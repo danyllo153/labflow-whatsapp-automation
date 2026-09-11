@@ -30,3 +30,9 @@ Conectado via credencial OAuth2, configurada em um projeto próprio no Google Cl
 Planilha: "LabFlow - Dados", aba "AMOSTRAS", com colunas: ID, Amostra, Analise, Data Entrada, Status, Responsavel, Observacao.
 
 Ação usada: "Append row in sheet" — adiciona uma nova linha a cada registro válido.
+
+## MVP funcional — primeiro teste ponta a ponta
+
+Fluxo completo testado com sucesso: mensagem simulada via webhook → parsing por regex → validação IF (True Branch) → gravação no Google Sheets.
+
+Linha registrada na aba AMOSTRAS: Amostra 2458, Analise acidofilos, Data Entrada 09/09/2026, Status Pendente.
