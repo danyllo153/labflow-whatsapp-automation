@@ -44,3 +44,20 @@ Quando a validação falha (algum campo obrigatório ausente), monta um campo "R
 Mensagem atual: genérica (não indica especificamente qual campo faltou).
 
 Melhoria futura documentada: tornar a mensagem dinâmica, apontando exatamente quais campos (amostra, analise, data) não foram reconhecidos na mensagem original.
+
+## MVP V1 — Concluído
+
+Fluxo completo funcionando de ponta a ponta, testado via requisições HTTP simulando o WhatsApp:
+
+**Cenário de sucesso** (dados completos):
+- Entrada: "Registrar amostra 2458, analise acidofilos, data 09/09/2026"
+- Resultado: linha gravada na planilha AMOSTRAS + resposta de confirmação retornada diretamente na chamada HTTP
+
+**Cenário de erro** (dados incompletos):
+- Entrada: "Registrar amostra 3000"
+- Resultado: nenhuma gravação na planilha + mensagem de erro retornada diretamente na chamada HTTP
+
+**Arquitetura final:**
+Webhook → Code (parsing por regex) → IF (validação) → [True: Google Sheets + Edit Fields de sucesso | False: Edit Fields de erro] → Respond to Webhook
+
+Configuração do Webhook alterada de "Respond Immediately" para "Using Respond to Webhook Node", permitindo que a resposta HTTP dependa do resultado do processamento — o mesmo padrão usado por qualquer API REST real.
