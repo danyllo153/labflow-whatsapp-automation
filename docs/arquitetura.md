@@ -36,3 +36,11 @@ Ação usada: "Append row in sheet" — adiciona uma nova linha a cada registro 
 Fluxo completo testado com sucesso: mensagem simulada via webhook → parsing por regex → validação IF (True Branch) → gravação no Google Sheets.
 
 Linha registrada na aba AMOSTRAS: Amostra 2458, Analise acidofilos, Data Entrada 09/09/2026, Status Pendente.
+
+## Node 5 — Mensagem de erro (Edit Fields, caminho False)
+
+Quando a validação falha (algum campo obrigatório ausente), monta um campo "Resposta" com uma mensagem de erro fixa, informando ao usuário que faltam dados.
+
+Mensagem atual: genérica (não indica especificamente qual campo faltou).
+
+Melhoria futura documentada: tornar a mensagem dinâmica, apontando exatamente quais campos (amostra, analise, data) não foram reconhecidos na mensagem original.
