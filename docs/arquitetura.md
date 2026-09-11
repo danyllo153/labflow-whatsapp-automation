@@ -22,3 +22,11 @@ Verifica se os três campos obrigatórios (amostra, analise, data) foram extraí
 - Mensagem incompleta ("Registrar amostra 3000") → saiu corretamente pela False Branch, com analise e data como null
 
 Isso confirma que o sistema não grava registros incompletos silenciosamente, conforme planejado na seção de segurança e validação do projeto.
+
+## Node 4 — Gravação (Google Sheets)
+
+Conectado via credencial OAuth2, configurada em um projeto próprio no Google Cloud Console (necessário porque o n8n roda self-hosted localmente via Docker, diferente do n8n Cloud que já vem com integração pré-configurada).
+
+Planilha: "LabFlow - Dados", aba "AMOSTRAS", com colunas: ID, Amostra, Analise, Data Entrada, Status, Responsavel, Observacao.
+
+Ação usada: "Append row in sheet" — adiciona uma nova linha a cada registro válido.
