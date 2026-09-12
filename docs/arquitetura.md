@@ -61,3 +61,11 @@ Fluxo completo funcionando de ponta a ponta, testado via requisições HTTP simu
 Webhook → Code (parsing por regex) → IF (validação) → [True: Google Sheets + Edit Fields de sucesso | False: Edit Fields de erro] → Respond to Webhook
 
 Configuração do Webhook alterada de "Respond Immediately" para "Using Respond to Webhook Node", permitindo que a resposta HTTP dependa do resultado do processamento — o mesmo padrão usado por qualquer API REST real.
+
+## Incidente e correção — persistência de dados
+
+O container labflow-n8n foi perdido inesperadamente (nome trocado para um aleatório pelo Docker). O workflow foi recuperado sem perdas graças ao volume n8n_data, criado desde o início.
+
+Aproveitando o incidente, o Postgres da Evolution API (que não tinha volume configurado) foi recriado com um volume dedicado (labflow_postgres_data), prevenindo perda de dados em caso de problema semelhante no futuro.
+
+Lição: todo container que guarda estado (n8n, Postgres) deve ter volume configurado desde a criação.
