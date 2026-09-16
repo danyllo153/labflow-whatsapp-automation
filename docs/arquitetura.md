@@ -69,3 +69,59 @@ O container labflow-n8n foi perdido inesperadamente (nome trocado para um aleat�
 Aproveitando o incidente, o Postgres da Evolution API (que não tinha volume configurado) foi recriado com um volume dedicado (labflow_postgres_data), prevenindo perda de dados em caso de problema semelhante no futuro.
 
 Lição: todo container que guarda estado (n8n, Postgres) deve ter volume configurado desde a criação.
+
+## MVP V2 — Integração real com WhatsApp (Evolution API)
+
+Substituído o webhook simulado por integração real com WhatsApp Business via
+Evolution API v2 (self-hosted, Docker + Postgres). Fluxo evoluído para:
+Webhook (Evolution API) → Filter → Code (parsing regex + guards) → IF
+(validação) → [True: Google Sheets + Edit Fields + HTTP Request (reply) |
+False: Edit Fields erro + HTTP Request (reply erro)] → Respond to Webhook.
+
+Adicionados ao registro: ID único por amostra (`AM-<timestamp>`, campo
+`idRegistro`) e nome do responsável (`nomeContato`, extraído do `pushName`
+da Evolution API), ambos gravados na planilha AMOSTRAS.
+
+## Incidente e correção — loop de mensagens por sync de histórico
+
+A instância `labflow` entrou em loop, reenviando mensagens antigas
+(inclusive um teste de dias atrás) como se fossem novas. Causa: a instância
+foi conectada primeiro ao número errado, depois reconectada ao número
+correto; o histórico da conexão errada ficou persistido no Postgres, e a
+cada restart o WhatsApp ressincronizava esse histórico como eventos novos.
+
+Correção inicial: apagar a instância contaminada e recriar do zero
+(`labflow2`), conectando direto no número correto.
+
+Descoberta seguinte: mesmo numa instância nova, a sincronização de
+histórico ao parear é comportamento **padrão** do protocolo WhatsApp
+Multi-Device (via Baileys) — não é bug exclusivo da instância antiga.
+Solução definitiva em duas camadas: (1) configuração da instância via
+`/settings/set` da Evolution API (`syncFullHistory: false`, `readMessages:
+false`, `alwaysOnline: false`); (2) guardas no Code node do n8n, descartando
+mensagens com `fromMe: true` ou com `messageTimestamp` mais antigo que 10
+minutos — tornando o fluxo resiliente a qualquer sync futuro.
+
+## Incidente e correção — Filter descartando mensagens reais
+
+O node Filter (condição `status is empty`) estava descartando mensagens
+reais, porque o campo `status` da Evolution API às vezes já vem preenchido
+(`DELIVERY_ACK`) mesmo na primeira notificação de uma mensagem legítima.
+Corrigido trocando a condição para `data.message.conversation exists` — um
+critério mais confiável de "isso é uma mensagem de verdade".
+
+## Incidente e correção — resposta indo para o número errado
+
+A confirmação de "amostra registrada" chegava no próprio número Business em
+vez de voltar para quem enviou. Causa: o campo `number` do HTTP Request de
+resposta usava `body.sender`, que na Evolution API representa o número **da
+própria instância**, não o remetente — nome de campo enganoso. Corrigido
+usando `data.key.remoteJid` (capturado no Code node como `numero`).
+
+## Incidente e correção — planilha gravando fora do lugar
+
+Depois de limpar linhas de teste usando "Limpar conteúdo" (em vez de
+"Excluir linhas"), o Google Sheets manteve o intervalo de dados "usado"
+inalterado, fazendo o Append Row gravar dezenas de linhas abaixo do
+cabeçalho. Lição: sempre excluir as linhas de fato, não só o conteúdo, para
+resetar o intervalo de dados da planilha.
