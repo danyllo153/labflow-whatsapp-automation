@@ -7,4 +7,9 @@ Sistema de automação para registro e acompanhamento de amostras de laboratóri
 
 Projeto de portfólio desenvolvido durante minha transição de carreira de Biomedicina/Controle de Qualidade para Tecnologia da Informação.
 
-**Status:** em desenvolvimento (MVP)
+**Status:** em desenvolvimento (MVP concluído + integração real com WhatsApp via Evolution API funcionando ponta a ponta)
+
+## Documentação
+
+- [Arquitetura do sistema](docs/arquitetura.md) — descrição dos nodes do workflow, decisões técnicas e histórico de incidentes
+- [Troubleshooting: integração WhatsApp](docs/troubleshooting.md) — bugs enfrentados na integração com a Evolution API, causa raiz e soluções
