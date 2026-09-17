@@ -7,16 +7,28 @@ Sistema de automação para registro e acompanhamento de amostras de laboratóri
 
 Projeto de portfólio desenvolvido durante minha transição de carreira de Biomedicina/Controle de Qualidade para Tecnologia da Informação.
 
-**Status:** em desenvolvimento (MVP concluído + integração real com WhatsApp via Evolution API funcionando ponta a ponta)
+**Status:** em desenvolvimento (MVP concluído + integração real com WhatsApp via
+Evolution API funcionando ponta a ponta, incluindo registro de amostras,
+coleta de terra, coleta de navio multi-tanque e consulta de drops do dia)
+
 
 ## Stack
 n8n · Docker · PostgreSQL · Evolution API · JavaScript · Google Sheets API · Webhooks
 
-## Próximas melhorias
-- [ ] Integração com LLM para interpretação de mensagens em linguagem natural
-- [ ] Registro de coletas e controle de drops (D5/D10/D15)
-- [ ] Suporte a múltiplos tipos de análise
+## Funcionalidades
 
+- Registro de amostra via WhatsApp (parsing por regex + validação + gravação em planilha)
+- Registro de coleta de terra (1 tanque por mensagem) com geração automática de 3 pontos de reanálise (drops D5/D10/D15)
+- Registro de coleta de navio (1 a 16 tanques numa única mensagem) com o mesmo controle de drops
+- Consulta de drops pendentes do dia via WhatsApp ("drops hoje"), agrupando terra e navio automaticamente
+- 
+
+## Próximas melhorias
+
+- [ ] Integração com LLM para interpretação de mensagens em linguagem natural
+- [ ] Suporte a múltiplos tipos de análise (normal / estresse)
+- [ ] Marcar status de drop como "Concluído" via WhatsApp após a análise ser feita
+- [ ] Validação de campos obrigatórios nos branches de coleta (hoje só o branch de amostra valida antes de responder)
 
 ## Documentação
 
