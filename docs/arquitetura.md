@@ -125,3 +125,134 @@ Depois de limpar linhas de teste usando "Limpar conteúdo" (em vez de
 inalterado, fazendo o Append Row gravar dezenas de linhas abaixo do
 cabeçalho. Lição: sempre excluir as linhas de fato, não só o conteúdo, para
 resetar o intervalo de dados da planilha.
+
+## MVP V3 — Coleta de terra e coleta de navio, cálculo de Drops
+
+Adicionado um node Switch (mode: Rules) logo após o Code node, roteando por
+um campo `tipo` que o Code node passa a determinar (uma expressão regular
+por intenção reconhecida). O fluxo, que antes tinha um único caminho
+(amostra), passou a ter múltiplos branches independentes, cada um com seu
+próprio trio de validação (If) e resposta (Edit Fields/HTTP Request/Respond
+to Webhook).
+
+Branch `coleta_terra`: reconhece mensagens no formato "registrar coleta
+tanque terra <número> data <dd/mm/aaaa>". Grava uma linha por coleta na aba
+COLETAS e calcula automaticamente 3 datas de "drop" de reanálise (D5, D10,
+D15 — coleta + 5/10/15 dias corridos), gravadas na aba DROPS.
+
+Branch `coleta_navio`: reconhece "Coleta navio <nome> tanques <lista
+separada por vírgula> data <dd/mm/aaaa>", aceitando de 1 a 16 tanques numa
+única mensagem. Gera uma linha por tanque na aba COLETAS_NAVIO e reaproveita
+a mesma função de cálculo de drops do branch de terra, gravando na mesma
+aba DROPS (diferenciada por colunas Tipo Tanque/Navio, sem precisar de join
+entre abas na hora de consultar).
+
+Decisão de design: os dois branches de coleta reaproveitam a mesma função
+`calcularDrops(dataColeta, idColeta, tanque, tipoTanque, navio)` dentro do
+Code node, parametrizada por tipo/navio, em vez de duplicar a lógica de
+cálculo de data.
+
+Branch `consulta_drops`: reconhece "drops hoje" e variações. Lê a aba DROPS
+inteira (Get rows, sem filtro) e um segundo Code node ("Montar resposta
+drops", Run Once for All Items) filtra as linhas com Data Prevista = hoje,
+agrupa por Dia Drop e separa terra/navio.
+
+Limitação conhecida (corrigida depois): inicialmente só o branch `amostra`
+tinha validação de campos obrigatórios antes de gravar; `coleta_terra` e
+`coleta_navio` gravavam mesmo com dados incompletos. Resolvido adicionando
+um If de validação em cada um dos dois branches, no mesmo padrão do branch
+`amostra` (ver MVP V3 — Concluído).
+
+## MVP V3 — Concluído
+
+Testado ponta a ponta via WhatsApp real (Evolution API):
+- `coleta_terra`: mensagem completa gravada corretamente em COLETAS + 3
+  linhas em DROPS, confirmação recebida com as datas de drop calculadas
+  certas.
+- `coleta_navio`: mensagem com 5 tanques gerou 5 linhas em COLETAS_NAVIO e
+  15 linhas em DROPS (5×3), confirmação recebida com lista de tanques e
+  total.
+- `consulta_drops`: "drops hoje" retornou corretamente os drops pendentes
+  do dia, combinando terra e navio na mesma resposta, sem precisar de join
+  entre as abas.
+- Validação de formato inválido testada nos dois branches de coleta, cada
+  um retornando mensagem de erro específica sem gravar nada.
+
+## MVP V4 — Rastreio de arquivo/descarte (bags de terra e potes de navio)
+
+Nova função `calcularArquivo(dataColetaStr, idColeta, tanque, navio)` no
+Code node, no mesmo padrão de `calcularDrops`, calculando uma única data de
+descarte previsto (coleta + 365 dias corridos). `coleta_terra` passou a
+gravar também na aba nova BAGS_TERRA; `coleta_navio` na aba nova
+POTES_NAVIO (uma linha por tanque).
+
+Dois branches de consulta novos no Switch, espelhando `consulta_drops`:
+`consulta_bags` ("quais bags posso descartar hoje") e `consulta_potes`
+("quais potes navio posso descartar hoje"), cada um lendo sua aba (sem
+filtro) e filtrando por Data Descarte Prevista = hoje e Status != Descartado
+num Code node dedicado. Consulta é só leitura — a marcação de Status como
+Descartado é feita manualmente na planilha.
+
+## MVP V4 — Concluído
+
+Testados os quatro caminhos via WhatsApp: gravação de bag (terra), gravação
+de pote (navio), consulta de bags vazia e com item pendente, consulta de
+potes vazia e com item pendente — todos bateram com o esperado.
+
+## MVP V5 — Gerenciamento de usuários e permissões via WhatsApp
+
+Decisão de design: em vez de uma lista de usuários fixa no código (cogitada
+inicialmente, mas incompatível com um comando que precisa escrever/alterar
+cargos em tempo real), os usuários e seus cargos (Admin/Operador) passaram
+a viver numa aba nova USUARIOS (Numero | Nome | Nivel) no Google Sheets,
+como fonte única da verdade.
+
+Novo node Get rows USUARIOS, inserido entre Filter e Code in JavaScript,
+lendo a aba inteira a cada mensagem recebida. Isso mudou o modo de execução
+do Code in JavaScript de "Run Once for Each Item" para "Run Once for All
+Items", já que o input principal do node passou a ser as linhas da
+USUARIOS em vez do payload do webhook — que agora é referenciado
+explicitamente via `$('Webhook').first().json`.
+
+Novo branch `gerenciar_usuario` no Switch, reconhecendo o comando
+"adicionar/trocar/mudar cargo <nivel> para o numero <numero> [nome
+<nome>]", restrito a remetentes com Nivel = Admin na USUARIOS. Gravação via
+operação "Append or Update Row" do node Google Sheets (upsert nativo,
+matching column = Numero) — cria a linha se o número for novo, ou atualiza
+se já existir, sem precisar de lógica condicional própria pra decidir entre
+Append e Update.
+
+Sincronização automática de nome: um segundo caminho, paralelo ao Switch
+(dois fios saindo da mesma saída do Code in JavaScript, não em série),
+atualiza sozinho o campo Nome de qualquer remetente já cadastrado sempre
+que o pushName do WhatsApp daquela mensagem difere do que está salvo — sem
+nunca criar cadastro novo por essa via.
+
+## MVP V5 — Concluído
+
+Testado via WhatsApp real: alteração de cargo por Admin (sucesso),
+atualização de cargo já existente sem duplicar linha (upsert), cargo
+inválido rejeitado, usuário Operador bloqueado de alterar cargos (inclusive
+o próprio, evitando autopromoção), sincronização automática do nome
+validada, e regressão dos branches antigos (amostra, coleta_navio,
+consulta_drops) confirmada sem mudança de comportamento após a troca de
+modo do Code node.
+
+## Arquitetura atual (resumo)
+
+```
+Webhook (Evolution API)
+  → Filter (fromMe = false AND message.conversation exists)
+  → Get rows USUARIOS (lê aba inteira)
+  → Code in JavaScript (Run Once for All Items — guards, parsing por
+    regex de 7 intenções, cálculo de drops/arquivo, checagem de
+    permissão, sinalização de sincronização de nome)
+      ├─ Switch → amostra | coleta_terra | coleta_navio | consulta_drops |
+      │           consulta_bags | consulta_potes | gerenciar_usuario
+      │           (cada um com seu próprio trio de validação/gravação/resposta)
+      └─ If sincronizarNome → Append or Update Row (USUARIOS, só Nome) —
+          caminho paralelo, não retorna resposta ao WhatsApp
+```
+
+Detalhes de cada branch, bugs encontrados e lições de debugging estão
+documentados em `docs/troubleshooting.md`.
