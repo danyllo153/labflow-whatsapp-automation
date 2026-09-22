@@ -88,7 +88,8 @@ A instância `labflow` entrou em loop, reenviando mensagens antigas
 (inclusive um teste de dias atrás) como se fossem novas. Causa: a instância
 foi conectada primeiro ao número errado, depois reconectada ao número
 correto; o histórico da conexão errada ficou persistido no Postgres, e a
-cada restart o WhatsApp ressincronizava esse histórico como eventos novos.
+cada restart a Evolution API ressincronizava esse histórico como eventos
+novos.
 
 Correção inicial: apagar a instância contaminada e recriar do zero
 (`labflow2`), conectando direto no número correto.
@@ -195,9 +196,10 @@ Descartado é feita manualmente na planilha.
 
 ## MVP V4 — Concluído
 
-Testados os quatro caminhos via WhatsApp: gravação de bag (terra), gravação
-de pote (navio), consulta de bags vazia e com item pendente, consulta de
-potes vazia e com item pendente — todos bateram com o esperado.
+Testados os quatro caminhos via WhatsApp: gravação de bag (terra),
+gravação de pote (navio), consulta de bags vazia e com item pendente,
+consulta de potes vazia e com item pendente — todos bateram com o
+esperado.
 
 ## MVP V5 — Gerenciamento de usuários e permissões via WhatsApp
 
@@ -256,3 +258,33 @@ Webhook (Evolution API)
 
 Detalhes de cada branch, bugs encontrados e lições de debugging estão
 documentados em `docs/troubleshooting.md`.
+
+---
+
+## Infraestrutura de deploy (VPS)
+
+A partir de 21/09/2026, o LabFlow deixou de rodar em Docker local e passou
+a rodar numa stack própria e isolada num VPS Linux compartilhado (cedido
+por um administrador externo, que também hospeda outros serviços dele no
+mesmo servidor).
+
+**Resumo da mudança:**
+- n8n, Postgres e Evolution API próprios, numa rede Docker isolada
+  (`labflow-net`), sem nenhum serviço compartilhado com o resto do
+  servidor.
+- Nenhuma porta exposta publicamente — todo acesso administrativo (editor
+  do n8n, Manager do Evolution) é feito por túnel SSH.
+- Segredos (senha do Postgres, chave da API, chave de criptografia do
+  n8n) gerados diretamente no servidor via `openssl`, nunca transmitidos
+  por fora do terminal.
+- Credencial do Evolution migrada de "chave fixa no node" para uma
+  Credencial Header Auth do n8n; credencial do Google Sheets migrada de
+  OAuth2 (expira a cada 7 dias em modo de teste) para conta de serviço
+  (não expira).
+- A lógica do workflow (nodes, regex, regras de negócio descritas acima
+  nesta página) **não mudou** na migração — só a infraestrutura por trás
+  dela.
+
+A arquitetura completa da infraestrutura (diagrama de rede, gestão de
+segredos, processo de migração passo a passo e troubleshooting específico
+de infraestrutura) está documentada em `docs/deploy-vps.md`.
