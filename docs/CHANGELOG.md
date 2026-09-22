@@ -6,9 +6,47 @@ de amostras via WhatsApp) são documentadas aqui. Formato baseado em
 
 Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 `docs/troubleshooting.md`. Pra entender a arquitetura atual do sistema, ver
-`docs/arquitetura.md`. Este arquivo é só o resumo cronológico do que mudou.
+`docs/arquitetura.md`. Pra detalhes da infraestrutura de deploy, ver
+`docs/deploy-vps.md`. Este arquivo é só o resumo cronológico do que mudou.
 
 ## [Unreleased]
+
+## [0.5.0] - 2026-09-21
+
+### Added
+- Deploy migrado de Docker local (PC) para stack própria e isolada num
+  VPS Linux compartilhado, cedido por um administrador externo — ver
+  `docs/deploy-vps.md` para a arquitetura completa
+- Rede Docker isolada (`labflow-net`), sem nenhum serviço compartilhado
+  com os outros containers do servidor
+- Imagens fixadas por versão: `postgres:15-alpine`, `n8nio/n8n:2.38.6`,
+  `evoapicloud/evolution-api` fixada por digest (não por tag `latest`)
+- `docs/comandos.md`: referência de todos os comandos reconhecidos pelo
+  bot, com formato e exemplo de cada um
+
+### Changed
+- Credencial da Evolution API migrada de chave fixa em cada node HTTP
+  Request para uma Credencial Header Auth do n8n, eliminando o segredo
+  em texto puro nos exports do workflow
+- Credencial do Google Sheets migrada de OAuth2 (expira a cada 7 dias em
+  modo de teste) para conta de serviço (não expira, sem dependência de
+  login por navegador)
+- Instância do WhatsApp recriada no Evolution API do servidor
+  (`labflow2`, mesmo nome), com o número reparado via QR code
+
+### Fixed
+- Webhook configurado pela tela do Manager do Evolution API não estava
+  sendo persistido (retornava `null` ao consultar via API); corrigido
+  configurando via chamada direta à API (`POST /webhook/set/<instancia>`)
+  — ver Bug 11 em `docs/troubleshooting.md`
+
+### Security
+- Todos os segredos da stack do VPS (senha do Postgres, chave da API,
+  chave de criptografia do n8n) gerados diretamente no servidor via
+  `openssl rand`, nunca transmitidos por fora do terminal SSH
+- Nenhum serviço da stack exposto publicamente: acesso administrativo
+  (n8n, Manager do Evolution) restrito a túnel SSH, portas publicadas
+  apenas em `127.0.0.1`
 
 ## [0.4.0] - 2026-09-18
 
