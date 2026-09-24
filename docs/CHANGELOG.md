@@ -9,12 +9,6 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 `docs/arquitetura.md`. Pra detalhes da infraestrutura de deploy, ver
 `docs/deploy-vps.md`. Este arquivo é só o resumo cronológico do que mudou.
 
-## [Unreleased]
-
-### Pendente
-- `LabFlow.json` do repositório ainda é o export da v0.4.0; exportar a
-  versão atual do workflow (já sem chave em texto puro, usando a
-  Credencial Header Auth) e substituir
 
 ## [0.6.0] - 2026-09-23
 
