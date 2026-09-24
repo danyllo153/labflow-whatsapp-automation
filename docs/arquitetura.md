@@ -240,21 +240,121 @@ validada, e regressão dos branches antigos (amostra, coleta_navio,
 consulta_drops) confirmada sem mudança de comportamento após a troca de
 modo do Code node.
 
+## Coleta de terra com vários tanques
+
+`coleta_terra` passou a aceitar uma lista de até 8 tanques numa única
+mensagem, no mesmo padrão já usado pelo `coleta_navio` (lista no Code
+node + `Split Out` para gravar uma linha por tanque). Mensagem com um
+tanque só continua funcionando. Com 9 ou mais tanques, a mensagem é
+recusada inteira, sem gravação parcial.
+
+Testado: lista de 3 tanques, tanque único (compatibilidade) e recusa com
+9 tanques. Gravação conferida em `COLETAS_TERRA`, `DROPS` e `BAGS_TERRA`.
+
+## Registro e consulta de análises de tanque
+
+**Modelo de dados.** Nova aba `ANALISES` com as colunas: ID, ID Coleta,
+Tanque, Tipo Tanque, Navio, Tipo Frasco, Sub-Analise, Metodo, Data
+Analise, Data Pre-Leitura, Data Leitura Final, Status, Responsavel.
+
+Cada comando de análise (frasco Normal ou Stress) gera 4 linhas por
+tanque, seguindo o laudo oficial do laboratório e a prática interna:
+
+| Sub-análise | Método | Pré-leitura | Leitura final |
+|---|---|---|---|
+| CT | Profundidade | — | 48h |
+| BL | Profundidade | 72h | 120h |
+| WORT | Profundidade | 120h | 240h |
+| WORT | Superfície | 120h | 240h |
+
+A pré-leitura de BL em 72h não consta no laudo oficial, mas é feita
+internamente para identificação prévia de microrganismos, por isso é
+rastreada.
+
+**Decisão de design — um único campo Status.** Em vez de um status para
+a pré-leitura e outro para a leitura final, cada linha tem um único
+`Status` que descreve o estágio atual (Aguardando Pré-Leitura →
+Aguardando Leitura Final → Concluído). Isso deixa a planilha mais simples
+de ler e de filtrar.
+
+**Consulta do dia.** "Quais analises de tanques terra/navio saem hoje?"
+lê a aba `ANALISES` e agrupa por sub-análise + estágio (prazo em horas) +
+tipo de frasco. A mesma sub-análise pode aparecer em mais de uma linha
+no mesmo dia se os tanques estiverem em estágios diferentes (ex: BL 72h
+para uns, BL 120h para outros). WORT Profundidade e Superfície são
+juntados numa linha só, exibida como "Psicrotroficos".
+
+**Limitação conhecida:** a palavra `navio` é obrigatória no comando de
+análise de navio para diferenciar de terra sem ambiguidade. Aceitar
+variações livres fica para a fase de IA.
+
+## Permissões por cargo e bloqueio de coleta duplicada
+
+**Número não cadastrado bloqueado.** Antes, só o `gerenciar_usuario`
+checava o cargo do remetente. Qualquer número conseguia registrar e
+consultar, o que foi percebido quando um analista sem cadastro usou o
+bot. Agora o Code node principal checa o remetente na `USUARIOS` antes de
+qualquer comando: número não cadastrado recebe uma mensagem pedindo
+cadastro e nada é executado.
+
+**Cargo Consultor.** Terceiro cargo, além de Admin e Operador: pode usar
+todas as consultas, mas é bloqueado de registrar coleta e análise.
+
+**Bloqueio de duplicata.** Antes de gravar uma coleta, um `Get rows` lê
+`COLETAS_TERRA` (ou `COLETAS_NAVIO`) e um Code node checa se já existe o
+mesmo tanque na mesma data de coleta (e no mesmo navio, no caso de
+navio). Se algum tanque da mensagem já existir, a mensagem inteira é
+recusada e a resposta informa quem já registrou. Os dois `Get rows` usam
+**Always Output Data**, para a checagem funcionar com a aba vazia (ver
+Bug 14 em `docs/troubleshooting.md`).
+
+Testado: número não cadastrado bloqueado, Consultor bloqueado de
+registrar e com consulta normal, duplicata recusada em terra e navio,
+mesmo tanque em navios diferentes aceito.
+
+## Conclusão de drops em lote
+
+Novo comando "Concluir drops [D5/D10/D15] terra/navio [nome do navio]".
+O fluxo lê a aba `DROPS`, filtra por Tipo Tanque + Status = Pendente +
+Data Prevista = hoje (mais dia e navio, quando informados) e atualiza
+todas as linhas encontradas para `Concluído` com `Update Row`. A resposta
+lista os tanques e as datas de coleta concluídos.
+
+Testado criando coletas com data retroativa (5, 10 e 15 dias atrás) para
+gerar drops vencendo hoje, concluindo e confirmando que o item some da
+consulta "drops hoje" em seguida.
+
 ## Arquitetura atual (resumo)
 
 ```
 Webhook (Evolution API)
   → Filter (fromMe = false AND message.conversation exists)
   → Get rows USUARIOS (lê aba inteira)
-  → Code in JavaScript (Run Once for All Items — guards, parsing por
-    regex de 7 intenções, cálculo de drops/arquivo, checagem de
-    permissão, sinalização de sincronização de nome)
-      ├─ Switch → amostra | coleta_terra | coleta_navio | consulta_drops |
-      │           consulta_bags | consulta_potes | gerenciar_usuario
-      │           (cada um com seu próprio trio de validação/gravação/resposta)
+  → Code in JavaScript (Run Once for All Items — guards, bloqueio de
+    número não cadastrado, parsing por regex de cada intenção, checagem
+    de cargo, cálculo de drops/arquivo/análises, sinalização de
+    sincronização de nome)
+      ├─ Switch
+      │    ├─ Registro:  amostra | coleta_terra | coleta_navio |
+      │    │             análise de tanque (terra/navio)
+      │    ├─ Consulta:  drops hoje | bags | potes | análises do dia
+      │    │             (terra/navio)
+      │    ├─ Atualização: concluir drops
+      │    └─ Admin:     gerenciar_usuario
+      │    (coletas passam antes por Get rows + checagem de duplicata;
+      │     cada branch termina em HTTP Request → Respond to Webhook)
       └─ If sincronizarNome → Append or Update Row (USUARIOS, só Nome) —
           caminho paralelo, não retorna resposta ao WhatsApp
 ```
+
+**Abas da planilha:** `AMOSTRAS`, `COLETAS_TERRA`, `COLETAS_NAVIO`,
+`DROPS`, `BAGS_TERRA`, `POTES_NAVIO`, `ANALISES`, `USUARIOS` e `Painel`
+(só leitura, fórmulas com `FILTER`).
+
+**Regra de manutenção:** depois de qualquer mudança estrutural no fluxo
+(inserir node, religar conexões), exportar o workflow em JSON e revisar
+as conexões antes de dar como concluído (ver Bug 15 em
+`docs/troubleshooting.md`).
 
 Detalhes de cada branch, bugs encontrados e lições de debugging estão
 documentados em `docs/troubleshooting.md`.
