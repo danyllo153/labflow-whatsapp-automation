@@ -11,6 +11,60 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 
 ## [Unreleased]
 
+### Pendente
+- `LabFlow.json` do repositório ainda é o export da v0.4.0; exportar a
+  versão atual do workflow (já sem chave em texto puro, usando a
+  Credencial Header Auth) e substituir
+
+## [0.6.0] - 2026-09-23
+
+### Added
+- Coleta de terra com vários tanques numa única mensagem (até 8), no
+  mesmo padrão de lista + `Split Out` do `coleta_navio`; mensagem com um
+  tanque só continua funcionando (compatível com o formato antigo)
+- Registro de análises de tanque via WhatsApp (`Analise do normal/stress
+  do(s) tanque(s) <lista> [navio <nome>], data <dd/mm/aaaa>`), aceitando
+  lista de tanques (até 8 terra / 16 navio). Cada tanque gera 4 linhas
+  na nova aba `ANALISES`: CT Profundidade, BL Profundidade, WORT
+  Profundidade e WORT Superfície, com datas de pré-leitura e leitura
+  final calculadas automaticamente
+- Consulta de análises do dia (`Quais analises de tanques terra/navio
+  saem hoje?`), agrupando por sub-análise + prazo em horas + tipo de
+  frasco (Normal/Stress), com WORT Profundidade e Superfície juntos numa
+  linha só (exibido como "Psicrotroficos")
+- Cargo **Consultor**: acesso só de consulta, bloqueado de registrar
+  coleta/análise
+- Conclusão de drops em lote via WhatsApp (`Concluir drops [D5|D10|D15]
+  terra|navio [nome do navio]`): muda para `Concluído` todas as linhas de
+  `DROPS` pendentes com data prevista hoje que batem no filtro, e
+  responde com a lista de tanques concluídos
+
+### Changed
+- Nomes de navio aceitam o número da viagem junto (ex: `O.SKY 123`), sem
+  mudança de código: o nome já era capturado como texto livre
+
+### Fixed
+- Cálculo de "hoje" usando o relógio UTC do container: à noite (depois das
+  21h em Brasília) as consultas do dia já olhavam o dia seguinte.
+  Corrigido com `toLocaleDateString('pt-BR', { timeZone:
+  'America/Sao_Paulo' })` em todos os Code nodes de consulta — ver Bug 12
+- `Get rows` de aba vazia não repassava nenhum item e a execução parava
+  em silêncio (visto em `COLETAS_NAVIO`); corrigido ativando "Always
+  Output Data" — ver Bug 14
+- Conexões erradas introduzidas ao religar o fluxo manualmente para o
+  bloqueio de duplicata (drops de terra sem gravar, ramos de erro ligados
+  a nodes de gravação, `HTTP Request` sem `Respond to Webhook`) — ver
+  Bug 15
+
+### Security
+- Número não cadastrado na aba `USUARIOS` é bloqueado por completo:
+  recebe mensagem pedindo cadastro e nenhum comando é executado (antes
+  só o comando de cargo checava permissão)
+- Bloqueio de coleta duplicada: mesmo tanque + mesma data de coleta (e
+  mesmo navio, no caso de navio) é recusado, informando quem já
+  registrou; se algum tanque da lista já existir, a mensagem inteira é
+  recusada sem gravar nada
+
 ## [0.5.0] - 2026-09-21
 
 ### Added
