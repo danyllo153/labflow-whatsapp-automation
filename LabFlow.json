@@ -1,0 +1,4115 @@
+{
+  "name": "LabFlow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "labflow-registro",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1040,
+        208
+      ],
+      "id": "9840723e-dd48-443f-bc87-eaa8da57d595",
+      "name": "Webhook",
+      "webhookId": "fe12b46f-78f4-4521-88ac-1853954e311b"
+    },
+    {
+      "parameters": {
+        "jsCode": "const webhookItem = $('Webhook').first().json;\nconst data = webhookItem.body.data;\n\nif (data.key?.fromMe === true) {\n  return [];\n}\n\nconst msgTimestamp = data.messageTimestamp;\nconst nowSeconds = Math.floor(Date.now() / 1000);\nconst MAX_AGE_SECONDS = 600;\nif (msgTimestamp && (nowSeconds - msgTimestamp) > MAX_AGE_SECONDS) {\n  return [];\n}\n\nconst texto = data.message.conversation;\nconst numeroRemetente = data.key.remoteJid;\nconst nomeContato = data.pushName || 'Desconhecido';\n\n// --- Carrega usuários da planilha e identifica o nível de quem enviou ---\nconst usuarios = $input.all().map(i => i.json);\nconst numeroRemetenteLimpo = numeroRemetente.replace('@s.whatsapp.net', '');\nconst usuarioAtual = usuarios.find(u => String(u.Numero) === numeroRemetenteLimpo);\nconst nivelAtual = usuarioAtual ? usuarioAtual.Nivel : 'Desconhecido';\n// --- BLOQUEIO: só usuários cadastrados podem usar o bot ---\nif (nivelAtual === 'Desconhecido') {\n  return [{\n    json: {\n      tipo: 'nao_cadastrado',\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta: '❌ Você ainda não está cadastrado no LabFlow. Peça a um administrador para te cadastrar.'\n    }\n  }];\n}\n// Sinaliza se o nome do WhatsApp de quem mandou mudou (ou nunca foi\n// preenchido) em relação ao que já está salvo na USUARIOS — só pra quem\n// já é cadastrado (nunca cria cadastro novo por essa via).\nconst sincronizarNome = !!(usuarioAtual && usuarioAtual.Nome !== nomeContato);\n\n// Toda resposta passa por aqui, pra sempre levar junto os dados de\n// sincronização de nome sem precisar repetir em cada bloco abaixo.\nfunction output(json) {\n  return [{\n    json: {\n      ...json,\n      _sincronizarNome: sincronizarNome,\n      _numeroRemetenteLimpo: numeroRemetenteLimpo,\n      _nomeContatoAtual: nomeContato\n    }\n  }];\n}\n// Calcula as N linhas de análise (CT, BL, WORT) para um tanque, a partir\n// da data em que o frasco (Normal ou Stress) foi analisado.\nfunction calcularAnalises(dataAnaliseStr, idColeta, tanque, tipoFrasco, tipoTanque, navio) {\n  const [dia, mes, ano] = dataAnaliseStr.split('/').map(Number);\n  const dataBase = new Date(ano, mes - 1, dia);\n\n  const formatarData = (d) =>\n    `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;\n\n  const somarHoras = (dataBase, horas) => {\n    const d = new Date(dataBase);\n    d.setHours(d.getHours() + horas);\n    return d;\n  };\n\n  // Config: { pre: horas ou null, final: horas }\n  const PRAZOS = {\n    CT:   { pre: null, final: 48 },\n    BL:   { pre: 72,   final: 120 },\n    WORT: { pre: 120,  final: 240 }\n  };\n\n  // Cada linha: { subAnalise, metodo }\n  const LINHAS = [\n    { subAnalise: 'CT',   metodo: 'Profundidade' },\n    { subAnalise: 'BL',   metodo: 'Profundidade' },\n    { subAnalise: 'WORT', metodo: 'Profundidade' },\n    { subAnalise: 'WORT', metodo: 'Superficie' }\n  ];\n\n  return LINHAS.map(({ subAnalise, metodo }, idx) => {\n    const prazo = PRAZOS[subAnalise];\n    const dataPreLeitura = prazo.pre !== null\n      ? formatarData(somarHoras(dataBase, prazo.pre))\n      : '';\n    const dataLeituraFinal = formatarData(somarHoras(dataBase, prazo.final));\n    const status = prazo.pre !== null\n      ? 'Aguardando Pré-Leitura'\n      : 'Aguardando Leitura Final';\n\n    return {\n      idAnalise: `AN-${idColeta}-${tipoFrasco}-${subAnalise}-${metodo}`.slice(0, 60),\n      idColeta,\n      tanque,\n      tipoTanque,\n      navio: navio || '',\n      tipoFrasco,\n      subAnalise,\n      metodo,\n      dataAnalise: dataAnaliseStr,\n      dataPreLeitura,\n      dataLeituraFinal,\n      status,\n      responsavel: nomeContato\n    };\n  });\n}\n// Calcula as 3 datas de drop (D5, D10, D15) a partir da data de coleta\nfunction calcularDrops(dataColetaStr, idColeta, tanque, tipoTanque, navio) {\n  const [dia, mes, ano] = dataColetaStr.split('/').map(Number);\n  const dataBase = new Date(ano, mes - 1, dia);\n  const dias = [5, 10, 15];\n  return dias.map(offset => {\n    const dataDrop = new Date(dataBase);\n    dataDrop.setDate(dataDrop.getDate() + offset);\n    const dd = String(dataDrop.getDate()).padStart(2, '0');\n    const mm = String(dataDrop.getMonth() + 1).padStart(2, '0');\n    const yyyy = dataDrop.getFullYear();\n    return {\n      idDrop: `DR-${idColeta}-${offset}`,\n      idColeta: idColeta,\n      tipoTanque: tipoTanque,\n      tanque: tanque,\n      navio: navio || '',\n      diaDrop: `D${offset}`,\n      dataPrevista: `${dd}/${mm}/${yyyy}`,\n      status: 'Pendente',\n      responsavel: nomeContato\n    };\n  });\n}\nfunction calcularArquivo(dataColetaStr, idColeta, tanque, navio) {\n  const [dia, mes, ano] = dataColetaStr.split('/').map(Number);\n  const dataColeta = new Date(ano, mes - 1, dia);\n  const dataDescarte = new Date(dataColeta);\n  dataDescarte.setDate(dataDescarte.getDate() + 365);\n\n  const formatarData = (d) =>\n    `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;\n\n  return {\n    id: `AR-${idColeta}`,\n    idColeta,\n    tanque,\n    navio: navio || '',\n    dataColeta: dataColetaStr,\n    dataDescarte: formatarData(dataDescarte),\n    status: 'Arquivado',\n    responsavel: nomeContato\n  };\n}\n\n// --- GERENCIAR USUARIO ---\nconst regexGerenciarUsuario = /(adicionar|trocar|mudar)\\s+cargo\\s+(?:de\\s+)?(\\w+)\\s+para\\s+o?\\s*n[uú]mero\\s+(\\d+)(?:\\s+nome\\s+(.+))?/i;\nconst matchGerenciar = texto.match(regexGerenciarUsuario);\n\nif (matchGerenciar) {\n  const nivelNovo = matchGerenciar[2];\n  const numeroAlvo = matchGerenciar[3];\n  const nomeInformado = matchGerenciar[4] ? matchGerenciar[4].trim() : null;\n\n  if (nivelAtual !== 'Admin') {\n    return output({\n      tipo: 'gerenciar_usuario',\n      autorizado: false,\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta: '❌ Só administradores podem alterar cargos de usuários.'\n    });\n  }\n\n  const niveisValidos = ['Admin', 'Operador', 'Consultor'];\n  if (!niveisValidos.includes(nivelNovo)) {\n    return output({\n      tipo: 'gerenciar_usuario',\n      autorizado: false,\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta: `❌ Cargo inválido. Use: ${niveisValidos.join(' ou ')}.`\n    });\n  }\n\n  const usuarioAlvoExistente = usuarios.find(u => String(u.Numero) === numeroAlvo);\n  let nomeAlvo;\n  if (nomeInformado) {\n    nomeAlvo = nomeInformado;\n  } else if (numeroAlvo === numeroRemetenteLimpo) {\n    nomeAlvo = nomeContato;\n  } else {\n    nomeAlvo = usuarioAlvoExistente ? usuarioAlvoExistente.Nome : '';\n  }\n\n  return output({\n    tipo: 'gerenciar_usuario',\n    autorizado: true,\n    numero: numeroRemetente,\n    nomeContato,\n    NumeroAlvo: numeroAlvo,\n    NivelNovo: nivelNovo,\n    NomeAlvo: nomeAlvo,\n    textoResposta: nomeAlvo\n      ? `✅ Cargo atualizado: numero ${numeroAlvo} (${nomeAlvo}) agora é ${nivelNovo}.`\n      : `✅ Cargo atualizado: numero ${numeroAlvo} agora é ${nivelNovo}.`\n  });\n}\n// Bloqueia comandos de registro para quem só tem acesso de consulta.\nfunction bloqueadoConsultor() {\n  if (nivelAtual === 'Consultor') {\n    return output({\n      tipo: 'erro_coleta',\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta: '❌ Consultores têm acesso somente de consulta. Peça a um administrador para registrar isso.'\n    });\n  }\n  return null;\n}\n// --- COLETA TANQUE TERRA ---\nif (/registrar\\s+coleta\\s+tanques?\\s+terra/i.test(texto)) {\n  const bloqueio = bloqueadoConsultor();\n  if (bloqueio) return bloqueio;\n  const matchTanques = texto.match(/tanques?\\s+terra\\s+([a-z0-9,\\s]+?)\\s+data\\s+(\\d{2}\\/\\d{2}\\/\\d{4})/i);\n\n  if (!matchTanques) {\n    return output({\n      tipo: 'erro_coleta',\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta:\n        '❌ Não foi possível registrar a coleta de terra.\\n\\n' +\n        'Formato esperado:\\n\"registrar coleta tanque(s) terra <número(s)> data <dd/mm/aaaa>\"'\n    });\n  }\n\n  const tanques = matchTanques[1].split(',').map(t => t.trim()).filter(Boolean);\n  const dataColeta = matchTanques[2];\n\n  if (tanques.length === 0) {\n    return output({\n      tipo: 'erro_coleta',\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta:\n        '❌ Não foi possível registrar a coleta de terra — nenhum tanque reconhecido.\\n\\n' +\n        'Formato esperado:\\n\"registrar coleta tanque(s) terra <número(s)> data <dd/mm/aaaa>\"'\n    });\n  }\n\n  if (tanques.length > 8) {\n    return output({\n      tipo: 'erro_coleta',\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta:\n        `❌ Só é possível registrar até 8 tanques por mensagem (você enviou ${tanques.length}). ` +\n        'Divida em mais de uma mensagem.'\n    });\n  }\n\n  const itensColeta = [];\n  let drops = [];\n  let bagsArquivo = [];\n\n  tanques.forEach((tanque, idx) => {\n    const idColeta = `CT-${Date.now()}-${idx}`;\n\n    itensColeta.push({ idColeta, tanque, dataColeta, responsavel: nomeContato });\n    drops = drops.concat(calcularDrops(dataColeta, idColeta, tanque, 'Terra', null));\n    bagsArquivo.push(calcularArquivo(dataColeta, idColeta, tanque, null));\n  });\n\n  return output({\n    tipo: 'coleta_terra',\n    dataColeta,\n    tanques,\n    itensColeta,\n    drops,\n    bagsArquivo,\n    numero: numeroRemetente,\n    nomeContato,\n    textoResposta:\n      `✅ Coleta de terra registrada.\\n\\nTanques: ${tanques.join(', ')}\\n` +\n      `Data: ${dataColeta}\\n` +\n      `Total: ${tanques.length} tanque${tanques.length === 1 ? '' : 's'}`\n  });\n}\n\n// --- COLETA TANQUE NAVIO ---\nif (/coleta navio/i.test(texto)) {\n  const bloqueio = bloqueadoConsultor();\n  if (bloqueio) return bloqueio;\n  const matchNavio = texto.match(/coleta\\s+navio\\s+(.+?)\\s+tanques\\s+([a-z0-9,\\s]+?)\\s+data\\s+(\\d{2}\\/\\d{2}\\/\\d{4})/i);\n\n  if (!matchNavio) {\n    return output({\n      tipo: 'erro_coleta',\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta:\n        '❌ Não foi possível registrar a coleta de navio.\\n\\n' +\n        'Formato esperado:\\n\"Coleta navio <nome> tanques <lista separada por vírgula> data <dd/mm/aaaa>\"'\n    });\n  }\n\n  const navio = matchNavio[1].trim();\n  const tanques = matchNavio[2].split(',').map(t => t.trim().toUpperCase()).filter(Boolean);\n  const dataColeta = matchNavio[3];\n\n  if (!navio || tanques.length === 0) {\n    return output({\n      tipo: 'erro_coleta',\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta:\n        '❌ Não foi possível registrar a coleta de navio — nome do navio ou lista de tanques veio vazia.\\n\\n' +\n        'Formato esperado:\\n\"Coleta navio <nome> tanques <lista separada por vírgula> data <dd/mm/aaaa>\"'\n    });\n  }\n\n  const itensColeta = [];\n  let drops = [];\n  let arquivosNavio = [];\n\n  tanques.forEach((tanque, idx) => {\n    const idColeta = `CN-${Date.now()}-${idx}`;\n\n    itensColeta.push({\n      idColeta,\n      navio,\n      tanque,\n      dataColeta,\n      responsavel: nomeContato\n    });\n\n    drops = drops.concat(\n      calcularDrops(dataColeta, idColeta, tanque, 'Navio', navio)\n    );\n\n    arquivosNavio.push(\n      calcularArquivo(dataColeta, idColeta, tanque, navio)\n    );\n  });\n\n  return output({\n    tipo: 'coleta_navio',\n    navio,\n    dataColeta,\n    tanques,\n    itensColeta,\n    drops,\n    arquivosNavio,\n    numero: numeroRemetente,\n    nomeContato,\n    textoResposta:\n      `✅ Coleta registrada.\\n\\nNavio: ${navio}\\n` +\n      `Tanques: ${tanques.join(', ')}\\n` +\n      `Data: ${dataColeta}\\n` +\n      `Total: ${tanques.length} tanque${tanques.length === 1 ? '' : 's'}`\n  });\n}\n\n// --- ANALISE DE TANQUE (NORMAL / STRESS) — terra e navio, lista de tanques ---\nconst regexAnaliseTanque = /an[aá]lise\\s+(?:dos?\\s+)?(normal|stress)\\s+(?:dos?\\s+)?tanques?\\s+([a-z0-9,\\s]+?)(?:\\s+navio\\s+(.+?))?\\s*,?\\s*data\\s+(\\d{2}\\/\\d{2}\\/\\d{4})/i;\nconst matchAnaliseTanque = texto.match(regexAnaliseTanque);\n\nif (matchAnaliseTanque) {\n  const bloqueio = bloqueadoConsultor();\n  if (bloqueio) return bloqueio;\n  const tipoFrascoBruto = matchAnaliseTanque[1].toLowerCase();\n  const tipoFrasco = tipoFrascoBruto === 'stress' ? 'Stress' : 'Normal';\n  const tanques = matchAnaliseTanque[2].split(',').map(t => t.trim().toUpperCase()).filter(Boolean);\n  const navio = matchAnaliseTanque[3] ? matchAnaliseTanque[3].trim().toUpperCase() : null;\n  const tipoTanque = navio ? 'Navio' : 'Terra';\n  const dataAnalise = matchAnaliseTanque[4];\n\n  if (tanques.length === 0) {\n    return output({\n      tipo: 'erro_coleta',\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta:\n        '❌ Não foi possível registrar a análise — nenhum tanque reconhecido.\\n\\n' +\n        'Formato esperado:\\n\"Analise do normal/stress do tanque(s) <número(s)>[ navio <nome>], data <dd/mm/aaaa>\"'\n    });\n  }\n\n  const limite = navio ? 16 : 8;\n  if (tanques.length > limite) {\n    return output({\n      tipo: 'erro_coleta',\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta:\n        `❌ Só é possível registrar até ${limite} tanques por mensagem${navio ? ' de navio' : ''} (você enviou ${tanques.length}). ` +\n        'Divida em mais de uma mensagem.'\n    });\n  }\n\n  const idColetaBase = `AN-${Date.now()}`;\n  let analises = [];\n  tanques.forEach((tanque, idx) => {\n    const idColeta = `${idColetaBase}-${idx}`;\n    analises = analises.concat(calcularAnalises(dataAnalise, idColeta, tanque, tipoFrasco, tipoTanque, navio));\n  });\n\n  const analiseBL = analises.find(a => a.subAnalise === 'BL');\n  const analiseWORT = analises.find(a => a.subAnalise === 'WORT');\n\n  return output({\n    tipo: 'registro_analise',\n    tipoFrasco,\n    tanques,\n    tipoTanque,\n    navio,\n    dataAnalise,\n    analises,\n    numero: numeroRemetente,\n    nomeContato,\n    textoResposta:\n      `✅ Análise ${tipoFrasco} registrada.\\n\\n` +\n      `Tanques: ${tanques.join(', ')}${navio ? ` (Navio ${navio})` : ''}\\n` +\n      `Data: ${dataAnalise}\\n` +\n      `Data pré-leitura BL: ${analiseBL.dataPreLeitura}\\n` +\n      `Data final BL: ${analiseBL.dataLeituraFinal}\\n` +\n      `Data pré-leitura WORT: ${analiseWORT.dataPreLeitura}\\n` +\n      `Data final WORT: ${analiseWORT.dataLeituraFinal}\\n` +\n      `Total: ${tanques.length} tanque${tanques.length === 1 ? '' : 's'}\\n` +\n      `Analises realizadas: CT, BL, WORT (Profundidade e Superfície)`\n  });\n}\n\n// --- CONSULTA DE DROPS ---\nif (/^drops?\\s*(previstos)?\\s*(para)?\\s*hoje\\??$/i.test(texto.trim())) {\n  return output({\n    tipo: 'consulta_drops',\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n// --- CONSULTA DE ANALISES (TERRA) ---\nif (/^quais\\s+analises?\\s+(de\\s+)?tanques?\\s+terra\\s+saem\\s+hoje\\??$/i.test(texto.trim())) {\n  return output({\n    tipo: 'consulta_analises_terra',\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n\n// --- CONSULTA DE ANALISES (NAVIO) ---\nif (/^quais\\s+analises?\\s+(de\\s+)?tanques?\\s+navio\\s+saem\\s+hoje\\??$/i.test(texto.trim())) {\n  return output({\n    tipo: 'consulta_analises_navio',\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n// --- CONSULTA DE BAGS (TERRA) ---\nif (/^quais\\s+bags?\\s+(posso\\s+)?descartar\\s+hoje/i.test(texto.trim())) {\n  return output({\n    tipo: 'consulta_bags',\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n\n// --- CONSULTA DE POTES (NAVIO) ---\nif (/^quais\\s+potes?\\s+(do\\s+)?navio\\s+(posso\\s+)?descartar\\s+hoje/i.test(texto.trim())) {\n  return output({\n    tipo: 'consulta_potes',\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n// --- CONCLUIR DROPS EM LOTE ---\nconst regexConcluirDrops = /concluir\\s+drops?\\s+(?:(d5|d10|d15)\\s+)?(terra|navio)(?:\\s+(.+))?\\s*$/i;\nconst matchConcluirDrops = texto.match(regexConcluirDrops);\n\nif (matchConcluirDrops) {\n  const bloqueio = bloqueadoConsultor();\n  if (bloqueio) return bloqueio;\n\n  const diaFiltro = matchConcluirDrops[1] ? matchConcluirDrops[1].toUpperCase() : null;\n  const tipoTanqueFiltro = matchConcluirDrops[2].toLowerCase() === 'navio' ? 'Navio' : 'Terra';\n  const navioFiltro = (tipoTanqueFiltro === 'Navio' && matchConcluirDrops[3])\n    ? matchConcluirDrops[3].trim().toUpperCase()\n    : null;\n\n  return output({\n    tipo: 'concluir_drops',\n    diaFiltro,\n    tipoTanqueFiltro,\n    navioFiltro,\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n// --- AMOSTRA (fluxo existente, sem mudança de lógica) ---\nconst regexAmostra = /amostra\\s+(\\d+)/i;\nconst regexAnalise = /analise\\s+([a-zA-ZÀ-ú]+)/i;\nconst regexData = /(\\d{2}\\/\\d{2}\\/\\d{4})/;\n\nconst matchAmostra = texto.match(regexAmostra);\nconst matchAnalise = texto.match(regexAnalise);\nconst matchDataAmostra = texto.match(regexData);\n\nreturn output({\n  tipo: 'amostra',\n  idRegistro: `AM-${Date.now()}`,\n  amostra: matchAmostra ? matchAmostra[1] : null,\n  analise: matchAnalise ? matchAnalise[1] : null,\n  data: matchDataAmostra ? matchDataAmostra[1] : null,\n  mensagem_original: texto,\n  numero: numeroRemetente,\n  nomeContato: nomeContato\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -256,
+        208
+      ],
+      "id": "dbd2e383-1b2f-4b4d-a5e5-2ed694987878",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1dc30dbb-66b9-421b-aa9b-7ec76bed5bc4",
+              "leftValue": "={{ $json.amostra }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "41af8736-8320-4a0e-a30a-4f00686c3c40",
+              "leftValue": "={{ $json.analise }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "6c233895-7554-4b67-8e0d-ed314100d38b",
+              "leftValue": "={{ $json.data }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        272,
+        208
+      ],
+      "id": "1f75edfc-6b49-45e5-8b96-6b2d6701bd00",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "582f5a84-c774-4161-a18d-7174b2224751",
+              "name": "Resposta",
+              "value": " Não foi possível registrar. Verifique se amostra, analise e data foram informados corretamente.",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        528,
+        304
+      ],
+      "id": "329a84aa-18e5-4787-86a9-c42d663e5643",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "678aa8a5-07e7-4edf-9209-ac108ad88996",
+              "name": "Resposta",
+              "value": "=✅ Amostra registrada.\n\nAmostra: {{ $json.Amostra }}\nAnálise: {{ $json.Analise }}\nData: {{ $json['Data Entrada'] }}\nStatus: {{ $json.Status }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        784,
+        208
+      ],
+      "id": "02260f42-39c1-4bde-b368-c00b09b09516",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.Resposta }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1312,
+        208
+      ],
+      "id": "57f8143e-7dc3-49c8-8616-11a0bffa72c1",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "respondWith": "text",
+        "responseBody": "={{ $json.Resposta }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1040,
+        304
+      ],
+      "id": "1f50dc90-5e1d-4382-884f-23ebc70fb1c7",
+      "name": "Respond to Webhook1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://labflow-evolution:8080/message/sendText/labflow2",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": []
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "={{ $('Code in JavaScript').item.json.numero.replace('@s.whatsapp.net', '') }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.Resposta }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        784,
+        304
+      ],
+      "id": "9cc87618-859f-45cd-bee2-6719d774f150",
+      "name": "HTTP Request",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "EVOLUTION_CREDENTIAL_ID",
+          "name": "Evolution API (servidor)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://labflow-evolution:8080/message/sendText/labflow2",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "={{ $('Code in JavaScript').item.json.numero.replace('@s.whatsapp.net', '') }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.Resposta }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1040,
+        208
+      ],
+      "id": "c05d0784-a247-4de6-8ca2-84ce15e99368",
+      "name": "HTTP Request1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "EVOLUTION_CREDENTIAL_ID",
+          "name": "Evolution API (servidor)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "59c5a933-e68a-4701-9b06-d46111742eb8",
+              "leftValue": "={{ $json.body.data.key.fromMe }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "false",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "e876a092-5073-47a4-8b30-3a07db9adb2b",
+              "leftValue": "={{ $json.body.data.message.conversation }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        -784,
+        208
+      ],
+      "id": "8fbf055d-3c99-452f-a31c-0dcd891face6",
+      "name": "Filter"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "drops",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        800
+      ],
+      "id": "2ab35a25-db80-4449-9bfe-e1fb5ac149eb",
+      "name": "Split Out"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://labflow-evolution:8080/message/sendText/labflow2",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "={{ $('Code in JavaScript').item.json.numero.replace('@s.whatsapp.net', '') }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.textoResposta }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1040,
+        704
+      ],
+      "id": "99e7eb2e-1dfb-4a30-b903-df66afa1be8d",
+      "name": "HTTP Request2",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "EVOLUTION_CREDENTIAL_ID",
+          "name": "Evolution API (servidor)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1312,
+        704
+      ],
+      "id": "1eb3f94c-77f7-4966-9b1a-ee9fe5ec4b2e",
+      "name": "Respond to Webhook2"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "=   {{ $json.tipo }}",
+                    "rightValue": "   amostra",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "5052a217-efba-4c8f-ac04-325de8232d55"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "amostra"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "aab8e853-4fe7-4502-a451-c4636a62c135",
+                    "leftValue": "={{ $json.tipo }}",
+                    "rightValue": "coleta_terra",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "coleta_terra"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "cfc41b50-832e-4fcd-a267-e8d9a3577aa1",
+                    "leftValue": "={{ $json.tipo }}",
+                    "rightValue": "coleta_navio",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "coleta_navio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "0d5627f0-454f-439a-8e76-a9c14989cda0",
+                    "leftValue": "={{ $json.tipo }}",
+                    "rightValue": "consulta_drops",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "consulta_drops"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "1bd64b4a-3983-4385-8fdd-41fe023c4f77",
+                    "leftValue": "={{ $json.tipo }}",
+                    "rightValue": "erro_coleta",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "erro_coleta"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "7be93336-155e-4e91-be81-6ce2ed88aa80",
+                    "leftValue": "={{ $json.tipo }}",
+                    "rightValue": "consulta_bags",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "consulta_bags"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "3be0dcb8-0f4f-42f8-b73a-c672d93b18d3",
+                    "leftValue": "={{ $json.tipo }}",
+                    "rightValue": "=consulta_potes",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "consulta_potes"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "6c3ce02e-c502-4966-9623-bde3ffc6e90b",
+                    "leftValue": "={{ $json.tipo }}",
+                    "rightValue": "gerenciar_usuario",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "gerenciar_usuario"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "ee443f6f-1cee-4459-9419-83a5bd1a2963",
+                    "leftValue": "={{ $json.tipo }}",
+                    "rightValue": "registro_analise",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "registro_analise"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "ca21b3c5-3ded-4bb2-98b8-b7fc63cd7fbd",
+                    "leftValue": "={{ $json.tipo }}",
+                    "rightValue": "consulta_analises_terra",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "consulta_analises_terra"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "7181f1ac-e7c3-418e-b53f-286e59d1d465",
+                    "leftValue": "={{ $json.tipo }}",
+                    "rightValue": "consulta_analises_navio",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "consulta_analises_navio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "75290c61-72ce-42cf-a5b6-d0dfb285439d",
+                    "leftValue": "={{ $json.tipo }}",
+                    "rightValue": "nao_cadastrado",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "nao_cadastrado"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "b55fd04c-3455-44b5-9b52-0a0ea9360ba2",
+                    "leftValue": "={{ $json.tipo }}",
+                    "rightValue": "concluir_drops",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "concluir_drops"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        208
+      ],
+      "id": "6808a2d0-93de-4586-998b-be5547861c8b",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "itensColeta",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        352,
+        912
+      ],
+      "id": "edd57c42-84ac-47a3-83df-eec687fa32f3",
+      "name": "Split Out1"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "drops",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        352,
+        1024
+      ],
+      "id": "5df6a9d4-67d2-4745-be79-820a52f7f9b2",
+      "name": "Split Out2"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://labflow-evolution:8080/message/sendText/labflow2",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "=  {{ $('Code in JavaScript').item.json.numero.replace('@s.whatsapp.net', '') }}"
+            },
+            {
+              "name": "text",
+              "value": "=  {{ $json.textoResposta }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        352,
+        1216
+      ],
+      "id": "c899f9ec-613c-4ad3-8ee5-1c358bf39844",
+      "name": "HTTP Request3",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "EVOLUTION_CREDENTIAL_ID",
+          "name": "Evolution API (servidor)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        512,
+        1216
+      ],
+      "id": "17a8c716-c1c6-4160-a61a-4b380fc46d5e",
+      "name": "Respond to Webhook3"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "SEU_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "LabFlow - Dados",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1161277391,
+          "mode": "list",
+          "cachedResultName": "DROPS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit#gid=1161277391"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        288,
+        1568
+      ],
+      "id": "0b1d965e-831f-43cc-8374-1cc5a0bc596b",
+      "name": "Get rows DROPS",
+      "credentials": {
+        "googleApi": {
+          "id": "GOOGLE_CREDENTIAL_ID",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const dropsRows = $('Get rows DROPS').all();\n\nconst hoje = new Date();\nconst hojeStr = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });\n\nconst dropsHoje = dropsRows.filter(item => {\n  const data = item.json['DATA PREVISTA'];\n  const status = (item.json['STATUS'] || '').trim().toLowerCase();\n  return data === hojeStr && status !== 'concluido' && status !== 'concluído';\n});\n\nconst grupos = {};\ndropsHoje.forEach(item => {\n  const dia = item.json['DIA DROP'];\n  const tanque = item.json['TANQUE'];\n  const tipoTanque = (item.json['TIPO TANQUE'] || '').trim().toLowerCase();\n  const navio = item.json['NAVIO'];\n\n  if (!grupos[dia]) grupos[dia] = { terra: [], navios: {} };\n\n  if (tipoTanque === 'navio' && navio) {\n    (grupos[dia].navios[navio] ??= []).push(tanque);\n  } else {\n    grupos[dia].terra.push(tanque);\n  }\n});\n\nconst ordem = ['D5', 'D10', 'D15'];\nconst linhas = ordem\n  .filter(dia => grupos[dia])\n  .map(dia => {\n    const g = grupos[dia];\n    const partes = [...g.terra];\n    Object.entries(g.navios).forEach(([nome, tanques]) => {\n      partes.push(`${tanques.join(',')}  NAVIO ${nome}`);\n    });\n    const diasNum = parseInt(dia.replace('D', ''), 10);\n    const dataColeta = new Date(hoje);\n    dataColeta.setDate(dataColeta.getDate() - diasNum);\n    return `${dia} -  Tanques ${partes.join(', ')} - coletados ${dataColeta.toLocaleDateString('pt-BR')}`;\n  });\n\nconst texto = linhas.length\n  ? linhas.join('\\n')\n  : `Nenhum drop previsto para hoje (${hojeStr}).`;\n\nreturn [{ json: { textoResposta: texto } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        1568
+      ],
+      "id": "d91f1d98-8b66-4660-a86b-e6c87cd7e666",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://labflow-evolution:8080/message/sendText/labflow2",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": []
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "={{ $('Code in JavaScript').item.json.numero.replace('@s.whatsapp.net', '') }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.textoResposta }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        640,
+        1568
+      ],
+      "id": "4be6b129-0a55-4dc5-be7e-83b5a980f18d",
+      "name": "HTTP Request4",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "EVOLUTION_CREDENTIAL_ID",
+          "name": "Evolution API (servidor)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        800,
+        1600
+      ],
+      "id": "5709f12f-1c17-4a7e-a384-90f017d12107",
+      "name": "Respond to Webhook4"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://labflow-evolution:8080/message/sendText/labflow2",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "={{ $('Code in JavaScript').item.json.numero.replace('@s.whatsapp.net', '') }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.textoResposta }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        272,
+        1808
+      ],
+      "id": "50b87cc0-252a-47a6-9dae-be947ce33cb5",
+      "name": "HTTP erro_coleta",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "EVOLUTION_CREDENTIAL_ID",
+          "name": "Evolution API (servidor)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        528,
+        1808
+      ],
+      "id": "88886574-3bab-439b-9656-b85099aa46d8",
+      "name": "Respond to Webhook5"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "SEU_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "LabFlow - Dados",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1274153667,
+          "mode": "list",
+          "cachedResultName": "COLETAS_NAVIO",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit#gid=1274153667"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID": "={{ $json.idColeta }}",
+            "Navio": "={{ $json.navio }}",
+            "Tanque": "={{ $json.tanque }}",
+            "Data Coleta": "={{ $json.dataColeta }}",
+            "Responsavel": "={{ $json.responsavel }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Navio",
+              "displayName": "Navio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Tanque",
+              "displayName": "Tanque",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Data Coleta",
+              "displayName": "Data Coleta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Responsavel",
+              "displayName": "Responsavel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Observação",
+              "displayName": "Observação",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        512,
+        896
+      ],
+      "id": "41f5af81-1243-4127-bf9d-4799ee5e0d0e",
+      "name": "Append COLETAS_NAVIO",
+      "credentials": {
+        "googleApi": {
+          "id": "GOOGLE_CREDENTIAL_ID",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "SEU_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "LabFlow - Dados",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1161277391,
+          "mode": "list",
+          "cachedResultName": "DROPS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit#gid=1161277391"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID": "={{ $json.idDrop }}",
+            "ID COLETA": "={{ $json.idColeta }}",
+            "TIPO TANQUE": "={{ $json.tipoTanque }}",
+            "TANQUE": "={{ $json.tanque }}",
+            "NAVIO": "={{ $json.navio }}",
+            "DIA DROP": "={{ $json.diaDrop }}",
+            "STATUS": "={{ $json.status }}",
+            "DATA PREVISTA": "={{ $json.dataPrevista }}",
+            "RESPONSAVEL": "={{ $json.responsavel }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ID COLETA",
+              "displayName": "ID COLETA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "TIPO TANQUE",
+              "displayName": "TIPO TANQUE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "TANQUE",
+              "displayName": "TANQUE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "NAVIO",
+              "displayName": "NAVIO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "DIA DROP",
+              "displayName": "DIA DROP",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "DATA PREVISTA",
+              "displayName": "DATA PREVISTA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "STATUS",
+              "displayName": "STATUS",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "RESPONSAVEL",
+              "displayName": "RESPONSAVEL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        512,
+        1008
+      ],
+      "id": "877af7ea-b5f5-4d6a-891f-21d56acb60b5",
+      "name": "Append row DROPS",
+      "credentials": {
+        "googleApi": {
+          "id": "GOOGLE_CREDENTIAL_ID",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "SEU_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "LabFlow - Dados",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 655180568,
+          "mode": "list",
+          "cachedResultName": "COLETAS_TERRA",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit#gid=655180568"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID": "={{ $json.idColeta }}",
+            "Tanque": "={{ $json.tanque }}",
+            "Data Coleta": "={{ $json.dataColeta }}",
+            "Responsavel": "={{ $json.responsavel }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Tanque",
+              "displayName": "Tanque",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Data Coleta",
+              "displayName": "Data Coleta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Responsavel",
+              "displayName": "Responsavel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Observação",
+              "displayName": "Observação",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1312,
+        912
+      ],
+      "id": "a1bffe86-2936-4783-80c3-776db9f91cc7",
+      "name": "Append Row COLETAS_TERRA",
+      "credentials": {
+        "googleApi": {
+          "id": "GOOGLE_CREDENTIAL_ID",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "SEU_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "LabFlow - Dados",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1161277391,
+          "mode": "list",
+          "cachedResultName": "DROPS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit#gid=1161277391"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID": "={{ $json.idDrop }}",
+            "ID COLETA": "={{ $json.idColeta }}",
+            "TIPO TANQUE": "={{ $json.tipoTanque }}",
+            "TANQUE": "={{ $json.tanque }}",
+            "NAVIO": "={{ $json.navio }}",
+            "DIA DROP": "={{ $json.diaDrop }}",
+            "DATA PREVISTA": "={{ $json.dataPrevista }}",
+            "STATUS": "={{ $json.status }}",
+            "RESPONSAVEL": "={{ $json.responsavel }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ID COLETA",
+              "displayName": "ID COLETA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "TIPO TANQUE",
+              "displayName": "TIPO TANQUE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "TANQUE",
+              "displayName": "TANQUE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "NAVIO",
+              "displayName": "NAVIO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "DIA DROP",
+              "displayName": "DIA DROP",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "DATA PREVISTA",
+              "displayName": "DATA PREVISTA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "STATUS",
+              "displayName": "STATUS",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "RESPONSAVEL",
+              "displayName": "RESPONSAVEL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1312,
+        800
+      ],
+      "id": "dd7ea2c2-0bfc-4876-936b-871ae1153327",
+      "name": "Append row in DROPS",
+      "credentials": {
+        "googleApi": {
+          "id": "GOOGLE_CREDENTIAL_ID",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "SEU_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "LabFlow - Dados",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "AMOSTRAS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID": "={{ $json.idRegistro }}",
+            "Amostra": "={{ $json.amostra }}",
+            "Analise": "={{ $json.analise }}",
+            "Data Entrada": "={{ $json.data }}",
+            "Status": "Pendente",
+            "Responsavel": "={{ $json.nomeContato }}",
+            "Observacao": "="
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Amostra",
+              "displayName": "Amostra",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Analise",
+              "displayName": "Analise",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Data Entrada",
+              "displayName": "Data Entrada",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Responsavel",
+              "displayName": "Responsavel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Observacao",
+              "displayName": "Observacao",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        528,
+        208
+      ],
+      "id": "d3aeeefc-5c41-4de3-a755-857900f87289",
+      "name": "Append row in AMOSTRAS",
+      "alwaysOutputData": false,
+      "credentials": {
+        "googleApi": {
+          "id": "GOOGLE_CREDENTIAL_ID",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "SEU_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "LabFlow - Dados",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1181361168,
+          "mode": "list",
+          "cachedResultName": "BAGS_TERRA",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit#gid=1181361168"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID": "={{ $json.id }}",
+            "Tanque": "={{ $json.tanque }}",
+            "Responsavel": "={{ $json.responsavel }}",
+            "ID Coleta": "={{ $json.idColeta }}",
+            "Data Coleta": "={{ $json.dataColeta }}",
+            "Data Descarte Prevista": "={{ $json.dataDescarte }}",
+            "Status": "={{ $json.status }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ID Coleta",
+              "displayName": "ID Coleta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Tanque",
+              "displayName": "Tanque",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Data Coleta",
+              "displayName": "Data Coleta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Data Descarte Prevista",
+              "displayName": "Data Descarte Prevista",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Responsavel",
+              "displayName": "Responsavel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1312,
+        1008
+      ],
+      "id": "841ee5e6-1a3f-43c8-b9b9-82e35ecc81f6",
+      "name": "Append Row BAGS_TERRA",
+      "credentials": {
+        "googleApi": {
+          "id": "GOOGLE_CREDENTIAL_ID",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "arquivosNavio",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        352,
+        1120
+      ],
+      "id": "82b25db6-0b7e-4f1f-ae50-533c94801ca9",
+      "name": "Split Out arquivosNavio"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "SEU_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "LabFlow - Dados",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 2126769382,
+          "mode": "list",
+          "cachedResultName": "POTES_NAVIO",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit#gid=2126769382"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID": "={{ $json.idColeta }}",
+            "Navio": "={{ $json.navio }}",
+            "Tanque": "={{ $json.tanque }}",
+            "Data Coleta": "={{ $json.dataColeta }}",
+            "Responsavel": "={{ $json.responsavel }}",
+            "ID Coleta": "={{ $json.idColeta }}",
+            "Data Descarte Prevista": "={{ $json.dataDescarte }}",
+            "Status": "={{ $json.status }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ID Coleta",
+              "displayName": "ID Coleta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Navio",
+              "displayName": "Navio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Tanque",
+              "displayName": "Tanque",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Data Coleta",
+              "displayName": "Data Coleta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Data Descarte Prevista",
+              "displayName": "Data Descarte Prevista",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Responsavel",
+              "displayName": "Responsavel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        512,
+        1104
+      ],
+      "id": "4d29a0cd-048f-4515-a208-95423fba8d02",
+      "name": "Append POTES_NAVIO",
+      "credentials": {
+        "googleApi": {
+          "id": "GOOGLE_CREDENTIAL_ID",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "SEU_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "LabFlow - Dados",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1181361168,
+          "mode": "list",
+          "cachedResultName": "BAGS_TERRA",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit#gid=1181361168"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        272,
+        2208
+      ],
+      "id": "24132553-454a-4df9-9108-4233408cb992",
+      "name": "Get rows BAGS_TERRA",
+      "credentials": {
+        "googleApi": {
+          "id": "GOOGLE_CREDENTIAL_ID",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const hojeStr = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });\n\nconst pendentes = $input.all()\n  .map(item => item.json)\n  .filter(row => row['Data Descarte Prevista'] === hojeStr && row['Status'] !== 'Descartado');\n\nif (pendentes.length === 0) {\n  return [{ json: { textoResposta: `♻️ Nenhuma bag de terra pra descartar hoje (${hojeStr}).` } }];\n}\n\nconst linhas = pendentes.map(r => `Tanque ${r['Tanque']} - coletado ${r['Data Coleta']}`).join('\\n');\nconst texto = `♻️ Bags de terra pra descartar hoje (${hojeStr}):\\n${linhas}\\nTotal: ${pendentes.length} bag(s)`;\n\nreturn [{ json: { textoResposta: texto } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        528,
+        2208
+      ],
+      "id": "514cac20-711d-4d0a-9a4c-c0a20f0193d8",
+      "name": "Code in JavaScript resposta Bags"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://labflow-evolution:8080/message/sendText/labflow2",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "={{ $('Code in JavaScript').item.json.numero.replace('@s.whatsapp.net', '') }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.textoResposta }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        784,
+        2208
+      ],
+      "id": "e19e94e9-6ae9-425a-aa12-e605ec95685e",
+      "name": "HTTP Request5",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "EVOLUTION_CREDENTIAL_ID",
+          "name": "Evolution API (servidor)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1040,
+        2208
+      ],
+      "id": "b76b140d-3dce-4279-837f-bb330984406a",
+      "name": "Respond to Webhook6"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1040,
+        2608
+      ],
+      "id": "7c638e95-ebf1-484c-9782-0be4ef2ba1f7",
+      "name": "Respond to Webhook7"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "SEU_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "LabFlow - Dados",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 2126769382,
+          "mode": "list",
+          "cachedResultName": "POTES_NAVIO",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit#gid=2126769382"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        272,
+        2608
+      ],
+      "id": "629daca6-8cca-414c-b67e-c45fbb8f3363",
+      "name": "Get rows POTES_ARQ_NAVIO",
+      "credentials": {
+        "googleApi": {
+          "id": "GOOGLE_CREDENTIAL_ID",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const hojeStr = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });\n\nconst pendentes = $input.all()\n  .map(item => item.json)\n  .filter(row => row['Data Descarte Prevista'] === hojeStr && row['Status'] !== 'Descartado');\n\nif (pendentes.length === 0) {\n  return [{ json: { textoResposta: `♻️ Nenhum pote de navio pra descartar hoje (${hojeStr}).` } }];\n}\n\nconst linhas = pendentes.map(r => `Tanque ${r['Tanque']} (${r['Navio']}) - coletado ${r['Data Coleta']}`).join('\\n');\nconst texto = `♻️ Potes de navio pra descartar hoje (${hojeStr}):\\n${linhas}\\nTotal: ${pendentes.length} pote(s)`;\n\nreturn [{ json: { textoResposta: texto } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        528,
+        2608
+      ],
+      "id": "17543266-e7b0-4c79-a6c7-7b54cb805dee",
+      "name": "Code in JavaScript POTES_ARQ_NAVIO"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://labflow-evolution:8080/message/sendText/labflow2",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "={{ $('Code in JavaScript').item.json.numero.replace('@s.whatsapp.net', '') }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.textoResposta }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        784,
+        2608
+      ],
+      "id": "e37e7956-968e-4c82-a3fb-bada2ac34683",
+      "name": "HTTP Request POTES_ARQ_NAVIO",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "EVOLUTION_CREDENTIAL_ID",
+          "name": "Evolution API (servidor)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "SEU_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "LabFlow - Dados",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1470633693,
+          "mode": "list",
+          "cachedResultName": "USUARIOS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit#gid=1470633693"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -528,
+        208
+      ],
+      "id": "82c2923f-f337-496e-a220-96baf7da6bef",
+      "name": "Get rows USUARIOS",
+      "credentials": {
+        "googleApi": {
+          "id": "GOOGLE_CREDENTIAL_ID",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f02db183-3fba-4c8c-b493-93a881888cc1",
+              "leftValue": "={{ $json.autorizado }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        272,
+        3008
+      ],
+      "id": "02692aa1-708a-42c9-b21b-1cee476e8dc2",
+      "name": "If_autorizar_usuario"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "SEU_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "LabFlow - Dados",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1470633693,
+          "mode": "list",
+          "cachedResultName": "USUARIOS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit#gid=1470633693"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Numero": "={{ $json.NumeroAlvo }}",
+            "Nome": "=",
+            "Nivel": "={{ $json.NivelNovo }}"
+          },
+          "matchingColumns": [
+            "Numero"
+          ],
+          "schema": [
+            {
+              "id": "Numero",
+              "displayName": "Numero",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Nome",
+              "displayName": "Nome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Nivel",
+              "displayName": "Nivel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        528,
+        3008
+      ],
+      "id": "4ebf1ec0-ff88-4b0c-b92d-d9c936be13cd",
+      "name": "Append or Update USUARIOS",
+      "credentials": {
+        "googleApi": {
+          "id": "GOOGLE_CREDENTIAL_ID",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://labflow-evolution:8080/message/sendText/labflow2",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "={{ $('Code in JavaScript').item.json.numero.replace('@s.whatsapp.net', '') }}"
+            },
+            {
+              "name": "text",
+              "value": "= {{ $('Code in JavaScript').item.json.textoResposta }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        784,
+        3008
+      ],
+      "id": "906da0c0-4f08-4468-b280-8f2bcb77fa29",
+      "name": "HTTP Request (cargo - sucesso)",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "EVOLUTION_CREDENTIAL_ID",
+          "name": "Evolution API (servidor)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1040,
+        3008
+      ],
+      "id": "6bd64993-6086-4a4a-86d6-9fae501c3c96",
+      "name": "Respond to Webhook8"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://labflow-evolution:8080/message/sendText/labflow2",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": []
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "=  {{ $('Code in JavaScript').item.json.numero.replace('@s.whatsapp.net', '') }}"
+            },
+            {
+              "name": "text",
+              "value": "=  {{ $json.textoResposta }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        528,
+        3104
+      ],
+      "id": "08b4647f-9bf3-4cb0-a975-61b0f02e4651",
+      "name": "HTTP Request (cargo - negado)",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "EVOLUTION_CREDENTIAL_ID",
+          "name": "Evolution API (servidor)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        784,
+        3104
+      ],
+      "id": "85ce1121-19c5-4ddd-bf64-cff17c89d47f",
+      "name": "Respond to Webhook9"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "90897e5b-4b3b-4cd9-a98e-052cbee3b1be",
+              "leftValue": "={{ $json._sincronizarNome }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "a55ec618-3cd6-4fb0-83f4-b72b0b8e79ae",
+      "name": "If sincronizarNome"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "SEU_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "LabFlow - Dados",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1470633693,
+          "mode": "list",
+          "cachedResultName": "USUARIOS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit#gid=1470633693"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Numero": "={{ $json._numeroRemetenteLimpo }}",
+            "Nome": "={{ $json._nomeContatoAtual }}"
+          },
+          "matchingColumns": [
+            "Numero"
+          ],
+          "schema": [
+            {
+              "id": "Numero",
+              "displayName": "Numero",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Nome",
+              "displayName": "Nome",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Nivel",
+              "displayName": "Nivel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        272,
+        0
+      ],
+      "id": "e673cbbf-c1fc-44fc-927b-601d4e7e1440",
+      "name": "Get rows USUARIOS1",
+      "credentials": {
+        "googleApi": {
+          "id": "GOOGLE_CREDENTIAL_ID",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "itensColeta",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        912
+      ],
+      "id": "efe0670a-24aa-4352-8270-f3410c113f0a",
+      "name": "Split Out Coleta Terra"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "bagsArquivo",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        1008
+      ],
+      "id": "d48a9b4b-5d9e-4794-941f-5df85f2e983f",
+      "name": "Split Out Bags Terra"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "analises",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        272,
+        3408
+      ],
+      "id": "84fc11c7-5f32-4743-904f-922b2612ae34",
+      "name": "Split Out Analises"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "SEU_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "LabFlow - Dados",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1828827858,
+          "mode": "list",
+          "cachedResultName": "ANALISES",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit#gid=1828827858"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID": "={{ $json.idAnalise }}",
+            "ID Coleta": "={{ $json.idColeta }}",
+            "Tanque": "={{ $json.tanque }}",
+            "Tipo Tanque": "={{ $json.tipoTanque }}",
+            "Navio": "={{ $json.navio }}",
+            "Tipo Frasco": "={{ $json.tipoFrasco }}",
+            "Sub-Analise": "={{ $json.subAnalise }}",
+            "Metodo": "={{ $json.metodo }}",
+            "Data Analise": "={{ $json.dataAnalise }}",
+            "Data Pre-Leitura": "={{ $json.dataPreLeitura }}",
+            "Data Leitura Final": "={{ $json.dataLeituraFinal }}",
+            "Status": "={{ $json.status }}",
+            "Responsavel": "={{ $json.responsavel }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ID Coleta",
+              "displayName": "ID Coleta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Tanque",
+              "displayName": "Tanque",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Tipo Tanque",
+              "displayName": "Tipo Tanque",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Navio",
+              "displayName": "Navio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Tipo Frasco",
+              "displayName": "Tipo Frasco",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Sub-Analise",
+              "displayName": "Sub-Analise",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Metodo",
+              "displayName": "Metodo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Data Analise",
+              "displayName": "Data Analise",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Data Pre-Leitura",
+              "displayName": "Data Pre-Leitura",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Data Leitura Final",
+              "displayName": "Data Leitura Final",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Responsavel",
+              "displayName": "Responsavel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        528,
+        3408
+      ],
+      "id": "42896321-c998-4695-b766-8366eff81845",
+      "name": "Append Row ANALISES",
+      "credentials": {
+        "googleApi": {
+          "id": "GOOGLE_CREDENTIAL_ID",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://labflow-evolution:8080/message/sendText/labflow2",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "={{ $('Code in JavaScript').item.json.numero.replace('@s.whatsapp.net', '') }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.textoResposta }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        272,
+        3504
+      ],
+      "id": "dfd2a5ef-0daa-409b-b883-1e0d6c9114ec",
+      "name": "HTTP Request Analise",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "EVOLUTION_CREDENTIAL_ID",
+          "name": "Evolution API (servidor)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        528,
+        3504
+      ],
+      "id": "fee02560-dade-495b-a631-cb9406d7e280",
+      "name": "Respond to Webhook10"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "SEU_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "LabFlow - Dados",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1828827858,
+          "mode": "list",
+          "cachedResultName": "ANALISES",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit#gid=1828827858"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        272,
+        3808
+      ],
+      "id": "67f132e1-147d-4159-b246-06bce3c9c973",
+      "name": "Get rows ANALISES Terra",
+      "credentials": {
+        "googleApi": {
+          "id": "GOOGLE_CREDENTIAL_ID",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "SEU_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "LabFlow - Dados",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1828827858,
+          "mode": "list",
+          "cachedResultName": "ANALISES",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit#gid=1828827858"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        272,
+        4208
+      ],
+      "id": "2db8e0ea-4452-40e1-9262-880fa3c47d62",
+      "name": "Get rows ANALISES Navio",
+      "credentials": {
+        "googleApi": {
+          "id": "GOOGLE_CREDENTIAL_ID",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all().map(i => i.json);\nconst hojeStr = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });\n\nconst FILTRO_TIPO_TANQUE = 'Terra';\n\nconst PRAZOS = {\n  CT:   { pre: null, final: 48 },\n  BL:   { pre: 72,   final: 120 },\n  WORT: { pre: 120,  final: 240 }\n};\nconst LABELS = { CT: 'CT', BL: 'BL', WORT: 'Psicrotroficos' };\nconst ORDEM = { CT: 0, BL: 1, WORT: 2 };\n\nfunction juntarComE(lista) {\n  if (lista.length === 0) return '';\n  if (lista.length === 1) return lista[0];\n  return lista.slice(0, -1).join(', ') + ' e ' + lista[lista.length - 1];\n}\n\nconst linhasFiltradas = rows.filter(r => r['Tipo Tanque'] === FILTRO_TIPO_TANQUE);\n\nconst grupos = {};\nfunction adicionarAoGrupo(estagio, r) {\n  const subAnalise = r['Sub-Analise'];\n  const tipoFrasco = r['Tipo Frasco'];\n  const navio = r['Navio'];\n  const chave = `${subAnalise}|${estagio}|${tipoFrasco}`;\n\n  if (!grupos[chave]) {\n    grupos[chave] = {\n      subAnalise,\n      tipoFrasco,\n      prazoHoras: estagio === 'pre' ? PRAZOS[subAnalise].pre : PRAZOS[subAnalise].final,\n      tanques: [],\n      navios: {}\n    };\n  }\n\n  if (navio) {\n    (grupos[chave].navios[navio] ??= []).push(r['Tanque']);\n  } else {\n    grupos[chave].tanques.push(r['Tanque']);\n  }\n}\n\nlinhasFiltradas.forEach(r => {\n  if (r['Data Pre-Leitura'] === hojeStr) adicionarAoGrupo('pre', r);\n  if (r['Data Leitura Final'] === hojeStr) adicionarAoGrupo('final', r);\n});\n\nconst chavesOrdenadas = Object.keys(grupos).sort((a, b) => {\n  const ga = grupos[a], gb = grupos[b];\n  if (ORDEM[ga.subAnalise] !== ORDEM[gb.subAnalise]) return ORDEM[ga.subAnalise] - ORDEM[gb.subAnalise];\n  return ga.prazoHoras - gb.prazoHoras;\n});\n\nconst linhasResposta = chavesOrdenadas.map(chave => {\n  const g = grupos[chave];\n  const partes = [...g.tanques];\n  Object.entries(g.navios).forEach(([nome, tanques]) => {\n    partes.push(`${juntarComE(tanques)} NAVIO ${nome}`);\n  });\n  return `${LABELS[g.subAnalise]} (${g.prazoHoras}hrs) Tanques ${juntarComE(partes)} analise ${g.tipoFrasco}`;\n});\n\nconst texto = linhasResposta.length\n  ? linhasResposta.join('\\n')\n  : `Nenhuma análise de tanque terra sai hoje (${hojeStr}).`;\n\nreturn [{ json: { textoResposta: texto } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        528,
+        3808
+      ],
+      "id": "69f44f38-9ba2-44d9-84fe-2448e42e69ca",
+      "name": "Code Analises Terra"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://labflow-evolution:8080/message/sendText/labflow2",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "=  {{ $('Code in JavaScript').item.json.numero.replace('@s.whatsapp.net', '') }}"
+            },
+            {
+              "name": "text",
+              "value": "=  {{ $json.textoResposta }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        784,
+        3808
+      ],
+      "id": "3ca3ab33-617f-471b-8f08-f821c7e8cdfe",
+      "name": "HTTP Request Analises Terra",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "EVOLUTION_CREDENTIAL_ID",
+          "name": "Evolution API (servidor)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://labflow-evolution:8080/message/sendText/labflow2",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "=  {{ $('Code in JavaScript').item.json.numero.replace('@s.whatsapp.net', '') }}"
+            },
+            {
+              "name": "text",
+              "value": "=  {{ $json.textoResposta }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        784,
+        4208
+      ],
+      "id": "6d6aed36-cf10-4f36-9933-0d56070599eb",
+      "name": "HTTP Request Analises Navio",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "EVOLUTION_CREDENTIAL_ID",
+          "name": "Evolution API (servidor)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all().map(i => i.json);\nconst hojeStr = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });\n\nconst FILTRO_TIPO_TANQUE = 'Navio';\n\nconst PRAZOS = {\n  CT:   { pre: null, final: 48 },\n  BL:   { pre: 72,   final: 120 },\n  WORT: { pre: 120,  final: 240 }\n};\nconst LABELS = { CT: 'CT', BL: 'BL', WORT: 'Psicrotroficos' };\nconst ORDEM = { CT: 0, BL: 1, WORT: 2 };\n\nfunction juntarComE(lista) {\n  if (lista.length === 0) return '';\n  if (lista.length === 1) return lista[0];\n  return lista.slice(0, -1).join(', ') + ' e ' + lista[lista.length - 1];\n}\n\nconst linhasFiltradas = rows.filter(r => r['Tipo Tanque'] === FILTRO_TIPO_TANQUE);\n\nconst grupos = {};\nfunction adicionarAoGrupo(estagio, r) {\n  const subAnalise = r['Sub-Analise'];\n  const tipoFrasco = r['Tipo Frasco'];\n  const navio = r['Navio'];\n  const chave = `${subAnalise}|${estagio}|${tipoFrasco}`;\n\n  if (!grupos[chave]) {\n    grupos[chave] = {\n      subAnalise,\n      tipoFrasco,\n      prazoHoras: estagio === 'pre' ? PRAZOS[subAnalise].pre : PRAZOS[subAnalise].final,\n      tanques: [],\n      navios: {}\n    };\n  }\n\n  if (navio) {\n    (grupos[chave].navios[navio] ??= []).push(r['Tanque']);\n  } else {\n    grupos[chave].tanques.push(r['Tanque']);\n  }\n}\n\nlinhasFiltradas.forEach(r => {\n  if (r['Data Pre-Leitura'] === hojeStr) adicionarAoGrupo('pre', r);\n  if (r['Data Leitura Final'] === hojeStr) adicionarAoGrupo('final', r);\n});\n\nconst chavesOrdenadas = Object.keys(grupos).sort((a, b) => {\n  const ga = grupos[a], gb = grupos[b];\n  if (ORDEM[ga.subAnalise] !== ORDEM[gb.subAnalise]) return ORDEM[ga.subAnalise] - ORDEM[gb.subAnalise];\n  return ga.prazoHoras - gb.prazoHoras;\n});\n\nconst linhasResposta = chavesOrdenadas.map(chave => {\n  const g = grupos[chave];\n  const partes = [...g.tanques];\n  Object.entries(g.navios).forEach(([nome, tanques]) => {\n    partes.push(`${juntarComE(tanques)} NAVIO ${nome}`);\n  });\n  return `${LABELS[g.subAnalise]} (${g.prazoHoras}hrs) Tanques ${juntarComE(partes)} analise ${g.tipoFrasco}`;\n});\n\nconst texto = linhasResposta.length\n  ? linhasResposta.join('\\n')\n  : `Nenhuma análise de tanque navio sai hoje (${hojeStr}).`;\n\nreturn [{ json: { textoResposta: texto } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        528,
+        4208
+      ],
+      "id": "86079f42-0a24-45b8-af81-ea229d431ce0",
+      "name": "Code in JavaScript2 Navio"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://labflow-evolution:8080/message/sendText/labflow2",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "={{ $('Code in JavaScript').item.json.numero.replace('@s.whatsapp.net', '') }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.textoResposta }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        272,
+        4608
+      ],
+      "id": "eb9e2a67-473d-4024-9f95-aa2f48cf15c6",
+      "name": "HTTP Request Nao Cadastrado",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "EVOLUTION_CREDENTIAL_ID",
+          "name": "Evolution API (servidor)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        528,
+        4608
+      ],
+      "id": "e965806d-5413-4c0f-b146-7c10464de423",
+      "name": "Respond to Webhook11"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "SEU_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "LabFlow - Dados",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 655180568,
+          "mode": "list",
+          "cachedResultName": "COLETAS_TERRA",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit#gid=655180568"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        272,
+        608
+      ],
+      "id": "1b45ef06-d07d-42b7-a31f-295b2b08fbf7",
+      "name": "Get rows COLETAS_TERRA",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleApi": {
+          "id": "GOOGLE_CREDENTIAL_ID",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const coletas = $input.all().map(i => i.json);\nconst item = $('Code in JavaScript').first().json;\nconst { tanques, dataColeta } = item;\n\nconst duplicados = tanques.filter(tanque =>\n  coletas.some(c => String(c['Tanque']) === String(tanque) && c['Data Coleta'] === dataColeta)\n);\n\nif (duplicados.length > 0) {\n  const linhas = duplicados.map(tanque => {\n    const linha = coletas.find(c => String(c['Tanque']) === String(tanque) && c['Data Coleta'] === dataColeta);\n    return `Tanque ${tanque} (coletado por ${linha['Responsavel']})`;\n  });\n  return [{ json: {\n    ...item,\n    duplicado: true,\n    textoResposta: `❌ Coleta já registrada:\\n${linhas.join('\\n')}\\n\\nData: ${dataColeta}. Nada foi gravado.`\n  } }];\n}\n\nreturn [{ json: { ...item, duplicado: false } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        528,
+        608
+      ],
+      "id": "2e0fa0a3-cdcb-420c-aa42-5afe8821f7b4",
+      "name": "Checar Duplicata Terra"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ede8f6cb-a899-41c5-bd82-f8e531926404",
+              "leftValue": "={{ $json.duplicado }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        784,
+        608
+      ],
+      "id": "4bdff2be-b360-4aef-b074-ccdc7df518f3",
+      "name": "If Duplicado Terra"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://labflow-evolution:8080/message/sendText/labflow2",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "={{ $('Code in JavaScript').item.json.numero.replace('@s.whatsapp.net', '') }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.textoResposta }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1040,
+        608
+      ],
+      "id": "904e4c78-289b-46bd-9add-113d92d29e45",
+      "name": "HTTP Duplicado Terra",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "EVOLUTION_CREDENTIAL_ID",
+          "name": "Evolution API (servidor)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1312,
+        608
+      ],
+      "id": "c1459905-82eb-41ec-9a9d-905e59b47580",
+      "name": "Respond to Webhook Dup Terra"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1040,
+        3808
+      ],
+      "id": "f575e9f0-6093-45c4-9470-041b912dfd57",
+      "name": "Respond to Webhook Analises Terra"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1040,
+        4208
+      ],
+      "id": "d3aadcd3-59e2-41fe-8a1f-2b5bfb8cfaf5",
+      "name": "Respond to Webhook Analises Navio"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "SEU_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "LabFlow - Dados",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1274153667,
+          "mode": "list",
+          "cachedResultName": "COLETAS_NAVIO",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit#gid=1274153667"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        512,
+        1344
+      ],
+      "id": "9ecd7b35-c45f-4e54-9851-fa1de7d54f50",
+      "name": "Get rows COLETAS_NAVIO",
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleApi": {
+          "id": "GOOGLE_CREDENTIAL_ID",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const coletas = $input.all().map(i => i.json);\nconst item = $('Code in JavaScript').first().json;\nconst { tanques, dataColeta, navio } = item;\n\nconst duplicados = tanques.filter(tanque =>\n  coletas.some(c =>\n    String(c['Tanque']) === String(tanque) &&\n    c['Data Coleta'] === dataColeta &&\n    String(c['Navio']).toUpperCase() === String(navio).toUpperCase()\n  )\n);\n\nif (duplicados.length > 0) {\n  const linhas = duplicados.map(tanque => {\n    const linha = coletas.find(c =>\n      String(c['Tanque']) === String(tanque) &&\n      c['Data Coleta'] === dataColeta &&\n      String(c['Navio']).toUpperCase() === String(navio).toUpperCase()\n    );\n    return `Tanque ${tanque} (coletado por ${linha['Responsavel']})`;\n  });\n  return [{ json: {\n    ...item,\n    duplicado: true,\n    textoResposta: `❌ Coleta já registrada:\\n${linhas.join('\\n')}\\n\\nNavio: ${navio}\\nData: ${dataColeta}. Nada foi gravado.`\n  } }];\n}\n\nreturn [{ json: { ...item, duplicado: false } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        704,
+        1328
+      ],
+      "id": "2cad3fea-79ad-4672-b0c2-544d92e867cd",
+      "name": "Checar Duplicata Navio"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "539d7526-6be0-4331-ba9a-ea908a7d99de",
+              "leftValue": "={{ $json.duplicado }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        880,
+        1328
+      ],
+      "id": "774e4d59-e871-439d-98ed-3dcb7694b629",
+      "name": "If Duplicado Navio"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://labflow-evolution:8080/message/sendText/labflow2",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "={{ $('Code in JavaScript').item.json.numero.replace('@s.whatsapp.net', '') }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.textoResposta }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        1024,
+        1328
+      ],
+      "id": "436ff24c-f4bc-44d5-9848-1a33c8025985",
+      "name": "HTTP Duplicado Navio",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "EVOLUTION_CREDENTIAL_ID",
+          "name": "Evolution API (servidor)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1152,
+        1328
+      ],
+      "id": "1285ca3c-c212-4e22-a331-f455c3efb16a",
+      "name": "Respond to Webhook12"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "documentId": {
+          "__rl": true,
+          "value": "SEU_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "LabFlow - Dados",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1161277391,
+          "mode": "list",
+          "cachedResultName": "DROPS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit#gid=1161277391"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        288,
+        4880
+      ],
+      "id": "5c7c8c3b-49f9-4df9-88ed-32f3c16ae050",
+      "name": "Get rows DROPS Concluir",
+      "credentials": {
+        "googleApi": {
+          "id": "GOOGLE_CREDENTIAL_ID",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all().map(i => i.json);\nconst item = $('Code in JavaScript').first().json;\nconst { diaFiltro, tipoTanqueFiltro, navioFiltro } = item;\n\nconst hojeStr = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });\n\nfunction parseData(str) {\n  const [d, m, a] = str.split('/').map(Number);\n  return new Date(a, m - 1, d);\n}\nfunction formatarData(d) {\n  return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;\n}\n\nconst encontrados = rows.filter(r => {\n  if (r['TIPO TANQUE'] !== tipoTanqueFiltro) return false;\n  if ((r['STATUS'] || '').trim() !== 'Pendente') return false;\n  if (r['DATA PREVISTA'] !== hojeStr) return false;\n  if (diaFiltro && r['DIA DROP'] !== diaFiltro) return false;\n  if (navioFiltro && String(r['NAVIO']).toUpperCase() !== navioFiltro) return false;\n  return true;\n});\n\nif (encontrados.length === 0) {\n  const descFiltro = [diaFiltro || 'qualquer dia', tipoTanqueFiltro, navioFiltro || '']\n    .filter(Boolean).join(' / ');\n  return [{ json: {\n    ...item,\n    drops: [],\n    textoResposta: `❌ Nenhum drop pendente encontrado para concluir hoje (${hojeStr}). Filtro: ${descFiltro}.`\n  } }];\n}\n\nconst drops = encontrados.map(r => {\n  const diasNum = parseInt(r['DIA DROP'].replace('D', ''), 10);\n  const dataColeta = new Date(parseData(r['DATA PREVISTA']));\n  dataColeta.setDate(dataColeta.getDate() - diasNum);\n  return {\n    id: r['ID'],\n    tanque: r['TANQUE'],\n    navio: r['NAVIO'],\n    diaDrop: r['DIA DROP'],\n    dataColeta: formatarData(dataColeta)\n  };\n});\n\nconst linhas = drops.map(d =>\n  `Tanque ${d.tanque}${d.navio ? ' NAVIO ' + d.navio : ''} (${d.diaDrop}) - coletado ${d.dataColeta}`\n).join('\\n');\n\nconst textoResposta = `✅ Drops concluídos hoje (${hojeStr}):\\n${linhas}\\n\\nTotal: ${drops.length} drop${drops.length === 1 ? '' : 's'} concluído${drops.length === 1 ? '' : 's'}.`;\n\nreturn [{ json: { ...item, drops, textoResposta } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        560,
+        4880
+      ],
+      "id": "1700b1fb-cc7e-4a0c-a86a-a17bc3c4a660",
+      "name": "Filtrar Drops Para Concluir"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://labflow-evolution:8080/message/sendText/labflow2",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "=  {{ $('Code in JavaScript').item.json.numero.replace('@s.whatsapp.net', '') }}"
+            },
+            {
+              "name": "text",
+              "value": "=  {{ $json.textoResposta }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        816,
+        4880
+      ],
+      "id": "6dede8c8-3058-4c6f-a718-84e9a84795dc",
+      "name": "HTTP Request Concluir Drops",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "EVOLUTION_CREDENTIAL_ID",
+          "name": "Evolution API (servidor)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        1040,
+        4880
+      ],
+      "id": "ef20bfcb-3e0a-4a24-9196-d7adacabe254",
+      "name": "Respond to Webhook13"
+    },
+    {
+      "parameters": {
+        "fieldToSplitOut": "drops",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        816,
+        5072
+      ],
+      "id": "2cb628dd-ba0d-45c2-a1b5-e458cda3371c",
+      "name": "Split Out Drops Concluir"
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "SEU_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "LabFlow - Dados",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1161277391,
+          "mode": "list",
+          "cachedResultName": "DROPS",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit#gid=1161277391"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID": "={{ $json.id }}",
+            "STATUS": "Concluído"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "ID COLETA",
+              "displayName": "ID COLETA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "TIPO TANQUE",
+              "displayName": "TIPO TANQUE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "TANQUE",
+              "displayName": "TANQUE",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "NAVIO",
+              "displayName": "NAVIO",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "DIA DROP",
+              "displayName": "DIA DROP",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "DATA PREVISTA",
+              "displayName": "DATA PREVISTA",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "STATUS",
+              "displayName": "STATUS",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "RESPONSAVEL",
+              "displayName": "RESPONSAVEL",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1040,
+        5072
+      ],
+      "id": "ed1d60ae-ca98-420e-ba68-79e55f6f770e",
+      "name": "Update Row DROPS Concluir",
+      "credentials": {
+        "googleApi": {
+          "id": "GOOGLE_CREDENTIAL_ID",
+          "name": "Google Service Account account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If sincronizarNome",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Append row in AMOSTRAS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request1": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Get rows USUARIOS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out": {
+      "main": [
+        [
+          {
+            "node": "Append row in DROPS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request2": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get rows COLETAS_TERRA",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get rows COLETAS_NAVIO",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get rows DROPS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP erro_coleta",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get rows BAGS_TERRA",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get rows POTES_ARQ_NAVIO",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If_autorizar_usuario",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Split Out Analises",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "HTTP Request Analise",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get rows ANALISES Terra",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get rows ANALISES Navio",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request Nao Cadastrado",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get rows DROPS Concluir",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out1": {
+      "main": [
+        [
+          {
+            "node": "Append COLETAS_NAVIO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out2": {
+      "main": [
+        [
+          {
+            "node": "Append row DROPS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request3": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get rows DROPS": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request4": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP erro_coleta": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in AMOSTRAS": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out arquivosNavio": {
+      "main": [
+        [
+          {
+            "node": "Append POTES_NAVIO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get rows BAGS_TERRA": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript resposta Bags",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript resposta Bags": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request5": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get rows POTES_ARQ_NAVIO": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript POTES_ARQ_NAVIO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript POTES_ARQ_NAVIO": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request POTES_ARQ_NAVIO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request POTES_ARQ_NAVIO": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get rows USUARIOS": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or Update USUARIOS": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request (cargo - sucesso)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If_autorizar_usuario": {
+      "main": [
+        [
+          {
+            "node": "Append or Update USUARIOS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request (cargo - negado)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request (cargo - sucesso)": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request (cargo - negado)": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook9",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If sincronizarNome": {
+      "main": [
+        [
+          {
+            "node": "Get rows USUARIOS1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out Coleta Terra": {
+      "main": [
+        [
+          {
+            "node": "Append Row COLETAS_TERRA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out Bags Terra": {
+      "main": [
+        [
+          {
+            "node": "Append Row BAGS_TERRA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out Analises": {
+      "main": [
+        [
+          {
+            "node": "Append Row ANALISES",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request Analise": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get rows ANALISES Terra": {
+      "main": [
+        [
+          {
+            "node": "Code Analises Terra",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get rows ANALISES Navio": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript2 Navio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code Analises Terra": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request Analises Terra",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript2 Navio": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request Analises Navio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request Nao Cadastrado": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook11",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get rows COLETAS_TERRA": {
+      "main": [
+        [
+          {
+            "node": "Checar Duplicata Terra",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Checar Duplicata Terra": {
+      "main": [
+        [
+          {
+            "node": "If Duplicado Terra",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Duplicado Terra": {
+      "main": [
+        [
+          {
+            "node": "HTTP Duplicado Terra",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Split Out",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Split Out Coleta Terra",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Split Out Bags Terra",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Duplicado Terra": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook Dup Terra",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request Analises Terra": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook Analises Terra",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request Analises Navio": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook Analises Navio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get rows COLETAS_NAVIO": {
+      "main": [
+        [
+          {
+            "node": "Checar Duplicata Navio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Checar Duplicata Navio": {
+      "main": [
+        [
+          {
+            "node": "If Duplicado Navio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Duplicado Navio": {
+      "main": [
+        [
+          {
+            "node": "HTTP Duplicado Navio",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request3",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Split Out arquivosNavio",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Split Out2",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Split Out1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Duplicado Navio": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook12",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get rows DROPS Concluir": {
+      "main": [
+        [
+          {
+            "node": "Filtrar Drops Para Concluir",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filtrar Drops Para Concluir": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request Concluir Drops",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Split Out Drops Concluir",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request Concluir Drops": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook13",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out Drops Concluir": {
+      "main": [
+        [
+          {
+            "node": "Update Row DROPS Concluir",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "dae8f3b8-6c0c-41ee-aa7e-19b6279b4368",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "id": "P8OfEI0J3o1Rrgex",
+  "tags": []
+}
