@@ -2,7 +2,7 @@
 
 Automação de laboratório de microbiologia via WhatsApp: o analista manda uma mensagem, e o LabFlow registra coletas e análises numa planilha, calcula os prazos de leitura e reanálise e responde quais tarefas vencem no dia.
 
-Projeto de portfólio da minha transição de carreira de Biomedicina / Controle de Qualidade para Tecnologia da Informação. O problema vem da rotina real de um laboratório de controle de qualidade de suco. Todo o desenvolvimento e os testes usam **dados fictícios**.
+Projeto pessoal que une biomedicina e automação. O problema vem da rotina real de um laboratório de controle de qualidade. Todo o desenvolvimento e os testes usam **dados fictícios**.
 
 **Status:** em uso de teste no servidor (VPS), com regras de negócio, permissões por cargo e registro de análises funcionando ponta a ponta. Próxima fase: interpretação de mensagens com IA.
 
@@ -104,4 +104,4 @@ Nenhum dado real de empresa é usado neste projeto. Números de tanque, navios, 
 
 ## Autor
 
-**Danyllo** — biomédico em transição para TI, estudante de Ciência da Computação.
+**Danyllo Gomes** — Biomédico e estudante de Ciência da Computação, com foco em automação de processos.
