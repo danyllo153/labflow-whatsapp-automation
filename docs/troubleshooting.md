@@ -663,6 +663,109 @@ pela UI esperando um resultado diferente.
 
 ---
 
+## Bug 12 — "Hoje" calculado no fuso UTC do container
+
+**Sintoma:** à noite, as consultas do dia (`drops hoje`, bags, potes,
+análises) passavam a responder como se já fosse o dia seguinte.
+
+**Causa raiz:** os Code nodes calculavam a data de hoje com
+`new Date().getDate()` ou `toLocaleDateString('pt-BR')` sem informar o
+fuso. No servidor, o container do n8n usa o relógio em UTC. A variável
+`TZ=America/Sao_Paulo` do `docker-compose` não tem efeito nesse cálculo
+em JavaScript sem o pacote `tzdata` na imagem. Resultado: a partir das
+21h de Brasília (meia-noite UTC), "hoje" virava amanhã.
+
+**Solução aplicada:** informar o fuso explicitamente em todo Code node
+que calcula a data de hoje (`consulta_drops`, `consulta_bags`,
+`consulta_potes`, `Code Analises Terra`, `Code Analises Navio`):
+
+```javascript
+const hoje = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });
+```
+
+**Lição:** o bug não aparecia no Docker local, só no servidor, e só em
+um horário específico. Qualquer cálculo de data que depende de "agora"
+deve informar o fuso explicitamente, sem depender da configuração do
+ambiente.
+
+---
+
+## Bug 13 — Aba USUARIOS vazia faz o bot parar de responder para todos
+
+**Sintoma:** durante os testes de permissão, a própria linha de cadastro
+foi apagada da aba `USUARIOS`, deixando a aba sem nenhuma linha. A partir
+daí, nenhuma mensagem de nenhum número gerava resposta.
+
+**Causa raiz:** o `Code in JavaScript` principal roda em modo "Run Once
+for All Items" e recebe como entrada as linhas da `USUARIOS` (o payload
+do webhook é lido via `$('Webhook').first().json`). Com a aba vazia, o
+`Get rows USUARIOS` não repassa nenhum item, e o Code node simplesmente
+não executa.
+
+**Solução aplicada:** recadastrar o número como Admin direto na planilha.
+
+**Lição:** num node "Run Once for All Items", zero itens de entrada
+significa zero execuções, sem erro. A aba `USUARIOS` precisa ter pelo
+menos um Admin cadastrado para o bot funcionar. Mesma categoria do
+Bug 14.
+
+---
+
+## Bug 14 — `Get rows` de aba vazia interrompe a execução em silêncio
+
+**Sintoma:** no primeiro teste do bloqueio de coleta duplicada de navio,
+a execução parava no `Get rows COLETAS_NAVIO`, sem erro e sem resposta
+no WhatsApp.
+
+**Causa raiz:** a aba `COLETAS_NAVIO` estava vazia. Por padrão, um
+`Get rows` que não encontra linhas não repassa nenhum item, então o
+`Checar Duplicata Navio` seguinte nunca executava.
+
+**Solução aplicada:** ativar **Always Output Data** nas configurações do
+`Get rows COLETAS_NAVIO` e, como prevenção, do `Get rows COLETAS_TERRA`.
+Com isso, o node repassa um item vazio e o fluxo segue normalmente (sem
+duplicata encontrada).
+
+**Lição:** todo `Get rows` usado para checagem (duplicata, permissão)
+precisa funcionar com a aba vazia, que é justamente o estado inicial de
+qualquer planilha nova.
+
+---
+
+## Bug 15 — Conexões erradas ao religar o fluxo manualmente (bloqueio de duplicata)
+
+**Contexto:** para o bloqueio de coleta duplicada, foi preciso inserir
+`Get rows` + checagem + `If Duplicado` no meio dos branches de coleta, o
+que exigiu religar várias conexões à mão no editor do n8n.
+
+**Como foi encontrado:** o workflow foi exportado em JSON e revisado fora
+do n8n. A revisão das conexões encontrou quatro problemas:
+
+1. O `Split Out` de drops da `coleta_terra` ficou sem conexão de entrada:
+   as coletas eram gravadas, mas os drops D5/D10/D15 não.
+2. O ramo de erro do `If` de validação de amostra ganhou conexões para
+   `Split Out Coleta Terra` e `Split Out1` (do `coleta_navio`), nodes que
+   não têm nada a ver com esse branch.
+3. O `If Duplicado Terra` ligava só 2 dos 4 destinos no caminho "não
+   duplicado" (faltavam o `Split Out` de drops e o `Split Out Coleta
+   Terra`).
+4. `HTTP Duplicado Terra`, `HTTP Request Analises Terra` e `HTTP Request
+   Analises Navio` não tinham `Respond to Webhook` depois, deixando a
+   execução pendurada até dar timeout.
+
+**Solução aplicada:** todas as conexões corrigidas no JSON e o workflow
+reimportado. O workflow também foi reorganizado visualmente, com uma
+fileira por branch. Um segundo export, depois do bloqueio de duplicata
+para navio, foi revisado do mesmo jeito e não tinha erros.
+
+**Lição:** religar conexões à mão num fluxo grande quebra coisas que não
+aparecem no teste do caminho principal. Exportar o JSON e revisar as
+conexões virou etapa fixa depois de qualquer mudança estrutural. E todo
+caminho que termina em `HTTP Request` precisa de um `Respond to Webhook`
+no final.
+
+---
+
 ## Configuração da instância Evolution API (recomendada)
 
 ```json
