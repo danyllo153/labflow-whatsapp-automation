@@ -1,0 +1,23 @@
+name: Auditoria do workflow
+
+on:
+  push:
+    paths:
+      - "LabFlow.json"
+      - "scripts/audit-workflow.py"
+      - ".github/workflows/audit-workflow.yml"
+  pull_request:
+    paths:
+      - "LabFlow.json"
+  workflow_dispatch:
+
+jobs:
+  auditar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Auditar LabFlow.json (estrutura + dados sensíveis)
+        run: python scripts/audit-workflow.py LabFlow.json --public
