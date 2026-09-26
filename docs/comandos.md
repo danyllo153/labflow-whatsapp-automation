@@ -105,7 +105,9 @@ Analise do normal do tanque 47, data 22/09/2026
 Analise do stress dos tanques 47,49 navio O.SKY 123, data 22/09/2026
 ```
 
-Aceita "do"/"dos" e singular/plural. Limite de 8 tanques para terra e 16 para navio. A palavra `navio` é obrigatória nas análises de navio, porque é ela que diferencia terra de navio na regex. Aceitar variações sem essa palavra fica para a fase de IA.
+Aceita "do"/"dos", singular/plural e a palavra `terra` opcional (`tanque terra 40` grava o tanque como `40`). Limite de 8 tanques para terra e 16 para navio. A palavra `navio` é obrigatória nas análises de navio, porque é ela que diferencia terra de navio na regex. Aceitar variações sem essa palavra fica para a fase de IA.
+
+A confirmação mostra a data da leitura final do CT (`Data final CT`) e da pré-leitura do BL.
 
 Cada tanque gera 4 linhas na aba `ANALISES`:
 
@@ -130,6 +132,8 @@ CT (48hrs) Tanques 47 e 49 analise normal
 BL (72hrs) Tanques 37 e 40 analise normal
 Psicrotroficos (240hrs) do(s) Tanques 42 e 41 analise Stress
 ```
+
+Leituras já concluídas continuam aparecendo, marcadas com ✅, e o fim da resposta mostra o total (ex: `✅ = lido (2 de 5)`). No WORT, o tanque só ganha ✅ quando Profundidade e Superfície estão lidas.
 
 ## 9. Concluir drops do dia
 
