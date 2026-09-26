@@ -38,7 +38,7 @@ LabFlow:  CT (48hrs) Tanques 47 e 49 analise normal
 
 **Atualização**
 - Conclusão de drops em lote, filtrando por dia (D5/D10/D15), terra/navio e navio
-- Conclusão de leituras de CT/BL/WORT (pré-leitura ou final) com confirmação em duas etapas: o bot pergunta, o analista responde "sim" ou "não", e a pendência expira em 10 minutos
+- Conclusão de leituras de CT/BL/WORT (pré-leitura ou final) com confirmação em duas etapas: o bot pergunta, o analista responde "sim" ou "não", e a pendência expira em 10 minutos. O nome de quem confirmou fica registrado em cada leitura (pré-leitura e leitura final)
 
 **Controle e segurança**
 - Só números cadastrados usam o bot; três cargos (Admin, Operador, Consultor)
