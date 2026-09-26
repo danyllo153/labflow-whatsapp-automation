@@ -23,11 +23,19 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
   resposta de confirmação mostra "Leitura feita por: <nome>"
 - Nova aba `CONFIRMACOES_PENDENTES` (`Numero, IDs, NovosStatus, Resumo,
   Criado Em`) para guardar a pendência entre as duas mensagens
-- Script `scripts/audit-workflow.py`, que audita as conexões do
-  `LabFlow.json` (nodes órfãos, ramos de IF faltando, HTTP Request sem
-  `Respond to Webhook`), documentado em `docs/scripts.md`
+- Script `scripts/audit-workflow.py`, que audita o `LabFlow.json`:
+  conexões para nodes inexistentes, nodes órfãos, HTTP Request sem
+  `Respond to Webhook`, placeholder `PRECISA_RESELECIONAR` e espaço antes
+  de `{{`; com `--public`, também dados sensíveis (ID de planilha e de
+  credencial, `instanceId`, `pinData`, telefone, e-mail, chave de API).
+  Documentado em `docs/scripts.md`
 - GitHub Action (`.github/workflows/audit-workflow.yml`) que roda a
   auditoria a cada alteração do `LabFlow.json`
+- Consulta de análises do dia marca com ✅ as leituras já feitas e mostra
+  o total no fim (ex: "✅ = lido (2 de 5)"); para o WORT, o tanque só
+  ganha ✅ quando Profundidade e Superfície estão lidas
+- Confirmação do registro de análise mostra a data da leitura final do
+  CT (`Data final CT`)
 
 ### Fixed
 - Pendências de confirmação nunca expiravam: `toLocaleString('pt-BR')`
@@ -37,6 +45,18 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
   convertida para UTC; se não der para ler, a pendência é tratada como
   expirada
 - Caminho de cargo negado sem `Respond to Webhook`
+- Nodes criados depois do export apontavam para `PRECISA_RESELECIONAR`
+  no campo Sheet, e a gravação na aba `CONFIRMACOES_PENDENTES` falhava —
+  ver Bug 16
+- Espaço no começo de algumas respostas do WhatsApp, vindo de espaços
+  entre `=` e `{{` no campo `text` dos HTTP Request — ver Bug 17
+- Comando de análise com "tanque terra 40" gravava o tanque como
+  `TERRA 40`; a palavra "terra" agora é opcional na regex e fica fora da
+  captura
+- Consulta de análises repetia o tanque no WORT ("Tanques 99 e 99"),
+  porque Profundidade e Superfície eram somadas na mesma lista
+- "Leitura feita por" gravado na coluna errada por um campo que não foi
+  trocado ao duplicar o node de Update Row — ver Bug 19
 
 ### Security
 - Conclusão de leitura bloqueada para o cargo Consultor, como os demais
