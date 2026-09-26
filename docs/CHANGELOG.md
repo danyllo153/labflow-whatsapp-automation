@@ -10,6 +10,39 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 `docs/deploy-vps.md`. Este arquivo é só o resumo cronológico do que mudou.
 
 
+## [0.7.0] - 2026-09-25
+
+### Added
+- Conclusão de leituras de análise via WhatsApp (`Concluir [pre|final]
+  leitura [CT|BL|WORT] [normal|stress] terra|navio [nome]`), com
+  confirmação em duas etapas: o bot lista as leituras que vencem hoje e
+  só altera a aba `ANALISES` depois de uma resposta "sim"; "não" cancela
+  e a pendência expira em 10 minutos
+- Colunas `Pre-Leitura Feita Por` e `Leitura Final Feita Por` na aba
+  `ANALISES`, preenchidas com o nome de quem confirmou a leitura; a
+  resposta de confirmação mostra "Leitura feita por: <nome>"
+- Nova aba `CONFIRMACOES_PENDENTES` (`Numero, IDs, NovosStatus, Resumo,
+  Criado Em`) para guardar a pendência entre as duas mensagens
+- Script `scripts/audit-workflow.py`, que audita as conexões do
+  `LabFlow.json` (nodes órfãos, ramos de IF faltando, HTTP Request sem
+  `Respond to Webhook`), documentado em `docs/scripts.md`
+- GitHub Action (`.github/workflows/audit-workflow.yml`) que roda a
+  auditoria a cada alteração do `LabFlow.json`
+
+### Fixed
+- Pendências de confirmação nunca expiravam: `toLocaleString('pt-BR')`
+  grava `"25/09/2026, 21:08:28"` (com vírgula depois do ano), e a leitura
+  por `split(' ')` transformava o ano em `NaN`, fazendo `NaN > 10` ser
+  sempre falso. Agora a data é lida por regex (com ou sem vírgula) e
+  convertida para UTC; se não der para ler, a pendência é tratada como
+  expirada
+- Caminho de cargo negado sem `Respond to Webhook`
+
+### Security
+- Conclusão de leitura bloqueada para o cargo Consultor, como os demais
+  comandos de registro
+
+
 ## [0.6.0] - 2026-09-23
 
 ### Added
