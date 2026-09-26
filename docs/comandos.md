@@ -11,7 +11,7 @@ Lista dos comandos reconhecidos pelo bot do WhatsApp, com o formato esperado e u
 
 ## Cargos e permissões
 
-| Cargo | Registrar (coleta, análise, amostra, concluir drops) | Consultar | Gerenciar cargos |
+| Cargo | Registrar (coleta, análise, amostra, concluir drops e leituras) | Consultar | Gerenciar cargos |
 |---|---|---|---|
 | **Admin** | ✅ | ✅ | ✅ |
 | **Operador** | ✅ | ✅ | ❌ |
@@ -148,7 +148,57 @@ Concluir drops navio
 
 Marca como `Concluído` todas as linhas da aba `DROPS` com status `Pendente` e data prevista hoje que batem no filtro. O dia (D5/D10/D15) e o nome do navio são opcionais. Sem eles, conclui todos os estágios e todos os navios. A resposta lista os tanques e as datas de coleta concluídos.
 
-## 10. Amostra
+## 10. Concluir leituras de análise (CT/BL/WORT)
+
+```
+Concluir [pre|final] leitura [CT|BL|WORT] [normal|stress] terra
+Concluir [pre|final] leitura [CT|BL|WORT] [normal|stress] navio [<nome do navio>]
+```
+
+**Exemplos:**
+```
+Concluir final leitura CT normal terra
+Concluir pre leitura BL stress navio O.SKY 123
+Concluir leitura terra
+```
+
+Estágio, sub-análise, frasco e nome do navio são opcionais. Sem eles, o comando pega todas as leituras que vencem hoje para terra (ou navio).
+
+O comando funciona em duas etapas:
+
+1. O bot **não altera nada ainda**. Ele lista as leituras encontradas e pergunta se pode concluir. A pendência fica guardada na aba `CONFIRMACOES_PENDENTES`.
+2. O analista responde com uma mensagem só com **`sim`** (confirma) ou **`não`**/**`nao`** (cancela). A pendência expira em **10 minutos**; depois disso é preciso mandar o comando de novo. Se a data da pendência não puder ser lida, ela também é tratada como expirada (é mais seguro recusar do que confirmar sem saber a idade).
+
+Ao confirmar, cada linha muda de status na aba `ANALISES`:
+
+| Status atual | Data que precisa ser hoje | Novo status |
+|---|---|---|
+| Aguardando Pré-Leitura | Data Pre-Leitura | Aguardando Leitura Final |
+| Aguardando Leitura Final | Data Leitura Final | Concluído |
+
+O nome de quem confirmou fica registrado na coluna `Pre-Leitura Feita Por` ou `Leitura Final Feita Por`, conforme o estágio concluído.
+
+**Exemplo de conversa:**
+```
+Você:     Concluir final leitura CT normal terra
+LabFlow:  ❓ Tem certeza que quer concluir as seguintes leituras?
+
+          Leitura de CT do tanque 47, data 23/09/2026
+          Leitura de CT do tanque 49, data 23/09/2026
+
+          Responda "sim" para confirmar ou "não" para cancelar.
+Você:     sim
+LabFlow:  ✅ Concluído:
+
+          Leitura de CT do tanque 47, data 23/09/2026
+          Leitura de CT do tanque 49, data 23/09/2026
+
+          Leitura feita por: João
+```
+
+A consulta "Quais analises ... saem hoje?" continua mostrando as leituras já concluídas no dia, de propósito: a lista do dia serve de base para o resumo enviado por e-mail.
+
+## 11. Amostra
 
 Não tem uma frase fixa. Qualquer mensagem contendo `amostra <número>` — e, opcionalmente, `analise <tipo>` e uma data `dd/mm/aaaa` — é reconhecida como registro de amostra. Este é também o comportamento padrão quando a mensagem não corresponde a nenhum dos comandos acima.
 
