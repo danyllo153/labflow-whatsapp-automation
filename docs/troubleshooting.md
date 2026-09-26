@@ -766,6 +766,112 @@ no final.
 
 ---
 
+## Bug 16 — `PRECISA_RESELECIONAR`: aba criada depois do export
+
+**Sintoma:** ao testar a conclusão de leituras, o node `Salvar Pendencia
+Terra` falhava com `Sheet with ID PRECISA_RESELECIONAR not found`. No
+editor, o campo **Sheet** mostrava o nome certo
+(`CONFIRMACOES_PENDENTES`).
+
+**Causa raiz:** a Parte H foi montada editando o JSON exportado e
+reimportando. A aba `CONFIRMACOES_PENDENTES` foi criada na planilha
+depois do export, então o JSON não tinha como saber o ID interno dela,
+e esses nodes ficaram com o placeholder `PRECISA_RESELECIONAR`. O nome
+que aparece no campo é só um rótulo guardado no arquivo
+(`cachedResultName`); o n8n procura a aba pelo ID.
+
+**Solução aplicada:** em cada node que usa a aba, abrir o campo
+**Sheet** e escolher `CONFIRMACOES_PENDENTES` de novo na lista, o que
+grava o ID real. Para achar todos os nodes afetados, buscar
+`PRECISA_RESELECIONAR` no JSON.
+
+**Lição:** o nome exibido num campo do n8n não prova que a referência
+por trás está certa. Toda aba nova criada fora do editor precisa ser
+reselecionada nos nodes. O `scripts/audit-workflow.py` passou a acusar
+esse placeholder como erro.
+
+---
+
+## Bug 17 — Espaço no começo das respostas vinha do HTTP Request, não do código
+
+**Sintoma:** algumas respostas do WhatsApp (consulta de análises,
+conclusão de drops, coleta de navio) começavam com um espaço. Outras
+não.
+
+**Causa raiz:** o código dos Code nodes montava o texto sem espaço
+nenhum. O espaço estava no campo `text` de alguns HTTP Request, salvo
+como `=  {{ $json.textoResposta }}`: tudo o que fica entre o `=` e o
+`{{` vira texto fixo e vai junto na mensagem. Por isso só as respostas
+que passavam por esses nodes tinham o espaço.
+
+**Solução aplicada:** apagar o campo inteiro e digitar de novo
+`{{ $json.textoResposta }}`, sem nada antes. Apagar só os espaços não
+resolveu na primeira tentativa, porque eles são quase invisíveis no
+editor de expressão. Um `.trim()` no código não teria resolvido, porque
+o espaço era adicionado depois do código.
+
+**Lição:** seguir o dado até o ponto em que ele sai do sistema antes de
+corrigir. Corrigir onde o texto é montado teria escondido o sintoma sem
+tocar na causa. O script de auditoria avisa sobre espaço entre `=` e
+`{{` em qualquer campo.
+
+---
+
+## Bug 18 — Confirmação pendente nunca expirava (`NaN`)
+
+**Sintoma:** encontrado lendo o código, e não em uso: um "sim" mandado
+horas depois ainda confirmaria a conclusão de leituras, apesar da regra
+de expirar em 10 minutos.
+
+**Causa raiz:** o `Criado Em` é gravado com
+`toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' })`, que gera
+`25/09/2026, 21:08:28`, com vírgula depois do ano. O
+`Processar Confirmacao` separava data e hora com `split(' ')`, então a
+data virava `25/09/2026,` e o ano, `Number("2026,")`, dava `NaN`. A
+diferença em minutos também virava `NaN`, e `NaN > 10` é sempre falso:
+a pendência nunca expirava. Mesmo sem a vírgula haveria um segundo
+problema: `new Date(ano, mes, dia, hora...)` interpreta a hora no fuso
+do container (UTC), não no de Brasília (ver Bug 12).
+
+**Solução aplicada:** ler dia, mês, ano, hora e minuto com uma regex que
+aceita o formato com ou sem vírgula e montar a data com `Date.UTC`,
+somando 3 horas (Brasília = UTC-3). Se a data não puder ser lida, a
+pendência é tratada como expirada.
+
+**Validação:** comando de concluir às 22:51, "sim" às 23:06 → resposta
+"⏰ Essa confirmação expirou", leitura inalterada na planilha.
+
+**Lição:** um bug silencioso numa regra de segurança não aparece em
+nenhum teste do caminho feliz. É preciso testar também o caminho de
+erro (o "sim" atrasado). E, quando um valor não pode ser validado, o
+lado seguro é recusar, não aceitar.
+
+---
+
+## Bug 19 — Campo errado no node duplicado ("Leitura feita por" na coluna trocada)
+
+**Sintoma:** ao implementar "Leitura feita por", o nome de quem fez a
+pré-leitura caía na coluna `Leitura Final Feita Por`. Trocar as ligações
+do `If Leitura Final` só inverteu o problema: aí a leitura final caía
+na coluna da pré.
+
+**Causa raiz:** o `Update Row` da leitura final foi criado duplicando o
+da pré-leitura, e o campo mapeado (`Pre-Leitura Feita Por`) não foi
+trocado na cópia. O `If` estava certo desde o começo.
+
+**Como foi encontrado:** abrindo a execução e olhando o Input e o
+Output do node: o item chegava com `estagio: "final"` no node certo,
+mas a coluna mapeada nele era a da pré-leitura.
+
+**Solução aplicada:** trocar o campo no node duplicado para
+`Leitura Final Feita Por` e desfazer a troca das ligações.
+
+**Lição:** ao duplicar um node, revisar todos os campos da cópia. E
+inspecionar os dados em cada etapa da execução antes de mudar ligações:
+trocar conexões às cegas só move o problema de lugar.
+
+---
+
 ## Configuração da instância Evolution API (recomendada)
 
 ```json
