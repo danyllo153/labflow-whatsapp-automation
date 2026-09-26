@@ -4,7 +4,7 @@ Automação de laboratório de microbiologia via WhatsApp: o analista manda uma 
 
 Projeto pessoal que une biomedicina e automação. O problema vem da rotina real de um laboratório de controle de qualidade. Todo o desenvolvimento e os testes usam **dados fictícios**.
 
-**Status:** em uso de teste no servidor (VPS), com regras de negócio, permissões por cargo e registro de análises funcionando ponta a ponta. Próxima fase: interpretação de mensagens com IA.
+**Status:** em uso de teste no servidor (VPS), com regras de negócio, permissões por cargo e registro de análises funcionando ponta a ponta. Próxima fase: interpretação de mensagens com IA como fallback da regex, seguida da migração para PostgreSQL.
 
 ## O problema
 
@@ -38,6 +38,7 @@ LabFlow:  CT (48hrs) Tanques 47 e 49 analise normal
 
 **Atualização**
 - Conclusão de drops em lote, filtrando por dia (D5/D10/D15), terra/navio e navio
+- Conclusão de leituras de CT/BL/WORT (pré-leitura ou final) com confirmação em duas etapas: o bot pergunta, o analista responde "sim" ou "não", e a pendência expira em 10 minutos
 
 **Controle e segurança**
 - Só números cadastrados usam o bot; três cargos (Admin, Operador, Consultor)
@@ -76,17 +77,20 @@ n8n · Docker / Docker Compose · Evolution API · PostgreSQL · JavaScript · G
 - **Evolution API em número dedicado.** Por ser uma integração não oficial, usa um eSIM separado com WhatsApp Business, sem arriscar um número pessoal.
 - **Segredos fora do workflow.** A chave da Evolution API fica numa Credencial do n8n e o Google Sheets usa conta de serviço, então o JSON exportado do workflow não carrega segredo nenhum.
 - **Revisão do JSON depois de mudanças estruturais.** Religar conexões à mão no editor já introduziu bugs que só apareceram na revisão do export (ver Bug 15 em [troubleshooting](docs/troubleshooting.md)).
+- **Auditoria automática do workflow.** O script [`scripts/audit-workflow.py`](scripts/audit-workflow.py) procura nodes órfãos, ramos de IF faltando e HTTP Requests sem resposta ao webhook. Uma GitHub Action roda essa auditoria a cada alteração do `LabFlow.json`. A primeira execução encontrou 4 bugs de conexão reais.
 
 ## Roadmap
 
 - [x] **V1 — MVP:** WhatsApp + n8n + Google Sheets, registro e confirmação
 - [x] **V2 — Regras de negócio:** drops, arquivo/descarte, análises com prazos, permissões, duplicata, conclusão em lote
-- [ ] **V3 — IA:** interpretação de linguagem natural como fallback da regex, comando por áudio, leitura de laudo por foto (com confirmação antes de gravar)
-- [ ] **V4 — Banco de dados:** migração do Google Sheets para PostgreSQL
-- [ ] **V5 — Dashboard:** indicadores de pendentes, concluídos e atrasados no Power BI (hoje há um painel simples na própria planilha)
-- [ ] **V6 — Acabamento:** testes, diagramas e documentação final
+- [ ] **V3, parte 1 — IA como fallback:** interpretação de linguagem natural quando a regex não reconhece a mensagem, ainda sobre o Google Sheets
+- [ ] **V4 — Banco de dados:** migração do Google Sheets para PostgreSQL, já incluindo as análises de recebimento e embarque de suco concentrado (identificação por Load/Lote/Item/Fábrica) direto no schema final
+- [ ] **V3, parte 2 — IA avançada:** comando por áudio e leitura de laudo por foto (com confirmação antes de gravar), já sobre o PostgreSQL
+- [ ] **V5 — Dashboard:** indicadores de pendentes, concluídos e atrasados no Power BI, sobre o PostgreSQL (hoje há um painel simples na própria planilha)
+- [ ] **Interface web (LIMS):** última etapa, depois que tudo acima estiver estável no banco relacional
+- [ ] **V6 — Acabamento (contínuo):** testes, diagramas e documentação atualizados a cada marco
 
-Próximo recurso planejado: análises de recebimento e embarque de suco concentrado, com planilha própria (identificação por Load/Lote/Item/Fábrica).
+<sub>A numeração das versões é histórica. A lista acima segue a ordem de execução, revisada em 25/09/2026.</sub>
 
 ## Documentação
 
@@ -96,6 +100,7 @@ Próximo recurso planejado: análises de recebimento e embarque de suco concentr
 | [arquitetura.md](docs/arquitetura.md) | Nodes do workflow, abas da planilha e decisões de design de cada etapa |
 | [troubleshooting.md](docs/troubleshooting.md) | 15 bugs reais: sintoma, causa raiz, solução e lição |
 | [deploy-vps.md](docs/deploy-vps.md) | Infraestrutura no VPS: rede, segredos, acesso SSH, migração |
+| [scripts.md](docs/scripts.md) | Script de auditoria do workflow e como rodá-lo |
 | [CHANGELOG.md](docs/CHANGELOG.md) | Histórico de versões |
 
 ## Dados e privacidade
