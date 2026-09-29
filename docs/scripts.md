@@ -15,7 +15,7 @@ python scripts/audit-workflow.py LabFlow.json --public   # estrutura + dados sen
 |---|---|---|
 | ERRO | Conexão para node inexistente | Sobra de node apagado |
 | ERRO | Node sem conexão de entrada | Parte do fluxo nunca executa ([Bug 15](troubleshooting.md)) |
-| ERRO | HTTP Request sem Respond to Webhook depois | Execução fica pendurada e a Evolution API reenvia a mensagem ([Bug 15](troubleshooting.md)) |
+| ERRO | HTTP Request sem Respond to Webhook depois | Execução fica pendurada e a Evolution API reenvia a mensagem ([Bug 15](troubleshooting.md)). Exceção: HTTP Request que chama o próprio webhook do workflow (reenvio do comando confirmado da IA), porque a resposta ao webhook original sai por outro ramo e a chamada abre uma execução própria |
 | ERRO | Placeholder `PRECISA_RESELECIONAR` | Aba criada depois do export, não reselecionada no node |
 | AVISO | Espaço entre `=` e `{{` | Os espaços viram texto fixo na mensagem |
 | AVISO | Node desativado | Pode ter sido esquecido |

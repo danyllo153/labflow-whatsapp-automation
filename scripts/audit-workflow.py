@@ -9,7 +9,9 @@ Uso:
 Checagens de estrutura (sempre):
     [ERRO]  conexão apontando para um node que não existe
     [ERRO]  node sem nenhuma conexão de entrada (órfão)
-    [ERRO]  HTTP Request sem Respond to Webhook depois (execução fica pendurada até timeout)
+    [ERRO]  HTTP Request sem Respond to Webhook depois (execução fica pendurada até timeout);
+            exceção: HTTP Request que reenvia para o próprio webhook do workflow (a resposta
+            ao webhook original sai por outro ramo, e o reenvio abre uma execução própria)
     [ERRO]  placeholder não resolvido (ex: PRECISA_RESELECIONAR)
     [AVISO] espaço entre "=" e "{{" em expressões (vira texto fixo na mensagem)
     [AVISO] node desativado
@@ -125,8 +127,19 @@ def checar_estrutura(workflow, rel):
             rel.erro("órfão", f"'{nome}' não recebe nenhuma conexão")
 
     # 3. HTTP Request sem Respond to Webhook depois
+    caminhos_webhook = {
+        n.get("parameters", {}).get("path")
+        for n in nodes.values()
+        if tipo_curto(n) == "webhook" and n.get("parameters", {}).get("path")
+    }
     for nome, node in nodes.items():
         if tipo_curto(node) != "httprequest":
+            continue
+        # Reenvio para o próprio webhook (ex: comando confirmado da IA): a execução
+        # que reenvia já respondeu ao webhook original por outro ramo, e a chamada
+        # abre uma execução nova, que responde por conta própria.
+        url = str(node.get("parameters", {}).get("url", ""))
+        if any(f"/webhook/{p}" in url for p in caminhos_webhook):
             continue
         tipos_depois = {tipo_curto(nodes[d]) for d in descendentes(nome, saidas) if d in nodes}
         if TIPO_RESPOND not in tipos_depois:
