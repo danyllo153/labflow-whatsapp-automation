@@ -1,0 +1,2 @@
+# Mantém fim de linha LF no repositório, independente do sistema (Windows/Linux).
+* text=auto eol=lf
