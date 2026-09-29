@@ -20,7 +20,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const webhookItem = $('Webhook').first().json;\nconst data = webhookItem.body.data;\n\nif (data.key?.fromMe === true) {\n  return [];\n}\n\nconst msgTimestamp = data.messageTimestamp;\nconst nowSeconds = Math.floor(Date.now() / 1000);\nconst MAX_AGE_SECONDS = 600;\nif (msgTimestamp && (nowSeconds - msgTimestamp) > MAX_AGE_SECONDS) {\n  return [];\n}\n\nconst texto = data.message.conversation;\nconst numeroRemetente = data.key.remoteJid;\nconst nomeContato = data.pushName || 'Desconhecido';\n\n// --- Carrega usuários da planilha e identifica o nível de quem enviou ---\nconst usuarios = $input.all().map(i => i.json);\nconst numeroRemetenteLimpo = numeroRemetente.replace('@s.whatsapp.net', '');\nconst usuarioAtual = usuarios.find(u => String(u.Numero) === numeroRemetenteLimpo);\nconst nivelAtual = usuarioAtual ? usuarioAtual.Nivel : 'Desconhecido';\n// --- BLOQUEIO: só usuários cadastrados podem usar o bot ---\nif (nivelAtual === 'Desconhecido') {\n  return [{\n    json: {\n      tipo: 'nao_cadastrado',\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta: '❌ Você ainda não está cadastrado no LabFlow. Peça a um administrador para te cadastrar.'\n    }\n  }];\n}\n// Sinaliza se o nome do WhatsApp de quem mandou mudou (ou nunca foi\n// preenchido) em relação ao que já está salvo na USUARIOS — só pra quem\n// já é cadastrado (nunca cria cadastro novo por essa via).\nconst sincronizarNome = !!(usuarioAtual && usuarioAtual.Nome !== nomeContato);\n\n// Toda resposta passa por aqui, pra sempre levar junto os dados de\n// sincronização de nome sem precisar repetir em cada bloco abaixo.\nfunction output(json) {\n  return [{\n    json: {\n      ...json,\n      _sincronizarNome: sincronizarNome,\n      _numeroRemetenteLimpo: numeroRemetenteLimpo,\n      _nomeContatoAtual: nomeContato\n    }\n  }];\n}\n// Calcula as N linhas de análise (CT, BL, WORT) para um tanque, a partir\n// da data em que o frasco (Normal ou Stress) foi analisado.\nfunction calcularAnalises(dataAnaliseStr, idColeta, tanque, tipoFrasco, tipoTanque, navio) {\n  const [dia, mes, ano] = dataAnaliseStr.split('/').map(Number);\n  const dataBase = new Date(ano, mes - 1, dia);\n\n  const formatarData = (d) =>\n    `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;\n\n  const somarHoras = (dataBase, horas) => {\n    const d = new Date(dataBase);\n    d.setHours(d.getHours() + horas);\n    return d;\n  };\n\n  // Config: { pre: horas ou null, final: horas }\n  const PRAZOS = {\n    CT:   { pre: null, final: 48 },\n    BL:   { pre: 72,   final: 120 },\n    WORT: { pre: 120,  final: 240 }\n  };\n\n  // Cada linha: { subAnalise, metodo }\n  const LINHAS = [\n    { subAnalise: 'CT',   metodo: 'Profundidade' },\n    { subAnalise: 'BL',   metodo: 'Profundidade' },\n    { subAnalise: 'WORT', metodo: 'Profundidade' },\n    { subAnalise: 'WORT', metodo: 'Superficie' }\n  ];\n\n  return LINHAS.map(({ subAnalise, metodo }, idx) => {\n    const prazo = PRAZOS[subAnalise];\n    const dataPreLeitura = prazo.pre !== null\n      ? formatarData(somarHoras(dataBase, prazo.pre))\n      : '';\n    const dataLeituraFinal = formatarData(somarHoras(dataBase, prazo.final));\n    const status = prazo.pre !== null\n      ? 'Aguardando Pré-Leitura'\n      : 'Aguardando Leitura Final';\n\n    return {\n      idAnalise: `AN-${idColeta}-${tipoFrasco}-${subAnalise}-${metodo}`.slice(0, 60),\n      idColeta,\n      tanque,\n      tipoTanque,\n      navio: navio || '',\n      tipoFrasco,\n      subAnalise,\n      metodo,\n      dataAnalise: dataAnaliseStr,\n      dataPreLeitura,\n      dataLeituraFinal,\n      status,\n      responsavel: nomeContato\n    };\n  });\n}\n// Calcula as 3 datas de drop (D5, D10, D15) a partir da data de coleta\nfunction calcularDrops(dataColetaStr, idColeta, tanque, tipoTanque, navio) {\n  const [dia, mes, ano] = dataColetaStr.split('/').map(Number);\n  const dataBase = new Date(ano, mes - 1, dia);\n  const dias = [5, 10, 15];\n  return dias.map(offset => {\n    const dataDrop = new Date(dataBase);\n    dataDrop.setDate(dataDrop.getDate() + offset);\n    const dd = String(dataDrop.getDate()).padStart(2, '0');\n    const mm = String(dataDrop.getMonth() + 1).padStart(2, '0');\n    const yyyy = dataDrop.getFullYear();\n    return {\n      idDrop: `DR-${idColeta}-${offset}`,\n      idColeta: idColeta,\n      tipoTanque: tipoTanque,\n      tanque: tanque,\n      navio: navio || '',\n      diaDrop: `D${offset}`,\n      dataPrevista: `${dd}/${mm}/${yyyy}`,\n      status: 'Pendente',\n      responsavel: nomeContato\n    };\n  });\n}\nfunction calcularArquivo(dataColetaStr, idColeta, tanque, navio) {\n  const [dia, mes, ano] = dataColetaStr.split('/').map(Number);\n  const dataColeta = new Date(ano, mes - 1, dia);\n  const dataDescarte = new Date(dataColeta);\n  dataDescarte.setDate(dataDescarte.getDate() + 365);\n\n  const formatarData = (d) =>\n    `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;\n\n  return {\n    id: `AR-${idColeta}`,\n    idColeta,\n    tanque,\n    navio: navio || '',\n    dataColeta: dataColetaStr,\n    dataDescarte: formatarData(dataDescarte),\n    status: 'Arquivado',\n    responsavel: nomeContato\n  };\n}\n\n// --- GERENCIAR USUARIO ---\nconst regexGerenciarUsuario = /(adicionar|trocar|mudar)\\s+cargo\\s+(?:de\\s+)?(\\w+)\\s+para\\s+o?\\s*n[uú]mero\\s+(\\d+)(?:\\s+nome\\s+(.+))?/i;\nconst matchGerenciar = texto.match(regexGerenciarUsuario);\n\nif (matchGerenciar) {\n  const nivelNovo = matchGerenciar[2];\n  const numeroAlvo = matchGerenciar[3];\n  const nomeInformado = matchGerenciar[4] ? matchGerenciar[4].trim() : null;\n\n  if (nivelAtual !== 'Admin') {\n    return output({\n      tipo: 'gerenciar_usuario',\n      autorizado: false,\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta: '❌ Só administradores podem alterar cargos de usuários.'\n    });\n  }\n\n  const niveisValidos = ['Admin', 'Operador', 'Consultor'];\n  if (!niveisValidos.includes(nivelNovo)) {\n    return output({\n      tipo: 'gerenciar_usuario',\n      autorizado: false,\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta: `❌ Cargo inválido. Use: ${niveisValidos.join(' ou ')}.`\n    });\n  }\n\n  const usuarioAlvoExistente = usuarios.find(u => String(u.Numero) === numeroAlvo);\n  let nomeAlvo;\n  if (nomeInformado) {\n    nomeAlvo = nomeInformado;\n  } else if (numeroAlvo === numeroRemetenteLimpo) {\n    nomeAlvo = nomeContato;\n  } else {\n    nomeAlvo = usuarioAlvoExistente ? usuarioAlvoExistente.Nome : '';\n  }\n\n  return output({\n    tipo: 'gerenciar_usuario',\n    autorizado: true,\n    numero: numeroRemetente,\n    nomeContato,\n    NumeroAlvo: numeroAlvo,\n    NivelNovo: nivelNovo,\n    NomeAlvo: nomeAlvo,\n    textoResposta: nomeAlvo\n      ? `✅ Cargo atualizado: numero ${numeroAlvo} (${nomeAlvo}) agora é ${nivelNovo}.`\n      : `✅ Cargo atualizado: numero ${numeroAlvo} agora é ${nivelNovo}.`\n  });\n}\n// Bloqueia comandos de registro para quem só tem acesso de consulta.\nfunction bloqueadoConsultor() {\n  if (nivelAtual === 'Consultor') {\n    return output({\n      tipo: 'erro_coleta',\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta: '❌ Consultores têm acesso somente de consulta. Peça a um administrador para registrar isso.'\n    });\n  }\n  return null;\n}\n// --- COLETA TANQUE TERRA ---\nif (/registrar\\s+coleta\\s+tanques?\\s+terra/i.test(texto)) {\n  const bloqueio = bloqueadoConsultor();\n  if (bloqueio) return bloqueio;\n  const matchTanques = texto.match(/tanques?\\s+terra\\s+([a-z0-9,\\s]+?)\\s+data\\s+(\\d{2}\\/\\d{2}\\/\\d{4})/i);\n\n  if (!matchTanques) {\n    return output({\n      tipo: 'erro_coleta',\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta:\n        '❌ Não foi possível registrar a coleta de terra.\\n\\n' +\n        'Formato esperado:\\n\"registrar coleta tanque(s) terra <número(s)> data <dd/mm/aaaa>\"'\n    });\n  }\n\n  const tanques = matchTanques[1].split(',').map(t => t.trim()).filter(Boolean);\n  const dataColeta = matchTanques[2];\n\n  if (tanques.length === 0) {\n    return output({\n      tipo: 'erro_coleta',\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta:\n        '❌ Não foi possível registrar a coleta de terra — nenhum tanque reconhecido.\\n\\n' +\n        'Formato esperado:\\n\"registrar coleta tanque(s) terra <número(s)> data <dd/mm/aaaa>\"'\n    });\n  }\n\n  if (tanques.length > 8) {\n    return output({\n      tipo: 'erro_coleta',\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta:\n        `❌ Só é possível registrar até 8 tanques por mensagem (você enviou ${tanques.length}). ` +\n        'Divida em mais de uma mensagem.'\n    });\n  }\n\n  const itensColeta = [];\n  let drops = [];\n  let bagsArquivo = [];\n\n  tanques.forEach((tanque, idx) => {\n    const idColeta = `CT-${Date.now()}-${idx}`;\n\n    itensColeta.push({ idColeta, tanque, dataColeta, responsavel: nomeContato });\n    drops = drops.concat(calcularDrops(dataColeta, idColeta, tanque, 'Terra', null));\n    bagsArquivo.push(calcularArquivo(dataColeta, idColeta, tanque, null));\n  });\n\n  return output({\n    tipo: 'coleta_terra',\n    dataColeta,\n    tanques,\n    itensColeta,\n    drops,\n    bagsArquivo,\n    numero: numeroRemetente,\n    nomeContato,\n    textoResposta:\n      `✅ Coleta de terra registrada.\\n\\nTanques: ${tanques.join(', ')}\\n` +\n      `Data: ${dataColeta}\\n` +\n      `Total: ${tanques.length} tanque${tanques.length === 1 ? '' : 's'}`\n  });\n}\n\n// --- COLETA TANQUE NAVIO ---\nif (/coleta navio/i.test(texto)) {\n  const bloqueio = bloqueadoConsultor();\n  if (bloqueio) return bloqueio;\n  const matchNavio = texto.match(/coleta\\s+navio\\s+(.+?)\\s+tanques\\s+([a-z0-9,\\s]+?)\\s+data\\s+(\\d{2}\\/\\d{2}\\/\\d{4})/i);\n\n  if (!matchNavio) {\n    return output({\n      tipo: 'erro_coleta',\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta:\n        '❌ Não foi possível registrar a coleta de navio.\\n\\n' +\n        'Formato esperado:\\n\"Coleta navio <nome> tanques <lista separada por vírgula> data <dd/mm/aaaa>\"'\n    });\n  }\n\n  const navio = matchNavio[1].trim();\n  const tanques = matchNavio[2].split(',').map(t => t.trim().toUpperCase()).filter(Boolean);\n  const dataColeta = matchNavio[3];\n\n  if (!navio || tanques.length === 0) {\n    return output({\n      tipo: 'erro_coleta',\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta:\n        '❌ Não foi possível registrar a coleta de navio — nome do navio ou lista de tanques veio vazia.\\n\\n' +\n        'Formato esperado:\\n\"Coleta navio <nome> tanques <lista separada por vírgula> data <dd/mm/aaaa>\"'\n    });\n  }\n\n  const itensColeta = [];\n  let drops = [];\n  let arquivosNavio = [];\n\n  tanques.forEach((tanque, idx) => {\n    const idColeta = `CN-${Date.now()}-${idx}`;\n\n    itensColeta.push({\n      idColeta,\n      navio,\n      tanque,\n      dataColeta,\n      responsavel: nomeContato\n    });\n\n    drops = drops.concat(\n      calcularDrops(dataColeta, idColeta, tanque, 'Navio', navio)\n    );\n\n    arquivosNavio.push(\n      calcularArquivo(dataColeta, idColeta, tanque, navio)\n    );\n  });\n\n  return output({\n    tipo: 'coleta_navio',\n    navio,\n    dataColeta,\n    tanques,\n    itensColeta,\n    drops,\n    arquivosNavio,\n    numero: numeroRemetente,\n    nomeContato,\n    textoResposta:\n      `✅ Coleta registrada.\\n\\nNavio: ${navio}\\n` +\n      `Tanques: ${tanques.join(', ')}\\n` +\n      `Data: ${dataColeta}\\n` +\n      `Total: ${tanques.length} tanque${tanques.length === 1 ? '' : 's'}`\n  });\n}\n\n// --- ANALISE DE TANQUE (NORMAL / STRESS) — terra e navio, lista de tanques ---\nconst regexAnaliseTanque = /an[aá]lise\\s+(?:dos?\\s+)?(normal|stress)\\s+(?:dos?\\s+)?tanques?\\s+(?:terra\\s+)?([a-z0-9,\\s]+?)(?:\\s+navio\\s+(.+?))?\\s*,?\\s*data\\s+(\\d{2}\\/\\d{2}\\/\\d{4})/i;\nconst matchAnaliseTanque = texto.match(regexAnaliseTanque);\n\nif (matchAnaliseTanque) {\n  const bloqueio = bloqueadoConsultor();\n  if (bloqueio) return bloqueio;\n  const tipoFrascoBruto = matchAnaliseTanque[1].toLowerCase();\n  const tipoFrasco = tipoFrascoBruto === 'stress' ? 'Stress' : 'Normal';\n  const tanques = matchAnaliseTanque[2].split(',').map(t => t.trim().toUpperCase()).filter(Boolean);\n  const navio = matchAnaliseTanque[3] ? matchAnaliseTanque[3].trim().toUpperCase() : null;\n  const tipoTanque = navio ? 'Navio' : 'Terra';\n  const dataAnalise = matchAnaliseTanque[4];\n\n  if (tanques.length === 0) {\n    return output({\n      tipo: 'erro_coleta',\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta:\n        '❌ Não foi possível registrar a análise — nenhum tanque reconhecido.\\n\\n' +\n        'Formato esperado:\\n\"Analise do normal/stress do tanque(s) <número(s)>[ navio <nome>], data <dd/mm/aaaa>\"'\n    });\n  }\n\n  const limite = navio ? 16 : 8;\n  if (tanques.length > limite) {\n    return output({\n      tipo: 'erro_coleta',\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta:\n        `❌ Só é possível registrar até ${limite} tanques por mensagem${navio ? ' de navio' : ''} (você enviou ${tanques.length}). ` +\n        'Divida em mais de uma mensagem.'\n    });\n  }\n\n  const idColetaBase = `AN-${Date.now()}`;\n  let analises = [];\n  tanques.forEach((tanque, idx) => {\n    const idColeta = `${idColetaBase}-${idx}`;\n    analises = analises.concat(calcularAnalises(dataAnalise, idColeta, tanque, tipoFrasco, tipoTanque, navio));\n  });\n  const analiseCT = analises.find(a => a.subAnalise === 'CT');\n  const analiseBL = analises.find(a => a.subAnalise === 'BL');\n  const analiseWORT = analises.find(a => a.subAnalise === 'WORT');\n\n  return output({\n    tipo: 'registro_analise',\n    tipoFrasco,\n    tanques,\n    tipoTanque,\n    navio,\n    dataAnalise,\n    analises,\n    numero: numeroRemetente,\n    nomeContato,\n    textoResposta:\n      `✅ Análise ${tipoFrasco} registrada.\\n\\n` +\n      `Tanques: ${tanques.join(', ')}${navio ? ` (Navio ${navio})` : ''}\\n` +\n      `Data: ${dataAnalise}\\n` +\n      `Data final CT: ${analiseCT.dataLeituraFinal}\\n` +\n      `Data pré-leitura BL: ${analiseBL.dataPreLeitura}\\n` +\n      `Data final BL: ${analiseBL.dataLeituraFinal}\\n` +\n      `Data pré-leitura WORT: ${analiseWORT.dataPreLeitura}\\n` +\n      `Data final WORT: ${analiseWORT.dataLeituraFinal}\\n` +\n      `Total: ${tanques.length} tanque${tanques.length === 1 ? '' : 's'}\\n` +\n      `Analises realizadas: CT, BL, WORT (Profundidade e Superfície)`\n  });\n}\n\n// --- CONSULTA DE DROPS ---\nif (/^drops?\\s*(previstos)?\\s*(para)?\\s*hoje\\??$/i.test(texto.trim())) {\n  return output({\n    tipo: 'consulta_drops',\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n// --- CONSULTA DE ANALISES (TERRA) ---\nif (/^quais\\s+analises?\\s+(de\\s+)?tanques?\\s+terra\\s+saem\\s+hoje\\??$/i.test(texto.trim())) {\n  return output({\n    tipo: 'consulta_analises_terra',\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n\n// --- CONSULTA DE ANALISES (NAVIO) ---\nif (/^quais\\s+analises?\\s+(de\\s+)?tanques?\\s+navio\\s+saem\\s+hoje\\??$/i.test(texto.trim())) {\n  return output({\n    tipo: 'consulta_analises_navio',\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n// --- CONSULTA DE BAGS (TERRA) ---\nif (/^quais\\s+bags?\\s+(posso\\s+)?descartar\\s+hoje/i.test(texto.trim())) {\n  return output({\n    tipo: 'consulta_bags',\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n\n// --- CONSULTA DE POTES (NAVIO) ---\nif (/^quais\\s+potes?\\s+(do\\s+)?navio\\s+(posso\\s+)?descartar\\s+hoje/i.test(texto.trim())) {\n  return output({\n    tipo: 'consulta_potes',\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n// --- CONCLUIR DROPS EM LOTE ---\nconst regexConcluirDrops = /concluir\\s+drops?\\s+(?:(d5|d10|d15)\\s+)?(terra|navio)(?:\\s+(.+))?\\s*$/i;\nconst matchConcluirDrops = texto.match(regexConcluirDrops);\n\nif (matchConcluirDrops) {\n  const bloqueio = bloqueadoConsultor();\n  if (bloqueio) return bloqueio;\n\n  const diaFiltro = matchConcluirDrops[1] ? matchConcluirDrops[1].toUpperCase() : null;\n  const tipoTanqueFiltro = matchConcluirDrops[2].toLowerCase() === 'navio' ? 'Navio' : 'Terra';\n  const navioFiltro = (tipoTanqueFiltro === 'Navio' && matchConcluirDrops[3])\n    ? matchConcluirDrops[3].trim().toUpperCase()\n    : null;\n\n  return output({\n    tipo: 'concluir_drops',\n    diaFiltro,\n    tipoTanqueFiltro,\n    navioFiltro,\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n// --- CONCLUIR LEITURA DE ANALISE (CT/BL/WORT) - TERRA ---\nconst regexConcluirLeituraTerra = /concluir\\s+(?:(pre|final)\\s+)?leitura\\s+(?:(ct|bl|wort)\\s+)?(?:(normal|stress)\\s+)?terra\\s*$/i;\nconst matchConcluirLeituraTerra = texto.match(regexConcluirLeituraTerra);\n\nif (matchConcluirLeituraTerra) {\n  const bloqueio = bloqueadoConsultor();\n  if (bloqueio) return bloqueio;\n\n  const estagioFiltro = matchConcluirLeituraTerra[1] ? matchConcluirLeituraTerra[1].toLowerCase() : null;\n  const subAnaliseFiltro = matchConcluirLeituraTerra[2] ? matchConcluirLeituraTerra[2].toUpperCase() : null;\n  const frascoFiltro = matchConcluirLeituraTerra[3]\n    ? (matchConcluirLeituraTerra[3].toLowerCase() === 'stress' ? 'Stress' : 'Normal')\n    : null;\n\n  return output({\n    tipo: 'concluir_leitura_terra',\n    estagioFiltro,\n    subAnaliseFiltro,\n    frascoFiltro,\n    tipoTanqueFiltro: 'Terra',\n    navioFiltro: null,\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n\n// --- CONCLUIR LEITURA DE ANALISE (CT/BL/WORT) - NAVIO ---\nconst regexConcluirLeituraNavio = /concluir\\s+(?:(pre|final)\\s+)?leitura\\s+(?:(ct|bl|wort)\\s+)?(?:(normal|stress)\\s+)?navio(?:\\s+(.+))?\\s*$/i;\nconst matchConcluirLeituraNavio = texto.match(regexConcluirLeituraNavio);\n\nif (matchConcluirLeituraNavio) {\n  const bloqueio = bloqueadoConsultor();\n  if (bloqueio) return bloqueio;\n\n  const estagioFiltro = matchConcluirLeituraNavio[1] ? matchConcluirLeituraNavio[1].toLowerCase() : null;\n  const subAnaliseFiltro = matchConcluirLeituraNavio[2] ? matchConcluirLeituraNavio[2].toUpperCase() : null;\n  const frascoFiltro = matchConcluirLeituraNavio[3]\n    ? (matchConcluirLeituraNavio[3].toLowerCase() === 'stress' ? 'Stress' : 'Normal')\n    : null;\n  const navioFiltro = matchConcluirLeituraNavio[4] ? matchConcluirLeituraNavio[4].trim().toUpperCase() : null;\n\n  return output({\n    tipo: 'concluir_leitura_navio',\n    estagioFiltro,\n    subAnaliseFiltro,\n    frascoFiltro,\n    tipoTanqueFiltro: 'Navio',\n    navioFiltro,\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n\n// --- CONFIRMAR PENDENCIA (resposta \"sim\" isolada) ---\nif (/^sim\\s*$/i.test(texto.trim())) {\n  return output({\n    tipo: 'confirmar_pendencia',\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n\n// --- CANCELAR PENDENCIA (resposta \"nao\"/\"não\" isolada) ---\nif (/^n[aã]o\\s*$/i.test(texto.trim())) {\n  return output({\n    tipo: 'cancelar_pendencia',\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n\n// --- AMOSTRA (fluxo existente, sem mudança de lógica) ---\nconst regexAmostra = /amostra\\s+(\\d+)/i;\nconst regexAnalise = /analise\\s+([a-zA-ZÀ-ú]+)/i;\nconst regexData = /(\\d{2}\\/\\d{2}\\/\\d{4})/;\n\nconst matchAmostra = texto.match(regexAmostra);\nconst matchAnalise = texto.match(regexAnalise);\nconst matchDataAmostra = texto.match(regexData);\n\nreturn output({\n  tipo: 'amostra',\n  idRegistro: `AM-${Date.now()}`,\n  amostra: matchAmostra ? matchAmostra[1] : null,\n  analise: matchAnalise ? matchAnalise[1] : null,\n  data: matchDataAmostra ? matchDataAmostra[1] : null,\n  mensagem_original: texto,\n  numero: numeroRemetente,\n  nomeContato: nomeContato\n});"
+        "jsCode": "const webhookItem = $('Webhook').first().json;\nconst data = webhookItem.body.data;\n\nif (data.key?.fromMe === true) {\n  return [];\n}\n\nconst msgTimestamp = data.messageTimestamp;\nconst nowSeconds = Math.floor(Date.now() / 1000);\nconst MAX_AGE_SECONDS = 600;\nif (msgTimestamp && (nowSeconds - msgTimestamp) > MAX_AGE_SECONDS) {\n  return [];\n}\n\nconst texto = data.message.conversation;\nconst numeroRemetente = data.key.remoteJid;\nconst nomeContato = data.pushName || 'Desconhecido';\n\n// --- Carrega usuários da planilha e identifica o nível de quem enviou ---\nconst usuarios = $input.all().map(i => i.json);\nconst numeroRemetenteLimpo = numeroRemetente.replace('@s.whatsapp.net', '');\nconst usuarioAtual = usuarios.find(u => String(u.Numero) === numeroRemetenteLimpo);\nconst nivelAtual = usuarioAtual ? usuarioAtual.Nivel : 'Desconhecido';\n// --- BLOQUEIO: só usuários cadastrados podem usar o bot ---\nif (nivelAtual === 'Desconhecido') {\n  return [{\n    json: {\n      tipo: 'nao_cadastrado',\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta: '❌ Você ainda não está cadastrado no LabFlow. Peça a um administrador para te cadastrar.'\n    }\n  }];\n}\n// Sinaliza se o nome do WhatsApp de quem mandou mudou (ou nunca foi\n// preenchido) em relação ao que já está salvo na USUARIOS — só pra quem\n// já é cadastrado (nunca cria cadastro novo por essa via).\nconst sincronizarNome = !!(usuarioAtual && usuarioAtual.Nome !== nomeContato);\n\n// Toda resposta passa por aqui, pra sempre levar junto os dados de\n// sincronização de nome sem precisar repetir em cada bloco abaixo.\nfunction output(json) {\n  return [{\n    json: {\n      ...json,\n      _sincronizarNome: sincronizarNome,\n      _numeroRemetenteLimpo: numeroRemetenteLimpo,\n      _nomeContatoAtual: nomeContato\n    }\n  }];\n}\n// Calcula as N linhas de análise (CT, BL, WORT) para um tanque, a partir\n// da data em que o frasco (Normal ou Stress) foi analisado.\nfunction calcularAnalises(dataAnaliseStr, idColeta, tanque, tipoFrasco, tipoTanque, navio) {\n  const [dia, mes, ano] = dataAnaliseStr.split('/').map(Number);\n  const dataBase = new Date(ano, mes - 1, dia);\n\n  const formatarData = (d) =>\n    `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;\n\n  const somarHoras = (dataBase, horas) => {\n    const d = new Date(dataBase);\n    d.setHours(d.getHours() + horas);\n    return d;\n  };\n\n  // Config: { pre: horas ou null, final: horas }\n  const PRAZOS = {\n    CT:   { pre: null, final: 48 },\n    BL:   { pre: 72,   final: 120 },\n    WORT: { pre: 120,  final: 240 }\n  };\n\n  // Cada linha: { subAnalise, metodo }\n  const LINHAS = [\n    { subAnalise: 'CT',   metodo: 'Profundidade' },\n    { subAnalise: 'BL',   metodo: 'Profundidade' },\n    { subAnalise: 'WORT', metodo: 'Profundidade' },\n    { subAnalise: 'WORT', metodo: 'Superficie' }\n  ];\n\n  return LINHAS.map(({ subAnalise, metodo }, idx) => {\n    const prazo = PRAZOS[subAnalise];\n    const dataPreLeitura = prazo.pre !== null\n      ? formatarData(somarHoras(dataBase, prazo.pre))\n      : '';\n    const dataLeituraFinal = formatarData(somarHoras(dataBase, prazo.final));\n    const status = prazo.pre !== null\n      ? 'Aguardando Pré-Leitura'\n      : 'Aguardando Leitura Final';\n\n    return {\n      idAnalise: `AN-${idColeta}-${tipoFrasco}-${subAnalise}-${metodo}`.slice(0, 60),\n      idColeta,\n      tanque,\n      tipoTanque,\n      navio: navio || '',\n      tipoFrasco,\n      subAnalise,\n      metodo,\n      dataAnalise: dataAnaliseStr,\n      dataPreLeitura,\n      dataLeituraFinal,\n      status,\n      responsavel: nomeContato\n    };\n  });\n}\n// Calcula as 3 datas de drop (D5, D10, D15) a partir da data de coleta\nfunction calcularDrops(dataColetaStr, idColeta, tanque, tipoTanque, navio) {\n  const [dia, mes, ano] = dataColetaStr.split('/').map(Number);\n  const dataBase = new Date(ano, mes - 1, dia);\n  const dias = [5, 10, 15];\n  return dias.map(offset => {\n    const dataDrop = new Date(dataBase);\n    dataDrop.setDate(dataDrop.getDate() + offset);\n    const dd = String(dataDrop.getDate()).padStart(2, '0');\n    const mm = String(dataDrop.getMonth() + 1).padStart(2, '0');\n    const yyyy = dataDrop.getFullYear();\n    return {\n      idDrop: `DR-${idColeta}-${offset}`,\n      idColeta: idColeta,\n      tipoTanque: tipoTanque,\n      tanque: tanque,\n      navio: navio || '',\n      diaDrop: `D${offset}`,\n      dataPrevista: `${dd}/${mm}/${yyyy}`,\n      status: 'Pendente',\n      responsavel: nomeContato\n    };\n  });\n}\nfunction calcularArquivo(dataColetaStr, idColeta, tanque, navio) {\n  const [dia, mes, ano] = dataColetaStr.split('/').map(Number);\n  const dataColeta = new Date(ano, mes - 1, dia);\n  const dataDescarte = new Date(dataColeta);\n  dataDescarte.setDate(dataDescarte.getDate() + 365);\n\n  const formatarData = (d) =>\n    `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;\n\n  return {\n    id: `AR-${idColeta}`,\n    idColeta,\n    tanque,\n    navio: navio || '',\n    dataColeta: dataColetaStr,\n    dataDescarte: formatarData(dataDescarte),\n    status: 'Arquivado',\n    responsavel: nomeContato\n  };\n}\n\n// --- GERENCIAR USUARIO ---\nconst regexGerenciarUsuario = /(adicionar|trocar|mudar)\\s+cargo\\s+(?:de\\s+)?(\\w+)\\s+para\\s+o?\\s*n[uú]mero\\s+(\\d+)(?:\\s+nome\\s+(.+))?/i;\nconst matchGerenciar = texto.match(regexGerenciarUsuario);\n\nif (matchGerenciar) {\n  const nivelNovo = matchGerenciar[2];\n  const numeroAlvo = matchGerenciar[3];\n  const nomeInformado = matchGerenciar[4] ? matchGerenciar[4].trim() : null;\n\n  if (nivelAtual !== 'Admin') {\n    return output({\n      tipo: 'gerenciar_usuario',\n      autorizado: false,\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta: '❌ Só administradores podem alterar cargos de usuários.'\n    });\n  }\n\n  const niveisValidos = ['Admin', 'Operador', 'Consultor'];\n  if (!niveisValidos.includes(nivelNovo)) {\n    return output({\n      tipo: 'gerenciar_usuario',\n      autorizado: false,\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta: `❌ Cargo inválido. Use: ${niveisValidos.join(' ou ')}.`\n    });\n  }\n\n  const usuarioAlvoExistente = usuarios.find(u => String(u.Numero) === numeroAlvo);\n  let nomeAlvo;\n  if (nomeInformado) {\n    nomeAlvo = nomeInformado;\n  } else if (numeroAlvo === numeroRemetenteLimpo) {\n    nomeAlvo = nomeContato;\n  } else {\n    nomeAlvo = usuarioAlvoExistente ? usuarioAlvoExistente.Nome : '';\n  }\n\n  return output({\n    tipo: 'gerenciar_usuario',\n    autorizado: true,\n    numero: numeroRemetente,\n    nomeContato,\n    NumeroAlvo: numeroAlvo,\n    NivelNovo: nivelNovo,\n    NomeAlvo: nomeAlvo,\n    textoResposta: nomeAlvo\n      ? `✅ Cargo atualizado: numero ${numeroAlvo} (${nomeAlvo}) agora é ${nivelNovo}.`\n      : `✅ Cargo atualizado: numero ${numeroAlvo} agora é ${nivelNovo}.`\n  });\n}\n// Bloqueia comandos de registro para quem só tem acesso de consulta.\nfunction bloqueadoConsultor() {\n  if (nivelAtual === 'Consultor') {\n    return output({\n      tipo: 'erro_coleta',\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta: '❌ Consultores têm acesso somente de consulta. Peça a um administrador para registrar isso.'\n    });\n  }\n  return null;\n}\n// --- COLETA TANQUE TERRA ---\nif (/registrar\\s+coleta\\s+tanques?\\s+terra/i.test(texto)) {\n  const bloqueio = bloqueadoConsultor();\n  if (bloqueio) return bloqueio;\n  const matchTanques = texto.match(/tanques?\\s+terra\\s+([a-z0-9,\\s]+?)\\s+data\\s+(\\d{2}\\/\\d{2}\\/\\d{4})/i);\n\n  if (!matchTanques) {\n    return output({\n      tipo: 'erro_coleta',\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta:\n        '❌ Não foi possível registrar a coleta de terra.\\n\\n' +\n        'Formato esperado:\\n\"registrar coleta tanque(s) terra <número(s)> data <dd/mm/aaaa>\"'\n    });\n  }\n\n  const tanques = matchTanques[1].split(',').map(t => t.trim()).filter(Boolean);\n  const dataColeta = matchTanques[2];\n\n  if (tanques.length === 0) {\n    return output({\n      tipo: 'erro_coleta',\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta:\n        '❌ Não foi possível registrar a coleta de terra — nenhum tanque reconhecido.\\n\\n' +\n        'Formato esperado:\\n\"registrar coleta tanque(s) terra <número(s)> data <dd/mm/aaaa>\"'\n    });\n  }\n\n  if (tanques.length > 8) {\n    return output({\n      tipo: 'erro_coleta',\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta:\n        `❌ Só é possível registrar até 8 tanques por mensagem (você enviou ${tanques.length}). ` +\n        'Divida em mais de uma mensagem.'\n    });\n  }\n\n  const itensColeta = [];\n  let drops = [];\n  let bagsArquivo = [];\n\n  tanques.forEach((tanque, idx) => {\n    const idColeta = `CT-${Date.now()}-${idx}`;\n\n    itensColeta.push({ idColeta, tanque, dataColeta, responsavel: nomeContato });\n    drops = drops.concat(calcularDrops(dataColeta, idColeta, tanque, 'Terra', null));\n    bagsArquivo.push(calcularArquivo(dataColeta, idColeta, tanque, null));\n  });\n\n  return output({\n    tipo: 'coleta_terra',\n    dataColeta,\n    tanques,\n    itensColeta,\n    drops,\n    bagsArquivo,\n    numero: numeroRemetente,\n    nomeContato,\n    textoResposta:\n      `✅ Coleta de terra registrada.\\n\\nTanques: ${tanques.join(', ')}\\n` +\n      `Data: ${dataColeta}\\n` +\n      `Total: ${tanques.length} tanque${tanques.length === 1 ? '' : 's'}`\n  });\n}\n\n// --- COLETA TANQUE NAVIO ---\nif (/coleta navio/i.test(texto)) {\n  const bloqueio = bloqueadoConsultor();\n  if (bloqueio) return bloqueio;\n  const matchNavio = texto.match(/coleta\\s+navio\\s+(.+?)\\s+tanques\\s+([a-z0-9,\\s]+?)\\s+data\\s+(\\d{2}\\/\\d{2}\\/\\d{4})/i);\n\n  if (!matchNavio) {\n    return output({\n      tipo: 'erro_coleta',\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta:\n        '❌ Não foi possível registrar a coleta de navio.\\n\\n' +\n        'Formato esperado:\\n\"Coleta navio <nome> tanques <lista separada por vírgula> data <dd/mm/aaaa>\"'\n    });\n  }\n\n  const navio = matchNavio[1].trim();\n  const tanques = matchNavio[2].split(',').map(t => t.trim().toUpperCase()).filter(Boolean);\n  const dataColeta = matchNavio[3];\n\n  if (!navio || tanques.length === 0) {\n    return output({\n      tipo: 'erro_coleta',\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta:\n        '❌ Não foi possível registrar a coleta de navio — nome do navio ou lista de tanques veio vazia.\\n\\n' +\n        'Formato esperado:\\n\"Coleta navio <nome> tanques <lista separada por vírgula> data <dd/mm/aaaa>\"'\n    });\n  }\n\n  const itensColeta = [];\n  let drops = [];\n  let arquivosNavio = [];\n\n  tanques.forEach((tanque, idx) => {\n    const idColeta = `CN-${Date.now()}-${idx}`;\n\n    itensColeta.push({\n      idColeta,\n      navio,\n      tanque,\n      dataColeta,\n      responsavel: nomeContato\n    });\n\n    drops = drops.concat(\n      calcularDrops(dataColeta, idColeta, tanque, 'Navio', navio)\n    );\n\n    arquivosNavio.push(\n      calcularArquivo(dataColeta, idColeta, tanque, navio)\n    );\n  });\n\n  return output({\n    tipo: 'coleta_navio',\n    navio,\n    dataColeta,\n    tanques,\n    itensColeta,\n    drops,\n    arquivosNavio,\n    numero: numeroRemetente,\n    nomeContato,\n    textoResposta:\n      `✅ Coleta registrada.\\n\\nNavio: ${navio}\\n` +\n      `Tanques: ${tanques.join(', ')}\\n` +\n      `Data: ${dataColeta}\\n` +\n      `Total: ${tanques.length} tanque${tanques.length === 1 ? '' : 's'}`\n  });\n}\n\n// --- ANALISE DE TANQUE (NORMAL / STRESS) — terra e navio, lista de tanques ---\nconst regexAnaliseTanque = /an[aá]lise\\s+(?:dos?\\s+)?(normal|stress)\\s+(?:dos?\\s+)?tanques?\\s+(?:terra\\s+)?([a-z0-9,\\s]+?)(?:\\s+navio\\s+(.+?))?\\s*,?\\s*data\\s+(\\d{2}\\/\\d{2}\\/\\d{4})/i;\nconst matchAnaliseTanque = texto.match(regexAnaliseTanque);\n\nif (matchAnaliseTanque) {\n  const bloqueio = bloqueadoConsultor();\n  if (bloqueio) return bloqueio;\n  const tipoFrascoBruto = matchAnaliseTanque[1].toLowerCase();\n  const tipoFrasco = tipoFrascoBruto === 'stress' ? 'Stress' : 'Normal';\n  const tanques = matchAnaliseTanque[2].split(',').map(t => t.trim().toUpperCase()).filter(Boolean);\n  const navio = matchAnaliseTanque[3] ? matchAnaliseTanque[3].trim().toUpperCase() : null;\n  const tipoTanque = navio ? 'Navio' : 'Terra';\n  const dataAnalise = matchAnaliseTanque[4];\n\n  if (tanques.length === 0) {\n    return output({\n      tipo: 'erro_coleta',\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta:\n        '❌ Não foi possível registrar a análise — nenhum tanque reconhecido.\\n\\n' +\n        'Formato esperado:\\n\"Analise do normal/stress do tanque(s) <número(s)>[ navio <nome>], data <dd/mm/aaaa>\"'\n    });\n  }\n\n  const limite = navio ? 16 : 8;\n  if (tanques.length > limite) {\n    return output({\n      tipo: 'erro_coleta',\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta:\n        `❌ Só é possível registrar até ${limite} tanques por mensagem${navio ? ' de navio' : ''} (você enviou ${tanques.length}). ` +\n        'Divida em mais de uma mensagem.'\n    });\n  }\n\n  const idColetaBase = `AN-${Date.now()}`;\n  let analises = [];\n  tanques.forEach((tanque, idx) => {\n    const idColeta = `${idColetaBase}-${idx}`;\n    analises = analises.concat(calcularAnalises(dataAnalise, idColeta, tanque, tipoFrasco, tipoTanque, navio));\n  });\n  const analiseCT = analises.find(a => a.subAnalise === 'CT');\n  const analiseBL = analises.find(a => a.subAnalise === 'BL');\n  const analiseWORT = analises.find(a => a.subAnalise === 'WORT');\n\n  return output({\n    tipo: 'registro_analise',\n    tipoFrasco,\n    tanques,\n    tipoTanque,\n    navio,\n    dataAnalise,\n    analises,\n    numero: numeroRemetente,\n    nomeContato,\n    textoResposta:\n      `✅ Análise ${tipoFrasco} registrada.\\n\\n` +\n      `Tanques: ${tanques.join(', ')}${navio ? ` (Navio ${navio})` : ''}\\n` +\n      `Data: ${dataAnalise}\\n` +\n      `Data final CT: ${analiseCT.dataLeituraFinal}\\n` +\n      `Data pré-leitura BL: ${analiseBL.dataPreLeitura}\\n` +\n      `Data final BL: ${analiseBL.dataLeituraFinal}\\n` +\n      `Data pré-leitura WORT: ${analiseWORT.dataPreLeitura}\\n` +\n      `Data final WORT: ${analiseWORT.dataLeituraFinal}\\n` +\n      `Total: ${tanques.length} tanque${tanques.length === 1 ? '' : 's'}\\n` +\n      `Analises realizadas: CT, BL, WORT (Profundidade e Superfície)`\n  });\n}\n\n// --- CONSULTA DE DROPS ---\nif (/^drops?\\s*(previstos)?\\s*(para)?\\s*hoje\\??$/i.test(texto.trim())) {\n  return output({\n    tipo: 'consulta_drops',\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n// --- CONSULTA DE ANALISES (TERRA) ---\nif (/^quais\\s+analises?\\s+(de\\s+)?tanques?\\s+terra\\s+saem\\s+hoje\\??$/i.test(texto.trim())) {\n  return output({\n    tipo: 'consulta_analises_terra',\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n\n// --- CONSULTA DE ANALISES (NAVIO) ---\nif (/^quais\\s+analises?\\s+(de\\s+)?tanques?\\s+navio\\s+saem\\s+hoje\\??$/i.test(texto.trim())) {\n  return output({\n    tipo: 'consulta_analises_navio',\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n// --- CONSULTA DE BAGS (TERRA) ---\nif (/^quais\\s+bags?\\s+(posso\\s+)?descartar\\s+hoje/i.test(texto.trim())) {\n  return output({\n    tipo: 'consulta_bags',\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n\n// --- CONSULTA DE POTES (NAVIO) ---\nif (/^quais\\s+potes?\\s+(do\\s+)?navio\\s+(posso\\s+)?descartar\\s+hoje/i.test(texto.trim())) {\n  return output({\n    tipo: 'consulta_potes',\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n// --- CONCLUIR DROPS EM LOTE ---\nconst regexConcluirDrops = /concluir\\s+drops?\\s+(?:(d5|d10|d15)\\s+)?(terra|navio)(?:\\s+(.+))?\\s*$/i;\nconst matchConcluirDrops = texto.match(regexConcluirDrops);\n\nif (matchConcluirDrops) {\n  const bloqueio = bloqueadoConsultor();\n  if (bloqueio) return bloqueio;\n\n  const diaFiltro = matchConcluirDrops[1] ? matchConcluirDrops[1].toUpperCase() : null;\n  const tipoTanqueFiltro = matchConcluirDrops[2].toLowerCase() === 'navio' ? 'Navio' : 'Terra';\n  const navioFiltro = (tipoTanqueFiltro === 'Navio' && matchConcluirDrops[3])\n    ? matchConcluirDrops[3].trim().toUpperCase()\n    : null;\n\n  return output({\n    tipo: 'concluir_drops',\n    diaFiltro,\n    tipoTanqueFiltro,\n    navioFiltro,\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n// --- CONCLUIR LEITURA DE ANALISE (CT/BL/WORT) - TERRA ---\nconst regexConcluirLeituraTerra = /concluir\\s+(?:(pre|final)\\s+)?leitura\\s+(?:(ct|bl|wort)\\s+)?(?:(normal|stress)\\s+)?terra\\s*$/i;\nconst matchConcluirLeituraTerra = texto.match(regexConcluirLeituraTerra);\n\nif (matchConcluirLeituraTerra) {\n  const bloqueio = bloqueadoConsultor();\n  if (bloqueio) return bloqueio;\n\n  const estagioFiltro = matchConcluirLeituraTerra[1] ? matchConcluirLeituraTerra[1].toLowerCase() : null;\n  const subAnaliseFiltro = matchConcluirLeituraTerra[2] ? matchConcluirLeituraTerra[2].toUpperCase() : null;\n  const frascoFiltro = matchConcluirLeituraTerra[3]\n    ? (matchConcluirLeituraTerra[3].toLowerCase() === 'stress' ? 'Stress' : 'Normal')\n    : null;\n\n  return output({\n    tipo: 'concluir_leitura_terra',\n    estagioFiltro,\n    subAnaliseFiltro,\n    frascoFiltro,\n    tipoTanqueFiltro: 'Terra',\n    navioFiltro: null,\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n\n// --- CONCLUIR LEITURA DE ANALISE (CT/BL/WORT) - NAVIO ---\nconst regexConcluirLeituraNavio = /concluir\\s+(?:(pre|final)\\s+)?leitura\\s+(?:(ct|bl|wort)\\s+)?(?:(normal|stress)\\s+)?navio(?:\\s+(.+))?\\s*$/i;\nconst matchConcluirLeituraNavio = texto.match(regexConcluirLeituraNavio);\n\nif (matchConcluirLeituraNavio) {\n  const bloqueio = bloqueadoConsultor();\n  if (bloqueio) return bloqueio;\n\n  const estagioFiltro = matchConcluirLeituraNavio[1] ? matchConcluirLeituraNavio[1].toLowerCase() : null;\n  const subAnaliseFiltro = matchConcluirLeituraNavio[2] ? matchConcluirLeituraNavio[2].toUpperCase() : null;\n  const frascoFiltro = matchConcluirLeituraNavio[3]\n    ? (matchConcluirLeituraNavio[3].toLowerCase() === 'stress' ? 'Stress' : 'Normal')\n    : null;\n  const navioFiltro = matchConcluirLeituraNavio[4] ? matchConcluirLeituraNavio[4].trim().toUpperCase() : null;\n\n  return output({\n    tipo: 'concluir_leitura_navio',\n    estagioFiltro,\n    subAnaliseFiltro,\n    frascoFiltro,\n    tipoTanqueFiltro: 'Navio',\n    navioFiltro,\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n\n// --- CONFIRMAR PENDENCIA (resposta \"sim\" isolada) ---\nif (/^sim\\s*$/i.test(texto.trim())) {\n  return output({\n    tipo: 'confirmar_pendencia',\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n\n// --- CANCELAR PENDENCIA (resposta \"nao\"/\"não\" isolada) ---\nif (/^n[aã]o\\s*$/i.test(texto.trim())) {\n  return output({\n    tipo: 'cancelar_pendencia',\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n\n// --- NENHUM COMANDO RECONHECIDO ---\n\n// Mensagem reenviada pela própria IA (J4) que mesmo assim não bateu em\n// nenhuma regex: responde com erro em vez de mandar de novo para a IA,\n// para não entrar em loop.\nif (webhookItem.body.labflowReenvio === true) {\n  return output({\n    tipo: 'erro_ia',\n    numero: numeroRemetente,\n    nomeContato,\n    textoResposta:\n      '❌ Não consegui transformar sua mensagem num comando válido. ' +\n      'Envie no formato do comando, por exemplo:\\n' +\n      'registrar coleta tanque terra 40 data 29/09/2026'\n  });\n}\n\n// Mensagem normal que nenhuma regex reconheceu: vai para a IA (J3).\nconst hojeIA = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' });\n\nreturn output({\n  tipo: 'interpretar_ia',\n  mensagem_original: texto,\n  hoje: hojeIA,\n  numero: numeroRemetente,\n  nomeContato,\n  // Resposta provisória, usada só até a J3 ligar o Gemini nesta rota.\n  textoResposta:\n    '🤖 Não reconheci esse comando. Em breve vou conseguir interpretar mensagens livres. ' +\n    'Por enquanto, use o formato do comando.'\n});"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -79,7 +79,7 @@
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
-        272,
+        656,
         208
       ],
       "id": "ff25011c-8277-4abd-a2ef-b344342f91f1",
@@ -102,7 +102,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.5,
       "position": [
-        528,
+        912,
         304
       ],
       "id": "ab21ec00-55f3-4009-887d-723057effc42",
@@ -125,7 +125,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.5,
       "position": [
-        784,
+        1168,
         208
       ],
       "id": "0e8d50b3-3790-409f-8c4a-ba0ba6aa8311",
@@ -140,7 +140,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        1312,
+        1696,
         208
       ],
       "id": "c9e2f698-c2e5-4b22-af91-fd1286a421a2",
@@ -155,7 +155,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.5,
       "position": [
-        1040,
+        1424,
         304
       ],
       "id": "62ceccf4-40a6-48b2-8e78-9767c96f6d23",
@@ -189,7 +189,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        784,
+        1168,
         304
       ],
       "id": "b2195663-c87c-411a-a7cf-bfaa3c13c6fc",
@@ -225,7 +225,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        1040,
+        1424,
         208
       ],
       "id": "670805e6-1db4-4968-acd5-e3cb0c64d098",
@@ -771,6 +771,56 @@
               },
               "renameOutput": true,
               "outputKey": "cancelar_pendencia"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "0687df92-abec-4c21-838d-65ddac93ac9f",
+                    "leftValue": "={{ $json.tipo }}",
+                    "rightValue": "interpretar_ia",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "interpretar_ia"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "4c6ecdc1-5e81-4a6c-a99b-7260b02371c0",
+                    "leftValue": "={{ $json.tipo }}",
+                    "rightValue": "erro_ia",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "erro_ia"
             }
           ]
         },
@@ -1583,7 +1633,7 @@
       "type": "n8n-nodes-base.googleSheets",
       "typeVersion": 4.7,
       "position": [
-        528,
+        912,
         208
       ],
       "id": "7f26a03b-6836-4fc1-90f4-10212149260a",
@@ -3848,7 +3898,7 @@
     },
     {
       "parameters": {
-        "jsCode": "const rows = $input.all().map(i => i.json);\nconst item = $('Code in JavaScript').first().json;\nconst numeroLimpo = item._numeroRemetenteLimpo;\nconst acao = item.tipo; // 'confirmar_pendencia' ou 'cancelar_pendencia'\nconst feitaPor = item.nomeContato || 'Desconhecido';\n\nconst pendencia = rows.find(r => String(r['Numero']) === String(numeroLimpo));\n\nif (!pendencia || !pendencia['IDs']) {\n  return [{ json: { ...item, analisesParaAtualizar: [], limparPendencia: false,\n    textoResposta: 'ℹ️ Nenhuma confirmação pendente encontrada.' } }];\n}\n\n// \"Criado Em\" é gravado no horário de Brasília, ex: \"25/09/2026, 21:08:28\".\n// Lê dia/mês/ano/hora com regex (aceita com ou sem vírgula) e converte para UTC\n// somando 3h (Brasília = UTC-3, sem horário de verão).\nconst m = String(pendencia['Criado Em'] || '')\n  .match(/(\\d{1,2})\\/(\\d{1,2})\\/(\\d{4})\\D+(\\d{1,2}):(\\d{2})(?::(\\d{2}))?/);\nconst criadoEmMs = m\n  ? Date.UTC(+m[3], +m[2] - 1, +m[1], +m[4] + 3, +m[5], +(m[6] || 0))\n  : NaN;\nconst diffMinutos = (Date.now() - criadoEmMs) / 60000;\n\n// Se não der para ler a data, trata como expirada (mais seguro que confirmar).\nif (!m || isNaN(diffMinutos) || diffMinutos > 10) {\n  return [{ json: { ...item, analisesParaAtualizar: [], limparPendencia: true,\n    textoResposta: '⏰ Essa confirmação expirou. Envie o comando novamente.' } }];\n}\n\nif (acao === 'cancelar_pendencia') {\n  return [{ json: { ...item, analisesParaAtualizar: [], limparPendencia: true,\n    textoResposta: '❌ Operação cancelada. Nada foi alterado.' } }];\n}\n\nconst ids = pendencia['IDs'].split(',');\nconst novosStatus = pendencia['NovosStatus'].split(',');\nconst analisesParaAtualizar = ids.map((id, idx) => ({\n  id,\n  novoStatus: novosStatus[idx],\n  // Se o novo status é \"Concluído\", foi a leitura final; senão, foi a pré-leitura.\n  estagio: /conclu/i.test(novosStatus[idx]) ? 'final' : 'pre',\n  feitaPor\n}));\n\nreturn [{ json: { ...item, analisesParaAtualizar, limparPendencia: true,\n  textoResposta: `✅ Concluído:\\n\\n${pendencia['Resumo']}\\n\\nLeitura feita por: ${feitaPor}` } }];"
+        "jsCode": "const rows = $input.all().map(i => i.json);\nconst item = $('Code in JavaScript').first().json;\nconst numeroLimpo = item._numeroRemetenteLimpo;\nconst acao = item.tipo; // 'confirmar_pendencia' ou 'cancelar_pendencia'\nconst feitaPor = item.nomeContato || 'Desconhecido';\n\nconst pendencia = rows.find(r => String(r['Numero']) === String(numeroLimpo));\n\nif (!pendencia || !pendencia['IDs']) {\n  return [{ json: { ...item, analisesParaAtualizar: [], limparPendencia: false,\n    textoResposta: 'ℹ️ Nenhuma confirmação pendente encontrada.' } }];\n}\n\n// \"Criado Em\" é gravado no horário de Brasília, ex: \"25/09/2026, 21:08:28\".\n// Lê dia/mês/ano/hora com regex (aceita com ou sem vírgula) e converte para UTC\n// somando 3h (Brasília = UTC-3, sem horário de verão).\nconst m = String(pendencia['Criado Em'] || '')\n  .match(/(\\d{1,2})\\/(\\d{1,2})\\/(\\d{4})\\D+(\\d{1,2}):(\\d{2})(?::(\\d{2}))?/);\nconst criadoEmMs = m\n  ? Date.UTC(+m[3], +m[2] - 1, +m[1], +m[4] + 3, +m[5], +(m[6] || 0))\n  : NaN;\nconst diffMinutos = (Date.now() - criadoEmMs) / 60000;\n\n// Se não der para ler a data, trata como expirada (mais seguro que confirmar).\nif (!m || isNaN(diffMinutos) || diffMinutos > 10) {\n  return [{ json: { ...item, analisesParaAtualizar: [], limparPendencia: true,\n    textoResposta: '⏰ Essa confirmação expirou. Envie o comando novamente.' } }];\n}\n\nif (acao === 'cancelar_pendencia') {\n  return [{ json: { ...item, analisesParaAtualizar: [], limparPendencia: true,\n    textoResposta: '❌ Operação cancelada. Nada foi alterado.' } }];\n}\n// Pendência criada pela IA: o Resumo guarda o comando canônico a executar\nif (pendencia['IDs'] === 'IA') {\n  return [{ json: { ...item, analisesParaAtualizar: [], limparPendencia: true,\n    reenviarComando: pendencia['Resumo'],\n    textoResposta: '' } }];\n}\nconst ids = pendencia['IDs'].split(',');\nconst novosStatus = pendencia['NovosStatus'].split(',');\nconst analisesParaAtualizar = ids.map((id, idx) => ({\n  id,\n  novoStatus: novosStatus[idx],\n  // Se o novo status é \"Concluído\", foi a leitura final; senão, foi a pré-leitura.\n  estagio: /conclu/i.test(novosStatus[idx]) ? 'final' : 'pre',\n  feitaPor\n}));\n\nreturn [{ json: { ...item, analisesParaAtualizar, limparPendencia: true,\n  textoResposta: `✅ Concluído:\\n\\n${pendencia['Resumo']}\\n\\nLeitura feita por: ${feitaPor}` } }];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -4018,8 +4068,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        784,
-        6320
+        752,
+        6592
       ],
       "id": "4f51983f-326e-4f41-83ef-a01cf55b4104",
       "name": "HTTP Request Confirmar Resposta",
@@ -4088,217 +4138,6 @@
       ],
       "id": "28ddab44-a877-4aa2-ac41-dc785f67a1c6",
       "name": "If Leitura Final"
-    },
-    {
-      "parameters": {
-        "authentication": "serviceAccount",
-        "operation": "update",
-        "documentId": {
-          "__rl": true,
-          "value": "SEU_SPREADSHEET_ID",
-          "mode": "list",
-          "cachedResultName": "LabFlow - Dados",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit?usp=drivesdk"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": 1828827858,
-          "mode": "list",
-          "cachedResultName": "ANALISES",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit#gid=1828827858"
-        },
-        "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "ID": "={{ $json.id }}",
-            "Status": "={{ $json.novoStatus }}",
-            "Leitura Final Feita Por": "={{ $json.feitaPor }}"
-          },
-          "matchingColumns": [
-            "ID"
-          ],
-          "schema": [
-            {
-              "id": "ID",
-              "displayName": "ID",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "ID Coleta",
-              "displayName": "ID Coleta",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": true
-            },
-            {
-              "id": "Tanque",
-              "displayName": "Tanque",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": true
-            },
-            {
-              "id": "Tipo Tanque",
-              "displayName": "Tipo Tanque",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": true
-            },
-            {
-              "id": "Navio",
-              "displayName": "Navio",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": true
-            },
-            {
-              "id": "Tipo Frasco",
-              "displayName": "Tipo Frasco",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": true
-            },
-            {
-              "id": "Sub-Analise",
-              "displayName": "Sub-Analise",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": true
-            },
-            {
-              "id": "Metodo",
-              "displayName": "Metodo",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": true
-            },
-            {
-              "id": "Data Analise",
-              "displayName": "Data Analise",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": true
-            },
-            {
-              "id": "Data Pre-Leitura",
-              "displayName": "Data Pre-Leitura",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": true
-            },
-            {
-              "id": "Data Leitura Final",
-              "displayName": "Data Leitura Final",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": true
-            },
-            {
-              "id": "Status",
-              "displayName": "Status",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "Responsavel",
-              "displayName": "Responsavel",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": true
-            },
-            {
-              "id": "Pre-Leitura Feita Por",
-              "displayName": "Pre-Leitura Feita Por",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": true
-            },
-            {
-              "id": "Leitura Final Feita Por",
-              "displayName": "Leitura Final Feita Por",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true,
-              "removed": false
-            },
-            {
-              "id": "row_number",
-              "displayName": "row_number",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "number",
-              "canBeUsedToMatch": true,
-              "readOnly": true,
-              "removed": true
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.7,
-      "position": [
-        1392,
-        5680
-      ],
-      "id": "cbf62053-df84-4f96-995a-4c8db613c4f3",
-      "name": "Update Row ANALISES Confirmar1",
-      "credentials": {
-        "googleApi": {
-          "id": "GOOGLE_CREDENTIAL_ID",
-          "name": "Google Service Account account"
-        }
-      }
     },
     {
       "parameters": {
@@ -4503,13 +4342,542 @@
         5984
       ],
       "id": "37c08f90-04da-430c-82bf-a0ab0ed38247",
-      "name": "Update Row ANALISES FInal",
+      "name": "Update Row ANALISES Pre",
       "credentials": {
         "googleApi": {
           "id": "GOOGLE_CREDENTIAL_ID",
           "name": "Google Service Account account"
         }
       }
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "SEU_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "LabFlow - Dados",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1828827858,
+          "mode": "list",
+          "cachedResultName": "ANALISES",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit#gid=1828827858"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "ID": "={{ $json.id }}",
+            "Status": "={{ $json.novoStatus }}",
+            "Leitura Final Feita Por": "={{ $json.feitaPor }}"
+          },
+          "matchingColumns": [
+            "ID"
+          ],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ID Coleta",
+              "displayName": "ID Coleta",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Tanque",
+              "displayName": "Tanque",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Tipo Tanque",
+              "displayName": "Tipo Tanque",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Navio",
+              "displayName": "Navio",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Tipo Frasco",
+              "displayName": "Tipo Frasco",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Sub-Analise",
+              "displayName": "Sub-Analise",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Metodo",
+              "displayName": "Metodo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Data Analise",
+              "displayName": "Data Analise",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Data Pre-Leitura",
+              "displayName": "Data Pre-Leitura",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Data Leitura Final",
+              "displayName": "Data Leitura Final",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Status",
+              "displayName": "Status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Responsavel",
+              "displayName": "Responsavel",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Pre-Leitura Feita Por",
+              "displayName": "Pre-Leitura Feita Por",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Leitura Final Feita Por",
+              "displayName": "Leitura Final Feita Por",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1392,
+        5680
+      ],
+      "id": "cbf62053-df84-4f96-995a-4c8db613c4f3",
+      "name": "Update Row ANALISES Final",
+      "credentials": {
+        "googleApi": {
+          "id": "GOOGLE_CREDENTIAL_ID",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://labflow-evolution:8080/message/sendText/labflow2",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "={{ $('Code in JavaScript').item.json.numero.replace('@s.whatsapp.net', '') }}"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.textoResposta }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        -640,
+        1184
+      ],
+      "id": "9d8f00a4-f501-4f60-b245-3be2746b1ba7",
+      "name": "HTTP Request  IA provisorio",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "EVOLUTION_CREDENTIAL_ID",
+          "name": "Evolution API (servidor)"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.5,
+      "position": [
+        -640,
+        1344
+      ],
+      "id": "2a418297-7edc-4824-a6e2-5115dc0fd0be",
+      "name": "Respond to Webhook14"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-3.1-flash-lite",
+          "mode": "list",
+          "cachedResultName": "models/gemini-3.1-flash-lite"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Você é o interpretador do LabFlow, bot de laboratório de microbiologia.\nConverta a mensagem do analista em JSON. Responda APENAS com o JSON, sem texto extra e sem ```.\n\nIntenções válidas:\n- \"coleta_terra\": coleta de tanque(s) de terra. Tanques são números (ex: 42, 43). Máximo 8.\n- \"coleta_navio\": coleta de tanque(s) de navio. Tanques têm número + letra opcional C/P/S/A/F (ex: 1C, 4P). Máximo 16. O navio inclui o número da viagem (ex: \"O.SKY 123\"), mesmo que a palavra \"navio\" não apareça.\n- \"desconhecido\": qualquer outra coisa (saudação, pergunta, mensagem incompleta).\n\nFormato:\n{\"intencao\": \"...\", \"tanques\": [\"...\"], \"navio\": \"... ou null\", \"data\": \"dd/mm/aaaa ou null\"}\n\nRegras:\n- Hoje é {{ $('Code in JavaScript').first().json.hoje }}. Converta \"hoje\", \"ontem\" etc. para dd/mm/aaaa.\n- Se faltar a data, use null. Nunca invente tanques, navio ou data.\n\nMensagem: {{ $('Code in JavaScript').first().json.mensagem_original }}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "temperature": 0
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        -640,
+        832
+      ],
+      "id": "ad38391b-7204-424d-ae90-a47810249ba5",
+      "name": "Message a model Interpretar IA",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000,
+      "maxTries": 5,
+      "credentials": {
+        "googlePalmApi": {
+          "id": "GEMINI_CREDENTIAL_ID",
+          "name": "Gemini (LabFlow)"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const principal = $('Code in JavaScript').first().json;\nconst raw = $input.first().json;\nif (raw?.error) {\n  return [{ json: {\n    numero: principal.numero,\n    nomeContato: principal.nomeContato,\n    comando_ia: null,\n    textoResposta: '⚠️ A IA está indisponível no momento. Tente de novo em alguns instantes ou use o formato do comando.'\n  }}];\n}\nlet texto = raw?.content?.parts?.[0]?.text ?? '';\ntexto = String(texto).replace(/```json|```/g, '').trim();\n\nlet ia;\ntry { ia = JSON.parse(texto); } catch (e) { ia = { intencao: 'desconhecido' }; }\n\nconst tanques = Array.isArray(ia.tanques)\n  ? ia.tanques.map(t => String(t).trim().toUpperCase()).filter(Boolean)\n  : [];\nconst dataOk = /^\\d{2}\\/\\d{2}\\/\\d{4}$/.test(ia.data || '');\n\nlet comando = null, erro = null;\n\nif (ia.intencao === 'coleta_terra') {\n  if (!tanques.length || !tanques.every(t => /^\\d+$/.test(t))) erro = 'Não identifiquei os tanques de terra.';\n  else if (tanques.length > 8) erro = 'Limite de 8 tanques de terra por mensagem.';\n  else if (!dataOk) erro = 'Faltou a data da coleta (dd/mm/aaaa).';\n  else comando = `registrar coleta tanque terra ${tanques.join(',')} data ${ia.data}`;\n} else if (ia.intencao === 'coleta_navio') {\n  if (!ia.navio) erro = 'Faltou o nome do navio com a viagem (ex: O.SKY 123).';\n  else if (!tanques.length || !tanques.every(t => /^\\d+[CPS]?$/.test(t))) erro = 'Não identifiquei os tanques do navio.';\n  else if (tanques.length > 16) erro = 'Limite de 16 tanques de navio por mensagem.';\n  else if (!dataOk) erro = 'Faltou a data da coleta (dd/mm/aaaa).';\n  else comando = `Coleta navio ${String(ia.navio).trim()} tanques ${tanques.join(',')} data ${ia.data}`;\n} else {\n  erro = 'Não entendi a mensagem. Formatos aceitos:\\n' +\n    '• registrar coleta tanque terra 42,43 data 28/09/2026\\n' +\n    '• Coleta navio O.SKY 123 tanques 1C,4P data 28/09/2026';\n}\n\nconst criadoEm = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });\n\nreturn [{ json: {\n  numero: principal.numero,\n  nomeContato: principal.nomeContato,\n  comando_ia: comando,\n  idsCSV: 'IA',\n  novosStatusCSV: 'IA',\n  resumo: comando,\n  criadoEm,\n  textoResposta: comando\n    ? `🤖 Entendi:\\n${comando}\\n\\nResponda *sim* para confirmar ou *não* para cancelar.`\n    : `❌ ${erro}`\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -288,
+        1088
+      ],
+      "id": "5b06ab9e-379e-433c-ba07-d0642edc32bd",
+      "name": "Validar IA"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "f0c067f9-4dbe-41d1-9823-abf9ffa88984",
+              "leftValue": "comando_ia",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -64,
+        1088
+      ],
+      "id": "63f536ba-348f-4be0-8c34-ab87d642630b",
+      "name": "If IA Entendeu."
+    },
+    {
+      "parameters": {
+        "authentication": "serviceAccount",
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "SEU_SPREADSHEET_ID",
+          "mode": "list",
+          "cachedResultName": "LabFlow - Dados",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 540274203,
+          "mode": "list",
+          "cachedResultName": "CONFIRMACOES_PENDENTES",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit#gid=540274203"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Numero": "={{ $('Code in JavaScript').first().json._numeroRemetenteLimpo }}",
+            "IDs": "={{ $json.idsCSV }}",
+            "NovosStatus": "={{ $json.novosStatusCSV }}",
+            "Resumo": "={{ $json.resumo }}",
+            "Criado Em": "={{ $json.criadoEm }}"
+          },
+          "matchingColumns": [
+            "Numero"
+          ],
+          "schema": [
+            {
+              "id": "Numero",
+              "displayName": "Numero",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "IDs",
+              "displayName": "IDs",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "NovosStatus",
+              "displayName": "NovosStatus",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Resumo",
+              "displayName": "Resumo",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Criado Em",
+              "displayName": "Criado Em",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -64,
+        1424
+      ],
+      "id": "04b682f8-a224-46d8-a15e-9d4586808899",
+      "name": "Salvar Pendencia IA",
+      "credentials": {
+        "googleApi": {
+          "id": "GOOGLE_CREDENTIAL_ID",
+          "name": "Google Service Account account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "c156d93b-bb51-4098-863c-893501487ada",
+              "leftValue": "reenviarComando",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1232,
+        6656
+      ],
+      "id": "e7f5d6c8-6547-4421-9d80-acb0246e1fb5",
+      "name": "If Reenviar Comando."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:5678/webhook/labflow-registro",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  labflowReenvio: true,\n  data: {\n    key: { remoteJid: $('Code in JavaScript').first().json.numero, fromMe: false },\n    pushName: $('Code in JavaScript').first().json.nomeContato,\n    messageTimestamp: Math.floor(Date.now() / 1000),\n    message: { conversation: $json.reenviarComando }\n  }\n} }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.5,
+      "position": [
+        576,
+        6336
+      ],
+      "id": "ff882e15-2866-4522-9f2a-720833e8aca2",
+      "name": "HTTP Reenvio IA"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "bc9e542a-061c-4253-9f09-071caf852aa1",
+              "leftValue": "={{ String($json.textoResposta || '').trim().length > 0 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        192,
+        6624
+      ],
+      "id": "0ddfd602-77fb-4e5b-81d4-aee75159400d",
+      "name": "If Tem Resposta"
     }
   ],
   "pinData": {},
@@ -4758,6 +5126,20 @@
         [
           {
             "node": "Get rows CONFIRMACOES_PENDENTES",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Message a model Interpretar IA",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request  IA provisorio",
             "type": "main",
             "index": 0
           }
@@ -5405,7 +5787,12 @@
             "index": 0
           },
           {
-            "node": "HTTP Request Confirmar Resposta",
+            "node": "If Reenviar Comando.",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If Tem Resposta",
             "type": "main",
             "index": 0
           }
@@ -5449,14 +5836,92 @@
       "main": [
         [
           {
-            "node": "Update Row ANALISES Confirmar1",
+            "node": "Update Row ANALISES Final",
             "type": "main",
             "index": 0
           }
         ],
         [
           {
-            "node": "Update Row ANALISES FInal",
+            "node": "Update Row ANALISES Pre",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request  IA provisorio": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook14",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model Interpretar IA": {
+      "main": [
+        [
+          {
+            "node": "Validar IA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validar IA": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request  IA provisorio",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If IA Entendeu.",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If IA Entendeu.": {
+      "main": [
+        [
+          {
+            "node": "Salvar Pendencia IA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Reenviar Comando.": {
+      "main": [
+        [
+          {
+            "node": "HTTP Reenvio IA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Tem Resposta": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request Confirmar Resposta",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook Confirmar Resposta",
             "type": "main",
             "index": 0
           }
@@ -5469,7 +5934,7 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "75a88488-0cd0-46a2-8d4e-e046785396d7",
+  "versionId": "2f8da83f-6fca-49f0-88d2-dd916ce18d07",
   "meta": {},
   "nodeGroups": [],
   "id": "rvgdaHvnC4EqXMeQ",

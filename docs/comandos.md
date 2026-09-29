@@ -7,11 +7,12 @@ Lista dos comandos reconhecidos pelo bot do WhatsApp, com o formato esperado e u
 - **Mensagens do próprio número pareado são ignoradas.** O bot não processa mensagens enviadas por ele mesmo.
 - **Mensagens com mais de 10 minutos são descartadas.** Evita reprocessar mensagens antigas se o serviço ficar fora do ar por um tempo e voltar.
 - **Só números cadastrados usam o bot.** Quem não está na aba `USUARIOS` recebe uma mensagem pedindo cadastro e nenhum comando é executado.
+- **Mensagem que nenhum comando reconhece vai para a IA** (seção 11), em vez de ser tratada como amostra.
 - Os comandos abaixo não diferenciam maiúsculas de minúsculas.
 
 ## Cargos e permissões
 
-| Cargo | Registrar (coleta, análise, amostra, concluir drops e leituras) | Consultar | Gerenciar cargos |
+| Cargo | Registrar (coleta, análise, concluir drops e leituras) | Consultar | Gerenciar cargos |
 |---|---|---|---|
 | **Admin** | ✅ | ✅ | ✅ |
 | **Operador** | ✅ | ✅ | ❌ |
@@ -202,11 +203,37 @@ LabFlow:  ✅ Concluído:
 
 A consulta "Quais analises ... saem hoje?" continua mostrando as leituras já concluídas no dia, de propósito: a lista do dia serve de base para o resumo enviado por e-mail.
 
-## 11. Amostra
+## 11. Mensagem livre (IA)
 
-Não tem uma frase fixa. Qualquer mensagem contendo `amostra <número>` — e, opcionalmente, `analise <tipo>` e uma data `dd/mm/aaaa` — é reconhecida como registro de amostra. Este é também o comportamento padrão quando a mensagem não corresponde a nenhum dos comandos acima.
+Quando a mensagem não bate em nenhum comando acima, ela é enviada ao Gemini, que tenta transformá-la num comando. Hoje a IA entende **coleta de terra** e **coleta de navio**. Os outros comandos ainda precisam ser digitados no formato exato.
 
-**Exemplo:**
+**Exemplos de mensagens aceitas:**
 ```
-amostra 123 analise fisico-quimica 20/09/2026
+coletei os tanques 42 e 43 hoje
+O.SKY 123, tanques 1C e 4P, coleta de ontem
 ```
+
+A IA nunca grava nada sozinha. O bot responde com o comando que entendeu e pede confirmação:
+
+```
+Você:     coletei os tanques 42 e 43 hoje
+LabFlow:  🤖 Entendi:
+          registrar coleta tanque terra 42,43 data 29/09/2026
+
+          Responda sim para confirmar ou não para cancelar.
+Você:     sim
+LabFlow:  ✅ Coleta de terra registrada.
+
+          Tanques: 42, 43
+          Data: 29/09/2026
+          Total: 2 tanques
+```
+
+- **`sim`** executa o comando como se ele tivesse sido digitado: mesmas permissões, mesmos limites (8 tanques em terra, 16 em navio) e mesmo bloqueio de coleta duplicada.
+- **`não`**/**`nao`** cancela, e nada é gravado.
+- A pendência expira em **10 minutos**, como na conclusão de leituras (seção 10).
+- Se faltar a data, o bot responde `Faltou a data da coleta (dd/mm/aaaa).` e, se faltar o nome do navio com a viagem, pede o nome. Nada é gravado e nenhuma confirmação é pedida.
+- Se a mensagem não tiver relação com nenhum comando (uma saudação, por exemplo), o bot responde com a lista dos formatos aceitos.
+- Se o Gemini estiver fora do ar, o bot responde `A IA está indisponível no momento` e nada é gravado. Nesse caso, use o comando no formato padrão.
+
+O registro de amostra avulsa (`amostra <número> ...`) foi removido na versão 0.8.0: as amostras do laboratório serão o recebimento e o embarque de suco concentrado, em planilha própria.
