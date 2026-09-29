@@ -872,6 +872,79 @@ trocar conexões às cegas só move o problema de lugar.
 
 ---
 
+## Bug 20 — Mensagem "fantasma" depois do "sim" (texto vazio → erro 400 → webhook reenviado)
+
+**Sintoma:** ao confirmar um comando da IA com "sim", o bot executava o
+comando normalmente, mas em seguida mandava também "ℹ️ Nenhuma
+confirmação pendente encontrada.". Na aba Executions, uma das execuções
+do "sim" estava com erro no `HTTP Request Confirmar Resposta`:
+`400 - Text is required`.
+
+**Causa raiz:** no caso da IA, o texto de resposta do "sim" é vazio de
+propósito: o comando reenviado já responde ("Coleta de terra
+registrada"), e uma mensagem "Executando o comando..." só poluía o chat.
+O `HTTP Request` tentou enviar o texto vazio e a Evolution API recusou.
+O erro interrompeu a execução antes do `Respond to Webhook`, o webhook
+original ficou sem resposta, e a Evolution API reenviou o mesmo "sim"
+(o mesmo mecanismo do Bug 10). A segunda entrega não achou pendência,
+porque a primeira já a tinha apagado, e daí a mensagem "fantasma".
+
+**Como foi encontrado:** a aba Executions mostrava duas execuções para um
+"sim" só, uma delas com erro. Abrir a que falhou apontou o node e a
+mensagem `Text is required`.
+
+**Solução aplicada:** um node `If Tem Resposta` antes do envio: com texto,
+segue para o `HTTP Request Confirmar Resposta`; sem texto, vai direto
+para o `Respond to Webhook`. A primeira versão da condição (`textoResposta`
+"is not empty") ainda deixou um item vazio passar; a causa exata do
+operador não foi investigada. Foi trocada por uma expressão booleana
+explícita, `{{ String($json.textoResposta || '').trim().length > 0 }}`
+com o operador "is true".
+
+**Validação:** mensagem de coleta, "sim" e reenvio geraram três execuções
+com sucesso, sem repetição. "não" e "sim" sem pendência continuaram
+respondendo normalmente.
+
+**Lição:** um erro de envio num ramo lateral derruba a execução inteira e
+faz o webhook ser reentregue. Todo ramo que pode terminar sem texto
+precisa ter uma saída que ainda responda ao webhook. E uma resposta "de
+sobra" no WhatsApp é pista de execução duplicada: a aba Executions mostra
+qual falhou.
+
+---
+
+## Bug 21 — Gemini fora do ar aparecia como "Não entendi a mensagem"
+
+**Sintoma:** a mesma frase que funcionava passava, às vezes, a receber
+"Não entendi a mensagem. Formatos aceitos: ...". Nas primeiras chamadas
+de teste, cerca de 3 em 8 falharam, mesmo com nova tentativa automática.
+
+**Causa raiz:** o Gemini respondia `Service unavailable` (503, sobrecarga
+do lado do provedor). Com `On Error = Continue`, o item de erro seguia
+para o `Validar IA`, que não achava JSON e caía no caminho "intenção
+desconhecida", o mesmo de uma saudação. Para quem usa o bot, "não
+entendi" e "a IA caiu" pedem ações diferentes.
+
+**Solução aplicada:**
+1. `Retry On Fail` no node do Gemini, com 5 tentativas e 3 s entre elas.
+2. O `Validar IA` verifica primeiro se o item veio com erro e, nesse caso,
+   responde "A IA está indisponível no momento. Tente de novo em alguns
+   instantes ou use o formato do comando", sem salvar pendência.
+3. Troca do modelo por uma variante Flash-Lite, mais barata e menos
+   disputada.
+
+**Validação:** o aviso de indisponibilidade apareceu nas falhas e as
+mensagens seguintes voltaram a ser interpretadas. Depois da troca de
+modelo, os testes seguintes não falharam (amostra pequena; vale seguir
+observando).
+
+**Lição:** um serviço externo vai falhar, então separar "não entendi" de
+"não respondeu" faz parte do desenho. Nova tentativa com espera resolve
+picos curtos, e registrar a taxa de falha antes e depois de cada
+mitigação mostra se ela funcionou.
+
+---
+
 ## Configuração da instância Evolution API (recomendada)
 
 ```json
