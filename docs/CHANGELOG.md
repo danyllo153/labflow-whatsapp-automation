@@ -10,6 +10,63 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 `docs/deploy-vps.md`. Este arquivo é só o resumo cronológico do que mudou.
 
 
+## [0.8.0] - 2026-09-29
+
+### Added
+- IA como fallback da regex (Gemini): mensagem que nenhuma regex reconhece
+  vai para o node `Message a model Interpretar IA`, que devolve um JSON
+  (`intencao`, `tanques`, `navio`, `data`). Hoje entende coleta de terra e
+  de navio, inclusive frases livres ("coletei os tanques 42 e 43 hoje") e
+  nome de navio sem a palavra "navio"
+- Node `Validar IA`: confere o JSON com as mesmas regras da regex (tanques
+  válidos, limites de 8 e 16, data `dd/mm/aaaa`, navio obrigatório) e monta
+  o comando no formato padrão
+- Confirmação antes de executar: o bot mostra o comando entendido e pede
+  "sim" ou "não". A pendência usa a aba `CONFIRMACOES_PENDENTES` (`IDs =
+  IA`, `Resumo` = comando), com a mesma expiração de 10 minutos
+- Reenvio do comando confirmado ao próprio webhook (`labflowReenvio:
+  true`), para executar pela regex normal. Se ainda não for reconhecido,
+  responde erro em vez de voltar à IA (sem loop)
+- Aviso "A IA está indisponível" quando o Gemini falha; `Retry On Fail`
+  com 5 tentativas e 3 s de espera
+- Node `If Tem Resposta`: pula o envio de WhatsApp quando não há texto de
+  resposta (caso da confirmação da IA), mas continua respondendo ao
+  webhook
+- Documentação: `docs/arquitetura.md` (seção da IA), `docs/comandos.md`
+  (seção 11) e Bugs 20 e 21 em `docs/troubleshooting.md`
+
+### Changed
+- `Processar Confirmacao` reconhece pendência da IA (`IDs = IA`) e devolve
+  `reenviarComando`
+- `scripts/audit-workflow.py`: um HTTP Request que reenvia para o próprio
+  webhook do workflow não exige `Respond to Webhook` depois, porque a
+  resposta ao webhook original sai por outro ramo e a chamada abre uma
+  execução própria
+- Nodes `Update Row ANALISES` renomeados para `... Pre` e `... Final`
+- Modelo do Gemini trocado para uma variante Flash-Lite depois de falhas
+  de disponibilidade
+
+### Removed
+- **Breaking:** comando de registro de amostra avulsa (`amostra <número>
+  ...`). As amostras do laboratório serão o recebimento e o embarque, em
+  planilha própria. Uma mensagem sem comando reconhecido agora vai para a
+  IA em vez de virar amostra. O ramo `amostra` ainda existe no canvas do
+  n8n, sem entrada, e a aba `AMOSTRAS` está sem uso; ambos serão apagados
+
+### Fixed
+- Mensagem "fantasma" no WhatsApp depois de confirmar um comando da IA:
+  texto vazio no `HTTP Request Confirmar Resposta` gerava erro 400 e a
+  Evolution API reenviava o "sim" — ver Bug 20
+- Falha do Gemini (503) aparecia como "Não entendi a mensagem" — ver Bug 21
+
+### Security
+- A IA não grava dados: só sugere um comando, que precisa de confirmação e
+  passa pelas regras de sempre (cargo, limites, duplicata) na execução do
+  comando reenviado
+- O `LabFlow.json` continua sem segredos: a credencial do Gemini fica no
+  n8n, e o arquivo público traz só o placeholder `GEMINI_CREDENTIAL_ID`
+
+
 ## [0.7.0] - 2026-09-25
 
 ### Added

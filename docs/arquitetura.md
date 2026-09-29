@@ -324,6 +324,48 @@ Testado criando coletas com data retroativa (5, 10 e 15 dias atrás) para
 gerar drops vencendo hoje, concluindo e confirmando que o item some da
 consulta "drops hoje" em seguida.
 
+## IA como fallback da regex (V3, parte 1)
+
+**Objetivo.** Aceitar mensagens livres ("coletei os tanques 42 e 43 hoje") sem trocar as regras de negócio, que continuam nas regex. A IA só traduz a frase num comando no formato padrão.
+
+**Fluxo.**
+
+```
+Code in JavaScript (nenhuma regex bateu)
+  → Switch (tipo = interpretar_ia)
+  → Message a model Interpretar IA   Gemini, temperatura 0, resposta em JSON
+  → Validar IA                        Code node: valida e monta o comando padrão
+      ├─ HTTP Request IA provisorio → Respond to Webhook14
+      │     "🤖 Entendi: <comando> — responda sim ou não" (ou a mensagem de erro)
+      └─ If IA Entendeu. (comando_ia não vazio)
+            → Salvar Pendencia IA     CONFIRMACOES_PENDENTES (IDs = IA, Resumo = comando)
+
+Resposta "sim"
+  → Get rows CONFIRMACOES_PENDENTES → Processar Confirmacao
+      ├─ If Tem Resposta → (com texto) HTTP Request Confirmar Resposta → Respond to Webhook
+      │                  → (sem texto) Respond to Webhook direto
+      ├─ If Limpar Pendencia → Limpar Pendencia
+      └─ If Reenviar Comando. → HTTP Reenvio IA
+            POST no próprio webhook, com labflowReenvio: true e o comando como mensagem
+            → o Code node reconhece por regex e executa (coleta terra/navio)
+```
+
+**Decisões de design.**
+
+- **A IA devolve texto padrão, não aciona ramos.** O Gemini responde um JSON (`intencao`, `tanques`, `navio`, `data`). O `Validar IA` confere o JSON e monta o mesmo texto que uma pessoa digitaria (`registrar coleta tanque terra 42,43 data 29/09/2026`). Quem grava é a regex de sempre. Assim as regras de cargo, limite e duplicata existem num lugar só, e uma resposta errada da IA não consegue gravar nada sem passar por elas.
+- **Validação do que a IA devolve.** Tanques de terra só numéricos, tanques de navio número com letra opcional, limites de 8 e 16, data no formato `dd/mm/aaaa`, nome do navio obrigatório. O que não passa vira mensagem de erro específica. A IA não recebe o número de telefone de ninguém, só o texto da mensagem e a data de hoje em São Paulo.
+- **Confirmação reaproveitada.** A pendência usa a aba `CONFIRMACOES_PENDENTES` e o `Processar Confirmacao` da conclusão de leituras, com `IDs = IA` e o comando em `Resumo`. A expiração de 10 minutos e o "não" funcionam sem código novo.
+- **Sem loop.** O comando reenviado leva `labflowReenvio: true`. Se, mesmo assim, nenhuma regex o reconhecer, o Code node responde `erro_ia` em vez de mandar de novo para a IA.
+- **Resposta vazia de propósito.** Depois do "sim", a única mensagem que o analista vê é a do próprio comando ("Coleta de terra registrada"). Uma mensagem intermediária ("Executando...") só poluía o chat. O `If Tem Resposta` pula o envio quando o texto é vazio, mas ainda responde ao webhook (ver Bug 20).
+- **Falha do Gemini.** `Retry On Fail` com 5 tentativas e 3 s entre elas, `On Error = Continue`. Se ainda falhar, o `Validar IA` reconhece o item de erro e responde "A IA está indisponível" (ver Bug 21).
+- **Modelo.** Foi trocado para uma variante Flash-Lite depois de falhas frequentes de disponibilidade (menos disputada e mais barata). O modelo é configurável no node.
+
+**Remoção do registro de amostra.** O comando `amostra <número> ...` deixou de existir. O `else` final do Code node, que antes transformava qualquer mensagem em amostra, agora envia a mensagem para a IA. Os nodes do ramo `amostra` continuam no canvas, sem entrada, e a aba `AMOSTRAS` está sem uso; ambos serão apagados.
+
+**Testado (29/09/2026).** Frase livre de coleta de terra e de navio (com "ontem" e sem a palavra "navio"), coleta sem data, saudação sem relação com comandos, "não" cancelando e limpando a pendência, "sim" sem pendência, coleta duplicada bloqueada depois do "sim", e regressão dos comandos por regex (drops, análises de terra e navio, bags e registro de análise).
+
+**Limitações conhecidas.** A IA só reconhece coleta de terra e de navio. As demais intenções (consultas, análises, conclusões) entram nas próximas etapas, cada uma virando o comando padrão que a regex já aceita. A pendência é uma só por número: uma nova mensagem entendida pela IA substitui a anterior.
+
 ## Arquitetura atual (resumo)
 
 ```
@@ -335,11 +377,13 @@ Webhook (Evolution API)
     de cargo, cálculo de drops/arquivo/análises, sinalização de
     sincronização de nome)
       ├─ Switch
-      │    ├─ Registro:  amostra | coleta_terra | coleta_navio |
+      │    ├─ Registro:  coleta_terra | coleta_navio |
       │    │             análise de tanque (terra/navio)
       │    ├─ Consulta:  drops hoje | bags | potes | análises do dia
       │    │             (terra/navio)
       │    ├─ Atualização: concluir drops
+      │    ├─ Confirmação: sim | não (pendência de leitura ou de comando da IA)
+      │    ├─ IA:        interpretar_ia (Gemini) | erro_ia
       │    └─ Admin:     gerenciar_usuario
       │    (coletas passam antes por Get rows + checagem de duplicata;
       │     cada branch termina em HTTP Request → Respond to Webhook)
@@ -347,9 +391,11 @@ Webhook (Evolution API)
           caminho paralelo, não retorna resposta ao WhatsApp
 ```
 
-**Abas da planilha:** `AMOSTRAS`, `COLETAS_TERRA`, `COLETAS_NAVIO`,
-`DROPS`, `BAGS_TERRA`, `POTES_NAVIO`, `ANALISES`, `USUARIOS` e `Painel`
-(só leitura, fórmulas com `FILTER`).
+**Abas da planilha:** `COLETAS_TERRA`, `COLETAS_NAVIO`, `DROPS`,
+`BAGS_TERRA`, `POTES_NAVIO`, `ANALISES`, `USUARIOS`,
+`CONFIRMACOES_PENDENTES` e `Painel` (só leitura, fórmulas com `FILTER`).
+A aba `AMOSTRAS` está sem uso desde a remoção do comando de amostra e
+será apagada.
 
 **Regra de manutenção:** depois de qualquer mudança estrutural no fluxo
 (inserir node, religar conexões), exportar o workflow em JSON e revisar
