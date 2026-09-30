@@ -4,7 +4,7 @@ Automação de laboratório de microbiologia via WhatsApp: o analista manda uma 
 
 Projeto pessoal que une biomedicina e automação. O problema vem da rotina real de um laboratório de controle de qualidade. Todo o desenvolvimento e os testes usam **dados fictícios**.
 
-**Status:** em uso de teste no servidor (VPS), com regras de negócio, permissões por cargo e registro de análises funcionando ponta a ponta. A interpretação de mensagens livres com IA (Gemini) já funciona para coleta de terra e de navio; falta cobrir os demais comandos. Depois vem a migração para PostgreSQL.
+**Status:** em uso de teste no servidor (VPS), com regras de negócio, permissões por cargo e registro de análises funcionando ponta a ponta. A interpretação de mensagens livres com IA (Gemini) já cobre todos os comandos (consultas, coletas, análises, conclusões e troca de cargo), sempre com as permissões conferidas no código. Depois vem a migração para PostgreSQL.
 
 ## O problema
 
@@ -14,8 +14,11 @@ O LabFlow deixa o registro no canal que a equipe já usa (WhatsApp) e passa o c�
 
 ```
 Você:     registrar coleta tanque terra 42,43 data 20/09/2026
-LabFlow:  ✅ Coleta registrada — tanques 42, 43
-          Drops: D5 25/09 · D10 30/09 · D15 05/10
+LabFlow:  ✅ Registro de tanque terra efetuado com sucesso por Ana.
+
+          Tanques: 42, 43
+          Data: 20/09/2026
+          Total: 2
 
 Você:     Quais analises de tanques terra saem hoje?
 LabFlow:  CT (48hrs) Tanques 47 e 49 analise normal
@@ -26,7 +29,11 @@ LabFlow:  🤖 Entendi:
           registrar coleta tanque terra 44,45 data 20/09/2026
           Responda sim para confirmar ou não para cancelar.
 Você:     sim
-LabFlow:  ✅ Coleta de terra registrada — tanques 44, 45
+LabFlow:  ✅ Registro de tanque terra efetuado com sucesso por Ana.
+
+Você:     comandos para drops
+LabFlow:  📖 Comandos de drops
+          (lista só os comandos do assunto, sem chamar a IA)
 ```
 <sub>Respostas resumidas para ilustração.</sub>
 
@@ -47,9 +54,11 @@ LabFlow:  ✅ Coleta de terra registrada — tanques 44, 45
 - Conclusão de leituras de CT/BL/WORT (pré-leitura ou final) com confirmação em duas etapas: o bot pergunta, o analista responde "sim" ou "não", e a pendência expira em 10 minutos. O nome de quem confirmou fica registrado em cada leitura (pré-leitura e leitura final)
 
 **Mensagens livres (IA)**
-- Quando nenhuma regex reconhece a mensagem, o Gemini tenta interpretá-la. Hoje entende coleta de terra e de navio, inclusive frases como "coletei os tanques 42 e 43 hoje" ou "O.SKY 123, tanques 1C e 4P, coleta de ontem"
-- O bot mostra o comando que entendeu e só executa depois do "sim"; "não" cancela e a pendência expira em 10 minutos
+- Quando nenhuma regex reconhece a mensagem, o Gemini tenta interpretá-la. Entende todos os comandos: consultas (drops, análises de terra e navio, bags, potes), coleta de terra e de navio, registro de análise normal ou stress, conclusão de drops, conclusão de leitura e troca de cargo. Exemplos: "coletei os tanques 42 e 43 hoje", "O.SKY 123, tanques 1C e 4P, coleta de ontem", "quais bags posso descartar hoje"
+- Consultas rodam direto, porque só leem a planilha. Toda gravação mostra o comando que a IA entendeu e só executa depois do "sim"; "não" cancela e a pendência expira em 10 minutos. Conclusão de leitura já tem a sua própria confirmação
 - O comando confirmado passa pelas mesmas regras de um comando digitado (cargo, limites, bloqueio de duplicata)
+- Permissão não é decidida pela IA: o código recusa antes do "sim" quem não pode gravar, e na troca de cargo o cargo e o telefone precisam estar escritos na mensagem original (a IA não "corrige" o que o usuário escreveu)
+- Ajuda por assunto, sem IA: "comandos para drops", "consultar análises", "consultar cargos" mostram só os comandos do tema
 - Se o Gemini estiver fora do ar, o bot avisa que a IA está indisponível e nada é gravado
 
 **Controle e segurança**
@@ -90,6 +99,7 @@ n8n · Docker / Docker Compose · Evolution API · Google Gemini API · PostgreS
 
 - **Regex antes de IA.** Comandos com formato definido são previsíveis e fáceis de testar. A regex continua sendo a primeira tentativa, e o modelo só entra quando ela não reconhece a mensagem.
 - **A IA sugere, a regex executa.** O Gemini nunca grava nada: ele traduz a mensagem livre num comando no formato padrão, que o analista confirma com "sim". Depois o comando volta ao mesmo webhook e passa pela regex e pelas regras de sempre (cargo, duplicata, limites). As regras de negócio ficam num lugar só, e uma interpretação errada da IA vira, no pior caso, uma confirmação que o analista recusa.
+- **Permissão validada no código, não no prompt.** Pedir ao modelo "só aceite Admin, Operador ou Consultor" não bastou: ele trocou "gerente" por Admin (Bug 23). Agora o código confere o cargo e o telefone contra a mensagem original e checa o nível de quem enviou antes de pedir o "sim". Para qualquer ação sensível, o modelo propõe e o código decide.
 - **Falha de serviço externo tratada.** O Gemini responde 503 de vez em quando. O node tenta até 5 vezes e, se ainda falhar, o bot diz que a IA está indisponível, em vez de "não entendi" (ver Bug 21 em [troubleshooting](docs/troubleshooting.md)).
 - **Evolution API em número dedicado.** Por ser uma integração não oficial, usa um eSIM separado com WhatsApp Business, sem arriscar um número pessoal.
 - **Segredos fora do workflow.** A chave da Evolution API fica numa Credencial do n8n e o Google Sheets usa conta de serviço, então o JSON exportado do workflow não carrega segredo nenhum.
@@ -100,7 +110,7 @@ n8n · Docker / Docker Compose · Evolution API · Google Gemini API · PostgreS
 
 - [x] **V1 — MVP:** WhatsApp + n8n + Google Sheets, registro e confirmação
 - [x] **V2 — Regras de negócio:** drops, arquivo/descarte, análises com prazos, permissões, duplicata, conclusão em lote
-- [ ] **V3, parte 1 — IA como fallback (em andamento):** o Gemini interpreta linguagem natural quando a regex não reconhece a mensagem, com confirmação antes de executar, ainda sobre o Google Sheets. Feito: coleta de terra e de navio. Falta: consultas, análises e conclusões
+- [x] **V3, parte 1 — IA como fallback:** o Gemini interpreta linguagem natural quando a regex não reconhece a mensagem, com confirmação antes de executar, ainda sobre o Google Sheets. Feito: consultas, coleta de terra e de navio, análises, conclusões, troca de cargo e ajuda por assunto. Próximos ajustes: testes de regressão do prompt e um segundo modelo de reserva
 - [ ] **V4 — Banco de dados:** migração do Google Sheets para PostgreSQL, já incluindo as análises de recebimento e embarque de suco concentrado (identificação por Load/Lote/Item/Fábrica) direto no schema final
 - [ ] **V3, parte 2 — IA avançada:** comando por áudio e leitura de laudo por foto (com confirmação antes de gravar), já sobre o PostgreSQL
 - [ ] **V5 — Dashboard:** indicadores de pendentes, concluídos e atrasados no Power BI, sobre o PostgreSQL (hoje há um painel simples na própria planilha)
@@ -115,7 +125,7 @@ n8n · Docker / Docker Compose · Evolution API · Google Gemini API · PostgreS
 |---|---|
 | [comandos.md](docs/comandos.md) | Todos os comandos do bot, cargos e permissões |
 | [arquitetura.md](docs/arquitetura.md) | Nodes do workflow, abas da planilha e decisões de design de cada etapa |
-| [troubleshooting.md](docs/troubleshooting.md) | 21 bugs reais: sintoma, causa raiz, solução e lição |
+| [troubleshooting.md](docs/troubleshooting.md) | 24 bugs reais: sintoma, causa raiz, solução e lição |
 | [deploy-vps.md](docs/deploy-vps.md) | Infraestrutura no VPS: rede, segredos, acesso SSH, migração |
 | [scripts.md](docs/scripts.md) | Script de auditoria do workflow e como rodá-lo |
 | [CHANGELOG.md](docs/CHANGELOG.md) | Histórico de versões |

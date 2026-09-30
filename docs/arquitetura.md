@@ -326,7 +326,7 @@ consulta "drops hoje" em seguida.
 
 ## IA como fallback da regex (V3, parte 1)
 
-**Objetivo.** Aceitar mensagens livres ("coletei os tanques 42 e 43 hoje") sem trocar as regras de negócio, que continuam nas regex. A IA só traduz a frase num comando no formato padrão.
+**Objetivo.** Aceitar mensagens livres ("coletei os tanques 42 e 43 hoje", "quais drops tenho hoje?") sem trocar as regras de negócio, que continuam nas regex. A IA só traduz a frase num comando no formato padrão.
 
 **Fluxo.**
 
@@ -335,10 +335,14 @@ Code in JavaScript (nenhuma regex bateu)
   → Switch (tipo = interpretar_ia)
   → Message a model Interpretar IA   Gemini, temperatura 0, resposta em JSON
   → Validar IA                        Code node: valida e monta o comando padrão
-      ├─ HTTP Request IA provisorio → Respond to Webhook14
-      │     "🤖 Entendi: <comando> — responda sim ou não" (ou a mensagem de erro)
-      └─ If IA Entendeu. (comando_ia não vazio)
-            → Salvar Pendencia IA     CONFIRMACOES_PENDENTES (IDs = IA, Resumo = comando)
+      ├─ If Tem Resposta IA            (textoResposta não vazio)
+      │     ├─ true  → HTTP Request IA provisorio → Respond to Webhook14
+      │     │          "🤖 Entendi: <comando> — responda sim ou não" (ou a mensagem de erro)
+      │     └─ false → Respond to Webhook14 (consulta / leitura: sem texto)
+      ├─ If IA Entendeu. (comando_ia não vazio)
+      │     → Salvar Pendencia IA      CONFIRMACOES_PENDENTES (IDs = IA, Resumo = comando)
+      └─ If Reenviar Consulta (reenviarComando não vazio)
+            → HTTP Reenvio IA           consulta e concluir leitura vão direto
 
 Resposta "sim"
   → Get rows CONFIRMACOES_PENDENTES → Processar Confirmacao
@@ -347,24 +351,30 @@ Resposta "sim"
       ├─ If Limpar Pendencia → Limpar Pendencia
       └─ If Reenviar Comando. → HTTP Reenvio IA
             POST no próprio webhook, com labflowReenvio: true e o comando como mensagem
-            → o Code node reconhece por regex e executa (coleta terra/navio)
+            → o Code node reconhece por regex e executa
 ```
+
+**O que a IA reconhece.** Coleta de terra e de navio, registro de análise (normal ou stress), concluir drops, concluir leitura, troca de cargo e cinco consultas (drops, análises de terra, análises de navio, bags e potes). O Gemini devolve um JSON (`intencao`, `tanques`, `navio`, `data`, `tipo`, `dia`, `fase`, `leitura`, `analise`, `cargo`, `telefone`, `nome`), e o prompt traz 10 exemplos de mensagem com a resposta esperada.
 
 **Decisões de design.**
 
-- **A IA devolve texto padrão, não aciona ramos.** O Gemini responde um JSON (`intencao`, `tanques`, `navio`, `data`). O `Validar IA` confere o JSON e monta o mesmo texto que uma pessoa digitaria (`registrar coleta tanque terra 42,43 data 29/09/2026`). Quem grava é a regex de sempre. Assim as regras de cargo, limite e duplicata existem num lugar só, e uma resposta errada da IA não consegue gravar nada sem passar por elas.
-- **Validação do que a IA devolve.** Tanques de terra só numéricos, tanques de navio número com letra opcional, limites de 8 e 16, data no formato `dd/mm/aaaa`, nome do navio obrigatório. O que não passa vira mensagem de erro específica. A IA não recebe o número de telefone de ninguém, só o texto da mensagem e a data de hoje em São Paulo.
+- **A IA devolve texto padrão, não aciona ramos.** O `Validar IA` confere o JSON e monta o mesmo texto que uma pessoa digitaria (`registrar coleta tanque terra 42,43 data 29/09/2026`). Quem grava é a regex de sempre. Assim as regras de cargo, limite e duplicata existem num lugar só, e uma resposta errada da IA não consegue gravar nada sem passar por elas.
+- **Confirmação só onde faz falta.** Gravação pede "sim". Consulta só lê a planilha, então roda direto. Concluir leitura já lista as leituras e pergunta "tem certeza?" no fluxo normal (seção de conclusão), e uma segunda pergunta da IA seria confirmar duas vezes. Por isso a leitura também vai direto.
+- **Validação do que a IA devolve.** Tanques de terra só numéricos, tanques de navio número com letra opcional, limites de 8 e 16, data no formato `dd/mm/aaaa`, nome do navio obrigatório, normal ou stress obrigatório, dia de drop em D5/D10/D15. O que não passa vira mensagem de erro específica. A IA não recebe o número de telefone de ninguém, só o texto da mensagem e a data de hoje em São Paulo.
+- **Permissão não é decidida pela IA.** O Code node passa `nivelAtual` ao `Validar IA`, que recusa antes do "sim" o Consultor que tenta gravar e o não-Admin que tenta trocar cargo. A barreira final continua na regex, que confere o cargo de quem enviou quando o comando é reenviado. Na troca de cargo, o código exige que o cargo (Admin/administrador, Operador, Consultor) e os dígitos do telefone apareçam na mensagem original; se a IA devolver um cargo que o usuário não escreveu, o pedido é recusado (ver Bug 23). Mudar cargo é a única ação em que um erro de interpretação vira concessão de privilégio, por isso ela tem essa conferência a mais.
 - **Confirmação reaproveitada.** A pendência usa a aba `CONFIRMACOES_PENDENTES` e o `Processar Confirmacao` da conclusão de leituras, com `IDs = IA` e o comando em `Resumo`. A expiração de 10 minutos e o "não" funcionam sem código novo.
 - **Sem loop.** O comando reenviado leva `labflowReenvio: true`. Se, mesmo assim, nenhuma regex o reconhecer, o Code node responde `erro_ia` em vez de mandar de novo para a IA.
-- **Resposta vazia de propósito.** Depois do "sim", a única mensagem que o analista vê é a do próprio comando ("Coleta de terra registrada"). Uma mensagem intermediária ("Executando...") só poluía o chat. O `If Tem Resposta` pula o envio quando o texto é vazio, mas ainda responde ao webhook (ver Bug 20).
+- **Resposta vazia de propósito.** Depois do "sim", a única mensagem que o analista vê é a do próprio comando ("Registro de tanque terra efetuado..."). Uma mensagem intermediária ("Executando...") só poluía o chat. Os `If Tem Resposta` pulam o envio quando o texto é vazio, mas ainda respondem ao webhook (ver Bug 20).
 - **Falha do Gemini.** `Retry On Fail` com 5 tentativas e 3 s entre elas, `On Error = Continue`. Se ainda falhar, o `Validar IA` reconhece o item de erro e responde "A IA está indisponível" (ver Bug 21).
-- **Modelo.** Foi trocado para uma variante Flash-Lite depois de falhas frequentes de disponibilidade (menos disputada e mais barata). O modelo é configurável no node.
+- **Modelo.** Foi trocado para uma variante Flash-Lite depois de falhas frequentes de disponibilidade (menos disputada e mais barata). Modelo leve interpreta pior quando o prompt cresce, e a mitigação foi regra explícita mais exemplos (ver Bug 24).
 
-**Remoção do registro de amostra.** O comando `amostra <número> ...` deixou de existir. O `else` final do Code node, que antes transformava qualquer mensagem em amostra, agora envia a mensagem para a IA. Os nodes do ramo `amostra` continuam no canvas, sem entrada, e a aba `AMOSTRAS` está sem uso; ambos serão apagados.
+**Ajuda por assunto (sem IA).** `comandos` e `consultar <assunto>` são resolvidos por regex num trecho do Code node, antes das demais intenções, e respondem pela mesma rota de texto simples (`erro_ia` → `HTTP Request IA provisorio`). Não passam pelo Gemini: respondem na hora e continuam funcionando se o Gemini cair. A mensagem de "não entendi" da IA ficou curta e aponta para essa ajuda, em vez de listar todos os formatos.
 
-**Testado (29/09/2026).** Frase livre de coleta de terra e de navio (com "ontem" e sem a palavra "navio"), coleta sem data, saudação sem relação com comandos, "não" cancelando e limpando a pendência, "sim" sem pendência, coleta duplicada bloqueada depois do "sim", e regressão dos comandos por regex (drops, análises de terra e navio, bags e registro de análise).
+**Remoção do registro de amostra.** O comando `amostra <número> ...` deixou de existir na 0.8.0. O `else` final do Code node, que antes transformava qualquer mensagem em amostra, agora envia a mensagem para a IA. Os nodes do ramo `amostra` foram apagados do workflow na 0.9.0.
 
-**Limitações conhecidas.** A IA só reconhece coleta de terra e de navio. As demais intenções (consultas, análises, conclusões) entram nas próximas etapas, cada uma virando o comando padrão que a regex já aceita. A pendência é uma só por número: uma nova mensagem entendida pela IA substitui a anterior.
+**Testado (29/09/2026).** Coleta de terra e de navio por frase livre, coleta sem data, saudação sem relação com comandos, "não" cancelando e limpando a pendência, "sim" sem pendência, coleta duplicada bloqueada depois do "sim", consultas (drops, análises de terra, bags, potes), pergunta ambígua ("qual análise sai hoje?") caindo na ajuda, registro de análise normal por frase livre com "sim", concluir drops e concluir leitura sem pendência do dia, troca de cargo com "sim" (Operador) e recusa de "gerente", ajuda por assunto, e regressão dos comandos por regex.
+
+**Limitações conhecidas.** A pendência é uma só por número: uma nova mensagem entendida pela IA substitui a anterior. O modelo leve pode errar a interpretação, e por isso a confirmação mostra o comando montado antes de gravar. A prévia de datas de análise só aparece no registro de análise, não na coleta.
 
 ## Arquitetura atual (resumo)
 
@@ -383,7 +393,8 @@ Webhook (Evolution API)
       │    │             (terra/navio)
       │    ├─ Atualização: concluir drops
       │    ├─ Confirmação: sim | não (pendência de leitura ou de comando da IA)
-      │    ├─ IA:        interpretar_ia (Gemini) | erro_ia
+      │    ├─ IA:        interpretar_ia (Gemini) | erro_ia (também usado
+      │    │             pela ajuda por assunto, sem IA)
       │    └─ Admin:     gerenciar_usuario
       │    (coletas passam antes por Get rows + checagem de duplicata;
       │     cada branch termina em HTTP Request → Respond to Webhook)
@@ -395,7 +406,7 @@ Webhook (Evolution API)
 `BAGS_TERRA`, `POTES_NAVIO`, `ANALISES`, `USUARIOS`,
 `CONFIRMACOES_PENDENTES` e `Painel` (só leitura, fórmulas com `FILTER`).
 A aba `AMOSTRAS` está sem uso desde a remoção do comando de amostra e
-será apagada.
+pode ser apagada.
 
 **Regra de manutenção:** depois de qualquer mudança estrutural no fluxo
 (inserir node, religar conexões), exportar o workflow em JSON e revisar
