@@ -3,8 +3,11 @@
 Plano da migração dos dados do LabFlow da planilha para o Postgres. O
 schema está em [`db/migrations/`](../db/migrations/).
 
-**Estado:** plano e schema em rascunho. Nada foi criado no servidor e os
-arquivos `.sql` ainda não foram executados em nenhum Postgres.
+**Estado (30/09/2026):** etapas 1 e 2 concluídas no servidor: banco
+`labflow`, usuários `labflow_app` e `labflow_leitura`, e `001_tanques.sql`
+aplicada e testada (cargo inválido, telefone duplicado, coleta duplicada na
+terra e CT com pré-leitura são recusados pelo banco). A `002` segue em
+rascunho e ainda não foi executada. O n8n já tem a credencial Postgres.
 
 ## Por que migrar
 
