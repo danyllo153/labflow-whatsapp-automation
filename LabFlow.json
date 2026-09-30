@@ -42,212 +42,6 @@
           },
           "conditions": [
             {
-              "id": "1dc30dbb-66b9-421b-aa9b-7ec76bed5bc4",
-              "leftValue": "={{ $json.amostra }}",
-              "rightValue": "",
-              "operator": {
-                "type": "string",
-                "operation": "notEmpty",
-                "singleValue": true
-              }
-            },
-            {
-              "id": "41af8736-8320-4a0e-a30a-4f00686c3c40",
-              "leftValue": "={{ $json.analise }}",
-              "rightValue": "",
-              "operator": {
-                "type": "string",
-                "operation": "notEmpty",
-                "singleValue": true
-              }
-            },
-            {
-              "id": "6c233895-7554-4b67-8e0d-ed314100d38b",
-              "leftValue": "={{ $json.data }}",
-              "rightValue": "",
-              "operator": {
-                "type": "string",
-                "operation": "notEmpty",
-                "singleValue": true
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2.3,
-      "position": [
-        656,
-        208
-      ],
-      "id": "ff25011c-8277-4abd-a2ef-b344342f91f1",
-      "name": "If"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "582f5a84-c774-4161-a18d-7174b2224751",
-              "name": "Resposta",
-              "value": " Não foi possível registrar. Verifique se amostra, analise e data foram informados corretamente.",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.5,
-      "position": [
-        912,
-        304
-      ],
-      "id": "ab21ec00-55f3-4009-887d-723057effc42",
-      "name": "Edit Fields"
-    },
-    {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "678aa8a5-07e7-4edf-9209-ac108ad88996",
-              "name": "Resposta",
-              "value": "=✅ Amostra registrada.\n\nAmostra: {{ $json.Amostra }}\nAnálise: {{ $json.Analise }}\nData: {{ $json['Data Entrada'] }}\nStatus: {{ $json.Status }}",
-              "type": "string"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.5,
-      "position": [
-        1168,
-        208
-      ],
-      "id": "0e8d50b3-3790-409f-8c4a-ba0ba6aa8311",
-      "name": "Edit Fields1"
-    },
-    {
-      "parameters": {
-        "respondWith": "text",
-        "responseBody": "={{ $json.Resposta }}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.5,
-      "position": [
-        1696,
-        208
-      ],
-      "id": "c9e2f698-c2e5-4b22-af91-fd1286a421a2",
-      "name": "Respond to Webhook"
-    },
-    {
-      "parameters": {
-        "respondWith": "text",
-        "responseBody": "={{ $json.Resposta }}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.5,
-      "position": [
-        1424,
-        304
-      ],
-      "id": "62ceccf4-40a6-48b2-8e78-9767c96f6d23",
-      "name": "Respond to Webhook1"
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "http://labflow-evolution:8080/message/sendText/labflow2",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendHeaders": true,
-        "headerParameters": {
-          "parameters": []
-        },
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "number",
-              "value": "={{ $('Code in JavaScript').item.json.numero.replace('@s.whatsapp.net', '') }}"
-            },
-            {
-              "name": "text",
-              "value": "={{ $json.Resposta }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.5,
-      "position": [
-        1168,
-        304
-      ],
-      "id": "b2195663-c87c-411a-a7cf-bfaa3c13c6fc",
-      "name": "HTTP Request",
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "EVOLUTION_CREDENTIAL_ID",
-          "name": "Evolution API (servidor)"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "method": "POST",
-        "url": "http://labflow-evolution:8080/message/sendText/labflow2",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpHeaderAuth",
-        "sendBody": true,
-        "bodyParameters": {
-          "parameters": [
-            {
-              "name": "number",
-              "value": "={{ $('Code in JavaScript').item.json.numero.replace('@s.whatsapp.net', '') }}"
-            },
-            {
-              "name": "text",
-              "value": "={{ $json.Resposta }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.5,
-      "position": [
-        1424,
-        208
-      ],
-      "id": "670805e6-1db4-4968-acd5-e3cb0c64d098",
-      "name": "HTTP Request1",
-      "credentials": {
-        "httpHeaderAuth": {
-          "id": "EVOLUTION_CREDENTIAL_ID",
-          "name": "Evolution API (servidor)"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "strict",
-            "version": 3
-          },
-          "conditions": [
-            {
               "id": "59c5a933-e68a-4701-9b06-d46111742eb8",
               "leftValue": "={{ $json.body.data.key.fromMe }}",
               "rightValue": false,
@@ -343,497 +137,6 @@
       ],
       "id": "7a06e5c6-24a2-40a9-9fdc-7fcd917e5d59",
       "name": "Respond to Webhook2"
-    },
-    {
-      "parameters": {
-        "rules": {
-          "values": [
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 3
-                },
-                "conditions": [
-                  {
-                    "leftValue": "=   {{ $json.tipo }}",
-                    "rightValue": "   amostra",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals"
-                    },
-                    "id": "5052a217-efba-4c8f-ac04-325de8232d55"
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "amostra"
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 3
-                },
-                "conditions": [
-                  {
-                    "id": "aab8e853-4fe7-4502-a451-c4636a62c135",
-                    "leftValue": "={{ $json.tipo }}",
-                    "rightValue": "coleta_terra",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals",
-                      "name": "filter.operator.equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "coleta_terra"
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 3
-                },
-                "conditions": [
-                  {
-                    "id": "cfc41b50-832e-4fcd-a267-e8d9a3577aa1",
-                    "leftValue": "={{ $json.tipo }}",
-                    "rightValue": "coleta_navio",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals",
-                      "name": "filter.operator.equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "coleta_navio"
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 3
-                },
-                "conditions": [
-                  {
-                    "id": "0d5627f0-454f-439a-8e76-a9c14989cda0",
-                    "leftValue": "={{ $json.tipo }}",
-                    "rightValue": "consulta_drops",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals",
-                      "name": "filter.operator.equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "consulta_drops"
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 3
-                },
-                "conditions": [
-                  {
-                    "id": "1bd64b4a-3983-4385-8fdd-41fe023c4f77",
-                    "leftValue": "={{ $json.tipo }}",
-                    "rightValue": "erro_coleta",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals",
-                      "name": "filter.operator.equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "erro_coleta"
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 3
-                },
-                "conditions": [
-                  {
-                    "id": "7be93336-155e-4e91-be81-6ce2ed88aa80",
-                    "leftValue": "={{ $json.tipo }}",
-                    "rightValue": "consulta_bags",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals",
-                      "name": "filter.operator.equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "consulta_bags"
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 3
-                },
-                "conditions": [
-                  {
-                    "id": "3be0dcb8-0f4f-42f8-b73a-c672d93b18d3",
-                    "leftValue": "={{ $json.tipo }}",
-                    "rightValue": "=consulta_potes",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals",
-                      "name": "filter.operator.equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "consulta_potes"
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 3
-                },
-                "conditions": [
-                  {
-                    "id": "6c3ce02e-c502-4966-9623-bde3ffc6e90b",
-                    "leftValue": "={{ $json.tipo }}",
-                    "rightValue": "gerenciar_usuario",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals",
-                      "name": "filter.operator.equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "gerenciar_usuario"
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 3
-                },
-                "conditions": [
-                  {
-                    "id": "ee443f6f-1cee-4459-9419-83a5bd1a2963",
-                    "leftValue": "={{ $json.tipo }}",
-                    "rightValue": "registro_analise",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals",
-                      "name": "filter.operator.equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "registro_analise"
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 3
-                },
-                "conditions": [
-                  {
-                    "id": "ca21b3c5-3ded-4bb2-98b8-b7fc63cd7fbd",
-                    "leftValue": "={{ $json.tipo }}",
-                    "rightValue": "consulta_analises_terra",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals",
-                      "name": "filter.operator.equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "consulta_analises_terra"
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 3
-                },
-                "conditions": [
-                  {
-                    "id": "7181f1ac-e7c3-418e-b53f-286e59d1d465",
-                    "leftValue": "={{ $json.tipo }}",
-                    "rightValue": "consulta_analises_navio",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals",
-                      "name": "filter.operator.equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "consulta_analises_navio"
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 3
-                },
-                "conditions": [
-                  {
-                    "id": "75290c61-72ce-42cf-a5b6-d0dfb285439d",
-                    "leftValue": "={{ $json.tipo }}",
-                    "rightValue": "nao_cadastrado",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals",
-                      "name": "filter.operator.equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "nao_cadastrado"
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 3
-                },
-                "conditions": [
-                  {
-                    "id": "b55fd04c-3455-44b5-9b52-0a0ea9360ba2",
-                    "leftValue": "={{ $json.tipo }}",
-                    "rightValue": "concluir_drops",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals",
-                      "name": "filter.operator.equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "concluir_drops"
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 3
-                },
-                "conditions": [
-                  {
-                    "id": "4f0e60cd-d03c-48fd-88a5-df93b5115a60",
-                    "leftValue": "={{ $json.tipo }}",
-                    "rightValue": "concluir_leitura_terra",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals",
-                      "name": "filter.operator.equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "concluir_leitura_terra"
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 3
-                },
-                "conditions": [
-                  {
-                    "id": "cde8c2a1-6e85-47be-af12-72169f3990cc",
-                    "leftValue": "={{ $json.tipo }}",
-                    "rightValue": "concluir_leitura_navio",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals",
-                      "name": "filter.operator.equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "concluir_leitura_navio"
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 3
-                },
-                "conditions": [
-                  {
-                    "id": "ba0368a1-ae46-4534-9cbd-f1c50f0d942c",
-                    "leftValue": "={{ $json.tipo }}",
-                    "rightValue": "confirmar_pendencia",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals",
-                      "name": "filter.operator.equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "confirmar_pendencia"
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 3
-                },
-                "conditions": [
-                  {
-                    "id": "4dd57ac2-1ca4-4295-a1eb-fabc064eb944",
-                    "leftValue": "={{ $json.tipo }}",
-                    "rightValue": "cancelar_pendencia",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals",
-                      "name": "filter.operator.equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "cancelar_pendencia"
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 3
-                },
-                "conditions": [
-                  {
-                    "id": "0687df92-abec-4c21-838d-65ddac93ac9f",
-                    "leftValue": "={{ $json.tipo }}",
-                    "rightValue": "interpretar_ia",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals",
-                      "name": "filter.operator.equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "interpretar_ia"
-            },
-            {
-              "conditions": {
-                "options": {
-                  "caseSensitive": true,
-                  "leftValue": "",
-                  "typeValidation": "strict",
-                  "version": 3
-                },
-                "conditions": [
-                  {
-                    "id": "4c6ecdc1-5e81-4a6c-a99b-7260b02371c0",
-                    "leftValue": "={{ $json.tipo }}",
-                    "rightValue": "erro_ia",
-                    "operator": {
-                      "type": "string",
-                      "operation": "equals",
-                      "name": "filter.operator.equals"
-                    }
-                  }
-                ],
-                "combinator": "and"
-              },
-              "renameOutput": true,
-              "outputKey": "erro_ia"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.switch",
-      "typeVersion": 3.4,
-      "position": [
-        0,
-        208
-      ],
-      "id": "46fa3048-04c5-4d60-8578-36a500d7044e",
-      "name": "Switch"
     },
     {
       "parameters": {
@@ -1523,122 +826,6 @@
       ],
       "id": "0a388312-a80b-4e9f-b57e-39523796ab06",
       "name": "Append row in DROPS",
-      "credentials": {
-        "googleApi": {
-          "id": "GOOGLE_CREDENTIAL_ID",
-          "name": "Google Service Account account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "authentication": "serviceAccount",
-        "operation": "append",
-        "documentId": {
-          "__rl": true,
-          "value": "SEU_SPREADSHEET_ID",
-          "mode": "list",
-          "cachedResultName": "LabFlow - Dados",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit?usp=drivesdk"
-        },
-        "sheetName": {
-          "__rl": true,
-          "value": "gid=0",
-          "mode": "list",
-          "cachedResultName": "AMOSTRAS",
-          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/SEU_SPREADSHEET_ID/edit#gid=0"
-        },
-        "columns": {
-          "mappingMode": "defineBelow",
-          "value": {
-            "ID": "={{ $json.idRegistro }}",
-            "Amostra": "={{ $json.amostra }}",
-            "Analise": "={{ $json.analise }}",
-            "Data Entrada": "={{ $json.data }}",
-            "Status": "Pendente",
-            "Responsavel": "={{ $json.nomeContato }}",
-            "Observacao": "="
-          },
-          "matchingColumns": [],
-          "schema": [
-            {
-              "id": "ID",
-              "displayName": "ID",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Amostra",
-              "displayName": "Amostra",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Analise",
-              "displayName": "Analise",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Data Entrada",
-              "displayName": "Data Entrada",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Status",
-              "displayName": "Status",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Responsavel",
-              "displayName": "Responsavel",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            },
-            {
-              "id": "Observacao",
-              "displayName": "Observacao",
-              "required": false,
-              "defaultMatch": false,
-              "display": true,
-              "type": "string",
-              "canBeUsedToMatch": true
-            }
-          ],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": false
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.googleSheets",
-      "typeVersion": 4.7,
-      "position": [
-        912,
-        208
-      ],
-      "id": "7f26a03b-6836-4fc1-90f4-10212149260a",
-      "name": "Append row in AMOSTRAS",
-      "alwaysOutputData": false,
       "credentials": {
         "googleApi": {
           "id": "GOOGLE_CREDENTIAL_ID",
@@ -4585,8 +3772,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.5,
       "position": [
-        -640,
-        1184
+        -784,
+        1088
       ],
       "id": "9d8f00a4-f501-4f60-b245-3be2746b1ba7",
       "name": "HTTP Request  IA provisorio",
@@ -4621,7 +3808,7 @@
         "messages": {
           "values": [
             {
-              "content": "=Você é o interpretador do LabFlow, bot de laboratório de microbiologia.\nConverta a mensagem do analista em JSON. Responda APENAS com o JSON, sem texto extra e sem ```.\n\nIntenções válidas:\n- \"coleta_terra\": coleta de tanque(s) de terra. Tanques são números (ex: 42, 43). Máximo 8.\n- \"coleta_navio\": coleta de tanque(s) de navio. Tanques têm número + letra opcional C/P/S/A/F (ex: 1C, 4P). Máximo 16. O navio inclui o número da viagem (ex: \"O.SKY 123\"), mesmo que a palavra \"navio\" não apareça.\n- \"desconhecido\": qualquer outra coisa (saudação, pergunta, mensagem incompleta).\n\nFormato:\n{\"intencao\": \"...\", \"tanques\": [\"...\"], \"navio\": \"... ou null\", \"data\": \"dd/mm/aaaa ou null\"}\n\nRegras:\n- Hoje é {{ $('Code in JavaScript').first().json.hoje }}. Converta \"hoje\", \"ontem\" etc. para dd/mm/aaaa.\n- Se faltar a data, use null. Nunca invente tanques, navio ou data.\n\nMensagem: {{ $('Code in JavaScript').first().json.mensagem_original }}"
+              "content": "=Você é o interpretador do LabFlow, bot de laboratório de microbiologia.\nConverta a mensagem do analista em JSON. Responda APENAS com o JSON, sem texto extra e sem ```.\n\nIntenções válidas:\n- \"coleta_terra\": coleta de tanque(s) de terra. Tanques são números (ex: 42, 43). Máximo 8.\n- \"coleta_navio\": coleta de tanque(s) de navio. Tanques têm número + letra opcional C/P/S/A/F (ex: 1C, 4P). Máximo 16. O navio inclui o número da viagem (ex: \"O.SKY 123\"), mesmo que a palavra \"navio\" não apareça.\n- \"consulta_drops\": pergunta quais drops (reanálises D5, D10, D15) vencem hoje.\n- \"consulta_analises_terra\": pergunta quais análises de tanques de terra saem hoje. Só use se a mensagem falar de terra.\n- \"consulta_analises_navio\": pergunta quais análises de tanques de navio saem hoje. Só use se a mensagem falar de navio.\n- \"consulta_bags\": pergunta quais bags (tanques de terra) podem ser descartados hoje.\n- \"consulta_potes\": pergunta quais potes de navio podem ser descartados hoje.\n- \"desconhecido\": qualquer outra coisa (saudação, pergunta sobre outro assunto, mensagem incompleta ou ambígua).\n\nFormato:\n{\"intencao\": \"...\", \"tanques\": [\"...\"], \"navio\": \"... ou null\", \"data\": \"dd/mm/aaaa ou null\"}\n\nRegras:\n- Nas consultas, use \"tanques\": [], \"navio\": null e \"data\": null.\n- Hoje é {{ $('Code in JavaScript').first().json.hoje }}. Converta \"hoje\", \"ontem\" etc. para dd/mm/aaaa.\n- Se faltar a data numa coleta, use null. Nunca invente tanques, navio ou data.\n\nMensagem: {{ $('Code in JavaScript').first().json.mensagem_original }}"
             }
           ]
         },
@@ -4651,13 +3838,13 @@
     },
     {
       "parameters": {
-        "jsCode": "const principal = $('Code in JavaScript').first().json;\nconst raw = $input.first().json;\nif (raw?.error) {\n  return [{ json: {\n    numero: principal.numero,\n    nomeContato: principal.nomeContato,\n    comando_ia: null,\n    textoResposta: '⚠️ A IA está indisponível no momento. Tente de novo em alguns instantes ou use o formato do comando.'\n  }}];\n}\nlet texto = raw?.content?.parts?.[0]?.text ?? '';\ntexto = String(texto).replace(/```json|```/g, '').trim();\n\nlet ia;\ntry { ia = JSON.parse(texto); } catch (e) { ia = { intencao: 'desconhecido' }; }\n\nconst tanques = Array.isArray(ia.tanques)\n  ? ia.tanques.map(t => String(t).trim().toUpperCase()).filter(Boolean)\n  : [];\nconst dataOk = /^\\d{2}\\/\\d{2}\\/\\d{4}$/.test(ia.data || '');\n\nlet comando = null, erro = null;\n\nif (ia.intencao === 'coleta_terra') {\n  if (!tanques.length || !tanques.every(t => /^\\d+$/.test(t))) erro = 'Não identifiquei os tanques de terra.';\n  else if (tanques.length > 8) erro = 'Limite de 8 tanques de terra por mensagem.';\n  else if (!dataOk) erro = 'Faltou a data da coleta (dd/mm/aaaa).';\n  else comando = `registrar coleta tanque terra ${tanques.join(',')} data ${ia.data}`;\n} else if (ia.intencao === 'coleta_navio') {\n  if (!ia.navio) erro = 'Faltou o nome do navio com a viagem (ex: O.SKY 123).';\n  else if (!tanques.length || !tanques.every(t => /^\\d+[CPS]?$/.test(t))) erro = 'Não identifiquei os tanques do navio.';\n  else if (tanques.length > 16) erro = 'Limite de 16 tanques de navio por mensagem.';\n  else if (!dataOk) erro = 'Faltou a data da coleta (dd/mm/aaaa).';\n  else comando = `Coleta navio ${String(ia.navio).trim()} tanques ${tanques.join(',')} data ${ia.data}`;\n} else {\n  erro = 'Não entendi a mensagem. Formatos aceitos:\\n' +\n    '• registrar coleta tanque terra 42,43 data 28/09/2026\\n' +\n    '• Coleta navio O.SKY 123 tanques 1C,4P data 28/09/2026';\n}\n\nconst criadoEm = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });\n\nreturn [{ json: {\n  numero: principal.numero,\n  nomeContato: principal.nomeContato,\n  comando_ia: comando,\n  idsCSV: 'IA',\n  novosStatusCSV: 'IA',\n  resumo: comando,\n  criadoEm,\n  textoResposta: comando\n    ? `🤖 Entendi:\\n${comando}\\n\\nResponda *sim* para confirmar ou *não* para cancelar.`\n    : `❌ ${erro}`\n}}];"
+        "jsCode": "const principal = $('Code in JavaScript').first().json;\nconst raw = $input.first().json;\n\nif (raw?.error) {\n  return [{ json: {\n    numero: principal.numero,\n    nomeContato: principal.nomeContato,\n    comando_ia: null,\n    reenviarComando: '',\n    textoResposta: '⚠️ A IA está indisponível no momento. Tente de novo em alguns instantes ou use o formato do comando.'\n  }}];\n}\n\nlet texto = raw?.content?.parts?.[0]?.text ?? '';\ntexto = String(texto).replace(/```json|```/g, '').trim();\n\nlet ia;\ntry { ia = JSON.parse(texto); } catch (e) { ia = { intencao: 'desconhecido' }; }\n\nconst tanques = Array.isArray(ia.tanques)\n  ? ia.tanques.map(t => String(t).trim().toUpperCase()).filter(Boolean)\n  : [];\nconst dataOk = /^\\d{2}\\/\\d{2}\\/\\d{4}$/.test(ia.data || '');\n\n// Consultas: só leem a planilha, então executam direto, sem pedir \"sim\"\nconst CONSULTAS = {\n  consulta_drops: 'drops para hoje',\n  consulta_analises_terra: 'Quais analises de tanques terra saem hoje?',\n  consulta_analises_navio: 'Quais analises de tanques navio saem hoje?',\n  consulta_bags: 'Quais bags posso descartar hoje',\n  consulta_potes: 'Quais potes do navio posso descartar hoje'\n};\n\nif (CONSULTAS[ia.intencao]) {\n  return [{ json: {\n    numero: principal.numero,\n    nomeContato: principal.nomeContato,\n    comando_ia: null,\n    reenviarComando: CONSULTAS[ia.intencao],\n    textoResposta: ''\n  }}];\n}\n\nlet comando = null, erro = null;\n\nif (ia.intencao === 'coleta_terra') {\n  if (!tanques.length || !tanques.every(t => /^\\d+$/.test(t))) erro = 'Não identifiquei os tanques de terra.';\n  else if (tanques.length > 8) erro = 'Limite de 8 tanques de terra por mensagem.';\n  else if (!dataOk) erro = 'Faltou a data da coleta (dd/mm/aaaa).';\n  else comando = `registrar coleta tanque terra ${tanques.join(',')} data ${ia.data}`;\n} else if (ia.intencao === 'coleta_navio') {\n  if (!ia.navio) erro = 'Faltou o nome do navio com a viagem (ex: O.SKY 123).';\n  else if (!tanques.length || !tanques.every(t => /^\\d+[CPSAF]?$/.test(t))) erro = 'Não identifiquei os tanques do navio.';\n  else if (tanques.length > 16) erro = 'Limite de 16 tanques de navio por mensagem.';\n  else if (!dataOk) erro = 'Faltou a data da coleta (dd/mm/aaaa).';\n  else comando = `Coleta navio ${String(ia.navio).trim()} tanques ${tanques.join(',')} data ${ia.data}`;\n} else {\n  erro = 'Não entendi a mensagem. Formatos aceitos:\\n' +\n    '• registrar coleta tanque terra 42,43 data 28/09/2026\\n' +\n    '• Coleta navio O.SKY 123 tanques 1C,4P data 28/09/2026\\n' +\n    '• drops para hoje\\n' +\n    '• Quais analises de tanques terra saem hoje?';\n}\n\nconst criadoEm = new Date().toLocaleString('pt-BR', { timeZone: 'America/Sao_Paulo' });\n\nreturn [{ json: {\n  numero: principal.numero,\n  nomeContato: principal.nomeContato,\n  comando_ia: comando,\n  reenviarComando: '',\n  idsCSV: 'IA',\n  novosStatusCSV: 'IA',\n  resumo: comando,\n  criadoEm,\n  textoResposta: comando\n    ? `🤖 Entendi:\\n${comando}\\n\\nResponda *sim* para confirmar ou *não* para cancelar.`\n    : `❌ ${erro}`\n}}];"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        -288,
-        1088
+        -272,
+        1024
       ],
       "id": "5b06ab9e-379e-433c-ba07-d0642edc32bd",
       "name": "Validar IA"
@@ -4878,6 +4065,541 @@
       ],
       "id": "0ddfd602-77fb-4e5b-81d4-aee75159400d",
       "name": "If Tem Resposta"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "aab8e853-4fe7-4502-a451-c4636a62c135",
+                    "leftValue": "={{ $json.tipo }}",
+                    "rightValue": "coleta_terra",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "coleta_terra"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "cfc41b50-832e-4fcd-a267-e8d9a3577aa1",
+                    "leftValue": "={{ $json.tipo }}",
+                    "rightValue": "coleta_navio",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "coleta_navio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "0d5627f0-454f-439a-8e76-a9c14989cda0",
+                    "leftValue": "={{ $json.tipo }}",
+                    "rightValue": "consulta_drops",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "consulta_drops"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "1bd64b4a-3983-4385-8fdd-41fe023c4f77",
+                    "leftValue": "={{ $json.tipo }}",
+                    "rightValue": "erro_coleta",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "erro_coleta"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "7be93336-155e-4e91-be81-6ce2ed88aa80",
+                    "leftValue": "={{ $json.tipo }}",
+                    "rightValue": "consulta_bags",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "consulta_bags"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "3be0dcb8-0f4f-42f8-b73a-c672d93b18d3",
+                    "leftValue": "={{ $json.tipo }}",
+                    "rightValue": "=consulta_potes",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "consulta_potes"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "6c3ce02e-c502-4966-9623-bde3ffc6e90b",
+                    "leftValue": "={{ $json.tipo }}",
+                    "rightValue": "gerenciar_usuario",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "gerenciar_usuario"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "ee443f6f-1cee-4459-9419-83a5bd1a2963",
+                    "leftValue": "={{ $json.tipo }}",
+                    "rightValue": "registro_analise",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "registro_analise"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "ca21b3c5-3ded-4bb2-98b8-b7fc63cd7fbd",
+                    "leftValue": "={{ $json.tipo }}",
+                    "rightValue": "consulta_analises_terra",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "consulta_analises_terra"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "7181f1ac-e7c3-418e-b53f-286e59d1d465",
+                    "leftValue": "={{ $json.tipo }}",
+                    "rightValue": "consulta_analises_navio",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "consulta_analises_navio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "75290c61-72ce-42cf-a5b6-d0dfb285439d",
+                    "leftValue": "={{ $json.tipo }}",
+                    "rightValue": "nao_cadastrado",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "nao_cadastrado"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "b55fd04c-3455-44b5-9b52-0a0ea9360ba2",
+                    "leftValue": "={{ $json.tipo }}",
+                    "rightValue": "concluir_drops",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "concluir_drops"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "4f0e60cd-d03c-48fd-88a5-df93b5115a60",
+                    "leftValue": "={{ $json.tipo }}",
+                    "rightValue": "concluir_leitura_terra",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "concluir_leitura_terra"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "cde8c2a1-6e85-47be-af12-72169f3990cc",
+                    "leftValue": "={{ $json.tipo }}",
+                    "rightValue": "concluir_leitura_navio",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "concluir_leitura_navio"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "ba0368a1-ae46-4534-9cbd-f1c50f0d942c",
+                    "leftValue": "={{ $json.tipo }}",
+                    "rightValue": "confirmar_pendencia",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "confirmar_pendencia"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "4dd57ac2-1ca4-4295-a1eb-fabc064eb944",
+                    "leftValue": "={{ $json.tipo }}",
+                    "rightValue": "cancelar_pendencia",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "cancelar_pendencia"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "0687df92-abec-4c21-838d-65ddac93ac9f",
+                    "leftValue": "={{ $json.tipo }}",
+                    "rightValue": "interpretar_ia",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "interpretar_ia"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "4c6ecdc1-5e81-4a6c-a99b-7260b02371c0",
+                    "leftValue": "={{ $json.tipo }}",
+                    "rightValue": "erro_ia",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "erro_ia"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        0,
+        208
+      ],
+      "id": "46fa3048-04c5-4d60-8578-36a500d7044e",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6d8e268f-2545-4c96-a6a0-de9cb19d1fa5",
+              "leftValue": "={{ String($json.textoResposta || '').trim().length > 0 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1136,
+        1200
+      ],
+      "id": "f0a180e4-1452-436b-a43d-97e604d125f6",
+      "name": "If Tem Resposta IA"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "16796f35-4750-4578-8b76-21d53c3bc1a3",
+              "leftValue": "={{ String($json.reenviarComando || '').trim().length > 0 }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -400,
+        1392
+      ],
+      "id": "5ea9ee32-33e2-4d82-bc2a-556f714100f6",
+      "name": "If Reenviar Consulta"
     }
   ],
   "pinData": {},
@@ -4897,74 +4619,12 @@
       "main": [
         [
           {
-            "node": "Switch",
+            "node": "If sincronizarNome",
             "type": "main",
             "index": 0
           },
           {
-            "node": "If sincronizarNome",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "If": {
-      "main": [
-        [
-          {
-            "node": "Append row in AMOSTRAS",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Edit Fields",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Edit Fields1": {
-      "main": [
-        [
-          {
-            "node": "HTTP Request1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Edit Fields": {
-      "main": [
-        [
-          {
-            "node": "HTTP Request",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP Request": {
-      "main": [
-        [
-          {
-            "node": "Respond to Webhook1",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "HTTP Request1": {
-      "main": [
-        [
-          {
-            "node": "Respond to Webhook",
+            "node": "Switch",
             "type": "main",
             "index": 0
           }
@@ -4998,148 +4658,6 @@
         [
           {
             "node": "Respond to Webhook2",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Switch": {
-      "main": [
-        [
-          {
-            "node": "If",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Get rows COLETAS_TERRA",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Get rows COLETAS_NAVIO",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Get rows DROPS",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "HTTP erro_coleta",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Get rows BAGS_TERRA",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Get rows POTES_ARQ_NAVIO",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "If_autorizar_usuario",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Split Out Analises",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "HTTP Request Analise",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Get rows ANALISES Terra",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Get rows ANALISES Navio",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "HTTP Request Nao Cadastrado",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Get rows DROPS Concluir",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Get rows ANALISES Concluir Terra",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Get rows ANALISES Concluir Navio",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Get rows CONFIRMACOES_PENDENTES",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Get rows CONFIRMACOES_PENDENTES",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Message a model Interpretar IA",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "HTTP Request  IA provisorio",
             "type": "main",
             "index": 0
           }
@@ -5217,17 +4735,6 @@
         [
           {
             "node": "Respond to Webhook5",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Append row in AMOSTRAS": {
-      "main": [
-        [
-          {
-            "node": "Edit Fields1",
             "type": "main",
             "index": 0
           }
@@ -5876,12 +5383,17 @@
       "main": [
         [
           {
-            "node": "HTTP Request  IA provisorio",
+            "node": "If IA Entendeu.",
             "type": "main",
             "index": 0
           },
           {
-            "node": "If IA Entendeu.",
+            "node": "If Tem Resposta IA",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "If Reenviar Consulta",
             "type": "main",
             "index": 0
           }
@@ -5927,6 +5439,170 @@
           }
         ]
       ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Get rows COLETAS_TERRA",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get rows COLETAS_NAVIO",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get rows DROPS",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP erro_coleta",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get rows BAGS_TERRA",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get rows POTES_ARQ_NAVIO",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If_autorizar_usuario",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request Analise",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Split Out Analises",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get rows ANALISES Terra",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get rows ANALISES Navio",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request Nao Cadastrado",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get rows DROPS Concluir",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get rows ANALISES Concluir Terra",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get rows ANALISES Concluir Navio",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get rows CONFIRMACOES_PENDENTES",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get rows CONFIRMACOES_PENDENTES",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Message a model Interpretar IA",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "HTTP Request  IA provisorio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Tem Resposta IA": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request  IA provisorio",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond to Webhook14",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Reenviar Consulta": {
+      "main": [
+        [
+          {
+            "node": "HTTP Reenvio IA",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
@@ -5934,7 +5610,7 @@
     "executionOrder": "v1",
     "binaryMode": "separate"
   },
-  "versionId": "2f8da83f-6fca-49f0-88d2-dd916ce18d07",
+  "versionId": "067026ec-555d-4c9f-bfb3-01f9d8fde578",
   "meta": {},
   "nodeGroups": [],
   "id": "rvgdaHvnC4EqXMeQ",
