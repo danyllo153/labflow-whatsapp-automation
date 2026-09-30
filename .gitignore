@@ -1,0 +1,25 @@
+# Workflow com IDs reais do n8n (nunca vai para o Git)
+LabFlow_importar_n8n.json
+
+# Segredos e credenciais
+.env
+.env.*
+*.pem
+*.key
+client_secret*.json
+*credentials*.json
+
+# Sistema e editor
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
+
+# Python
+__pycache__/
+*.pyc
+
+# Dumps e backups do banco
+*.dump
+*.sql.gz
