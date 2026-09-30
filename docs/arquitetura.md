@@ -138,7 +138,7 @@ to Webhook).
 
 Branch `coleta_terra`: reconhece mensagens no formato "registrar coleta
 tanque terra <número> data <dd/mm/aaaa>". Grava uma linha por coleta na aba
-COLETAS e calcula automaticamente 3 datas de "drop" de reanálise (D5, D10,
+COLETAS e calcula automaticamente 3 datas de análise de "drop" (D5, D10,
 D15 — coleta + 5/10/15 dias corridos), gravadas na aba DROPS.
 
 Branch `coleta_navio`: reconhece "Coleta navio <nome> tanques <lista
