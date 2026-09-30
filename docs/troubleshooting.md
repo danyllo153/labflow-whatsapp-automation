@@ -945,6 +945,99 @@ mitigação mostra se ela funcionou.
 
 ---
 
+## Bug 22 — Limpar dados de teste apagando a linha de cabeçalho da aba
+
+**Sintoma:** depois de limpar linhas de teste da planilha (tanques de
+teste, navio de teste, usuário de teste), o próximo registro do bot
+falhava no node de `Append` daquela aba.
+
+**Causa raiz:** o node Google Sheets do n8n mapeia as colunas pelos
+nomes da linha 1. Na limpeza, a linha de cabeçalho foi apagada junto com
+os dados de teste, e o node ficou sem nomes para casar com os campos do
+workflow.
+
+**Como foi encontrado:** o erro apareceu no primeiro `Append` depois da
+limpeza, na aba Executions, e a causa estava na própria planilha: a
+linha 1 já não era o cabeçalho.
+
+**Solução aplicada:** restaurar a linha 1 com os nomes originais das
+colunas. Para a limpeza de teste, selecionar sempre a partir da linha 2.
+
+**Lição:** o cabeçalho de uma aba faz parte do contrato com o workflow,
+não é decoração. Limpeza de dados de teste é uma operação de escrita
+como qualquer outra e precisa de cuidado: começar pela linha 2, e, se a
+aba for delicada, testar com uma cópia da planilha.
+
+---
+
+## Bug 23 — Troca de cargo por frase livre promovia "gerente" a Admin
+
+**Sintoma:** com a IA cobrindo a troca de cargo, uma mensagem pedindo
+para trocar alguém para "gerente" foi aceita e o bot montou o comando
+com o cargo Admin. "Gerente" não é um cargo do LabFlow (os cargos são
+Admin, Operador e Consultor).
+
+**Causa raiz:** o Gemini "ajudou": trocou a palavra que o usuário
+escreveu pelo cargo válido mais parecido. Numa consulta isso seria
+inofensivo, mas aqui um erro de interpretação vira concessão de
+privilégio. A primeira tentativa de correção foi só no prompt ("aceite
+apenas Admin, Operador ou Consultor"), e o modelo continuou aceitando.
+Uma regra escrita em linguagem natural para um modelo é uma sugestão,
+não uma garantia.
+
+**Solução aplicada:** a decisão saiu do modelo e foi para o código, em
+três camadas:
+1. O `Validar IA` normaliza a mensagem original (sem acento, minúscula)
+   e exige que o cargo (Admin/administrador, Operador ou Consultor) e os
+   dígitos do telefone apareçam nela. Se a IA devolve um cargo que o
+   usuário não escreveu, o pedido é recusado com a lista de cargos
+   válidos.
+2. O `Code in JavaScript` passa o `nivelAtual` de quem enviou ao
+   `Validar IA`, que recusa antes do "sim" quem não é Admin.
+3. A regex final continua conferindo o cargo de quem manda o comando
+   reenviado, como antes.
+
+**Validação:** o pedido com "gerente" passou a ser recusado, e a troca
+com cargo escrito corretamente (Operador, Consultor, Admin) continuou
+funcionando. Quem não é Admin recebe a recusa sem gastar uma confirmação.
+
+**Lição:** para qualquer ação sensível, a IA só pode propor, e o código
+confere contra o texto original do usuário e contra as permissões. Nunca
+confie na "correção" que o modelo fez na entrada.
+
+---
+
+## Bug 24 — Gemini respondia `desconhecido` para a coleta depois que o prompt cresceu
+
+**Sintoma:** "coletei os tanques 60 e 61 hoje", que funcionava, passou a
+receber "Comando inválido". Na aba Executions, o node do Gemini tinha
+devolvido `{"intencao": "desconhecido"}` e o resto do fluxo se comportou
+corretamente diante disso.
+
+**Causa raiz:** o prompt ganhou várias intenções novas (consultas,
+análise, conclusões, cargos) e o modelo leve (Flash-Lite) passou a
+classificar como `desconhecido` uma frase de coleta que não trazia a
+palavra "terra". Adicionar intenções a um prompt pode piorar as antigas,
+como qualquer mudança de código sem teste de regressão.
+
+**Solução aplicada:**
+1. Regra explícita no prompt: mensagem de coleta só com números de
+   tanque e sem nome de navio é coleta de terra, mesmo sem a palavra
+   "terra".
+2. Exemplos no prompt (10 mensagens com a resposta JSON esperada), com a
+   data de hoje preenchida automaticamente.
+
+**Validação:** a mesma frase voltou a ser interpretada como coleta de
+terra e o fluxo seguiu até o "sim" e o registro.
+
+**Lição:** o prompt é código e precisa de regressão. Depois de mudar o
+prompt, reenviar uma frase de cada intenção (coleta terra, coleta navio,
+cada consulta, análise, conclusão, cargo) antes de considerar pronto. Um
+modelo maior ou um segundo modelo de reserva é o plano B se o leve
+continuar falhando.
+
+---
+
 ## Configuração da instância Evolution API (recomendada)
 
 ```json
