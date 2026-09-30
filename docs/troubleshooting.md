@@ -258,7 +258,7 @@ de depender de timestamp sozinho.
 - **ID único por registro** (`idRegistro`, formato `AM-<timestamp>`),
   gerado no Code node — serve como chave de referência estável para
   vincular esse registro a futuras funcionalidades (ex: cálculo de "drops"
-  de reanálise), independente da posição da linha na planilha.
+  D5/D10/D15), independente da posição da linha na planilha.
 - **Nome do responsável** (`nomeContato`, do campo `pushName` da Evolution
   API) gravado na coluna "Responsavel" da planilha, para rastrear quem
   enviou cada registro.

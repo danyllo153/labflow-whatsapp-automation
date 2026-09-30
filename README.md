@@ -1,6 +1,6 @@
 # LabFlow
 
-Automação de laboratório de microbiologia via WhatsApp: o analista manda uma mensagem, e o LabFlow registra coletas e análises numa planilha, calcula os prazos de leitura e reanálise e responde quais tarefas vencem no dia.
+Automação de laboratório de microbiologia via WhatsApp: o analista manda uma mensagem, e o LabFlow registra coletas e análises numa planilha, calcula os prazos de leitura e dos drops e responde quais tarefas vencem no dia.
 
 Projeto pessoal que une biomedicina e automação. O problema vem da rotina real de um laboratório de controle de qualidade. Todo o desenvolvimento e os testes usam **dados fictícios**.
 
@@ -8,7 +8,7 @@ Projeto pessoal que une biomedicina e automação. O problema vem da rotina real
 
 ## O problema
 
-No laboratório, cada coleta de tanque gera uma série de prazos: análises com pré-leitura e leitura final em horas diferentes, reanálises (drops) em D5, D10 e D15, e descarte da amostra de arquivo depois de 1 ano. Esse controle depende de anotação manual e de lembrar o que vence em cada dia.
+No laboratório, cada coleta de tanque gera uma série de prazos: análises com pré-leitura e leitura final em horas diferentes, análises de drop em D5, D10 e D15, e descarte da amostra de arquivo depois de 1 ano. Esse controle depende de anotação manual e de lembrar o que vence em cada dia.
 
 O LabFlow deixa o registro no canal que a equipe já usa (WhatsApp) e passa o cálculo dos prazos para o sistema.
 
