@@ -10,6 +10,65 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 `docs/deploy-vps.md`. Este arquivo é só o resumo cronológico do que mudou.
 
 
+## [0.9.0] - 2026-09-29
+
+### Added
+- A IA passa a cobrir todos os comandos, não só a coleta. Novas intenções
+  no Gemini e no `Validar IA`:
+  - consultas (`consulta_drops`, `consulta_analises_terra`,
+    `consulta_analises_navio`, `consulta_bags`, `consulta_potes`): rodam
+    direto, sem pedir "sim", porque só leem a planilha
+  - `registro_analise` (frasco normal ou stress, terra ou navio)
+  - `concluir_drops` (dia D5/D10/D15, terra ou navio)
+  - `concluir_leitura` (pré ou final, CT/BL/WORT, normal ou stress): vai
+    direto para o fluxo de leitura, que já lista as leituras e pede o
+    "sim". A IA não pede uma segunda confirmação
+  - `gerenciar_cargo` (troca de cargo por frase livre)
+- Ajuda por tópico, sem IA: `comandos`, `comandos para drops`, `consultar
+  análises`, `consultar leituras`, `consultar descarte`, `consultar cargos`
+  e `consultar tanques` mostram só os comandos do assunto. Trecho novo
+  no Code node, antes do `Gerenciar usuário`
+- Mais jeitos de perguntar bags e potes ("bags de terra hoje", "descartar
+  potes hoje", "quais potes posso descartar hoje")
+- Permissão checada duas vezes: o `Validar IA` recusa na hora o Consultor
+  que tenta gravar e quem não é Admin tentando trocar cargo (sem gastar
+  um "sim"), e a regex do Code node continua sendo a barreira final. Para
+  isso o Code node passa `nivelAtual` ao `Validar IA`
+- Exemplos no prompt do Gemini (10 mensagens com a resposta esperada) e
+  data de hoje preenchida automaticamente nos exemplos
+
+### Changed
+- Resposta de coleta: `Registro de tanque terra/navio efetuado com
+  sucesso por <nome de quem enviou>`, seguida de tanques, data e total
+- Mensagem de "não entendi" da IA ficou curta: `Comando inválido. Se
+  desejar consultar a lista de comandos, escreva o que procura. Por
+  exemplo: consultar drops`, com a lista de assuntos. Antes listava todos
+  os formatos e poluía o chat
+- `Validar IA` devolve `reenviarComando` (consulta e leitura) ou
+  `comando_ia` (gravação com confirmação), e o resultado passa pelos Ifs
+  `If Reenviar Consulta` e `If Tem Resposta IA`
+- Regra do prompt: mensagem de coleta só com números e sem navio é coleta
+  de terra, mesmo sem a palavra "terra"
+
+### Removed
+- Nodes do ramo `amostra` (sem entrada desde a 0.8.0)
+
+### Fixed
+- Troca de cargo por frase livre promovia "gerente" a Admin: a IA trocava
+  a palavra pelo cargo válido mais parecido — ver Bug 23
+- Apagar a linha de cabeçalho de uma aba ao limpar dados de teste fazia o
+  próximo `Append` falhar — ver Bug 22
+- Gemini leve respondia `desconhecido` para "coletei os tanques 60 e 61
+  hoje" depois que o prompt ganhou mais intenções — ver Bug 24
+
+### Security
+- O cargo e o telefone da troca de cargo precisam estar escritos na
+  mensagem original: o código confere o texto do usuário e ignora o que
+  a IA "corrigiu". Sem isso, um erro de interpretação viraria promoção
+- Toda gravação vinda da IA continua pedindo "sim" e passando pelas regras
+  da regex na execução (cargo, limites, duplicata)
+
+
 ## [0.8.0] - 2026-09-29
 
 ### Added
