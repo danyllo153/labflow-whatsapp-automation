@@ -6,7 +6,7 @@ Lista dos comandos reconhecidos pelo bot do WhatsApp, com o formato esperado e u
 
 - **Mensagens do próprio número pareado são ignoradas.** O bot não processa mensagens enviadas por ele mesmo.
 - **Mensagens com mais de 10 minutos são descartadas.** Evita reprocessar mensagens antigas se o serviço ficar fora do ar por um tempo e voltar.
-- **Só números cadastrados usam o bot.** Quem não está na aba `USUARIOS` recebe uma mensagem pedindo cadastro e nenhum comando é executado.
+- **Só números cadastrados usam o bot.** Quem não está cadastrado (tabela `usuarios`) recebe uma mensagem pedindo cadastro e nenhum comando é executado.
 - **Mensagem que nenhum comando reconhece vai para a IA** (seção 11), em vez de ser tratada como amostra.
 - Os comandos abaixo não diferenciam maiúsculas de minúsculas.
 
@@ -133,7 +133,15 @@ Aceita "do"/"dos", singular/plural e a palavra `terra` opcional (`tanque terra 4
 
 A confirmação mostra a data da leitura final do CT (`Data final CT`) e da pré-leitura do BL.
 
-Cada tanque gera 4 linhas na aba `ANALISES`:
+**A análise exige coleta.** Cada tanque é ligado à coleta mais recente com data até a data da análise (e do mesmo navio, no caso de navio). Se algum tanque da lista não tiver coleta, nada é gravado e o bot responde:
+
+```
+❌ Análise não registrada: não há coleta de terra até 22/09/2026 para o(s) tanque(s) 47.
+
+Registre a coleta primeiro. Nada foi gravado.
+```
+
+Cada tanque gera 4 linhas na tabela `analises`:
 
 | Sub-análise | Método | Pré-leitura | Leitura final |
 |---|---|---|---|
@@ -174,7 +182,7 @@ Concluir drops D10 navio O.SKY 123
 Concluir drops navio
 ```
 
-Marca como `Concluído` todas as linhas da aba `DROPS` com status `Pendente` e data prevista hoje que batem no filtro. O dia (D5/D10/D15) e o nome do navio são opcionais. Sem eles, conclui todos os estágios e todos os navios. A resposta lista os tanques e as datas de coleta concluídos.
+Marca como `Concluído` todos os drops da tabela `drops` com status `Pendente` e data prevista hoje que batem no filtro. O dia (D5/D10/D15) e o nome do navio são opcionais. Sem eles, conclui todos os estágios e todos os navios. A resposta lista os tanques e as datas de coleta concluídos.
 
 ## 10. Concluir leituras de análise (CT/BL/WORT)
 
@@ -194,17 +202,17 @@ Estágio, sub-análise, frasco e nome do navio são opcionais. Sem eles, o coman
 
 O comando funciona em duas etapas:
 
-1. O bot **não altera nada ainda**. Ele lista as leituras encontradas e pergunta se pode concluir. A pendência fica guardada na aba `CONFIRMACOES_PENDENTES`.
+1. O bot **não altera nada ainda**. Ele lista as leituras encontradas e pergunta se pode concluir. A pendência fica guardada na tabela `confirmacoes` (uma por usuário; uma nova substitui a anterior).
 2. O analista responde com uma mensagem só com **`sim`** (confirma) ou **`não`**/**`nao`** (cancela). A pendência expira em **10 minutos**; depois disso é preciso mandar o comando de novo. Se a data da pendência não puder ser lida, ela também é tratada como expirada (é mais seguro recusar do que confirmar sem saber a idade).
 
-Ao confirmar, cada linha muda de status na aba `ANALISES`:
+Ao confirmar, cada linha muda de status na tabela `analises`:
 
 | Status atual | Data que precisa ser hoje | Novo status |
 |---|---|---|
 | Aguardando Pré-Leitura | Data Pre-Leitura | Aguardando Leitura Final |
 | Aguardando Leitura Final | Data Leitura Final | Concluído |
 
-O nome de quem confirmou fica registrado na coluna `Pre-Leitura Feita Por` ou `Leitura Final Feita Por`, conforme o estágio concluído.
+O nome de quem confirmou fica registrado na coluna `pre_leitura_por` ou `leitura_final_por`, conforme o estágio concluído.
 
 **Exemplo de conversa:**
 ```
@@ -259,13 +267,13 @@ LabFlow:  ✅ Registro de tanque terra efetuado com sucesso por João.
 - **`sim`** executa o comando como se ele tivesse sido digitado: mesmas permissões, mesmos limites (8 tanques em terra, 16 em navio) e mesmo bloqueio de coleta duplicada.
 - **`não`**/**`nao`** cancela, e nada é gravado.
 - A pendência expira em **10 minutos**, como na conclusão de leituras (seção 10).
-- **Consultas** e **concluir leitura** não pedem o "sim" da IA: as consultas só leem a planilha, e a conclusão de leitura já lista as leituras e pergunta se pode concluir.
+- **Consultas** e **concluir leitura** não pedem o "sim" da IA: as consultas só leem o banco, e a conclusão de leitura já lista as leituras e pergunta se pode concluir.
 - **Permissões.** O Consultor que tenta gravar por frase livre recebe a recusa na hora, sem precisar dizer "sim". Só Admin troca cargo. O cargo e o telefone da troca de cargo precisam estar escritos na mensagem; o código confere o texto original e recusa cargos que não existem.
 - Se faltar dado (data da coleta, nome do navio, tanques, normal ou stress, cargo, terra ou navio), o bot responde o que faltou. Nada é gravado e nenhuma confirmação é pedida.
 - Se a mensagem não tiver relação com nenhum comando (uma saudação, por exemplo), o bot responde `Comando inválido` e explica como ver a lista (seção 12).
 - Se o Gemini estiver fora do ar, o bot responde `A IA está indisponível no momento` e nada é gravado. Nesse caso, use o comando no formato padrão.
 
-O registro de amostra avulsa (`amostra <número> ...`) foi removido na versão 0.8.0: as amostras do laboratório serão o recebimento e o embarque de suco concentrado, em planilha própria.
+O registro de amostra avulsa (`amostra <número> ...`) foi removido na versão 0.8.0: as amostras do laboratório serão o recebimento e o embarque de suco concentrado, que serão um módulo próprio no banco.
 
 ## 12. Ajuda por assunto
 
