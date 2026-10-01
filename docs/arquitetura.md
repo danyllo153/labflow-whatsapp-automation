@@ -1,3 +1,9 @@
+> **Nota (v1.0.0):** as seções de "Node 1" até "IA como fallback" são um diário
+> do que foi construído quando os dados ainda ficavam no Google Sheets, e
+> mantêm os nomes de abas e de nodes daquela época. A arquitetura atual, com
+> PostgreSQL, está em **"Arquitetura atual (1.0.0 — PostgreSQL)"**, perto do
+> fim deste arquivo.
+
 ## Node 1 — Webhook (entrada)
 
 Recebe as mensagens simulando o WhatsApp via HTTP POST. Endpoint de teste: `/webhook-test/labflow-registro`.
@@ -326,6 +332,11 @@ consulta "drops hoje" em seguida.
 
 ## IA como fallback da regex (V3, parte 1)
 
+> Na 1.0.0 os nodes citados abaixo ganharam os nomes `BD · Salvar pendência
+> IA`, `Validar resposta da IA`, `IA entendeu?`, `Reenviar comando da IA?` e
+> `Reenviar ao webhook`, e a pendência fica na tabela `confirmacoes` (uma
+> por usuário), no lugar da aba `CONFIRMACOES_PENDENTES`. A lógica é a mesma.
+
 **Objetivo.** Aceitar mensagens livres ("coletei os tanques 42 e 43 hoje", "quais drops tenho hoje?") sem trocar as regras de negócio, que continuam nas regex. A IA só traduz a frase num comando no formato padrão.
 
 **Fluxo.**
@@ -376,7 +387,104 @@ Resposta "sim"
 
 **Limitações conhecidas.** A pendência é uma só por número: uma nova mensagem entendida pela IA substitui a anterior. O modelo leve pode errar a interpretação, e por isso a confirmação mostra o comando montado antes de gravar. A prévia de datas de análise só aparece no registro de análise, não na coleta.
 
-## Arquitetura atual (resumo)
+## Migração para o PostgreSQL (1.0.0)
+
+**Objetivo.** Trocar só a camada de dados (Google Sheets → PostgreSQL), sem
+mudar o que o usuário vê: mesmos comandos, mesmas respostas, mesma IA. O
+plano completo e as decisões do schema estão em `docs/postgres-migracao.md`.
+
+**Por que migrar.** Cada consulta lia a aba inteira (`Get rows` sem filtro)
+e filtrava num Code node; no banco, vira um `WHERE` com `CURRENT_DATE`. A
+planilha também quebrava com operações manuais (apagar o cabeçalho, zerar a
+aba `USUARIOS`; ver Bug 22), e o módulo de suco concentrado tem relações
+(load → lotes → compostas) que não cabem em abas.
+
+**O banco.** Banco `labflow` dentro do container `labflow-postgres` que a
+stack já tinha, separado do banco da Evolution API. Dois usuários:
+`labflow_app` (o n8n usa, lê e escreve) e `labflow_leitura` (somente leitura,
+para o DBeaver e para o Power BI). O fuso do banco é `America/Sao_Paulo`,
+então `CURRENT_DATE` é o "hoje" de Brasília e o Bug 12 deixou de depender de
+cada Code node. O schema está em `db/migrations/001_tanques.sql`.
+
+**O modelo.** A coleta é o centro: drops, amostra de arquivo e análises
+apontam para ela por `coleta_id`.
+
+| Aba antiga | Tabela |
+|---|---|
+| `USUARIOS` | `usuarios` (telefone único e só dígitos; cargo validado por `CHECK`) |
+| — | `navios` (`O.SKY 123` = nome `O.SKY` + viagem `123`) |
+| `COLETAS_TERRA` + `COLETAS_NAVIO` | `coletas` (com `origem`) |
+| `DROPS` | `drops` (dia 5, 10 ou 15) |
+| `BAGS_TERRA` + `POTES_NAVIO` | `arquivo_amostras` (`tipo` bag ou pote) |
+| `ANALISES` | `analises` |
+| `CONFIRMACOES_PENDENTES` | `confirmacoes` (uma por usuário) |
+
+**O que o banco passou a garantir.** Além das regras que continuam no
+código, o banco confere de novo: cargo válido (`CHECK`), coleta duplicada
+(`UNIQUE NULLS NOT DISTINCT` em origem + navio + tanque + data), vínculo
+entre coleta, drop, arquivo e análise (chave estrangeira com `ON DELETE
+CASCADE`), CT sem pré-leitura e Superfície só no WORT (`CHECK`). A checagem de
+duplicata do workflow continua, porque é ela que responde quem já registrou;
+o `UNIQUE` é a barreira final.
+
+**No workflow.**
+
+- 22 nodes Postgres, todos com parâmetros (`$1`, `$2`...), nunca com texto
+  da mensagem concatenado no SQL.
+- A coleta grava coleta + 3 drops + bag ou pote numa única instrução (`WITH
+  ... INSERT`), então ou grava tudo ou nada.
+- A expiração de 10 minutos é calculada pelo banco (`now() - criado_em`), o
+  que elimina o parse de data em texto do bug da 0.7.0.
+- Quem registrou, concluiu ou leu é guardado como usuário (`registrado_por`,
+  `concluido_por`, `pre_leitura_por`, `leitura_final_por`).
+- 8 blocos coloridos no canvas (entrada, consultas, coletas, análise,
+  concluir, "sim"/"não", IA e cargos) e nomes padronizados: `BD ·` banco,
+  `Zap ·` envia no WhatsApp, `Fim ·` responde ao webhook, `Montar resposta
+  ...` formata o texto.
+
+**Mudanças de comportamento.**
+
+- **A análise exige coleta.** O registro liga cada tanque à coleta mais
+  recente com data até a data da análise (e do mesmo navio, no navio). Se
+  algum tanque não tiver coleta, nada é gravado e o bot responde que não há
+  coleta e pede para registrá-la primeiro. Na planilha, a análise era
+  aceita sem coleta.
+- O nome do navio é separado em nome e viagem: o último número da frase é a
+  viagem.
+
+**Como foi feito.** Numa cópia do workflow (`LabFlow (Postgres)`), um ramo
+por vez, começando por uma consulta simples (drops de hoje) e testando no
+WhatsApp a cada troca. Testados: drops de hoje, coleta e duplicata, análise
+com e sem coleta, consulta de análises, concluir leitura com "sim",
+concluir drops, troca de cargo e frase livre pela IA com "sim" e com "não".
+O workflow antigo ficou desativado, como plano B.
+
+**Fluxo atual.**
+
+```
+Webhook WhatsApp
+  → Filtrar mensagens válidas (fromMe = false e texto existe)
+  → BD · Buscar usuários
+  → Interpretar comando (Code, Run Once for All Items: guards, bloqueio de
+    número não cadastrado, regex de cada intenção, checagem de cargo)
+      ├─ Rotear comando (Switch)
+      │    ├─ Consultas:  drops | bags | potes | análises de terra e de navio
+      │    ├─ Coletas:    BD · Coleta ... já existe? → Duplicada? → BD · Gravar coleta ...
+      │    ├─ Análise:    BD · Gravar análise
+      │    ├─ Concluir:   BD · Concluir drops | BD · Leituras ... de hoje → BD · Salvar pendência ...
+      │    ├─ Sim/Não:    BD · Buscar pendência → Processar sim ou não
+      │    ├─ IA:         Gemini · Interpretar mensagem → Validar resposta da IA
+      │    └─ Cargos:     Pode trocar cargo? → BD · Gravar cargo
+      └─ Nome do contato mudou? → BD · Atualizar nome (paralelo, sem resposta)
+  (cada ramo termina em Zap · ... → Fim · ...: HTTP Request + Respond to Webhook)
+```
+
+**Limitações e próximos passos.** O módulo de suco concentrado
+(`db/migrations/002_concentrado.sql`) está em rascunho e ainda não foi
+aplicado. Views para relatório (Power BI) também faltam. O backup diário
+roda no servidor, mas a cópia fora dele ainda é manual.
+
+## Arquitetura no tempo do Google Sheets (resumo, até a 0.9.0)
 
 ```
 Webhook (Evolution API)

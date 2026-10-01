@@ -10,6 +10,68 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 `docs/deploy-vps.md`. Este arquivo é só o resumo cronológico do que mudou.
 
 
+## [1.0.0] - 2026-10-01
+
+### Changed
+- **Breaking (dados):** os dados saíram do Google Sheets e foram para o
+  PostgreSQL (banco `labflow` no container `labflow-postgres` da stack). O
+  workflow não tem mais nenhum node do Google Sheets: são 22 nodes Postgres,
+  todos com parâmetros (`$1`, `$2`...), nunca com texto concatenado
+- Os comandos e as respostas do bot continuam os mesmos. A coleta grava
+  coleta + drops D5/D10/D15 + bag ou pote numa instrução só, e a conclusão
+  de leitura grava o usuário que leu
+- **Análise de tanque exige coleta:** o registro liga cada tanque à coleta
+  mais recente até a data da análise. Se algum tanque não tiver coleta,
+  nada é gravado e o bot responde "Análise não registrada: não há coleta
+  ... Registre a coleta primeiro"
+- Navio separado em nome e viagem (`O.SKY 123` = nome `O.SKY`, viagem `123`)
+- Quem registrou, concluiu ou leu passa a ser guardado como usuário (chave
+  estrangeira), e não como texto livre
+- "Hoje" é `CURRENT_DATE` do banco (fuso `America/Sao_Paulo`), e a expiração
+  de 10 minutos da confirmação é calculada pelo banco
+- Workflow reorganizado em 8 blocos coloridos, com nomes padronizados:
+  `BD ·` (banco), `Zap ·` (envia no WhatsApp), `Fim ·` (responde ao
+  webhook) e `Montar resposta ...` (formata o texto)
+- Texto do bot e prompt do Gemini: D5, D10 e D15 são "análises de drop",
+  não "reanálises"
+
+### Added
+- `db/migrations/001_tanques.sql` (usuarios, navios, coletas, drops,
+  arquivo_amostras, analises, confirmacoes) e `db/migrations/002_concentrado.sql`
+  (recebimento, embarque, compostas, TAB, Coliformes e Howard; rascunho,
+  ainda não aplicada)
+- Usuário somente leitura `labflow_leitura`, para o DBeaver e para o Power BI
+- Backup diário do banco (`scripts/backup-db.sh`: `pg_dump`, `cron` às 3h,
+  14 dias de retenção), documentado em `docs/scripts.md`
+- `docs/postgres-migracao.md` (plano e decisões) e `docs/handoff.md`
+  (retomar o projeto em outro computador)
+- `.gitignore`
+
+### Fixed
+- Dois `If` da IA comparavam texto fixo e davam sempre verdadeiro — ver Bug 25
+- Duplicar o workflow trocou o caminho do webhook — ver Bug 26
+- Referência a node com maiúscula diferente: a coleta gravava e a resposta
+  falhava — ver Bug 27
+- Telefone cadastrado com zero na frente aparecia como não cadastrado —
+  ver Bug 28
+
+### Security
+- O banco confere as regras de novo, como segunda barreira: cargo válido
+  (`CHECK`), coleta duplicada (`UNIQUE`), vínculo entre coleta, drop, arquivo
+  e análise (chave estrangeira) e CT sem pré-leitura
+- Consultas sempre parametrizadas, sem montar SQL com texto da mensagem
+- Usuário da aplicação e usuário somente leitura separados, e o banco do
+  LabFlow isolado do banco da Evolution API
+- Senhas só no `.env` do servidor e em Credenciais do n8n; backups com
+  permissão restrita (pasta `700`, arquivos `600`)
+
+### Notes
+- O servidor é de demonstração, com dados fictícios. O workflow antigo, do
+  Google Sheets, continua no n8n **desativado**, como plano B: para voltar
+  atrás, desative o novo e ative o antigo (os dois usam o caminho
+  `labflow-registro` e não podem ficar ativos juntos)
+
+
 ## [0.9.0] - 2026-09-29
 
 ### Added

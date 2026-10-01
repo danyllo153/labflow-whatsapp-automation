@@ -21,7 +21,7 @@ Documento para retomar o projeto em outro computador ou numa conversa nova do Cl
 Versão publicada: `v0.9.0` (tag no commit de merge `a9d6a1e`, PR #2 mesclado).
 Repositório: `github.com/danyllo153/labflow-whatsapp-automation` (público). Clone local no PC principal: `C:\Dev\labflow-whatsapp-automation`. Notas do projeto no Obsidian (vault `PROJETO- LABFLOW`), incluindo uma pasta `Git` com guia de comandos. Cópia dos arquivos no OneDrive: `Valts\labflow-whatsapp-automation`.
 
-**Fim do dia 30/09/2026:** workflow no Postgres mesclado na `main` (PR #6). Branch aberta: `chore/backup-db` (script de backup + este handoff) — enviar com `git push -u origin chore/backup-db`, abrir PR e mesclar. A versão publicada ainda é a `v0.9.0`: a migração ainda não tem número de versão nem CHANGELOG (decidir 0.10.0 ou 1.0.0; recomendação: 1.0.0).
+**01/10/2026:** workflow no Postgres e backup já estão na `main` (PRs #6 e #7). Versão decidida: **1.0.0**. Os docs da virada (troubleshooting com os Bugs 25 a 28, arquitetura, comandos, README e CHANGELOG da 1.0.0) estão na branch `docs/virada-postgres`, com commits feitos: falta `git push -u origin docs/virada-postgres`, abrir o PR, mesclar e criar a tag `v1.0.0` (a última tag publicada ainda é a `v0.9.0`).
 
 **Ambiente:** o VPS atual é **demonstração** com dados fictícios, para provar que a automação funciona. Na empresa, servidor, Postgres e Power BI serão os da empresa, com migração e segurança definidas junto com a TI; o LabFlow vai como base. Ideia combinada para depois: um "Guia de implantação do LabFlow" para a TI.
 
@@ -51,19 +51,19 @@ Repositório: `github.com/danyllo153/labflow-whatsapp-automation` (público). Cl
   - Telefone cadastrado com `0` na frente: o bot respondia "não cadastrado". Formato certo: o mesmo de `_numeroRemetenteLimpo` (só dígitos, DDI 55, sem zero).
 - **Dados de teste no banco (fictícios):** coletas terra 42–47, análises dos tanques 44 e 45, usuário `5511900000001` (Teste, Operador). Limpar quando quiser.
 - **Próximos passos, em ordem:**
-  1. Mesclar o PR da `chore/backup-db`.
-  2. Documentação: troubleshooting (bugs da virada acima), `arquitetura.md` e `comandos.md` (Postgres no lugar do Sheets, nomes novos dos nodes), README, CHANGELOG + tag (versão a decidir; recomendação 1.0.0).
+  1. ~~Mesclar o PR da `chore/backup-db`~~ (feito, PR #7).
+  2. Fechar a 1.0.0: PR e merge da `docs/virada-postgres` (docs já escritos) e tag `v1.0.0` com release no GitHub.
   3. DBeaver: conexão `LabFlow (app)` e lição de `UPDATE`/`DELETE`; usar para limpar os dados de teste.
   4. Módulo de concentrado (`002_concentrado.sql`): recebimento, embarque, TAB, Coliformes, Howard — perguntas em aberto na seção 8.
   5. Depois: Power BI (V5) e IA avançada (V3 parte 2).
 
 Stack em produção de teste (VPS Linux, stack própria em `~/labflow`, Docker, sem porta pública, acesso só por túnel SSH):
 
-- WhatsApp Business (número dedicado em eSIM) → Evolution API 2.3.7 (instância `labflow2`) → webhook → n8n 2.38.6 → Google Sheets (conta de serviço) → resposta pelo WhatsApp.
-- Já existe um container Postgres na stack, hoje usado pela Evolution API.
+- WhatsApp Business (número dedicado em eSIM) → Evolution API 2.3.7 (instância `labflow2`) → webhook → n8n 2.38.6 → PostgreSQL → resposta pelo WhatsApp.
+- O mesmo container Postgres da stack guarda o banco da Evolution API e o banco `labflow`.
 - IA: Gemini (`models/gemini-3.1-flash-lite`) como fallback da regex.
 
-O que o bot já faz (tudo sobre Google Sheets):
+O que o bot já faz (agora sobre PostgreSQL; a descrição abaixo vale igual):
 
 - Coleta de tanque terra (até 8 tanques por mensagem) e navio (até 16, nome + viagem, ex.: "O.SKY 123").
 - Cálculo automático de drops D5/D10/D15 e da data de descarte do bag (terra) / pote (navio) = coleta + 365 dias.
@@ -75,11 +75,11 @@ O que o bot já faz (tudo sobre Google Sheets):
 - Bloqueio de coleta duplicada (mesmo tanque + mesma data; no navio considera o navio).
 - IA (V3 parte 1, concluída): mensagem que a regex não reconhece vai ao Gemini, que devolve JSON; o node `Validar IA` valida e monta o comando padrão; gravações pedem "sim" e o comando volta ao próprio webhook para a regex executar. Consultas e concluir leitura vão direto. Permissão e cargo são validados no código, nunca no prompt (Bug 23: IA trocava "gerente" por Admin). Ajuda por assunto sem IA ("comandos para drops", "consultar análises").
 
-Abas atuais do Google Sheets: `COLETAS_TERRA`, `COLETAS_NAVIO`, `DROPS` (terra e navio juntos, com Tipo Tanque/Navio), `BAGS_TERRA`, `POTES_NAVIO`, `ANALISES` (ID, ID Coleta, Tanque, Tipo Tanque, Navio, Tipo Frasco, Sub-Analise, Metodo, Data Analise, Data Pre-Leitura, Data Leitura Final, Status, Responsavel, Pre-Leitura Feita Por, Leitura Final Feita Por), `USUARIOS` (Numero, Nome, Nivel), `CONFIRMACOES_PENDENTES` (Numero, IDs, NovosStatus, Resumo, Criado Em).
+Abas do Google Sheets (legado, só do workflow antigo que ficou como plano B; hoje os dados vivem nas tabelas do `001_tanques.sql`): `COLETAS_TERRA`, `COLETAS_NAVIO`, `DROPS` (terra e navio juntos, com Tipo Tanque/Navio), `BAGS_TERRA`, `POTES_NAVIO`, `ANALISES` (ID, ID Coleta, Tanque, Tipo Tanque, Navio, Tipo Frasco, Sub-Analise, Metodo, Data Analise, Data Pre-Leitura, Data Leitura Final, Status, Responsavel, Pre-Leitura Feita Por, Leitura Final Feita Por), `USUARIOS` (Numero, Nome, Nivel), `CONFIRMACOES_PENDENTES` (Numero, IDs, NovosStatus, Resumo, Criado Em).
 
 Ferramentas do repositório: `scripts/audit-workflow.py` (órfãos, HTTP sem Respond to Webhook — com exceção para chamada ao próprio webhook —, placeholders, dados sensíveis com `--public`) + GitHub Action que roda a cada mudança do `LabFlow.json`. Dois arquivos de workflow: `LabFlow.json` (sanitizado, vai para o Git) e `LabFlow_importar_n8n.json` (IDs reais, nunca vai para o Git).
 
-Docs: `README.md`, `docs/comandos.md`, `docs/arquitetura.md`, `docs/troubleshooting.md` (24 bugs; faltam os da virada), `docs/deploy-vps.md`, `docs/scripts.md` (audit-workflow e backup-db), `docs/CHANGELOG.md`, `docs/postgres-migracao.md`, `docs/handoff.md`. Atenção: arquitetura e comandos ainda descrevem o Google Sheets.
+Docs: `README.md`, `docs/comandos.md`, `docs/arquitetura.md`, `docs/troubleshooting.md` (28 bugs, incluindo os da virada), `docs/deploy-vps.md`, `docs/scripts.md` (audit-workflow e backup-db), `docs/CHANGELOG.md`, `docs/postgres-migracao.md`, `docs/handoff.md`. Arquitetura e comandos já descrevem o PostgreSQL (as seções antigas de arquitetura continuam como diário da época do Sheets).
 
 Pendências pequenas (as de antes da migração já foram feitas: `.gitignore`, branch remota apagada, Bug 22 revisado):
 
