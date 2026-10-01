@@ -2,7 +2,7 @@
 
 Documento para retomar o projeto em outro computador ou numa conversa nova do Claude Code. Leia inteiro antes de propor qualquer coisa. O que está marcado como decidido já foi combinado com o Danyllo; o que está em "a definir" precisa ser perguntado antes de implementar.
 
-Última atualização: 30/09/2026.
+Última atualização: 30/09/2026 (fim do dia: migração para o Postgres, backup e DBeaver).
 
 ## 1. Quem sou e como gosto de trabalhar
 
@@ -21,7 +21,21 @@ Documento para retomar o projeto em outro computador ou numa conversa nova do Cl
 Versão publicada: `v0.9.0` (tag no commit de merge `a9d6a1e`, PR #2 mesclado).
 Repositório: `github.com/danyllo153/labflow-whatsapp-automation` (público). Clone local no PC principal: `C:\Dev\labflow-whatsapp-automation`. Notas do projeto no Obsidian (vault `PROJETO- LABFLOW`), incluindo uma pasta `Git` com guia de comandos. Cópia dos arquivos no OneDrive: `Valts\labflow-whatsapp-automation`.
 
-Branch de trabalho atual: `feat/workflow-postgres` (workflow inteiro no Postgres + correções do termo "reanálise"). Enviar com `git push -u origin feat/workflow-postgres` e abrir **um PR só** (ele já contém os commits da `fix/remover-termo-reanalise`, cujo PR pode ser fechado sem mesclar).
+**Fim do dia 30/09/2026:** workflow no Postgres mesclado na `main` (PR #6). Branch aberta: `chore/backup-db` (script de backup + este handoff) — enviar com `git push -u origin chore/backup-db`, abrir PR e mesclar. A versão publicada ainda é a `v0.9.0`: a migração ainda não tem número de versão nem CHANGELOG (decidir 0.10.0 ou 1.0.0; recomendação: 1.0.0).
+
+**Ambiente:** o VPS atual é **demonstração** com dados fictícios, para provar que a automação funciona. Na empresa, servidor, Postgres e Power BI serão os da empresa, com migração e segurança definidas junto com a TI; o LabFlow vai como base. Ideia combinada para depois: um "Guia de implantação do LabFlow" para a TI.
+
+### Backup do banco — feito em 30/09/2026
+
+- `scripts/backup-db.sh` copiado para `~/labflow/backup-db.sh` no servidor; `cron` todo dia às 3h (servidor no fuso -03); guarda 14 dias em `~/labflow/backups` (pasta `700`, arquivos `600`); log em `backups/backup.log`.
+- Testado: backup gerado (24K) e validado com `pg_restore --list` (7 tabelas). Restaurar: ver `docs/scripts.md`.
+- Falta: copiar de vez em quando um `.dump` para fora do servidor (`scp`); como os dados são fictícios, pode ir para o OneDrive.
+
+### DBeaver — configurado em 30/09/2026
+
+- Conexão `LabFlow (leitura)` (usuário `labflow_leitura`) funcionando, via túnel SSH (host `172.16.2.2`, IP interno do container; muda se o container for recriado).
+- Falta criar `LabFlow (app)` (usuário `labflow_app`, tipo de conexão **Production** para pedir confirmação antes de gravar) e dar a lição de `UPDATE`/`DELETE`.
+- Aulas de SQL já dadas: `SELECT`, `WHERE`, `ORDER BY` (DESC em data = mais recente primeiro), `JOIN`, `GROUP BY`/`count`. Cola no Obsidian: nota `SQL-e-DBeaver`.
 
 ### Migração para o Postgres — feita e testada em 30/09/2026 (noite)
 
@@ -36,7 +50,12 @@ Branch de trabalho atual: `feat/workflow-postgres` (workflow inteiro no Postgres
   - Referência a node com nome em caixa diferente (`Checar Duplicata Terra` x `Checar duplicata terra`): a coleta gravava, a resposta falhava e a Evolution reenviava a mensagem, que voltava como "já registrada".
   - Telefone cadastrado com `0` na frente: o bot respondia "não cadastrado". Formato certo: o mesmo de `_numeroRemetenteLimpo` (só dígitos, DDI 55, sem zero).
 - **Dados de teste no banco (fictícios):** coletas terra 42–47, análises dos tanques 44 e 45, usuário `5511900000001` (Teste, Operador). Limpar quando quiser.
-- **Próximo:** atualizar docs (`arquitetura.md`, `comandos.md`, troubleshooting com os bugs acima, CHANGELOG → versão a decidir: 0.10.0 ou 1.0.0, README), limpar dados de teste, backup com `pg_dump` (etapa 8), depois o módulo de concentrado (`002`).
+- **Próximos passos, em ordem:**
+  1. Mesclar o PR da `chore/backup-db`.
+  2. Documentação: troubleshooting (bugs da virada acima), `arquitetura.md` e `comandos.md` (Postgres no lugar do Sheets, nomes novos dos nodes), README, CHANGELOG + tag (versão a decidir; recomendação 1.0.0).
+  3. DBeaver: conexão `LabFlow (app)` e lição de `UPDATE`/`DELETE`; usar para limpar os dados de teste.
+  4. Módulo de concentrado (`002_concentrado.sql`): recebimento, embarque, TAB, Coliformes, Howard — perguntas em aberto na seção 8.
+  5. Depois: Power BI (V5) e IA avançada (V3 parte 2).
 
 Stack em produção de teste (VPS Linux, stack própria em `~/labflow`, Docker, sem porta pública, acesso só por túnel SSH):
 
@@ -60,7 +79,7 @@ Abas atuais do Google Sheets: `COLETAS_TERRA`, `COLETAS_NAVIO`, `DROPS` (terra e
 
 Ferramentas do repositório: `scripts/audit-workflow.py` (órfãos, HTTP sem Respond to Webhook — com exceção para chamada ao próprio webhook —, placeholders, dados sensíveis com `--public`) + GitHub Action que roda a cada mudança do `LabFlow.json`. Dois arquivos de workflow: `LabFlow.json` (sanitizado, vai para o Git) e `LabFlow_importar_n8n.json` (IDs reais, nunca vai para o Git).
 
-Docs: `README.md`, `docs/comandos.md`, `docs/arquitetura.md`, `docs/troubleshooting.md` (24 bugs), `docs/deploy-vps.md`, `docs/scripts.md`, `docs/CHANGELOG.md`, `docs/postgres-migracao.md`.
+Docs: `README.md`, `docs/comandos.md`, `docs/arquitetura.md`, `docs/troubleshooting.md` (24 bugs; faltam os da virada), `docs/deploy-vps.md`, `docs/scripts.md` (audit-workflow e backup-db), `docs/CHANGELOG.md`, `docs/postgres-migracao.md`, `docs/handoff.md`. Atenção: arquitetura e comandos ainda descrevem o Google Sheets.
 
 Pendências pequenas (as de antes da migração já foram feitas: `.gitignore`, branch remota apagada, Bug 22 revisado):
 
