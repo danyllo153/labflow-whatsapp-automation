@@ -222,7 +222,7 @@
                                                                                    },
                                                                                    {
                                                                                        "name":  "text",
-                                                                                       "value":  "={{ $(\u0027Checar Duplicata Terra\u0027).first().json.textoResposta }}"
+                                                                                       "value":  "={{ $(\u0027Checar duplicata terra\u0027).first().json.textoResposta }}"
                                                                                    }
                                                                                ]
                                                             },
@@ -275,7 +275,7 @@
                                                                                    },
                                                                                    {
                                                                                        "name":  "text",
-                                                                                       "value":  "={{ $(\u0027Checar Duplicata Navio\u0027).first().json.textoResposta }}"
+                                                                                       "value":  "={{ $(\u0027Checar duplicata navio\u0027).first().json.textoResposta }}"
                                                                                    }
                                                                                ]
                                                             },
