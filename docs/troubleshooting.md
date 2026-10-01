@@ -15,6 +15,10 @@ webhook não persistindo), ver a seção "Bug 11" ao final deste documento e
 
 ---
 
+> **Nota (v1.0.0):** os Bugs 1 a 24 aconteceram quando os dados ainda ficavam
+> no Google Sheets e continuam valendo como registro. Os Bugs 25 a 28 são da
+> virada para o PostgreSQL.
+
 ## Contexto
 
 O fluxo recebe mensagens de WhatsApp via webhook da Evolution API, processa o
@@ -1035,6 +1039,95 @@ prompt, reenviar uma frase de cada intenção (coleta terra, coleta navio,
 cada consulta, análise, conclusão, cargo) antes de considerar pronto. Um
 modelo maior ou um segundo modelo de reserva é o plano B se o leve
 continuar falhando.
+
+---
+
+## Bug 25 — Dois `If` da IA comparavam texto fixo e davam sempre verdadeiro
+
+**Sintoma:** na virada para o PostgreSQL, os nodes `If IA Entendeu.` e `If
+Reenviar Comando.` (hoje `IA entendeu?` e `Reenviar comando da IA?`)
+mandavam toda mensagem pelo caminho "verdadeiro", mesmo quando não havia
+comando da IA para salvar ou reenviar. Um efeito possível era apagar uma
+confirmação de leitura que o analista ainda não tinha respondido.
+
+**Causa raiz:** a condição comparava um texto fixo, e não o campo do item
+que deveria decidir o caminho. Com os dois lados iguais, o resultado era
+sempre o mesmo. O ramo "falso" nunca foi exercitado, por isso ninguém
+percebeu antes.
+
+**Solução aplicada:** as duas condições passaram a avaliar o campo do item
+(`comando_ia` e `reenviarComando`).
+
+**Validação:** testes pelo WhatsApp com frase livre pela IA confirmada com
+"sim" e cancelada com "não", e conclusão de leitura com "sim", todos ok.
+
+**Lição:** um `If` que nunca falha é pior do que um que falha. Ao revisar
+uma condição, teste os dois lados, em especial o "falso" (ex.: "sim" sem
+pendência da IA, ou frase livre quando já existe uma leitura pendente).
+
+---
+
+## Bug 26 — Duplicar o workflow trocou o caminho do webhook e o reenvio da IA foi para o workflow antigo
+
+**Sintoma:** o plano era trocar os nodes numa cópia do workflow. A cópia
+nasceu com outro caminho de webhook, e o comando confirmado pela IA (que o
+workflow reenvia para o próprio webhook) voltava para o workflow antigo, o
+do Google Sheets.
+
+**Causa raiz:** ao duplicar um workflow, o n8n troca o caminho do node
+Webhook por um código aleatório. O node `Reenviar ao webhook` continuava
+apontando para `labflow-registro`.
+
+**Solução aplicada:** o caminho do workflow novo voltou a ser
+`labflow-registro`. Como os dois usam o mesmo caminho, **só um pode ficar
+ativo por vez**: para voltar atrás, desativa-se o novo e ativa-se o antigo.
+
+**Lição:** depois de duplicar um workflow, conferir o caminho do Webhook e
+qualquer URL que aponte para ele. No n8n 2.x, depois de editar também é
+preciso **publicar** a versão para valer no workflow ativo.
+
+---
+
+## Bug 27 — Nome de node com maiúscula diferente: a coleta gravava, a resposta falhava e a mensagem voltava como "já registrada"
+
+**Sintoma:** o analista mandava uma coleta; o bot não respondia nada. Pouco
+depois chegava a mensagem "coleta já registrada" para a mesma coleta.
+
+**Causa raiz:** a resposta lia `$('Checar Duplicata Terra')`, mas o node se
+chamava `Checar duplicata terra`. Nome de node diferencia maiúsculas de
+minúsculas, então a referência quebrava depois da gravação. Sem resposta ao
+webhook, a Evolution API reenviou a mensagem (o mesmo mecanismo dos Bugs 10
+e 20), e o reenvio encontrou a coleta já gravada.
+
+**Como foi encontrado:** na aba Executions havia uma execução vermelha
+seguida de uma verde para a mesma mensagem.
+
+**Solução aplicada:** referência corrigida para o nome exato do node.
+
+**Lição:** quando o bot grava e não responde, o reenvio da Evolution parece
+uma duplicata do usuário. Na aba Executions, execução vermelha seguida de
+verde é a assinatura. Depois de renomear um node, procurar as referências
+`$('Nome')` que dependiam do nome antigo.
+
+---
+
+## Bug 28 — Telefone cadastrado com zero na frente: "número não cadastrado"
+
+**Sintoma:** um usuário recém-cadastrado no banco recebia "número não
+cadastrado" ao mandar mensagem.
+
+**Causa raiz:** o telefone estava gravado com `0` na frente, e o WhatsApp
+manda só dígitos, com DDI 55 e sem zero. A comparação é exata, e o
+`CHECK (telefone ~ '^[0-9]+$')` da tabela aceita o zero, porque ele também é
+um dígito.
+
+**Solução aplicada:** cadastrar no mesmo formato de `_numeroRemetenteLimpo`
+(Executions → node `Interpretar comando`): só dígitos, começando com 55,
+sem zero na frente.
+
+**Lição:** o formato do telefone no banco precisa ser igual ao que o canal
+entrega, e uma restrição genérica não garante isso. Se o cadastro virar uma
+tela, normalizar o número antes de gravar.
 
 ---
 
