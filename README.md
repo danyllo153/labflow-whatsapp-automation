@@ -1,10 +1,10 @@
 # LabFlow
 
-Automação de laboratório de microbiologia via WhatsApp: o analista manda uma mensagem, e o LabFlow registra coletas e análises numa planilha, calcula os prazos de leitura e dos drops e responde quais tarefas vencem no dia.
+Automação de laboratório de microbiologia via WhatsApp: o analista manda uma mensagem, e o LabFlow registra coletas e análises num banco PostgreSQL, calcula os prazos de leitura e dos drops e responde quais tarefas vencem no dia.
 
 Projeto pessoal que une biomedicina e automação. O problema vem da rotina real de um laboratório de controle de qualidade. Todo o desenvolvimento e os testes usam **dados fictícios**.
 
-**Status:** em uso de teste no servidor (VPS), com regras de negócio, permissões por cargo e registro de análises funcionando ponta a ponta. A interpretação de mensagens livres com IA (Gemini) já cobre todos os comandos (consultas, coletas, análises, conclusões e troca de cargo), sempre com as permissões conferidas no código. Depois vem a migração para PostgreSQL.
+**Status:** v1.0.0. Em uso de teste num servidor de demonstração (VPS), com dados fictícios: regras de negócio, permissões por cargo e registro de análises funcionando ponta a ponta sobre PostgreSQL, com backup diário. A interpretação de mensagens livres com IA (Gemini) cobre todos os comandos (consultas, coletas, análises, conclusões e troca de cargo), sempre com as permissões conferidas no código. Próximo: o módulo de suco concentrado (recebimento e embarque).
 
 ## O problema
 
@@ -55,7 +55,7 @@ LabFlow:  📖 Comandos de drops
 
 **Mensagens livres (IA)**
 - Quando nenhuma regex reconhece a mensagem, o Gemini tenta interpretá-la. Entende todos os comandos: consultas (drops, análises de terra e navio, bags, potes), coleta de terra e de navio, registro de análise normal ou stress, conclusão de drops, conclusão de leitura e troca de cargo. Exemplos: "coletei os tanques 42 e 43 hoje", "O.SKY 123, tanques 1C e 4P, coleta de ontem", "quais bags posso descartar hoje"
-- Consultas rodam direto, porque só leem a planilha. Toda gravação mostra o comando que a IA entendeu e só executa depois do "sim"; "não" cancela e a pendência expira em 10 minutos. Conclusão de leitura já tem a sua própria confirmação
+- Consultas rodam direto, porque só leem o banco. Toda gravação mostra o comando que a IA entendeu e só executa depois do "sim"; "não" cancela e a pendência expira em 10 minutos. Conclusão de leitura já tem a sua própria confirmação
 - O comando confirmado passa pelas mesmas regras de um comando digitado (cargo, limites, bloqueio de duplicata)
 - Permissão não é decidida pela IA: o código recusa antes do "sim" quem não pode gravar, e na troca de cargo o cargo e o telefone precisam estar escritos na mensagem original (a IA não "corrige" o que o usuário escreveu)
 - Ajuda por assunto, sem IA: "comandos para drops", "consultar análises", "consultar cargos" mostram só os comandos do tema
@@ -76,7 +76,7 @@ flowchart LR
     A[WhatsApp Business] --> B[Evolution API]
     B -- webhook --> C[n8n]
     C --> D{Code node<br/>regex + regras}
-    D --> E[(Google Sheets)]
+    D --> E[(PostgreSQL)]
     D -- "regex não reconheceu" --> F[Gemini]
     F -- "comando padrão + sim/não" --> D
     D -- resposta --> B
@@ -86,14 +86,14 @@ flowchart LR
 - **Evolution API** (self-hosted) conecta um número de WhatsApp Business e envia cada mensagem recebida para o n8n.
 - **n8n** filtra a mensagem, confere o cargo do remetente, identifica o comando por regex e aplica as regras de negócio (prazos, duplicata, permissões).
 - **Gemini** (API do Google) só é consultado quando nenhuma regex reconhece a mensagem. Ele devolve um JSON, o n8n valida e converte no comando padrão, e o comando só roda depois do "sim" do analista.
-- **Google Sheets** guarda os dados em abas separadas: coletas, drops, análises, arquivo, usuários e pendências de confirmação.
+- **PostgreSQL** guarda os dados em tabelas ligadas por chave estrangeira (a coleta é o centro): coletas, drops, amostras de arquivo, análises, usuários e pendências de confirmação. O banco confere as regras de novo: duplicata, cargo válido e valores permitidos.
 - Tudo roda em **Docker**, numa stack isolada em um VPS Linux, sem nenhuma porta exposta publicamente (acesso administrativo só por túnel SSH).
 
 Detalhes em [docs/arquitetura.md](docs/arquitetura.md) e [docs/deploy-vps.md](docs/deploy-vps.md).
 
 ## Stack
 
-n8n · Docker / Docker Compose · Evolution API · Google Gemini API · PostgreSQL · JavaScript · Google Sheets API · Webhooks · Linux (VPS) · SSH
+n8n · Docker / Docker Compose · Evolution API · Google Gemini API · PostgreSQL · JavaScript · SQL · Webhooks · Linux (VPS) · SSH
 
 ## Decisões técnicas
 
@@ -102,18 +102,22 @@ n8n · Docker / Docker Compose · Evolution API · Google Gemini API · PostgreS
 - **Permissão validada no código, não no prompt.** Pedir ao modelo "só aceite Admin, Operador ou Consultor" não bastou: ele trocou "gerente" por Admin (Bug 23). Agora o código confere o cargo e o telefone contra a mensagem original e checa o nível de quem enviou antes de pedir o "sim". Para qualquer ação sensível, o modelo propõe e o código decide.
 - **Falha de serviço externo tratada.** O Gemini responde 503 de vez em quando. O node tenta até 5 vezes e, se ainda falhar, o bot diz que a IA está indisponível, em vez de "não entendi" (ver Bug 21 em [troubleshooting](docs/troubleshooting.md)).
 - **Evolution API em número dedicado.** Por ser uma integração não oficial, usa um eSIM separado com WhatsApp Business, sem arriscar um número pessoal.
-- **Segredos fora do workflow.** A chave da Evolution API fica numa Credencial do n8n e o Google Sheets usa conta de serviço, então o JSON exportado do workflow não carrega segredo nenhum.
+- **Segredos fora do workflow.** A chave da Evolution API e a senha do banco ficam em Credenciais do n8n (a senha também no `.env` do servidor, fora do Git), então o JSON exportado do workflow não carrega segredo nenhum.
 - **Revisão do JSON depois de mudanças estruturais.** Religar conexões à mão no editor já introduziu bugs que só apareceram na revisão do export (ver Bug 15 em [troubleshooting](docs/troubleshooting.md)).
 - **Auditoria automática do workflow.** O script [`scripts/audit-workflow.py`](scripts/audit-workflow.py) procura nodes órfãos, ramos de IF faltando e HTTP Requests sem resposta ao webhook. Uma GitHub Action roda essa auditoria a cada alteração do `LabFlow.json`. A primeira execução encontrou 4 bugs de conexão reais.
+- **Regras também no banco.** Duplicata (`UNIQUE`), cargo válido (`CHECK`) e vínculo entre coleta, drop e análise (chave estrangeira) são conferidos pelo PostgreSQL, além do código do n8n: se uma regra do código falhar, o banco recusa o dado. Foi testado direto no banco, com cargo inválido, telefone duplicado, coleta duplicada e CT com pré-leitura.
+- **Consultas sempre parametrizadas.** Os 22 nodes Postgres recebem o texto da mensagem como parâmetro (`$1`, `$2`...), nunca concatenado no SQL.
+- **Migração reversível.** O workflow novo entrou numa cópia, um ramo por vez, com o antigo (Google Sheets) desativado como plano B. A cópia trouxe quatro bugs que só os testes pelo WhatsApp revelaram (Bugs 25 a 28 em [troubleshooting](docs/troubleshooting.md)).
 
 ## Roadmap
 
 - [x] **V1 — MVP:** WhatsApp + n8n + Google Sheets, registro e confirmação
 - [x] **V2 — Regras de negócio:** drops, arquivo/descarte, análises com prazos, permissões, duplicata, conclusão em lote
 - [x] **V3, parte 1 — IA como fallback:** o Gemini interpreta linguagem natural quando a regex não reconhece a mensagem, com confirmação antes de executar, ainda sobre o Google Sheets. Feito: consultas, coleta de terra e de navio, análises, conclusões, troca de cargo e ajuda por assunto. Próximos ajustes: testes de regressão do prompt e um segundo modelo de reserva
-- [ ] **V4 — Banco de dados:** migração do Google Sheets para PostgreSQL, já incluindo as análises de recebimento e embarque de suco concentrado (identificação por Load/Lote/Item/Fábrica) direto no schema final
+- [x] **V4 — Banco de dados:** migração do Google Sheets para PostgreSQL (tabelas com restrições no banco, usuário somente leitura e backup diário), publicada na 1.0.0
+- [ ] **Suco concentrado:** recebimento e embarque (identificação por Load/Lote/Item/Fábrica), compostas e TAB/Coliformes/Howard sobre o PostgreSQL; o schema está em rascunho em `db/migrations/002_concentrado.sql`
 - [ ] **V3, parte 2 — IA avançada:** comando por áudio e leitura de laudo por foto (com confirmação antes de gravar), já sobre o PostgreSQL
-- [ ] **V5 — Dashboard:** indicadores de pendentes, concluídos e atrasados no Power BI, sobre o PostgreSQL (hoje há um painel simples na própria planilha)
+- [ ] **V5 — Dashboard:** indicadores de pendentes, concluídos e atrasados no Power BI, sobre o PostgreSQL, por um usuário somente leitura
 - [ ] **Interface web (LIMS):** última etapa, depois que tudo acima estiver estável no banco relacional
 - [ ] **V6 — Acabamento (contínuo):** testes, diagramas e documentação atualizados a cada marco
 
@@ -124,10 +128,11 @@ n8n · Docker / Docker Compose · Evolution API · Google Gemini API · PostgreS
 | Documento | Conteúdo |
 |---|---|
 | [comandos.md](docs/comandos.md) | Todos os comandos do bot, cargos e permissões |
-| [arquitetura.md](docs/arquitetura.md) | Nodes do workflow, abas da planilha e decisões de design de cada etapa |
-| [troubleshooting.md](docs/troubleshooting.md) | 24 bugs reais: sintoma, causa raiz, solução e lição |
+| [arquitetura.md](docs/arquitetura.md) | Nodes do workflow, tabelas do banco e decisões de design de cada etapa |
+| [troubleshooting.md](docs/troubleshooting.md) | 28 bugs reais: sintoma, causa raiz, solução e lição |
 | [deploy-vps.md](docs/deploy-vps.md) | Infraestrutura no VPS: rede, segredos, acesso SSH, migração |
-| [scripts.md](docs/scripts.md) | Script de auditoria do workflow e como rodá-lo |
+| [postgres-migracao.md](docs/postgres-migracao.md) | Plano, schema e decisões da migração para o PostgreSQL |
+| [scripts.md](docs/scripts.md) | Scripts de auditoria do workflow e de backup do banco, e como usá-los |
 | [CHANGELOG.md](docs/CHANGELOG.md) | Histórico de versões |
 
 ## Dados e privacidade
