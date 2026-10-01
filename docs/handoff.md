@@ -14,7 +14,7 @@ Documento para retomar o projeto em outro computador ou numa conversa nova do Cl
 - Gosto de dicas práticas de mercado/portfólio no meio da ajuda técnica.
 - Respostas em português.
 - Dados sempre fictícios. Nada real da empresa no repositório, nos testes ou na documentação (LGPD).
-- O termo "reanálise" não se usa no projeto (reanálise seria analisar a mesma coisa 2x, e isso não acontece). Os D5/D10/D15 são "drops".
+- O termo "reanálise" não se usa no projeto (reanálise seria analisar a mesma coisa 2x, e isso não acontece). Os D5/D10/D15 são "análises de drop" (ou só "drops").
 
 ## 2. Estado atual (30/09/2026)
 
