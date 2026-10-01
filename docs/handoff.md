@@ -14,14 +14,29 @@ Documento para retomar o projeto em outro computador ou numa conversa nova do Cl
 - Gosto de dicas práticas de mercado/portfólio no meio da ajuda técnica.
 - Respostas em português.
 - Dados sempre fictícios. Nada real da empresa no repositório, nos testes ou na documentação (LGPD).
-- O termo "reanálise" não se usa no projeto (reanálise seria analisar a mesma coisa 2x, e isso não acontece). Os D5/D10/D15 são "drops".
+- O termo "reanálise" não se usa no projeto (reanálise seria analisar a mesma coisa 2x, e isso não acontece). Os D5/D10/D15 são "análises de drop" (ou só "drops").
 
 ## 2. Estado atual (30/09/2026)
 
 Versão publicada: `v0.9.0` (tag no commit de merge `a9d6a1e`, PR #2 mesclado).
 Repositório: `github.com/danyllo153/labflow-whatsapp-automation` (público). Clone local no PC principal: `C:\Dev\labflow-whatsapp-automation`. Notas do projeto no Obsidian (vault `PROJETO- LABFLOW`), incluindo uma pasta `Git` com guia de comandos. Cópia dos arquivos no OneDrive: `Valts\labflow-whatsapp-automation`.
 
-Branch de trabalho atual: `feat/postgres-schema` (migrations 001 e 002 em rascunho, `docs/postgres-migracao.md`, troca do termo "reanálise").
+Branch de trabalho atual: `feat/workflow-postgres` (workflow inteiro no Postgres + correções do termo "reanálise"). Enviar com `git push -u origin feat/workflow-postgres` e abrir **um PR só** (ele já contém os commits da `fix/remover-termo-reanalise`, cujo PR pode ser fechado sem mesclar).
+
+### Migração para o Postgres — feita e testada em 30/09/2026 (noite)
+
+- **No servidor:** banco `labflow`, usuários `labflow_app` (n8n) e `labflow_leitura` (Power BI/DBeaver), fuso `America/Sao_Paulo`, `001_tanques.sql` aplicada. Senhas só em `~/labflow/.env` (ver nota `Postgres-Migracao` no Obsidian).
+- **No n8n:** workflow novo `LabFlow (Postgres)` **ativo**; o antigo (Sheets) **desativado** e guardado para voltar atrás (desativar o novo e ativar o antigo). Os dois usam o caminho `labflow-registro` e não podem ficar ativos juntos.
+- **Sem nenhum node do Google Sheets.** 22 nodes Postgres, sempre com parâmetros (`$1`, `$2`...). Coleta grava coleta + drops + bag/pote numa instrução só. Análise **exige coleta** do tanque até a data da análise (decidido). Expiração do "sim" calculada pelo banco.
+- **Organização:** 8 blocos coloridos (entrada, consultas, coletas, análise, concluir, sim/não, IA, cargos) e nomes padronizados: `BD ·` banco, `Zap ·` envia no WhatsApp, `Fim ·` responde ao webhook, `Montar resposta ...` formata texto.
+- **Testado pelo WhatsApp (todos ok):** drops de hoje; coleta + duplicata; análise com e sem coleta; consulta de análises; concluir leitura com "sim"; concluir drops D5; trocar cargo; frase livre pela IA com "sim" e com "não".
+- **Bugs encontrados (registrar no troubleshooting):**
+  - `If IA Entendeu.` e `If Reenviar Comando.` comparavam texto fixo e eram sempre verdadeiros (podiam apagar uma confirmação de leitura pendente). Corrigidos.
+  - Ao duplicar o workflow, o n8n troca o caminho do webhook por um código aleatório; o reenvio da IA iria para o workflow antigo. Voltou para `labflow-registro`.
+  - Referência a node com nome em caixa diferente (`Checar Duplicata Terra` x `Checar duplicata terra`): a coleta gravava, a resposta falhava e a Evolution reenviava a mensagem, que voltava como "já registrada".
+  - Telefone cadastrado com `0` na frente: o bot respondia "não cadastrado". Formato certo: o mesmo de `_numeroRemetenteLimpo` (só dígitos, DDI 55, sem zero).
+- **Dados de teste no banco (fictícios):** coletas terra 42–47, análises dos tanques 44 e 45, usuário `5511900000001` (Teste, Operador). Limpar quando quiser.
+- **Próximo:** atualizar docs (`arquitetura.md`, `comandos.md`, troubleshooting com os bugs acima, CHANGELOG → versão a decidir: 0.10.0 ou 1.0.0, README), limpar dados de teste, backup com `pg_dump` (etapa 8), depois o módulo de concentrado (`002`).
 
 Stack em produção de teste (VPS Linux, stack própria em `~/labflow`, Docker, sem porta pública, acesso só por túnel SSH):
 
@@ -47,12 +62,8 @@ Ferramentas do repositório: `scripts/audit-workflow.py` (órfãos, HTTP sem Res
 
 Docs: `README.md`, `docs/comandos.md`, `docs/arquitetura.md`, `docs/troubleshooting.md` (24 bugs), `docs/deploy-vps.md`, `docs/scripts.md`, `docs/CHANGELOG.md`, `docs/postgres-migracao.md`.
 
-Pendências pequenas antes da migração:
+Pendências pequenas (as de antes da migração já foram feitas: `.gitignore`, branch remota apagada, Bug 22 revisado):
 
-- Criar `.gitignore` (incluir `LabFlow_importar_n8n.json`, `.env`, chaves).
-- Apagar a branch remota `feat/ia-consultas-e-comandos` e fazer `git fetch --prune`.
-- Revisar o texto do Bug 22 no troubleshooting.
-- Limpar linhas de teste da planilha (sempre a partir da linha 2).
 - Opcional: release `v0.9.0` no GitHub; testes de regressão do prompt do Gemini; segundo modelo de reserva.
 
 ## 3. Ordem do roadmap (decidida em 25/09, revisada)
