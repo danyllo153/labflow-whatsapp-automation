@@ -75,23 +75,54 @@ O mesmo ciclo vale para **compostas de recebimento**, **compostas de embarque** 
 | 7 | `tabs de hoje lidos` | "Leu #12 e #14 (sem crescimento). Todas **negativas**?" → **sim**. As em confirmação ficam de fora |
 | 8 | `quais tabs foram lidos hoje?` | Concluídas hoje, com o resultado de cada uma |
 
-## 4. Coliformes (mesmo molde do TAB)
+## 4. Coliformes
 
-Mesma composta do TAB. Resultado **Positivo ou Negativo**.
+Mesma composta do TAB (no recebimento) e do Howard (no embarque). Resultado **Positivo ou Negativo**.
 
 | Status | Entra quando | Data prevista |
 |---|---|---|
 | `No caldo` | "Coliformes feitos" confirmado | estriar = feito + 2 dias |
 | `Estriada` | "coliformes de hoje estriados" confirmado | leitura = estria + 1 dia (3º dia) |
-| `Concluída` | resultado gravado | — |
+| `Em confirmação` | "coliformes em confirmação" → bot pergunta se **abre a composta** → **sim** | leitura de cada lote (prazo em aberto, ver seção 10) |
+| `Concluída` | resultado gravado (composta inteira negativa, ou todos os lotes da composta aberta com resultado) | — |
 
-Comandos: `Coliformes feitos do load 77001, compostas (1-5)(6-10)` · `quais coliformes tenho para estriar hoje?` · `coliformes de hoje estriados` · `quais coliformes tenho para ler hoje?` · `coliformes de hoje lidos` · `quais coliformes foram lidos hoje?` · resultado individual: `coliformes #12 positivo`.
+**Confirmação = abrir a composta.** Quando a composta sinaliza, ela é aberta e **cada lote é analisado separado**, para saber qual lote deu positivo:
+
+```text
+Você:    composta load 77001, lotes 1-5, coliformes em confirmação   (ou: coliformes #12 em confirmação)
+LabFlow: ❓ Abrir a composta #12 load 77001 (1-5) e analisar lote por lote?
+         Vão entrar 5 confirmações: #12.1, #12.2, #12.3, #12.4, #12.5. Responda sim ou não.
+Você:    sim
+LabFlow: ✅ Composta #12 aberta: lotes 1, 2, 3, 4 e 5 em confirmação.
+
+Você:    composta load 77001, lote 3, da confirmação deu positivo   (ou: coliformes #12.3 positivo)
+LabFlow: ❓ Confirmar POSITIVO de coliformes no lote 3 da composta #12? sim/não
+```
+
+- Cada lote da composta aberta ganha um código `#12.3` (composta 12, lote 3), mostrado pelo bot.
+- Resultado da composta: **positiva** se algum lote der positivo, com o(s) lote(s) apontados; **negativa** se todos os lotes derem negativo.
+- Lotes ainda sem resultado aparecem em `quais coliformes tenho para ler hoje?`.
+
+Comandos: `Coliformes feitos do load 77001, compostas (1-5)(6-10)` · `quais coliformes tenho para estriar hoje?` · `coliformes de hoje estriados` · `quais coliformes tenho para ler hoje?` · `coliformes de hoje lidos` (sem crescimento → negativas, com "sim") · `coliformes #12 em confirmação` · `coliformes #12.3 positivo` · `quais coliformes foram lidos hoje?`.
 
 ## 5. Howard
 
-Só no embarque. Lido em 50 campos; cada campo positivo vale 2%. O banco guarda `campos_lidos` (50) e `campos_positivos` e calcula a porcentagem.
+**Só no embarque**, feito da composta do embarque (a mesma de Coliformes). É uma análise de **um dia só**: não tem caldo, estria nem confirmação. Lido em 50 campos, cada campo positivo vale 2%; o analista já manda a porcentagem.
 
-Comandos: `temos análise de howard para hoje?` · `howard #20 3 campos positivos` (→ 6%) · `quais howards foram lidos hoje?`.
+```text
+Você:    Analise da composta de Howard do navio O.SKY 133 linha 2 fase 2 amostras 1-5, foi 2%
+         (ou: howard #20 2%)
+LabFlow: ❓ Gravar Howard 2% (1 campo positivo de 50) — O.SKY 133, linha 2, fase 2 (A1-A5)? sim/não
+```
+
+- O banco guarda o percentual e `campos_positivos` (= percentual ÷ 2). Como são 50 campos, o percentual é sempre **par**; um valor ímpar (ex.: 3%) é recusado com aviso.
+- **Prazo máximo:** até sair a análise completa do **último tanque de NFC do mesmo navio e viagem**. Ex.: navio inteiro analisado em stress hoje → leitura final do WORT (240h) daqui a 10 dias → esse é o prazo do Howard. O bot calcula pelas análises de NFC já registradas para o navio.
+- `temos análise de howard para hoje?` lista os Howards pendentes, com o prazo de cada um, e marca `⚠️` os que vencem hoje ou já venceram.
+- `quais howards foram lidos hoje?` lista os gravados hoje, com o percentual.
+
+## 5.1 TAB de NFC (tank farm)
+
+**Por tanque, sem composta.** Mesmo ciclo do TAB (caldo → espalhar → incubar → confirmação → resultado), ligado à coleta do tanque. Ex.: `Tab feito dos tanques terra 42,43`; o bot identifica cada tanque pelo número (e pelo navio, se houver).
 
 ## 6. Regex das consultas
 
@@ -113,7 +144,7 @@ As regex dos comandos que gravam (com load, compostas e `#`) entram no desenho d
 
 | Mensagem | O que vem |
 |---|---|
-| `relatório do dia tanques terra` (ou navio, recebimento, embarque) | O bloco pedido, com **tudo** que sai hoje (lido ou ainda não), para acompanhar o andamento |
+| `relatório do dia tanques terra` (ou navio, recebimento, embarque) | O bloco pedido, com **tudo** que sai hoje, para acompanhar o andamento: o que já foi lido vem marcado com ✅ |
 | `relatório do dia completo` | Só o que **já foi lido**, no formato do relatório oficial |
 | `leitura de hoje finalizada` | O analista libera as leituras **dele** do dia para o relatório completo |
 
@@ -155,10 +186,21 @@ leituras_finalizadas(usuario_id, data, finalizada_em)            -- barreira do 
 | E | Relatório completo, `leitura de hoje finalizada`, e-mail e Excel |
 | F | Situação (ok / não ok) e resultado por foto ou áudio |
 
-## 10. Em aberto
+## 10. Recebimento (comandos decididos)
 
-1. **Howard:** quando é lido (no mesmo dia da composta ou com prazo)?
-2. **Coliformes:** existe etapa de confirmação, como no TAB?
-3. **TAB de NFC:** é por tanque (uma amostra por tanque) ou também em composta?
-4. **Recebimento:** formato exato do comando de lotes e de compostas (ex.: `recebimento load 77001 item 444 fabrica AQA lotes 1-14` e `compostas do load 77001 (1-5)(6-10)(11-14)`).
-5. **Relatório "em andamento" por bloco:** deve marcar o que já foi lido (✅), como a consulta de análises faz hoje?
+Dois comandos separados, porque lotes atrasados podem completar compostas em outro dia:
+
+```text
+recebimento load 77001 item 444 fabrica AQA lotes 1-14
+compostas do load 77001 (1-5)(6-10)(11-14)
+```
+
+- O recebimento registra os lotes (e agenda C.T e B.L de cada lote, fase D).
+- As compostas só aceitam lotes já recebidos daquele load; o bot devolve a lista numerada (`#12`, `#13`...) e grava com **sim**.
+- No embarque, a composta é por navio, viagem, linha, fase e amostras: `compostas do navio O.SKY 133 linha 2 fase 2 (A1-A5)(A6-A10)`.
+
+## 11. Em aberto
+
+1. **Coliformes, confirmação lote a lote:** em quantos dias sai o resultado de cada lote da composta aberta?
+2. **TAB de NFC:** o comando de criação é por número do tanque (`Tab feito dos tanques terra 42,43`)? Ele se liga à coleta mais recente do tanque, como a análise de tanque?
+3. **Howard sem análise de NFC registrada:** se o navio ainda não tiver tanques de NFC analisados, qual é o prazo padrão?
