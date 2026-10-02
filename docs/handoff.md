@@ -2,7 +2,7 @@
 
 Documento para retomar o projeto em outro computador ou numa conversa nova do Claude Code. Leia inteiro antes de propor qualquer coisa. O que está marcado como decidido já foi combinado com o Danyllo; o que está em "a definir" precisa ser perguntado antes de implementar.
 
-Última atualização: 30/09/2026 (fim do dia: migração para o Postgres, backup e DBeaver).
+Última atualização: 01/10/2026 (fim do dia: desenho do módulo de concentrado em `docs/concentrado.md`).
 
 ## 1. Quem sou e como gosto de trabalhar
 
@@ -18,10 +18,12 @@ Documento para retomar o projeto em outro computador ou numa conversa nova do Cl
 
 ## 2. Estado atual (30/09/2026)
 
-Versão publicada: `v0.9.0` (tag no commit de merge `a9d6a1e`, PR #2 mesclado).
+Versão publicada: **`v1.0.0`** (LabFlow no PostgreSQL; tag e release no GitHub, PR #8).
 Repositório: `github.com/danyllo153/labflow-whatsapp-automation` (público). Clone local no PC principal: `C:\Dev\labflow-whatsapp-automation`. Notas do projeto no Obsidian (vault `PROJETO- LABFLOW`), incluindo uma pasta `Git` com guia de comandos. Cópia dos arquivos no OneDrive: `Valts\labflow-whatsapp-automation`.
 
-**01/10/2026:** workflow no Postgres e backup já estão na `main` (PRs #6 e #7). Versão decidida: **1.0.0**. Os docs da virada (troubleshooting com os Bugs 25 a 28, arquitetura, comandos, README e CHANGELOG da 1.0.0) estão na branch `docs/virada-postgres`, com commits feitos: falta `git push -u origin docs/virada-postgres`, abrir o PR, mesclar e criar a tag `v1.0.0` (a última tag publicada ainda é a `v0.9.0`).
+**01/10/2026:** 1.0.0 publicada (docs da virada, CHANGELOG, tag e release, PR #8). O resto do dia foi **desenho** do módulo de concentrado, sem código: tudo em [`docs/concentrado.md`](concentrado.md), na branch `docs/desenho-concentrado` (enviar com `git push -u origin docs/desenho-concentrado`, abrir PR e mesclar). **Leia esse documento antes de mexer no concentrado:** ele tem as regras decididas, os ciclos do TAB, Coliformes e Howard, as regex das consultas, o relatório do dia e o rascunho do modelo de dados.
+
+**Objetivo do produto (definido em 01/10):** o bot gerar o **Relatório diário de Microbiologia** que o laboratório envia todo dia (blocos FCOJ recebimento, FCOJ embarque, NFC tank farm e NFC navio; coluna Situação `ok` = dentro do limite). Cada consulta "o que sai hoje" é um pedaço dele. A planilha real tem dados da empresa e **nunca** entra no repositório; o formato está descrito em `docs/concentrado.md` com dados fictícios.
 
 **Ambiente:** o VPS atual é **demonstração** com dados fictícios, para provar que a automação funciona. Na empresa, servidor, Postgres e Power BI serão os da empresa, com migração e segurança definidas junto com a TI; o LabFlow vai como base. Ideia combinada para depois: um "Guia de implantação do LabFlow" para a TI.
 
@@ -52,9 +54,11 @@ Repositório: `github.com/danyllo153/labflow-whatsapp-automation` (público). Cl
 - **Dados de teste no banco (fictícios):** coletas terra 42–47, análises dos tanques 44 e 45, usuário `5511900000001` (Teste, Operador). Limpar quando quiser.
 - **Próximos passos, em ordem:**
   1. ~~Mesclar o PR da `chore/backup-db`~~ (feito, PR #7).
-  2. Fechar a 1.0.0: PR e merge da `docs/virada-postgres` (docs já escritos) e tag `v1.0.0` com release no GitHub.
+  2. ~~Fechar a 1.0.0~~ (feito, PR #8, tag e release `v1.0.0`).
+  2.1. Mesclar o PR da `docs/desenho-concentrado` (desenho do concentrado).
+  2.2. **Fase A do concentrado:** comando `relatório do dia` com os blocos de NFC (tanques terra e navio, normal e stress, drops), usando os dados que já existem, com ✅ no que já foi lido. Detalhes em `docs/concentrado.md`, seção 7.
   3. DBeaver: conexão `LabFlow (app)` e lição de `UPDATE`/`DELETE`; usar para limpar os dados de teste.
-  4. Módulo de concentrado (`002_concentrado.sql`): recebimento, embarque, TAB, Coliformes, Howard — perguntas em aberto na seção 8.
+  4. Módulo de concentrado, fases B a F de `docs/concentrado.md` (recebimento + compostas + TAB; Coliformes e Howard; C.T/B.L por lote; relatório completo por e-mail/Excel; Situação por foto/áudio). Reescrever a `002_concentrado.sql` a partir do desenho.
   5. Depois: Power BI (V5) e IA avançada (V3 parte 2).
 
 Stack em produção de teste (VPS Linux, stack própria em `~/labflow`, Docker, sem porta pública, acesso só por túnel SSH):
@@ -172,15 +176,12 @@ Passos, cada um numa branch e PR:
 
 ## 8. Perguntas em aberto (perguntar antes de implementar)
 
-1. Howard: quantos campos o laboratório lê (50 ou 100)?
-2. Prazos de TAB, Coliformes e Howard entram nas consultas "o que sai hoje"?
-3. Coliformes no embarque: sempre, ou depende do destino como TAB/Howard?
-4. Comandos exatos para: criar composta ("composta load 40400 lotes 1-3,5,6"?), registrar resultado de composta, registrar resultado numérico de CT/BL por lote/amostra, e consultas ("quanto deu de CT no load 40400 lote 4").
-5. Quem pode registrar resultado (Operador? só Admin?).
-6. Nome/número da versão da migração (0.10.0 ou 1.0.0).
-7. Começar do zero no Postgres ou importar os dados de teste do Sheets.
-8. Licença do Power BI.
-9. Onde guardar a cópia do `pg_dump`.
+As perguntas antigas desta seção foram respondidas em 30/09 e 01/10: versão 1.0.0; dados de teste recomeçados do zero no Postgres; backup no servidor com cópia eventual no OneDrive (dados fictícios); Howard com 50 campos e sem prazo; comandos e ciclos do concentrado em `docs/concentrado.md` (seção 11 de lá: nada em aberto).
+
+Ainda em aberto:
+
+1. Licença do Power BI (Microsoft 365 Family não inclui o Pro; o Desktop é gratuito para montar e testar).
+2. Quem pode registrar resultado de TAB, Coliformes e Howard (Operador ou só Admin)? Hoje a regra geral é: Consultor só consulta.
 
 ## 9. Lições que valem para a migração
 
