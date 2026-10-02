@@ -83,7 +83,7 @@ Mesma composta do TAB (no recebimento) e do Howard (no embarque). Resultado **Po
 |---|---|---|
 | `No caldo` | "Coliformes feitos" confirmado | estriar = feito + 2 dias |
 | `Estriada` | "coliformes de hoje estriados" confirmado | leitura = estria + 1 dia (3º dia) |
-| `Em confirmação` | "coliformes em confirmação" → bot pergunta se **abre a composta** → **sim** | leitura de cada lote (prazo em aberto, ver seção 10) |
+| `Em confirmação` | "coliformes em confirmação" → bot pergunta se **abre a composta** → **sim** | cada lote: caldo hoje → estriar amanhã (+1) → ler no dia seguinte (+2) |
 | `Concluída` | resultado gravado (composta inteira negativa, ou todos os lotes da composta aberta com resultado) | — |
 
 **Confirmação = abrir a composta.** Quando a composta sinaliza, ela é aberta e **cada lote é analisado separado**, para saber qual lote deu positivo:
@@ -101,7 +101,7 @@ LabFlow: ❓ Confirmar POSITIVO de coliformes no lote 3 da composta #12? sim/nã
 
 - Cada lote da composta aberta ganha um código `#12.3` (composta 12, lote 3), mostrado pelo bot.
 - Resultado da composta: **positiva** se algum lote der positivo, com o(s) lote(s) apontados; **negativa** se todos os lotes derem negativo.
-- Lotes ainda sem resultado aparecem em `quais coliformes tenho para ler hoje?`.
+- Cada lote da composta aberta tem o próprio ciclo curto: **caldo (dia 0) → estria (dia 1) → leitura (dia 2)**. Ele aparece em `quais coliformes tenho para estriar hoje?` no dia 1 e em `quais coliformes tenho para ler hoje?` no dia 2, e `coliformes de hoje estriados` também vale para esses lotes.
 
 Comandos: `Coliformes feitos do load 77001, compostas (1-5)(6-10)` · `quais coliformes tenho para estriar hoje?` · `coliformes de hoje estriados` · `quais coliformes tenho para ler hoje?` · `coliformes de hoje lidos` (sem crescimento → negativas, com "sim") · `coliformes #12 em confirmação` · `coliformes #12.3 positivo` · `quais coliformes foram lidos hoje?`.
 
@@ -116,13 +116,21 @@ LabFlow: ❓ Gravar Howard 2% (1 campo positivo de 50) — O.SKY 133, linha 2, f
 ```
 
 - O banco guarda o percentual e `campos_positivos` (= percentual ÷ 2). Como são 50 campos, o percentual é sempre **par**; um valor ímpar (ex.: 3%) é recusado com aviso.
-- **Prazo máximo:** até sair a análise completa do **último tanque de NFC do mesmo navio e viagem**. Ex.: navio inteiro analisado em stress hoje → leitura final do WORT (240h) daqui a 10 dias → esse é o prazo do Howard. O bot calcula pelas análises de NFC já registradas para o navio.
-- `temos análise de howard para hoje?` lista os Howards pendentes, com o prazo de cada um, e marca `⚠️` os que vencem hoje ou já venceram.
+- **Sem prazo.** O analista registra a porcentagem com navio, viagem, linha, fase e amostras, e o Howard entra no relatório do dia em que foi registrado.
+- `temos análise de howard para hoje?` lista as compostas de embarque que ainda não têm Howard registrado.
 - `quais howards foram lidos hoje?` lista os gravados hoje, com o percentual.
 
 ## 5.1 TAB de NFC (tank farm)
 
-**Por tanque, sem composta.** Mesmo ciclo do TAB (caldo → espalhar → incubar → confirmação → resultado), ligado à coleta do tanque. Ex.: `Tab feito dos tanques terra 42,43`; o bot identifica cada tanque pelo número (e pelo navio, se houver).
+**Por tanque, sem composta.** Mesmo ciclo do TAB (caldo → espalhar → incubar → confirmação → resultado).
+
+O comando **sempre cita a data da coleta**, porque tanques podem acumular e o mesmo número pode ter mais de uma coleta:
+
+```text
+Tab feito dos tanques terra 42,43 coleta 28/09/2026
+```
+
+O bot liga o TAB à coleta exata (tanque + data). Se não existir coleta do tanque naquela data, ele recusa e não grava nada, como na análise de tanque.
 
 ## 6. Regex das consultas
 
@@ -201,6 +209,4 @@ compostas do load 77001 (1-5)(6-10)(11-14)
 
 ## 11. Em aberto
 
-1. **Coliformes, confirmação lote a lote:** em quantos dias sai o resultado de cada lote da composta aberta?
-2. **TAB de NFC:** o comando de criação é por número do tanque (`Tab feito dos tanques terra 42,43`)? Ele se liga à coleta mais recente do tanque, como a análise de tanque?
-3. **Howard sem análise de NFC registrada:** se o navio ainda não tiver tanques de NFC analisados, qual é o prazo padrão?
+Nada no momento. Todas as perguntas do desenho foram respondidas em 01/10/2026.
