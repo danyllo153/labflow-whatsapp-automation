@@ -2,7 +2,7 @@
 
 Documento para retomar o projeto em outro computador ou numa conversa nova do Claude Code. Leia inteiro antes de propor qualquer coisa. O que está marcado como decidido já foi combinado com o Danyllo; o que está em "a definir" precisa ser perguntado antes de implementar.
 
-Última atualização: 01/10/2026 (fim do dia: desenho do módulo de concentrado em `docs/concentrado.md`).
+Última atualização: 02/10/2026 (fase A: relatório do dia dos tanques).
 
 ## 1. Quem sou e como gosto de trabalhar
 
@@ -56,7 +56,7 @@ Repositório: `github.com/danyllo153/labflow-whatsapp-automation` (público). Cl
   1. ~~Mesclar o PR da `chore/backup-db`~~ (feito, PR #7).
   2. ~~Fechar a 1.0.0~~ (feito, PR #8, tag e release `v1.0.0`).
   2.1. Mesclar o PR da `docs/desenho-concentrado` (desenho do concentrado).
-  2.2. **Fase A do concentrado:** comando `relatório do dia` com os blocos de NFC (tanques terra e navio, normal e stress, drops), usando os dados que já existem, com ✅ no que já foi lido. Detalhes em `docs/concentrado.md`, seção 7.
+  2.2. ~~Fase A~~: `relatório do dia` dos tanques — feito em 02/10/2026 (view `vw_relatorio_nfc` aplicada no servidor; workflow com a regra `relatorio_nfc` e os nodes `BD · / Montar / Zap · / Fim · Relatório do dia`; PR `feat/relatorio-nfc`). Falta testar pelo WhatsApp depois de importar.
   3. DBeaver: conexão `LabFlow (app)` e lição de `UPDATE`/`DELETE`; usar para limpar os dados de teste.
   4. Módulo de concentrado, fases B a F de `docs/concentrado.md` (recebimento + compostas + TAB; Coliformes e Howard; C.T/B.L por lote; relatório completo por e-mail/Excel; Situação por foto/áudio). Reescrever a `002_concentrado.sql` a partir do desenho.
   5. Depois: Power BI (V5) e IA avançada (V3 parte 2).

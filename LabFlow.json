@@ -14,7 +14,7 @@
                                        0,
                                        0
                                    ],
-                      "id":  "7ec0429c-8a54-4118-9aea-be86f798e5ee",
+                      "id":  "635c4a90-ddf9-45b9-b579-0436a6f2791b",
                       "name":  "Bloco 1"
                   },
                   {
@@ -30,55 +30,54 @@
                                        0,
                                        1200
                                    ],
-                      "id":  "76a3d73f-8ed7-42ea-9e70-0fa33e5a0ce2",
+                      "id":  "b671b80c-4d90-4827-a502-37cc37addf27",
                       "name":  "Bloco 2"
                   },
                   {
                       "parameters":  {
-                                         "content":  "## 2 · Consultas (só leitura)\nDrops, bags, potes e análises que vencem hoje. \"Hoje\" = CURRENT_DATE do banco (America/Sao_Paulo).",
-                                         "height":  1140,
+                                         "content":  "## 2 · Consultas (só leitura)\nDrops, bags, potes, análises que vencem hoje e o relatório do dia. \"Hoje\" = CURRENT_DATE do banco (America/Sao_Paulo).",
+                                         "height":  1340,
                                          "width":  1020,
                                          "color":  4
                                      },
                       "type":  "n8n-nodes-base.stickyNote",
                       "typeVersion":  1,
                       "position":  [
-                                       1800,
+                                       1808,
                                        0
                                    ],
-                      "id":  "389e17e2-2981-4787-af56-e14c1e2fe63c",
+                      "id":  "8fc66088-0eba-42f9-bdc0-e0a7f8f6e4bb",
                       "name":  "Bloco 3"
                   },
                   {
                       "parameters":  {
                                          "content":  "## 3 · Coletas (terra e navio)\nConfere duplicata; se não houver, grava coleta + drops D5/D10/D15 + bag/pote numa única transação.",
                                          "height":  940,
-                                         "width":  1540,
-                                         "color":  1
+                                         "width":  1540
                                      },
                       "type":  "n8n-nodes-base.stickyNote",
                       "typeVersion":  1,
                       "position":  [
-                                       1800,
-                                       1340
+                                       1808,
+                                       1344
                                    ],
-                      "id":  "f943a52e-a274-4d28-947b-96b09843a677",
+                      "id":  "084c8f2e-2552-48e6-b4a5-8764289338f6",
                       "name":  "Bloco 4"
                   },
                   {
                       "parameters":  {
                                          "content":  "## 4 · Registrar análise (CT, BL, WORT)\nLiga cada tanque à coleta mais recente até a data da análise. Sem coleta para algum tanque: nada é gravado.",
-                                         "height":  940,
-                                         "width":  240,
-                                         "color":  6
+                                         "height":  340,
+                                         "color":  6,
+                                         "width":  1020
                                      },
                       "type":  "n8n-nodes-base.stickyNote",
                       "typeVersion":  1,
                       "position":  [
-                                       1800,
-                                       2340
+                                       1808,
+                                       2352
                                    ],
-                      "id":  "b550d868-47e2-475c-8153-9212cbd9df09",
+                      "id":  "7dbbfec3-fbec-4157-8619-6c7aab3425a6",
                       "name":  "Bloco 5"
                   },
                   {
@@ -91,10 +90,10 @@
                       "type":  "n8n-nodes-base.stickyNote",
                       "typeVersion":  1,
                       "position":  [
-                                       1800,
-                                       2780
+                                       1808,
+                                       2784
                                    ],
-                      "id":  "190d03b4-a876-4d95-bebe-8790d3ed9a52",
+                      "id":  "12f8eddb-f4e7-4050-8c0a-620adfc0bbfc",
                       "name":  "Bloco 6"
                   },
                   {
@@ -107,10 +106,10 @@
                       "type":  "n8n-nodes-base.stickyNote",
                       "typeVersion":  1,
                       "position":  [
-                                       1800,
-                                       3980
+                                       1808,
+                                       3984
                                    ],
-                      "id":  "d3462efd-3255-4710-9790-c500b92c0920",
+                      "id":  "d69227a7-8900-480b-a176-835d63d6a69c",
                       "name":  "Bloco 7"
                   },
                   {
@@ -124,9 +123,9 @@
                       "typeVersion":  1,
                       "position":  [
                                        0,
-                                       2200
+                                       2208
                                    ],
-                      "id":  "bf75e66e-b913-41a2-878a-0778b8fe4ca8",
+                      "id":  "d645ccfa-c203-4b08-9e7f-7cac7ba48910",
                       "name":  "Bloco 8"
                   },
                   {
@@ -141,24 +140,24 @@
                       "type":  "n8n-nodes-base.webhook",
                       "typeVersion":  2.1,
                       "position":  [
-                                       60,
-                                       140
+                                       64,
+                                       144
                                    ],
-                      "id":  "fa627ba6-9aeb-46bc-97f7-5e38050d7bfb",
+                      "id":  "1e4b8944-cf97-4aa9-a3a0-bc8eef683de7",
                       "name":  "Webhook WhatsApp",
                       "webhookId":  "366f8048-a2f0-4fc2-9db8-9e8785b0aab4"
                   },
                   {
                       "parameters":  {
-                                         "jsCode":  "const webhookItem = $(\u0027Webhook WhatsApp\u0027).first().json;\nconst data = webhookItem.body.data;\n\nif (data.key?.fromMe === true) {\n  return [];\n}\n\nconst msgTimestamp = data.messageTimestamp;\nconst nowSeconds = Math.floor(Date.now() / 1000);\nconst MAX_AGE_SECONDS = 600;\nif (msgTimestamp \u0026\u0026 (nowSeconds - msgTimestamp) \u003e MAX_AGE_SECONDS) {\n  return [];\n}\n\nconst texto = data.message.conversation;\nconst numeroRemetente = data.key.remoteJid;\nconst nomeContato = data.pushName || \u0027Desconhecido\u0027;\n\n// --- Carrega usuários da planilha e identifica o nível de quem enviou ---\nconst usuarios = $input.all().map(i =\u003e i.json);\nconst numeroRemetenteLimpo = numeroRemetente.replace(\u0027@s.whatsapp.net\u0027, \u0027\u0027);\nconst usuarioAtual = usuarios.find(u =\u003e String(u.Numero) === numeroRemetenteLimpo);\nconst nivelAtual = usuarioAtual ? usuarioAtual.Nivel : \u0027Desconhecido\u0027;\n// --- BLOQUEIO: só usuários cadastrados podem usar o bot ---\nif (nivelAtual === \u0027Desconhecido\u0027) {\n  return [{\n    json: {\n      tipo: \u0027nao_cadastrado\u0027,\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta: \u0027❌ Você ainda não está cadastrado no LabFlow. Peça a um administrador para te cadastrar.\u0027\n    }\n  }];\n}\n// Sinaliza se o nome do WhatsApp de quem mandou mudou (ou nunca foi\n// preenchido) em relação ao que já está salvo na USUARIOS — só pra quem\n// já é cadastrado (nunca cria cadastro novo por essa via).\nconst sincronizarNome = !!(usuarioAtual \u0026\u0026 usuarioAtual.Nome !== nomeContato);\n\n// Toda resposta passa por aqui, pra sempre levar junto os dados de\n// sincronização de nome sem precisar repetir em cada bloco abaixo.\nfunction output(json) {\n  return [{\n    json: {\n      ...json,\n      _sincronizarNome: sincronizarNome,\n      _numeroRemetenteLimpo: numeroRemetenteLimpo,\n      _nomeContatoAtual: nomeContato\n    }\n  }];\n}\n// Calcula as N linhas de análise (CT, BL, WORT) para um tanque, a partir\n// da data em que o frasco (Normal ou Stress) foi analisado.\nfunction calcularAnalises(dataAnaliseStr, idColeta, tanque, tipoFrasco, tipoTanque, navio) {\n  const [dia, mes, ano] = dataAnaliseStr.split(\u0027/\u0027).map(Number);\n  const dataBase = new Date(ano, mes - 1, dia);\n\n  const formatarData = (d) =\u003e\n    `${String(d.getDate()).padStart(2, \u00270\u0027)}/${String(d.getMonth() + 1).padStart(2, \u00270\u0027)}/${d.getFullYear()}`;\n\n  const somarHoras = (dataBase, horas) =\u003e {\n    const d = new Date(dataBase);\n    d.setHours(d.getHours() + horas);\n    return d;\n  };\n\n  // Config: { pre: horas ou null, final: horas }\n  const PRAZOS = {\n    CT:   { pre: null, final: 48 },\n    BL:   { pre: 72,   final: 120 },\n    WORT: { pre: 120,  final: 240 }\n  };\n\n  // Cada linha: { subAnalise, metodo }\n  const LINHAS = [\n    { subAnalise: \u0027CT\u0027,   metodo: \u0027Profundidade\u0027 },\n    { subAnalise: \u0027BL\u0027,   metodo: \u0027Profundidade\u0027 },\n    { subAnalise: \u0027WORT\u0027, metodo: \u0027Profundidade\u0027 },\n    { subAnalise: \u0027WORT\u0027, metodo: \u0027Superficie\u0027 }\n  ];\n\n  return LINHAS.map(({ subAnalise, metodo }, idx) =\u003e {\n    const prazo = PRAZOS[subAnalise];\n    const dataPreLeitura = prazo.pre !== null\n      ? formatarData(somarHoras(dataBase, prazo.pre))\n      : \u0027\u0027;\n    const dataLeituraFinal = formatarData(somarHoras(dataBase, prazo.final));\n    const status = prazo.pre !== null\n      ? \u0027Aguardando Pré-Leitura\u0027\n      : \u0027Aguardando Leitura Final\u0027;\n\n    return {\n      idAnalise: `AN-${idColeta}-${tipoFrasco}-${subAnalise}-${metodo}`.slice(0, 60),\n      idColeta,\n      tanque,\n      tipoTanque,\n      navio: navio || \u0027\u0027,\n      tipoFrasco,\n      subAnalise,\n      metodo,\n      dataAnalise: dataAnaliseStr,\n      dataPreLeitura,\n      dataLeituraFinal,\n      status,\n      responsavel: nomeContato\n    };\n  });\n}\n// Calcula as 3 datas de drop (D5, D10, D15) a partir da data de coleta\nfunction calcularDrops(dataColetaStr, idColeta, tanque, tipoTanque, navio) {\n  const [dia, mes, ano] = dataColetaStr.split(\u0027/\u0027).map(Number);\n  const dataBase = new Date(ano, mes - 1, dia);\n  const dias = [5, 10, 15];\n  return dias.map(offset =\u003e {\n    const dataDrop = new Date(dataBase);\n    dataDrop.setDate(dataDrop.getDate() + offset);\n    const dd = String(dataDrop.getDate()).padStart(2, \u00270\u0027);\n    const mm = String(dataDrop.getMonth() + 1).padStart(2, \u00270\u0027);\n    const yyyy = dataDrop.getFullYear();\n    return {\n      idDrop: `DR-${idColeta}-${offset}`,\n      idColeta: idColeta,\n      tipoTanque: tipoTanque,\n      tanque: tanque,\n      navio: navio || \u0027\u0027,\n      diaDrop: `D${offset}`,\n      dataPrevista: `${dd}/${mm}/${yyyy}`,\n      status: \u0027Pendente\u0027,\n      responsavel: nomeContato\n    };\n  });\n}\nfunction calcularArquivo(dataColetaStr, idColeta, tanque, navio) {\n  const [dia, mes, ano] = dataColetaStr.split(\u0027/\u0027).map(Number);\n  const dataColeta = new Date(ano, mes - 1, dia);\n  const dataDescarte = new Date(dataColeta);\n  dataDescarte.setDate(dataDescarte.getDate() + 365);\n\n  const formatarData = (d) =\u003e\n    `${String(d.getDate()).padStart(2, \u00270\u0027)}/${String(d.getMonth() + 1).padStart(2, \u00270\u0027)}/${d.getFullYear()}`;\n\n  return {\n    id: `AR-${idColeta}`,\n    idColeta,\n    tanque,\n    navio: navio || \u0027\u0027,\n    dataColeta: dataColetaStr,\n    dataDescarte: formatarData(dataDescarte),\n    status: \u0027Arquivado\u0027,\n    responsavel: nomeContato\n  };\n}\n// --- AJUDA POR TÓPICO: \"comandos drops\", \"consultar análises\"... (sem IA) ---\nconst ajudaBusca = texto.trim().toLowerCase()\n  .normalize(\u0027NFD\u0027).replace(/[\\u0300-\\u036f]/g, \u0027\u0027)\n  .replace(/[?!.]+$/, \u0027\u0027).trim();\n\nconst AJUDA_TOPICOS = [\n  { chave: \u0027drops\u0027, nomes: /^drops?$/, texto:\n    \u0027📖 *Comandos de drops*\\n\\n\u0027 +\n    \u0027*Consultar*\\n• drops para hoje\\n\\n\u0027 +\n    \u0027*Concluir* (marca os drops de hoje como feitos)\\n\u0027 +\n    \u0027• Concluir drops D5 terra\\n\u0027 +\n    \u0027• Concluir drops D10 navio O.SKY 123\\n\u0027 +\n    \u0027• Concluir drops terra\\n\u0027 +\n    \u0027• Concluir drops navio\\n\\n\u0027 +\n    \u0027D5, D10 e D15 são as análises de drop. Sem o dia, conclui todos os que vencem hoje.\u0027 },\n  { chave: \u0027tanques\u0027, nomes: /^(tanques?|coletas?)$/, texto:\n    \u0027📖 *Comandos de coleta de tanques*\\n\\n\u0027 +\n    \u0027• registrar coleta tanque terra 42,43 data 28/09/2026 (até 8 tanques)\\n\u0027 +\n    \u0027• Coleta navio O.SKY 123 tanques 1C,4P data 28/09/2026 (até 16 tanques)\\n\\n\u0027 +\n    \u0027Cada coleta gera as datas de drop (D5, D10, D15) e de descarte.\u0027 },\n  { chave: \u0027analises\u0027, nomes: /^analises?$/, texto:\n    \u0027📖 *Comandos de análise*\\n\\n\u0027 +\n    \u0027*Registrar* (normal ou stress)\\n\u0027 +\n    \u0027• Analise normal tanques 44,45 data 29/09/2026\\n\u0027 +\n    \u0027• Analise stress tanques 1C,4P navio O.SKY 123 data 29/09/2026\\n\\n\u0027 +\n    \u0027*Consultar o que sai hoje*\\n\u0027 +\n    \u0027• Quais analises de tanques terra saem hoje?\\n\u0027 +\n    \u0027• Quais analises de tanques navio saem hoje?\u0027 },\n  { chave: \u0027leituras\u0027, nomes: /^leituras?$/, texto:\n    \u0027📖 *Comandos de leitura*\\n\\n\u0027 +\n    \u0027Conclui as leituras (CT, BL, WORT) que vencem hoje. O bot lista e pergunta *sim* ou *não* antes de gravar.\\n\u0027 +\n    \u0027• Concluir leitura terra\\n\u0027 +\n    \u0027• Concluir final leitura CT normal terra\\n\u0027 +\n    \u0027• Concluir pre leitura BL stress navio O.SKY 123\\n\u0027 +\n    \u0027• Concluir leitura navio\\n\\n\u0027 +\n    \u0027Opcionais: pre ou final, CT ou BL ou WORT, normal ou stress.\u0027 },\n  { chave: \u0027descarte\u0027, nomes: /^(descartes?|bags?|potes?|bags e potes)$/, texto:\n    \u0027📖 *Comandos de descarte*\\n\\n\u0027 +\n    \u0027• Quais bags posso descartar hoje (tanques de terra)\\n\u0027 +\n    \u0027• Quais potes do navio posso descartar hoje\u0027 },\n  { chave: \u0027cargos\u0027, nomes: /^(cargos?|(gerenciar|gerencia)( de)? cargos?|gerencia|usuarios?)$/, texto:\n    \u0027📖 *Comandos de cargo* (somente Admin)\\n\\n\u0027 +\n    \u0027• trocar cargo de Operador para o número \u003cnúmero com DDD\u003e nome João\\n\u0027 +\n    \u0027• trocar cargo de Consultor para o número \u003cnúmero com DDD\u003e\\n\\n\u0027 +\n    \u0027Cargos válidos: Admin, Operador e Consultor.\u0027 }\n];\n\nconst AJUDA_MENU =\n  \u0027📖 *Lista de comandos.* Escreva o que procura:\\n\u0027 +\n  \u0027• consultar drops\\n\u0027 +\n  \u0027• consultar tanques\\n\u0027 +\n  \u0027• consultar análises\\n\u0027 +\n  \u0027• consultar leituras\\n\u0027 +\n  \u0027• consultar descarte (bags e potes)\\n\u0027 +\n  \u0027• consultar cargos\\n\\n\u0027 +\n  \u0027Você também pode escrever livremente. Antes de gravar, o bot mostra como entendeu e pede *sim* ou *não*.\u0027;\n\nfunction acharTopico(nome) {\n  return AJUDA_TOPICOS.find(t =\u003e t.nomes.test(nome.trim()));\n}\n\nconst matchAjudaComandos = ajudaBusca.match(/^(?:consultar\\s+|ver\\s+|lista\\s+de\\s+)?comandos?(?:\\s+(?:para|de|do|da|dos|das|sobre))?(?:\\s+(.+))?$/);\nconst matchAjudaConsultar = ajudaBusca.match(/^consultar\\s+(.+)$/);\nlet respostaAjuda = null;\n\nif (matchAjudaComandos) {\n  const pedido = matchAjudaComandos[1];\n  const topico = pedido ? acharTopico(pedido) : null;\n  respostaAjuda = topico ? topico.texto\n    : (pedido ? `❌ Não encontrei comandos para \"${pedido}\".\\n\\n` : \u0027\u0027) + AJUDA_MENU;\n} else if (matchAjudaConsultar \u0026\u0026 acharTopico(matchAjudaConsultar[1])) {\n  respostaAjuda = acharTopico(matchAjudaConsultar[1]).texto;\n}\n\nif (respostaAjuda) {\n  // Reaproveita a rota de resposta de texto simples (tipo \u0027erro_ia\u0027 -\u003e HTTP Request IA provisorio)\n  return output({\n    tipo: \u0027erro_ia\u0027,\n    numero: numeroRemetente,\n    nomeContato,\n    textoResposta: respostaAjuda\n  });\n}\n// --- GERENCIAR USUARIO ---\nconst regexGerenciarUsuario = /(adicionar|trocar|mudar)\\s+cargo\\s+(?:de\\s+)?(\\w+)\\s+para\\s+o?\\s*n[uú]mero\\s+(\\d+)(?:\\s+nome\\s+(.+))?/i;\nconst matchGerenciar = texto.match(regexGerenciarUsuario);\n\nif (matchGerenciar) {\n  const nivelNovo = matchGerenciar[2];\n  const numeroAlvo = matchGerenciar[3];\n  const nomeInformado = matchGerenciar[4] ? matchGerenciar[4].trim() : null;\n\n  if (nivelAtual !== \u0027Admin\u0027) {\n    return output({\n      tipo: \u0027gerenciar_usuario\u0027,\n      autorizado: false,\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta: \u0027❌ Só administradores podem alterar cargos de usuários.\u0027\n    });\n  }\n\n  const niveisValidos = [\u0027Admin\u0027, \u0027Operador\u0027, \u0027Consultor\u0027];\n  if (!niveisValidos.includes(nivelNovo)) {\n    return output({\n      tipo: \u0027gerenciar_usuario\u0027,\n      autorizado: false,\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta: `❌ Cargo inválido. Use: ${niveisValidos.join(\u0027 ou \u0027)}.`\n    });\n  }\n\n  const usuarioAlvoExistente = usuarios.find(u =\u003e String(u.Numero) === numeroAlvo);\n  let nomeAlvo;\n  if (nomeInformado) {\n    nomeAlvo = nomeInformado;\n  } else if (numeroAlvo === numeroRemetenteLimpo) {\n    nomeAlvo = nomeContato;\n  } else {\n    nomeAlvo = usuarioAlvoExistente ? usuarioAlvoExistente.Nome : \u0027\u0027;\n  }\n\n  return output({\n    tipo: \u0027gerenciar_usuario\u0027,\n    autorizado: true,\n    numero: numeroRemetente,\n    nomeContato,\n    NumeroAlvo: numeroAlvo,\n    NivelNovo: nivelNovo,\n    NomeAlvo: nomeAlvo,\n    textoResposta: nomeAlvo\n      ? `✅ Cargo atualizado: numero ${numeroAlvo} (${nomeAlvo}) agora é ${nivelNovo}.`\n      : `✅ Cargo atualizado: numero ${numeroAlvo} agora é ${nivelNovo}.`\n  });\n}\n// Bloqueia comandos de registro para quem só tem acesso de consulta.\nfunction bloqueadoConsultor() {\n  if (nivelAtual === \u0027Consultor\u0027) {\n    return output({\n      tipo: \u0027erro_coleta\u0027,\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta: \u0027❌ Consultores têm acesso somente de consulta. Peça a um administrador para registrar isso.\u0027\n    });\n  }\n  return null;\n}\n// --- COLETA TANQUE TERRA ---\nif (/registrar\\s+coleta\\s+tanques?\\s+terra/i.test(texto)) {\n  const bloqueio = bloqueadoConsultor();\n  if (bloqueio) return bloqueio;\n  const matchTanques = texto.match(/tanques?\\s+terra\\s+([a-z0-9,\\s]+?)\\s+data\\s+(\\d{2}\\/\\d{2}\\/\\d{4})/i);\n\n  if (!matchTanques) {\n    return output({\n      tipo: \u0027erro_coleta\u0027,\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta:\n        \u0027❌ Não foi possível registrar a coleta de terra.\\n\\n\u0027 +\n        \u0027Formato esperado:\\n\"registrar coleta tanque(s) terra \u003cnúmero(s)\u003e data \u003cdd/mm/aaaa\u003e\"\u0027\n    });\n  }\n\n  const tanques = matchTanques[1].split(\u0027,\u0027).map(t =\u003e t.trim()).filter(Boolean);\n  const dataColeta = matchTanques[2];\n\n  if (tanques.length === 0) {\n    return output({\n      tipo: \u0027erro_coleta\u0027,\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta:\n        \u0027❌ Não foi possível registrar a coleta de terra — nenhum tanque reconhecido.\\n\\n\u0027 +\n        \u0027Formato esperado:\\n\"registrar coleta tanque(s) terra \u003cnúmero(s)\u003e data \u003cdd/mm/aaaa\u003e\"\u0027\n    });\n  }\n\n  if (tanques.length \u003e 8) {\n    return output({\n      tipo: \u0027erro_coleta\u0027,\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta:\n        `❌ Só é possível registrar até 8 tanques por mensagem (você enviou ${tanques.length}). ` +\n        \u0027Divida em mais de uma mensagem.\u0027\n    });\n  }\n\n  const itensColeta = [];\n  let drops = [];\n  let bagsArquivo = [];\n\n  tanques.forEach((tanque, idx) =\u003e {\n    const idColeta = `CT-${Date.now()}-${idx}`;\n\n    itensColeta.push({ idColeta, tanque, dataColeta, responsavel: nomeContato });\n    drops = drops.concat(calcularDrops(dataColeta, idColeta, tanque, \u0027Terra\u0027, null));\n    bagsArquivo.push(calcularArquivo(dataColeta, idColeta, tanque, null));\n  });\n\n  return output({\n    tipo: \u0027coleta_terra\u0027,\n    dataColeta,\n    tanques,\n    itensColeta,\n    drops,\n    bagsArquivo,\n    numero: numeroRemetente,\n    nomeContato,\n    textoResposta:\n      `✅ Registro de tanque terra efetuado com sucesso por ${nomeContato}.\\n\\nTanques: ${tanques.join(\u0027, \u0027)}\\n` +\n      `Data: ${dataColeta}\\n` +\n      `Total: ${tanques.length} tanque${tanques.length === 1 ? \u0027\u0027 : \u0027s\u0027}`\n  });\n}\n\n// --- COLETA TANQUE NAVIO ---\nif (/coleta navio/i.test(texto)) {\n  const bloqueio = bloqueadoConsultor();\n  if (bloqueio) return bloqueio;\n  const matchNavio = texto.match(/coleta\\s+navio\\s+(.+?)\\s+tanques\\s+([a-z0-9,\\s]+?)\\s+data\\s+(\\d{2}\\/\\d{2}\\/\\d{4})/i);\n\n  if (!matchNavio) {\n    return output({\n      tipo: \u0027erro_coleta\u0027,\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta:\n        \u0027❌ Não foi possível registrar a coleta de navio.\\n\\n\u0027 +\n        \u0027Formato esperado:\\n\"Coleta navio \u003cnome\u003e tanques \u003clista separada por vírgula\u003e data \u003cdd/mm/aaaa\u003e\"\u0027\n    });\n  }\n\n  const navio = matchNavio[1].trim();\n  const tanques = matchNavio[2].split(\u0027,\u0027).map(t =\u003e t.trim().toUpperCase()).filter(Boolean);\n  const dataColeta = matchNavio[3];\n\n  if (!navio || tanques.length === 0) {\n    return output({\n      tipo: \u0027erro_coleta\u0027,\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta:\n        \u0027❌ Não foi possível registrar a coleta de navio — nome do navio ou lista de tanques veio vazia.\\n\\n\u0027 +\n        \u0027Formato esperado:\\n\"Coleta navio \u003cnome\u003e tanques \u003clista separada por vírgula\u003e data \u003cdd/mm/aaaa\u003e\"\u0027\n    });\n  }\n\n  const itensColeta = [];\n  let drops = [];\n  let arquivosNavio = [];\n\n  tanques.forEach((tanque, idx) =\u003e {\n    const idColeta = `CN-${Date.now()}-${idx}`;\n\n    itensColeta.push({\n      idColeta,\n      navio,\n      tanque,\n      dataColeta,\n      responsavel: nomeContato\n    });\n\n    drops = drops.concat(\n      calcularDrops(dataColeta, idColeta, tanque, \u0027Navio\u0027, navio)\n    );\n\n    arquivosNavio.push(\n      calcularArquivo(dataColeta, idColeta, tanque, navio)\n    );\n  });\n\n  return output({\n    tipo: \u0027coleta_navio\u0027,\n    navio,\n    dataColeta,\n    tanques,\n    itensColeta,\n    drops,\n    arquivosNavio,\n    numero: numeroRemetente,\n    nomeContato,\n    textoResposta:\n      `✅ Registro de tanque navio efetuado com sucesso por ${nomeContato}.\\n\\nNavio: ${navio}\\n` +\n      `Tanques: ${tanques.join(\u0027, \u0027)}\\n` +\n      `Data: ${dataColeta}\\n` +\n      `Total: ${tanques.length} tanque${tanques.length === 1 ? \u0027\u0027 : \u0027s\u0027}`\n  });\n}\n\n// --- ANALISE DE TANQUE (NORMAL / STRESS) — terra e navio, lista de tanques ---\nconst regexAnaliseTanque = /an[aá]lise\\s+(?:dos?\\s+)?(normal|stress)\\s+(?:dos?\\s+)?tanques?\\s+(?:terra\\s+)?([a-z0-9,\\s]+?)(?:\\s+navio\\s+(.+?))?\\s*,?\\s*data\\s+(\\d{2}\\/\\d{2}\\/\\d{4})/i;\nconst matchAnaliseTanque = texto.match(regexAnaliseTanque);\n\nif (matchAnaliseTanque) {\n  const bloqueio = bloqueadoConsultor();\n  if (bloqueio) return bloqueio;\n  const tipoFrascoBruto = matchAnaliseTanque[1].toLowerCase();\n  const tipoFrasco = tipoFrascoBruto === \u0027stress\u0027 ? \u0027Stress\u0027 : \u0027Normal\u0027;\n  const tanques = matchAnaliseTanque[2].split(\u0027,\u0027).map(t =\u003e t.trim().toUpperCase()).filter(Boolean);\n  const navio = matchAnaliseTanque[3] ? matchAnaliseTanque[3].trim().toUpperCase() : null;\n  const tipoTanque = navio ? \u0027Navio\u0027 : \u0027Terra\u0027;\n  const dataAnalise = matchAnaliseTanque[4];\n\n  if (tanques.length === 0) {\n    return output({\n      tipo: \u0027erro_coleta\u0027,\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta:\n        \u0027❌ Não foi possível registrar a análise — nenhum tanque reconhecido.\\n\\n\u0027 +\n        \u0027Formato esperado:\\n\"Analise do normal/stress do tanque(s) \u003cnúmero(s)\u003e[ navio \u003cnome\u003e], data \u003cdd/mm/aaaa\u003e\"\u0027\n    });\n  }\n\n  const limite = navio ? 16 : 8;\n  if (tanques.length \u003e limite) {\n    return output({\n      tipo: \u0027erro_coleta\u0027,\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta:\n        `❌ Só é possível registrar até ${limite} tanques por mensagem${navio ? \u0027 de navio\u0027 : \u0027\u0027} (você enviou ${tanques.length}). ` +\n        \u0027Divida em mais de uma mensagem.\u0027\n    });\n  }\n\n  const idColetaBase = `AN-${Date.now()}`;\n  let analises = [];\n  tanques.forEach((tanque, idx) =\u003e {\n    const idColeta = `${idColetaBase}-${idx}`;\n    analises = analises.concat(calcularAnalises(dataAnalise, idColeta, tanque, tipoFrasco, tipoTanque, navio));\n  });\n  const analiseCT = analises.find(a =\u003e a.subAnalise === \u0027CT\u0027);\n  const analiseBL = analises.find(a =\u003e a.subAnalise === \u0027BL\u0027);\n  const analiseWORT = analises.find(a =\u003e a.subAnalise === \u0027WORT\u0027);\n\n  return output({\n    tipo: \u0027registro_analise\u0027,\n    tipoFrasco,\n    tanques,\n    tipoTanque,\n    navio,\n    dataAnalise,\n    analises,\n    numero: numeroRemetente,\n    nomeContato,\n    textoResposta:\n      `✅ Análise ${tipoFrasco} registrada.\\n\\n` +\n      `Tanques: ${tanques.join(\u0027, \u0027)}${navio ? ` (Navio ${navio})` : \u0027\u0027}\\n` +\n      `Data: ${dataAnalise}\\n` +\n      `Data final CT: ${analiseCT.dataLeituraFinal}\\n` +\n      `Data pré-leitura BL: ${analiseBL.dataPreLeitura}\\n` +\n      `Data final BL: ${analiseBL.dataLeituraFinal}\\n` +\n      `Data pré-leitura WORT: ${analiseWORT.dataPreLeitura}\\n` +\n      `Data final WORT: ${analiseWORT.dataLeituraFinal}\\n` +\n      `Total: ${tanques.length} tanque${tanques.length === 1 ? \u0027\u0027 : \u0027s\u0027}\\n` +\n      `Analises realizadas: CT, BL, WORT (Profundidade e Superfície)`\n  });\n}\n\n// --- CONSULTA DE DROPS ---\nif (/^drops?\\s*(previstos)?\\s*(para)?\\s*hoje\\??$/i.test(texto.trim())) {\n  return output({\n    tipo: \u0027consulta_drops\u0027,\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n// --- CONSULTA DE ANALISES (TERRA) ---\nif (/^quais\\s+analises?\\s+(de\\s+)?tanques?\\s+terra\\s+saem\\s+hoje\\??$/i.test(texto.trim())) {\n  return output({\n    tipo: \u0027consulta_analises_terra\u0027,\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n\n// --- CONSULTA DE ANALISES (NAVIO) ---\nif (/^quais\\s+analises?\\s+(de\\s+)?tanques?\\s+navio\\s+saem\\s+hoje\\??$/i.test(texto.trim())) {\n  return output({\n    tipo: \u0027consulta_analises_navio\u0027,\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n// --- CONSULTA DE BAGS (TERRA) ---\nif (/^((quais\\s+)?bags?\\s+(de\\s+terra\\s+)?((posso|podemos|para|pra)\\s+)?descartar|descartar\\s+bags?|(quais\\s+)?bags?(\\s+de\\s+terra)?)\\s+hoje/i.test(texto.trim())) {\n  return output({\n    tipo: \u0027consulta_bags\u0027,\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n\n// --- CONSULTA DE POTES (NAVIO) ---\nif (/^((quais\\s+)?potes?\\s+(d[eo]\\s+)?(navio\\s+)?((posso|podemos|para|pra)\\s+)?descartar|descartar\\s+potes?|(quais\\s+)?potes?(\\s+d[eo]\\s+navio)?)\\s+hoje/i.test(texto.trim())) {\n  return output({\n    tipo: \u0027consulta_potes\u0027,\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n// --- CONCLUIR DROPS EM LOTE ---\nconst regexConcluirDrops = /concluir\\s+drops?\\s+(?:(d5|d10|d15)\\s+)?(terra|navio)(?:\\s+(.+))?\\s*$/i;\nconst matchConcluirDrops = texto.match(regexConcluirDrops);\n\nif (matchConcluirDrops) {\n  const bloqueio = bloqueadoConsultor();\n  if (bloqueio) return bloqueio;\n\n  const diaFiltro = matchConcluirDrops[1] ? matchConcluirDrops[1].toUpperCase() : null;\n  const tipoTanqueFiltro = matchConcluirDrops[2].toLowerCase() === \u0027navio\u0027 ? \u0027Navio\u0027 : \u0027Terra\u0027;\n  const navioFiltro = (tipoTanqueFiltro === \u0027Navio\u0027 \u0026\u0026 matchConcluirDrops[3])\n    ? matchConcluirDrops[3].trim().toUpperCase()\n    : null;\n\n  return output({\n    tipo: \u0027concluir_drops\u0027,\n    diaFiltro,\n    tipoTanqueFiltro,\n    navioFiltro,\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n// --- CONCLUIR LEITURA DE ANALISE (CT/BL/WORT) - TERRA ---\nconst regexConcluirLeituraTerra = /concluir\\s+(?:(pre|final)\\s+)?leitura\\s+(?:(ct|bl|wort)\\s+)?(?:(normal|stress)\\s+)?terra\\s*$/i;\nconst matchConcluirLeituraTerra = texto.match(regexConcluirLeituraTerra);\n\nif (matchConcluirLeituraTerra) {\n  const bloqueio = bloqueadoConsultor();\n  if (bloqueio) return bloqueio;\n\n  const estagioFiltro = matchConcluirLeituraTerra[1] ? matchConcluirLeituraTerra[1].toLowerCase() : null;\n  const subAnaliseFiltro = matchConcluirLeituraTerra[2] ? matchConcluirLeituraTerra[2].toUpperCase() : null;\n  const frascoFiltro = matchConcluirLeituraTerra[3]\n    ? (matchConcluirLeituraTerra[3].toLowerCase() === \u0027stress\u0027 ? \u0027Stress\u0027 : \u0027Normal\u0027)\n    : null;\n\n  return output({\n    tipo: \u0027concluir_leitura_terra\u0027,\n    estagioFiltro,\n    subAnaliseFiltro,\n    frascoFiltro,\n    tipoTanqueFiltro: \u0027Terra\u0027,\n    navioFiltro: null,\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n\n// --- CONCLUIR LEITURA DE ANALISE (CT/BL/WORT) - NAVIO ---\nconst regexConcluirLeituraNavio = /concluir\\s+(?:(pre|final)\\s+)?leitura\\s+(?:(ct|bl|wort)\\s+)?(?:(normal|stress)\\s+)?navio(?:\\s+(.+))?\\s*$/i;\nconst matchConcluirLeituraNavio = texto.match(regexConcluirLeituraNavio);\n\nif (matchConcluirLeituraNavio) {\n  const bloqueio = bloqueadoConsultor();\n  if (bloqueio) return bloqueio;\n\n  const estagioFiltro = matchConcluirLeituraNavio[1] ? matchConcluirLeituraNavio[1].toLowerCase() : null;\n  const subAnaliseFiltro = matchConcluirLeituraNavio[2] ? matchConcluirLeituraNavio[2].toUpperCase() : null;\n  const frascoFiltro = matchConcluirLeituraNavio[3]\n    ? (matchConcluirLeituraNavio[3].toLowerCase() === \u0027stress\u0027 ? \u0027Stress\u0027 : \u0027Normal\u0027)\n    : null;\n  const navioFiltro = matchConcluirLeituraNavio[4] ? matchConcluirLeituraNavio[4].trim().toUpperCase() : null;\n\n  return output({\n    tipo: \u0027concluir_leitura_navio\u0027,\n    estagioFiltro,\n    subAnaliseFiltro,\n    frascoFiltro,\n    tipoTanqueFiltro: \u0027Navio\u0027,\n    navioFiltro,\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n\n// --- CONFIRMAR PENDENCIA (resposta \"sim\" isolada) ---\nif (/^sim\\s*$/i.test(texto.trim())) {\n  return output({\n    tipo: \u0027confirmar_pendencia\u0027,\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n\n// --- CANCELAR PENDENCIA (resposta \"nao\"/\"não\" isolada) ---\nif (/^n[aã]o\\s*$/i.test(texto.trim())) {\n  return output({\n    tipo: \u0027cancelar_pendencia\u0027,\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n\n// --- NENHUM COMANDO RECONHECIDO ---\n\n// Mensagem reenviada pela própria IA (J4) que mesmo assim não bateu em\n// nenhuma regex: responde com erro em vez de mandar de novo para a IA,\n// para não entrar em loop.\nif (webhookItem.body.labflowReenvio === true) {\n  return output({\n    tipo: \u0027erro_ia\u0027,\n    numero: numeroRemetente,\n    nomeContato,\n    textoResposta:\n            \u0027❌ Não consegui transformar sua mensagem num comando válido. \u0027 +\n      \u0027Para ver a lista de comandos, escreva o que procura. Por exemplo: consultar drops\u0027\n  });\n}\n\n// Mensagem normal que nenhuma regex reconheceu: vai para a IA (J3).\nconst hojeIA = new Date().toLocaleDateString(\u0027pt-BR\u0027, { timeZone: \u0027America/Sao_Paulo\u0027 });\n\nreturn output({\n  tipo: \u0027interpretar_ia\u0027,\n  mensagem_original: texto,\n  hoje: hojeIA,\n  numero: numeroRemetente,\n  nomeContato,\n  nivelAtual,\n  // Resposta provisória, usada só até a J3 ligar o Gemini nesta rota.\n  textoResposta:\n    \u0027🤖 Não reconheci esse comando. Em breve vou conseguir interpretar mensagens livres. \u0027 +\n    \u0027Por enquanto, use o formato do comando.\u0027\n});"
+                                         "jsCode":  "const webhookItem = $(\u0027Webhook WhatsApp\u0027).first().json;\nconst data = webhookItem.body.data;\n\nif (data.key?.fromMe === true) {\n  return [];\n}\n\nconst msgTimestamp = data.messageTimestamp;\nconst nowSeconds = Math.floor(Date.now() / 1000);\nconst MAX_AGE_SECONDS = 600;\nif (msgTimestamp \u0026\u0026 (nowSeconds - msgTimestamp) \u003e MAX_AGE_SECONDS) {\n  return [];\n}\n\nconst texto = data.message.conversation;\nconst numeroRemetente = data.key.remoteJid;\nconst nomeContato = data.pushName || \u0027Desconhecido\u0027;\n\n// --- Carrega usuários da planilha e identifica o nível de quem enviou ---\nconst usuarios = $input.all().map(i =\u003e i.json);\nconst numeroRemetenteLimpo = numeroRemetente.replace(\u0027@s.whatsapp.net\u0027, \u0027\u0027);\nconst usuarioAtual = usuarios.find(u =\u003e String(u.Numero) === numeroRemetenteLimpo);\nconst nivelAtual = usuarioAtual ? usuarioAtual.Nivel : \u0027Desconhecido\u0027;\n// --- BLOQUEIO: só usuários cadastrados podem usar o bot ---\nif (nivelAtual === \u0027Desconhecido\u0027) {\n  return [{\n    json: {\n      tipo: \u0027nao_cadastrado\u0027,\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta: \u0027❌ Você ainda não está cadastrado no LabFlow. Peça a um administrador para te cadastrar.\u0027\n    }\n  }];\n}\n// Sinaliza se o nome do WhatsApp de quem mandou mudou (ou nunca foi\n// preenchido) em relação ao que já está salvo na USUARIOS — só pra quem\n// já é cadastrado (nunca cria cadastro novo por essa via).\nconst sincronizarNome = !!(usuarioAtual \u0026\u0026 usuarioAtual.Nome !== nomeContato);\n\n// Toda resposta passa por aqui, pra sempre levar junto os dados de\n// sincronização de nome sem precisar repetir em cada bloco abaixo.\nfunction output(json) {\n  return [{\n    json: {\n      ...json,\n      _sincronizarNome: sincronizarNome,\n      _numeroRemetenteLimpo: numeroRemetenteLimpo,\n      _nomeContatoAtual: nomeContato\n    }\n  }];\n}\n// Calcula as N linhas de análise (CT, BL, WORT) para um tanque, a partir\n// da data em que o frasco (Normal ou Stress) foi analisado.\nfunction calcularAnalises(dataAnaliseStr, idColeta, tanque, tipoFrasco, tipoTanque, navio) {\n  const [dia, mes, ano] = dataAnaliseStr.split(\u0027/\u0027).map(Number);\n  const dataBase = new Date(ano, mes - 1, dia);\n\n  const formatarData = (d) =\u003e\n    `${String(d.getDate()).padStart(2, \u00270\u0027)}/${String(d.getMonth() + 1).padStart(2, \u00270\u0027)}/${d.getFullYear()}`;\n\n  const somarHoras = (dataBase, horas) =\u003e {\n    const d = new Date(dataBase);\n    d.setHours(d.getHours() + horas);\n    return d;\n  };\n\n  // Config: { pre: horas ou null, final: horas }\n  const PRAZOS = {\n    CT:   { pre: null, final: 48 },\n    BL:   { pre: 72,   final: 120 },\n    WORT: { pre: 120,  final: 240 }\n  };\n\n  // Cada linha: { subAnalise, metodo }\n  const LINHAS = [\n    { subAnalise: \u0027CT\u0027,   metodo: \u0027Profundidade\u0027 },\n    { subAnalise: \u0027BL\u0027,   metodo: \u0027Profundidade\u0027 },\n    { subAnalise: \u0027WORT\u0027, metodo: \u0027Profundidade\u0027 },\n    { subAnalise: \u0027WORT\u0027, metodo: \u0027Superficie\u0027 }\n  ];\n\n  return LINHAS.map(({ subAnalise, metodo }, idx) =\u003e {\n    const prazo = PRAZOS[subAnalise];\n    const dataPreLeitura = prazo.pre !== null\n      ? formatarData(somarHoras(dataBase, prazo.pre))\n      : \u0027\u0027;\n    const dataLeituraFinal = formatarData(somarHoras(dataBase, prazo.final));\n    const status = prazo.pre !== null\n      ? \u0027Aguardando Pré-Leitura\u0027\n      : \u0027Aguardando Leitura Final\u0027;\n\n    return {\n      idAnalise: `AN-${idColeta}-${tipoFrasco}-${subAnalise}-${metodo}`.slice(0, 60),\n      idColeta,\n      tanque,\n      tipoTanque,\n      navio: navio || \u0027\u0027,\n      tipoFrasco,\n      subAnalise,\n      metodo,\n      dataAnalise: dataAnaliseStr,\n      dataPreLeitura,\n      dataLeituraFinal,\n      status,\n      responsavel: nomeContato\n    };\n  });\n}\n// Calcula as 3 datas de drop (D5, D10, D15) a partir da data de coleta\nfunction calcularDrops(dataColetaStr, idColeta, tanque, tipoTanque, navio) {\n  const [dia, mes, ano] = dataColetaStr.split(\u0027/\u0027).map(Number);\n  const dataBase = new Date(ano, mes - 1, dia);\n  const dias = [5, 10, 15];\n  return dias.map(offset =\u003e {\n    const dataDrop = new Date(dataBase);\n    dataDrop.setDate(dataDrop.getDate() + offset);\n    const dd = String(dataDrop.getDate()).padStart(2, \u00270\u0027);\n    const mm = String(dataDrop.getMonth() + 1).padStart(2, \u00270\u0027);\n    const yyyy = dataDrop.getFullYear();\n    return {\n      idDrop: `DR-${idColeta}-${offset}`,\n      idColeta: idColeta,\n      tipoTanque: tipoTanque,\n      tanque: tanque,\n      navio: navio || \u0027\u0027,\n      diaDrop: `D${offset}`,\n      dataPrevista: `${dd}/${mm}/${yyyy}`,\n      status: \u0027Pendente\u0027,\n      responsavel: nomeContato\n    };\n  });\n}\nfunction calcularArquivo(dataColetaStr, idColeta, tanque, navio) {\n  const [dia, mes, ano] = dataColetaStr.split(\u0027/\u0027).map(Number);\n  const dataColeta = new Date(ano, mes - 1, dia);\n  const dataDescarte = new Date(dataColeta);\n  dataDescarte.setDate(dataDescarte.getDate() + 365);\n\n  const formatarData = (d) =\u003e\n    `${String(d.getDate()).padStart(2, \u00270\u0027)}/${String(d.getMonth() + 1).padStart(2, \u00270\u0027)}/${d.getFullYear()}`;\n\n  return {\n    id: `AR-${idColeta}`,\n    idColeta,\n    tanque,\n    navio: navio || \u0027\u0027,\n    dataColeta: dataColetaStr,\n    dataDescarte: formatarData(dataDescarte),\n    status: \u0027Arquivado\u0027,\n    responsavel: nomeContato\n  };\n}\n// --- AJUDA POR TÓPICO: \"comandos drops\", \"consultar análises\"... (sem IA) ---\nconst ajudaBusca = texto.trim().toLowerCase()\n  .normalize(\u0027NFD\u0027).replace(/[\\u0300-\\u036f]/g, \u0027\u0027)\n  .replace(/[?!.]+$/, \u0027\u0027).trim();\n\nconst AJUDA_TOPICOS = [\n  { chave: \u0027drops\u0027, nomes: /^drops?$/, texto:\n    \u0027📖 *Comandos de drops*\\n\\n\u0027 +\n    \u0027*Consultar*\\n• drops para hoje\\n\\n\u0027 +\n    \u0027*Concluir* (marca os drops de hoje como feitos)\\n\u0027 +\n    \u0027• Concluir drops D5 terra\\n\u0027 +\n    \u0027• Concluir drops D10 navio O.SKY 123\\n\u0027 +\n    \u0027• Concluir drops terra\\n\u0027 +\n    \u0027• Concluir drops navio\\n\\n\u0027 +\n    \u0027D5, D10 e D15 são as análises de drop. Sem o dia, conclui todos os que vencem hoje.\u0027 },\n  { chave: \u0027tanques\u0027, nomes: /^(tanques?|coletas?)$/, texto:\n    \u0027📖 *Comandos de coleta de tanques*\\n\\n\u0027 +\n    \u0027• registrar coleta tanque terra 42,43 data 28/09/2026 (até 8 tanques)\\n\u0027 +\n    \u0027• Coleta navio O.SKY 123 tanques 1C,4P data 28/09/2026 (até 16 tanques)\\n\\n\u0027 +\n    \u0027Cada coleta gera as datas de drop (D5, D10, D15) e de descarte.\u0027 },\n  { chave: \u0027analises\u0027, nomes: /^analises?$/, texto:\n    \u0027📖 *Comandos de análise*\\n\\n\u0027 +\n    \u0027*Registrar* (normal ou stress)\\n\u0027 +\n    \u0027• Analise normal tanques 44,45 data 29/09/2026\\n\u0027 +\n    \u0027• Analise stress tanques 1C,4P navio O.SKY 123 data 29/09/2026\\n\\n\u0027 +\n    \u0027*Consultar o que sai hoje*\\n\u0027 +\n    \u0027• Quais analises de tanques terra saem hoje?\\n\u0027 +\n    \u0027• Quais analises de tanques navio saem hoje?\u0027 },\n  { chave: \u0027leituras\u0027, nomes: /^leituras?$/, texto:\n    \u0027📖 *Comandos de leitura*\\n\\n\u0027 +\n    \u0027Conclui as leituras (CT, BL, WORT) que vencem hoje. O bot lista e pergunta *sim* ou *não* antes de gravar.\\n\u0027 +\n    \u0027• Concluir leitura terra\\n\u0027 +\n    \u0027• Concluir final leitura CT normal terra\\n\u0027 +\n    \u0027• Concluir pre leitura BL stress navio O.SKY 123\\n\u0027 +\n    \u0027• Concluir leitura navio\\n\\n\u0027 +\n    \u0027Opcionais: pre ou final, CT ou BL ou WORT, normal ou stress.\u0027 },\n  { chave: \u0027descarte\u0027, nomes: /^(descartes?|bags?|potes?|bags e potes)$/, texto:\n    \u0027📖 *Comandos de descarte*\\n\\n\u0027 +\n    \u0027• Quais bags posso descartar hoje (tanques de terra)\\n\u0027 +\n    \u0027• Quais potes do navio posso descartar hoje\u0027 },\n  { chave: \u0027relatorio\u0027, nomes: /^(relatorios?|relatorios? do dia)$/, texto:\n    \u0027📖 *Relatório do dia*\\n\\n\u0027 +\n    \u0027• relatório do dia tanques terra\\n\u0027 +\n    \u0027• relatório do dia tanques navio\\n\u0027 +\n    \u0027• relatório do dia (os dois blocos)\\n\\n\u0027 +\n    \u0027Mostra o que sai hoje em cada linha do relatório. ✅ = já lido.\u0027 },\n  { chave: \u0027cargos\u0027, nomes: /^(cargos?|(gerenciar|gerencia)( de)? cargos?|gerencia|usuarios?)$/, texto:\n    \u0027📖 *Comandos de cargo* (somente Admin)\\n\\n\u0027 +\n    \u0027• trocar cargo de Operador para o número \u003cnúmero com DDD\u003e nome João\\n\u0027 +\n    \u0027• trocar cargo de Consultor para o número \u003cnúmero com DDD\u003e\\n\\n\u0027 +\n    \u0027Cargos válidos: Admin, Operador e Consultor.\u0027 }\n];\n\nconst AJUDA_MENU =\n  \u0027📖 *Lista de comandos.* Escreva o que procura:\\n\u0027 +\n  \u0027• consultar drops\\n\u0027 +\n  \u0027• consultar tanques\\n\u0027 +\n  \u0027• consultar análises\\n\u0027 +\n  \u0027• consultar leituras\\n\u0027 +\n  \u0027• consultar descarte (bags e potes)\\n\u0027 +\n  \u0027• consultar cargos\\n\u0027 +\n  \u0027• consultar relatório\\n\\n\u0027 +\n  \u0027Você também pode escrever livremente. Antes de gravar, o bot mostra como entendeu e pede *sim* ou *não*.\u0027;\n\nfunction acharTopico(nome) {\n  return AJUDA_TOPICOS.find(t =\u003e t.nomes.test(nome.trim()));\n}\n\nconst matchAjudaComandos = ajudaBusca.match(/^(?:consultar\\s+|ver\\s+|lista\\s+de\\s+)?comandos?(?:\\s+(?:para|de|do|da|dos|das|sobre))?(?:\\s+(.+))?$/);\nconst matchAjudaConsultar = ajudaBusca.match(/^consultar\\s+(.+)$/);\nlet respostaAjuda = null;\n\nif (matchAjudaComandos) {\n  const pedido = matchAjudaComandos[1];\n  const topico = pedido ? acharTopico(pedido) : null;\n  respostaAjuda = topico ? topico.texto\n    : (pedido ? `❌ Não encontrei comandos para \"${pedido}\".\\n\\n` : \u0027\u0027) + AJUDA_MENU;\n} else if (matchAjudaConsultar \u0026\u0026 acharTopico(matchAjudaConsultar[1])) {\n  respostaAjuda = acharTopico(matchAjudaConsultar[1]).texto;\n}\n\nif (respostaAjuda) {\n  // Reaproveita a rota de resposta de texto simples (tipo \u0027erro_ia\u0027 -\u003e HTTP Request IA provisorio)\n  return output({\n    tipo: \u0027erro_ia\u0027,\n    numero: numeroRemetente,\n    nomeContato,\n    textoResposta: respostaAjuda\n  });\n}\n// --- GERENCIAR USUARIO ---\nconst regexGerenciarUsuario = /(adicionar|trocar|mudar)\\s+cargo\\s+(?:de\\s+)?(\\w+)\\s+para\\s+o?\\s*n[uú]mero\\s+(\\d+)(?:\\s+nome\\s+(.+))?/i;\nconst matchGerenciar = texto.match(regexGerenciarUsuario);\n\nif (matchGerenciar) {\n  const nivelNovo = matchGerenciar[2];\n  const numeroAlvo = matchGerenciar[3];\n  const nomeInformado = matchGerenciar[4] ? matchGerenciar[4].trim() : null;\n\n  if (nivelAtual !== \u0027Admin\u0027) {\n    return output({\n      tipo: \u0027gerenciar_usuario\u0027,\n      autorizado: false,\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta: \u0027❌ Só administradores podem alterar cargos de usuários.\u0027\n    });\n  }\n\n  const niveisValidos = [\u0027Admin\u0027, \u0027Operador\u0027, \u0027Consultor\u0027];\n  if (!niveisValidos.includes(nivelNovo)) {\n    return output({\n      tipo: \u0027gerenciar_usuario\u0027,\n      autorizado: false,\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta: `❌ Cargo inválido. Use: ${niveisValidos.join(\u0027 ou \u0027)}.`\n    });\n  }\n\n  const usuarioAlvoExistente = usuarios.find(u =\u003e String(u.Numero) === numeroAlvo);\n  let nomeAlvo;\n  if (nomeInformado) {\n    nomeAlvo = nomeInformado;\n  } else if (numeroAlvo === numeroRemetenteLimpo) {\n    nomeAlvo = nomeContato;\n  } else {\n    nomeAlvo = usuarioAlvoExistente ? usuarioAlvoExistente.Nome : \u0027\u0027;\n  }\n\n  return output({\n    tipo: \u0027gerenciar_usuario\u0027,\n    autorizado: true,\n    numero: numeroRemetente,\n    nomeContato,\n    NumeroAlvo: numeroAlvo,\n    NivelNovo: nivelNovo,\n    NomeAlvo: nomeAlvo,\n    textoResposta: nomeAlvo\n      ? `✅ Cargo atualizado: numero ${numeroAlvo} (${nomeAlvo}) agora é ${nivelNovo}.`\n      : `✅ Cargo atualizado: numero ${numeroAlvo} agora é ${nivelNovo}.`\n  });\n}\n// Bloqueia comandos de registro para quem só tem acesso de consulta.\nfunction bloqueadoConsultor() {\n  if (nivelAtual === \u0027Consultor\u0027) {\n    return output({\n      tipo: \u0027erro_coleta\u0027,\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta: \u0027❌ Consultores têm acesso somente de consulta. Peça a um administrador para registrar isso.\u0027\n    });\n  }\n  return null;\n}\n// --- COLETA TANQUE TERRA ---\nif (/registrar\\s+coleta\\s+tanques?\\s+terra/i.test(texto)) {\n  const bloqueio = bloqueadoConsultor();\n  if (bloqueio) return bloqueio;\n  const matchTanques = texto.match(/tanques?\\s+terra\\s+([a-z0-9,\\s]+?)\\s+data\\s+(\\d{2}\\/\\d{2}\\/\\d{4})/i);\n\n  if (!matchTanques) {\n    return output({\n      tipo: \u0027erro_coleta\u0027,\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta:\n        \u0027❌ Não foi possível registrar a coleta de terra.\\n\\n\u0027 +\n        \u0027Formato esperado:\\n\"registrar coleta tanque(s) terra \u003cnúmero(s)\u003e data \u003cdd/mm/aaaa\u003e\"\u0027\n    });\n  }\n\n  const tanques = matchTanques[1].split(\u0027,\u0027).map(t =\u003e t.trim()).filter(Boolean);\n  const dataColeta = matchTanques[2];\n\n  if (tanques.length === 0) {\n    return output({\n      tipo: \u0027erro_coleta\u0027,\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta:\n        \u0027❌ Não foi possível registrar a coleta de terra — nenhum tanque reconhecido.\\n\\n\u0027 +\n        \u0027Formato esperado:\\n\"registrar coleta tanque(s) terra \u003cnúmero(s)\u003e data \u003cdd/mm/aaaa\u003e\"\u0027\n    });\n  }\n\n  if (tanques.length \u003e 8) {\n    return output({\n      tipo: \u0027erro_coleta\u0027,\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta:\n        `❌ Só é possível registrar até 8 tanques por mensagem (você enviou ${tanques.length}). ` +\n        \u0027Divida em mais de uma mensagem.\u0027\n    });\n  }\n\n  const itensColeta = [];\n  let drops = [];\n  let bagsArquivo = [];\n\n  tanques.forEach((tanque, idx) =\u003e {\n    const idColeta = `CT-${Date.now()}-${idx}`;\n\n    itensColeta.push({ idColeta, tanque, dataColeta, responsavel: nomeContato });\n    drops = drops.concat(calcularDrops(dataColeta, idColeta, tanque, \u0027Terra\u0027, null));\n    bagsArquivo.push(calcularArquivo(dataColeta, idColeta, tanque, null));\n  });\n\n  return output({\n    tipo: \u0027coleta_terra\u0027,\n    dataColeta,\n    tanques,\n    itensColeta,\n    drops,\n    bagsArquivo,\n    numero: numeroRemetente,\n    nomeContato,\n    textoResposta:\n      `✅ Registro de tanque terra efetuado com sucesso por ${nomeContato}.\\n\\nTanques: ${tanques.join(\u0027, \u0027)}\\n` +\n      `Data: ${dataColeta}\\n` +\n      `Total: ${tanques.length} tanque${tanques.length === 1 ? \u0027\u0027 : \u0027s\u0027}`\n  });\n}\n\n// --- COLETA TANQUE NAVIO ---\nif (/coleta navio/i.test(texto)) {\n  const bloqueio = bloqueadoConsultor();\n  if (bloqueio) return bloqueio;\n  const matchNavio = texto.match(/coleta\\s+navio\\s+(.+?)\\s+tanques\\s+([a-z0-9,\\s]+?)\\s+data\\s+(\\d{2}\\/\\d{2}\\/\\d{4})/i);\n\n  if (!matchNavio) {\n    return output({\n      tipo: \u0027erro_coleta\u0027,\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta:\n        \u0027❌ Não foi possível registrar a coleta de navio.\\n\\n\u0027 +\n        \u0027Formato esperado:\\n\"Coleta navio \u003cnome\u003e tanques \u003clista separada por vírgula\u003e data \u003cdd/mm/aaaa\u003e\"\u0027\n    });\n  }\n\n  const navio = matchNavio[1].trim();\n  const tanques = matchNavio[2].split(\u0027,\u0027).map(t =\u003e t.trim().toUpperCase()).filter(Boolean);\n  const dataColeta = matchNavio[3];\n\n  if (!navio || tanques.length === 0) {\n    return output({\n      tipo: \u0027erro_coleta\u0027,\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta:\n        \u0027❌ Não foi possível registrar a coleta de navio — nome do navio ou lista de tanques veio vazia.\\n\\n\u0027 +\n        \u0027Formato esperado:\\n\"Coleta navio \u003cnome\u003e tanques \u003clista separada por vírgula\u003e data \u003cdd/mm/aaaa\u003e\"\u0027\n    });\n  }\n\n  const itensColeta = [];\n  let drops = [];\n  let arquivosNavio = [];\n\n  tanques.forEach((tanque, idx) =\u003e {\n    const idColeta = `CN-${Date.now()}-${idx}`;\n\n    itensColeta.push({\n      idColeta,\n      navio,\n      tanque,\n      dataColeta,\n      responsavel: nomeContato\n    });\n\n    drops = drops.concat(\n      calcularDrops(dataColeta, idColeta, tanque, \u0027Navio\u0027, navio)\n    );\n\n    arquivosNavio.push(\n      calcularArquivo(dataColeta, idColeta, tanque, navio)\n    );\n  });\n\n  return output({\n    tipo: \u0027coleta_navio\u0027,\n    navio,\n    dataColeta,\n    tanques,\n    itensColeta,\n    drops,\n    arquivosNavio,\n    numero: numeroRemetente,\n    nomeContato,\n    textoResposta:\n      `✅ Registro de tanque navio efetuado com sucesso por ${nomeContato}.\\n\\nNavio: ${navio}\\n` +\n      `Tanques: ${tanques.join(\u0027, \u0027)}\\n` +\n      `Data: ${dataColeta}\\n` +\n      `Total: ${tanques.length} tanque${tanques.length === 1 ? \u0027\u0027 : \u0027s\u0027}`\n  });\n}\n\n// --- ANALISE DE TANQUE (NORMAL / STRESS) — terra e navio, lista de tanques ---\nconst regexAnaliseTanque = /an[aá]lise\\s+(?:dos?\\s+)?(normal|stress)\\s+(?:dos?\\s+)?tanques?\\s+(?:terra\\s+)?([a-z0-9,\\s]+?)(?:\\s+navio\\s+(.+?))?\\s*,?\\s*data\\s+(\\d{2}\\/\\d{2}\\/\\d{4})/i;\nconst matchAnaliseTanque = texto.match(regexAnaliseTanque);\n\nif (matchAnaliseTanque) {\n  const bloqueio = bloqueadoConsultor();\n  if (bloqueio) return bloqueio;\n  const tipoFrascoBruto = matchAnaliseTanque[1].toLowerCase();\n  const tipoFrasco = tipoFrascoBruto === \u0027stress\u0027 ? \u0027Stress\u0027 : \u0027Normal\u0027;\n  const tanques = matchAnaliseTanque[2].split(\u0027,\u0027).map(t =\u003e t.trim().toUpperCase()).filter(Boolean);\n  const navio = matchAnaliseTanque[3] ? matchAnaliseTanque[3].trim().toUpperCase() : null;\n  const tipoTanque = navio ? \u0027Navio\u0027 : \u0027Terra\u0027;\n  const dataAnalise = matchAnaliseTanque[4];\n\n  if (tanques.length === 0) {\n    return output({\n      tipo: \u0027erro_coleta\u0027,\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta:\n        \u0027❌ Não foi possível registrar a análise — nenhum tanque reconhecido.\\n\\n\u0027 +\n        \u0027Formato esperado:\\n\"Analise do normal/stress do tanque(s) \u003cnúmero(s)\u003e[ navio \u003cnome\u003e], data \u003cdd/mm/aaaa\u003e\"\u0027\n    });\n  }\n\n  const limite = navio ? 16 : 8;\n  if (tanques.length \u003e limite) {\n    return output({\n      tipo: \u0027erro_coleta\u0027,\n      numero: numeroRemetente,\n      nomeContato,\n      textoResposta:\n        `❌ Só é possível registrar até ${limite} tanques por mensagem${navio ? \u0027 de navio\u0027 : \u0027\u0027} (você enviou ${tanques.length}). ` +\n        \u0027Divida em mais de uma mensagem.\u0027\n    });\n  }\n\n  const idColetaBase = `AN-${Date.now()}`;\n  let analises = [];\n  tanques.forEach((tanque, idx) =\u003e {\n    const idColeta = `${idColetaBase}-${idx}`;\n    analises = analises.concat(calcularAnalises(dataAnalise, idColeta, tanque, tipoFrasco, tipoTanque, navio));\n  });\n  const analiseCT = analises.find(a =\u003e a.subAnalise === \u0027CT\u0027);\n  const analiseBL = analises.find(a =\u003e a.subAnalise === \u0027BL\u0027);\n  const analiseWORT = analises.find(a =\u003e a.subAnalise === \u0027WORT\u0027);\n\n  return output({\n    tipo: \u0027registro_analise\u0027,\n    tipoFrasco,\n    tanques,\n    tipoTanque,\n    navio,\n    dataAnalise,\n    analises,\n    numero: numeroRemetente,\n    nomeContato,\n    textoResposta:\n      `✅ Análise ${tipoFrasco} registrada.\\n\\n` +\n      `Tanques: ${tanques.join(\u0027, \u0027)}${navio ? ` (Navio ${navio})` : \u0027\u0027}\\n` +\n      `Data: ${dataAnalise}\\n` +\n      `Data final CT: ${analiseCT.dataLeituraFinal}\\n` +\n      `Data pré-leitura BL: ${analiseBL.dataPreLeitura}\\n` +\n      `Data final BL: ${analiseBL.dataLeituraFinal}\\n` +\n      `Data pré-leitura WORT: ${analiseWORT.dataPreLeitura}\\n` +\n      `Data final WORT: ${analiseWORT.dataLeituraFinal}\\n` +\n      `Total: ${tanques.length} tanque${tanques.length === 1 ? \u0027\u0027 : \u0027s\u0027}\\n` +\n      `Analises realizadas: CT, BL, WORT (Profundidade e Superfície)`\n  });\n}\n\n// --- CONSULTA DE DROPS ---\nif (/^drops?\\s*(previstos)?\\s*(para)?\\s*hoje\\??$/i.test(texto.trim())) {\n  return output({\n    tipo: \u0027consulta_drops\u0027,\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n// --- CONSULTA DE ANALISES (TERRA) ---\nif (/^quais\\s+analises?\\s+(de\\s+)?tanques?\\s+terra\\s+saem\\s+hoje\\??$/i.test(texto.trim())) {\n  return output({\n    tipo: \u0027consulta_analises_terra\u0027,\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n\n// --- CONSULTA DE ANALISES (NAVIO) ---\nif (/^quais\\s+analises?\\s+(de\\s+)?tanques?\\s+navio\\s+saem\\s+hoje\\??$/i.test(texto.trim())) {\n  return output({\n    tipo: \u0027consulta_analises_navio\u0027,\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n// --- CONSULTA DE BAGS (TERRA) ---\nif (/^((quais\\s+)?bags?\\s+(de\\s+terra\\s+)?((posso|podemos|para|pra)\\s+)?descartar|descartar\\s+bags?|(quais\\s+)?bags?(\\s+de\\s+terra)?)\\s+hoje/i.test(texto.trim())) {\n  return output({\n    tipo: \u0027consulta_bags\u0027,\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n\n// --- CONSULTA DE POTES (NAVIO) ---\nif (/^((quais\\s+)?potes?\\s+(d[eo]\\s+)?(navio\\s+)?((posso|podemos|para|pra)\\s+)?descartar|descartar\\s+potes?|(quais\\s+)?potes?(\\s+d[eo]\\s+navio)?)\\s+hoje/i.test(texto.trim())) {\n  return output({\n    tipo: \u0027consulta_potes\u0027,\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n// --- RELATÓRIO DO DIA (NFC: tanques terra e navio) ---\nconst matchRelatorio = ajudaBusca.match(/^relatorio\\s+(?:do\\s+dia|de\\s+hoje)(?:\\s+(?:dos\\s+)?tanques?(?:\\s+(terra|navio))?)?$/);\n\nif (matchRelatorio) {\n  const qual = matchRelatorio[1];\n  return output({\n    tipo: \u0027relatorio_nfc\u0027,\n    blocoFiltro: qual === \u0027terra\u0027 ? \u0027Tank farm\u0027 : (qual === \u0027navio\u0027 ? \u0027Navio\u0027 : \u0027\u0027),\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n// --- CONCLUIR DROPS EM LOTE ---\nconst regexConcluirDrops = /concluir\\s+drops?\\s+(?:(d5|d10|d15)\\s+)?(terra|navio)(?:\\s+(.+))?\\s*$/i;\nconst matchConcluirDrops = texto.match(regexConcluirDrops);\n\nif (matchConcluirDrops) {\n  const bloqueio = bloqueadoConsultor();\n  if (bloqueio) return bloqueio;\n\n  const diaFiltro = matchConcluirDrops[1] ? matchConcluirDrops[1].toUpperCase() : null;\n  const tipoTanqueFiltro = matchConcluirDrops[2].toLowerCase() === \u0027navio\u0027 ? \u0027Navio\u0027 : \u0027Terra\u0027;\n  const navioFiltro = (tipoTanqueFiltro === \u0027Navio\u0027 \u0026\u0026 matchConcluirDrops[3])\n    ? matchConcluirDrops[3].trim().toUpperCase()\n    : null;\n\n  return output({\n    tipo: \u0027concluir_drops\u0027,\n    diaFiltro,\n    tipoTanqueFiltro,\n    navioFiltro,\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n// --- CONCLUIR LEITURA DE ANALISE (CT/BL/WORT) - TERRA ---\nconst regexConcluirLeituraTerra = /concluir\\s+(?:(pre|final)\\s+)?leitura\\s+(?:(ct|bl|wort)\\s+)?(?:(normal|stress)\\s+)?terra\\s*$/i;\nconst matchConcluirLeituraTerra = texto.match(regexConcluirLeituraTerra);\n\nif (matchConcluirLeituraTerra) {\n  const bloqueio = bloqueadoConsultor();\n  if (bloqueio) return bloqueio;\n\n  const estagioFiltro = matchConcluirLeituraTerra[1] ? matchConcluirLeituraTerra[1].toLowerCase() : null;\n  const subAnaliseFiltro = matchConcluirLeituraTerra[2] ? matchConcluirLeituraTerra[2].toUpperCase() : null;\n  const frascoFiltro = matchConcluirLeituraTerra[3]\n    ? (matchConcluirLeituraTerra[3].toLowerCase() === \u0027stress\u0027 ? \u0027Stress\u0027 : \u0027Normal\u0027)\n    : null;\n\n  return output({\n    tipo: \u0027concluir_leitura_terra\u0027,\n    estagioFiltro,\n    subAnaliseFiltro,\n    frascoFiltro,\n    tipoTanqueFiltro: \u0027Terra\u0027,\n    navioFiltro: null,\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n\n// --- CONCLUIR LEITURA DE ANALISE (CT/BL/WORT) - NAVIO ---\nconst regexConcluirLeituraNavio = /concluir\\s+(?:(pre|final)\\s+)?leitura\\s+(?:(ct|bl|wort)\\s+)?(?:(normal|stress)\\s+)?navio(?:\\s+(.+))?\\s*$/i;\nconst matchConcluirLeituraNavio = texto.match(regexConcluirLeituraNavio);\n\nif (matchConcluirLeituraNavio) {\n  const bloqueio = bloqueadoConsultor();\n  if (bloqueio) return bloqueio;\n\n  const estagioFiltro = matchConcluirLeituraNavio[1] ? matchConcluirLeituraNavio[1].toLowerCase() : null;\n  const subAnaliseFiltro = matchConcluirLeituraNavio[2] ? matchConcluirLeituraNavio[2].toUpperCase() : null;\n  const frascoFiltro = matchConcluirLeituraNavio[3]\n    ? (matchConcluirLeituraNavio[3].toLowerCase() === \u0027stress\u0027 ? \u0027Stress\u0027 : \u0027Normal\u0027)\n    : null;\n  const navioFiltro = matchConcluirLeituraNavio[4] ? matchConcluirLeituraNavio[4].trim().toUpperCase() : null;\n\n  return output({\n    tipo: \u0027concluir_leitura_navio\u0027,\n    estagioFiltro,\n    subAnaliseFiltro,\n    frascoFiltro,\n    tipoTanqueFiltro: \u0027Navio\u0027,\n    navioFiltro,\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n\n// --- CONFIRMAR PENDENCIA (resposta \"sim\" isolada) ---\nif (/^sim\\s*$/i.test(texto.trim())) {\n  return output({\n    tipo: \u0027confirmar_pendencia\u0027,\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n\n// --- CANCELAR PENDENCIA (resposta \"nao\"/\"não\" isolada) ---\nif (/^n[aã]o\\s*$/i.test(texto.trim())) {\n  return output({\n    tipo: \u0027cancelar_pendencia\u0027,\n    numero: numeroRemetente,\n    nomeContato\n  });\n}\n\n// --- NENHUM COMANDO RECONHECIDO ---\n\n// Mensagem reenviada pela própria IA (J4) que mesmo assim não bateu em\n// nenhuma regex: responde com erro em vez de mandar de novo para a IA,\n// para não entrar em loop.\nif (webhookItem.body.labflowReenvio === true) {\n  return output({\n    tipo: \u0027erro_ia\u0027,\n    numero: numeroRemetente,\n    nomeContato,\n    textoResposta:\n            \u0027❌ Não consegui transformar sua mensagem num comando válido. \u0027 +\n      \u0027Para ver a lista de comandos, escreva o que procura. Por exemplo: consultar drops\u0027\n  });\n}\n\n// Mensagem normal que nenhuma regex reconheceu: vai para a IA (J3).\nconst hojeIA = new Date().toLocaleDateString(\u0027pt-BR\u0027, { timeZone: \u0027America/Sao_Paulo\u0027 });\n\nreturn output({\n  tipo: \u0027interpretar_ia\u0027,\n  mensagem_original: texto,\n  hoje: hojeIA,\n  numero: numeroRemetente,\n  nomeContato,\n  nivelAtual,\n  // Resposta provisória, usada só até a J3 ligar o Gemini nesta rota.\n  textoResposta:\n    \u0027🤖 Não reconheci esse comando. Em breve vou conseguir interpretar mensagens livres. \u0027 +\n    \u0027Por enquanto, use o formato do comando.\u0027\n});"
                                      },
                       "type":  "n8n-nodes-base.code",
                       "typeVersion":  2,
                       "position":  [
-                                       840,
-                                       140
+                                       848,
+                                       144
                                    ],
-                      "id":  "08d05b50-44a4-409e-9f77-ff48f4505e01",
+                      "id":  "188dba43-56f7-4576-95ab-615f21404a28",
                       "name":  "Interpretar comando"
                   },
                   {
@@ -202,9 +201,9 @@
                       "typeVersion":  2.3,
                       "position":  [
                                        320,
-                                       140
+                                       144
                                    ],
-                      "id":  "89d252ff-4af8-4bea-a3d7-638de9bbfed6",
+                      "id":  "a0a9e69b-f965-4b9f-8523-42c5fe24c3dd",
                       "name":  "Filtrar mensagens válidas"
                   },
                   {
@@ -233,10 +232,10 @@
                       "type":  "n8n-nodes-base.httpRequest",
                       "typeVersion":  4.5,
                       "position":  [
-                                       2900,
+                                       2912,
                                        1680
                                    ],
-                      "id":  "5ec8fa03-e6f2-4653-a570-c92a088001a1",
+                      "id":  "00d73570-04a7-4e5b-b43f-1544e52385d0",
                       "name":  "Zap · Coleta terra registrada",
                       "credentials":  {
                                           "httpHeaderAuth":  {
@@ -254,10 +253,10 @@
                       "type":  "n8n-nodes-base.respondToWebhook",
                       "typeVersion":  1.5,
                       "position":  [
-                                       3160,
+                                       3168,
                                        1680
                                    ],
-                      "id":  "8ba1db79-fd8b-4496-be57-caea032740b1",
+                      "id":  "46bb4afe-659b-4890-a3a5-c69d882f18cb",
                       "name":  "Fim · Coleta terra registrada"
                   },
                   {
@@ -286,10 +285,10 @@
                       "type":  "n8n-nodes-base.httpRequest",
                       "typeVersion":  4.5,
                       "position":  [
-                                       2900,
+                                       2912,
                                        2080
                                    ],
-                      "id":  "067a7f7e-9ae2-4708-868e-e5d02e54e66a",
+                      "id":  "80e895e6-711e-49c2-abae-a7876a10b139",
                       "name":  "Zap · Coleta navio registrada",
                       "credentials":  {
                                           "httpHeaderAuth":  {
@@ -307,10 +306,10 @@
                       "type":  "n8n-nodes-base.respondToWebhook",
                       "typeVersion":  1.5,
                       "position":  [
-                                       3160,
+                                       3168,
                                        2080
                                    ],
-                      "id":  "8f5d94e4-a2df-4a33-bb8d-3f346637a4a7",
+                      "id":  "0afd8c6c-8b4a-43c9-b802-bfee4dad7555",
                       "name":  "Fim · Coleta navio registrada"
                   },
                   {
@@ -320,10 +319,10 @@
                       "type":  "n8n-nodes-base.code",
                       "typeVersion":  2,
                       "position":  [
-                                       2120,
-                                       140
+                                       2128,
+                                       144
                                    ],
-                      "id":  "57d3a472-74b4-4c2f-8276-0f08d78e3bb6",
+                      "id":  "16e33665-0bf8-4769-af9f-85fe248ccf20",
                       "name":  "Montar resposta drops"
                   },
                   {
@@ -358,10 +357,10 @@
                       "type":  "n8n-nodes-base.httpRequest",
                       "typeVersion":  4.5,
                       "position":  [
-                                       2380,
-                                       140
+                                       2384,
+                                       144
                                    ],
-                      "id":  "a8c88cbd-78b9-41a4-ab96-e0c5744a6840",
+                      "id":  "6812859b-c036-4999-82d0-f9fdbc05fc19",
                       "name":  "Zap · Drops de hoje",
                       "credentials":  {
                                           "httpHeaderAuth":  {
@@ -380,9 +379,9 @@
                       "typeVersion":  1.5,
                       "position":  [
                                        2640,
-                                       140
+                                       144
                                    ],
-                      "id":  "63b6c8b3-5212-4a9e-a441-8a418e14144f",
+                      "id":  "3951c05c-aa38-429d-9355-bdd5d18a05d2",
                       "name":  "Fim · Drops de hoje"
                   },
                   {
@@ -411,10 +410,10 @@
                       "type":  "n8n-nodes-base.httpRequest",
                       "typeVersion":  4.5,
                       "position":  [
-                                       840,
-                                       740
+                                       848,
+                                       752
                                    ],
-                      "id":  "7dd8d31b-89e3-45d6-9bb4-79643092288c",
+                      "id":  "de8fafc0-35e8-4982-bc10-27a3cff30fab",
                       "name":  "Zap · Erro no comando",
                       "credentials":  {
                                           "httpHeaderAuth":  {
@@ -432,10 +431,10 @@
                       "type":  "n8n-nodes-base.respondToWebhook",
                       "typeVersion":  1.5,
                       "position":  [
-                                       1100,
-                                       740
+                                       1104,
+                                       752
                                    ],
-                      "id":  "d8d6a466-6460-486e-bed7-caab677554e9",
+                      "id":  "d2bde760-c2d1-4d94-a746-ed20913c28d7",
                       "name":  "Fim · Erro no comando"
                   },
                   {
@@ -445,10 +444,10 @@
                       "type":  "n8n-nodes-base.code",
                       "typeVersion":  2,
                       "position":  [
-                                       2120,
-                                       340
+                                       2128,
+                                       352
                                    ],
-                      "id":  "78bf6b59-c9bc-4e36-a654-ad016e08546f",
+                      "id":  "f33523fb-39f8-4368-bf86-d9d73183e145",
                       "name":  "Montar resposta bags"
                   },
                   {
@@ -477,10 +476,10 @@
                       "type":  "n8n-nodes-base.httpRequest",
                       "typeVersion":  4.5,
                       "position":  [
-                                       2380,
-                                       340
+                                       2384,
+                                       352
                                    ],
-                      "id":  "af767d9d-e7e1-4121-8291-bdaf5421ba22",
+                      "id":  "2ea3a591-e9a0-46a3-a59e-c0f1e58f3814",
                       "name":  "Zap · Bags para descartar",
                       "credentials":  {
                                           "httpHeaderAuth":  {
@@ -499,9 +498,9 @@
                       "typeVersion":  1.5,
                       "position":  [
                                        2640,
-                                       340
+                                       352
                                    ],
-                      "id":  "7d92aad9-9e24-497e-b579-88bb75d18c90",
+                      "id":  "a88cd373-4e06-4f5a-b502-4c4ae0306c34",
                       "name":  "Fim · Bags para descartar"
                   },
                   {
@@ -514,9 +513,9 @@
                       "typeVersion":  1.5,
                       "position":  [
                                        2640,
-                                       540
+                                       544
                                    ],
-                      "id":  "4ab3835a-1aa4-4cd2-97d7-30c9ec0661ea",
+                      "id":  "744664bf-7271-4796-ba3e-ac37fb741bdd",
                       "name":  "Fim · Potes para descartar"
                   },
                   {
@@ -526,10 +525,10 @@
                       "type":  "n8n-nodes-base.code",
                       "typeVersion":  2,
                       "position":  [
-                                       2120,
-                                       540
+                                       2128,
+                                       544
                                    ],
-                      "id":  "fae82a35-8d01-4a64-9d69-ab6c74d5810f",
+                      "id":  "1e667946-6ade-4a18-91c7-2be9b1419155",
                       "name":  "Montar resposta potes"
                   },
                   {
@@ -562,10 +561,10 @@
                       "type":  "n8n-nodes-base.if",
                       "typeVersion":  2.3,
                       "position":  [
-                                       60,
-                                       2340
+                                       64,
+                                       2352
                                    ],
-                      "id":  "34f11cfb-4155-4ce3-b367-f260e4bdb305",
+                      "id":  "e0205b67-9c38-41ad-b0dd-7726bc01d66f",
                       "name":  "Pode trocar cargo?"
                   },
                   {
@@ -594,10 +593,10 @@
                       "type":  "n8n-nodes-base.httpRequest",
                       "typeVersion":  4.5,
                       "position":  [
-                                       580,
-                                       2340
+                                       592,
+                                       2352
                                    ],
-                      "id":  "258318e8-5143-491e-8d50-eb5b843e3e78",
+                      "id":  "c24a17d4-307f-4376-a095-6f7775cba3f5",
                       "name":  "Zap · Cargo atualizado",
                       "credentials":  {
                                           "httpHeaderAuth":  {
@@ -615,10 +614,10 @@
                       "type":  "n8n-nodes-base.respondToWebhook",
                       "typeVersion":  1.5,
                       "position":  [
-                                       840,
-                                       2340
+                                       848,
+                                       2352
                                    ],
-                      "id":  "e7348df1-50d8-4aa1-849f-a29bb03b3c65",
+                      "id":  "ccafd0cd-bd4a-4b3a-b99d-02aa70fec534",
                       "name":  "Fim · Cargo atualizado"
                   },
                   {
@@ -654,9 +653,9 @@
                       "typeVersion":  4.5,
                       "position":  [
                                        320,
-                                       2540
+                                       2544
                                    ],
-                      "id":  "b8a8e806-5ef8-47a2-bd0c-103b7f6cf5bc",
+                      "id":  "4609e9c2-b8d1-4f08-99ec-bdf3072dee52",
                       "name":  "Zap · Cargo negado",
                       "credentials":  {
                                           "httpHeaderAuth":  {
@@ -695,10 +694,10 @@
                       "type":  "n8n-nodes-base.if",
                       "typeVersion":  2.3,
                       "position":  [
-                                       840,
-                                       340
+                                       848,
+                                       352
                                    ],
-                      "id":  "114d57be-fb90-443f-92e8-12c84c071761",
+                      "id":  "a9508a2f-abb9-4f5d-b8f2-7e2a48e25148",
                       "name":  "Nome do contato mudou?"
                   },
                   {
@@ -727,10 +726,10 @@
                       "type":  "n8n-nodes-base.httpRequest",
                       "typeVersion":  4.5,
                       "position":  [
-                                       1860,
+                                       1872,
                                        2880
                                    ],
-                      "id":  "d243a4ae-0cd1-4b41-a41b-be2af5289c6e",
+                      "id":  "23fcd4fb-6f24-4a89-9d96-eeb4423fcb72",
                       "name":  "Zap · Análise registrada",
                       "credentials":  {
                                           "httpHeaderAuth":  {
@@ -748,10 +747,10 @@
                       "type":  "n8n-nodes-base.respondToWebhook",
                       "typeVersion":  1.5,
                       "position":  [
-                                       1860,
-                                       3080
+                                       1888,
+                                       3232
                                    ],
-                      "id":  "c09bf344-56b7-48dd-8b17-b3118e4992ed",
+                      "id":  "1b29f400-4359-4e3e-ac48-bd8cfb58c52d",
                       "name":  "Fim · Análise registrada"
                   },
                   {
@@ -761,10 +760,10 @@
                       "type":  "n8n-nodes-base.code",
                       "typeVersion":  2,
                       "position":  [
-                                       2120,
-                                       740
+                                       2128,
+                                       752
                                    ],
-                      "id":  "8ff658bb-a997-4196-bad8-ae80e5d6d6a0",
+                      "id":  "d5a69e60-84ae-4c10-a986-b52fb7b21d30",
                       "name":  "Montar resposta análises terra"
                   },
                   {
@@ -793,10 +792,10 @@
                       "type":  "n8n-nodes-base.httpRequest",
                       "typeVersion":  4.5,
                       "position":  [
-                                       2380,
-                                       740
+                                       2384,
+                                       752
                                    ],
-                      "id":  "03742257-bd98-4368-9efa-4aa18864fd81",
+                      "id":  "95917a7b-15b5-4722-8989-04a4c9c337cd",
                       "name":  "Zap · Análises terra de hoje",
                       "credentials":  {
                                           "httpHeaderAuth":  {
@@ -831,10 +830,10 @@
                       "type":  "n8n-nodes-base.httpRequest",
                       "typeVersion":  4.5,
                       "position":  [
-                                       2380,
-                                       940
+                                       2384,
+                                       944
                                    ],
-                      "id":  "cb54b77c-1049-43d5-a766-427dfa3c7eaf",
+                      "id":  "d3b22d96-b1b9-49d8-9ec8-bd5c6f3b75bc",
                       "name":  "Zap · Análises navio de hoje",
                       "credentials":  {
                                           "httpHeaderAuth":  {
@@ -850,10 +849,10 @@
                       "type":  "n8n-nodes-base.code",
                       "typeVersion":  2,
                       "position":  [
-                                       2120,
-                                       940
+                                       2128,
+                                       944
                                    ],
-                      "id":  "e53afcf6-31b4-4e47-91bc-8a5b07f1082c",
+                      "id":  "77876763-bf41-40cd-893c-b1aada92bde7",
                       "name":  "Montar resposta análises navio"
                   },
                   {
@@ -882,10 +881,10 @@
                       "type":  "n8n-nodes-base.httpRequest",
                       "typeVersion":  4.5,
                       "position":  [
-                                       840,
-                                       540
+                                       848,
+                                       544
                                    ],
-                      "id":  "68fc8cb3-09bd-46e4-b2ce-dee147d42be6",
+                      "id":  "9cbc9459-664b-4bd5-a4c0-850351f9a8a4",
                       "name":  "Zap · Não cadastrado",
                       "credentials":  {
                                           "httpHeaderAuth":  {
@@ -903,10 +902,10 @@
                       "type":  "n8n-nodes-base.respondToWebhook",
                       "typeVersion":  1.5,
                       "position":  [
-                                       1100,
-                                       540
+                                       1104,
+                                       544
                                    ],
-                      "id":  "8cd186b7-2839-41f7-8d95-c4d58fe3875f",
+                      "id":  "7cb6603e-9597-44b1-83c1-ce24de1318c5",
                       "name":  "Fim · Não cadastrado"
                   },
                   {
@@ -916,10 +915,10 @@
                       "type":  "n8n-nodes-base.code",
                       "typeVersion":  2,
                       "position":  [
-                                       2120,
-                                       1480
+                                       2128,
+                                       1488
                                    ],
-                      "id":  "c6fc7f68-3cad-479d-9aa1-30ea6103e01a",
+                      "id":  "58c395a4-7e92-49bb-b3cc-ddeb515c3dd9",
                       "name":  "Checar duplicata terra"
                   },
                   {
@@ -952,10 +951,10 @@
                       "type":  "n8n-nodes-base.if",
                       "typeVersion":  2.3,
                       "position":  [
-                                       2380,
-                                       1480
+                                       2384,
+                                       1488
                                    ],
-                      "id":  "30ff2507-a4c4-45a6-a56e-6dd9001a3aa0",
+                      "id":  "40a8e48f-7c5c-4505-93bc-9f362a3e0456",
                       "name":  "Duplicada? (terra)"
                   },
                   {
@@ -985,9 +984,9 @@
                       "typeVersion":  4.5,
                       "position":  [
                                        2640,
-                                       1480
+                                       1488
                                    ],
-                      "id":  "b76b4fce-9ba3-4bff-a970-273ce744c6b9",
+                      "id":  "51b90d5e-05fc-41fb-90b6-ad1ade3bce6e",
                       "name":  "Zap · Coleta terra duplicada",
                       "credentials":  {
                                           "httpHeaderAuth":  {
@@ -1005,10 +1004,10 @@
                       "type":  "n8n-nodes-base.respondToWebhook",
                       "typeVersion":  1.5,
                       "position":  [
-                                       2900,
-                                       1480
+                                       2912,
+                                       1488
                                    ],
-                      "id":  "00c9c4c8-f4d7-4fbd-b8e5-e1bd8d46538f",
+                      "id":  "4f4adb88-9e7f-4a42-8f87-62d0a5e6e33e",
                       "name":  "Fim · Coleta terra duplicada"
                   },
                   {
@@ -1021,9 +1020,9 @@
                       "typeVersion":  1.5,
                       "position":  [
                                        2640,
-                                       740
+                                       752
                                    ],
-                      "id":  "0eb618bf-8465-4105-980c-a90be15f485a",
+                      "id":  "afa2b73d-a675-4817-86bf-d1520c620f69",
                       "name":  "Fim · Análises terra de hoje"
                   },
                   {
@@ -1036,9 +1035,9 @@
                       "typeVersion":  1.5,
                       "position":  [
                                        2640,
-                                       940
+                                       944
                                    ],
-                      "id":  "94b880e6-3fb1-4777-be0a-71febf9be3b3",
+                      "id":  "342d76b0-c1fc-41bb-ba9e-e99e7f79cc24",
                       "name":  "Fim · Análises navio de hoje"
                   },
                   {
@@ -1048,10 +1047,10 @@
                       "type":  "n8n-nodes-base.code",
                       "typeVersion":  2,
                       "position":  [
-                                       2120,
-                                       1880
+                                       2128,
+                                       1888
                                    ],
-                      "id":  "6e0a8948-412c-4a1b-83d8-36b2ca87a22d",
+                      "id":  "bb479ce9-0394-49d8-903d-8c0e9a3a59ea",
                       "name":  "Checar duplicata navio"
                   },
                   {
@@ -1084,10 +1083,10 @@
                       "type":  "n8n-nodes-base.if",
                       "typeVersion":  2.3,
                       "position":  [
-                                       2380,
-                                       1880
+                                       2384,
+                                       1888
                                    ],
-                      "id":  "f978ecb0-c161-4a4e-af88-e4b68ee0f359",
+                      "id":  "92582e97-8a38-4aba-a3cc-96c2bc3dbfe1",
                       "name":  "Duplicada? (navio)"
                   },
                   {
@@ -1117,9 +1116,9 @@
                       "typeVersion":  4.5,
                       "position":  [
                                        2640,
-                                       1880
+                                       1888
                                    ],
-                      "id":  "d805526f-7fd4-4a5d-9293-5f992d813525",
+                      "id":  "1c005fea-dac7-4432-9ba5-4b1e3e71e88b",
                       "name":  "Zap · Coleta navio duplicada",
                       "credentials":  {
                                           "httpHeaderAuth":  {
@@ -1137,10 +1136,10 @@
                       "type":  "n8n-nodes-base.respondToWebhook",
                       "typeVersion":  1.5,
                       "position":  [
-                                       2900,
-                                       1880
+                                       2912,
+                                       1888
                                    ],
-                      "id":  "0e2b38e7-7fee-45e0-8a0f-4f54a0574338",
+                      "id":  "eccf64cc-19de-4e82-a678-97f2d1dcb7f7",
                       "name":  "Fim · Coleta navio duplicada"
                   },
                   {
@@ -1150,10 +1149,10 @@
                       "type":  "n8n-nodes-base.code",
                       "typeVersion":  2,
                       "position":  [
-                                       2120,
-                                       2920
+                                       2128,
+                                       2928
                                    ],
-                      "id":  "6621cc7e-61f4-439b-8d62-ca29edd283a5",
+                      "id":  "34bed500-ea95-4378-a0a7-210043f1c0d4",
                       "name":  "Montar resposta concluir drops"
                   },
                   {
@@ -1182,10 +1181,10 @@
                       "type":  "n8n-nodes-base.httpRequest",
                       "typeVersion":  4.5,
                       "position":  [
-                                       2380,
-                                       2920
+                                       2384,
+                                       2928
                                    ],
-                      "id":  "9a432e1b-5c09-4544-b455-353cc9e86d83",
+                      "id":  "b0a3f565-9ee3-47a4-b3b4-0cb53638444d",
                       "name":  "Zap · Drops concluídos",
                       "credentials":  {
                                           "httpHeaderAuth":  {
@@ -1204,9 +1203,9 @@
                       "typeVersion":  1.5,
                       "position":  [
                                        2640,
-                                       2920
+                                       2928
                                    ],
-                      "id":  "3087e9ea-d64e-4476-94c3-1848e6a92270",
+                      "id":  "855c9e26-76d1-45bf-a4ef-2711820c2fb1",
                       "name":  "Fim · Drops concluídos"
                   },
                   {
@@ -1216,10 +1215,10 @@
                       "type":  "n8n-nodes-base.code",
                       "typeVersion":  2,
                       "position":  [
-                                       2120,
+                                       2128,
                                        3120
                                    ],
-                      "id":  "3a675346-7c44-43da-bead-a33eab9a3e31",
+                      "id":  "1a25710c-8429-4dd9-b094-86375b9d2a1c",
                       "name":  "Montar pergunta leituras terra"
                   },
                   {
@@ -1248,10 +1247,10 @@
                       "type":  "n8n-nodes-base.httpRequest",
                       "typeVersion":  4.5,
                       "position":  [
-                                       2380,
+                                       2384,
                                        3120
                                    ],
-                      "id":  "94bbfaa3-d1d8-45e0-80c6-5aa0575df2bb",
+                      "id":  "d0bcdd3b-0c22-4c00-a6e0-8e4b16c3bd15",
                       "name":  "Zap · Pergunta leituras terra",
                       "credentials":  {
                                           "httpHeaderAuth":  {
@@ -1272,7 +1271,7 @@
                                        2640,
                                        3120
                                    ],
-                      "id":  "3f801886-89b2-48ba-969a-7f6f434516a1",
+                      "id":  "79447c34-ab73-4963-8c05-fe391e6b629e",
                       "name":  "Fim · Pergunta leituras terra"
                   },
                   {
@@ -1282,10 +1281,10 @@
                       "type":  "n8n-nodes-base.code",
                       "typeVersion":  2,
                       "position":  [
-                                       2120,
-                                       3520
+                                       2128,
+                                       3632
                                    ],
-                      "id":  "159f0c6e-b019-4434-ae22-5197c689cb40",
+                      "id":  "91d4f2e1-6efe-4406-ad8c-9a4e5cb223ac",
                       "name":  "Montar pergunta leituras navio"
                   },
                   {
@@ -1314,10 +1313,10 @@
                       "type":  "n8n-nodes-base.httpRequest",
                       "typeVersion":  4.5,
                       "position":  [
-                                       2380,
+                                       2384,
                                        3520
                                    ],
-                      "id":  "da077058-f0c1-4475-957b-94e66562af0e",
+                      "id":  "9c02a851-82ea-40f4-bff2-0b265493e075",
                       "name":  "Zap · Pergunta leituras navio",
                       "credentials":  {
                                           "httpHeaderAuth":  {
@@ -1338,7 +1337,7 @@
                                        2640,
                                        3520
                                    ],
-                      "id":  "d125edd5-4dc4-4421-a74b-47e7287d9139",
+                      "id":  "143e11bd-595e-45a4-9b77-51e16a547e85",
                       "name":  "Fim · Pergunta leituras navio"
                   },
                   {
@@ -1348,10 +1347,10 @@
                       "type":  "n8n-nodes-base.code",
                       "typeVersion":  2,
                       "position":  [
-                                       2120,
-                                       4120
+                                       2128,
+                                       4128
                                    ],
-                      "id":  "1b3ae529-0209-4fea-9f34-28b9d197fbf7",
+                      "id":  "df7cb8e7-8841-4dac-a72c-2785f65d0d12",
                       "name":  "Processar sim ou não"
                   },
                   {
@@ -1384,10 +1383,10 @@
                       "type":  "n8n-nodes-base.if",
                       "typeVersion":  2.3,
                       "position":  [
-                                       2380,
-                                       4520
+                                       2384,
+                                       4528
                                    ],
-                      "id":  "1b081ec9-550b-42a1-8408-13f4e4d9b1bd",
+                      "id":  "f7a826b7-4485-4941-adc0-0b58d553fba0",
                       "name":  "Apagar pendência?"
                   },
                   {
@@ -1417,9 +1416,9 @@
                       "typeVersion":  4.5,
                       "position":  [
                                        2640,
-                                       4120
+                                       4128
                                    ],
-                      "id":  "76500ffd-99f7-410c-87de-fd45b41306a5",
+                      "id":  "8904f320-56e9-4ff5-bf0a-623097e58b4b",
                       "name":  "Zap · Resposta do sim ou não",
                       "credentials":  {
                                           "httpHeaderAuth":  {
@@ -1437,10 +1436,10 @@
                       "type":  "n8n-nodes-base.respondToWebhook",
                       "typeVersion":  1.5,
                       "position":  [
-                                       2900,
-                                       4120
+                                       2912,
+                                       4128
                                    ],
-                      "id":  "5c336a7a-785d-4fd1-8f84-597b41571257",
+                      "id":  "fa511b90-48a0-4db5-bcb4-ff4ae399e3d9",
                       "name":  "Fim · Resposta do sim ou não"
                   },
                   {
@@ -1452,10 +1451,10 @@
                       "type":  "n8n-nodes-base.respondToWebhook",
                       "typeVersion":  1.5,
                       "position":  [
-                                       580,
-                                       2540
+                                       592,
+                                       2544
                                    ],
-                      "id":  "e241c8f2-cd50-4913-9a67-556119732939",
+                      "id":  "90f07eae-1d3d-4bf5-97fa-8129b798864c",
                       "name":  "Fim · Cargo negado"
                   },
                   {
@@ -1484,10 +1483,10 @@
                       "type":  "n8n-nodes-base.httpRequest",
                       "typeVersion":  4.5,
                       "position":  [
-                                       840,
-                                       1540
+                                       848,
+                                       1552
                                    ],
-                      "id":  "dee281a5-49d1-4eff-8f7d-010312e767c2",
+                      "id":  "beb34c46-8fc4-4ad1-927f-ab840f655bf5",
                       "name":  "Zap · Resposta da IA",
                       "credentials":  {
                                           "httpHeaderAuth":  {
@@ -1505,10 +1504,10 @@
                       "type":  "n8n-nodes-base.respondToWebhook",
                       "typeVersion":  1.5,
                       "position":  [
-                                       1100,
-                                       1540
+                                       1104,
+                                       1552
                                    ],
-                      "id":  "b7afc7c1-edf8-4e9d-a570-6a45182cb8e4",
+                      "id":  "d1afd34c-ee96-4a52-b10c-03836fe13d13",
                       "name":  "Fim · Resposta da IA"
                   },
                   {
@@ -1536,10 +1535,10 @@
                       "type":  "@n8n/n8n-nodes-langchain.googleGemini",
                       "typeVersion":  1.2,
                       "position":  [
-                                       60,
-                                       1340
+                                       64,
+                                       1344
                                    ],
-                      "id":  "e4d9ede9-594b-42cd-b31f-53d2539af147",
+                      "id":  "e4b76678-ebbc-4124-b621-ca54e6ce568e",
                       "name":  "Gemini · Interpretar mensagem",
                       "retryOnFail":  true,
                       "waitBetweenTries":  3000,
@@ -1560,9 +1559,9 @@
                       "typeVersion":  2,
                       "position":  [
                                        320,
-                                       1340
+                                       1344
                                    ],
-                      "id":  "0337f226-689d-49d5-94a1-ba73c1d77413",
+                      "id":  "05b003fd-5182-4d5e-af77-783082a8bccb",
                       "name":  "Validar resposta da IA"
                   },
                   {
@@ -1595,10 +1594,10 @@
                       "type":  "n8n-nodes-base.if",
                       "typeVersion":  2.3,
                       "position":  [
-                                       580,
-                                       1340
+                                       592,
+                                       1344
                                    ],
-                      "id":  "d2ee272f-b033-4133-970b-7c089957dcf1",
+                      "id":  "3b3c3402-84ba-4a87-b17b-b0b6ed8874eb",
                       "name":  "IA entendeu?"
                   },
                   {
@@ -1631,10 +1630,10 @@
                       "type":  "n8n-nodes-base.if",
                       "typeVersion":  2.3,
                       "position":  [
-                                       2380,
+                                       2384,
                                        4720
                                    ],
-                      "id":  "96fd89bb-94fb-4480-98e8-3cbecddcc4f1",
+                      "id":  "b8f230bc-6dc0-4100-8b7e-ace675c9fd05",
                       "name":  "Reenviar comando da IA?"
                   },
                   {
@@ -1651,10 +1650,10 @@
                       "type":  "n8n-nodes-base.httpRequest",
                       "typeVersion":  4.5,
                       "position":  [
-                                       840,
-                                       1740
+                                       848,
+                                       1744
                                    ],
-                      "id":  "f64232ef-6b86-4662-ba56-099a299c174f",
+                      "id":  "99e0a390-6e77-4a83-a29d-28e6f6360ae7",
                       "name":  "Reenviar ao webhook"
                   },
                   {
@@ -1687,10 +1686,10 @@
                       "type":  "n8n-nodes-base.if",
                       "typeVersion":  2.3,
                       "position":  [
-                                       2380,
-                                       4120
+                                       2384,
+                                       4128
                                    ],
-                      "id":  "a5efea38-4412-411f-9595-5e77a71734cb",
+                      "id":  "74f64e46-ef4a-4626-a886-2829ce721a5e",
                       "name":  "Tem resposta?"
                   },
                   {
@@ -2146,6 +2145,31 @@
                                                                                          },
                                                                           "renameOutput":  true,
                                                                           "outputKey":  "erro_ia"
+                                                                      },
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "caseSensitive":  true,
+                                                                                                             "leftValue":  "",
+                                                                                                             "typeValidation":  "strict",
+                                                                                                             "version":  3
+                                                                                                         },
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "id":  "6d4ba6e0-3200-49dc-993e-702c658155be",
+                                                                                                                    "leftValue":  "={{ $json.tipo }}",
+                                                                                                                    "rightValue":  "relatorio_nfc",
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "equals",
+                                                                                                                                     "name":  "filter.operator.equals"
+                                                                                                                                 }
+                                                                                                                }
+                                                                                                            ],
+                                                                                             "combinator":  "and"
+                                                                                         },
+                                                                          "renameOutput":  true,
+                                                                          "outputKey":  "relatorio_nfc"
                                                                       }
                                                                   ]
                                                    },
@@ -2156,10 +2180,10 @@
                       "type":  "n8n-nodes-base.switch",
                       "typeVersion":  3.4,
                       "position":  [
-                                       1100,
-                                       140
+                                       1104,
+                                       144
                                    ],
-                      "id":  "956f295d-bba0-49e8-9a55-9396d1703982",
+                      "id":  "f1d5f07b-85a2-4c3f-8ee8-b4622aa2b8cb",
                       "name":  "Rotear comando"
                   },
                   {
@@ -2192,10 +2216,10 @@
                       "type":  "n8n-nodes-base.if",
                       "typeVersion":  2.3,
                       "position":  [
-                                       580,
-                                       1540
+                                       592,
+                                       1552
                                    ],
-                      "id":  "b8f3d89b-e319-426a-94f9-6b98cdc0b994",
+                      "id":  "e02f6f83-ceeb-4faa-9203-ce1a73e6e644",
                       "name":  "Tem resposta? (IA)"
                   },
                   {
@@ -2228,10 +2252,10 @@
                       "type":  "n8n-nodes-base.if",
                       "typeVersion":  2.3,
                       "position":  [
-                                       580,
-                                       1740
+                                       592,
+                                       1744
                                    ],
-                      "id":  "03a8347f-657a-4f3e-951b-01efb3099dfe",
+                      "id":  "e168443a-fd1a-4847-b552-11ea41e9e235",
                       "name":  "Reenviar consulta?"
                   },
                   {
@@ -2245,10 +2269,10 @@
                       "type":  "n8n-nodes-base.postgres",
                       "typeVersion":  2.7,
                       "position":  [
-                                       1860,
-                                       140
+                                       1872,
+                                       144
                                    ],
-                      "id":  "a5fc4b9a-7d74-4bfe-b73c-760779f294ca",
+                      "id":  "f43d5f04-4548-4b3f-9c53-505c58886268",
                       "name":  "BD · Drops de hoje",
                       "alwaysOutputData":  true,
                       "credentials":  {
@@ -2269,10 +2293,10 @@
                       "type":  "n8n-nodes-base.postgres",
                       "typeVersion":  2.7,
                       "position":  [
-                                       1860,
-                                       340
+                                       1872,
+                                       352
                                    ],
-                      "id":  "cf3003b6-7f71-48d7-81e6-066bfa7001e9",
+                      "id":  "14ae7731-dc85-4727-8392-a27457d8e211",
                       "name":  "BD · Bags para descartar",
                       "credentials":  {
                                           "postgres":  {
@@ -2292,10 +2316,10 @@
                       "type":  "n8n-nodes-base.postgres",
                       "typeVersion":  2.7,
                       "position":  [
-                                       1860,
-                                       540
+                                       1872,
+                                       544
                                    ],
-                      "id":  "ea5d07fe-6b40-49ec-8d5f-9f1bdbdc3484",
+                      "id":  "8c4b4166-dbef-4157-8345-838074308425",
                       "name":  "BD · Potes para descartar",
                       "credentials":  {
                                           "postgres":  {
@@ -2330,10 +2354,10 @@
                       "type":  "n8n-nodes-base.httpRequest",
                       "typeVersion":  4.5,
                       "position":  [
-                                       2380,
-                                       540
+                                       2384,
+                                       544
                                    ],
-                      "id":  "63ca5894-3fdb-44f8-8e48-6cdc305f9e21",
+                      "id":  "cc085249-35f0-4843-962d-a4b10e6f04e2",
                       "name":  "Zap · Potes para descartar",
                       "credentials":  {
                                           "httpHeaderAuth":  {
@@ -2353,10 +2377,10 @@
                       "type":  "n8n-nodes-base.postgres",
                       "typeVersion":  2.7,
                       "position":  [
-                                       1860,
-                                       740
+                                       1872,
+                                       752
                                    ],
-                      "id":  "9fd532cd-bb0f-4be1-8e58-439c84054829",
+                      "id":  "2fa81dc4-5bf2-487a-9b7a-b9dee6f4ac1b",
                       "name":  "BD · Análises terra de hoje",
                       "alwaysOutputData":  true,
                       "credentials":  {
@@ -2377,10 +2401,10 @@
                       "type":  "n8n-nodes-base.postgres",
                       "typeVersion":  2.7,
                       "position":  [
-                                       1860,
-                                       940
+                                       1872,
+                                       944
                                    ],
-                      "id":  "db51469a-a91c-4739-a37d-218165945161",
+                      "id":  "7593a2fe-6009-475c-a5c9-61a94e5edffd",
                       "name":  "BD · Análises navio de hoje",
                       "alwaysOutputData":  true,
                       "credentials":  {
@@ -2401,10 +2425,10 @@
                       "type":  "n8n-nodes-base.postgres",
                       "typeVersion":  2.7,
                       "position":  [
-                                       580,
-                                       140
+                                       592,
+                                       144
                                    ],
-                      "id":  "41ed023a-c71d-4d8a-81e8-75c9dde21f59",
+                      "id":  "38fc431a-9e49-4f90-bfe3-821cf37db119",
                       "name":  "BD · Buscar usuários",
                       "alwaysOutputData":  true,
                       "credentials":  {
@@ -2425,10 +2449,10 @@
                       "type":  "n8n-nodes-base.postgres",
                       "typeVersion":  2.7,
                       "position":  [
-                                       1100,
-                                       340
+                                       608,
+                                       352
                                    ],
-                      "id":  "d89a9d3a-1dbc-4f3e-8fa5-b031e4327349",
+                      "id":  "e766fea1-51ac-42be-8d9d-7211ecb44e72",
                       "name":  "BD · Atualizar nome",
                       "alwaysOutputData":  true,
                       "credentials":  {
@@ -2449,10 +2473,10 @@
                       "type":  "n8n-nodes-base.postgres",
                       "typeVersion":  2.7,
                       "position":  [
-                                       1860,
-                                       1480
+                                       1872,
+                                       1488
                                    ],
-                      "id":  "fc299ad4-a0be-4fb9-a8d8-d4d943aea630",
+                      "id":  "ebc55bed-7720-43e6-960f-5b04d405b187",
                       "name":  "BD · Coleta terra já existe?",
                       "alwaysOutputData":  true,
                       "credentials":  {
@@ -2476,7 +2500,7 @@
                                        2640,
                                        1680
                                    ],
-                      "id":  "ffff218c-94b4-4505-bbb0-8fc6b8777bf4",
+                      "id":  "414ab9a1-edcf-4ef5-9c6a-04e1762e96f7",
                       "name":  "BD · Gravar coleta terra",
                       "alwaysOutputData":  true,
                       "credentials":  {
@@ -2497,10 +2521,10 @@
                       "type":  "n8n-nodes-base.postgres",
                       "typeVersion":  2.7,
                       "position":  [
-                                       1860,
-                                       1880
+                                       1872,
+                                       1888
                                    ],
-                      "id":  "f3b4b50e-4ad2-439f-9522-09e77c44a655",
+                      "id":  "7325f897-f7d8-4837-9637-c17f8f34ad3c",
                       "name":  "BD · Coleta navio já existe?",
                       "alwaysOutputData":  true,
                       "credentials":  {
@@ -2524,7 +2548,7 @@
                                        2640,
                                        2080
                                    ],
-                      "id":  "fad6fd1f-cc43-4e10-acbf-b075255376e6",
+                      "id":  "ea78375b-b181-4909-bdee-ede66e89f28d",
                       "name":  "BD · Gravar coleta navio",
                       "alwaysOutputData":  true,
                       "credentials":  {
@@ -2546,9 +2570,9 @@
                       "typeVersion":  2.7,
                       "position":  [
                                        320,
-                                       2340
+                                       2352
                                    ],
-                      "id":  "d0cb185f-8474-4c92-be95-a8fc31381b84",
+                      "id":  "7430cc1f-38df-4ddc-8967-3afd67654adf",
                       "name":  "BD · Gravar cargo",
                       "alwaysOutputData":  true,
                       "credentials":  {
@@ -2569,10 +2593,10 @@
                       "type":  "n8n-nodes-base.postgres",
                       "typeVersion":  2.7,
                       "position":  [
-                                       1860,
-                                       2920
+                                       1888,
+                                       3056
                                    ],
-                      "id":  "8f8d3896-db9a-4b98-9c4f-eb7b2c412907",
+                      "id":  "607d840a-158d-43e0-80ce-56491292a817",
                       "name":  "BD · Concluir drops",
                       "alwaysOutputData":  true,
                       "credentials":  {
@@ -2593,10 +2617,10 @@
                       "type":  "n8n-nodes-base.postgres",
                       "typeVersion":  2.7,
                       "position":  [
-                                       1860,
+                                       1872,
                                        2480
                                    ],
-                      "id":  "513b5e6c-9b1c-4260-b682-65f03c99897e",
+                      "id":  "1cb07c67-329e-46f0-a981-6f82103b336c",
                       "name":  "BD · Gravar análise",
                       "alwaysOutputData":  true,
                       "credentials":  {
@@ -2613,10 +2637,10 @@
                       "type":  "n8n-nodes-base.code",
                       "typeVersion":  2,
                       "position":  [
-                                       1860,
-                                       2680
+                                       1872,
+                                       2688
                                    ],
-                      "id":  "0554115c-67ae-4858-8f53-13013fb45c0a",
+                      "id":  "e16adbb7-e96f-4f13-8145-f8e96e41249c",
                       "name":  "Montar resposta análise"
                   },
                   {
@@ -2630,10 +2654,10 @@
                       "type":  "n8n-nodes-base.postgres",
                       "typeVersion":  2.7,
                       "position":  [
-                                       1860,
-                                       3120
+                                       1888,
+                                       3488
                                    ],
-                      "id":  "c396f789-ed3f-40ce-bdca-ad9c486e25b7",
+                      "id":  "a5513487-eff6-4af2-aed3-3b3dbbcbdb4b",
                       "name":  "BD · Leituras terra de hoje",
                       "alwaysOutputData":  true,
                       "credentials":  {
@@ -2654,10 +2678,10 @@
                       "type":  "n8n-nodes-base.postgres",
                       "typeVersion":  2.7,
                       "position":  [
-                                       2380,
-                                       3320
+                                       2384,
+                                       3328
                                    ],
-                      "id":  "aed321b2-24de-4064-9427-dc32a9628582",
+                      "id":  "fd8448d2-34ca-431a-9641-f19874a41131",
                       "name":  "BD · Salvar pendência terra",
                       "alwaysOutputData":  true,
                       "credentials":  {
@@ -2678,10 +2702,10 @@
                       "type":  "n8n-nodes-base.postgres",
                       "typeVersion":  2.7,
                       "position":  [
-                                       1860,
-                                       3520
+                                       1872,
+                                       3712
                                    ],
-                      "id":  "384ebb99-5fde-4573-b2a4-fdb8d19ef3e1",
+                      "id":  "fa1d4d3c-3a3a-48a3-a5f4-e799f82f6c22",
                       "name":  "BD · Leituras navio de hoje",
                       "alwaysOutputData":  true,
                       "credentials":  {
@@ -2702,10 +2726,10 @@
                       "type":  "n8n-nodes-base.postgres",
                       "typeVersion":  2.7,
                       "position":  [
-                                       2380,
-                                       3720
+                                       2384,
+                                       3728
                                    ],
-                      "id":  "702f812d-9e66-4a70-b35b-68d2ac645eab",
+                      "id":  "4c456ea5-6233-4320-a352-52a292abef1f",
                       "name":  "BD · Salvar pendência navio",
                       "alwaysOutputData":  true,
                       "credentials":  {
@@ -2726,10 +2750,10 @@
                       "type":  "n8n-nodes-base.postgres",
                       "typeVersion":  2.7,
                       "position":  [
-                                       1860,
-                                       4120
+                                       1872,
+                                       4128
                                    ],
-                      "id":  "9881ca6f-a473-489c-8b0e-84efe03c14f4",
+                      "id":  "aa070935-1dd9-4d60-88c8-f9ec4c7d6fb8",
                       "name":  "BD · Buscar pendência",
                       "alwaysOutputData":  true,
                       "credentials":  {
@@ -2750,10 +2774,10 @@
                       "type":  "n8n-nodes-base.postgres",
                       "typeVersion":  2.7,
                       "position":  [
-                                       2380,
+                                       2384,
                                        4320
                                    ],
-                      "id":  "01239701-bc40-49b3-be47-548a12f6ccb7",
+                      "id":  "e500794e-0a25-4eae-82c6-3514cfe3fa9f",
                       "name":  "BD · Concluir leituras",
                       "alwaysOutputData":  true,
                       "credentials":  {
@@ -2775,9 +2799,9 @@
                       "typeVersion":  2.7,
                       "position":  [
                                        2640,
-                                       4520
+                                       4528
                                    ],
-                      "id":  "8bc9b635-2674-4a1a-9082-6e2c276faa14",
+                      "id":  "058a51f1-da3f-4669-8ac5-84f7bb165d49",
                       "name":  "BD · Apagar pendência",
                       "alwaysOutputData":  true,
                       "credentials":  {
@@ -2798,10 +2822,10 @@
                       "type":  "n8n-nodes-base.postgres",
                       "typeVersion":  2.7,
                       "position":  [
-                                       840,
-                                       1340
+                                       848,
+                                       1344
                                    ],
-                      "id":  "b7ae6852-d85e-4134-9d8e-9d54e6792411",
+                      "id":  "c6bfc816-426e-457f-9670-dfdb5702a469",
                       "name":  "BD · Salvar pendência IA",
                       "alwaysOutputData":  true,
                       "credentials":  {
@@ -2810,6 +2834,102 @@
                                                            "name":  "Postgres LabFlow"
                                                        }
                                       }
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "executeQuery",
+                                         "query":  "SELECT bloco, amostra, linha, ordem, navio, tanque, lido\nFROM vw_relatorio_nfc\nWHERE dia = CURRENT_DATE\n  AND (NULLIF($1::text, \u0027\u0027) IS NULL OR bloco = $1::text)\nORDER BY CASE bloco WHEN \u0027Tank farm\u0027 THEN 1 ELSE 2 END,\n         CASE amostra WHEN \u0027Normal\u0027 THEN 1 WHEN \u0027Stress\u0027 THEN 2 ELSE 3 END,\n         ordem, navio, length(tanque), tanque;",
+                                         "options":  {
+                                                         "queryReplacement":  "={{ [$json.blocoFiltro || \"\"] }}"
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.postgres",
+                      "typeVersion":  2.7,
+                      "position":  [
+                                       1872,
+                                       1144
+                                   ],
+                      "id":  "f95ba683-7e42-4880-995b-b65da256bd57",
+                      "name":  "BD · Relatório do dia",
+                      "alwaysOutputData":  true,
+                      "credentials":  {
+                                          "postgres":  {
+                                                           "id":  "POSTGRES_CREDENTIAL_ID",
+                                                           "name":  "Postgres LabFlow"
+                                                       }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Monta o relatório do dia no formato do relatório oficial de microbiologia.\n// Toda linha aparece, mesmo vazia (\"-\"), na ordem da planilha.\nconst rows = $input.all().map(i =\u003e i.json).filter(r =\u003e r.linha);\nconst item = $(\u0027Interpretar comando\u0027).first().json;\nconst hoje = new Date().toLocaleDateString(\u0027pt-BR\u0027, { timeZone: \u0027America/Sao_Paulo\u0027 });\n\nconst LINHAS_ANALISE = [\u0027C.T 48h\u0027, \u0027B.L 72h\u0027, \u0027B.L 120h\u0027, \u0027Psicrotróficos 120h\u0027, \u0027Psicrotróficos 240h\u0027];\nconst SECOES = [\n  [\u0027Normal\u0027, \u0027AMOSTRA NORMAL\u0027, LINHAS_ANALISE],\n  [\u0027Stress\u0027, \u0027AMOSTRA STRESS\u0027, LINHAS_ANALISE],\n  [\u0027Drops\u0027,  \u0027DROPS\u0027,          [\u0027Drop 5\u0027, \u0027Drop 10\u0027, \u0027Drop 15\u0027]]\n];\nconst TITULOS = { \u0027Tank farm\u0027: \u0027NFC — Tank farm\u0027, \u0027Navio\u0027: \u0027NFC — Navio\u0027 };\nconst blocos = item.blocoFiltro ? [item.blocoFiltro] : [\u0027Tank farm\u0027, \u0027Navio\u0027];\n\nconst rotulo = r =\u003e (r.lido ? `${r.tanque} ✅` : r.tanque);\n\n// Tank farm: \"37 ✅, 41\". Navio: \"O.SUN 156 (1A ✅, 1F); O.SKY 133 (2P)\".\nfunction celula(lista, bloco) {\n  if (lista.length === 0) return \u0027-\u0027;\n  if (bloco === \u0027Tank farm\u0027) return lista.map(rotulo).join(\u0027, \u0027);\n  const porNavio = {};\n  lista.forEach(r =\u003e (porNavio[r.navio || \u0027sem navio\u0027] ??= []).push(rotulo(r)));\n  return Object.entries(porNavio).map(([navio, tanques]) =\u003e `${navio} (${tanques.join(\u0027, \u0027)})`).join(\u0027; \u0027);\n}\n\nlet total = 0, lidos = 0;\nconst partes = [`📋 *Relatório do dia ${hoje}*`];\n\nfor (const bloco of blocos) {\n  partes.push(\u0027\u0027, `*${TITULOS[bloco]}*`);\n  for (const [amostra, titulo, linhas] of SECOES) {\n    partes.push(\u0027\u0027, titulo);\n    for (const linha of linhas) {\n      const lista = rows.filter(r =\u003e r.bloco === bloco \u0026\u0026 r.amostra === amostra \u0026\u0026 r.linha === linha);\n      total += lista.length;\n      lidos += lista.filter(r =\u003e r.lido).length;\n      partes.push(`${linha}: ${celula(lista, bloco)}`);\n    }\n    // TAB do tank farm entra na fase B (docs/concentrado.md)\n    if (amostra === \u0027Drops\u0027 \u0026\u0026 bloco === \u0027Tank farm\u0027) partes.push(\u0027TAB: -\u0027);\n  }\n}\n\npartes.push(\u0027\u0027, total ? `✅ = lido (${lidos} de ${total})` : \u0027Nenhuma leitura prevista para hoje.\u0027);\n\nreturn [{ json: { ...item, textoResposta: partes.join(\u0027\\n\u0027) } }];"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       2128,
+                                       1144
+                                   ],
+                      "id":  "aa3f5fe3-3a81-445b-b9d6-7680650e23c4",
+                      "name":  "Montar relatório do dia"
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "http://labflow-evolution:8080/message/sendText/labflow2",
+                                         "authentication":  "genericCredentialType",
+                                         "genericAuthType":  "httpHeaderAuth",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "bodyParameters":  {
+                                                                "parameters":  [
+                                                                                   {
+                                                                                       "name":  "number",
+                                                                                       "value":  "={{ $(\u0027Interpretar comando\u0027).item.json.numero.replace(\u0027@s.whatsapp.net\u0027, \u0027\u0027) }}"
+                                                                                   },
+                                                                                   {
+                                                                                       "name":  "text",
+                                                                                       "value":  "={{ $json.textoResposta }}"
+                                                                                   }
+                                                                               ]
+                                                            },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.5,
+                      "position":  [
+                                       2384,
+                                       1144
+                                   ],
+                      "id":  "5cc11c60-9829-4b25-8723-b665fc1a3977",
+                      "name":  "Zap · Relatório do dia",
+                      "credentials":  {
+                                          "httpHeaderAuth":  {
+                                                                 "id":  "EVOLUTION_CREDENTIAL_ID",
+                                                                 "name":  "Evolution API (servidor)"
+                                                             }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.respondToWebhook",
+                      "typeVersion":  1.5,
+                      "position":  [
+                                       2640,
+                                       1144
+                                   ],
+                      "id":  "dfe7d12f-e406-4fd4-9624-5d79fa95fe35",
+                      "name":  "Fim · Relatório do dia"
                   }
               ],
     "pinData":  {
@@ -3473,6 +3593,13 @@
                                                                     "type":  "main",
                                                                     "index":  0
                                                                 }
+                                                            ],
+                                                            [
+                                                                {
+                                                                    "node":  "BD · Relatório do dia",
+                                                                    "type":  "main",
+                                                                    "index":  0
+                                                                }
                                                             ]
                                                         ]
                                            },
@@ -3702,14 +3829,47 @@
                                                                        }
                                                                    ]
                                                                ]
-                                                  }
+                                                  },
+                        "BD · Relatório do dia":  {
+                                                      "main":  [
+                                                                   [
+                                                                       {
+                                                                           "node":  "Montar relatório do dia",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ]
+                                                               ]
+                                                  },
+                        "Montar relatório do dia":  {
+                                                        "main":  [
+                                                                     [
+                                                                         {
+                                                                             "node":  "Zap · Relatório do dia",
+                                                                             "type":  "main",
+                                                                             "index":  0
+                                                                         }
+                                                                     ]
+                                                                 ]
+                                                    },
+                        "Zap · Relatório do dia":  {
+                                                       "main":  [
+                                                                    [
+                                                                        {
+                                                                            "node":  "Fim · Relatório do dia",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        }
+                                                                    ]
+                                                                ]
+                                                   }
                     },
     "active":  true,
     "settings":  {
                      "executionOrder":  "v1",
                      "binaryMode":  "separate"
                  },
-    "versionId":  "8f2b49e3-bd26-44cf-8541-7762c169d215",
+    "versionId":  "1cb5f371-4c7e-4f2a-ac54-d5022aeab718",
     "meta":  {
 
              },
