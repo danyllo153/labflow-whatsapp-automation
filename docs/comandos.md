@@ -167,6 +167,39 @@ Psicrotroficos (240hrs) do(s) Tanques 42 e 41 analise Stress
 
 Leituras já concluídas continuam aparecendo, marcadas com ✅, e o fim da resposta mostra o total (ex: `✅ = lido (2 de 5)`). No WORT, o tanque só ganha ✅ quando Profundidade e Superfície estão lidas.
 
+## 8.1 Relatório do dia (tanques)
+
+```
+relatório do dia tanques terra
+relatório do dia tanques navio
+relatório do dia
+```
+
+Monta o que sai hoje no formato do relatório diário de microbiologia: uma linha para cada leitura (C.T 48h, B.L 72h, B.L 120h, Psicrotróficos 120h e 240h) em amostra normal e stress, mais os drops. Toda linha aparece, com `-` quando não há nada. Os dados vêm da view `vw_relatorio_nfc` (`db/migrations/003_relatorio_nfc.sql`).
+
+```
+📋 Relatório do dia 05/10/2026
+
+NFC — Tank farm
+
+AMOSTRA NORMAL
+C.T 48h: 45 ✅
+B.L 72h: -
+B.L 120h: 44
+Psicrotróficos 120h: 44
+Psicrotróficos 240h: -
+...
+DROPS
+Drop 5: 42, 43, 44, 46 ✅, 47
+Drop 10: 46
+Drop 15: -
+TAB: -
+
+✅ = lido (2 de 9)
+```
+
+No navio, os tanques vêm agrupados por navio, como na planilha: `O.SUN 156 (1A ✅, 1F); O.SKY 133 (2P)`. `relatório do dia` sozinho traz os dois blocos (tank farm e navio); quando o módulo de concentrado existir, ele passa a ser o relatório completo (ver `docs/concentrado.md`). A linha TAB fica com `-` até a fase B.
+
 ## 9. Concluir drops do dia
 
 ```
@@ -287,6 +320,7 @@ consultar análises
 consultar tanques
 consultar descarte
 consultar cargos
+consultar relatório
 ```
 
 | Assunto | O que mostra |
@@ -297,5 +331,6 @@ consultar cargos
 | `leituras` | concluir leituras |
 | `descarte` (ou `bags`, `potes`) | consultar bags e potes |
 | `cargos` (ou `gerenciar cargos`, `usuários`) | trocar cargo (somente Admin) |
+| `relatório` | relatório do dia dos tanques |
 
 `comandos` sozinho mostra o menu de assuntos. Um assunto que não existe (`comandos para xyz`) recebe o aviso e o mesmo menu. A frase `consultar drops` mostra a *lista de comandos* de drops; para ver os drops de hoje, o comando continua sendo `drops para hoje`.

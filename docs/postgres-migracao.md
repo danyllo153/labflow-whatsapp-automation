@@ -28,6 +28,7 @@ rascunho e ainda não foi executada. O n8n já tem a credencial Postgres.
 |---|---|
 | [`001_tanques.sql`](../db/migrations/001_tanques.sql) | `usuarios`, `navios`, `coletas`, `drops`, `arquivo_amostras`, `analises`, `confirmacoes` |
 | [`002_concentrado.sql`](../db/migrations/002_concentrado.sql) | `fabricas`, `itens`, `loads`, `recebimento_lotes`, `embarques`, `embarque_loads`, `embarque_amostras`, `compostas`, `composta_itens`, `testes_composta` |
+| [`003_relatorio_nfc.sql`](../db/migrations/003_relatorio_nfc.sql) | view `vw_relatorio_nfc`: uma linha por tanque em cada linha do relatório do dia (NFC), aplicada em 02/10/2026 |
 
 Aplicadas em ordem, uma de cada vez. A `002` é rascunho: os comandos, as
 permissões e os prazos finais de TAB e Coliformes ainda serão definidos.
