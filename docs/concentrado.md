@@ -188,7 +188,7 @@ leituras_finalizadas(usuario_id, data, finalizada_em)            -- barreira do 
 | Fase | Entrega |
 |---|---|
 | A | `relatório do dia` com os blocos de NFC (tanques terra e navio), com os dados que já existem — **feito em 02/10/2026** (`003_relatorio_nfc.sql`, comando em `docs/comandos.md` 8.1) |
-| B | Recebimento (loads, lotes) + compostas + **TAB** completo |
+| B | Recebimento (loads, lotes) + compostas + **TAB** completo — **recebimento e compostas feitos em 02/10/2026** (`002_concentrado.sql` aplicada; TAB em seguida) |
 | C | **Coliformes** e **Howard** |
 | D | C.T e B.L por lote (recebimento) e por amostra (embarque) |
 | E | Relatório completo, `leitura de hoje finalizada`, e-mail e Excel |
