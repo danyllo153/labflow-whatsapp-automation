@@ -3,11 +3,12 @@
 Plano da migração dos dados do LabFlow da planilha para o Postgres. O
 schema está em [`db/migrations/`](../db/migrations/).
 
-**Estado (30/09/2026):** etapas 1 e 2 concluídas no servidor: banco
-`labflow`, usuários `labflow_app` e `labflow_leitura`, e `001_tanques.sql`
-aplicada e testada (cargo inválido, telefone duplicado, coleta duplicada na
-terra e CT com pré-leitura são recusados pelo banco). A `002` segue em
-rascunho e ainda não foi executada. O n8n já tem a credencial Postgres.
+**Estado (04/10/2026):** migração concluída e em uso. Banco `labflow`,
+usuários `labflow_app` e `labflow_leitura`, backup diário, e as migrations
+`001` a `010` aplicadas e testadas pelo WhatsApp (a `001` também com INSERTs
+de teste: cargo inválido, telefone duplicado, coleta duplicada na terra e CT
+com pré-leitura são recusados pelo banco). O módulo de concentrado está
+descrito em [`concentrado.md`](concentrado.md).
 
 ## Por que migrar
 
@@ -27,11 +28,18 @@ rascunho e ainda não foi executada. O n8n já tem a credencial Postgres.
 | Arquivo | Conteúdo |
 |---|---|
 | [`001_tanques.sql`](../db/migrations/001_tanques.sql) | `usuarios`, `navios`, `coletas`, `drops`, `arquivo_amostras`, `analises`, `confirmacoes` |
-| [`002_concentrado.sql`](../db/migrations/002_concentrado.sql) | `fabricas`, `itens`, `loads`, `recebimento_lotes`, `embarques`, `embarque_loads`, `embarque_amostras`, `compostas`, `composta_itens`, `testes_composta` |
-| [`003_relatorio_nfc.sql`](../db/migrations/003_relatorio_nfc.sql) | view `vw_relatorio_nfc`: uma linha por tanque em cada linha do relatório do dia (NFC), aplicada em 02/10/2026 |
+| [`002_concentrado.sql`](../db/migrations/002_concentrado.sql) | `fabricas`, `itens`, `loads`, `recebimento_lotes`, `compostas`, `composta_lotes` e `testes` (TAB, Coliformes e Howard) |
+| [`003_relatorio_nfc.sql`](../db/migrations/003_relatorio_nfc.sql) | view `vw_relatorio_nfc`: uma linha por tanque em cada linha do relatório do dia (NFC) |
+| [`004_vw_compostas.sql`](../db/migrations/004_vw_compostas.sql) | view `vw_compostas`: load, item, fábrica e lotes de cada composta |
+| [`005_confirmacao_tab.sql`](../db/migrations/005_confirmacao_tab.sql) | confirmações "sim/não" também para o TAB |
+| [`006_testes_por_lote.sql`](../db/migrations/006_testes_por_lote.sql) | testes por lote (confirmação de Coliformes abrindo a composta) |
+| [`007_busca_composta.sql`](../db/migrations/007_busca_composta.sql) | funções `composta_por_lotes` e `composta_do_lote` |
+| [`008_embarque.sql`](../db/migrations/008_embarque.sql) | `embarques`, `embarque_amostras`, compostas de embarque, `vw_compostas` com as duas origens, funções de busca por amostra e Howard (`campos_positivos`) |
+| [`009_contagens.sql`](../db/migrations/009_contagens.sql) | `contagens` (C.T e B.L por lote e por amostra), `vw_contagens` (com o alarme) e `vw_contagens_previstas` |
+| [`010_testes_embarque.sql`](../db/migrations/010_testes_embarque.sql) | testes por amostra de embarque |
 
-Aplicadas em ordem, uma de cada vez. A `002` é rascunho: os comandos, as
-permissões e os prazos finais de TAB e Coliformes ainda serão definidos.
+Aplicadas em ordem, uma de cada vez, cada uma dentro de uma transação
+(`-v ON_ERROR_STOP=1`): se algo falha, nada fica pela metade.
 
 ## De aba para tabela
 

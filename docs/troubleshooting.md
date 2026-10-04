@@ -17,7 +17,7 @@ webhook não persistindo), ver a seção "Bug 11" ao final deste documento e
 
 > **Nota (v1.0.0):** os Bugs 1 a 24 aconteceram quando os dados ainda ficavam
 > no Google Sheets e continuam valendo como registro. Os Bugs 25 a 28 são da
-> virada para o PostgreSQL.
+> virada para o PostgreSQL; o 29, do módulo de concentrado; o 30, do processo de release.
 
 ## Contexto
 
@@ -1128,6 +1128,57 @@ sem zero na frente.
 **Lição:** o formato do telefone no banco precisa ser igual ao que o canal
 entrega, e uma restrição genérica não garante isso. Se o cadastro virar uma
 tela, normalizar o número antes de gravar.
+
+---
+
+## Bug 29 — Howard confirmava "✅ Feito" mas não gravava (acento estragado ao gerar o workflow)
+
+**Sintoma:** `howard #7 2%`, "sim" e a resposta "✅ Feito: Howard 2% (1 campo positivo de 50)...".
+Mas `quais howards foram lidos hoje?` respondia "Nenhum Howard lido hoje".
+
+**Causa raiz:** duas coisas encadeadas.
+1. O workflow foi montado por um script no Windows PowerShell 5.1, que lê arquivo
+   `.ps1` sem BOM como Windows-1252. O texto `'Concluída'` do SQL de gravação virou
+   `'ConcluÃ­da'` (o `í` UTF-8 lido como dois caracteres).
+2. O `CHECK` do banco só aceita os cinco status exatos, e recusou a linha. Mas a mensagem
+   "✅ Feito" sai de um ramo **separado** da gravação (`Processar sim ou não` manda o texto
+   ao WhatsApp em paralelo com `BD · Atualizar TABs`), então o analista viu sucesso sem
+   gravação.
+
+**Como foi encontrado:** o teste pelo WhatsApp (a consulta não mostrou o Howard). No arquivo
+gerado, uma contagem do caractere `Ã` (U+00C3) deu um a mais do que no arquivo anterior, e
+estava dentro do SQL do Howard.
+
+**Solução aplicada:** o texto com acento passou a vir de arquivos lidos explicitamente como
+UTF-8, e os scripts de montagem ficaram **100% ASCII** (conferência automática). Cada versão
+gerada passou a ser comparada com a anterior contando `Ã`, `Â` e `�`: qualquer diferença
+indica corrupção.
+
+**Validação:** `howard #7 2%`, "sim" e `quais howards foram lidos hoje?` mostrou a `#7` com 2%.
+
+**Lição:** (a) a restrição do banco funcionou como segunda barreira: recusou o dado ruim em
+vez de gravar lixo. (b) Depois de gerar arquivo por script, procure caracteres corrompidos
+antes de importar. (c) Ponto fraco que continua: o "✅" não depende do resultado da gravação
+(a confirmação sai antes). Melhoria futura: responder só depois de gravar e mostrar o erro
+quando o banco recusar.
+
+---
+
+## Bug 30 — A tag `v1.0.0` apontava para o commit anterior aos docs
+
+**Sintoma:** na página de Tags, o `v1.0.0` aparecia no commit `5431950`, e não no merge do PR
+dos docs (`13ad2fb`). O release teria saído sem o CHANGELOG da 1.0.0.
+
+**Causa raiz:** a tag foi criada no clone local, que estava 5 commits atrás do GitHub (faltou
+`git pull` depois do merge do PR e antes de `git tag`).
+
+**Solução aplicada:** como ainda não havia release publicado, a tag foi apagada no clone e no
+GitHub (`git tag -d v1.0.0` e `git push origin --delete v1.0.0`), recriada na `main`
+atualizada (`git tag -a v1.0.0`) e enviada de novo. Conferido na página de Tags: `13ad2fb`.
+
+**Lição:** antes de taguear, `git switch main && git pull` e conferir com `git log -1`. Mover
+uma tag já enviada só é aceitável enquanto nada depende dela (nenhum release, ninguém usando);
+depois de publicada, correção vira uma versão nova.
 
 ---
 

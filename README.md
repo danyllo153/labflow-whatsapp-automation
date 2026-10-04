@@ -4,7 +4,7 @@ Automação de laboratório de microbiologia via WhatsApp: o analista manda uma 
 
 Projeto pessoal que une biomedicina e automação. O problema vem da rotina real de um laboratório de controle de qualidade. Todo o desenvolvimento e os testes usam **dados fictícios**.
 
-**Status:** v1.0.0. Em uso de teste num servidor de demonstração (VPS), com dados fictícios: regras de negócio, permissões por cargo e registro de análises funcionando ponta a ponta sobre PostgreSQL, com backup diário. A interpretação de mensagens livres com IA (Gemini) cobre todos os comandos (consultas, coletas, análises, conclusões e troca de cargo), sempre com as permissões conferidas no código. Próximo: o módulo de suco concentrado (recebimento e embarque).
+**Status:** v1.1.0. Em uso de teste num servidor de demonstração (VPS), com dados fictícios: regras de negócio, permissões por cargo, análises de tanque e o **módulo de suco concentrado** (recebimento, embarque, compostas, TAB, Coliformes, Howard, C.T e B.L) funcionando ponta a ponta sobre PostgreSQL, com backup diário e o **relatório diário de microbiologia** gerado pelo próprio bot. A interpretação de mensagens livres com IA (Gemini) cobre os comandos de tanque, coleta, conclusão e troca de cargo, sempre com as permissões conferidas no código; os comandos do concentrado ainda usam o formato padrão. Próximo: liberação das leituras por analista, envio por e-mail e Excel, e a IA aprender o concentrado.
 
 ## O problema
 
@@ -61,6 +61,13 @@ LabFlow:  📖 Comandos de drops
 - Ajuda por assunto, sem IA: "comandos para drops", "consultar análises", "consultar cargos" mostram só os comandos do tema
 - Se o Gemini estiver fora do ar, o bot avisa que a IA está indisponível e nada é gravado
 
+**Suco concentrado (FCOJ)**
+- Recebimento de lotes por load, item e fábrica; compostas de 1 a N lotes, com número curto (`#12`)
+- Embarque por navio, linha e fase, com amostras A1, A2...; load antigo que nunca foi recebido é cadastrado na hora
+- TAB (de composta e de tanque de NFC), Coliformes e Howard, com o ciclo de cada um: caldo, estria, incubação, confirmação lote a lote e resultado; o bot lista o que vence hoje e os atrasados com a data prevista
+- C.T e B.L por lote e por amostra, com vários grupos numa mensagem (`ct load 77001 lote 4 deu 10, lotes 5-10 deu <10`), e alarme em B.L ≥ 50 e C.T ≥ 200
+- **Relatório do dia** com os quatro blocos (FCOJ recebimento e embarque, NFC tank farm e navio) numa mensagem, com ✅ no lido e 🚨 no que passou do limite; o `completo` traz só o que já foi lido, com `ok` / `não ok`
+
 **Controle e segurança**
 - Só números cadastrados usam o bot; três cargos (Admin, Operador, Consultor)
 - Gestão de cargos pelo próprio WhatsApp, restrita a Admin
@@ -106,7 +113,7 @@ n8n · Docker / Docker Compose · Evolution API · Google Gemini API · PostgreS
 - **Revisão do JSON depois de mudanças estruturais.** Religar conexões à mão no editor já introduziu bugs que só apareceram na revisão do export (ver Bug 15 em [troubleshooting](docs/troubleshooting.md)).
 - **Auditoria automática do workflow.** O script [`scripts/audit-workflow.py`](scripts/audit-workflow.py) procura nodes órfãos, ramos de IF faltando e HTTP Requests sem resposta ao webhook. Uma GitHub Action roda essa auditoria a cada alteração do `LabFlow.json`. A primeira execução encontrou 4 bugs de conexão reais.
 - **Regras também no banco.** Duplicata (`UNIQUE`), cargo válido (`CHECK`) e vínculo entre coleta, drop e análise (chave estrangeira) são conferidos pelo PostgreSQL, além do código do n8n: se uma regra do código falhar, o banco recusa o dado. Foi testado direto no banco, com cargo inválido, telefone duplicado, coleta duplicada e CT com pré-leitura.
-- **Consultas sempre parametrizadas.** Os 22 nodes Postgres recebem o texto da mensagem como parâmetro (`$1`, `$2`...), nunca concatenado no SQL.
+- **Consultas sempre parametrizadas.** Os 41 nodes Postgres recebem o texto da mensagem como parâmetro (`$1`, `$2`...), nunca concatenado no SQL.
 - **Migração reversível.** O workflow novo entrou numa cópia, um ramo por vez, com o antigo (Google Sheets) desativado como plano B. A cópia trouxe quatro bugs que só os testes pelo WhatsApp revelaram (Bugs 25 a 28 em [troubleshooting](docs/troubleshooting.md)).
 
 ## Roadmap
@@ -115,7 +122,9 @@ n8n · Docker / Docker Compose · Evolution API · Google Gemini API · PostgreS
 - [x] **V2 — Regras de negócio:** drops, arquivo/descarte, análises com prazos, permissões, duplicata, conclusão em lote
 - [x] **V3, parte 1 — IA como fallback:** o Gemini interpreta linguagem natural quando a regex não reconhece a mensagem, com confirmação antes de executar, ainda sobre o Google Sheets. Feito: consultas, coleta de terra e de navio, análises, conclusões, troca de cargo e ajuda por assunto. Próximos ajustes: testes de regressão do prompt e um segundo modelo de reserva
 - [x] **V4 — Banco de dados:** migração do Google Sheets para PostgreSQL (tabelas com restrições no banco, usuário somente leitura e backup diário), publicada na 1.0.0
-- [ ] **Suco concentrado:** recebimento e embarque (identificação por Load/Lote/Item/Fábrica), compostas e TAB/Coliformes/Howard sobre o PostgreSQL; o schema está em rascunho em `db/migrations/002_concentrado.sql`
+- [x] **Suco concentrado:** recebimento, embarque, compostas, TAB, Coliformes, Howard, C.T/B.L com alarme e o relatório diário de microbiologia, sobre o PostgreSQL (versão 1.1.0)
+- [ ] **Relatório diário, fase seguinte:** `leitura de hoje finalizada` por analista, envio por e-mail e em Excel, e limites e Situação do Howard e do NFC
+- [ ] **IA no concentrado:** ensinar o Gemini os comandos de recebimento, embarque, TAB, Coliformes, Howard e C.T/B.L, com a permissão conferida no código
 - [ ] **V3, parte 2 — IA avançada:** comando por áudio e leitura de laudo por foto (com confirmação antes de gravar), já sobre o PostgreSQL
 - [ ] **V5 — Dashboard:** indicadores de pendentes, concluídos e atrasados no Power BI, sobre o PostgreSQL, por um usuário somente leitura
 - [ ] **Interface web (LIMS):** última etapa, depois que tudo acima estiver estável no banco relacional
@@ -129,7 +138,8 @@ n8n · Docker / Docker Compose · Evolution API · Google Gemini API · PostgreS
 |---|---|
 | [comandos.md](docs/comandos.md) | Todos os comandos do bot, cargos e permissões |
 | [arquitetura.md](docs/arquitetura.md) | Nodes do workflow, tabelas do banco e decisões de design de cada etapa |
-| [troubleshooting.md](docs/troubleshooting.md) | 28 bugs reais: sintoma, causa raiz, solução e lição |
+| [concentrado.md](docs/concentrado.md) | Desenho do módulo de suco concentrado: ciclos do TAB, Coliformes e Howard, embarque, C.T/B.L, alarmes e relatório diário |
+| [troubleshooting.md](docs/troubleshooting.md) | 30 bugs reais: sintoma, causa raiz, solução e lição |
 | [deploy-vps.md](docs/deploy-vps.md) | Infraestrutura no VPS: rede, segredos, acesso SSH, migração |
 | [postgres-migracao.md](docs/postgres-migracao.md) | Plano, schema e decisões da migração para o PostgreSQL |
 | [scripts.md](docs/scripts.md) | Scripts de auditoria do workflow e de backup do banco, e como usá-los |

@@ -23,6 +23,24 @@ python scripts/audit-workflow.py LabFlow.json --public   # estrutura + dados sen
 
 Sai com código `1` se houver algum erro. Por isso a GitHub Action em [`.github/workflows/audit-workflow.yml`](../.github/workflows/audit-workflow.yml) roda o script a cada upload do `LabFlow.json` e marca o commit com ❌ quando algo falha.
 
+## sanitize-workflow.ps1
+
+Arquivo: [`scripts/sanitize-workflow.ps1`](../scripts/sanitize-workflow.ps1)
+
+Gera o `LabFlow.json` **público** a partir do export do n8n com IDs reais (`LabFlow_importar_n8n.json`, que nunca vai para o Git). Roda no Windows PowerShell 5.1.
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\sanitize-workflow.ps1 `
+    -Entrada LabFlow_importar_n8n.json -Saida LabFlow.json
+python scripts/audit-workflow.py LabFlow.json --public
+```
+
+- Troca o ID real de cada credencial por um placeholder (`GEMINI_CREDENTIAL_ID`, `EVOLUTION_CREDENTIAL_ID`, `POSTGRES_CREDENTIAL_ID`) e remove `meta.instanceId`. Se aparecer um tipo de credencial novo, o script para e pede o placeholder.
+- Grava no mesmo formato do arquivo versionado (JSON indentado, terminando em LF), para o diff do Git mostrar só o que mudou.
+- Para se houver `pinData` (dados fixados no n8n), ou se sobrar algum ID real no resultado.
+
+O script é **só ASCII**: o Windows PowerShell 5.1 lê arquivo sem BOM como Windows-1252 e estraga acentos (já aconteceu, ver [Bug 29](troubleshooting.md)). Texto com acento deve vir de arquivos lidos como UTF-8.
+
 ## backup-db.sh
 
 Arquivo: [`scripts/backup-db.sh`](../scripts/backup-db.sh)

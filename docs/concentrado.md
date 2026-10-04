@@ -1,6 +1,6 @@
 # Desenho do módulo de concentrado (FCOJ) e testes de composta
 
-**Estado:** desenho para revisão (01/10/2026). Nada disto está implementado. A migration [`002_concentrado.sql`](../db/migrations/002_concentrado.sql) é um rascunho anterior e será reescrita a partir deste documento.
+**Estado (04/10/2026):** implementado e testado pelo WhatsApp, com dados fictícios: relatório do dia, recebimento, compostas, TAB (de composta e de NFC), Coliformes, embarque, Howard e C.T/B.L por lote e amostra (migrations `002` a `010`). Faltam, da fase E em diante: `leitura de hoje finalizada`, e-mail e Excel, limites e Situação do Howard e do NFC, e a IA entender os comandos do concentrado.
 
 Todos os exemplos usam **dados fictícios**.
 
@@ -81,8 +81,8 @@ Mesma composta do TAB (no recebimento) e do Howard (no embarque). Resultado **Po
 
 | Status | Entra quando | Data prevista |
 |---|---|---|
-| `No caldo` | "Coliformes feitos" confirmado | estriar = feito + 2 dias |
-| `Estriada` | "coliformes de hoje estriados" confirmado | leitura = estria + 1 dia (3º dia) |
+| `No caldo` | "Coliformes feitos" confirmado | estriar = feito + 1 dia |
+| `Estriada` | "coliformes de hoje estriados" confirmado | leitura = estria + 1 dia (2º dia) |
 | `Em confirmação` | "coliformes em confirmação" → bot pergunta se **abre a composta** → **sim** | cada lote: caldo hoje → estriar amanhã (+1) → ler no dia seguinte (+2) |
 | `Concluída` | resultado gravado (composta inteira negativa, ou todos os lotes da composta aberta com resultado) | — |
 
@@ -188,11 +188,11 @@ leituras_finalizadas(usuario_id, data, finalizada_em)            -- barreira do 
 | Fase | Entrega |
 |---|---|
 | A | `relatório do dia` com os blocos de NFC (tanques terra e navio), com os dados que já existem — **feito em 02/10/2026** (`003_relatorio_nfc.sql`, comando em `docs/comandos.md` 8.1) |
-| B | Recebimento (loads, lotes) + compostas + **TAB** completo |
-| C | **Coliformes** e **Howard** |
-| D | C.T e B.L por lote (recebimento) e por amostra (embarque) |
-| E | Relatório completo, `leitura de hoje finalizada`, e-mail e Excel |
-| F | Situação (ok / não ok) e resultado por foto ou áudio |
+| B | Recebimento (loads, lotes) + compostas + **TAB** completo — **feito** (recebimento e compostas em 02/10/2026; TAB de composta em 03/10/2026; TAB de NFC em 04/10/2026) |
+| C | **Coliformes** e **Howard**, e o **embarque** — **feito** (Coliformes em 03/10/2026; embarque e Howard em 04/10/2026) |
+| D | C.T e B.L por lote (recebimento) e por amostra (embarque) — **feito em 04/10/2026**, com o alarme B.L ≥ 50 e C.T ≥ 200 |
+| E | Relatório do dia com os quatro blocos e o `completo` — **feito em 04/10/2026**. Falta: `leitura de hoje finalizada`, e-mail e Excel |
+| F | Situação (ok / não ok) por limites do Howard e do NFC, e resultado por foto ou áudio |
 
 ## 10. Recebimento (comandos decididos)
 
@@ -206,6 +206,45 @@ compostas do load 77001 (1-5)(6-10)(11-14)
 - O recebimento registra os lotes (e agenda C.T e B.L de cada lote, fase D).
 - As compostas só aceitam lotes já recebidos daquele load; o bot devolve a lista numerada (`#12`, `#13`...) e grava com **sim**.
 - No embarque, a composta é por navio, viagem, linha, fase e amostras: `compostas do navio O.SKY 133 linha 2 fase 2 (A1-A5)(A6-A10)`.
+
+## 10.1 Embarque (comandos decididos em 04/10/2026)
+
+O embarque é por **navio + viagem, linha e fase**. Cada comando registra amostras de **um load** (uma linha+fase pode ter mais de um load: repete-se o comando com o outro load):
+
+```text
+embarque navio O.SKY 133 linha 2 fase 2 load 77010 item 444 amostras 1-10
+embarque navio O.SKY 133 linha 2 fase 2 load 77011 item 444 amostras 11-20 data 03/10/2026
+```
+
+- As amostras são numeradas A1, A2... (a quantidade varia com a tonelada). A numeração é **da linha+fase**, sem repetir entre loads.
+- O **load não precisa existir antes.** Às vezes embarca-se um load muito antigo, que nunca passou pelo recebimento no sistema: o bot cadastra o load (número e item) **sem fábrica**, que o comando de embarque não informa. Se o recebimento for registrado depois, a fábrica é preenchida.
+- Load e item formam a identidade do load, como no recebimento: o mesmo número com outro item é outro load.
+- Amostras já registradas na mesma linha+fase são ignoradas (a numeração A1, A2... não repete entre loads).
+- Compostas do embarque: `compostas do navio O.SKY 133 linha 2 fase 2 (A1-A5)(A6-A10)`. Uma composta pode juntar amostras de loads diferentes da mesma linha+fase. TAB, Coliformes e Howard usam a **mesma composta**, com os mesmos comandos de `#` e a identificação `O.SKY 133 linha 2 fase 2 (A1-A5)`.
+
+## 10.2 C.T e B.L por lote e por amostra (comandos decididos em 04/10/2026)
+
+Prazos a partir do recebimento (lote) ou do embarque (amostra): **C.T 48h** (+2 dias), **B.L 72h** (+3) e **B.L 120h** (+5). O analista registra o resultado numérico de cada um:
+
+```text
+ct load 77001 lote 4 deu 10, lotes 5-10 deu <10
+ct load 77001 lote 4-12 deu =10, lote 13 deu 20
+bl72 load 77001 lotes 1-14 deu <10
+bl120 load 77001 lote 4 deu 8
+ct navio O.SKY 133 linha 2 fase 2 amostras 1-5 deu <10, amostra 6 deu 30
+```
+
+- Vários grupos na mesma mensagem, separados por vírgula; cada grupo é `lote` ou `lotes` + faixa/lista + `deu` + valor. No embarque, `amostra`/`amostras` com o número (`A3` também vale).
+- **Valor:** `10` ou `=10` (exato), `<10` (menor que) ou `>10` (maior que). Fica gravado como texto, mantendo a notação do laudo.
+- Toda gravação mostra o que o bot entendeu e só grava com **sim**. Lote ou amostra que não existe cancela tudo. Um resultado repetido corrige o anterior, avisando o valor antigo.
+- Consultas: `quais ct tenho para ler hoje?` (e `bl72`, `bl120`) lista o que vence hoje e os atrasados; `quais cts foram lidos hoje?` lista os registrados hoje.
+- **Quem registra:** Admin e Operador; o Consultor só consulta.
+
+### Alarme no relatório diário
+
+- **B.L (72h e 120h): 50 ou mais.** **C.T: 200 ou mais.**
+- O relatório avisa o **load e os lotes** (ou o navio, linha, fase e as amostras) que passaram do limite, e a Situação da linha vira `não ok`.
+- `<10` nunca alarma. `>N` alarma se N já estiver no limite ou acima.
 
 ## 11. Em aberto
 
