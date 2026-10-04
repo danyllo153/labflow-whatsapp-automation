@@ -484,6 +484,62 @@ Webhook WhatsApp
 aplicado. Views para relatório (Power BI) também faltam. O backup diário
 roda no servidor, mas a cópia fora dele ainda é manual.
 
+## Módulo de concentrado (1.1.0)
+
+**Objetivo.** Registrar pelo WhatsApp o suco concentrado (FCOJ), do recebimento ao embarque, e
+gerar o **relatório diário de microbiologia**. Desenho, regras e ciclos em
+[`concentrado.md`](concentrado.md); comandos em [`comandos.md`](comandos.md) (12.1 a 15).
+
+**Modelo de dados** (migrations `002` e `004` a `010`). A ordem é sempre *recebimento → compostas → testes*.
+
+```
+loads (número + item, fábrica opcional)
+  └─ recebimento_lotes (lote, data)
+embarques (navio + linha + fase) ─ embarque_amostras (A1, A2... de um load)
+compostas (de load OU de embarque)
+  └─ composta_lotes (lote OU amostra, no máximo uma composta)
+testes (TAB, COLIFORMES, HOWARD) — de exatamente um alvo: composta, tanque (coleta), lote ou amostra
+contagens (C.T, B.L 72h, B.L 120h por lote ou por amostra)
+```
+
+**O que o banco faz.** `vw_compostas` junta as duas origens de composta com o rótulo
+(`load 77001` ou `O.SKY 133 linha 2 fase 2`) e o prefixo (`A` nas amostras). `vw_contagens`
+calcula o alarme (B.L ≥ 50, C.T ≥ 200; `<` nunca alarma) e `vw_contagens_previstas` calcula os
+prazos (+2, +3, +5 dias do recebimento ou do embarque). Os checks garantem: composta de load
+**ou** de embarque, teste de um alvo só, Howard par (`percentual = campos_positivos × 2`).
+
+**No workflow.** São 159 nodes, no mesmo bloco "Concentrado" do canvas. Decisões de desenho:
+
+- **Uma pendência para tudo o que pede "sim".** TAB, Coliformes, Howard e C.T/B.L reaproveitam a
+  pendência do tipo `TAB` (tabela `confirmacoes`), com `{acao, ...}` no payload (`espalhar`,
+  `negativos`, `resultado`, `abrir`, `howard`, `contagem`). Uma única gravação,
+  `BD · Atualizar TABs`, executa a ação depois do "sim". O que o analista confirma é exatamente
+  o que foi resolvido antes (os ids de lote/amostra vão no payload).
+- **Consultas e telas compartilhadas.** As mesmas consultas do TAB servem para compostas de load,
+  compostas de embarque e tanques de NFC: o rótulo vem do banco (`rotulo`, `prefixo`, `tanque`,
+  `data_coleta`) e o texto é montado num lugar só.
+- **A IA ainda não conhece o concentrado.** O prompt do Gemini não tem essas intenções: mensagem
+  livre sobre elas cai em "comando inválido". Os comandos usam o formato padrão (regex).
+- **Parser de C.T/B.L por grupos.** `ct load 77001 lote 4 deu 10, lotes 5-10 deu <10`: o texto é
+  quebrado em grupos onde começa "lote(s)/amostra(s)"; cada grupo vira `{numeros, sinal, valor}`.
+  Número em dois grupos, valor ausente ou lote/amostra inexistente cancelam tudo antes do "sim".
+- **Relatório do dia.** Uma consulta de NFC (`BD · Relatório NFC`) e uma do concentrado
+  (`BD · Relatório concentrado`), em série, e um node que monta as quatro seções. O node do
+  concentrado vem **depois** de um node que devolve várias linhas: sem `executeOnce` o n8n
+  rodaria a consulta uma vez por linha e o relatório sairia duplicado.
+- **Fábrica opcional.** O embarque de um load antigo, que nunca foi recebido, cadastra o load
+  sem fábrica; se o recebimento for registrado depois, a fábrica é preenchida.
+
+**Como foi testado.** O SQL só roda no servidor, mas o código dos nodes foi executado fora do
+n8n: o `Interpretar comando` real, extraído do arquivo exportado, rodou com dezenas de mensagens
+(novas e antigas) e as telas de resposta rodaram com dados de exemplo, no navegador. Isso pegou
+erros de regex e de texto antes de importar. Depois, cada etapa foi testada pelo WhatsApp.
+
+**Limitações conhecidas.** O "✅ Feito" depois do "sim" sai antes da gravação (ver [Bug 29](troubleshooting.md));
+`leitura de hoje finalizada` (liberação por analista), e-mail e Excel ainda não existem; Howard e
+NFC não têm limite nem Situação; o alarme de C.T/B.L aparece na confirmação, nas consultas e no
+relatório, mas não é enviado sozinho.
+
 ## Arquitetura no tempo do Google Sheets (resumo, até a 0.9.0)
 
 ```

@@ -10,6 +10,64 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 `docs/deploy-vps.md`. Este arquivo é só o resumo cronológico do que mudou.
 
 
+## [1.1.0] - 2026-10-04
+
+### Added
+- **Módulo de suco concentrado (FCOJ)**, tudo pelo WhatsApp e sobre o PostgreSQL. Desenho em
+  `docs/concentrado.md`, comandos em `docs/comandos.md` (seções 12.1 a 15):
+  - **Recebimento** de lotes por load, item e fábrica, e **compostas** (de 1 a N lotes, em
+    qualquer combinação) com número curto `#N`
+  - **TAB de composta**: caldo → espalhar (+5 dias) → incubar → confirmação (PCA 24h) → resultado,
+    com consultas ("quais tabs tenho para espalhar/ler hoje?"), comandos em lote e atrasados com a
+    data prevista
+  - **TAB de NFC (tank farm)**, por tanque, sempre citando a data da coleta
+  - **Coliformes de composta**: caldo → estria (+1 dia) → leitura (+1 dia); a confirmação abre a
+    composta lote a lote (no embarque, amostra a amostra)
+  - **Embarque** por navio + viagem, linha e fase, com amostras A1, A2... de um load por comando;
+    load antigo que nunca passou pelo recebimento é cadastrado na hora (a fábrica é opcional)
+  - **Howard** (embarque): porcentagem em 50 campos, sempre par, com confirmação
+  - **C.T 48h e B.L 72h/120h por lote e por amostra**, com vários grupos por mensagem
+    (`ct load 77001 lote 4 deu 10, lotes 5-10 deu <10`) e valores `=`, `<` e `>`
+  - **Alarme**: B.L a partir de 50 e C.T a partir de 200; TAB e Coliformes positivos também
+- **Relatório do dia com os quatro blocos** (FCOJ recebimento, FCOJ embarque, NFC tank farm e NFC
+  navio) numa mensagem só, com ✅ no lido e 🚨 no que passou do limite. `relatório do dia completo`
+  traz só o que já foi lido, com a Situação (`ok` / `não ok`) nas linhas do concentrado. Filtros por
+  bloco (`recebimento`, `embarque`, `tanques terra`...)
+- Migrations `003` a `010` (`db/migrations/`): relatório de NFC, view das compostas, confirmação do
+  TAB, testes por lote e por amostra, busca de composta, embarque, contagens e testes de embarque
+- `scripts/sanitize-workflow.ps1`: gera o `LabFlow.json` público a partir do export com IDs reais
+- Comandos de embarque, Howard, TAB de NFC e C.T/B.L documentados em `docs/comandos.md`; desenho
+  completo do módulo em `docs/concentrado.md`
+
+### Changed
+- O workflow passou de 97 para 159 nodes (41 nodes Postgres, todos parametrizados), dentro do mesmo
+  bloco "Concentrado" do canvas
+- `relatório do dia` deixou de ser só NFC: sozinho, traz os quatro blocos. A linha TAB do tank farm,
+  que mostrava `-`, passa a listar os TABs de NFC
+- TAB e Coliformes aparecem no **masculino** nos textos de status ("O TAB do tanque 92 está
+  Incubado", "Os Coliformes estão Estriados"); no banco os valores continuam como antes
+- As telas do TAB e dos Coliformes passaram a mostrar compostas de embarque
+  (`O.SKY 133 linha 2 fase 2 (A1-A5)`) e tanques de NFC, além das compostas de load
+- `vw_compostas` reúne as compostas de recebimento e de embarque; `loads.fabrica_id` deixou de ser
+  obrigatório
+- Os arquivos `LabFlow_importar_n8n*.json` (com IDs reais) ficam todos fora do Git
+
+### Security
+- Regras também no banco: composta de load **ou** de embarque, teste de exatamente um alvo
+  (composta, tanque, lote ou amostra), Howard sempre par (`percentual = campos_positivos × 2`),
+  resultado repetido de C.T/B.L corrige o anterior em vez de duplicar
+- Gravações novas pedem "sim" (Howard, C.T/B.L, TAB e Coliformes); Consultor só consulta
+- `scripts/sanitize-workflow.ps1` confere que nenhum ID real de credencial nem `instanceId` sobra no
+  arquivo público
+
+### Notes
+- Tudo foi testado pelo WhatsApp em 04/10/2026, com dados fictícios
+- O fallback de IA (Gemini) ainda **não conhece** os comandos do concentrado: mensagem livre sobre
+  eles cai em "comando inválido". Os comandos precisam ser escritos no formato padrão
+- Limites e Situação do Howard e do NFC, `leitura de hoje finalizada`, e-mail e Excel ficam para
+  as próximas versões
+
+
 ## [1.0.0] - 2026-10-01
 
 ### Changed
