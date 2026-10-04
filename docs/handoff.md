@@ -2,192 +2,99 @@
 
 Documento para retomar o projeto em outro computador ou numa conversa nova do Claude Code. Leia inteiro antes de propor qualquer coisa. O que está marcado como decidido já foi combinado com o Danyllo; o que está em "a definir" precisa ser perguntado antes de implementar.
 
-Última atualização: 02/10/2026 (fase A: relatório do dia dos tanques).
+Última atualização: 04/10/2026 (módulo de concentrado completo, versão 1.1.0 pronta para publicar).
 
 ## 1. Quem sou e como gosto de trabalhar
 
 - Danyllo Gomes, biomédico (microbiologia / controle de qualidade de suco) e estudante de Ciência da Computação. O LabFlow é projeto de portfólio para transição de carreira.
 - Sem experiência prévia em PostgreSQL e Power BI: explicar passo a passo, em comandos pequenos, um de cada vez.
-- Não sou avançado em n8n: instruções de n8n em passos curtos, um node por vez.
-- O Claude adianta os commits; eu só envio para o GitHub pelo PowerShell (branch por mudança, Conventional Commits, PR, merge). Nunca editar pelo site do GitHub.
-- Enquanto iteramos nos nodes, mandar só o código/prompt do node como texto. O `LabFlow.json` completo e o JSON de importação só quando eu pedir.
+- Não sou avançado em n8n: instruções de n8n em passos curtos.
+- O Claude faz os commits localmente; eu só envio para o GitHub pelo PowerShell (branch por mudança, Conventional Commits, PR, merge, tag). Nunca editar pelo site do GitHub.
+- Mudanças grandes no workflow: o Claude monta o JSON de importação por script, eu importo no n8n **como cópia**, troco o ativo e testo pelo WhatsApp. O arquivo anterior é o rollback.
 - Gosto de dicas práticas de mercado/portfólio no meio da ajuda técnica.
 - Respostas em português.
 - Dados sempre fictícios. Nada real da empresa no repositório, nos testes ou na documentação (LGPD).
-- O termo "reanálise" não se usa no projeto (reanálise seria analisar a mesma coisa 2x, e isso não acontece). Os D5/D10/D15 são "análises de drop" (ou só "drops").
+- O termo "reanálise" não se usa no projeto. Os D5/D10/D15 são "análises de drop" (ou só "drops").
+- **TAB e Coliformes são masculinos** nos textos para o usuário ("O TAB está Incubado", "Os Coliformes estão Estriados"); no banco os status continuam `Incubada`, `Estriada`, `Concluída`.
 
-## 2. Estado atual (30/09/2026)
+## 2. Estado atual (04/10/2026)
 
-Versão publicada: **`v1.0.0`** (LabFlow no PostgreSQL; tag e release no GitHub, PR #8).
-Repositório: `github.com/danyllo153/labflow-whatsapp-automation` (público). Clone local no PC principal: `C:\Dev\labflow-whatsapp-automation`. Notas do projeto no Obsidian (vault `PROJETO- LABFLOW`), incluindo uma pasta `Git` com guia de comandos. Cópia dos arquivos no OneDrive: `Valts\labflow-whatsapp-automation`.
+Versão publicada: **`v1.0.0`** (LabFlow no PostgreSQL; tag e release no GitHub). **A `1.1.0` (módulo de concentrado) está pronta:** os commits estão na branch `feat/concentrado-tab`. Falta: `git push`, abrir o PR, mesclar, `git switch main && git pull` e então `git tag -a v1.1.0` + release (**sempre `git pull` antes de taguear**, ver Bug 30).
 
-**01/10/2026:** 1.0.0 publicada (docs da virada, CHANGELOG, tag e release, PR #8). O resto do dia foi **desenho** do módulo de concentrado, sem código: tudo em [`docs/concentrado.md`](concentrado.md), na branch `docs/desenho-concentrado` (enviar com `git push -u origin docs/desenho-concentrado`, abrir PR e mesclar). **Leia esse documento antes de mexer no concentrado:** ele tem as regras decididas, os ciclos do TAB, Coliformes e Howard, as regex das consultas, o relatório do dia e o rascunho do modelo de dados.
-
-**Objetivo do produto (definido em 01/10):** o bot gerar o **Relatório diário de Microbiologia** que o laboratório envia todo dia (blocos FCOJ recebimento, FCOJ embarque, NFC tank farm e NFC navio; coluna Situação `ok` = dentro do limite). Cada consulta "o que sai hoje" é um pedaço dele. A planilha real tem dados da empresa e **nunca** entra no repositório; o formato está descrito em `docs/concentrado.md` com dados fictícios.
+Repositório: `github.com/danyllo153/labflow-whatsapp-automation` (público). Clone local: `C:\Dev\labflow-whatsapp-automation`. Notas do projeto no Obsidian (vault `PROJETO- LABFLOW`), incluindo a pasta `Git` com o guia de comandos. Cópia dos arquivos no OneDrive: `Valts\labflow-whatsapp-automation` (o `sync-valts.bat` do notebook copia o projeto para lá).
 
 **Ambiente:** o VPS atual é **demonstração** com dados fictícios, para provar que a automação funciona. Na empresa, servidor, Postgres e Power BI serão os da empresa, com migração e segurança definidas junto com a TI; o LabFlow vai como base. Ideia combinada para depois: um "Guia de implantação do LabFlow" para a TI.
 
-### Backup do banco — feito em 30/09/2026
+Stack (VPS Linux, stack própria em `~/labflow`, Docker, sem porta pública, acesso só por túnel SSH): WhatsApp Business (número dedicado em eSIM) → Evolution API 2.3.7 (instância `labflow2`) → webhook → n8n 2.38.6 → PostgreSQL → resposta pelo WhatsApp. O mesmo container Postgres guarda o banco da Evolution API e o banco `labflow`. IA: Gemini (`models/gemini-3.1-flash-lite`) como fallback da regex.
 
-- `scripts/backup-db.sh` copiado para `~/labflow/backup-db.sh` no servidor; `cron` todo dia às 3h (servidor no fuso -03); guarda 14 dias em `~/labflow/backups` (pasta `700`, arquivos `600`); log em `backups/backup.log`.
-- Testado: backup gerado (24K) e validado com `pg_restore --list` (7 tabelas). Restaurar: ver `docs/scripts.md`.
-- Falta: copiar de vez em quando um `.dump` para fora do servidor (`scp`); como os dados são fictícios, pode ir para o OneDrive.
+**No servidor:** migrations `001` a `010` aplicadas. No n8n está ativo o workflow final (159 nodes). O backup diário (3h, 14 dias, `~/labflow/backups`) está rodando. DBeaver: conexões `LabFlow (leitura)` e `LabFlow (app)` (tipo Production).
 
-### DBeaver — configurado em 30/09/2026
+**Arquivos de workflow (na pasta do projeto):**
+- `LabFlow.json`: versão **pública**, sem IDs reais (vai para o Git).
+- `LabFlow_importar_n8n.json`: o workflow final **com IDs reais** (nunca vai para o Git; o `.gitignore` bloqueia `LabFlow_importar_n8n*.json`).
+- `LabFlow_importar_n8n_etapa1.json` a `etapa5`: cópias intermediárias da construção do concentrado, também com IDs reais e fora do Git. Podem ser apagadas depois que a 1.1.0 estiver publicada e estável (a `etapa4` é o rollback mais recente).
+- Para regerar o público: `scripts\sanitize-workflow.ps1 -Entrada LabFlow_importar_n8n.json -Saida LabFlow.json`, e depois `python scripts/audit-workflow.py LabFlow.json --public` (o Python precisa estar instalado; a GitHub Action roda a auditoria a cada alteração do `LabFlow.json`). Detalhes em [`scripts.md`](scripts.md).
+- Cuidado: arquivo `.ps1` com acento sem BOM é lido como Windows-1252 no Windows PowerShell 5.1 e estraga o texto (Bug 29). Scripts em ASCII; texto com acento em arquivos lidos como UTF-8.
 
-- Conexão `LabFlow (leitura)` (usuário `labflow_leitura`) funcionando, via túnel SSH (host `172.16.2.2`, IP interno do container; muda se o container for recriado).
-- Falta criar `LabFlow (app)` (usuário `labflow_app`, tipo de conexão **Production** para pedir confirmação antes de gravar) e dar a lição de `UPDATE`/`DELETE`.
-- Aulas de SQL já dadas: `SELECT`, `WHERE`, `ORDER BY` (DESC em data = mais recente primeiro), `JOIN`, `GROUP BY`/`count`. Cola no Obsidian: nota `SQL-e-DBeaver`.
+**Dados de teste no banco (fictícios):** loads, embarque O.SKY 133, compostas, TABs, Howard, C.T/B.L e coletas dos testes de 02 a 04/10. Limpar pelo DBeaver (`LabFlow (app)`) quando quiser.
 
-### Migração para o Postgres — feita e testada em 30/09/2026 (noite)
+## 3. O que o bot faz
 
-- **No servidor:** banco `labflow`, usuários `labflow_app` (n8n) e `labflow_leitura` (Power BI/DBeaver), fuso `America/Sao_Paulo`, `001_tanques.sql` aplicada. Senhas só em `~/labflow/.env` (ver nota `Postgres-Migracao` no Obsidian).
-- **No n8n:** workflow novo `LabFlow (Postgres)` **ativo**; o antigo (Sheets) **desativado** e guardado para voltar atrás (desativar o novo e ativar o antigo). Os dois usam o caminho `labflow-registro` e não podem ficar ativos juntos.
-- **Sem nenhum node do Google Sheets.** 22 nodes Postgres, sempre com parâmetros (`$1`, `$2`...). Coleta grava coleta + drops + bag/pote numa instrução só. Análise **exige coleta** do tanque até a data da análise (decidido). Expiração do "sim" calculada pelo banco.
-- **Organização:** 8 blocos coloridos (entrada, consultas, coletas, análise, concluir, sim/não, IA, cargos) e nomes padronizados: `BD ·` banco, `Zap ·` envia no WhatsApp, `Fim ·` responde ao webhook, `Montar resposta ...` formata texto.
-- **Testado pelo WhatsApp (todos ok):** drops de hoje; coleta + duplicata; análise com e sem coleta; consulta de análises; concluir leitura com "sim"; concluir drops D5; trocar cargo; frase livre pela IA com "sim" e com "não".
-- **Bugs encontrados (registrar no troubleshooting):**
-  - `If IA Entendeu.` e `If Reenviar Comando.` comparavam texto fixo e eram sempre verdadeiros (podiam apagar uma confirmação de leitura pendente). Corrigidos.
-  - Ao duplicar o workflow, o n8n troca o caminho do webhook por um código aleatório; o reenvio da IA iria para o workflow antigo. Voltou para `labflow-registro`.
-  - Referência a node com nome em caixa diferente (`Checar Duplicata Terra` x `Checar duplicata terra`): a coleta gravava, a resposta falhava e a Evolution reenviava a mensagem, que voltava como "já registrada".
-  - Telefone cadastrado com `0` na frente: o bot respondia "não cadastrado". Formato certo: o mesmo de `_numeroRemetenteLimpo` (só dígitos, DDI 55, sem zero).
-- **Dados de teste no banco (fictícios):** coletas terra 42–47, análises dos tanques 44 e 45, usuário `5511900000001` (Teste, Operador). Limpar quando quiser.
-- **Próximos passos, em ordem:**
-  1. ~~Mesclar o PR da `chore/backup-db`~~ (feito, PR #7).
-  2. ~~Fechar a 1.0.0~~ (feito, PR #8, tag e release `v1.0.0`).
-  2.1. Mesclar o PR da `docs/desenho-concentrado` (desenho do concentrado).
-  2.2. ~~Fase A~~: `relatório do dia` dos tanques — feito em 02/10/2026 (view `vw_relatorio_nfc` aplicada no servidor; workflow com a regra `relatorio_nfc` e os nodes `BD · / Montar / Zap · / Fim · Relatório do dia`; PR `feat/relatorio-nfc`). Falta testar pelo WhatsApp depois de importar.
-  3. DBeaver: conexão `LabFlow (app)` e lição de `UPDATE`/`DELETE`; usar para limpar os dados de teste.
-  4. Módulo de concentrado, fases B a F de `docs/concentrado.md` (recebimento + compostas + TAB; Coliformes e Howard; C.T/B.L por lote; relatório completo por e-mail/Excel; Situação por foto/áudio). Reescrever a `002_concentrado.sql` a partir do desenho.
-  5. Depois: Power BI (V5) e IA avançada (V3 parte 2).
+**Tanques (NFC):** coleta de terra (até 8 tanques) e de navio (até 16, nome + viagem), com drops D5/D10/D15 e descarte de bag/pote em 365 dias; registro de análise Normal/Stress (CT, BL, WORT) que **exige coleta**; consultas do que vence hoje; conclusão de drops em lote; conclusão de leituras com confirmação "sim/não" (expira em 10 min); bloqueio de coleta duplicada.
 
-Stack em produção de teste (VPS Linux, stack própria em `~/labflow`, Docker, sem porta pública, acesso só por túnel SSH):
+**Concentrado (FCOJ), 1.1.0:** recebimento de lotes, compostas (`#N`), TAB de composta e de tanque de NFC, Coliformes (confirmação abrindo a composta lote a lote), embarque (navio + linha + fase, amostras A1..., load antigo é cadastrado na hora), Howard (% par, 50 campos), C.T/B.L por lote e amostra com vários grupos por mensagem e alarme (B.L ≥ 50, C.T ≥ 200). Comandos em [`comandos.md`](comandos.md) (12.1 a 15), desenho em [`concentrado.md`](concentrado.md), arquitetura em [`arquitetura.md`](arquitetura.md).
 
-- WhatsApp Business (número dedicado em eSIM) → Evolution API 2.3.7 (instância `labflow2`) → webhook → n8n 2.38.6 → PostgreSQL → resposta pelo WhatsApp.
-- O mesmo container Postgres da stack guarda o banco da Evolution API e o banco `labflow`.
-- IA: Gemini (`models/gemini-3.1-flash-lite`) como fallback da regex.
+**Relatório do dia:** `relatório do dia` traz os quatro blocos (FCOJ recebimento, FCOJ embarque, NFC tank farm, NFC navio) numa mensagem, com ✅ lido e 🚨 fora do limite. `relatório do dia completo` traz só o lido, com `ok` / `não ok` nas linhas do concentrado. Filtros por bloco.
 
-O que o bot já faz (agora sobre PostgreSQL; a descrição abaixo vale igual):
+**Permissões:** só números cadastrados usam o bot; cargos Admin, Operador, Consultor (Consultor só consulta; só Admin troca cargo). Admin e Operador registram tudo, inclusive resultados.
 
-- Coleta de tanque terra (até 8 tanques por mensagem) e navio (até 16, nome + viagem, ex.: "O.SKY 123").
-- Cálculo automático de drops D5/D10/D15 e da data de descarte do bag (terra) / pote (navio) = coleta + 365 dias.
-- Registro de análise Normal ou Stress: 4 linhas por tanque → CT Profundidade (leitura final 48h), BL Profundidade (pré 72h, final 120h), WORT Profundidade e WORT Superfície (pré 120h, final 240h). Campo único `Status` por linha: Aguardando Pré-Leitura → Aguardando Leitura Final → Concluído.
-- Consultas: drops de hoje, análises terra/navio que saem hoje (agrupadas por sub-análise + prazo em horas + frasco; WORT Prof./Sup. juntos), bags e potes para descartar hoje.
-- Conclusão de drops em lote; conclusão de leituras com confirmação "sim/não" (aba `CONFIRMACOES_PENDENTES`, expira em 10 min), gravando quem leu (`Pre-Leitura Feita Por`, `Leitura Final Feita Por`).
-- Leituras concluídas continuam aparecendo na consulta do dia (decidido: serve para montar lista por e-mail).
-- Permissões: só números cadastrados usam o bot; cargos Admin, Operador, Consultor (Consultor só consulta; só Admin troca cargo, inclusive o próprio).
-- Bloqueio de coleta duplicada (mesmo tanque + mesma data; no navio considera o navio).
-- IA (V3 parte 1, concluída): mensagem que a regex não reconhece vai ao Gemini, que devolve JSON; o node `Validar IA` valida e monta o comando padrão; gravações pedem "sim" e o comando volta ao próprio webhook para a regex executar. Consultas e concluir leitura vão direto. Permissão e cargo são validados no código, nunca no prompt (Bug 23: IA trocava "gerente" por Admin). Ajuda por assunto sem IA ("comandos para drops", "consultar análises").
+**IA (V3 parte 1):** mensagem que a regex não reconhece vai ao Gemini, que devolve JSON; o node `Validar resposta da IA` valida e monta o comando padrão; gravações pedem "sim". Permissão é validada no código, nunca no prompt (Bug 23). **A IA ainda não conhece os comandos do concentrado.**
 
-Abas do Google Sheets (legado, só do workflow antigo que ficou como plano B; hoje os dados vivem nas tabelas do `001_tanques.sql`): `COLETAS_TERRA`, `COLETAS_NAVIO`, `DROPS` (terra e navio juntos, com Tipo Tanque/Navio), `BAGS_TERRA`, `POTES_NAVIO`, `ANALISES` (ID, ID Coleta, Tanque, Tipo Tanque, Navio, Tipo Frasco, Sub-Analise, Metodo, Data Analise, Data Pre-Leitura, Data Leitura Final, Status, Responsavel, Pre-Leitura Feita Por, Leitura Final Feita Por), `USUARIOS` (Numero, Nome, Nivel), `CONFIRMACOES_PENDENTES` (Numero, IDs, NovosStatus, Resumo, Criado Em).
+## 4. Roadmap
 
-Ferramentas do repositório: `scripts/audit-workflow.py` (órfãos, HTTP sem Respond to Webhook — com exceção para chamada ao próprio webhook —, placeholders, dados sensíveis com `--public`) + GitHub Action que roda a cada mudança do `LabFlow.json`. Dois arquivos de workflow: `LabFlow.json` (sanitizado, vai para o Git) e `LabFlow_importar_n8n.json` (IDs reais, nunca vai para o Git).
-
-Docs: `README.md`, `docs/comandos.md`, `docs/arquitetura.md`, `docs/troubleshooting.md` (28 bugs, incluindo os da virada), `docs/deploy-vps.md`, `docs/scripts.md` (audit-workflow e backup-db), `docs/CHANGELOG.md`, `docs/postgres-migracao.md`, `docs/handoff.md`. Arquitetura e comandos já descrevem o PostgreSQL (as seções antigas de arquitetura continuam como diário da época do Sheets).
-
-Pendências pequenas (as de antes da migração já foram feitas: `.gitignore`, branch remota apagada, Bug 22 revisado):
-
-- Opcional: release `v0.9.0` no GitHub; testes de regressão do prompt do Gemini; segundo modelo de reserva.
-
-## 3. Ordem do roadmap (decidida em 25/09, revisada)
-
-1. ✅ V1 MVP · ✅ V2 regras de negócio · ✅ V3 parte 1 (IA como fallback, sobre o Sheets).
-2. ▶ Próximo: V4 — migração Google Sheets → PostgreSQL, implementando junto recebimento e embarque de suco concentrado (com TAB, Coliformes e Howard), já direto no schema final (sem planilha intermediária).
-3. V3 parte 2 — IA avançada sobre o Postgres: comando por áudio (transcrição → mesmo parsing) e leitura de laudo por foto (sempre com confirmação antes de gravar), cobrindo tanques e concentrado.
-4. V5 — Dashboards no Power BI sobre o Postgres (Excel foi descartado).
+1. ✅ V1 MVP · ✅ V2 regras de negócio · ✅ V3 parte 1 (IA como fallback) · ✅ V4 (PostgreSQL, 1.0.0) · ✅ módulo de concentrado e relatório diário (1.1.0).
+2. ▶ **Próximo (a definir ordem):**
+   - Publicar a 1.1.0 (push, PR, merge, `git pull`, tag, release).
+   - Relatório diário, fase seguinte: `leitura de hoje finalizada` por analista (barreira contra relatório incompleto, `docs/concentrado.md` seção 7), envio por e-mail e Excel, limites e Situação do Howard e do NFC.
+   - IA no concentrado: ensinar o Gemini as intenções novas, com permissão no código e testes de regressão do prompt (uma frase por intenção).
+   - Melhoria do "✅ Feito" (Bug 29): só confirmar depois de gravar.
+3. V3 parte 2 — IA avançada: comando por áudio (transcrição → mesmo parsing) e leitura de laudo por foto (sempre com confirmação antes de gravar).
+4. V5 — Dashboards no Power BI sobre views do Postgres, por usuário somente leitura (Excel foi descartado). Licença: Microsoft 365 Family não inclui o Pro; o Desktop é gratuito para montar e testar.
 5. Interface web (LIMS) por último.
 6. V6 — documentação e testes, contínuo a cada marco.
 
-## 4. Migração para PostgreSQL
+Futuro (NÃO fazer agora): integrar a arquitetura de tanques do navio (tanque C/P/S com tonelagem, Load(s)/Item(ns), destino, fase, Linha e TT, o tanque de terra que o encheu; mistura é muitos-para-muitos).
 
-O detalhe do plano, das decisões de design e dos passos do servidor está em [`postgres-migracao.md`](postgres-migracao.md), e o schema em [`../db/migrations/`](../db/migrations/). Resumo:
+## 5. Banco de dados
 
-- Cada aba vira tabela; a coleta é o centro (drops, arquivo e análises apontam para ela por `coleta_id`).
-- O fluxo do bot continua igual para o usuário (mesmos comandos, mesmas respostas); troca-se a camada de dados (nodes Google Sheets → nodes Postgres).
-- Regras que hoje estão em código vão para o banco: duplicata (`UNIQUE`), valores válidos (`CHECK`), integridade (`FOREIGN KEY ... ON DELETE CASCADE`), índices por data/status.
-- Regex continua primeira tentativa; IA só como fallback; "a IA sugere, o código valida" vale igual no banco.
-- `tanque` é TEXT (terra é número, navio é código tipo "1C", "4P").
-- Datas/horas em `America/Sao_Paulo` (já houve bug de UTC no container).
-- COLETAS_NAVIO fica como está (decidido): não adicionar agora colunas da arquitetura do navio.
+Plano e decisões em [`postgres-migracao.md`](postgres-migracao.md); migrations em [`../db/migrations/`](../db/migrations/) (`001` a `010`, aplicadas uma de cada vez, com `-v ON_ERROR_STOP=1`). A coleta é o centro (drops, arquivo e análises apontam para `coleta_id`); no concentrado, a ordem é *recebimento → compostas → testes*. `tanque` é TEXT; datas em `America/Sao_Paulo`; o banco confere as regras de novo (UNIQUE, CHECK, FK). Usuários: `labflow_app` (n8n) e `labflow_leitura` (DBeaver e Power BI). Senhas só em `~/labflow/.env` no servidor.
 
-Passos, cada um numa branch e PR:
+Aplicar uma migration nova a partir do PC (backup antes: `ssh labflow "cd ~/labflow && ./backup-db.sh"`):
 
-1. Criar o banco `labflow` no Postgres da stack (separado do da Evolution API), com usuário da aplicação e outro somente leitura para o Power BI.
-2. Criar o schema do módulo de tanques (`db/migrations/001_tanques.sql`).
-3. Credencial Postgres no n8n; trocar, um ramo por vez, os nodes Google Sheets por nodes Postgres (começar por drops de hoje), testando no WhatsApp a cada troca.
-4. Migrar dados existentes (são fictícios; recomeçar do zero ou importar CSV).
-5. Criar o módulo de concentrado (`002_concentrado.sql`) e os comandos novos (regex primeiro, depois a IA).
-6. Views para relatório (ex.: `vw_painel_analises` com Concluído/Pendente/Atrasado).
-7. Atualizar docs (arquitetura, comandos, troubleshooting, CHANGELOG → 0.10.0 ou 1.0.0 a decidir), auditoria do workflow e README.
-8. Backup: rotina de `pg_dump` no VPS.
+```powershell
+cmd /c "type db\migrations\NNN_nome.sql | ssh -o ClearAllForwardings=yes labflow docker exec -i labflow-postgres psql -U labflow_app -d labflow -v ON_ERROR_STOP=1"
+```
+(`ssh labflow` é um atalho do `~/.ssh/config` que também abre o túnel do n8n e da Evolution; `cmd /c` evita que o PowerShell estrague acentos.)
 
-## 5. Módulo novo — suco concentrado: recebimento e embarque
+## 6. Perguntas em aberto e pendências
 
-### Recebimento
-
-- Suco chega por carreta e enche um tanque principal que depois embarca num navio.
-- A unidade é o Load, com Item e Fábrica fixos. Um load recebe lotes aos poucos (cada lote = 1 amostra), de 0 a ~43, podendo levar mais de um dia (ex.: load 44444 item 2020 recebe lotes 01–14 num dia, o resto depois). Não fixar a quantidade de lotes (às vezes 32).
-- CT (48h) e BL (72h e 120h): por lote individual, com resultado numérico por lote. Ex.: "quanto deu de CT no load 40400 lote 4" retorna o valor daquele lote.
-- Compostas: grupos de lotes analisados juntos para Coliformes e TAB. Normalmente ~5 lotes, mas nem sempre 5 nem em sequência (ex.: "1-3,5,6" ou "1,2,5"; lotes faltantes completam outra composta em outra data). Precisa de relação composta ↔ lotes (tabela de ligação).
-- Exemplo de comando: `analise load 40400 item 3030 lotes 1-20` → uma linha por lote.
-
-### Embarque
-
-- Feito por Navio + viagem (ex.: "ORANGE STAR 112"; o campo "Embarque" do laudo é a viagem), Linha e Fase (linha pode ter 2, 3 ou 4 fases).
-- Linha = linha física de bombeamento (o "L04", "L07" da arquitetura do navio), independente do número do tanque do navio.
-- O número de amostras por linha/fase varia com a tonelada embarcada (não é fixo em 5; às vezes 10). Amostras identificadas A1, A2, A3…
-- Uma mesma Linha+Fase pode ter mais de 1 Load associado.
-- CT/BL por amostra individual (igual ao recebimento), com resultado numérico.
-- Compostas também no embarque; análise da composta é TAB ou Howard, dependendo do navio/destino; Coliformes também existe no embarque.
-- Item aparece hoje só na Observação do laudo, mas pode ter coluna própria no banco desde já.
-- Exemplo de comando: `analise embarque linha 2 fase 1 A1-A3`.
-
-### TAB, Coliformes e Howard
-
-- **TAB** (total 10 dias): 5 dias no caldo BAT, depois estria em placa por superfície, mais 5 dias em estufa. Consultas planejadas: "quais TABs tenho para espalhar hoje?" (dia 5) e "quais TABs tenho para ler hoje?" (dia 10).
-- **Coliformes:** pesa no caldo, 2 dias depois estria na placa, leitura no 3º dia. Comando simples, por exemplo `Coliformes feitos do load 33333 lotes 1-5, item 3333`; no embarque o comando inclui navio, linha e fase.
-- **Howard:** resultado em porcentagem, não positivo/negativo: porcentagem de campos positivos sobre os campos lidos. Método padrão: 25 campos em cada uma de 2 lâminas (50 campos), cada campo positivo vale 2%. O banco guarda `campos_lidos` e `campos_positivos` e calcula `howard_percentual`. **Confirmar quantos campos o laboratório lê** (com 100 campos, 1 positivo dá 1%).
-- TAB, Coliformes e Howard são feitos no recebimento e no embarque. Os prazos finais serão detalhados "quando for a hora de implementar".
-
-### Itens e tipo de produto
-
-- Item só importa para concentrado, não para NFC.
-- Regra prática: concentrado costuma ter Item de 4 dígitos (às vezes 3, ex.: 319); NFC/suco fresco tem 3 dígitos e quase sempre é 129. Não é regra rígida → tabela `itens` aberta para cadastro livre.
-
-### Futuro (depois da migração, NÃO fazer agora)
-
-- Integrar a arquitetura de tanques do navio (documento por navio/viagem): cada tanque do navio (sufixos C/P/S) com tonelagem, Load(s)/Item(ns), destino, fase, Linha e TT (tanque terra que o encheu); tanques de concentrado têm Origem (fábrica) e Linha, NFC não.
-- Tanque do navio ↔ Load/Item: muitos-para-muitos (pode haver mistura) → tabela de ligação.
-- TT: por ora campo simples (1 TT por tanque do navio); rastrear mistura de vários TT fica para depois.
-- Ligações futuras: tanque terra (TT) → tanque do navio → embarque → loads.
-
-## 6. Power BI (V5, depois do banco)
-
-- Fonte: views do Postgres (não as tabelas cruas), acessadas por usuário somente leitura.
-- Indicadores desejados: análises pendentes, concluídas e atrasadas; próximas do prazo; próximas do descarte; contagem por tipo de análise; coletas por período (terra × navio); drops previstos; recebimento/embarque (resultados de CT/BL por load/lote e resultados de TAB/Coliformes/Howard).
-- Já existe uma prévia simples: aba "Painel" no Sheets (FILTER dos drops do dia) e uma página de simulação do painel feita no Claude.
-- A definir: licença (Microsoft 365 Family não inclui Power BI Pro). Power BI Desktop é gratuito para montar/testar localmente; publicar e atualizar de forma agendada normalmente exige Pro e um gateway. Como o VPS não expõe portas, o Desktop conectaria via túnel SSH local. A empresa só tem Microsoft 365 (sem Google), o que favorece Power BI.
-
-## 7. IA avançada sobre o Postgres (V3 parte 2)
-
-- Áudio: transcrever → texto → mesmo parsing (regex, depois IA).
-- Foto de laudo: extrair CT, BL 72h, BL 120h etc. para o load/lote correspondente, sempre com confirmação antes de gravar (risco de letra manuscrita).
-- Ensinar a IA os comandos novos de recebimento/embarque; manter permissão validada no código.
-
-## 8. Perguntas em aberto (perguntar antes de implementar)
-
-As perguntas antigas desta seção foram respondidas em 30/09 e 01/10: versão 1.0.0; dados de teste recomeçados do zero no Postgres; backup no servidor com cópia eventual no OneDrive (dados fictícios); Howard com 50 campos e sem prazo; comandos e ciclos do concentrado em `docs/concentrado.md` (seção 11 de lá: nada em aberto).
+Respondidas: versão 1.0.0 e 1.1.0; Howard com 50 campos e sem prazo; TAB em 10 dias; Coliformes em 3 dias; quem registra resultado (Admin e Operador); embarque com load e item e sem exigir que o load exista; comandos de C.T/B.L por grupos; alarmes B.L ≥ 50 e C.T ≥ 200; dados de teste recomeçados do zero.
 
 Ainda em aberto:
 
-1. Licença do Power BI (Microsoft 365 Family não inclui o Pro; o Desktop é gratuito para montar e testar).
-2. Quem pode registrar resultado de TAB, Coliformes e Howard (Operador ou só Admin)? Hoje a regra geral é: Consultor só consulta.
+1. Limites (e Situação `ok`/`não ok`) do Howard e do NFC.
+2. Licença do Power BI.
+3. Onde guardar uma cópia do `pg_dump` fora do servidor (enquanto os dados forem fictícios, pode ir para o OneDrive).
+4. Positivo de TAB/Coliformes entra como "não ok" e 🚨: foi decisão do Claude seguindo o desenho; confirmar com o Danyllo.
 
-## 9. Lições que valem para a migração
+## 7. Lições que valem daqui para frente
 
-- Mudanças estruturais no n8n introduzem bugs de conexão: sempre exportar e rodar `python scripts/audit-workflow.py LabFlow.json --public` (0 erros).
+- Mudanças estruturais no n8n introduzem bugs de conexão: sempre rodar `python scripts/audit-workflow.py LabFlow.json --public` (0 erros).
 - Todo ramo precisa terminar em `Respond to Webhook`, senão a Evolution API reenvia a mensagem.
-- `Get rows` vazio trava o próximo node (no Postgres, conferir o comportamento equivalente com "Always Output Data").
+- Node que vem depois de um node com várias linhas precisa de `executeOnce`, senão roda uma vez por linha.
 - "Hoje" sempre em `America/Sao_Paulo`.
 - Prompt é código: depois de mudar o prompt, reenviar uma frase de cada intenção (regressão).
+- Código dos nodes pode ser testado fora do n8n: extrair o `jsCode` do JSON exportado e executar com mensagens de exemplo (no navegador). Pega erro de regex e de texto antes de importar.
+- Depois de gerar arquivo por script, procurar caracteres corrompidos (`Ã`, `Â`, `�`) comparando com a versão anterior.
+- Antes de taguear: `git switch main && git pull` e conferir com `git log -1`.
 - Nunca commitar IDs reais, chaves, telefones reais ou `.env`.
