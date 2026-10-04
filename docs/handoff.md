@@ -55,7 +55,7 @@ Stack (VPS Linux, stack própria em `~/labflow`, Docker, sem porta pública, ace
 1. ✅ V1 MVP · ✅ V2 regras de negócio · ✅ V3 parte 1 (IA como fallback) · ✅ V4 (PostgreSQL, 1.0.0) · ✅ módulo de concentrado e relatório diário (1.1.0).
 2. ▶ **Próximo (a definir ordem):**
    - Publicar a 1.1.0 (push, PR, merge, `git pull`, tag, release).
-   - Relatório diário, fase seguinte: `leitura de hoje finalizada` por analista (barreira contra relatório incompleto, `docs/concentrado.md` seção 7), envio por e-mail e Excel, limites e Situação do Howard e do NFC.
+   - Relatório diário, fase seguinte: `leitura de hoje finalizada` por analista (barreira contra relatório incompleto, `docs/concentrado.md` seção 7), envio por e-mail e Excel, e a Situação (`ok`/`não ok`) em todas as linhas do relatório, inclusive drops, Howard e NFC.
    - IA no concentrado: ensinar o Gemini as intenções novas, com permissão no código e testes de regressão do prompt (uma frase por intenção).
    - Melhoria do "✅ Feito" (Bug 29): só confirmar depois de gravar.
 3. V3 parte 2 — IA avançada: comando por áudio (transcrição → mesmo parsing) e leitura de laudo por foto (sempre com confirmação antes de gravar).
@@ -82,10 +82,10 @@ Respondidas: versão 1.0.0 e 1.1.0; Howard com 50 campos e sem prazo; TAB em 10 
 
 Ainda em aberto:
 
-1. Limites (e Situação `ok`/`não ok`) do Howard e do NFC.
+1. Regra de Situação (`ok`/`não ok`) para tudo o que aparece no relatório: Howard, NFC (C.T, B.L, Psicrotróficos) e drops.
 2. Licença do Power BI.
 3. Onde guardar uma cópia do `pg_dump` fora do servidor (enquanto os dados forem fictícios, pode ir para o OneDrive).
-4. Positivo de TAB/Coliformes entra como "não ok" e 🚨: foi decisão do Claude seguindo o desenho; confirmar com o Danyllo.
+4. **Decidido em 04/10:** positivo de TAB/Coliformes entra como `não ok` e 🚨 no relatório. A mesma lógica deve valer para **tudo** o que aparece no relatório, inclusive os drops. Falta definir a regra de `não ok` de cada linha (C.T, B.L e Psicrotróficos do NFC, drops D5/D10/D15, Howard).
 
 ## 7. Lições que valem daqui para frente
 
