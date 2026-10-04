@@ -198,7 +198,7 @@ TAB: -
 ✅ = lido (2 de 9)
 ```
 
-No navio, os tanques vêm agrupados por navio, como na planilha: `O.SUN 156 (1A ✅, 1F); O.SKY 133 (2P)`. `relatório do dia` sozinho traz os dois blocos (tank farm e navio); quando o módulo de concentrado existir, ele passa a ser o relatório completo (ver `docs/concentrado.md`). A linha TAB fica com `-` até a fase B.
+No navio, os tanques vêm agrupados por navio, como na planilha: `O.SUN 156 (1A ✅, 1F); O.SKY 133 (2P)`. `relatório do dia` sozinho agora traz **todos os blocos**, inclusive o concentrado, e a linha TAB do tank farm mostra os TABs de NFC por tanque: ver a seção 15.
 
 ## 9. Concluir drops do dia
 
@@ -334,3 +334,174 @@ consultar relatório
 | `relatório` | relatório do dia dos tanques |
 
 `comandos` sozinho mostra o menu de assuntos. Um assunto que não existe (`comandos para xyz`) recebe o aviso e o mesmo menu. A frase `consultar drops` mostra a *lista de comandos* de drops; para ver os drops de hoje, o comando continua sendo `drops para hoje`.
+
+## 12.1 Recebimento, compostas, TAB e Coliformes (concentrado)
+
+Módulo de suco concentrado (FCOJ). Desenho completo em [`concentrado.md`](concentrado.md). Regras gerais: **a ordem é recebimento → compostas → testes**, o bot recusa teste de lote que não existe, e gravações que pedem "sim" expiram em 10 minutos. Só Admin e Operador gravam; o Consultor só consulta.
+
+### Recebimento
+```
+recebimento load 77001 item 444 fabrica AQA lotes 1-14
+recebimento load 77001 item 444 fabrica AQA lotes 1-5,7,9-10 data 01/10/2026
+```
+Registra os lotes do load (cada lote é uma amostra de carreta; um load recebe lotes aos poucos, em dias diferentes). Lotes repetidos são ignorados, e fábrica diferente da cadastrada para aquele load é recusada. Grava direto, sem "sim". A `data` é opcional (hoje, se omitida).
+
+### Compostas
+```
+compostas do load 77001 (1-5)(6-10)(11,12,15)
+```
+Cria uma composta por parêntese, de 1 a N lotes em qualquer combinação (`-` é faixa, `,` separa lotes). Tudo ou nada: lote não recebido, ou já em outra composta, cancela a mensagem inteira. O bot devolve o número curto de cada composta (`#12`), usado nos comandos seguintes. `item 444` é opcional (necessário se o load existir com dois itens). TAB e Coliformes são feitos **da mesma composta**.
+
+### TAB e Coliformes de composta
+Os dois aceitam o **número `#`** ou o **formato por extenso** (load + lotes; `(1-3,5)` vale).
+
+| TAB (caldo, +5 dias para espalhar, +5 para ler) | Coliformes (caldo, +1 dia para estriar, +1 para ler) |
+|---|---|
+| `tab feito das compostas #4 a #6` · `tab feito do load 77001, item 444, lotes 1-5` | `coliformes feitos das compostas #4 a #6` · `coliformes feitos do load 77001 (1-5)(6-10)` |
+| `quais tabs tenho para espalhar hoje?` | `quais coliformes tenho para estriar hoje?` |
+| `tabs de hoje espalhados` → sim → Incubado | `coliformes de hoje estriados` → sim → Estriado |
+| `quais tabs tenho para ler hoje?` | `quais coliformes tenho para ler hoje?` |
+| `tab #5 em confirmação` (PCA 24h, direto) | `coliformes #5 em confirmação` → sim: abre a composta lote a lote (`#5.6`, `#5.7`...) |
+| `confirmação do tab #5 positivo` (ou `negativo`) → sim | `coliformes #5.7 positivo` → sim; a composta fecha positiva se algum lote der positivo |
+| `tabs de hoje lidos` → sim: sem crescimento, todos negativos | `coliformes de hoje lidos` → sim: todos negativos |
+| `quais tabs foram lidos hoje?` | `quais coliformes foram lidos hoje?` |
+
+- `data dd/mm/aaaa` no "feito" (`tab feito das compostas #7 data 28/09/2026`) faz o prazo contar dessa data, útil para registrar retroativo.
+- O que não foi feito no dia previsto continua aparecendo, com a **data prevista**: `⚠️ Atrasados — previsto 03/10/2026`.
+- Por extenso: `Tab da composta load 77001, lotes 6-10, item 444, em confirmação`; `composta load 77001, lote 7 item 444, da confirmação deu positivo`.
+
+## 13. Embarque (concentrado)
+
+**Em teste (04/10/2026).** Desenho completo em [`concentrado.md`](concentrado.md), seção 10.1.
+
+### Registrar o embarque
+```
+embarque navio O.SKY 133 linha 2 fase 2 load 77010 item 444 amostras 1-10
+embarque navio O.SKY 133 linha 2 fase 2 load 77011 item 444 amostras 11-20 data 03/10/2026
+```
+
+- O navio leva a viagem junto (`O.SKY 133`). As amostras são A1, A2... e podem ser escritas com ou sem o `A` (`A1-A5` ou `1-5`, `A1-A5,A7`).
+- Uma linha+fase pode ter mais de um load: um comando por load. A numeração das amostras não repete dentro da linha+fase.
+- **O load não precisa existir.** Se for um load antigo, o bot o cadastra na hora (número e item, sem fábrica) e avisa. Se o recebimento for registrado depois, a fábrica é preenchida.
+- Amostras já registradas são ignoradas, e a resposta diz a qual load pertencem. Se o mesmo número de load já existir com outro item, o bot avisa para conferir a digitação.
+- Grava direto, sem "sim", como o recebimento. Só Admin e Operador.
+
+### Criar compostas do embarque
+```
+compostas do navio O.SKY 133 linha 2 fase 2 (A1-A5)(A6-A10)
+```
+Todas as amostras precisam estar registradas e livres; uma composta pode juntar amostras de loads diferentes da mesma linha+fase. Nada é gravado se alguma amostra faltar ou já estiver em outra composta. O bot devolve o número de cada composta (`#21`).
+
+### TAB e Coliformes nas compostas de embarque
+Os mesmos comandos do recebimento, com o número `#` ou por extenso:
+```
+tab feito das compostas #21 a #22
+tab feito do navio O.SKY 133 linha 2 fase 2 (A1-A5)
+coliformes feitos do navio O.SKY 133 linha 2 fase 2
+tab da composta navio O.SKY 133 linha 2 fase 2, amostras A1-A5, em confirmação
+composta navio O.SKY 133 linha 2 fase 2, amostra A3, da confirmação deu positivo
+```
+As consultas (`quais tabs tenho para espalhar hoje?`, `quais coliformes tenho para ler hoje?`...) listam recebimento e embarque juntos, com a identificação `O.SKY 133 linha 2 fase 2 (A1-A5)`. Na confirmação de Coliformes, a composta de embarque é aberta **amostra por amostra** (`#21.3` = composta 21, amostra A3).
+### Howard (embarque)
+O Howard é **só do embarque**, feito da composta do embarque (a mesma do TAB e dos Coliformes). É uma análise de **um dia**: sem caldo, sem estria e sem confirmação, e sem prazo. Lido em 50 campos, cada campo positivo vale 2%, e o analista já manda a porcentagem.
+
+```
+howard #21 2%
+Analise da composta de Howard do navio O.SKY 133 linha 2 fase 2 amostras 1-5, foi 2%
+Analise da composta de Howard do navio O.SKY 133 linha 2 fase 2 (A1-A5) deu 10%
+```
+
+O bot mostra o que entendeu e só grava com **sim**:
+```
+❓ Gravar Howard *2%* (1 campo positivo de 50)?
+#21 O.SKY 133 linha 2 fase 2 (A1-A5)
+
+Responda *sim* ou *não*.
+```
+
+- Como são 50 campos, a porcentagem é sempre **par** (0%, 2%, 4%...); um valor ímpar ou com casas decimais, como 3% ou 2,5%, é recusado.
+- Composta do recebimento é recusada ("Howard só vale para composta de embarque"). Se a composta já tem Howard, o bot avisa e o novo valor substitui o anterior.
+- Só Admin e Operador registram.
+
+Consultas:
+```
+temos analise de howard para hoje?
+quais howards foram lidos hoje?
+```
+A primeira lista as compostas de embarque que ainda **não têm** Howard; a segunda, os Howards gravados hoje, com a porcentagem.
+### TAB de NFC (tank farm)
+O TAB também é feito **por tanque de terra**, sem composta, com o mesmo ciclo (caldo → espalhar → incubar → confirmação → resultado). O comando **sempre cita a data da coleta**, porque tanques podem acumular e o mesmo número pode ter mais de uma coleta:
+
+```
+Tab feito dos tanques terra 42,43 coleta 28/09/2026
+Tab feito dos tanques terra 42,43 coleta 28/09/2026 data 30/09/2026
+```
+
+- O bot liga o TAB à coleta exata (tanque + data). Se algum tanque não tiver coleta naquela data, **nada é gravado** e a resposta diz quais. Até 8 tanques por mensagem. Só tanques de **terra** (NFC de navio não tem TAB).
+- Espalhar em +5 dias e ler mais +5 dias depois de espalhar, como o TAB de composta. `data dd/mm/aaaa` é a data em que o TAB foi feito (hoje, se omitida).
+- As mesmas consultas do TAB (`quais tabs tenho para espalhar hoje?`, `quais tabs tenho para ler hoje?`, `quais tabs foram lidos hoje?`) e os comandos em lote (`tabs de hoje espalhados`, `tabs de hoje lidos`) valem para os dois tipos, e as respostas listam compostas e tanques juntos (`tanque 42 (coleta 28/09/2026)`).
+- Em confirmação e resultado, por tanque (não existe número `#` para tanque):
+```
+tab tanque terra 42 coleta 28/09/2026 em confirmação
+confirmação do tab tanque terra 42 coleta 28/09/2026 positivo
+```
+O resultado pede "sim" antes de gravar, como no TAB de composta.
+## 14. C.T e B.L por lote e por amostra (concentrado)
+
+**Em teste (04/10/2026).** Desenho em [`concentrado.md`](concentrado.md), seção 10.2. Prazos contados da data do recebimento (lote) ou do embarque (amostra): **C.T 48h** (+2 dias), **B.L 72h** (+3) e **B.L 120h** (+5).
+
+### Registrar os resultados
+Vários grupos na mesma mensagem, separados por vírgula. Cada grupo é `lote`/`lotes` (ou `amostra`/`amostras`) + faixa ou lista + `deu` + valor:
+
+```
+ct load 77001 lote 4 deu 10, lotes 5-10 deu <10
+ct load 77001 lote 4-12 deu =10, lote 13 deu 20
+bl72 load 77001 lotes 1-14 deu <10
+bl120 load 77001 item 444 lote 4 deu 8,5
+ct navio O.SKY 133 linha 2 fase 2 amostras 1-5 deu <10, amostra 6 deu 30
+```
+
+- **Valor:** `10` ou `=10` (exato), `<10` (menor que) ou `>10` (maior que); aceita vírgula decimal. Fica gravado com a notação do laudo.
+- `bl72` e `bl120` (também `bl 72`, `bl 120`) funcionam igual ao `ct`, no recebimento e no embarque. No embarque, `A1-A5` e `1-5` valem.
+- O bot mostra o que entendeu e só grava com **sim**. Load, embarque, lote ou amostra que não existe cancela **tudo**. O mesmo número em dois grupos é recusado.
+- Um resultado repetido **corrige** o anterior, e o bot avisa o valor antigo antes de gravar.
+- Se o número do load existir com dois itens, informe `item 444`.
+- Só Admin e Operador registram.
+
+### Alarme
+**B.L (72h e 120h) a partir de 50** e **C.T a partir de 200** mostram 🚨 na própria confirmação e nas consultas. `<10` nunca alarma; `>N` alarma se N já estiver no limite ou acima. O mesmo alarme vai para o relatório diário do concentrado (etapa seguinte).
+
+### Consultas
+```
+quais ct tenho para ler hoje?
+quais bl72 tenho para ler hoje?
+quais bl120 tenho para ler hoje?
+quais cts foram lidos hoje?
+```
+`para ler hoje` lista o que vence hoje e os **atrasados com a data prevista**, agrupado por load (`load 77001: 6-8`) ou por navio, linha, fase e load (`O.SKY 133 linha 2 fase 2 · load 77010: A1-A5`). `foram lidos hoje` mostra os resultados gravados hoje, com o 🚨 quando passou do limite.
+## 15. Relatório do dia (todos os blocos)
+
+O relatório diário de microbiologia sai **numa mensagem só**, com os quatro blocos na ordem da planilha: **FCOJ — Recebimento**, **FCOJ — Embarque**, **NFC — Tank farm** e **NFC — Navio**. Desenho em [`concentrado.md`](concentrado.md), seções 1 e 7.
+
+```
+relatório do dia                         os quatro blocos, acompanhando o andamento
+relatório do dia completo                só o que já foi lido, com a Situação (ok / não ok)
+relatório do dia recebimento             só o bloco pedido (também: embarque, concentrado)
+relatório do dia tanques terra           só NFC (também: tanques navio, tanques)
+```
+`completo` também pode vir depois do filtro (`relatório do dia embarque completo`), e `relatório completo` vale como `relatório do dia completo`.
+
+### O que entra em cada linha
+| Linha | O que mostra |
+|---|---|
+| **C.T 48h, B.L 72h, B.L 120h** (concentrado) | Por load: `77001 (4-5 ✅, 6 🚨, 7)`. No embarque: `O.SKY 133 linha 2 fase 2 - 77010 (A1-A2 ✅, A3)`. Entram os lotes/amostras que **vencem hoje** (+2, +3 e +5 dias do recebimento ou do embarque) |
+| **TAB** e **Coliformes** (concentrado) | Uma composta por parêntese: `77001 (1-5 ✅)(6-8 🚨)`. Entram as compostas cuja **leitura** é hoje |
+| **Howard** (embarque) | `O.SKY 133 linha 2 fase 2 - 77010 (A1-A5): 2%`, no dia em que foi registrado |
+| **TAB** (tank farm) | Por tanque, com a coleta: `42 (coleta 28/09) ✅, 43 (coleta 28/09)` |
+| C.T, B.L, Psicrotróficos e Drops (NFC) | Como antes: por tanque, `✅` = lido |
+
+### Marcas e alertas
+- **✅** = lido. **🚨** = fora do limite: **B.L a partir de 50** ou **C.T a partir de 200** (`<10` nunca alarma), ou TAB/Coliformes **positivo**.
+- Depois das linhas de cada bloco, uma linha de alerta por problema: `🚨 C.T 48h ≥ 200 — 77001: lote 6 = 250`, `🚨 TAB POSITIVO — 77001 (6-8)`.
+- No `completo`, cada linha do concentrado termina em `— ok` ou `— não ok` (não ok se algum item lido estiver fora do limite ou positivo). Linha sem leitura fica `-`, e o Howard e o NFC não têm Situação, porque ainda não há limite definido para eles.
+- O `completo` termina com `✅ lido: X de Y` e, se faltar leitura, o aviso `⚠️ Ainda há N leituras de hoje por fazer`. O envio por e-mail, em Excel, e a liberação por analista (`leitura de hoje finalizada`) ainda não existem.
