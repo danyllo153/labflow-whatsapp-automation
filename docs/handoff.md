@@ -2,7 +2,7 @@
 
 Documento para retomar o projeto em outro computador ou numa conversa nova do Claude Code. Leia inteiro antes de propor qualquer coisa. O que está marcado como decidido já foi combinado com o Danyllo; o que está em "a definir" precisa ser perguntado antes de implementar.
 
-Última atualização: 04/10/2026 (módulo de concentrado completo, versão 1.1.0 pronta para publicar).
+Última atualização: 04/10/2026 (módulo de concentrado completo, versão 1.1.0 publicada).
 
 ## 1. Quem sou e como gosto de trabalhar
 
@@ -19,7 +19,7 @@ Documento para retomar o projeto em outro computador ou numa conversa nova do Cl
 
 ## 2. Estado atual (04/10/2026)
 
-Versão publicada: **`v1.0.0`** (LabFlow no PostgreSQL; tag e release no GitHub). **A `1.1.0` (módulo de concentrado) está pronta:** os commits estão na branch `feat/concentrado-tab`. Falta: `git push`, abrir o PR, mesclar, `git switch main && git pull` e então `git tag -a v1.1.0` + release (**sempre `git pull` antes de taguear**, ver Bug 30).
+Versão publicada: **`v1.1.0`** (módulo de concentrado e relatório diário; PR #12, tag e release no GitHub). A anterior é a `v1.0.0` (LabFlow no PostgreSQL). **Sempre `git pull` antes de taguear** (ver Bug 30).
 
 Repositório: `github.com/danyllo153/labflow-whatsapp-automation` (público). Clone local: `C:\Dev\labflow-whatsapp-automation`. Notas do projeto no Obsidian (vault `PROJETO- LABFLOW`), incluindo a pasta `Git` com o guia de comandos. Cópia dos arquivos no OneDrive: `Valts\labflow-whatsapp-automation` (o `sync-valts.bat` do notebook copia o projeto para lá).
 
@@ -36,7 +36,7 @@ Stack (VPS Linux, stack própria em `~/labflow`, Docker, sem porta pública, ace
 - Para regerar o público: `scripts\sanitize-workflow.ps1 -Entrada LabFlow_importar_n8n.json -Saida LabFlow.json`, e depois `python scripts/audit-workflow.py LabFlow.json --public` (o Python precisa estar instalado; a GitHub Action roda a auditoria a cada alteração do `LabFlow.json`). Detalhes em [`scripts.md`](scripts.md).
 - Cuidado: arquivo `.ps1` com acento sem BOM é lido como Windows-1252 no Windows PowerShell 5.1 e estraga o texto (Bug 29). Scripts em ASCII; texto com acento em arquivos lidos como UTF-8.
 
-**Dados de teste no banco (fictícios):** loads, embarque O.SKY 133, compostas, TABs, Howard, C.T/B.L e coletas dos testes de 02 a 04/10. Limpar pelo DBeaver (`LabFlow (app)`) quando quiser.
+**Dados de teste no banco:** limpos em 04/10 (`TRUNCATE` de todas as tabelas, menos `usuarios`, com backup antes). Para repetir, sem DBeaver, depois de um backup (`ssh labflow "cd ~/labflow && ./backup-db.sh"`): `TRUNCATE contagens, testes, composta_lotes, compostas, embarque_amostras, embarques, recebimento_lotes, loads, itens, fabricas, confirmacoes, analises, drops, arquivo_amostras, coletas, navios RESTART IDENTITY CASCADE;` pelo `psql` do container. **Nunca na `usuarios`:** sem usuários cadastrados o bot bloqueia todo mundo.
 
 ## 3. O que o bot faz
 
@@ -54,7 +54,6 @@ Stack (VPS Linux, stack própria em `~/labflow`, Docker, sem porta pública, ace
 
 1. ✅ V1 MVP · ✅ V2 regras de negócio · ✅ V3 parte 1 (IA como fallback) · ✅ V4 (PostgreSQL, 1.0.0) · ✅ módulo de concentrado e relatório diário (1.1.0).
 2. ▶ **Próximo (a definir ordem):**
-   - Publicar a 1.1.0 (push, PR, merge, `git pull`, tag, release).
    - Relatório diário, fase seguinte: `leitura de hoje finalizada` por analista (barreira contra relatório incompleto, `docs/concentrado.md` seção 7), envio por e-mail e Excel, e a Situação (`ok`/`não ok`) em todas as linhas do relatório, inclusive drops, Howard e NFC.
    - IA no concentrado: ensinar o Gemini as intenções novas, com permissão no código e testes de regressão do prompt (uma frase por intenção).
    - Melhoria do "✅ Feito" (Bug 29): só confirmar depois de gravar.
