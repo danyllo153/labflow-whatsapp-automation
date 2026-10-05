@@ -462,7 +462,7 @@ ct navio O.SKY 133 linha 2 fase 2 amostras 1-5 deu <10, amostra 6 deu 30
 ```
 
 - **Valor:** `10` ou `=10` (exato), `<10` (menor que) ou `>10` (maior que); aceita vírgula decimal. Fica gravado com a notação do laudo.
-- `bl72` e `bl120` (também `bl 72`, `bl 120`) funcionam igual ao `ct`, no recebimento e no embarque. No embarque, `A1-A5` e `1-5` valem.
+- `bl72` e `bl120` (também `bl 72`, `bl 120`) funcionam igual ao `ct`, no recebimento e no embarque. **`bl` sozinho vale `bl120`** (no registro e nas consultas, também `bls`). No embarque, `A1-A5` e `1-5` valem.
 - O bot mostra o que entendeu e só grava com **sim**. Load, embarque, lote ou amostra que não existe cancela **tudo**. O mesmo número em dois grupos é recusado.
 - Um resultado repetido **corrige** o anterior, e o bot avisa o valor antigo antes de gravar.
 - Se o número do load existir com dois itens, informe `item 444`.
