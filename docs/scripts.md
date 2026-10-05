@@ -33,7 +33,7 @@ Executa o `jsCode` **real** do node `Interpretar comando` (extraído do `LabFlow
 npm test
 ```
 
-O que os testes cobrem (80 casos):
+O que os testes cobrem (89 casos; 9 são do alerta de erro, em `tests/alerta-erro.test.js`):
 
 - **Reconhecimento:** cada comando da referência ([comandos.md](comandos.md)) cai na intenção (`tipo`) certa.
 - **Campos extraídos:** lotes, compostas, navio/linha/fase, grupos de C.T/B.L com o sinal (`<` nunca vira igual), data da coleta do TAB de NFC.
@@ -41,6 +41,7 @@ O que os testes cobrem (80 casos):
 - **Recusas:** 9 tanques (limite 8), Howard com porcentagem ímpar.
 - **Permissões:** não cadastrado, Consultor, Operador e Admin (a permissão é do código, nunca do prompt: Bug 23).
 - **IA:** frase livre vai para o Gemini, a mensagem reenviada não entra em loop, mensagem do próprio bot é ignorada.
+- **Alerta de erro:** formato da mensagem, máscara de números longos, corte em 300 caracteres, um aviso por Admin, nenhum aviso sem Admin e a janela de 10 minutos contra repetição.
 
 Para testar outro arquivo, por exemplo o de importação, antes de subir no n8n:
 
@@ -52,7 +53,7 @@ Os testes foram validados injetando defeitos de propósito numa cópia do workfl
 
 A GitHub Action [`testes.yml`](../.github/workflows/testes.yml) roda `npm test` a cada mudança no `LabFlow.json` ou em `tests/`.
 
-**Limite conhecido:** só o node `Interpretar comando` está coberto. Os nodes `Montar ...` (que formatam a resposta) e o `Validar resposta da IA` ainda não têm teste. O Gemini em si não é testado offline: o teste de regressão do prompt continua pendente.
+**Limite conhecido:** só o node `Interpretar comando` (e o do alerta de erro) está coberto. Os nodes `Montar ...` (que formatam a resposta) e o `Validar resposta da IA` ainda não têm teste. O Gemini em si não é testado offline: o teste de regressão do prompt continua pendente.
 
 ## sanitize-workflow.ps1
 

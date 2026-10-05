@@ -540,6 +540,24 @@ erros de regex e de texto antes de importar. Depois, cada etapa foi testada pelo
 NFC não têm limite nem Situação; o alarme de C.T/B.L aparece na confirmação, nas consultas e no
 relatório, mas não é enviado sozinho.
 
+## Alerta de erro no WhatsApp
+
+Antes, um ramo do bot que falhava só era percebido olhando **Executions** no n8n. Agora o n8n avisa sozinho.
+
+Um segundo workflow, **`LabFlow · Alerta de erro`** (`LabFlow_Alerta_Erro.json`), é ligado ao bot em *Settings → Error workflow*. Quando uma execução automática do bot falha, o n8n dispara este workflow:
+
+```
+Error Trigger → BD · Buscar Admins → Montar alerta de erro → Zap · Alerta de erro
+```
+
+- **Quem recebe:** todos os usuários com cargo `Admin` na tabela `usuarios`. Nenhum telefone fica no arquivo (o repositório é público).
+- **O que a mensagem traz:** workflow, node que falhou, erro (cortado em 300 caracteres), número da execução e hora de Brasília. **Nunca** o texto das mensagens dos usuários, e sequências de 8 ou mais dígitos no erro (por exemplo um telefone citado pelo banco) viram `***`.
+- **Sem enxurrada:** o mesmo erro, no mesmo node, só avisa de novo depois de 10 minutos (memória do próprio workflow, `staticData`). Isso evita dezenas de mensagens quando a Evolution API reenvia uma mensagem que falha.
+- **Sem Admin cadastrado:** não envia nada (e não gasta a janela de 10 minutos).
+- **Limites:** só execuções automáticas disparam o Error Workflow (teste manual no editor não dispara). Se o próprio servidor, o n8n ou o WhatsApp estiverem fora do ar, o alerta também não sai: para isso o próximo passo seria um monitor externo (Uptime Kuma).
+
+A auditoria (`scripts/audit-workflow.py`) só cobra "Respond to Webhook" de workflows que têm Webhook; este não tem. O código do node é coberto por `tests/alerta-erro.test.js` (ver [`scripts.md`](scripts.md)).
+
 ## Arquitetura no tempo do Google Sheets (resumo, até a 0.9.0)
 
 ```
