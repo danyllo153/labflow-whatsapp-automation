@@ -1,0 +1,26 @@
+name: Testes dos Code nodes
+
+on:
+  push:
+    paths:
+      - "LabFlow.json"
+      - "tests/**"
+      - "package.json"
+      - ".github/workflows/testes.yml"
+  pull_request:
+    paths:
+      - "LabFlow.json"
+      - "tests/**"
+      - "package.json"
+  workflow_dispatch:
+
+jobs:
+  testar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Rodar os testes (jsCode real do LabFlow.json)
+        run: npm test

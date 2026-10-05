@@ -142,7 +142,7 @@ n8n · Docker / Docker Compose · Evolution API · Google Gemini API · PostgreS
 | [troubleshooting.md](docs/troubleshooting.md) | 30 bugs reais: sintoma, causa raiz, solução e lição |
 | [deploy-vps.md](docs/deploy-vps.md) | Infraestrutura no VPS: rede, segredos, acesso SSH, migração |
 | [postgres-migracao.md](docs/postgres-migracao.md) | Plano, schema e decisões da migração para o PostgreSQL |
-| [scripts.md](docs/scripts.md) | Scripts de auditoria do workflow e de backup do banco, e como usá-los |
+| [scripts.md](docs/scripts.md) | Auditoria do workflow, testes dos Code nodes (`npm test`) e backup do banco, e como usá-los |
 | [CHANGELOG.md](docs/CHANGELOG.md) | Histórico de versões |
 
 ## Dados e privacidade

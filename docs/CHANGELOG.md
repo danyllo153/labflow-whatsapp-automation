@@ -10,6 +10,15 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 `docs/deploy-vps.md`. Este arquivo é só o resumo cronológico do que mudou.
 
 
+## [Não lançado]
+
+### Adicionado
+- Testes automatizados do node `Interpretar comando` (`tests/`, 80 casos): reconhecimento dos comandos, campos extraídos, prazos de negócio, recusas e permissões. Rodam com `npm test` e na GitHub Action `testes.yml`. Ver `docs/scripts.md`.
+
+### Alterado
+- `bl` sozinho (e `bls`) passa a valer `bl120`, no registro e nas consultas de C.T/B.L. `bl72` continua valendo 72. Antes, `quais bl tenho para ler hoje?` ia para a IA.
+- `CLAUDE.md` com as regras de trabalho do projeto.
+
 ## [1.1.0] - 2026-10-04
 
 ### Added

@@ -237,7 +237,7 @@ ct navio O.SKY 133 linha 2 fase 2 amostras 1-5 deu <10, amostra 6 deu 30
 - Vários grupos na mesma mensagem, separados por vírgula; cada grupo é `lote` ou `lotes` + faixa/lista + `deu` + valor. No embarque, `amostra`/`amostras` com o número (`A3` também vale).
 - **Valor:** `10` ou `=10` (exato), `<10` (menor que) ou `>10` (maior que). Fica gravado como texto, mantendo a notação do laudo.
 - Toda gravação mostra o que o bot entendeu e só grava com **sim**. Lote ou amostra que não existe cancela tudo. Um resultado repetido corrige o anterior, avisando o valor antigo.
-- Consultas: `quais ct tenho para ler hoje?` (e `bl72`, `bl120`) lista o que vence hoje e os atrasados; `quais cts foram lidos hoje?` lista os registrados hoje.
+- Consultas: `quais ct tenho para ler hoje?` (e `bl72`, `bl120`; `bl` sozinho vale `bl120`) lista o que vence hoje e os atrasados; `quais cts foram lidos hoje?` lista os registrados hoje.
 - **Quem registra:** Admin e Operador; o Consultor só consulta.
 
 ### Alarme no relatório diário
