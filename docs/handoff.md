@@ -2,7 +2,22 @@
 
 Documento para retomar o projeto em outro computador ou numa conversa nova do Claude Code. Leia inteiro antes de propor qualquer coisa. O que está marcado como decidido já foi combinado com o Danyllo; o que está em "a definir" precisa ser perguntado antes de implementar.
 
-Última atualização: 04/10/2026 (módulo de concentrado completo, versão 1.1.0 publicada).
+Última atualização: 05/10/2026 (1.1.0 publicada; `CLAUDE.md`, testes automatizados e `bl` = `bl120` já na `main`; alerta de erro no WhatsApp montado, falta o teste de ponta a ponta e o merge).
+
+## 0. Onde paramos (leia primeiro)
+
+**Alerta de erro no WhatsApp** (workflow `LabFlow · Alerta de erro`, arquivo `LabFlow_Alerta_Erro.json`; desenho em [`arquitetura.md`](arquitetura.md)):
+
+- ✅ Código, 9 testes e documentação prontos, em 3 commits + 1 de handoff na branch **`feat/alerta-erro-whatsapp`**. **Pode estar sem push/PR/merge:** conferir com `git status -sb` e `git ls-remote --heads origin feat/alerta-erro-whatsapp`. Se a branch não existir no GitHub, o trabalho só está no PC onde foi feito.
+- ✅ No n8n do servidor: workflow de alerta **importado, publicado e ligado** ao `LabFlow (Postgres)` em *Settings → Error workflow*.
+- ✅ **Teste A passou** (execução manual do alerta): a mensagem 🚨 chegou no WhatsApp do Admin, formatada certa (com os dados de exemplo do n8n).
+- ⏳ **Falta o teste B (ponta a ponta):** importar `LabFlow_importar_n8n_teste_erro.json` (webhook que sempre falha), ligar o *Error workflow* dele ao alerta, publicar, e disparar (túnel `ssh labflow` aberto):
+  `Invoke-WebRequest -Method POST -Uri http://127.0.0.1:5679/webhook/labflow-teste-erro -UseBasicParsing` (erro 500 é o esperado). Deve chegar o alerta com `Node: Falha proposital`. Rodar de novo logo em seguida **não** deve enviar nada (janela de 10 minutos). Depois, despublicar e apagar o workflow de teste.
+- Os arquivos `LabFlow_importar_n8n_alerta.json` e `LabFlow_importar_n8n_teste_erro.json` ficam **fora do Git** (têm IDs reais). Estão no PC onde foram gerados e na cópia do OneDrive; se faltarem, o Claude os regenera.
+
+**Feito em 04 e 05/10, já na `main`:** `CLAUDE.md` (PR #14), 80 testes do node `Interpretar comando` e a Action `testes.yml` (PR #15), `bl` sozinho vale `bl120` (já importado e testado no WhatsApp), vault do Obsidian reorganizado sem instruções duplicadas.
+
+**Ao abrir em outro PC:** instalar Python (marcando *Add python.exe to PATH*) e Node LTS, `git pull`, e conferir com `py --version`, `node --version` e `npm test` (deve dar `pass` em tudo). Roteiro completo de troca de PC está na nota `Git/16 Trocar de PC e handoff` do Obsidian.
 
 ## 1. Quem sou e como gosto de trabalhar
 
@@ -17,7 +32,7 @@ Documento para retomar o projeto em outro computador ou numa conversa nova do Cl
 - O termo "reanálise" não se usa no projeto. Os D5/D10/D15 são "análises de drop" (ou só "drops").
 - **TAB e Coliformes são masculinos** nos textos para o usuário ("O TAB está Incubado", "Os Coliformes estão Estriados"); no banco os status continuam `Incubada`, `Estriada`, `Concluída`.
 
-## 2. Estado atual (04/10/2026)
+## 2. Estado atual (05/10/2026)
 
 Versão publicada: **`v1.1.0`** (módulo de concentrado e relatório diário; PR #12, tag e release no GitHub). A anterior é a `v1.0.0` (LabFlow no PostgreSQL). **Sempre `git pull` antes de taguear** (ver Bug 30).
 
@@ -32,8 +47,10 @@ Stack (VPS Linux, stack própria em `~/labflow`, Docker, sem porta pública, ace
 **Arquivos de workflow (na pasta do projeto):**
 - `LabFlow.json`: versão **pública**, sem IDs reais (vai para o Git).
 - `LabFlow_importar_n8n.json`: o workflow final **com IDs reais** (nunca vai para o Git; o `.gitignore` bloqueia `LabFlow_importar_n8n*.json`).
-- `LabFlow_importar_n8n_etapa1.json` a `etapa5`: cópias intermediárias da construção do concentrado, também com IDs reais e fora do Git. Podem ser apagadas depois que a 1.1.0 estiver publicada e estável (a `etapa4` é o rollback mais recente).
-- Para regerar o público: `scripts\sanitize-workflow.ps1 -Entrada LabFlow_importar_n8n.json -Saida LabFlow.json`, e depois `python scripts/audit-workflow.py LabFlow.json --public` (o Python precisa estar instalado; a GitHub Action roda a auditoria a cada alteração do `LabFlow.json`). Detalhes em [`scripts.md`](scripts.md).
+- `LabFlow_importar_n8n_etapa5.json`: o workflow de antes da mudança do `bl`, com IDs reais e fora do Git. Fica como rollback; pode ser apagado quando o `bl` estiver estável. (As `etapa1` a `etapa4` foram apagadas.)
+- `LabFlow_Alerta_Erro.json`: o workflow de alerta de erro, **público**, sem IDs reais (vai para o Git). O de importação é `LabFlow_importar_n8n_alerta.json` (fora do Git), e o de teste descartável é `LabFlow_importar_n8n_teste_erro.json`.
+- Para regerar o público: `scripts\sanitize-workflow.ps1 -Entrada LabFlow_importar_n8n.json -Saida LabFlow.json` (o mesmo vale para o alerta), e depois `py scripts/audit-workflow.py LabFlow.json --public` (no Windows o Python é o `py`; as GitHub Actions rodam a auditoria e os testes a cada alteração). Detalhes em [`scripts.md`](scripts.md).
+- Antes de importar um workflow no n8n: `npm test` (testes dos Code nodes). Para testar o arquivo de importação: `$env:LABFLOW_JSON='LabFlow_importar_n8n.json'; npm test`.
 - Cuidado: arquivo `.ps1` com acento sem BOM é lido como Windows-1252 no Windows PowerShell 5.1 e estraga o texto (Bug 29). Scripts em ASCII; texto com acento em arquivos lidos como UTF-8.
 
 **Dados de teste no banco:** limpos em 04/10 (`TRUNCATE` de todas as tabelas, menos `usuarios`, com backup antes). Para repetir, sem DBeaver, depois de um backup (`ssh labflow "cd ~/labflow && ./backup-db.sh"`): `TRUNCATE contagens, testes, composta_lotes, compostas, embarque_amostras, embarques, recebimento_lotes, loads, itens, fabricas, confirmacoes, analises, drops, arquivo_amostras, coletas, navios RESTART IDENTITY CASCADE;` pelo `psql` do container. **Nunca na `usuarios`:** sem usuários cadastrados o bot bloqueia todo mundo.
@@ -54,6 +71,8 @@ Stack (VPS Linux, stack própria em `~/labflow`, Docker, sem porta pública, ace
 
 1. ✅ V1 MVP · ✅ V2 regras de negócio · ✅ V3 parte 1 (IA como fallback) · ✅ V4 (PostgreSQL, 1.0.0) · ✅ módulo de concentrado e relatório diário (1.1.0).
 2. ▶ **Próximo (a definir ordem):**
+   - Fechar o alerta de erro: teste B, push, PR e merge (ver seção 0). Depois, monitor externo (Uptime Kuma), porque o alerta não sai se o servidor ou o n8n caírem.
+   - Melhorias de fluxo: skills `/novo-comando` e `/fechar-dia`, hook de pré-commit (acento corrompido, ID real, `.env`), mais testes (nodes `Montar ...` e `Validar resposta da IA`), backup do `pg_dump` fora do servidor, ferramenta de migration (`dbmate`), vídeo/GIF do bot no README e a seção "Como usei IA neste projeto".
    - Relatório diário, fase seguinte: `leitura de hoje finalizada` por analista (barreira contra relatório incompleto, `docs/concentrado.md` seção 7), envio por e-mail e Excel, e a Situação (`ok`/`não ok`) em todas as linhas do relatório, inclusive drops, Howard e NFC.
    - IA no concentrado: ensinar o Gemini as intenções novas, com permissão no código e testes de regressão do prompt (uma frase por intenção).
    - Melhoria do "✅ Feito" (Bug 29): só confirmar depois de gravar.
@@ -88,7 +107,9 @@ Ainda em aberto:
 
 ## 7. Lições que valem daqui para frente
 
-- Mudanças estruturais no n8n introduzem bugs de conexão: sempre rodar `python scripts/audit-workflow.py LabFlow.json --public` (0 erros).
+- Mudanças estruturais no n8n introduzem bugs de conexão: sempre rodar `py scripts/audit-workflow.py LabFlow.json --public` (0 erros) e `npm test`.
+- Teste que nunca falha não protege nada: depois de escrever testes, injetar um defeito de propósito numa cópia e conferir que algum teste falha.
+- Comando novo ou regra nova: acrescentar o caso em `tests/interpretar-comando.test.js` no mesmo PR. A consulta de B.L: `bl` sozinho vale `bl120`; o de 72 horas é sempre `bl72`.
 - Todo ramo precisa terminar em `Respond to Webhook`, senão a Evolution API reenvia a mensagem.
 - Node que vem depois de um node com várias linhas precisa de `executeOnce`, senão roda uma vez por linha.
 - "Hoje" sempre em `America/Sao_Paulo`.
