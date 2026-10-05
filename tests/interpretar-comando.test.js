@@ -160,6 +160,22 @@ test('campos: B.L aceita virgula decimal e item', () => {
   });
 });
 
+test('campos: "bl" sozinho vale BL120 e "bl72" continua valendo 72 (consulta e registro)', () => {
+  const consultas = [
+    ['quais bl tenho para ler hoje?', 'BL120', 'ler'],
+    ['quais bls foram lidos hoje?', 'BL120', 'lidos'],
+    ['quais bl120 tenho para ler hoje?', 'BL120', 'ler'],
+    ['quais bl72 tenho para ler hoje?', 'BL72', 'ler'],
+    ['quais bl72 foram lidos hoje?', 'BL72', 'lidos'],
+  ];
+  for (const [frase, analise, etapa] of consultas) {
+    confere(frase, { tipo: 'consulta_contagens', analise, etapa });
+  }
+  confere('bl load 77001 lotes 1-3 deu <10', { tipo: 'contagem_registrar', analise: 'BL120' });
+  confere('bl72 load 77001 lotes 1-3 deu <10', { tipo: 'contagem_registrar', analise: 'BL72' });
+  confere('bl navio O.SKY 133 linha 2 fase 2 amostras 1-5 deu 8', { analise: 'BL120', origem: 'embarque' });
+});
+
 test('campos: C.T de embarque guarda navio, linha e fase', () => {
   confere('ct navio O.SKY 133 linha 2 fase 2 amostras 1-5 deu <10, amostra 6 deu 30', {
     analise: 'CT',
