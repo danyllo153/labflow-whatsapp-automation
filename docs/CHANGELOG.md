@@ -16,8 +16,11 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 - Testes automatizados do node `Interpretar comando` (`tests/`, 80 casos): reconhecimento dos comandos, campos extraídos, prazos de negócio, recusas e permissões. Rodam com `npm test` e na GitHub Action `testes.yml`. Ver `docs/scripts.md`.
 
 ### Alterado
+- A auditoria só cobra "Respond to Webhook" de workflow que tem Webhook.
 - `bl` sozinho (e `bls`) passa a valer `bl120`, no registro e nas consultas de C.T/B.L. `bl72` continua valendo 72. Antes, `quais bl tenho para ler hoje?` ia para a IA.
 - `CLAUDE.md` com as regras de trabalho do projeto.
+- **Alerta de erro no WhatsApp:** segundo workflow (`LabFlow_Alerta_Erro.json`), ligado ao bot em *Settings → Error workflow*, que avisa todos os Admin quando um ramo falha. Não leva o texto das mensagens dos usuários, mascara números longos e não repete o mesmo erro em 10 minutos. Ver `docs/arquitetura.md`.
+- 9 testes do alerta de erro (`tests/alerta-erro.test.js`); a Action de auditoria também audita o `LabFlow_Alerta_Erro.json`.
 
 ## [1.1.0] - 2026-10-04
 

@@ -32,7 +32,7 @@ Automação de laboratório de microbiologia: WhatsApp → Evolution API → n8n
 ## Workflow do n8n
 - Mudança grande: o Claude monta o JSON por script, o Danyllo importa **como cópia**, troca o ativo e testa pelo WhatsApp. O arquivo anterior é o rollback.
 - Depois de mexer no workflow, rodar a auditoria e os testes (no Windows o Python é o `py`):
-  - `py scripts/audit-workflow.py LabFlow.json --public` (0 erros)
+  - `py scripts/audit-workflow.py LabFlow.json --public` (0 erros); o mesmo para `LabFlow_Alerta_Erro.json` (workflow de alerta de erro)
   - `npm test` (testes do node `Interpretar comando`, em `tests/`). Para testar o arquivo de importação: `$env:LABFLOW_JSON='LabFlow_importar_n8n.json'; npm test`.
 - Comando novo ou regra nova: acrescentar o caso em `tests/interpretar-comando.test.js` no mesmo PR.
 - Todo ramo termina em `Respond to Webhook`. Node depois de um node com várias linhas precisa de `executeOnce`.

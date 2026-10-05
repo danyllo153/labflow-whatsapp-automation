@@ -1,0 +1,150 @@
+{
+    "name":  "LabFlow · Alerta de erro",
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "content":  "## Alerta de erro\nO n8n dispara este workflow quando um ramo do **LabFlow (Postgres)** falha (configurado em Settings \u003e Error workflow do bot).\nManda uma mensagem de WhatsApp para todos os **Admin** cadastrados na tabela `usuarios`.\nNunca inclui o texto das mensagens dos usuários. O mesmo erro só alerta de novo depois de 10 minutos.",
+                                         "height":  200,
+                                         "width":  520
+                                     },
+                      "type":  "n8n-nodes-base.stickyNote",
+                      "typeVersion":  1,
+                      "position":  [
+                                       -320,
+                                       -260
+                                   ],
+                      "id":  "c48fc257-4659-4aea-b776-615a44b41ddf",
+                      "name":  "Nota"
+                  },
+                  {
+                      "parameters":  {
+
+                                     },
+                      "type":  "n8n-nodes-base.errorTrigger",
+                      "typeVersion":  1,
+                      "position":  [
+                                       -320,
+                                       0
+                                   ],
+                      "id":  "16984a8a-c28a-4b38-9acf-0f732761da89",
+                      "name":  "Error Trigger"
+                  },
+                  {
+                      "parameters":  {
+                                         "operation":  "executeQuery",
+                                         "query":  "SELECT telefone\nFROM usuarios\nWHERE cargo = \u0027Admin\u0027;",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.postgres",
+                      "typeVersion":  2.7,
+                      "position":  [
+                                       -80,
+                                       0
+                                   ],
+                      "id":  "73773df1-5759-4309-8a27-c322f66445f4",
+                      "name":  "BD · Buscar Admins",
+                      "alwaysOutputData":  true,
+                      "credentials":  {
+                                          "postgres":  {
+                                                           "id":  "POSTGRES_CREDENTIAL_ID",
+                                                           "name":  "Postgres LabFlow"
+                                                       }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// Monta o alerta de erro para os Admins.\n// Nunca inclui o texto das mensagens dos usuarios: so workflow, node, erro (sem numeros longos),\n// execucao e hora.\nconst dados = $(\u0027Error Trigger\u0027).first().json;\nconst wf = dados.workflow || {};\nconst ex = dados.execution || {};\nconst erro = ex.error || {};\n\n// Tira quebras de linha e mascara sequencias de 8+ digitos (telefone que o banco cita no erro).\nconst limpar = (s) =\u003e String(s || \u0027\u0027).replace(/\\d{8,}/g, \u0027***\u0027).replace(/\\s+/g, \u0027 \u0027).trim();\n\nconst nodeDoErro = erro.node \u0026\u0026 typeof erro.node === \u0027object\u0027 ? erro.node.name : erro.node;\nconst nodeFalhou = limpar(ex.lastNodeExecuted || nodeDoErro || \u0027desconhecido\u0027);\nconst mensagem = limpar(erro.message || \u0027sem mensagem\u0027).slice(0, 300);\nconst nomeWorkflow = limpar(wf.name || \u0027desconhecido\u0027);\n\n// Quem recebe: todos os Admins cadastrados (vem do node anterior).\nconst admins = $input.all()\n  .map((i) =\u003e String(i.json.telefone || \u0027\u0027).replace(/\\D/g, \u0027\u0027))\n  .filter(Boolean);\nif (admins.length === 0) return [];\n\n// Evita enxurrada: o mesmo erro, no mesmo node, so alerta de novo depois de 10 minutos.\nconst JANELA_MS = 10 * 60 * 1000;\nconst agoraMs = Date.now();\nconst memoria = $getWorkflowStaticData(\u0027global\u0027);\nconst recentes = memoria.alertasRecentes || {};\nfor (const chave of Object.keys(recentes)) {\n  if (agoraMs - recentes[chave] \u003e JANELA_MS) delete recentes[chave];\n}\nconst chaveErro = `${nomeWorkflow}|${nodeFalhou}|${mensagem}`;\nif (recentes[chaveErro]) {\n  memoria.alertasRecentes = recentes;\n  return [];\n}\nrecentes[chaveErro] = agoraMs;\nmemoria.alertasRecentes = recentes;\n\nconst hora = new Date().toLocaleString(\u0027pt-BR\u0027, { timeZone: \u0027America/Sao_Paulo\u0027 });\nconst texto = [\n  \u0027🚨 LabFlow: erro no workflow\u0027,\n  `Workflow: ${nomeWorkflow}`,\n  `Node: ${nodeFalhou}`,\n  `Erro: ${mensagem}`,\n  `Execução: ${limpar(ex.id || \u0027?\u0027)}`,\n  `Hora: ${hora}`,\n  \u0027Veja em Executions no n8n.\u0027,\n].join(\u0027\\n\u0027);\n\nreturn admins.map((numero) =\u003e ({ json: { numero, texto } }));\n"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       160,
+                                       0
+                                   ],
+                      "id":  "665f70ef-31cf-4f8f-ba3d-365f9a889a44",
+                      "name":  "Montar alerta de erro"
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "http://labflow-evolution:8080/message/sendText/labflow2",
+                                         "authentication":  "genericCredentialType",
+                                         "genericAuthType":  "httpHeaderAuth",
+                                         "sendBody":  true,
+                                         "bodyParameters":  {
+                                                                "parameters":  [
+                                                                                   {
+                                                                                       "name":  "number",
+                                                                                       "value":  "={{ $json.numero }}"
+                                                                                   },
+                                                                                   {
+                                                                                       "name":  "text",
+                                                                                       "value":  "={{ $json.texto }}"
+                                                                                   }
+                                                                               ]
+                                                            },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.5,
+                      "position":  [
+                                       400,
+                                       0
+                                   ],
+                      "id":  "dfc28eeb-f4c4-4417-8220-24f781676c69",
+                      "name":  "Zap · Alerta de erro",
+                      "credentials":  {
+                                          "httpHeaderAuth":  {
+                                                                 "id":  "EVOLUTION_CREDENTIAL_ID",
+                                                                 "name":  "Evolution API (servidor)"
+                                                             }
+                                      }
+                  }
+              ],
+    "connections":  {
+                        "Error Trigger":  {
+                                              "main":  [
+                                                           [
+                                                               {
+                                                                   "node":  "BD · Buscar Admins",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ]
+                                                       ]
+                                          },
+                        "BD · Buscar Admins":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "Montar alerta de erro",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               },
+                        "Montar alerta de erro":  {
+                                                      "main":  [
+                                                                   [
+                                                                       {
+                                                                           "node":  "Zap · Alerta de erro",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ]
+                                                               ]
+                                                  }
+                    },
+    "pinData":  {
+
+                },
+    "settings":  {
+                     "executionOrder":  "v1"
+                 },
+    "active":  false
+}

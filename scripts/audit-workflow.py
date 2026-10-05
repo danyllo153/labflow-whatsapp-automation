@@ -9,8 +9,8 @@ Uso:
 Checagens de estrutura (sempre):
     [ERRO]  conexão apontando para um node que não existe
     [ERRO]  node sem nenhuma conexão de entrada (órfão)
-    [ERRO]  HTTP Request sem Respond to Webhook depois (execução fica pendurada até timeout);
-            exceção: HTTP Request que reenvia para o próprio webhook do workflow (a resposta
+    [ERRO]  HTTP Request sem Respond to Webhook depois (execução fica pendurada até timeout),
+            só em workflow que tem Webhook; exceção: HTTP Request que reenvia para o próprio webhook do workflow (a resposta
             ao webhook original sai por outro ramo, e o reenvio abre uma execução própria)
     [ERRO]  placeholder não resolvido (ex: PRECISA_RESELECIONAR)
     [AVISO] espaço entre "=" e "{{" em expressões (vira texto fixo na mensagem)
@@ -132,8 +132,11 @@ def checar_estrutura(workflow, rel):
         for n in nodes.values()
         if tipo_curto(n) == "webhook" and n.get("parameters", {}).get("path")
     }
+    # Só vale para workflow com Webhook: sem webhook (ex: workflow de alerta de erro,
+    # disparado pelo próprio n8n) não existe resposta pendente.
+    tem_webhook = any(tipo_curto(n) == "webhook" for n in nodes.values())
     for nome, node in nodes.items():
-        if tipo_curto(node) != "httprequest":
+        if not tem_webhook or tipo_curto(node) != "httprequest":
             continue
         # Reenvio para o próprio webhook (ex: comando confirmado da IA): a execução
         # que reenvia já respondeu ao webhook original por outro ramo, e a chamada
