@@ -1,0 +1,11 @@
+{
+  "name": "labflow-whatsapp-automation",
+  "private": true,
+  "description": "LabFlow: automacao de laboratorio via WhatsApp (n8n + PostgreSQL). Este package.json existe so para rodar os testes dos Code nodes.",
+  "scripts": {
+    "test": "node --test \"tests/**/*.test.js\""
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
