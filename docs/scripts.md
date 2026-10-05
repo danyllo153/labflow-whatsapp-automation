@@ -23,6 +23,37 @@ python scripts/audit-workflow.py LabFlow.json --public   # estrutura + dados sen
 
 Sai com código `1` se houver algum erro. Por isso a GitHub Action em [`.github/workflows/audit-workflow.yml`](../.github/workflows/audit-workflow.yml) roda o script a cada upload do `LabFlow.json` e marca o commit com ❌ quando algo falha.
 
+## Testes dos Code nodes (`tests/`)
+
+Arquivos: [`tests/interpretar-comando.test.js`](../tests/interpretar-comando.test.js) e [`tests/helpers/executar-node.js`](../tests/helpers/executar-node.js)
+
+Executa o `jsCode` **real** do node `Interpretar comando` (extraído do `LabFlow.json`) com mensagens de exemplo, sem n8n, sem banco e sem WhatsApp. O executor simula só o que o node usa do n8n (`$('Webhook WhatsApp')` e `$input`). Não precisa instalar nada além do Node 22 ou mais novo: usa o executor de testes que já vem com ele.
+
+```powershell
+npm test
+```
+
+O que os testes cobrem (79 casos):
+
+- **Reconhecimento:** cada comando da referência ([comandos.md](comandos.md)) cai na intenção (`tipo`) certa.
+- **Campos extraídos:** lotes, compostas, navio/linha/fase, grupos de C.T/B.L com o sinal (`<` nunca vira igual), data da coleta do TAB de NFC.
+- **Prazos de negócio:** D5/D10/D15, descarte em 365 dias, CT 48h, BL 72/120h, WORT 120/240h.
+- **Recusas:** 9 tanques (limite 8), Howard com porcentagem ímpar.
+- **Permissões:** não cadastrado, Consultor, Operador e Admin (a permissão é do código, nunca do prompt: Bug 23).
+- **IA:** frase livre vai para o Gemini, a mensagem reenviada não entra em loop, mensagem do próprio bot é ignorada.
+
+Para testar outro arquivo, por exemplo o de importação, antes de subir no n8n:
+
+```powershell
+$env:LABFLOW_JSON = 'LabFlow_importar_n8n.json'; npm test
+```
+
+Os testes foram validados injetando defeitos de propósito numa cópia do workflow (prazo do BL, limite de tanques, prazo de descarte, permissão do Consultor): todos fizeram algum teste falhar.
+
+A GitHub Action [`testes.yml`](../.github/workflows/testes.yml) roda `npm test` a cada mudança no `LabFlow.json` ou em `tests/`.
+
+**Limite conhecido:** só o node `Interpretar comando` está coberto. Os nodes `Montar ...` (que formatam a resposta) e o `Validar resposta da IA` ainda não têm teste. O Gemini em si não é testado offline: o teste de regressão do prompt continua pendente.
+
 ## sanitize-workflow.ps1
 
 Arquivo: [`scripts/sanitize-workflow.ps1`](../scripts/sanitize-workflow.ps1)

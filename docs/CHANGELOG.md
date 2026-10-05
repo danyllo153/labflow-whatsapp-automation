@@ -10,6 +10,12 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 `docs/deploy-vps.md`. Este arquivo é só o resumo cronológico do que mudou.
 
 
+## [Não lançado]
+
+### Adicionado
+- Testes automatizados do node `Interpretar comando` (`tests/`, 79 casos): reconhecimento dos comandos, campos extraídos, prazos de negócio, recusas e permissões. Rodam com `npm test` e na GitHub Action `testes.yml`. Ver `docs/scripts.md`.
+- `CLAUDE.md` com as regras de trabalho do projeto.
+
 ## [1.1.0] - 2026-10-04
 
 ### Added
