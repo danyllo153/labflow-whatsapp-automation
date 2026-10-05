@@ -4,11 +4,14 @@ on:
   push:
     paths:
       - "LabFlow.json"
+      - "LabFlow_Alerta_Erro.json"
       - "scripts/audit-workflow.py"
       - ".github/workflows/audit-workflow.yml"
   pull_request:
     paths:
       - "LabFlow.json"
+      - "LabFlow_Alerta_Erro.json"
+      - "scripts/audit-workflow.py"
   workflow_dispatch:
 
 jobs:
@@ -19,5 +22,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Auditar LabFlow.json (estrutura + dados sensíveis)
+      - name: Auditar LabFlow.json (estrutura e dados sensíveis)
         run: python scripts/audit-workflow.py LabFlow.json --public
+      - name: Auditar LabFlow_Alerta_Erro.json (estrutura e dados sensíveis)
+        run: python scripts/audit-workflow.py LabFlow_Alerta_Erro.json --public
