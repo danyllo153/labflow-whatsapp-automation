@@ -61,4 +61,14 @@ function interpretar(texto, opcoes = {}) {
   return Array.isArray(saida) && saida.length > 0 ? saida[0].json : null;
 }
 
-module.exports = { interpretar, codigoDoNode, workflow };
+// jsCode de um node de OUTRO arquivo de workflow (ex.: LabFlow_Alerta_Erro.json).
+function codigoDoNodeEm(arquivoRelativo, nome) {
+  const outro = JSON.parse(fs.readFileSync(path.resolve(RAIZ, arquivoRelativo), 'utf8'));
+  const node = outro.nodes.find((n) => n.name === nome);
+  if (!node || !node.parameters || typeof node.parameters.jsCode !== 'string') {
+    throw new Error(`Code node nao encontrado em ${arquivoRelativo}: ${nome}`);
+  }
+  return node.parameters.jsCode;
+}
+
+module.exports = { interpretar, codigoDoNode, codigoDoNodeEm, workflow };

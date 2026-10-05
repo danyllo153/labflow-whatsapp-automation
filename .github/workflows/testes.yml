@@ -4,12 +4,14 @@ on:
   push:
     paths:
       - "LabFlow.json"
+      - "LabFlow_Alerta_Erro.json"
       - "tests/**"
       - "package.json"
       - ".github/workflows/testes.yml"
   pull_request:
     paths:
       - "LabFlow.json"
+      - "LabFlow_Alerta_Erro.json"
       - "tests/**"
       - "package.json"
   workflow_dispatch:
