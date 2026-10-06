@@ -6,6 +6,8 @@ Documento para retomar o projeto em outro computador ou numa conversa nova do Cl
 
 ## 0. Onde paramos (leia primeiro)
 
+**06/10/2026 — Power BI, primeira parte** (branch `feat/power-bi`): migration `013` (schema `bi`, 6 views para o painel) aplicada e dados de demonstração carregados (`db/seeds/demo.sql`; apagar com `limpar_demo.sql`). Power BI Desktop instalado no notebook e **conectado** pelo túnel (`postgres-migracao.md`, seção Power BI). **Parou no primeiro visual:** matriz "tanques coletados por mês" (linhas `data_coleta` só Ano e Mês, colunas `origem`, valores **Contagem** de `coleta_id`). **Próximo:** tabela "quem coletou cada tanque" (origem, navio, tanque, data_coleta, registrado_por, com segmentações de origem, navio e mês); depois as páginas visão geral (pendentes hoje, atrasados, positivos, alarmes), NFC, concentrado, desvios e rastreio. Salvar o painel como `.pbix` (fora do Git, por enquanto). O PR da IA (#19 e o README) já foi mesclado.
+
 **05/10/2026, madrugada — IA para todos os comandos novos** (branch `feat/ia-todos-comandos`): o Gemini entende todos os comandos novos (intenção `comando` com catálogo no prompt; `Validar resposta da IA` classifica e reenvia; `incompleto` pergunta o que faltou). Placar no Gemini real: 44 de 44 (`scripts/gerar-teste-prompt-ia.js`); 208 testes automáticos. Importado como cópia e testado pelo WhatsApp (relatório diário, recebimento com "sim", dado faltando, finalizada, desvio). Falta push, PR e merge. Próximo: Power BI para o laboratório; depois, áudio (V3 parte 2).
 
 **05/10/2026, noite — `leitura do dia finalizada` + desvio de drop** (branch `feat/finalizada-desvio-drop`, um PR só):
@@ -46,7 +48,7 @@ Repositório: `github.com/danyllo153/labflow-whatsapp-automation` (público). Cl
 
 Stack (VPS Linux, stack própria em `~/labflow`, Docker, sem porta pública, acesso só por túnel SSH): WhatsApp Business (número dedicado em eSIM) → Evolution API 2.3.7 (instância `labflow2`) → webhook → n8n 2.38.6 → PostgreSQL → resposta pelo WhatsApp. O mesmo container Postgres guarda o banco da Evolution API e o banco `labflow`. IA: Gemini (`models/gemini-3.1-flash-lite`) como fallback da regex.
 
-**No servidor:** migrations `001` a `012` aplicadas. No n8n está ativo o workflow final (159 nodes). O backup diário (3h, 14 dias, `~/labflow/backups`) está rodando. DBeaver: conexões `LabFlow (leitura)` e `LabFlow (app)` (tipo Production).
+**No servidor:** migrations `001` a `013` aplicadas. No n8n está ativo o workflow final (159 nodes). O backup diário (3h, 14 dias, `~/labflow/backups`) está rodando. DBeaver: conexões `LabFlow (leitura)` e `LabFlow (app)` (tipo Production).
 
 **Arquivos de workflow (na pasta do projeto):**
 - `LabFlow.json`: versão **pública**, sem IDs reais (vai para o Git).
@@ -89,7 +91,7 @@ Futuro (NÃO fazer agora): integrar a arquitetura de tanques do navio (tanque C/
 
 ## 5. Banco de dados
 
-Plano e decisões em [`postgres-migracao.md`](postgres-migracao.md); migrations em [`../db/migrations/`](../db/migrations/) (`001` a `012`, aplicadas uma de cada vez, com `-v ON_ERROR_STOP=1`). A coleta é o centro (drops, arquivo e análises apontam para `coleta_id`); no concentrado, a ordem é *recebimento → compostas → testes*. `tanque` é TEXT; datas em `America/Sao_Paulo`; o banco confere as regras de novo (UNIQUE, CHECK, FK). Usuários: `labflow_app` (n8n) e `labflow_leitura` (DBeaver e Power BI). Senhas só em `~/labflow/.env` no servidor.
+Plano e decisões em [`postgres-migracao.md`](postgres-migracao.md); migrations em [`../db/migrations/`](../db/migrations/) (`001` a `013`, aplicadas uma de cada vez, com `-v ON_ERROR_STOP=1`). A coleta é o centro (drops, arquivo e análises apontam para `coleta_id`); no concentrado, a ordem é *recebimento → compostas → testes*. `tanque` é TEXT; datas em `America/Sao_Paulo`; o banco confere as regras de novo (UNIQUE, CHECK, FK). Usuários: `labflow_app` (n8n) e `labflow_leitura` (DBeaver e Power BI). Senhas só em `~/labflow/.env` no servidor.
 
 Aplicar uma migration nova a partir do PC (backup antes: `ssh labflow "cd ~/labflow && ./backup-db.sh"`):
 
