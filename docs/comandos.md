@@ -280,6 +280,7 @@ Quando a mensagem não bate em nenhum comando acima, ela é enviada ao Gemini, q
 | Troca de cargo | `muda o cargo do 11 99999-1234 para operador` | `trocar cargo de Operador para o número 5511999991234` | "sim" |
 | Concluir leitura | `li o CT final normal de terra` | `Concluir final leitura CT normal terra` | o fluxo da seção 10 |
 | Consultas | `quais drops tenho hoje?` | `drops para hoje` | nenhuma (só lê) |
+| **Todos os comandos novos** (concentrado, TAB, Coliformes, Howard, C.T/B.L, relatório, leitura do dia, desvio) | `chegaram os lotes 1 a 14 do load 77001 item 444 da fábrica AQA` · `apareceu colônia no TAB 11` · `relatório diário` · `terminei a leitura de hoje` · `o drop D5 do tanque 45 da coleta de 30/09/2026 deu ruim` | o formato oficial do comando (seções 12.1 a 15.2) | consulta: nenhuma; gravação direta (recebimento, compostas, embarque, TAB/Coliformes feito, TAB em confirmação): "sim" da IA; comando que já pergunta (Howard, C.T/B.L, etapas do dia, resultados, finalizada, desvio): o "sim" do próprio comando |
 
 A IA nunca grava nada sozinha. Nas gravações, o bot responde com o comando que entendeu e pede confirmação:
 
@@ -305,6 +306,14 @@ LabFlow:  ✅ Registro de tanque terra efetuado com sucesso por João.
 - Se faltar dado (data da coleta, nome do navio, tanques, normal ou stress, cargo, terra ou navio), o bot responde o que faltou. Nada é gravado e nenhuma confirmação é pedida.
 - Se a mensagem não tiver relação com nenhum comando (uma saudação, por exemplo), o bot responde `Comando inválido` e explica como ver a lista (seção 12).
 - Se o Gemini estiver fora do ar, o bot responde `A IA está indisponível no momento` e nada é gravado. Nesse caso, use o comando no formato padrão.
+
+### Como a IA cobre os comandos novos (05/10/2026)
+
+Para os comandos novos, o Gemini **reescreve a frase num formato oficial** de um catálogo que está no prompt (intenção `comando`), em vez de devolver campos soltos. O node `Validar resposta da IA` confere se o resultado tem um formato conhecido e decide a classe: **consulta** (roda direto), **pede_sim** (o fluxo do comando já pergunta "sim") ou **grava** (a IA pergunta "sim" antes). Formato fora do catálogo é recusado. O comando volta ao webhook, onde a regex e as permissões rodam de novo: a IA nunca grava o que o código não aceitaria.
+
+- Falta de dado obrigatório (ex.: item e fábrica do load, data da coleta do drop) vira a intenção `incompleto`, e o bot pergunta o que faltou. Nada é inventado.
+- Números falados por extenso (pensando no áudio) viram algarismos: "load setenta e oito mil e cinco" = 78005.
+- **Regressão do prompt:** depois de mudar o prompt, gerar o workflow de teste (`node scripts/gerar-teste-prompt-ia.js`, ver `scripts.md`), importar no n8n, executar e conferir o placar. Em 05/10/2026: 44 de 44 frases diferentes dos exemplos do prompt, incluindo frases em estilo de áudio e as intenções antigas.
 
 O registro de amostra avulsa (`amostra <número> ...`) foi removido na versão 0.8.0: as amostras do laboratório serão o recebimento e o embarque de suco concentrado, que serão um módulo próprio no banco.
 

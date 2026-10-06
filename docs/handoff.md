@@ -6,6 +6,8 @@ Documento para retomar o projeto em outro computador ou numa conversa nova do Cl
 
 ## 0. Onde paramos (leia primeiro)
 
+**05/10/2026, madrugada — IA para todos os comandos novos** (branch `feat/ia-todos-comandos`): o Gemini entende todos os comandos novos (intenção `comando` com catálogo no prompt; `Validar resposta da IA` classifica e reenvia; `incompleto` pergunta o que faltou). Placar no Gemini real: 44 de 44 (`scripts/gerar-teste-prompt-ia.js`); 208 testes automáticos. Importado como cópia e testado pelo WhatsApp (relatório diário, recebimento com "sim", dado faltando, finalizada, desvio). Falta push, PR e merge. Próximo: Power BI para o laboratório; depois, áudio (V3 parte 2).
+
 **05/10/2026, noite — `leitura do dia finalizada` + desvio de drop** (branch `feat/finalizada-desvio-drop`, um PR só):
 
 - Migrations **`011`** (aplicada) e **`012`** no servidor; workflow com os dois recursos montado (177 nodes), 100 testes passando, auditoria 0 erros, SQL testado no banco em transações desfeitas e os textos testados com o código real dos nodes.
@@ -67,7 +69,7 @@ Stack (VPS Linux, stack própria em `~/labflow`, Docker, sem porta pública, ace
 
 **Permissões:** só números cadastrados usam o bot; cargos Admin, Operador, Consultor (Consultor só consulta; só Admin troca cargo). Admin e Operador registram tudo, inclusive resultados.
 
-**IA (V3 parte 1):** mensagem que a regex não reconhece vai ao Gemini, que devolve JSON; o node `Validar resposta da IA` valida e monta o comando padrão; gravações pedem "sim". Permissão é validada no código, nunca no prompt (Bug 23). **A IA ainda não conhece os comandos do concentrado.**
+**IA (V3 parte 1):** mensagem que a regex não reconhece vai ao Gemini, que devolve JSON; o node `Validar resposta da IA` valida e monta o comando padrão; gravações pedem "sim". Permissão é validada no código, nunca no prompt (Bug 23). **Desde 05/10/2026 a IA conhece todos os comandos** (catálogo no prompt; ver `comandos.md` seção 11).
 
 ## 4. Roadmap
 
