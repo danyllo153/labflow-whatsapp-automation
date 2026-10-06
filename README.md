@@ -1,80 +1,97 @@
 # LabFlow
 
-Automação de laboratório de microbiologia via WhatsApp: o analista manda uma mensagem, e o LabFlow registra coletas e análises num banco PostgreSQL, calcula os prazos de leitura e dos drops e responde quais tarefas vencem no dia.
+[![Auditoria do workflow](https://github.com/danyllo153/labflow-whatsapp-automation/actions/workflows/audit-workflow.yml/badge.svg)](https://github.com/danyllo153/labflow-whatsapp-automation/actions/workflows/audit-workflow.yml)
+[![Testes](https://github.com/danyllo153/labflow-whatsapp-automation/actions/workflows/testes.yml/badge.svg)](https://github.com/danyllo153/labflow-whatsapp-automation/actions/workflows/testes.yml)
 
-Projeto pessoal que une biomedicina e automação. O problema vem da rotina real de um laboratório de controle de qualidade. Todo o desenvolvimento e os testes usam **dados fictícios**.
+**Automação de laboratório de microbiologia pelo WhatsApp.** O analista manda uma mensagem (no formato do comando ou do jeito que falaria), e o LabFlow registra coletas, análises e resultados num banco PostgreSQL, calcula todos os prazos de leitura, avisa o que vence no dia e monta sozinho o **relatório diário de microbiologia**.
 
-**Status:** v1.1.0. Em uso de teste num servidor de demonstração (VPS), com dados fictícios: regras de negócio, permissões por cargo, análises de tanque e o **módulo de suco concentrado** (recebimento, embarque, compostas, TAB, Coliformes, Howard, C.T e B.L) funcionando ponta a ponta sobre PostgreSQL, com backup diário e o **relatório diário de microbiologia** gerado pelo próprio bot. A interpretação de mensagens livres com IA (Gemini) cobre os comandos de tanque, coleta, conclusão e troca de cargo, sempre com as permissões conferidas no código; os comandos do concentrado ainda usam o formato padrão. Próximo: liberação das leituras por analista, envio por e-mail e Excel, e a IA aprender o concentrado.
+Projeto pessoal que une biomedicina e automação: o problema vem da rotina real de um laboratório de controle de qualidade de suco. Roda num servidor de demonstração, sempre com **dados fictícios**.
+
+## Onde o projeto está
+
+**Versão publicada: [v1.1.0](docs/CHANGELOG.md)**, em uso de teste ponta a ponta pelo WhatsApp. Já entrou na `main` e vai para a próxima versão:
+
+- **A IA entende todos os comandos.** Frase livre ("chegaram os lotes 1 a 14 do load 77001 item 444 da fábrica AQA", "apareceu colônia no TAB 11", "relatório diário") vira o comando oficial; o código confere antes de gravar. Testada no Gemini real com 44 frases que não estão no prompt: **44 de 44**, inclusive frases em estilo de áudio.
+- **Leitura do dia finalizada:** quem lê o dia fecha tudo o que vence hoje de uma vez, e o relatório mostra quem finalizou.
+- **Desvio de drop:** drop "não ok" abre um desvio, com repetição em 7, 13 e 25 °C e resultado por temperatura, consultável por tanque.
+- **Alerta de erro no WhatsApp:** se um fluxo do bot falha, os administradores recebem o aviso na hora (validado de ponta a ponta).
+
+**Próximo:** dashboards no **Power BI** para o laboratório e **comando por áudio**.
+
+| Em números | |
+|---|---|
+| Nodes no workflow do n8n | 167, em 10 blocos por assunto |
+| Tipos de comando | 39 |
+| Consultas ao banco | 49, todas parametrizadas |
+| Banco | 12 migrations versionadas, 19 tabelas, views para o relatório |
+| Testes automáticos | 208 (`npm test`), rodando a cada alteração numa GitHub Action |
+| Bugs reais documentados | 30, com causa raiz e lição ([troubleshooting](docs/troubleshooting.md)) |
 
 ## O problema
 
-No laboratório, cada coleta de tanque gera uma série de prazos: análises com pré-leitura e leitura final em horas diferentes, análises de drop em D5, D10 e D15, e descarte da amostra de arquivo depois de 1 ano. Esse controle depende de anotação manual e de lembrar o que vence em cada dia.
+Cada coleta de tanque gera uma série de prazos: análises com pré-leitura e leitura final em horas diferentes, análises de drop em D5, D10 e D15, e descarte da amostra de arquivo depois de um ano. No suco concentrado, cada carreta (lote) e cada amostra de embarque tem C.T e B.L com prazo próprio, e as compostas passam por TAB, Coliformes e Howard, cada um com o seu ciclo de caldo, estria, incubação e confirmação. Tudo isso termina num relatório diário que era montado à mão, numa planilha.
 
-O LabFlow deixa o registro no canal que a equipe já usa (WhatsApp) e passa o cálculo dos prazos para o sistema.
+O LabFlow deixa o registro no canal que a equipe já usa (WhatsApp), calcula os prazos e gera o relatório.
+
+## Como é usar
 
 ```
-Você:     registrar coleta tanque terra 42,43 data 20/09/2026
-LabFlow:  ✅ Registro de tanque terra efetuado com sucesso por Ana.
+Você:     recebimento load 77001 item 444 fabrica AQA lotes 1-14
+LabFlow:  ✅ Recebimento do load 77001 (item 444, fábrica AQA) registrado por Ana.
+          Lotes recebidos: 1-14 (14)
 
-          Tanques: 42, 43
-          Data: 20/09/2026
-          Total: 2
+Você:     compostas do load 77001 (1-5)(6-10)(11-14)
+LabFlow:  ✅ 3 compostas criadas no load 77001:
+          #4 lotes 1-5 · #5 lotes 6-10 · #6 lotes 11-14
 
-Você:     Quais analises de tanques terra saem hoje?
-LabFlow:  CT (48hrs) Tanques 47 e 49 analise normal
-          BL (72hrs) Tanques 37 e 40 analise normal
-
-Você:     coletei os tanques 44 e 45 hoje
-LabFlow:  🤖 Entendi:
-          registrar coleta tanque terra 44,45 data 20/09/2026
+Você:     apareceu colônia no TAB 5                       ← frase livre: passa pela IA
+LabFlow:  🤖 Entendi: tab #5 em confirmação
           Responda sim para confirmar ou não para cancelar.
-Você:     sim
-LabFlow:  ✅ Registro de tanque terra efetuado com sucesso por Ana.
 
-Você:     comandos para drops
-LabFlow:  📖 Comandos de drops
-          (lista só os comandos do assunto, sem chamar a IA)
+Você:     o drop D5 do tanque 45 da coleta de 30/09/2026 deu ruim
+LabFlow:  ❓ Drop não ok: abrir desvio do drop D5 do tanque 45 (coleta 30/09/2026)?
+          Repetição do drop de arquivo em 7 °C, 13 °C e 25 °C, leitura até 10/10/2026.
+
+Você:     relatório do dia
+LabFlow:  📋 Relatório do dia 05/10/2026
+          FCOJ — Recebimento
+          C.T 48h: 77001 (1-5 ✅, 6 🚨, 7-14)
+          TAB: 77001 (1-5 ✅)(6-10 🚨)
+          ...
+          NFC — Tank farm
+          Drop 5: 45 🚨, 46 ✅
+          🚨 C.T 48h ≥ 200 — 77001: lote 6 = 250
+          ✅ Leitura do dia finalizada por Ana às 16:40.
 ```
-<sub>Respostas resumidas para ilustração.</sub>
+<sub>Respostas resumidas, com dados fictícios. Todos os comandos, com formato e exemplo: [docs/comandos.md](docs/comandos.md).</sub>
 
 ## Funcionalidades
 
-**Registro**
-- Coleta de tanque de terra (até 8 tanques por mensagem) e de navio (até 16 tanques, com nome + viagem)
-- Cálculo automático dos drops D5/D10/D15 e da data de descarte do bag/pote de arquivo (+365 dias)
-- Registro de análise Normal ou Stress: cada tanque gera CT, BL e WORT (Profundidade e Superfície) com datas de pré-leitura e leitura final
-
-**Consulta**
-- Drops que vencem hoje (terra e navio na mesma resposta)
-- Análises que saem hoje, agrupadas por sub-análise, prazo em horas e frasco
-- Bags e potes que podem ser descartados hoje
-
-**Atualização**
-- Conclusão de drops em lote, filtrando por dia (D5/D10/D15), terra/navio e navio
-- Conclusão de leituras de CT/BL/WORT (pré-leitura ou final) com confirmação em duas etapas: o bot pergunta, o analista responde "sim" ou "não", e a pendência expira em 10 minutos. O nome de quem confirmou fica registrado em cada leitura (pré-leitura e leitura final)
-
-**Mensagens livres (IA)**
-- Quando nenhuma regex reconhece a mensagem, o Gemini tenta interpretá-la. Entende todos os comandos: consultas (drops, análises de terra e navio, bags, potes), coleta de terra e de navio, registro de análise normal ou stress, conclusão de drops, conclusão de leitura e troca de cargo. Exemplos: "coletei os tanques 42 e 43 hoje", "O.SKY 123, tanques 1C e 4P, coleta de ontem", "quais bags posso descartar hoje"
-- Consultas rodam direto, porque só leem o banco. Toda gravação mostra o comando que a IA entendeu e só executa depois do "sim"; "não" cancela e a pendência expira em 10 minutos. Conclusão de leitura já tem a sua própria confirmação
-- O comando confirmado passa pelas mesmas regras de um comando digitado (cargo, limites, bloqueio de duplicata)
-- Permissão não é decidida pela IA: o código recusa antes do "sim" quem não pode gravar, e na troca de cargo o cargo e o telefone precisam estar escritos na mensagem original (a IA não "corrige" o que o usuário escreveu)
-- Ajuda por assunto, sem IA: "comandos para drops", "consultar análises", "consultar cargos" mostram só os comandos do tema
-- Se o Gemini estiver fora do ar, o bot avisa que a IA está indisponível e nada é gravado
+**Tanques de NFC (suco não concentrado)**
+- Coleta de tanque de terra (até 8 por mensagem) e de navio (até 16, com nome e viagem), com os drops D5/D10/D15 e o descarte do bag ou pote de arquivo (+365 dias) calculados na hora
+- Análise Normal ou Stress (C.T, B.L e Psicrotróficos, com pré-leitura e leitura final), que exige a coleta do tanque
+- Consultas do que vence hoje e conclusão em lote, com confirmação "sim/não" e registro de quem leu
+- Desvio de drop: drop "não ok" abre a repetição em 3 temperaturas, com resultado e histórico por tanque
 
 **Suco concentrado (FCOJ)**
 - Recebimento de lotes por load, item e fábrica; compostas de 1 a N lotes, com número curto (`#12`)
-- Embarque por navio, linha e fase, com amostras A1, A2...; load antigo que nunca foi recebido é cadastrado na hora
-- TAB (de composta e de tanque de NFC), Coliformes e Howard, com o ciclo de cada um: caldo, estria, incubação, confirmação lote a lote e resultado; o bot lista o que vence hoje e os atrasados com a data prevista
-- C.T e B.L por lote e por amostra, com vários grupos numa mensagem (`ct load 77001 lote 4 deu 10, lotes 5-10 deu <10`), e alarme em B.L ≥ 50 e C.T ≥ 200
-- **Relatório do dia** com os quatro blocos (FCOJ recebimento e embarque, NFC tank farm e navio) numa mensagem, com ✅ no lido e 🚨 no que passou do limite; o `completo` traz só o que já foi lido, com `ok` / `não ok`
+- Embarque por navio, linha e fase, com amostras A1, A2...
+- TAB (de composta e de tanque), Coliformes (confirmação abrindo a composta lote a lote) e Howard (% de campos positivos), cada um com o seu ciclo, lista do dia e atrasados com a data prevista
+- C.T e B.L por lote e por amostra, vários resultados numa mensagem, com alarme em B.L ≥ 50 e C.T ≥ 200
 
-**Controle e segurança**
-- Só números cadastrados usam o bot; três cargos (Admin, Operador, Consultor)
-- Gestão de cargos pelo próprio WhatsApp, restrita a Admin
-- Bloqueio de coleta duplicada (mesmo tanque, mesma data)
-- Validação de formato com mensagem de erro explicando o formato esperado
+**Relatório diário de microbiologia**
+- Os quatro blocos da planilha oficial (FCOJ recebimento e embarque, NFC tank farm e navio) numa mensagem, com ✅ no lido e 🚨 no que passou do limite, deu positivo ou abriu desvio
+- `relatório do dia completo` traz só o lido, com `ok` / `não ok`; filtros por bloco
+- `leitura do dia finalizada` fecha o dia de uma vez e registra quem leu
 
-Lista completa com formato e exemplo de cada comando: [docs/comandos.md](docs/comandos.md).
+**IA (Google Gemini)**
+- Entra só quando a regex não reconhece a mensagem, e cobre todos os comandos: o modelo reescreve a frase no formato oficial de um catálogo, e o código confere o formato, decide se pede "sim" e manda o comando de volta pela regex, que valida tudo de novo
+- Dado faltando vira pergunta ("Faltou o item e a fábrica do load"); nada é inventado. Números falados por extenso viram algarismos, preparando o comando por áudio
+
+**Operação e segurança**
+- Só números cadastrados usam o bot; cargos Admin, Operador e Consultor (só consulta), com a permissão conferida no código
+- Alerta de erro no WhatsApp para os Admin, sem expor o texto das mensagens e sem repetir o mesmo erro em 10 minutos
+- Backup diário do banco (14 dias), servidor sem nenhuma porta exposta (acesso só por túnel SSH)
 
 ## Arquitetura
 
@@ -82,73 +99,83 @@ Lista completa com formato e exemplo de cada comando: [docs/comandos.md](docs/co
 flowchart LR
     A[WhatsApp Business] --> B[Evolution API]
     B -- webhook --> C[n8n]
-    C --> D{Code node<br/>regex + regras}
+    C --> D{Interpretar comando<br/>regex + regras + permissões}
     D --> E[(PostgreSQL)]
     D -- "regex não reconheceu" --> F[Gemini]
-    F -- "comando padrão + sim/não" --> D
+    F -- "formato oficial do catálogo" --> G{Validar resposta da IA}
+    G -- "comando + sim/não" --> D
     D -- resposta --> B
     B --> A
+    C -. "falha em qualquer fluxo" .-> H[Alerta de erro] -.-> B
 ```
 
-- **Evolution API** (self-hosted) conecta um número de WhatsApp Business e envia cada mensagem recebida para o n8n.
-- **n8n** filtra a mensagem, confere o cargo do remetente, identifica o comando por regex e aplica as regras de negócio (prazos, duplicata, permissões).
-- **Gemini** (API do Google) só é consultado quando nenhuma regex reconhece a mensagem. Ele devolve um JSON, o n8n valida e converte no comando padrão, e o comando só roda depois do "sim" do analista.
-- **PostgreSQL** guarda os dados em tabelas ligadas por chave estrangeira (a coleta é o centro): coletas, drops, amostras de arquivo, análises, usuários e pendências de confirmação. O banco confere as regras de novo: duplicata, cargo válido e valores permitidos.
-- Tudo roda em **Docker**, numa stack isolada em um VPS Linux, sem nenhuma porta exposta publicamente (acesso administrativo só por túnel SSH).
+- **Evolution API** (self-hosted) conecta um número dedicado de WhatsApp Business e manda cada mensagem para o n8n.
+- **n8n** identifica o comando por regex, confere o cargo de quem mandou, aplica as regras de negócio e responde. O workflow é organizado em blocos por assunto (entrada, consultas, coletas, análises, sim/não, IA, cargos, concentrado, desvio).
+- **Gemini** só é chamado quando a regex não reconhece a mensagem. Ele propõe; o código decide.
+- **PostgreSQL** guarda tudo em tabelas ligadas por chave estrangeira (no NFC a coleta é o centro; no concentrado, *recebimento → compostas → testes*), e confere as regras de novo: duplicata, valores permitidos, temperaturas do desvio, um teste por composta.
+- Tudo em **Docker**, numa stack isolada num VPS Linux.
 
-Detalhes em [docs/arquitetura.md](docs/arquitetura.md) e [docs/deploy-vps.md](docs/deploy-vps.md).
+Detalhes em [docs/arquitetura.md](docs/arquitetura.md), [docs/concentrado.md](docs/concentrado.md) e [docs/deploy-vps.md](docs/deploy-vps.md).
 
 ## Stack
 
-n8n · Docker / Docker Compose · Evolution API · Google Gemini API · PostgreSQL · JavaScript · SQL · Webhooks · Linux (VPS) · SSH
+n8n · PostgreSQL · Docker / Docker Compose · Evolution API · Google Gemini API · JavaScript · SQL · Node.js (testes) · Python (auditoria) · GitHub Actions · Linux (VPS) · SSH
+
+## Engenharia e qualidade
+
+- **Testes dos Code nodes fora do n8n.** O código real dos nodes é extraído do workflow exportado e executado com mensagens de exemplo (`npm test`, 208 testes): reconhecimento de cada comando, campos extraídos, prazos de negócio, recusas, permissões, a validação da IA e o alerta de erro. Os testes foram validados **injetando defeitos de propósito**: um teste que nunca falha não protege nada.
+- **Regressão do prompt.** O Gemini não roda offline, então um script gera um workflow de teste com o mesmo prompt do bot e frases que não estão nos exemplos, e mostra um placar ([scripts.md](docs/scripts.md)). Roda depois de qualquer mudança no prompt.
+- **Auditoria automática do workflow.** [`scripts/audit-workflow.py`](scripts/audit-workflow.py) procura nodes órfãos, ramos sem resposta ao webhook e dados sensíveis no arquivo público. Duas GitHub Actions rodam a auditoria e os testes a cada alteração.
+- **Banco versionado.** 12 migrations numeradas, aplicadas uma de cada vez, sempre testadas antes numa transação desfeita e com backup antes de aplicar.
+- **Bugs documentados.** 30 bugs reais com sintoma, causa raiz, solução e lição ([troubleshooting](docs/troubleshooting.md)).
 
 ## Decisões técnicas
 
-- **Regex antes de IA.** Comandos com formato definido são previsíveis e fáceis de testar. A regex continua sendo a primeira tentativa, e o modelo só entra quando ela não reconhece a mensagem.
-- **A IA sugere, a regex executa.** O Gemini nunca grava nada: ele traduz a mensagem livre num comando no formato padrão, que o analista confirma com "sim". Depois o comando volta ao mesmo webhook e passa pela regex e pelas regras de sempre (cargo, duplicata, limites). As regras de negócio ficam num lugar só, e uma interpretação errada da IA vira, no pior caso, uma confirmação que o analista recusa.
-- **Permissão validada no código, não no prompt.** Pedir ao modelo "só aceite Admin, Operador ou Consultor" não bastou: ele trocou "gerente" por Admin (Bug 23). Agora o código confere o cargo e o telefone contra a mensagem original e checa o nível de quem enviou antes de pedir o "sim". Para qualquer ação sensível, o modelo propõe e o código decide.
-- **Falha de serviço externo tratada.** O Gemini responde 503 de vez em quando. O node tenta até 5 vezes e, se ainda falhar, o bot diz que a IA está indisponível, em vez de "não entendi" (ver Bug 21 em [troubleshooting](docs/troubleshooting.md)).
-- **Evolution API em número dedicado.** Por ser uma integração não oficial, usa um eSIM separado com WhatsApp Business, sem arriscar um número pessoal.
-- **Segredos fora do workflow.** A chave da Evolution API e a senha do banco ficam em Credenciais do n8n (a senha também no `.env` do servidor, fora do Git), então o JSON exportado do workflow não carrega segredo nenhum.
-- **Revisão do JSON depois de mudanças estruturais.** Religar conexões à mão no editor já introduziu bugs que só apareceram na revisão do export (ver Bug 15 em [troubleshooting](docs/troubleshooting.md)).
-- **Auditoria automática do workflow.** O script [`scripts/audit-workflow.py`](scripts/audit-workflow.py) procura nodes órfãos, ramos de IF faltando e HTTP Requests sem resposta ao webhook. Uma GitHub Action roda essa auditoria a cada alteração do `LabFlow.json`. A primeira execução encontrou 4 bugs de conexão reais.
-- **Regras também no banco.** Duplicata (`UNIQUE`), cargo válido (`CHECK`) e vínculo entre coleta, drop e análise (chave estrangeira) são conferidos pelo PostgreSQL, além do código do n8n: se uma regra do código falhar, o banco recusa o dado. Foi testado direto no banco, com cargo inválido, telefone duplicado, coleta duplicada e CT com pré-leitura.
-- **Consultas sempre parametrizadas.** Os 41 nodes Postgres recebem o texto da mensagem como parâmetro (`$1`, `$2`...), nunca concatenado no SQL.
-- **Migração reversível.** O workflow novo entrou numa cópia, um ramo por vez, com o antigo (Google Sheets) desativado como plano B. A cópia trouxe quatro bugs que só os testes pelo WhatsApp revelaram (Bugs 25 a 28 em [troubleshooting](docs/troubleshooting.md)).
+- **Regex antes de IA.** Comando com formato definido é previsível e testável. A regex é sempre a primeira tentativa; o modelo só entra quando ela não reconhece a mensagem.
+- **A IA sugere, o código executa.** O Gemini nunca grava nada: ele traduz a frase num comando oficial, e esse comando volta ao mesmo webhook e passa pelas regras de sempre (cargo, duplicata, limites). Formato fora do catálogo é recusado. No pior caso, uma interpretação errada vira uma confirmação que o analista recusa.
+- **Permissão validada no código, não no prompt.** Pedir ao modelo "só aceite Admin, Operador ou Consultor" não bastou: ele trocou "gerente" por Admin (Bug 23). Para ação sensível, o modelo propõe e o código decide.
+- **Regras também no banco.** Além do código do n8n, o PostgreSQL recusa duplicata (`UNIQUE`), valor fora do permitido (`CHECK`) e vínculo inexistente (chave estrangeira).
+- **Consultas sempre parametrizadas.** As 49 consultas recebem o texto da mensagem como parâmetro (`$1`, `$2`...), nunca concatenado no SQL.
+- **Mudança grande sempre reversível.** Workflow novo entra como cópia, o anterior fica desativado como plano B, e só depois dos testes pelo WhatsApp o novo vira o oficial. Foi assim na migração do Google Sheets para o PostgreSQL (1.0.0).
+- **Segredos fora do repositório.** Chaves e senhas ficam em Credenciais do n8n e no `.env` do servidor. O arquivo com IDs reais nunca vai para o Git; o público é gerado por script e auditado.
+- **Número dedicado.** A Evolution API é uma integração não oficial, então usa um eSIM próprio com WhatsApp Business, sem arriscar um número pessoal.
+
+## Como usei IA neste projeto
+
+- **No produto:** o Gemini interpreta mensagens livres, com o código validando tudo antes de gravar (seções acima).
+- **No desenvolvimento:** usei o Claude Code como par de programação. As regras de domínio, as decisões e a validação de cada entrega pelo WhatsApp são minhas; a IA ajudou a escrever SQL, scripts, testes e documentação, sempre seguindo as regras do projeto em [`CLAUDE.md`](CLAUDE.md) (dados fictícios, permissão no código, teste antes de importar, backup antes de migration).
 
 ## Roadmap
 
-- [x] **V1 — MVP:** WhatsApp + n8n + Google Sheets, registro e confirmação
-- [x] **V2 — Regras de negócio:** drops, arquivo/descarte, análises com prazos, permissões, duplicata, conclusão em lote
-- [x] **V3, parte 1 — IA como fallback:** o Gemini interpreta linguagem natural quando a regex não reconhece a mensagem, com confirmação antes de executar, ainda sobre o Google Sheets. Feito: consultas, coleta de terra e de navio, análises, conclusões, troca de cargo e ajuda por assunto. Próximos ajustes: testes de regressão do prompt e um segundo modelo de reserva
-- [x] **V4 — Banco de dados:** migração do Google Sheets para PostgreSQL (tabelas com restrições no banco, usuário somente leitura e backup diário), publicada na 1.0.0
-- [x] **Suco concentrado:** recebimento, embarque, compostas, TAB, Coliformes, Howard, C.T/B.L com alarme e o relatório diário de microbiologia, sobre o PostgreSQL (versão 1.1.0)
-- [ ] **Relatório diário, fase seguinte:** `leitura de hoje finalizada` por analista, envio por e-mail e em Excel, e limites e Situação do Howard e do NFC
-- [ ] **IA no concentrado:** ensinar o Gemini os comandos de recebimento, embarque, TAB, Coliformes, Howard e C.T/B.L, com a permissão conferida no código
-- [ ] **V3, parte 2 — IA avançada:** comando por áudio e leitura de laudo por foto (com confirmação antes de gravar), já sobre o PostgreSQL
-- [ ] **V5 — Dashboard:** indicadores de pendentes, concluídos e atrasados no Power BI, sobre o PostgreSQL, por um usuário somente leitura
-- [ ] **Interface web (LIMS):** última etapa, depois que tudo acima estiver estável no banco relacional
-- [ ] **V6 — Acabamento (contínuo):** testes, diagramas e documentação atualizados a cada marco
-
-<sub>A numeração das versões é histórica. A lista acima segue a ordem de execução, revisada em 25/09/2026.</sub>
+- [x] **V1 — MVP:** WhatsApp + n8n + Google Sheets
+- [x] **V2 — Regras de negócio:** drops, arquivo e descarte, análises com prazos, permissões, duplicata, conclusão em lote
+- [x] **V3, parte 1 — IA como fallback:** o Gemini interpreta linguagem natural, com confirmação antes de executar
+- [x] **V4 — Banco de dados:** migração para PostgreSQL, com restrições no banco, usuário somente leitura e backup diário (1.0.0)
+- [x] **Suco concentrado e relatório diário:** recebimento, embarque, compostas, TAB, Coliformes, Howard, C.T/B.L com alarme e o relatório diário (1.1.0)
+- [x] **Operação e IA completa:** alerta de erro no WhatsApp, leitura do dia finalizada, desvio de drop, IA para todos os comandos e regressão do prompt (próxima versão)
+- [ ] **V5 — Dashboard no Power BI** para o laboratório, sobre views do PostgreSQL, por um usuário somente leitura
+- [ ] **V3, parte 2 — IA avançada:** comando por áudio e leitura de laudo por foto, sempre com confirmação antes de gravar
+- [ ] **Situação (ok / não ok) em todas as linhas do relatório**, com os limites do Howard e do NFC
+- [ ] **Interface web (LIMS):** última etapa
+- [ ] **V6 — Acabamento (contínuo):** testes, diagramas e documentação a cada marco
 
 ## Documentação
 
 | Documento | Conteúdo |
 |---|---|
-| [comandos.md](docs/comandos.md) | Todos os comandos do bot, cargos e permissões |
-| [arquitetura.md](docs/arquitetura.md) | Nodes do workflow, tabelas do banco e decisões de design de cada etapa |
-| [concentrado.md](docs/concentrado.md) | Desenho do módulo de suco concentrado: ciclos do TAB, Coliformes e Howard, embarque, C.T/B.L, alarmes e relatório diário |
+| [comandos.md](docs/comandos.md) | Todos os comandos do bot, com formato, exemplo, cargos e permissões |
+| [arquitetura.md](docs/arquitetura.md) | Nodes do workflow, tabelas do banco e decisões de cada etapa |
+| [concentrado.md](docs/concentrado.md) | Desenho do concentrado: ciclos do TAB, Coliformes e Howard, embarque, C.T/B.L e relatório diário |
 | [troubleshooting.md](docs/troubleshooting.md) | 30 bugs reais: sintoma, causa raiz, solução e lição |
-| [deploy-vps.md](docs/deploy-vps.md) | Infraestrutura no VPS: rede, segredos, acesso SSH, migração |
-| [postgres-migracao.md](docs/postgres-migracao.md) | Plano, schema e decisões da migração para o PostgreSQL |
-| [scripts.md](docs/scripts.md) | Auditoria do workflow, testes dos Code nodes (`npm test`) e backup do banco, e como usá-los |
+| [scripts.md](docs/scripts.md) | Testes (`npm test`), regressão do prompt, auditoria, sanitização do workflow e backup |
+| [postgres-migracao.md](docs/postgres-migracao.md) | Migrations, schema e decisões do banco |
+| [deploy-vps.md](docs/deploy-vps.md) | Infraestrutura no VPS: rede, segredos e acesso SSH |
 | [CHANGELOG.md](docs/CHANGELOG.md) | Histórico de versões |
 
 ## Dados e privacidade
 
-Nenhum dado real de empresa é usado neste projeto. Números de tanque, navios, nomes e telefones nos testes e na documentação são fictícios. O uso com dados reais dependeria de aprovação da empresa e de adequação à LGPD (base legal, controle de acesso e retenção dos dados).
+Nenhum dado real de empresa é usado. Tanques, loads, navios, nomes e telefones nos testes e na documentação são fictícios. O servidor atual é de demonstração; o uso com dados reais será na infraestrutura da empresa, com a TI, e depende de adequação à LGPD (base legal, controle de acesso e retenção dos dados).
 
 ## Autor
 
-**Danyllo Gomes** — Biomédico e estudante de Ciência da Computação, com foco em automação de processos.
+**Danyllo Gomes** — biomédico (microbiologia e controle de qualidade) e estudante de Ciência da Computação, com foco em automação de processos e dados.
