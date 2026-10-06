@@ -83,6 +83,16 @@ const RECONHECIDOS = [
   ['relatório do dia', 'relatorio_dia'],
   ['relatório do dia completo', 'relatorio_dia'],
   ['relatório do dia recebimento', 'relatorio_dia'],
+  ['leitura do dia finalizada', 'finalizar_dia'],
+  ['Leitura de hoje finalizada', 'finalizar_dia'],
+  ['leitura finalizada', 'finalizar_dia'],
+  ['finalizar leitura do dia', 'finalizar_dia'],
+  ['drop d5 do tanque 45 data 30/09/2026 não ok', 'desvio_abrir'],
+  ['Drop D10 tanque 1C navio O.SKY 123 coleta 28/09/2026 nao ok', 'desvio_abrir'],
+  ['desvio do drop d5 tanque 45 confirmou em 13 e 25 graus', 'desvio_resultado'],
+  ['Desvio do drop D5 do tanque 45 não confirmou', 'desvio_resultado'],
+  ['quais últimos desvios de drops relacionados ao tanque 45?', 'consulta_desvios'],
+  ['quais desvios estão abertos?', 'consulta_desvios'],
 ];
 
 test('reconhecimento: cada comando cai na intencao certa', async (t) => {
@@ -273,6 +283,9 @@ test('permissao: Consultor consulta, mas nao grava', () => {
     'registrar coleta tanque terra 42 data 24/09/2026',
     'recebimento load 77001 item 444 fabrica AQA lotes 1-14',
     'bl120 load 77001 lotes 1-3 deu 60',
+    'leitura do dia finalizada',
+    'drop d5 do tanque 45 data 30/09/2026 não ok',
+    'desvio do drop d5 tanque 45 não confirmou',
   ];
   for (const frase of gravacoes) {
     const r = interpretar(frase, { cargo: 'Consultor' });
@@ -327,4 +340,25 @@ test('descarte: mensagem enviada pelo proprio bot (fromMe) e ignorada', () => {
   const executar = new Function('$', '$input', codigoDoNode('Interpretar comando'));
   const saida = executar(() => ({ first: () => ({ json: webhook }) }), { all: () => [] });
   assert.deepStrictEqual(saida, []);
+});
+
+test('campos: desvio de drop (abrir pela coleta, resultado por temperatura, consulta)', () => {
+  confere('drop d5 do tanque 45 data 30/09/2026 não ok', {
+    tipo: 'desvio_abrir', dia: 5, tanque: '45', navio: '', dataColeta: '30/09/2026',
+  });
+  confere('Drop D10 tanque 1c navio O.SKY 123 coleta 28/09/2026 nao ok', {
+    tipo: 'desvio_abrir', dia: 10, tanque: '1C', navio: 'O.SKY 123', dataColeta: '28/09/2026',
+  });
+  confere('desvio do drop d5 tanque 45 confirmou em 25 e 13 graus', {
+    tipo: 'desvio_resultado', dia: 5, tanque: '45', dataColeta: '', temps: [13, 25],
+  });
+  confere('desvio do drop d5 tanque 45 data 30/09/2026 não confirmou', {
+    tipo: 'desvio_resultado', dataColeta: '30/09/2026', temps: [],
+  });
+  confere('quais desvios de drops do tanque 45?', { tipo: 'consulta_desvios', modo: 'tanque', tanque: '45' });
+  confere('quais desvios estão abertos?', { tipo: 'consulta_desvios', modo: 'abertos' });
+  // temperatura fora de 7, 13 e 25: recusa sem gravar
+  const r = interpretar('desvio do drop d5 tanque 45 confirmou em 30 graus');
+  assert.equal(r.tipo, 'erro_coleta');
+  assert.match(r.textoResposta, /7, 13 ou 25/);
 });

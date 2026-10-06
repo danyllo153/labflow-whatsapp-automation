@@ -154,11 +154,9 @@ As regex dos comandos que gravam (com load, compostas e `#`) entram no desenho d
 |---|---|
 | `relatório do dia tanques terra` (ou navio, recebimento, embarque) | O bloco pedido, com **tudo** que sai hoje, para acompanhar o andamento: o que já foi lido vem marcado com ✅ |
 | `relatório do dia completo` | Só o que **já foi lido**, no formato do relatório oficial |
-| `leitura de hoje finalizada` | O analista libera as leituras **dele** do dia para o relatório completo |
+| `leitura do dia finalizada` | Uma pessoa lê por dia: marca como lido tudo o que sai hoje (TAB/Coliformes sem crescimento = Negativo; em confirmação não muda; C.T/B.L do concentrado ficam pendentes até o valor) e o relatório mostra quem finalizou. **Feito em 05/10/2026** (substitui a ideia de liberação por analista) |
 
-**Barreira contra relatório incompleto:** se alguém pedir o relatório completo e houver leituras do dia ainda não finalizadas, o bot avisa: "⚠️ Ainda há leituras de hoje não finalizadas (TAB 2, Coliformes 1). Enviar mesmo assim?".
-
-Depois (fase E): o mesmo relatório por e-mail e em Excel, no formato da planilha.
+**Decidido em 05/10/2026:** sem e-mail. Excel = exportar do Power BI (CSV) ou do DBeaver (XLSX).
 
 ## 8. Modelo de dados (rascunho para a nova 002)
 
