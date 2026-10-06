@@ -6,6 +6,13 @@ Documento para retomar o projeto em outro computador ou numa conversa nova do Cl
 
 ## 0. Onde paramos (leia primeiro)
 
+**05/10/2026, noite — `leitura do dia finalizada` + desvio de drop** (branch `feat/finalizada-desvio-drop`, um PR só):
+
+- Migrations **`011`** (aplicada) e **`012`** no servidor; workflow com os dois recursos montado (177 nodes), 100 testes passando, auditoria 0 erros, SQL testado no banco em transações desfeitas e os textos testados com o código real dos nodes.
+- **Testado pelo WhatsApp em 05/10/2026 (tudo ok):** workflow novo importado como cópia e ativo, com o *Error workflow* religado; desvio aberto, listado nos abertos, com 🚨 no relatório, fechado como "confirmou em 13 e 25 °C" e consultado por tanque; `leitura do dia finalizada` com "finalizada por" no rodapé do relatório. Falta só push, PR e merge.
+- Decisões: uma pessoa lê por dia; o "finalizada" fecha tudo o que sai hoje (TAB/Coliformes sem crescimento = Negativo; em confirmação não muda; C.T/B.L do concentrado ficam pendentes até o valor). **Sem e-mail**; Excel = exportar do Power BI ou do DBeaver. Desvio: data do comando = da coleta; 5 dias contam do "sim"; resultado pode sair antes; pode confirmar em mais de uma temperatura; `não confirmou` fecha como "não confirmado". Detalhes em `comandos.md` 15.1 e 15.2.
+- **Próximo:** Power BI para o laboratório (views de painel + Power BI Desktop pelo túnel) e a IA no concentrado.
+
 **Alerta de erro no WhatsApp: concluído em 05/10/2026.** Workflow `LabFlow · Alerta de erro` na `main` (PR #16), publicado no n8n e ligado ao `LabFlow (Postgres)` em *Settings → Error workflow*. Teste A (execução manual) e **teste B (ponta a ponta)** passaram: uma falha proposital gerou um alerta 🚨 no WhatsApp do Admin, com node, erro, execução e hora, e a segunda falha, 25 s depois, não gerou outro (janela de 10 minutos). O workflow de teste foi despublicado e apagado no n8n, e o arquivo `LabFlow_importar_n8n_teste_erro.json` foi apagado (se precisar de novo, o Claude regenera). Detalhe: o webhook de teste respondeu `200` (e não 500), porque responde antes do node que falha; o alerta dispara igual. Próximo passo do tema: monitor externo (Uptime Kuma), porque o alerta não sai se o servidor ou o n8n caírem.
 
 **Notebook (05/10):** Python 3.12 e Node 24 instalados; `npm test` passa os 89 testes e a auditoria dá 0 erros nos dois workflows. O `sync-valts.bat` deixou de usar `/MIR` (apagava no OneDrive arquivos vindos do outro PC); agora só acrescenta e não troca arquivo mais novo por um mais antigo.
@@ -37,7 +44,7 @@ Repositório: `github.com/danyllo153/labflow-whatsapp-automation` (público). Cl
 
 Stack (VPS Linux, stack própria em `~/labflow`, Docker, sem porta pública, acesso só por túnel SSH): WhatsApp Business (número dedicado em eSIM) → Evolution API 2.3.7 (instância `labflow2`) → webhook → n8n 2.38.6 → PostgreSQL → resposta pelo WhatsApp. O mesmo container Postgres guarda o banco da Evolution API e o banco `labflow`. IA: Gemini (`models/gemini-3.1-flash-lite`) como fallback da regex.
 
-**No servidor:** migrations `001` a `010` aplicadas. No n8n está ativo o workflow final (159 nodes). O backup diário (3h, 14 dias, `~/labflow/backups`) está rodando. DBeaver: conexões `LabFlow (leitura)` e `LabFlow (app)` (tipo Production).
+**No servidor:** migrations `001` a `012` aplicadas. No n8n está ativo o workflow final (159 nodes). O backup diário (3h, 14 dias, `~/labflow/backups`) está rodando. DBeaver: conexões `LabFlow (leitura)` e `LabFlow (app)` (tipo Production).
 
 **Arquivos de workflow (na pasta do projeto):**
 - `LabFlow.json`: versão **pública**, sem IDs reais (vai para o Git).
@@ -80,7 +87,7 @@ Futuro (NÃO fazer agora): integrar a arquitetura de tanques do navio (tanque C/
 
 ## 5. Banco de dados
 
-Plano e decisões em [`postgres-migracao.md`](postgres-migracao.md); migrations em [`../db/migrations/`](../db/migrations/) (`001` a `010`, aplicadas uma de cada vez, com `-v ON_ERROR_STOP=1`). A coleta é o centro (drops, arquivo e análises apontam para `coleta_id`); no concentrado, a ordem é *recebimento → compostas → testes*. `tanque` é TEXT; datas em `America/Sao_Paulo`; o banco confere as regras de novo (UNIQUE, CHECK, FK). Usuários: `labflow_app` (n8n) e `labflow_leitura` (DBeaver e Power BI). Senhas só em `~/labflow/.env` no servidor.
+Plano e decisões em [`postgres-migracao.md`](postgres-migracao.md); migrations em [`../db/migrations/`](../db/migrations/) (`001` a `012`, aplicadas uma de cada vez, com `-v ON_ERROR_STOP=1`). A coleta é o centro (drops, arquivo e análises apontam para `coleta_id`); no concentrado, a ordem é *recebimento → compostas → testes*. `tanque` é TEXT; datas em `America/Sao_Paulo`; o banco confere as regras de novo (UNIQUE, CHECK, FK). Usuários: `labflow_app` (n8n) e `labflow_leitura` (DBeaver e Power BI). Senhas só em `~/labflow/.env` no servidor.
 
 Aplicar uma migration nova a partir do PC (backup antes: `ssh labflow "cd ~/labflow && ./backup-db.sh"`):
 

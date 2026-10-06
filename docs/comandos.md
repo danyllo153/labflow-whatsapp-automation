@@ -504,4 +504,52 @@ relatório do dia tanques terra           só NFC (também: tanques navio, tanqu
 - **✅** = lido. **🚨** = fora do limite: **B.L a partir de 50** ou **C.T a partir de 200** (`<10` nunca alarma), ou TAB/Coliformes **positivo**.
 - Depois das linhas de cada bloco, uma linha de alerta por problema: `🚨 C.T 48h ≥ 200 — 77001: lote 6 = 250`, `🚨 TAB POSITIVO — 77001 (6-8)`.
 - No `completo`, cada linha do concentrado termina em `— ok` ou `— não ok` (não ok se algum item lido estiver fora do limite ou positivo). Linha sem leitura fica `-`, e o Howard e o NFC não têm Situação, porque ainda não há limite definido para eles.
-- O `completo` termina com `✅ lido: X de Y` e, se faltar leitura, o aviso `⚠️ Ainda há N leituras de hoje por fazer`. O envio por e-mail, em Excel, e a liberação por analista (`leitura de hoje finalizada`) ainda não existem.
+- O `completo` termina com `✅ lido: X de Y` e, se faltar leitura, o aviso `⚠️ Ainda há N leituras de hoje por fazer`.
+- Depois do `leitura do dia finalizada` (seção 15.1), o relatório termina com `✅ Leitura do dia finalizada por Ana às 16:40.`
+- **Drops com desvio** (seção 15.2): o drop "não ok" de hoje aparece com 🚨 no lugar do ✅, mais o alerta `🚨 Drop D5 NÃO OK — tanque 45 (coleta 30/09): desvio aberto, ler até 10/10`. A linha `Desvios:` (embaixo dos drops) mostra as leituras de desvio vencidas ou feitas hoje, e um desvio confirmado gera `🚨 Desvio CONFIRMADO ...`.
+- Não há envio por e-mail. Para Excel: exportar do Power BI (CSV) ou do DBeaver (XLSX).
+
+## 15.1 Leitura do dia finalizada
+
+Uma pessoa lê por dia. Em vez de fechar por partes (`concluir drops`, `concluir leitura`, `tabs de hoje lidos`...), ela pode fechar **tudo o que sai hoje de uma vez**. Os comandos por partes continuam valendo; o "finalizada" fecha só o que ainda estiver pendente. Só Admin e Operador.
+
+```
+leitura do dia finalizada               (também: leitura de hoje finalizada, leitura finalizada, finalizar leitura do dia)
+```
+
+```
+LabFlow: ❓ Marcar como lido tudo o que sai hoje (05/10)?
+         NFC tank farm: 6 leituras · Drops: 4 · TAB: 2 · Coliformes: 1
+         TAB e Coliformes sem crescimento ficam *Negativo*.
+         ⚠️ C.T/B.L do concentrado: 12 resultados sem valor. Continuam pendentes até você digitar.
+         ℹ️ 1 em confirmação não entra (precisa do resultado).
+Você:    sim
+LabFlow: ✅ Leitura do dia finalizada por Ana. Relatório do dia: todo lido, menos 12 resultados de C.T/B.L (digite os valores).
+```
+
+| O que sai hoje | O que o "finalizada" faz |
+|---|---|
+| Leituras de NFC (pré-leitura e leitura final de C.T, B.L, Psicrotróficos) e drops | Marca como lido, com quem leu |
+| TAB e Coliformes no dia da leitura | Fecha como **Negativo** |
+| TAB e Coliformes **em confirmação**, lotes de composta aberta, desvios de drop | **Não mexe** (precisam do resultado) |
+| C.T e B.L do concentrado (valor numérico) | **Ficam pendentes** até digitar o valor |
+
+O dia fica registrado na tabela `leituras_finalizadas` (migration `011`). Se der o comando de novo no mesmo dia, vale o último.
+
+## 15.2 Desvio de drop
+
+Drop **não ok** abre um **desvio**: o drop de arquivo é repetido em **3 temperaturas (7, 13 e 25 °C)** por **até 5 dias**. O drop é rastreado pela **coleta** (a data do comando é a da coleta). Só Admin e Operador abrem e fecham; consultar, todos.
+
+```
+drop d5 do tanque 45 data 30/09/2026 não ok                    abrir (pergunta antes; os 5 dias contam do "sim")
+drop d10 do tanque 1C navio O.SKY 123 coleta 28/09/2026 não ok  tanque de navio
+desvio do drop d5 tanque 45 confirmou em 13 e 25 graus          resultado (uma ou mais temperaturas; pergunta antes)
+desvio do drop d5 tanque 45 não confirmou                       nenhuma temperatura confirmou
+quais últimos desvios de drops do tanque 45?                    histórico do tanque (data, temperaturas, quem)
+quais desvios estão abertos?                                    desvios em confirmação, com o prazo
+```
+
+- Ao abrir, o drop conta como lido (com 🚨 no relatório do dia) e o desvio fica **em confirmação** até o analista passar o resultado, que pode sair **antes** dos 5 dias.
+- No resultado, a data da coleta é opcional: sem ela, o bot pega o desvio aberto daquele tanque e drop.
+- Temperaturas válidas: 7, 13 e 25 °C (o banco também confere). Um desvio por drop.
+- Tabela `desvios_drop` e view `vw_desvios_drop` (migration `012`).

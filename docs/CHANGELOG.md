@@ -13,6 +13,8 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 ## [Não lançado]
 
 ### Adicionado
+- **`leitura do dia finalizada`**: quem lê o dia fecha tudo o que sai hoje de uma vez (leituras de NFC e drops como lidos; TAB e Coliformes sem crescimento como Negativo), com "sim" antes. O que está em confirmação não muda e C.T/B.L do concentrado ficam pendentes até digitar o valor. O relatório do dia termina com "finalizada por X às HH:MM". Migration `011`. Ver `docs/comandos.md` 15.1.
+- **Desvio de drop**: `drop d5 do tanque 45 data 30/09/2026 não ok` abre desvio (com "sim"): repetição do drop de arquivo em 7, 13 e 25 °C por até 5 dias; resultado por temperatura (`confirmou em 13 e 25 graus` ou `não confirmou`); consultas `quais desvios de drops do tanque 45?` e `quais desvios estão abertos?`. No relatório, drop não ok = 🚨 e linha "Desvios". Migration `012`. Ver `docs/comandos.md` 15.2.
 - Testes automatizados do node `Interpretar comando` (`tests/`, 80 casos): reconhecimento dos comandos, campos extraídos, prazos de negócio, recusas e permissões. Rodam com `npm test` e na GitHub Action `testes.yml`. Ver `docs/scripts.md`.
 
 ### Alterado

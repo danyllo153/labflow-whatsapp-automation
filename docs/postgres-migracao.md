@@ -37,6 +37,8 @@ descrito em [`concentrado.md`](concentrado.md).
 | [`008_embarque.sql`](../db/migrations/008_embarque.sql) | `embarques`, `embarque_amostras`, compostas de embarque, `vw_compostas` com as duas origens, funções de busca por amostra e Howard (`campos_positivos`) |
 | [`009_contagens.sql`](../db/migrations/009_contagens.sql) | `contagens` (C.T e B.L por lote e por amostra), `vw_contagens` (com o alarme) e `vw_contagens_previstas` |
 | [`010_testes_embarque.sql`](../db/migrations/010_testes_embarque.sql) | testes por amostra de embarque |
+| [`011_leitura_finalizada.sql`](../db/migrations/011_leitura_finalizada.sql) | tabela `leituras_finalizadas` (quem finalizou a leitura de cada dia) e pendência `DIA` |
+| [`012_desvio_drop.sql`](../db/migrations/012_desvio_drop.sql) | tabela `desvios_drop`, view `vw_desvios_drop` (desvio de drop em 7, 13 e 25 °C) e pendência `DESVIO` |
 
 Aplicadas em ordem, uma de cada vez, cada uma dentro de uma transação
 (`-v ON_ERROR_STOP=1`): se algo falha, nada fica pela metade.
