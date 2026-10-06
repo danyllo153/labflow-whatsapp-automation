@@ -556,6 +556,8 @@ Error Trigger → BD · Buscar Admins → Montar alerta de erro → Zap · Alert
 - **Sem Admin cadastrado:** não envia nada (e não gasta a janela de 10 minutos).
 - **Limites:** só execuções automáticas disparam o Error Workflow (teste manual no editor não dispara). Se o próprio servidor, o n8n ou o WhatsApp estiverem fora do ar, o alerta também não sai: para isso o próximo passo seria um monitor externo (Uptime Kuma).
 
+**Validado de ponta a ponta em 05/10/2026** com um workflow descartável que falha de propósito (webhook `labflow-teste-erro` → node `Falha proposital`), ligado ao alerta: a primeira falha gerou um alerta no WhatsApp do Admin com o node, o erro, a execução e a hora; a segunda, 25 segundos depois, não gerou outro (janela de 10 minutos). O webhook desse teste respondeu `200 Workflow was started` (e não 500), porque responde antes de executar o node que falha; o Error Workflow dispara do mesmo jeito.
+
 A auditoria (`scripts/audit-workflow.py`) só cobra "Respond to Webhook" de workflows que têm Webhook; este não tem. O código do node é coberto por `tests/alerta-erro.test.js` (ver [`scripts.md`](scripts.md)).
 
 ## Arquitetura no tempo do Google Sheets (resumo, até a 0.9.0)

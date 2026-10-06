@@ -2,18 +2,13 @@
 
 Documento para retomar o projeto em outro computador ou numa conversa nova do Claude Code. Leia inteiro antes de propor qualquer coisa. O que está marcado como decidido já foi combinado com o Danyllo; o que está em "a definir" precisa ser perguntado antes de implementar.
 
-Última atualização: 05/10/2026 (1.1.0 publicada; `CLAUDE.md`, testes automatizados e `bl` = `bl120` já na `main`; alerta de erro no WhatsApp montado, falta o teste de ponta a ponta e o merge).
+Última atualização: 05/10/2026, noite (alerta de erro validado de ponta a ponta no notebook; notebook com Python e Node, 89 testes passando).
 
 ## 0. Onde paramos (leia primeiro)
 
-**Alerta de erro no WhatsApp** (workflow `LabFlow · Alerta de erro`, arquivo `LabFlow_Alerta_Erro.json`; desenho em [`arquitetura.md`](arquitetura.md)):
+**Alerta de erro no WhatsApp: concluído em 05/10/2026.** Workflow `LabFlow · Alerta de erro` na `main` (PR #16), publicado no n8n e ligado ao `LabFlow (Postgres)` em *Settings → Error workflow*. Teste A (execução manual) e **teste B (ponta a ponta)** passaram: uma falha proposital gerou um alerta 🚨 no WhatsApp do Admin, com node, erro, execução e hora, e a segunda falha, 25 s depois, não gerou outro (janela de 10 minutos). O workflow de teste foi despublicado e apagado no n8n, e o arquivo `LabFlow_importar_n8n_teste_erro.json` foi apagado (se precisar de novo, o Claude regenera). Detalhe: o webhook de teste respondeu `200` (e não 500), porque responde antes do node que falha; o alerta dispara igual. Próximo passo do tema: monitor externo (Uptime Kuma), porque o alerta não sai se o servidor ou o n8n caírem.
 
-- ✅ Código, 9 testes e documentação prontos, em 3 commits + 1 de handoff na branch **`feat/alerta-erro-whatsapp`**. **Pode estar sem push/PR/merge:** conferir com `git status -sb` e `git ls-remote --heads origin feat/alerta-erro-whatsapp`. Se a branch não existir no GitHub, o trabalho só está no PC onde foi feito.
-- ✅ No n8n do servidor: workflow de alerta **importado, publicado e ligado** ao `LabFlow (Postgres)` em *Settings → Error workflow*.
-- ✅ **Teste A passou** (execução manual do alerta): a mensagem 🚨 chegou no WhatsApp do Admin, formatada certa (com os dados de exemplo do n8n).
-- ⏳ **Falta o teste B (ponta a ponta):** importar `LabFlow_importar_n8n_teste_erro.json` (webhook que sempre falha), ligar o *Error workflow* dele ao alerta, publicar, e disparar (túnel `ssh labflow` aberto):
-  `Invoke-WebRequest -Method POST -Uri http://127.0.0.1:5679/webhook/labflow-teste-erro -UseBasicParsing` (erro 500 é o esperado). Deve chegar o alerta com `Node: Falha proposital`. Rodar de novo logo em seguida **não** deve enviar nada (janela de 10 minutos). Depois, despublicar e apagar o workflow de teste.
-- Os arquivos `LabFlow_importar_n8n_alerta.json` e `LabFlow_importar_n8n_teste_erro.json` ficam **fora do Git** (têm IDs reais). Estão no PC onde foram gerados e na cópia do OneDrive; se faltarem, o Claude os regenera.
+**Notebook (05/10):** Python 3.12 e Node 24 instalados; `npm test` passa os 89 testes e a auditoria dá 0 erros nos dois workflows. O `sync-valts.bat` deixou de usar `/MIR` (apagava no OneDrive arquivos vindos do outro PC); agora só acrescenta e não troca arquivo mais novo por um mais antigo.
 
 **Feito em 04 e 05/10, já na `main`:** `CLAUDE.md` (PR #14), 80 testes do node `Interpretar comando` e a Action `testes.yml` (PR #15), `bl` sozinho vale `bl120` (já importado e testado no WhatsApp), vault do Obsidian reorganizado sem instruções duplicadas.
 
@@ -71,7 +66,7 @@ Stack (VPS Linux, stack própria em `~/labflow`, Docker, sem porta pública, ace
 
 1. ✅ V1 MVP · ✅ V2 regras de negócio · ✅ V3 parte 1 (IA como fallback) · ✅ V4 (PostgreSQL, 1.0.0) · ✅ módulo de concentrado e relatório diário (1.1.0).
 2. ▶ **Próximo (a definir ordem):**
-   - Fechar o alerta de erro: teste B, push, PR e merge (ver seção 0). Depois, monitor externo (Uptime Kuma), porque o alerta não sai se o servidor ou o n8n caírem.
+   - ~~Fechar o alerta de erro~~ (feito em 05/10). Próximo do tema: monitor externo (Uptime Kuma), porque o alerta não sai se o servidor ou o n8n caírem.
    - Melhorias de fluxo: skills `/novo-comando` e `/fechar-dia`, hook de pré-commit (acento corrompido, ID real, `.env`), mais testes (nodes `Montar ...` e `Validar resposta da IA`), backup do `pg_dump` fora do servidor, ferramenta de migration (`dbmate`), vídeo/GIF do bot no README e a seção "Como usei IA neste projeto".
    - Relatório diário, fase seguinte: `leitura de hoje finalizada` por analista (barreira contra relatório incompleto, `docs/concentrado.md` seção 7), envio por e-mail e Excel, e a Situação (`ok`/`não ok`) em todas as linhas do relatório, inclusive drops, Howard e NFC.
    - IA no concentrado: ensinar o Gemini as intenções novas, com permissão no código e testes de regressão do prompt (uma frase por intenção).
