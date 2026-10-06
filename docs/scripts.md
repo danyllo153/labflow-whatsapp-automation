@@ -33,7 +33,7 @@ Executa o `jsCode` **real** do node `Interpretar comando` (extraído do `LabFlow
 npm test
 ```
 
-O que os testes cobrem (89 casos; 9 são do alerta de erro, em `tests/alerta-erro.test.js`):
+O que os testes cobrem (208 casos; 9 são do alerta de erro, em `tests/alerta-erro.test.js`, e 107 da IA, em `tests/validar-ia.test.js`):
 
 - **Reconhecimento:** cada comando da referência ([comandos.md](comandos.md)) cai na intenção (`tipo`) certa.
 - **Campos extraídos:** lotes, compostas, navio/linha/fase, grupos de C.T/B.L com o sinal (`<` nunca vira igual), data da coleta do TAB de NFC.
@@ -42,6 +42,7 @@ O que os testes cobrem (89 casos; 9 são do alerta de erro, em `tests/alerta-err
 - **Permissões:** não cadastrado, Consultor, Operador e Admin (a permissão é do código, nunca do prompt: Bug 23).
 - **IA:** frase livre vai para o Gemini, a mensagem reenviada não entra em loop, mensagem do próprio bot é ignorada.
 - **Alerta de erro:** formato da mensagem, máscara de números longos, corte em 300 caracteres, um aviso por Admin, nenhum aviso sem Admin e a janela de 10 minutos contra repetição.
+- **IA (node `Validar resposta da IA`):** com respostas simuladas do Gemini: cada formato do catálogo da IA ([`tests/catalogo-ia.js`](../tests/catalogo-ia.js), um exemplo de cada comando novo) é reconhecido pela regex e recebe a classe certa (consulta direto, "sim" da IA ou "sim" do próprio comando); Consultor só consulta; formato fora do catálogo é recusado; dado faltando vira pergunta; intenções antigas sem mudança. Validado com defeito injetado (recebimento sem "sim": 3 testes falharam).
 
 Para testar outro arquivo, por exemplo o de importação, antes de subir no n8n:
 
@@ -53,7 +54,19 @@ Os testes foram validados injetando defeitos de propósito numa cópia do workfl
 
 A GitHub Action [`testes.yml`](../.github/workflows/testes.yml) roda `npm test` a cada mudança no `LabFlow.json` ou em `tests/`.
 
-**Limite conhecido:** só o node `Interpretar comando` (e o do alerta de erro) está coberto. Os nodes `Montar ...` (que formatam a resposta) e o `Validar resposta da IA` ainda não têm teste. O Gemini em si não é testado offline: o teste de regressão do prompt continua pendente.
+**Limite conhecido:** os nodes `Montar ...` (que formatam a resposta) ainda não têm teste automático.
+
+## gerar-teste-prompt-ia.js (regressão do prompt do Gemini)
+
+Arquivo: [`scripts/gerar-teste-prompt-ia.js`](../scripts/gerar-teste-prompt-ia.js)
+
+O Gemini não roda offline, então o prompt é testado no próprio n8n. O script gera um workflow descartável com **o mesmo prompt do bot** (lido do arquivo de importação) e uma lista de frases com o resultado esperado; o workflow manda uma frase por vez ao Gemini (4 s entre elas) e o node **Placar** mostra quantas acertou e, nas erradas, a frase, o esperado e o obtido.
+
+```powershell
+node scriptsgerar-teste-prompt-ia.js LabFlow_importar_n8n.json LabFlow_importar_n8n_teste_ia.json
+```
+
+Importar no n8n como workflow novo, **Execute workflow** e ler o node Placar; depois apagar o workflow. Os dois arquivos têm IDs reais e ficam fora do Git. As frases ficam no próprio script (diferentes dos exemplos do prompt, para medir generalização, incluindo frases em estilo de áudio e as intenções antigas). Rodar depois de **qualquer** mudança no prompt. Em 05/10/2026: 44 de 44.
 
 ## sanitize-workflow.ps1
 
