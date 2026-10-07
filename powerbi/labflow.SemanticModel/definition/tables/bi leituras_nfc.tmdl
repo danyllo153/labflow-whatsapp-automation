@@ -1,0 +1,197 @@
+table 'bi leituras_nfc'
+	lineageTag: af6bf997-5538-4378-bc58-efd35acdcc92
+
+	measure Leituras = COUNTROWS('bi leituras_nfc')
+		formatString: 0
+		lineageTag: 98ea673c-07d8-49a0-a4e9-2af1eaa4373e
+
+	measure 'Leituras lidas' = CALCULATE(COUNTROWS('bi leituras_nfc'), 'bi leituras_nfc'[situacao] = "Lido")
+		formatString: 0
+		lineageTag: 86098499-3dc6-4e32-ac67-d8007b32d30c
+
+	measure 'Leituras atrasadas' = CALCULATE(COUNTROWS('bi leituras_nfc'), 'bi leituras_nfc'[situacao] = "Atrasado")
+		formatString: 0
+		lineageTag: f4801b6a-4372-43b6-b5f3-0e69a2589a01
+
+	measure 'Leituras que vencem hoje' = CALCULATE(COUNTROWS('bi leituras_nfc'), 'bi leituras_nfc'[situacao] = "Vence hoje")
+		formatString: 0
+		lineageTag: d4aa392e-d835-4653-b6ee-39e14cfbf4f0
+
+	measure '% de leituras lidas' = DIVIDE([Leituras lidas], [Leituras])
+		formatString: 0%
+		lineageTag: a7b312e9-d621-4ecb-a9fb-8e711efce97e
+
+	measure 'HTML andamento das leituras' = VAR linha = SELECTEDVALUE('bi leituras_nfc'[linha_relatorio]) VAR total = COALESCE([Leituras], 0) VAR lidas = COALESCE([Leituras lidas], 0) VAR atras = COALESCE([Leituras atrasadas], 0) VAR hoje = COALESCE([Leituras que vencem hoje], 0) VAR pl = FORMAT(ROUND(DIVIDE(lidas, total, 0) * 100, 0), "0") VAR pa = FORMAT(ROUND(DIVIDE(atras, total, 0) * 100, 0), "0") VAR ph = FORMAT(ROUND(DIVIDE(hoje, total, 0) * 100, 0), "0") RETURN "<div style='margin:2px 6px 14px 6px;font-family:Segoe UI,sans-serif'><div style='display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:#F4F4F5'><b>" & linha & "</b><span style='font-size:12px;color:#A1A1AA'><b style='color:#22C55E'>" & pl & "% lidas</b> · " & lidas & " de " & total & "</span></div><div style='height:8px;border-radius:6px;background:#27272A;overflow:hidden;display:flex;margin-top:6px'><div style='width:" & pl & "%;background:#22C55E'></div><div style='width:" & pa & "%;background:#EF4444'></div><div style='width:" & ph & "%;background:#F59E0B'></div></div><div style='font-size:11px;margin-top:5px;color:#A1A1AA'><span style='color:#EF4444'>● </span>" & atras & " atrasadas&nbsp;&nbsp;<span style='color:#F59E0B'>● </span>" & hoje & " para hoje</div></div>"
+		isHidden
+		displayFolder: Painel HTML
+		lineageTag: 95be5de3-d150-48b0-8ce1-f9c6c2506d6d
+
+	column analise_id
+		dataType: int64
+		formatString: 0
+		lineageTag: 64c8fec3-e9f6-414a-8523-559e8a828c70
+		summarizeBy: sum
+		sourceColumn: analise_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column coleta_id
+		dataType: int64
+		formatString: 0
+		lineageTag: 05a78958-1bc6-4d51-af1a-01ae6115a4be
+		summarizeBy: none
+		sourceColumn: coleta_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column origem
+		dataType: string
+		lineageTag: 8d811cf0-afad-43d8-83c2-66c8292b1d76
+		summarizeBy: none
+		sourceColumn: origem
+
+		annotation SummarizationSetBy = Automatic
+
+	column tanque
+		dataType: string
+		lineageTag: 610d22f7-96cf-4a4c-82cf-8479e2324573
+		summarizeBy: none
+		sourceColumn: tanque
+
+		annotation SummarizationSetBy = Automatic
+
+	column navio
+		dataType: string
+		lineageTag: 36db1610-32e4-4c6a-a206-34174275ab92
+		summarizeBy: none
+		sourceColumn: navio
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_coleta
+		dataType: dateTime
+		formatString: dd/MM/yyyy
+		lineageTag: 5de105ab-ddb0-4d0a-89aa-2842e517ae3a
+		summarizeBy: none
+		sourceColumn: data_coleta
+
+		variation Variation
+			isDefault
+			relationship: d84d4360-7af4-4205-8296-b6f47ebe176c
+			defaultHierarchy: LocalDateTable_a107d660-47d2-4881-bc54-c368c86f52a9.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column frasco
+		dataType: string
+		lineageTag: 76db4045-6eb9-46b4-8e98-7c1fe238c241
+		summarizeBy: none
+		sourceColumn: frasco
+
+		annotation SummarizationSetBy = Automatic
+
+	column analise
+		dataType: string
+		lineageTag: 3507f202-7c7f-471a-bde7-249ef6a1a15c
+		summarizeBy: none
+		sourceColumn: analise
+
+		annotation SummarizationSetBy = Automatic
+
+	column metodo
+		dataType: string
+		lineageTag: aad3faf6-a417-45b2-adf3-0b3c4ad96346
+		summarizeBy: none
+		sourceColumn: metodo
+
+		annotation SummarizationSetBy = Automatic
+
+	column etapa
+		dataType: string
+		lineageTag: 2f9a1624-8949-4f50-99e4-e35e6a4d97d8
+		summarizeBy: none
+		sourceColumn: etapa
+
+		annotation SummarizationSetBy = Automatic
+
+	column linha_relatorio
+		dataType: string
+		lineageTag: 44254d78-fd65-4c2e-bc6e-0b56b563f2f8
+		summarizeBy: none
+		sourceColumn: linha_relatorio
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_analise
+		dataType: dateTime
+		formatString: dd/MM/yyyy
+		lineageTag: 156bfbac-1003-48f7-a2af-4b74adba6c43
+		summarizeBy: none
+		sourceColumn: data_analise
+
+		variation Variation
+			isDefault
+			relationship: ba21d4ec-218c-4b01-b95a-c1789705579f
+			defaultHierarchy: LocalDateTable_91fa9946-0c63-4394-9049-68970da5de13.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column prevista
+		dataType: dateTime
+		formatString: dd/MM/yyyy
+		lineageTag: a21ad5a8-f88a-4ac6-a8db-67d0398b2774
+		summarizeBy: none
+		sourceColumn: prevista
+
+		variation Variation
+			isDefault
+			relationship: fa0d7de2-2c1d-4423-81e2-0ce5ed0235cd
+			defaultHierarchy: LocalDateTable_287786cc-8d9b-4fa3-9533-36f62235ea1c.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column lida
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 9b75084b-b2d6-4608-99f4-60a4a0657dd9
+		summarizeBy: none
+		sourceColumn: lida
+
+		annotation SummarizationSetBy = Automatic
+
+	column lida_por
+		dataType: string
+		lineageTag: c46e41d0-f98d-4e7f-847f-6255043cb61b
+		summarizeBy: none
+		sourceColumn: lida_por
+
+		annotation SummarizationSetBy = Automatic
+
+	column situacao
+		dataType: string
+		lineageTag: 6588382c-556b-4a70-9143-e1b31fa9836d
+		summarizeBy: none
+		sourceColumn: situacao
+
+		annotation SummarizationSetBy = Automatic
+
+	column Local = IF(ISBLANK('bi leituras_nfc'[navio]), "Terra (tank farm)", 'bi leituras_nfc'[navio])
+		dataType: string
+		lineageTag: 01359a8a-955b-4eaf-bca5-329d845c6c89
+		summarizeBy: none
+
+	partition 'bi leituras_nfc' = m
+		mode: import
+		source =
+				let
+				    Fonte = PostgreSQL.Database("localhost:15432", "labflow"),
+				    bi_leituras_nfc = Fonte{[Schema="bi",Item="leituras_nfc"]}[Data]
+				in
+				    bi_leituras_nfc
+

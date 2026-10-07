@@ -1182,6 +1182,50 @@ depois de publicada, correção vira uma versão nova.
 
 ---
 
+## Bug 31 — Medidas em dobro depois de salvar no Power BI ("both declare the same property: expression")
+
+**Sintoma:** ao abrir o `labflow.pbip`, erro "TMDL objects cannot be merged because both declare
+the same property: expression", com `measure 'Analistas'` e `measure Analistas` no mesmo arquivo.
+
+**Causa raiz:** o gerador grava os nomes entre aspas (`measure 'Analistas'`). Ao salvar, o Power BI
+regrava o TMDL do jeito dele e **tira as aspas** dos nomes simples. Na rodada seguinte, o gerador
+só apagava os blocos com aspas, então os sem aspas ficavam e ele criava outro por cima.
+
+**Solução aplicada:** a limpeza do gerador reconhece os dois jeitos (`'Nome'` e `Nome`) e também
+bloco com linha em branco antes de `annotation`. Conferido: nenhuma medida ou coluna duplicada.
+
+**Lição:** em "BI como código", o arquivo é escrito por duas ferramentas (o script e o Power BI).
+O script precisa aceitar o formato que o Power BI grava, não só o que ele mesmo escreve.
+
+---
+
+## Bug 32 — "Item 'desvio' already exists in the collection" ao abrir o painel
+
+**Sintoma:** o Power BI não abriu o projeto: coluna `desvio` já existe.
+
+**Causa raiz:** o gerador criou a coluna calculada `Desvio` na tabela de drops, que já tinha a
+coluna `desvio` (verdadeiro/falso, vinda do banco). No Power BI, maiúscula e minúscula são o
+**mesmo nome**.
+
+**Solução aplicada:** a coluna virou `Desvio do drop` (o título na tabela continua "Desvio") e o
+gerador passou a conferir os nomes antes de gravar: coluna calculada ou medida que repete uma
+coluna do banco, ou medida repetida no modelo, para o script com a mensagem do conflito.
+
+---
+
+## Bug 33 — "ActivePageName não encontrado" ao recarregar o painel
+
+**Sintoma:** depois de aplicar o gerador com o Power BI aberto, o Power BI avisou "Seu relatório
+tem problemas: ActivePageName não encontrado".
+
+**Causa raiz:** o gerador criava as páginas com um número (id) novo a cada rodada. O Power BI
+aberto lembrava da página em que estava, que "sumiu".
+
+**Solução aplicada:** "Continuar" abriu normalmente. O id de cada página passou a ser fixo,
+calculado a partir do nome dela.
+
+---
+
 ## Configuração da instância Evolution API (recomendada)
 
 ```json

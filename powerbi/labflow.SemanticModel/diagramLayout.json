@@ -1,0 +1,139 @@
+{
+  "version": "1.1.0",
+  "diagrams": [
+    {
+      "ordinal": 0,
+      "scrollPosition": {
+        "x": 0,
+        "y": 0.800000011920929
+      },
+      "nodes": [
+        {
+          "location": {
+            "x": 813.26446355839084,
+            "y": 229.38319375108279
+          },
+          "nodeIndex": "bi coletas",
+          "nodeLineageTag": "3227d910-993c-4d14-a312-7474026fe92b",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 289.22165522170349,
+            "y": 456.455797094078
+          },
+          "nodeIndex": "bi contagens",
+          "nodeLineageTag": "7df06b90-a577-4699-973e-a51a6c8d3129",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 523.85289866618461,
+            "y": 102.63263171488188
+          },
+          "nodeIndex": "bi desvios",
+          "nodeLineageTag": "537302f3-3622-476b-9ab0-b6d9aba5a9e9",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1100.2924489985958,
+            "y": -50
+          },
+          "nodeIndex": "bi drops",
+          "nodeLineageTag": "c82d8346-4cb4-433b-b14c-875c3ba9c464",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1158.155009921717,
+            "y": 303.77985814556814
+          },
+          "nodeIndex": "bi leituras_nfc",
+          "nodeLineageTag": "af6bf997-5538-4378-bc58-efd35acdcc92",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 499.86661555803073,
+            "y": 810.07407267063672
+          },
+          "nodeIndex": "bi testes",
+          "nodeLineageTag": "df42c17b-e7c9-4a02-aa20-f8ab20d132b0",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 786.898769486266,
+            "y": 582.02098475117282
+          },
+          "nodeIndex": "Calendário",
+          "nodeLineageTag": "70ed78c5-edd6-43a6-85c0-5f0e642b3870",
+          "size": {
+            "height": 176,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 212.89860724360869,
+            "y": 1129.9178609836949
+          },
+          "nodeIndex": "Embarques",
+          "nodeLineageTag": "96b0f3a3-4e89-4752-a222-f4dc6e0b2a0f",
+          "size": {
+            "height": 200,
+            "width": 234
+          },
+          "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 50,
+            "y": 205.80123141641229
+          },
+          "nodeIndex": "Loads",
+          "nodeLineageTag": "28ee7dd7-f3ee-4297-9a29-380a07d9a214",
+          "size": {
+            "height": 200,
+            "width": 234
+          },
+          "zIndex": 0
+        }
+      ],
+      "name": "Todas as tabelas",
+      "zoomValue": 100,
+      "pinKeyFieldsToTop": false,
+      "showExtraHeaderInfo": false,
+      "hideKeyFieldsWhenCollapsed": false,
+      "tablesLocked": false
+    }
+  ],
+  "selectedDiagram": "Todas as tabelas",
+  "defaultDiagram": "Todas as tabelas"
+}

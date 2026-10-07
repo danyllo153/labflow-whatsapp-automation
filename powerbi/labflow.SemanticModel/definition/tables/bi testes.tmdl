@@ -1,0 +1,292 @@
+table 'bi testes'
+	lineageTag: df42c17b-e7c9-4a02-aa20-f8ab20d132b0
+
+	measure Testes = COUNTROWS('bi testes')
+		formatString: 0
+		lineageTag: a9387c9e-f4cf-4c41-abe5-e0fec67f7c88
+
+	measure 'Testes positivos' = CALCULATE(COUNTROWS('bi testes'), 'bi testes'[resultado] = "Positivo")
+		formatString: 0
+		lineageTag: 2bfe9f04-c083-4b20-bd3f-9feba8f7f9e2
+
+	measure 'Testes em andamento' = CALCULATE(COUNTROWS('bi testes'), 'bi testes'[status] <> "Concluído")
+		formatString: 0
+		lineageTag: b0697938-1358-481b-94c2-ec8e9801fb99
+
+	measure 'Howard médio (%)' = AVERAGE('bi testes'[howard_percentual])
+		formatString: 0.0
+		lineageTag: e49ca3da-b2af-4e7b-80fc-f621902f5d08
+
+	measure 'Testes no caldo' = CALCULATE(COUNTROWS('bi testes'), 'bi testes'[status] = "No caldo")
+		formatString: 0
+		lineageTag: 5d78d12a-5229-4e1d-bf4b-1100597c02f9
+
+	measure 'Testes incubados' = CALCULATE(COUNTROWS('bi testes'), 'bi testes'[status] = "Incubado")
+		formatString: 0
+		lineageTag: c54e8da7-43a7-4e8e-b79c-a5d68cc4a476
+
+	measure 'Testes estriados' = CALCULATE(COUNTROWS('bi testes'), 'bi testes'[status] = "Estriado")
+		formatString: 0
+		lineageTag: 7dac38cb-53f2-4ac7-acef-cac8af7d6ede
+
+	measure 'Testes em confirmação' = CALCULATE(COUNTROWS('bi testes'), 'bi testes'[status] = "Em confirmação")
+		formatString: 0
+		lineageTag: 8231fa89-9125-4494-911d-09de6b377bad
+
+	measure 'Testes negativos' = CALCULATE(COUNTROWS('bi testes'), 'bi testes'[resultado] = "Negativo")
+		formatString: 0
+		lineageTag: 69bad6ff-f368-455c-8408-b53223a550e1
+
+	measure 'Testes atrasados' = CALCULATE(COUNTROWS('bi testes'), 'bi testes'[situacao] = "Atrasado")
+		formatString: 0
+		lineageTag: 5fed7e82-d964-4ff9-a735-e509a0d64504
+
+	column teste_id
+		dataType: int64
+		formatString: 0
+		lineageTag: d09cf33c-a239-459a-b679-36b96ce9bbc5
+		summarizeBy: sum
+		sourceColumn: teste_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column teste
+		dataType: string
+		lineageTag: 76b7c6ba-e5c9-4dbd-9ffb-6b856eff2811
+		summarizeBy: none
+		sourceColumn: teste
+
+		annotation SummarizationSetBy = Automatic
+
+	column origem
+		dataType: string
+		lineageTag: 02da33c7-30cb-4be2-a4e6-5df16dd5b949
+		summarizeBy: none
+		sourceColumn: origem
+
+		annotation SummarizationSetBy = Automatic
+
+	column alvo
+		dataType: string
+		lineageTag: ca79d702-0792-46e5-af6b-12034edcbde5
+		summarizeBy: none
+		sourceColumn: alvo
+
+		annotation SummarizationSetBy = Automatic
+
+	column composta
+		dataType: int64
+		formatString: 0
+		lineageTag: e1696f56-12a1-4958-b49f-bd47258bee51
+		summarizeBy: sum
+		sourceColumn: composta
+
+		annotation SummarizationSetBy = Automatic
+
+	column load
+		dataType: string
+		lineageTag: 5ad49ad6-6483-480c-9d8c-cd00e99f89d0
+		summarizeBy: none
+		sourceColumn: load
+
+		annotation SummarizationSetBy = Automatic
+
+	column item
+		dataType: string
+		lineageTag: 98ee9a41-df13-485e-97fc-fe3cbba4c3ce
+		summarizeBy: none
+		sourceColumn: item
+
+		annotation SummarizationSetBy = Automatic
+
+	column fabrica
+		dataType: string
+		lineageTag: 0c3bd4ea-54d0-477a-bf25-735e58ca12b5
+		summarizeBy: none
+		sourceColumn: fabrica
+
+		annotation SummarizationSetBy = Automatic
+
+	column embarque
+		dataType: string
+		lineageTag: 8a540220-848a-44ba-b691-4c0a8ec7af91
+		summarizeBy: none
+		sourceColumn: embarque
+
+		annotation SummarizationSetBy = Automatic
+
+	column lotes
+		dataType: string
+		lineageTag: caf5bef2-0c32-420f-9673-0fc0b00f1b5c
+		summarizeBy: none
+		sourceColumn: lotes
+
+		annotation SummarizationSetBy = Automatic
+
+	column tanque
+		dataType: string
+		lineageTag: f9cd59e6-04b3-406d-99e5-4b73cfd8b374
+		summarizeBy: none
+		sourceColumn: tanque
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_coleta
+		dataType: dateTime
+		formatString: dd/MM/yyyy
+		lineageTag: f6218382-ac73-4010-ae44-e8e1edb9220b
+		summarizeBy: none
+		sourceColumn: data_coleta
+
+		variation Variation
+			isDefault
+			relationship: 8e4f57a0-d496-4c16-9ec4-11a83d4601ec
+			defaultHierarchy: LocalDateTable_443e4ca3-374c-4672-90dd-602470b4b574.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column confirmacao_por_lote
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 54647229-5048-408b-b4ad-942374dd8b7d
+		summarizeBy: none
+		sourceColumn: confirmacao_por_lote
+
+		annotation SummarizationSetBy = Automatic
+
+	column status
+		dataType: string
+		lineageTag: 820ac161-7588-4b29-9b2e-9b65a824a218
+		summarizeBy: none
+		sourceColumn: status
+
+		annotation SummarizationSetBy = Automatic
+
+	column resultado
+		dataType: string
+		lineageTag: 89b8e388-5e71-4cc3-8dd1-f4b6936ab146
+		summarizeBy: none
+		sourceColumn: resultado
+
+		annotation SummarizationSetBy = Automatic
+
+	column howard_percentual
+		dataType: double
+		formatString: 0.0
+		lineageTag: cf3d9df3-8278-40bf-80cf-3dcbd2f4d8a1
+		summarizeBy: sum
+		sourceColumn: howard_percentual
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column positivo
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 81dc0b21-b4f1-4c85-b4ef-5dab32e0e5ba
+		summarizeBy: none
+		sourceColumn: positivo
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_feito
+		dataType: dateTime
+		formatString: dd/MM/yyyy
+		lineageTag: c0aae732-a1a1-4296-8e3f-2ba5849945fd
+		summarizeBy: none
+		sourceColumn: data_feito
+
+		variation Variation
+			isDefault
+			relationship: b48cd022-2914-402a-8d9f-6d0e9fa32231
+			defaultHierarchy: LocalDateTable_31b3a140-d057-4379-87b7-4ecc2bae1515.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column proxima_etapa
+		dataType: dateTime
+		formatString: dd/MM/yyyy
+		lineageTag: fff80fb5-5aa3-497d-9d41-12a9eedd156b
+		summarizeBy: none
+		sourceColumn: proxima_etapa
+
+		variation Variation
+			isDefault
+			relationship: 177d59c8-59a2-4bc3-a80e-86d9e2dcf712
+			defaultHierarchy: LocalDateTable_0c96591c-6005-4785-9f89-6fae3a45b53d.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column feito_por
+		dataType: string
+		lineageTag: 059052c9-8b18-4f9b-bbf4-12da1b221b14
+		summarizeBy: none
+		sourceColumn: feito_por
+
+		annotation SummarizationSetBy = Automatic
+
+	column resultado_por
+		dataType: string
+		lineageTag: 6aae835b-ad25-424d-9de1-8c2b0573f106
+		summarizeBy: none
+		sourceColumn: resultado_por
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_resultado
+		dataType: dateTime
+		formatString: dd/MM/yyyy
+		lineageTag: c04f4e7c-6400-4946-9534-1e226e26767c
+		summarizeBy: none
+		sourceColumn: data_resultado
+
+		variation Variation
+			isDefault
+			relationship: 5ac8b5a2-e9ad-4629-9570-caee1a4efb28
+			defaultHierarchy: LocalDateTable_f6bf5415-9eb5-4e18-8bce-986e7d3b250a.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column situacao
+		dataType: string
+		lineageTag: 694b71ae-337d-48cc-9edc-fb54ee39c8b5
+		summarizeBy: none
+		sourceColumn: situacao
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Resultado ou andamento' = IF(NOT ISBLANK('bi testes'[resultado]), 'bi testes'[resultado], IF('bi testes'[teste] = "Howard", "Concluído", "Em andamento"))
+		dataType: string
+		lineageTag: 912d947d-4dd0-46fb-acea-6a23bf67154d
+		summarizeBy: none
+
+	column Navio = IF('bi testes'[origem] = "Embarque", TRIM(LEFT('bi testes'[embarque], SEARCH(" linha", 'bi testes'[embarque], 1, LEN('bi testes'[embarque]) + 1) - 1)))
+		dataType: string
+		lineageTag: 955f337f-f5e8-4d6a-8581-b212aab39e83
+		summarizeBy: none
+
+	column Identificação = SWITCH('bi testes'[origem], "Tank farm", "Tanque " & 'bi testes'[tanque], "Embarque", 'bi testes'[embarque], "Load " & 'bi testes'[load])
+		dataType: string
+		lineageTag: 3ed48b4d-1ff5-4983-a56d-4d507e73a5bf
+		summarizeBy: none
+
+	partition 'bi testes' = m
+		mode: import
+		source =
+				let
+				    Fonte = PostgreSQL.Database("localhost:15432", "labflow"),
+				    bi_testes = Fonte{[Schema="bi",Item="testes"]}[Data]
+				in
+				    bi_testes
+
+	annotation PBI_ResultType = Table
+

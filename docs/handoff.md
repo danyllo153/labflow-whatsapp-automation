@@ -2,9 +2,19 @@
 
 Documento para retomar o projeto em outro computador ou numa conversa nova do Claude Code. Leia inteiro antes de propor qualquer coisa. O que está marcado como decidido já foi combinado com o Danyllo; o que está em "a definir" precisa ser perguntado antes de implementar.
 
-Última atualização: 05/10/2026, noite (alerta de erro validado de ponta a ponta no notebook; notebook com Python e Node, 89 testes passando).
+Última atualização: 06/10/2026, noite (painel do Power BI em 8 páginas, modo escuro, com o MCP do Power BI).
 
 ## 0. Onde paramos (leia primeiro)
+
+**06/10/2026, noite — Power BI, segunda parte** (branch `feat/power-bi`, **nada commitado ainda**): painel pronto no projeto `powerbi/labflow.pbip` (formato PBIP, vai para o Git; cache e `.pbix` ficam fora pelo `.gitignore`).
+
+- **8 páginas** no padrão da página Coletas (cabeçalho e cartões em HTML, filtros no topo, 3 gráficos e **uma** tabela): Visão geral (sem tabela), Coletas, Tanques, Drops, Recebimento (fábrica, item, load), Embarque (com Howard), **TAB** e **Coliformes** (filtros por origem, navio, tanque de terra, load, fábrica, item e período; cartões no caldo, incubado/estriado, em confirmação, positivos e negativos). **Modo escuro** (pedido em cima de uma referência); a versão colorida tem backup em `scripts/gerar-painel-powerbi-colorido.js`.
+- Tudo gerado por `scripts/gerar-painel-powerbi.js` (ver `scripts.md`). Com o Power BI aberto: `--so-relatorio` (só visual) e depois recarregar.
+- **Power BI Modeling MCP** (Microsoft) instalado em modo escrita, configurado no `.mcp.json` local (fora do Git; `cmd /c npx`). Criou as tabelas Loads, Embarques e Calendário e as 8 ligações (um filtro vale para a página inteira); o Calendário liga ao C.T/B.L pela **data da amostra** (recebimento/embarque). Números do painel conferidos contra o banco pelo MCP (todos batendo).
+- Dados de demonstração reaplicados em 06/10 com backup (3 fábricas AQA/COL/UCH, 9 loads, 3 embarques, testes em todas as etapas). Bugs 31 a 33 no `troubleshooting.md`.
+- **Próximo:** o Danyllo conferir no Power BI as páginas TAB, Coliformes, Recebimento e Visão geral no modo escuro; commit e PR único da branch `feat/power-bi` (migration 013, seeds, gerador, projeto do Power BI, docs); prints das páginas para o README e o LinkedIn. Depois: áudio (V3 parte 2) e a regra de Situação de cada linha do relatório.
+
+**06/10/2026 — Power BI, primeira parte** (branch `feat/power-bi`): migration `013` (schema `bi`, 6 views para o painel) aplicada e dados de demonstração carregados (`db/seeds/demo.sql`; apagar com `limpar_demo.sql`). Power BI Desktop instalado no notebook e **conectado** pelo túnel (`postgres-migracao.md`, seção Power BI). **Parou no primeiro visual:** matriz "tanques coletados por mês" (linhas `data_coleta` só Ano e Mês, colunas `origem`, valores **Contagem** de `coleta_id`). **Próximo:** tabela "quem coletou cada tanque" (origem, navio, tanque, data_coleta, registrado_por, com segmentações de origem, navio e mês); depois as páginas visão geral (pendentes hoje, atrasados, positivos, alarmes), NFC, concentrado, desvios e rastreio. Salvar o painel como `.pbix` (fora do Git, por enquanto). O PR da IA (#19 e o README) já foi mesclado.
 
 **05/10/2026, madrugada — IA para todos os comandos novos** (branch `feat/ia-todos-comandos`): o Gemini entende todos os comandos novos (intenção `comando` com catálogo no prompt; `Validar resposta da IA` classifica e reenvia; `incompleto` pergunta o que faltou). Placar no Gemini real: 44 de 44 (`scripts/gerar-teste-prompt-ia.js`); 208 testes automáticos. Importado como cópia e testado pelo WhatsApp (relatório diário, recebimento com "sim", dado faltando, finalizada, desvio). Falta push, PR e merge. Próximo: Power BI para o laboratório; depois, áudio (V3 parte 2).
 
@@ -46,7 +56,7 @@ Repositório: `github.com/danyllo153/labflow-whatsapp-automation` (público). Cl
 
 Stack (VPS Linux, stack própria em `~/labflow`, Docker, sem porta pública, acesso só por túnel SSH): WhatsApp Business (número dedicado em eSIM) → Evolution API 2.3.7 (instância `labflow2`) → webhook → n8n 2.38.6 → PostgreSQL → resposta pelo WhatsApp. O mesmo container Postgres guarda o banco da Evolution API e o banco `labflow`. IA: Gemini (`models/gemini-3.1-flash-lite`) como fallback da regex.
 
-**No servidor:** migrations `001` a `012` aplicadas. No n8n está ativo o workflow final (159 nodes). O backup diário (3h, 14 dias, `~/labflow/backups`) está rodando. DBeaver: conexões `LabFlow (leitura)` e `LabFlow (app)` (tipo Production).
+**No servidor:** migrations `001` a `013` aplicadas. No n8n está ativo o workflow final (159 nodes). O backup diário (3h, 14 dias, `~/labflow/backups`) está rodando. DBeaver: conexões `LabFlow (leitura)` e `LabFlow (app)` (tipo Production).
 
 **Arquivos de workflow (na pasta do projeto):**
 - `LabFlow.json`: versão **pública**, sem IDs reais (vai para o Git).
@@ -89,7 +99,7 @@ Futuro (NÃO fazer agora): integrar a arquitetura de tanques do navio (tanque C/
 
 ## 5. Banco de dados
 
-Plano e decisões em [`postgres-migracao.md`](postgres-migracao.md); migrations em [`../db/migrations/`](../db/migrations/) (`001` a `012`, aplicadas uma de cada vez, com `-v ON_ERROR_STOP=1`). A coleta é o centro (drops, arquivo e análises apontam para `coleta_id`); no concentrado, a ordem é *recebimento → compostas → testes*. `tanque` é TEXT; datas em `America/Sao_Paulo`; o banco confere as regras de novo (UNIQUE, CHECK, FK). Usuários: `labflow_app` (n8n) e `labflow_leitura` (DBeaver e Power BI). Senhas só em `~/labflow/.env` no servidor.
+Plano e decisões em [`postgres-migracao.md`](postgres-migracao.md); migrations em [`../db/migrations/`](../db/migrations/) (`001` a `013`, aplicadas uma de cada vez, com `-v ON_ERROR_STOP=1`). A coleta é o centro (drops, arquivo e análises apontam para `coleta_id`); no concentrado, a ordem é *recebimento → compostas → testes*. `tanque` é TEXT; datas em `America/Sao_Paulo`; o banco confere as regras de novo (UNIQUE, CHECK, FK). Usuários: `labflow_app` (n8n) e `labflow_leitura` (DBeaver e Power BI). Senhas só em `~/labflow/.env` no servidor.
 
 Aplicar uma migration nova a partir do PC (backup antes: `ssh labflow "cd ~/labflow && ./backup-db.sh"`):
 
@@ -105,7 +115,7 @@ Respondidas: versão 1.0.0 e 1.1.0; Howard com 50 campos e sem prazo; TAB em 10 
 Ainda em aberto:
 
 1. Regra de Situação (`ok`/`não ok`) para tudo o que aparece no relatório: Howard, NFC (C.T, B.L, Psicrotróficos) e drops.
-2. Licença do Power BI.
+2. ~~Licença do Power BI~~: decidido em 06/10 usar o Power BI Desktop (gratuito); publicar online (Pro + gateway) fica para quando o laboratório pedir.
 3. Onde guardar uma cópia do `pg_dump` fora do servidor (enquanto os dados forem fictícios, pode ir para o OneDrive).
 4. **Decidido em 04/10:** positivo de TAB/Coliformes entra como `não ok` e 🚨 no relatório. A mesma lógica deve valer para **tudo** o que aparece no relatório, inclusive os drops. Falta definir a regra de `não ok` de cada linha (C.T, B.L e Psicrotróficos do NFC, drops D5/D10/D15, Howard).
 
@@ -121,4 +131,6 @@ Ainda em aberto:
 - Código dos nodes pode ser testado fora do n8n: extrair o `jsCode` do JSON exportado e executar com mensagens de exemplo (no navegador). Pega erro de regex e de texto antes de importar.
 - Depois de gerar arquivo por script, procurar caracteres corrompidos (`Ã`, `Â`, `�`) comparando com a versão anterior.
 - Antes de taguear: `git switch main && git pull` e conferir com `git log -1`.
+- Power BI como código: o arquivo é escrito por duas ferramentas (o gerador e o Power BI ao salvar). O gerador precisa aceitar o formato que o Power BI grava (Bug 31) e conferir nomes sem diferenciar maiúscula de minúscula (Bug 32). Visual: gerador (`--so-relatorio` com o Power BI aberto e salvo). Modelo (ligações, tabelas de apoio, ajuste de medida com ele aberto): MCP do Power BI.
+- Números do painel: conferir contra o banco (DAX pelo MCP x SQL no `labflow_leitura`) depois de qualquer mudança de medida ou de dados de demonstração. Depois de mudar os dados no banco, o Power BI precisa de **Atualizar** (e Ctrl+S para guardar).
 - Nunca commitar IDs reais, chaves, telefones reais ou `.env`.

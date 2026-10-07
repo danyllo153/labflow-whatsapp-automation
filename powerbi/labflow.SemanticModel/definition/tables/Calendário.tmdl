@@ -1,0 +1,35 @@
+/// Calendário único do painel: um filtro de período vale para coletas (e por elas leituras e drops), C.T/B.L, testes e desvios.
+table Calendário
+	lineageTag: 70ed78c5-edd6-43a6-85c0-5f0e642b3870
+	dataCategory: Time
+
+	column Date
+		isUnique
+		formatString: dd/MM/yyyy
+		lineageTag: 4fdeffca-55cf-4302-824b-c74007405a50
+		isNameInferred
+		sourceColumn: [Date]
+
+	column Ano
+		lineageTag: dcad5f63-4f35-484f-93b3-c5bacd9c4785
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Ano]
+
+	column Mês
+		lineageTag: 57b737a0-afbe-48e3-a332-3e3d7bb37f8a
+		isNameInferred
+		sourceColumn: [Mês]
+		sortByColumn: 'Mês (ordem)'
+
+	column 'Mês (ordem)'
+		isHidden
+		lineageTag: b5d504af-461e-4e81-bcdf-d9aa51a7246b
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Mês (ordem)]
+
+	partition Calendário = calculated
+		mode: import
+		source = ADDCOLUMNS(CALENDAR(DATE(YEAR(TODAY()) - 1, 1, 1), DATE(YEAR(TODAY()) + 1, 12, 31)), "Ano", YEAR([Date]), "Mês", FORMAT([Date], "mmm/yyyy"), "Mês (ordem)", YEAR([Date]) * 100 + MONTH([Date]))
+

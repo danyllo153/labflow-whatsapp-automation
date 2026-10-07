@@ -1,0 +1,46 @@
+model Model
+	culture: pt-BR
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: pt-BR
+	valueFilterBehavior: independent
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation __PBI_TimeIntelligenceEnabled = 1
+
+annotation PBI_QueryOrder = ["bi coletas","bi contagens","bi desvios","bi drops","bi leituras_nfc","bi testes"]
+
+annotation PBI_ProTooling = ["DevMode","MCP-PBIModeling"]
+
+ref table 'bi coletas'
+ref table DateTableTemplate_7a8dad72-3863-48fe-bdde-2b659bc6ec7d
+ref table LocalDateTable_90ea4a27-089f-4c4a-9b1f-9742a2376b34
+ref table LocalDateTable_a6608c0b-4cc1-49de-9571-ed9213bfb765
+ref table 'bi contagens'
+ref table LocalDateTable_b5ffb9f5-5eda-4ea9-b669-59e2e2bb0d44
+ref table LocalDateTable_15df9fa4-61d7-46cd-b9cd-ae0104165baa
+ref table 'bi desvios'
+ref table LocalDateTable_7681d2f6-5b59-4923-b772-0486555ac98a
+ref table LocalDateTable_18c6ac17-f577-4ece-ab43-ac60e8c59a79
+ref table LocalDateTable_b05fadd7-04e0-4bbb-bd19-b04208d1a355
+ref table LocalDateTable_9f847797-c11e-4c5c-8281-8e59592bc23c
+ref table 'bi drops'
+ref table LocalDateTable_6af45992-34d1-4839-9bc4-0f0ecb4ea035
+ref table LocalDateTable_c3a20896-6dfe-46c8-9c13-7ff1c9da8f08
+ref table LocalDateTable_9763ed86-41fe-46d5-8e20-0f04316fbb4a
+ref table 'bi leituras_nfc'
+ref table LocalDateTable_a107d660-47d2-4881-bc54-c368c86f52a9
+ref table LocalDateTable_91fa9946-0c63-4394-9049-68970da5de13
+ref table LocalDateTable_287786cc-8d9b-4fa3-9533-36f62235ea1c
+ref table 'bi testes'
+ref table LocalDateTable_443e4ca3-374c-4672-90dd-602470b4b574
+ref table LocalDateTable_31b3a140-d057-4379-87b7-4ecc2bae1515
+ref table LocalDateTable_0c96591c-6005-4785-9f89-6fae3a45b53d
+ref table LocalDateTable_f6bf5415-9eb5-4e18-8bce-986e7d3b250a
+ref table Loads
+ref table Embarques
+ref table Calendário
+
+ref cultureInfo pt-BR
+

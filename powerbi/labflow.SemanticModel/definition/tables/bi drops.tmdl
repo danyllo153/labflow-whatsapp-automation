@@ -1,0 +1,184 @@
+table 'bi drops'
+	lineageTag: c82d8346-4cb4-433b-b14c-875c3ba9c464
+
+	measure Drops = COUNTROWS('bi drops')
+		formatString: 0
+		lineageTag: 61368d78-397e-4e57-a1cb-f0097de730f3
+
+	measure 'Drops atrasados' = CALCULATE(COUNTROWS('bi drops'), 'bi drops'[situacao] = "Atrasado")
+		formatString: 0
+		lineageTag: ca37110f-5ace-4079-93ec-408fa56011b8
+
+	measure 'Drops que vencem hoje' = CALCULATE(COUNTROWS('bi drops'), 'bi drops'[situacao] = "Vence hoje")
+		formatString: 0
+		lineageTag: 49eb305c-d8e0-4ef1-9eae-27b56bb9efa6
+
+	column drop_id
+		dataType: int64
+		formatString: 0
+		lineageTag: 75140409-9337-4eec-b383-333537232562
+		summarizeBy: sum
+		sourceColumn: drop_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column coleta_id
+		dataType: int64
+		formatString: 0
+		lineageTag: af1617fd-d86f-4c1d-a9e6-c73d3987b576
+		summarizeBy: none
+		sourceColumn: coleta_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column origem
+		dataType: string
+		lineageTag: 30c357f6-8908-4ce9-8731-6aa2a157db6a
+		summarizeBy: none
+		sourceColumn: origem
+
+		annotation SummarizationSetBy = Automatic
+
+	column tanque
+		dataType: string
+		lineageTag: daef730b-a52c-4eec-a2fc-6dfc910bf31f
+		summarizeBy: none
+		sourceColumn: tanque
+
+		annotation SummarizationSetBy = Automatic
+
+	column navio
+		dataType: string
+		lineageTag: b80a890f-5200-4409-b020-3e87c3c8513d
+		summarizeBy: none
+		sourceColumn: navio
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_coleta
+		dataType: dateTime
+		formatString: dd/MM/yyyy
+		lineageTag: 5f3930fd-3f9d-4d4e-bace-00c0e9992478
+		summarizeBy: none
+		sourceColumn: data_coleta
+
+		variation Variation
+			isDefault
+			relationship: adcda189-07d2-4d93-8a3a-bbf3c7db8ecd
+			defaultHierarchy: LocalDateTable_6af45992-34d1-4839-9bc4-0f0ecb4ea035.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column drop
+		dataType: string
+		lineageTag: 601a134f-2f6a-43ab-82a0-b153d76c2712
+		summarizeBy: none
+		sourceColumn: drop
+
+		annotation SummarizationSetBy = Automatic
+
+	column prevista
+		dataType: dateTime
+		formatString: dd/MM/yyyy
+		lineageTag: 6fdce1a5-6ee0-42ba-9428-5ef646ab2e1d
+		summarizeBy: none
+		sourceColumn: prevista
+
+		variation Variation
+			isDefault
+			relationship: 721a8e57-268e-4264-b783-1c2f3c2579a9
+			defaultHierarchy: LocalDateTable_c3a20896-6dfe-46c8-9c13-7ff1c9da8f08.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column concluido
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 6bc2af47-9546-4756-aab4-0fd4382463d9
+		summarizeBy: none
+		sourceColumn: concluido
+
+		annotation SummarizationSetBy = Automatic
+
+	column concluido_por
+		dataType: string
+		lineageTag: 369a0b4a-e43d-45f8-b14f-e6ef07b62386
+		summarizeBy: none
+		sourceColumn: concluido_por
+
+		annotation SummarizationSetBy = Automatic
+
+	column concluido_em
+		dataType: dateTime
+		formatString: dd/MM/yyyy HH:mm
+		lineageTag: b800f26c-730d-42f1-b4b0-ba7f993ccf2e
+		summarizeBy: none
+		sourceColumn: concluido_em
+
+		variation Variation
+			isDefault
+			relationship: d49a565b-44cc-453b-9235-be7996df6fca
+			defaultHierarchy: LocalDateTable_9763ed86-41fe-46d5-8e20-0f04316fbb4a.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+	column desvio
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 9312ced8-7177-4a7c-a5a9-37ea9db1e58b
+		summarizeBy: none
+		sourceColumn: desvio
+
+		annotation SummarizationSetBy = Automatic
+
+	column desvio_resultado
+		dataType: string
+		lineageTag: 319022a2-363c-4b23-8bab-0fe281ebde7a
+		summarizeBy: none
+		sourceColumn: desvio_resultado
+
+		annotation SummarizationSetBy = Automatic
+
+	column situacao
+		dataType: string
+		lineageTag: bd0bb516-8556-4377-8ef8-c710a5099dec
+		summarizeBy: none
+		sourceColumn: situacao
+
+		annotation SummarizationSetBy = Automatic
+
+	column Local = IF(ISBLANK('bi drops'[navio]), "Terra (tank farm)", 'bi drops'[navio])
+		dataType: string
+		lineageTag: 0becf3df-1f76-4a8f-9a3e-537149bbc668
+		summarizeBy: none
+
+	column Estágio = 'bi drops'[drop]
+		dataType: string
+		lineageTag: c811e2fe-24cd-4688-8b9b-de5cc83e0d3d
+		summarizeBy: none
+		sortByColumn: 'Estágio (ordem)'
+
+	column 'Estágio (ordem)' = INT(VALUE(MID('bi drops'[drop], 2, 3)))
+		dataType: int64
+		isHidden
+		lineageTag: 4d9ffb67-41da-417c-b0b1-b7e57247b918
+		summarizeBy: none
+
+	column 'Desvio do drop' = IF('bi drops'[desvio], COALESCE('bi drops'[desvio_resultado], "Em confirmação"), "Sem desvio")
+		dataType: string
+		lineageTag: 4af47802-cf87-4484-bccf-178fd4fa5323
+		summarizeBy: none
+
+	partition 'bi drops' = m
+		mode: import
+		source =
+				let
+				    Fonte = PostgreSQL.Database("localhost:15432", "labflow"),
+				    bi_drops = Fonte{[Schema="bi",Item="drops"]}[Data]
+				in
+				    bi_drops
+

@@ -1,0 +1,13 @@
+/// Loads do concentrado (recebimento e embarque). Liga C.T/B.L e TAB/Coliformes/Howard: um filtro de Load controla a página inteira.
+table Loads
+	lineageTag: 28ee7dd7-f3ee-4297-9a29-380a07d9a214
+
+	column Load
+		lineageTag: 447144ca-277c-4915-b796-ec2d03ed257d
+		isNameInferred
+		sourceColumn: [Load]
+
+	partition Loads = calculated
+		mode: import
+		source = DISTINCT(FILTER(UNION(SELECTCOLUMNS('bi contagens', "Load", 'bi contagens'[load]), SELECTCOLUMNS('bi testes', "Load", 'bi testes'[load])), NOT ISBLANK([Load])))
+

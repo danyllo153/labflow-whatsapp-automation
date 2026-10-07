@@ -39,6 +39,7 @@ descrito em [`concentrado.md`](concentrado.md).
 | [`010_testes_embarque.sql`](../db/migrations/010_testes_embarque.sql) | testes por amostra de embarque |
 | [`011_leitura_finalizada.sql`](../db/migrations/011_leitura_finalizada.sql) | tabela `leituras_finalizadas` (quem finalizou a leitura de cada dia) e pendência `DIA` |
 | [`012_desvio_drop.sql`](../db/migrations/012_desvio_drop.sql) | tabela `desvios_drop`, view `vw_desvios_drop` (desvio de drop em 7, 13 e 25 °C) e pendência `DESVIO` |
+| [`013_views_bi.sql`](../db/migrations/013_views_bi.sql) | schema `bi` com 6 views para o Power BI (`coletas`, `leituras_nfc`, `drops`, `desvios`, `contagens`, `testes`), com a coluna `situacao` (Lido, Atrasado, Vence hoje, No prazo) e sem telefone; leitura pelo `labflow_leitura` |
 
 Aplicadas em ordem, uma de cada vez, cada uma dentro de uma transação
 (`-v ON_ERROR_STOP=1`): se algo falha, nada fica pela metade.
@@ -190,3 +191,19 @@ INSERT INTO usuarios (telefone, nome, cargo) VALUES ('5511999999999', 'Seu Nome'
 - **Backup:** onde guardar a cópia do `pg_dump`.
 - **Versão do n8n:** confirmar que o node Postgres da 2.38.6 executa várias
   instruções numa transação (coleta + drops + arquivo).
+
+## Power BI (V5, iniciado em 05/10/2026)
+
+O Power BI lê **só o schema `bi`** (migration `013`), com o usuário somente leitura `labflow_leitura`. As views já trazem nomes legíveis, quem fez cada etapa e a coluna `situacao` calculada pelo "hoje" de Brasília.
+
+Conexão a partir do PC (o banco não tem porta pública):
+
+```powershell
+ssh -L 15432:172.16.2.2:5432 dan@IP-DO-SERVIDOR
+```
+
+Com essa janela aberta, no Power BI Desktop: **Obter dados → Banco de dados PostgreSQL**, servidor `localhost:15432`, banco `labflow`, modo **Importar**, aba **Banco de dados** com `labflow_leitura` (senha: `LABFLOW_DB_LEITURA_PASSWORD` do `.env`). O aviso "não foi possível criptografar" pode ser aceito: o tráfego já vai dentro do túnel SSH. No Navegador, `labflow → bi`, marcar as 6 views. `172.16.2.2` é o IP interno do container (muda se ele for recriado: `docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}' labflow-postgres`).
+
+**Dados de demonstração** (fictícios): `db/seeds/demo.sql` gera ~30 dias até a data em que roda: analistas Ana, Bruno e Carla (demo); tanques de terra 80 a 95 (com TAB) e navio DEMO STAR 900; recebimento dos loads 90001 a 90009 (fábricas AQA, COL e UCH, itens 9100 e 9200); embarque nos navios DEMO OCEAN 901 (linhas 1 e 2) e DEMO WAVE 902, loads 90011 a 90013; TAB, Coliformes e Howard passando por todas as etapas (no caldo, incubado/estriado, em confirmação, concluído). `db/seeds/limpar_demo.sql` apaga só eles (fábrica e item só saem se nenhum load de verdade usar). Reaplicados no servidor em 06/10/2026, com backup antes.
+
+**O painel** (projeto `powerbi/labflow.pbip`, formato PBIP): as páginas, o tema e as medidas são gerados por `scripts/gerar-painel-powerbi.js` (ver `scripts.md`); as tabelas de apoio (Loads, Embarques, Calendário) e as ligações entre as tabelas foram criadas pelo **Power BI Modeling MCP** (servidor MCP oficial da Microsoft, configurado no `.mcp.json` local, fora do Git). Abrir: túnel ligado, `labflow.pbip`, **Atualizar**.
