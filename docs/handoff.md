@@ -80,6 +80,8 @@ Comandos em [`comandos.md`](comandos.md), concentrado em [`concentrado.md`](conc
 
 - **Contínuo:** testes, docs, CHANGELOG e ADRs em `docs/decisoes/`.
 
+**Especificação do LIMS (Spec-Driven Development):** [`specs/lims/`](specs/lims/index.md), com um documento por assunto (visão geral, atores, audit trail, especificações, revisão e liberação, banco, API, app, fluxos, pontos de atenção, decisões e guia prático), todos em `draft v0.1`. Começa **depois da Fase 0**: cada documento é refinado até `v1.0` e só então vira tarefa e código, seguindo as regras anti-alucinação do `guia-pratico.md`.
+
 Detalhes e o comparativo "o que temos × o que falta para ser um LIMS" na nota `Roadmap-V1-V6` do Obsidian. Tarefas do dia a dia, só no `backlog`.
 
 ## 5. Banco de dados
