@@ -3,31 +3,47 @@ table 'bi contagens'
 
 	measure 'C.T e B.L' = COUNTROWS('bi contagens')
 		formatString: 0
-		lineageTag: e94002fa-6195-4693-a95b-3f62f8c4f74f
+		lineageTag: eeeb9aa0-1214-45c7-a8cc-4d1bec8b978f
 
 	measure 'Resultados com alarme' = CALCULATE(COUNTROWS('bi contagens'), 'bi contagens'[alarme] = TRUE())
 		formatString: 0
-		lineageTag: ca6839f6-6ee2-4920-a052-68f09e3890d1
+		lineageTag: 7dba4f3d-7ad4-47a6-852a-35fa0ab826fd
 
 	measure 'C.T e B.L atrasados' = CALCULATE(COUNTROWS('bi contagens'), 'bi contagens'[situacao] = "Atrasado")
 		formatString: 0
-		lineageTag: e5c695ba-bc2a-45c4-9b53-dedaef90c6ce
-
-	measure 'Cor do resultado' = IF(CALCULATE(COUNTROWS('bi contagens'), KEEPFILTERS('bi contagens'[alarme] = TRUE())) > 0, "#EF4444", IF(CALCULATE(COUNTROWS('bi contagens'), KEEPFILTERS('bi contagens'[lido] = TRUE())) > 0, "#22C55E"))
-		isHidden
-		lineageTag: 4200870b-f0f7-4889-982a-33b18febfc2e
-
-	measure 'Fundo do resultado' = IF(CALCULATE(COUNTROWS('bi contagens'), KEEPFILTERS('bi contagens'[alarme] = TRUE())) > 0, "#FDE2E1", IF(CALCULATE(COUNTROWS('bi contagens'), KEEPFILTERS('bi contagens'[lido] = TRUE())) > 0, "#DFF3E3"))
-		isHidden
-		lineageTag: d3fcc0d3-8d3e-4ff5-bb49-420cfc0c3cd5
+		lineageTag: fec7d4ae-8b14-402b-8c3a-91212cc78ac5
 
 	measure 'Lotes e amostras' = COUNTROWS(SUMMARIZE('bi contagens', 'bi contagens'[origem], 'bi contagens'[load], 'bi contagens'[Embarque], 'bi contagens'[lote_amostra]))
 		formatString: 0
-		lineageTag: 85a660b6-4ac7-4480-800b-0121fbcf7a9f
+		lineageTag: 0f599326-84f1-48c6-910a-2103746fc82c
 
 	measure 'Loads no período' = DISTINCTCOUNT('bi contagens'[load])
 		formatString: 0
-		lineageTag: dec70fb8-31a8-4f35-894e-f273604f3167
+		lineageTag: ba379ef1-44be-487e-867f-3350f5b33bf9
+
+	measure 'Cor do resultado' = IF(CALCULATE(COUNTROWS('bi contagens'), KEEPFILTERS('bi contagens'[alarme] = TRUE())) > 0, "#EF4444", IF(CALCULATE(COUNTROWS('bi contagens'), KEEPFILTERS('bi contagens'[lido] = TRUE())) > 0, "#22C55E"))
+		isHidden
+		lineageTag: bd6d9ac1-2295-42d1-9dd1-a797d8d01140
+
+	measure 'Fundo do resultado' = IF(CALCULATE(COUNTROWS('bi contagens'), KEEPFILTERS('bi contagens'[alarme] = TRUE())) > 0, "#2A1416", IF(CALCULATE(COUNTROWS('bi contagens'), KEEPFILTERS('bi contagens'[lido] = TRUE())) > 0, "#112419"))
+		isHidden
+		lineageTag: 2039f9dd-a818-48f7-ae10-d32467ebc1dc
+
+	column 'Embarque' = IF('bi contagens'[origem] = "Embarque", 'bi contagens'[navio] & " linha " & 'bi contagens'[linha] & " fase " & 'bi contagens'[fase])
+		dataType: string
+		lineageTag: a454bcb2-d14a-4dd6-9733-6f50591f8562
+		summarizeBy: none
+
+	column 'Faixa' = IF('bi contagens'[alarme], "Alarme", IF('bi contagens'[lido], "Normal", "Aguardando"))
+		dataType: string
+		lineageTag: f07c2b4f-e103-4732-925c-b9b834895d18
+		summarizeBy: none
+
+	column 'Data da amostra' = 'bi contagens'[prevista] - SWITCH('bi contagens'[analise], "C.T 48h", 2, "B.L 72h", 3, 5)
+		dataType: dateTime
+		formatString: dd/MM/yyyy
+		lineageTag: 57c957cb-d5f0-4370-94d2-798ac9fdef37
+		summarizeBy: none
 
 	column origem
 		dataType: string
@@ -203,22 +219,6 @@ table 'bi contagens'
 		sourceColumn: situacao
 
 		annotation SummarizationSetBy = Automatic
-
-	column Embarque = IF('bi contagens'[origem] = "Embarque", 'bi contagens'[navio] & " linha " & 'bi contagens'[linha] & " fase " & 'bi contagens'[fase])
-		dataType: string
-		lineageTag: 160ffce3-747b-4b45-bafb-4b62e184d576
-		summarizeBy: none
-
-	column Faixa = IF('bi contagens'[alarme], "Alarme", IF('bi contagens'[lido], "Normal", "Aguardando"))
-		dataType: string
-		lineageTag: 87ae0d66-cffc-4fd9-8fcc-dafa4fde8585
-		summarizeBy: none
-
-	column 'Data da amostra' = 'bi contagens'[prevista] - SWITCH('bi contagens'[analise], "C.T 48h", 2, "B.L 72h", 3, 5)
-		dataType: dateTime
-		formatString: dd/MM/yyyy
-		lineageTag: a02c2c9c-590d-42e2-8598-03afbbe30f17
-		summarizeBy: none
 
 	partition 'bi contagens' = m
 		mode: import

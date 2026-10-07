@@ -1,0 +1,8 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.1.0/schema.json",
+  "name": "f6ffa1d2cd45db6acf2f",
+  "displayName": "Coletas",
+  "displayOption": "FitToPage",
+  "height": 1080,
+  "width": 1920
+}
