@@ -3,36 +3,36 @@ table 'bi drops'
 
 	measure 'Drops' = COUNTROWS('bi drops')
 		formatString: 0
-		lineageTag: 91698763-ebc9-455b-9c4a-d56469d20e9e
+		lineageTag: 53b2c7a6-0f1d-9b31-c3ad-500e825aba38
 
 	measure 'Drops atrasados' = CALCULATE(COUNTROWS('bi drops'), 'bi drops'[situacao] = "Atrasado")
 		formatString: 0
-		lineageTag: a5ee5c34-e8ae-4074-9ab5-4786939a052e
+		lineageTag: 138bab2e-90e8-c0a0-c797-c09d9245fd68
 
 	measure 'Drops que vencem hoje' = CALCULATE(COUNTROWS('bi drops'), 'bi drops'[situacao] = "Vence hoje")
 		formatString: 0
-		lineageTag: 2a2df95a-476f-465e-abda-9756d684ce36
+		lineageTag: 6bd4a703-bcb0-d552-0377-54548bf8aa1d
 
 	column 'Local' = IF(ISBLANK('bi drops'[navio]), "Terra (tank farm)", 'bi drops'[navio])
 		dataType: string
-		lineageTag: 30edccac-5933-451b-b57b-0fe8ca01636a
+		lineageTag: 450b995c-6615-81b7-8f9f-a20db2f5e319
 		summarizeBy: none
 
 	column 'Estágio' = 'bi drops'[drop]
 		dataType: string
 		sortByColumn: 'Estágio (ordem)'
-		lineageTag: e0d76fbb-2956-42ca-91c2-b0b63693778c
+		lineageTag: 054dfcb1-1ea2-f181-59df-083c53aad0a8
 		summarizeBy: none
 
 	column 'Estágio (ordem)' = INT(VALUE(MID('bi drops'[drop], 2, 3)))
 		dataType: int64
 		isHidden
-		lineageTag: c8e20028-cf92-40e1-81ba-6e83c598f2bf
+		lineageTag: 674b53a8-00a4-0fcd-122c-1cbc50adf0f4
 		summarizeBy: none
 
 	column 'Desvio do drop' = IF('bi drops'[desvio], COALESCE('bi drops'[desvio_resultado], "Em confirmação"), "Sem desvio")
 		dataType: string
-		lineageTag: 1e3b3998-e126-40d2-aa77-c7a5e93027da
+		lineageTag: 7fa65f43-801d-702b-d618-a6f1ec78be16
 		summarizeBy: none
 
 	column drop_id

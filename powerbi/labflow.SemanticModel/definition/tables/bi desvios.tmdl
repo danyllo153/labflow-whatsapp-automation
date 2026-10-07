@@ -3,19 +3,19 @@ table 'bi desvios'
 
 	measure 'Desvios' = COUNTROWS('bi desvios')
 		formatString: 0
-		lineageTag: 77332887-2932-4d2f-96eb-efae83ae49c2
+		lineageTag: ee95e39c-f8dd-6eb1-6989-f3153bf7240c
 
 	measure 'Desvios abertos' = CALCULATE(COUNTROWS('bi desvios'), 'bi desvios'[status] = "Em confirmação")
 		formatString: 0
-		lineageTag: 6540da21-5898-4fac-afdf-0f7308ef7234
+		lineageTag: 68d04ec2-eea9-e47b-746d-fe121558f932
 
 	measure 'Desvios confirmados' = CALCULATE(COUNTROWS('bi desvios'), 'bi desvios'[resultado] = "Confirmado")
 		formatString: 0
-		lineageTag: f5025860-a19d-4d89-8d60-c083a7756707
+		lineageTag: 5c1c1e44-fbe3-8695-d3c7-e95299ae8c63
 
 	column 'Local' = IF(ISBLANK('bi desvios'[navio]), "Terra (tank farm)", 'bi desvios'[navio])
 		dataType: string
-		lineageTag: e231988b-cdc3-48a2-9b79-17046ace9fd7
+		lineageTag: fbf9c567-f473-9152-c8ec-96adfa6e8f1a
 		summarizeBy: none
 
 	column desvio_id
