@@ -79,7 +79,7 @@ FROM (SELECT d.*, row_number() OVER (ORDER BY d.data_prevista) AS n
 WHERE n <= 3;
 
 -- TAB dos tanques de terra (um a cada 4 dias de coleta), com o status pelo tempo: os mais recentes
--- no caldo ou incubados, os de 13 dias em confirmação (colônia na placa), alguns positivos
+-- no caldo ou incubados, os de 13 dias em confirmação (colônia na placa; a confirmação é no dia seguinte à leitura), alguns positivos
 INSERT INTO testes (tipo, coleta_id, status, resultado, data_feito, feito_por, espalhar_prevista, espalhado_em, espalhado_por,
                     leitura_prevista, confirmacao_prevista, resultado_em, resultado_por)
 SELECT 'TAB', c.id,
@@ -90,7 +90,7 @@ SELECT 'TAB', c.id,
        CASE WHEN f + 5 <= CURRENT_DATE THEN (f + 5) + time '09:00' END,
        CASE WHEN f + 5 <= CURRENT_DATE THEN c.registrado_por END,
        CASE WHEN f + 5 <= CURRENT_DATE THEN f + 10 END,
-       CASE WHEN c.d = 13 THEN f + 13 END,
+       CASE WHEN c.d = 13 THEN f + 11 END, -- PCA 24h: dia seguinte à leitura (f + 10); ficou esquecida, sai como atrasada
        CASE WHEN f + 10 < CURRENT_DATE AND c.d <> 13 THEN (f + 10) + time '14:00' END,
        CASE WHEN f + 10 < CURRENT_DATE AND c.d <> 13 THEN c.registrado_por END
 FROM (SELECT c.*, c.data_coleta + 1 AS f, CURRENT_DATE - c.data_coleta AS d FROM demo_col c
@@ -190,8 +190,10 @@ FROM (SELECT c.id, c.embarque_id, row_number() OVER (PARTITION BY c.embarque_id 
 JOIN embarque_amostras ea ON ea.embarque_id = c.embarque_id AND ((c.g = 1 AND ea.numero <= 5) OR (c.g = 2 AND ea.numero > 5));
 
 -- ---------- TAB (10 dias) e Coliformes (2 dias) de todas as compostas (recebimento e embarque) ----------
--- status pelo tempo: no caldo, incubado (TAB) ou estriado (Coliformes), em confirmação nos 3 dias depois
--- da leitura (metade das compostas) e concluído com resultado; ~20% positivos
+-- status pelo tempo: no caldo, incubado (TAB) ou estriado (Coliformes) e concluído com resultado; ~20% positivos.
+-- Em confirmação (metade das compostas, a partir do dia da leitura), pela regra do docs/concentrado.md:
+--   TAB: PCA 24h, a confirmação lê no dia seguinte (leitura + 1)
+--   Coliformes: abre a composta; cada lote vai para caldo no dia, estria no seguinte (+1) e lê no outro (+2)
 CREATE TEMP TABLE demo_comp AS
 SELECT c.id, l.recebido + 1 AS f FROM compostas c JOIN demo_load l ON l.id = c.load_id
 UNION ALL
@@ -210,13 +212,28 @@ SELECT x.tipo, c.id,
        CASE WHEN c.f + x.esp <= CURRENT_DATE THEN (c.f + x.esp) + time '09:00' END,
        CASE WHEN c.f + x.esp <= CURRENT_DATE THEN (SELECT ids[1 + ((c.id + 1) % 3)::int] FROM demo_u) END,
        CASE WHEN c.f + x.esp <= CURRENT_DATE THEN c.f + x.fim END,
-       CASE WHEN z.confirma THEN c.f + x.fim + 3 END,
+       CASE WHEN z.confirma THEN c.f + x.fim + x.conf END,
        CASE WHEN z.leu AND NOT z.confirma THEN (c.f + x.fim) + time '14:00' END,
        CASE WHEN z.leu AND NOT z.confirma THEN (SELECT ids[1 + ((c.id + 2) % 3)::int] FROM demo_u) END
 FROM demo_comp c
-CROSS JOIN (VALUES ('TAB', 5, 10), ('COLIFORMES', 1, 2)) AS x(tipo, esp, fim)
+CROSS JOIN (VALUES ('TAB', 5, 10, 1), ('COLIFORMES', 1, 2, 2)) AS x(tipo, esp, fim, conf)
 CROSS JOIN LATERAL (SELECT c.f + x.fim < CURRENT_DATE AS leu,
-                           c.f + x.fim < CURRENT_DATE AND c.f + x.fim + 3 >= CURRENT_DATE AND c.id % 2 = 0 AS confirma) AS z;
+                           c.id % 2 = 0 AND CURRENT_DATE BETWEEN c.f + x.fim AND c.f + x.fim + x.conf AS confirma) AS z;
+
+-- Coliformes em confirmação: a composta foi aberta, um teste por lote (recebimento) ou amostra (embarque)
+INSERT INTO testes (tipo, recebimento_lote_id, embarque_amostra_id, teste_pai_id, status, data_feito, feito_por,
+                    espalhar_prevista, espalhado_em, espalhado_por, leitura_prevista)
+SELECT 'COLIFORMES', cl.recebimento_lote_id, cl.embarque_amostra_id, t.id,
+       CASE WHEN d0 + 1 <= CURRENT_DATE THEN 'Estriada' ELSE 'No caldo' END,
+       d0, t.feito_por, d0 + 1,
+       CASE WHEN d0 + 1 <= CURRENT_DATE THEN (d0 + 1) + time '09:00' END,
+       CASE WHEN d0 + 1 <= CURRENT_DATE THEN t.feito_por END,
+       CASE WHEN d0 + 1 <= CURRENT_DATE THEN d0 + 2 END
+FROM testes t
+JOIN demo_comp c ON c.id = t.composta_id
+JOIN composta_lotes cl ON cl.composta_id = t.composta_id
+CROSS JOIN LATERAL (SELECT t.confirmacao_prevista - 2 AS d0) AS a
+WHERE t.tipo = 'COLIFORMES' AND t.status = 'Em confirmação';
 
 -- Howard (só embarque): um dia, já concluído, campos positivos x 2 = %
 INSERT INTO testes (tipo, composta_id, status, campos_positivos, percentual, data_feito, feito_por, resultado_em, resultado_por)
