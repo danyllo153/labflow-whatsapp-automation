@@ -14,14 +14,15 @@ on:
       - "LabFlow_Alerta_Erro.json"
       - "tests/**"
       - "package.json"
+      - ".github/workflows/testes.yml"
   workflow_dispatch:
 
 jobs:
   testar:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: "22"
       - name: Rodar os testes (jsCode real do LabFlow.json)
