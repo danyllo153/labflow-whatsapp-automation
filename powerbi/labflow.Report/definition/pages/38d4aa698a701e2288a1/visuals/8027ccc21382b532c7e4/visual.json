@@ -128,12 +128,27 @@
                       "Entity": "bi testes"
                     }
                   },
-                  "Property": "proxima_etapa"
+                  "Property": "leitura_prevista"
                 }
               },
-              "queryRef": "bi testes.proxima_etapa",
-              "nativeQueryRef": "proxima_etapa",
-              "displayName": "Próxima etapa"
+              "queryRef": "bi testes.leitura_prevista",
+              "nativeQueryRef": "leitura_prevista",
+              "displayName": "Leitura prevista"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "bi testes"
+                    }
+                  },
+                  "Property": "confirmacao_prevista"
+                }
+              },
+              "queryRef": "bi testes.confirmacao_prevista",
+              "nativeQueryRef": "confirmacao_prevista",
+              "displayName": "Confirmação"
             },
             {
               "field": {
@@ -4245,7 +4260,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "174D"
+                  "Value": "159D"
                 }
               }
             }
@@ -4259,7 +4274,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "276D"
+                  "Value": "252D"
                 }
               }
             }
@@ -4273,7 +4288,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "116D"
+                  "Value": "106D"
                 }
               }
             }
@@ -4287,7 +4302,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "101D"
+                  "Value": "93D"
                 }
               }
             }
@@ -4301,7 +4316,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "160D"
+                  "Value": "146D"
                 }
               }
             }
@@ -4315,7 +4330,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "160D"
+                  "Value": "146D"
                 }
               }
             }
@@ -4329,7 +4344,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "160D"
+                  "Value": "146D"
                 }
               }
             }
@@ -4343,13 +4358,13 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "174D"
+                  "Value": "146D"
                 }
               }
             }
           },
           "selector": {
-            "metadata": "bi testes.proxima_etapa"
+            "metadata": "bi testes.leitura_prevista"
           }
         },
         {
@@ -4357,7 +4372,21 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "203D"
+                  "Value": "146D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "bi testes.confirmacao_prevista"
+          }
+        },
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "186D"
                 }
               }
             }
@@ -4371,7 +4400,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "174D"
+                  "Value": "159D"
                 }
               }
             }
