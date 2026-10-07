@@ -235,6 +235,26 @@ JOIN composta_lotes cl ON cl.composta_id = t.composta_id
 CROSS JOIN LATERAL (SELECT t.confirmacao_prevista - 2 AS d0) AS a
 WHERE t.tipo = 'COLIFORMES' AND t.status = 'Em confirmação';
 
+-- Coliformes positivos já concluídos: a composta foi aberta no dia da leitura e cada lote foi confirmado
+-- sozinho; só o 3º lote deu positivo (a "laranja podre"), os outros negativos. A composta fica positiva.
+INSERT INTO testes (tipo, recebimento_lote_id, embarque_amostra_id, teste_pai_id, status, resultado, data_feito, feito_por,
+                    espalhar_prevista, espalhado_em, espalhado_por, leitura_prevista, resultado_em, resultado_por)
+SELECT 'COLIFORMES', cl.recebimento_lote_id, cl.embarque_amostra_id, t.id, 'Concluída',
+       CASE WHEN cl.n = 3 THEN 'Positivo' ELSE 'Negativo' END,
+       t.leitura_prevista, t.feito_por,
+       t.leitura_prevista + 1, (t.leitura_prevista + 1) + time '09:00', t.feito_por,
+       t.leitura_prevista + 2, (t.leitura_prevista + 2) + time '14:00', t.resultado_por
+FROM testes t
+JOIN demo_comp c ON c.id = t.composta_id
+JOIN (SELECT cl.*, row_number() OVER (PARTITION BY cl.composta_id
+                                      ORDER BY COALESCE(cl.recebimento_lote_id, cl.embarque_amostra_id)) AS n
+      FROM composta_lotes cl) cl ON cl.composta_id = t.composta_id
+WHERE t.tipo = 'COLIFORMES' AND t.status = 'Concluída' AND t.resultado = 'Positivo';
+-- o resultado da composta sai quando o último lote é lido (2 dias depois da abertura)
+UPDATE testes t SET resultado_em = (t.leitura_prevista + 2) + time '15:00'
+FROM demo_comp c
+WHERE c.id = t.composta_id AND t.tipo = 'COLIFORMES' AND t.status = 'Concluída' AND t.resultado = 'Positivo';
+
 -- Howard (só embarque): um dia, já concluído, campos positivos x 2 = %
 INSERT INTO testes (tipo, composta_id, status, campos_positivos, percentual, data_feito, feito_por, resultado_em, resultado_por)
 SELECT 'HOWARD', c.id, 'Concluída', p, p * 2, e.embarcado + 1, (SELECT ids[3] FROM demo_u),

@@ -20,7 +20,7 @@ O LabFlow deixa de ser só um bot de registro e vira um **LIMS próprio** (Labor
 - Prazos e pendências: drops D5/D10/D15, leituras de NFC, TAB, Coliformes, C.T/B.L, Howard, desvio de drop.
 - Resultados: C.T/B.L numéricos com alarme fixo (B.L ≥ 50, C.T ≥ 200), TAB/Coliformes positivo/negativo, Howard em %.
 - Pessoas: usuários com cargo (Admin, Operador, Consultor), "quem registrou" e "quem leu".
-- Banco PostgreSQL com 14 migrations, regras de novo no banco (UNIQUE, CHECK, FK), usuário somente leitura, backup diário.
+- Banco PostgreSQL com 15 migrations, regras de novo no banco (UNIQUE, CHECK, FK), usuário somente leitura, backup diário.
 - Relatório diário no WhatsApp e painel no Power BI.
 
 ## O que o LIMS acrescenta
