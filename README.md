@@ -24,7 +24,7 @@ Projeto pessoal que une biomedicina e automação: o problema vem da rotina real
 | Nodes no workflow do n8n | 177, em 10 blocos por assunto |
 | Tipos de comando | 39 |
 | Consultas ao banco | 49, todas parametrizadas |
-| Banco | 13 migrations versionadas, 19 tabelas, 12 views (relatório e painel) |
+| Banco | 14 migrations versionadas, 19 tabelas, 12 views (relatório e painel) |
 | Painel | Power BI com 8 páginas, gerado por código |
 | Testes automáticos | 208 (`npm test`), rodando a cada alteração numa GitHub Action |
 | Bugs reais documentados | 33, com causa raiz e lição ([troubleshooting](docs/troubleshooting.md)) |
