@@ -468,7 +468,7 @@ const navegador = (pos) => visual('pageNavigator', pos, null, { semMoldura: true
 const PESO = { tanque: 0.8, frasco: 0.9, drop: 0.7, load: 0.9, teste: 0.8, origem: 1.2, analise: 1, lotes: 1.1,
   navio: 1.5, Local: 1.6, linha_relatorio: 1.7, metodo: 1.3, situacao: 1.2, status: 1.1, resultado: 1.4, temperaturas: 1.6,
   alvo: 1.4, lote_amostra: 1, proxima_etapa: 1.2, registrado_em: 1.6, data_resultado: 1.2, howard_percentual: 1,
-  Embarque: 2.1, embarque: 2.1, 'Estágio': 0.8, 'Desvio do drop': 1.2, 'Resultado ou andamento': 1.3, data_feito: 1.1, data_coleta: 1.1,
+  Embarque: 2.4, embarque: 2.4, 'Estágio': 0.8, 'Desvio do drop': 1.2, 'Resultado ou andamento': 1.3, data_feito: 1.1, data_coleta: 1.1,
   prevista: 1.1, data_leitura: 1.1, fabrica: 0.8, item: 0.7, 'Identificação': 1.9, 'Data da amostra': 1.1, Navio: 1.4 };
 const peso = (c) => PESO[c.nativeQueryRef] || (/_por$/.test(c.nativeQueryRef) ? 1.5 : 1.2);
 // tabela: as colunas ocupam toda a largura do visual; status viram "pílulas" coloridas e
@@ -491,7 +491,7 @@ const tabela = (pos, titulo, campos, filtros, corTitulo) => {
   const fonte = pos[2] >= 1500 ? '14D' : pos[2] >= 900 ? '12D' : '11D';
   return visual('tableEx', pos, { Values: { projections: campos } }, { titulo, filtros, corTitulo,
     objects: {
-      values: [{ properties: { fontSize: lit(fonte) } }, ...cores],
+      values: [{ properties: { fontSize: lit(fonte), wordWrap: lit('false') } }, ...cores], // uma linha por registro (texto longo corta com '...')
       columnHeaders: [{ properties: { fontSize: lit(fonte), backColor: cor(COR.cartao2), fontColor: cor(COR.texto2),
         autoSizeColumnWidth: lit('false'), wordWrap: lit('true') } }],
       columnWidth: larguras,

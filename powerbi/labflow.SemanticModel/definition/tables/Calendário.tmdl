@@ -1,4 +1,4 @@
-/// Calendário único do painel: um filtro de período vale para coletas (e por elas leituras e drops), C.T/B.L, testes e desvios.
+/// Calendário único do painel: um filtro de período vale para coletas (e por elas leituras e drops), C.T/B.L, testes e desvios. Vai do início do mês de 2 meses atrás até hoje + 15 dias (o drop D15 fica previsto até 15 dias depois da coleta); anda sozinho a cada atualização.
 table Calendário
 	lineageTag: 70ed78c5-edd6-43a6-85c0-5f0e642b3870
 	dataCategory: Time
@@ -31,5 +31,5 @@ table Calendário
 
 	partition Calendário = calculated
 		mode: import
-		source = ADDCOLUMNS(CALENDAR(DATE(YEAR(TODAY()) - 1, 1, 1), DATE(YEAR(TODAY()) + 1, 12, 31)), "Ano", YEAR([Date]), "Mês", FORMAT([Date], "mmm/yyyy"), "Mês (ordem)", YEAR([Date]) * 100 + MONTH([Date]))
+		source = ADDCOLUMNS(CALENDAR(EOMONTH(TODAY(), -3) + 1, TODAY() + 15), "Ano", YEAR([Date]), "Mês", FORMAT([Date], "mmm/yyyy"), "Mês (ordem)", YEAR([Date]) * 100 + MONTH([Date]))
 

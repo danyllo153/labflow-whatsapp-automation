@@ -164,6 +164,13 @@
                   "Value": "14D"
                 }
               }
+            },
+            "wordWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
             }
           }
         },
@@ -1764,7 +1771,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "318D"
+                  "Value": "354D"
                 }
               }
             }
@@ -1778,7 +1785,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "136D"
+                  "Value": "132D"
                 }
               }
             }
@@ -1792,7 +1799,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "151D"
+                  "Value": "147D"
                 }
               }
             }
@@ -1806,7 +1813,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "151D"
+                  "Value": "147D"
                 }
               }
             }
@@ -1820,7 +1827,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "166D"
+                  "Value": "162D"
                 }
               }
             }
@@ -1834,7 +1841,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "166D"
+                  "Value": "162D"
                 }
               }
             }
@@ -1848,7 +1855,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "212D"
+                  "Value": "206D"
                 }
               }
             }
@@ -1862,7 +1869,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "227D"
+                  "Value": "221D"
                 }
               }
             }
@@ -1876,7 +1883,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "182D"
+                  "Value": "177D"
                 }
               }
             }

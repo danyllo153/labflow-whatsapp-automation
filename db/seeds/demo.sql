@@ -44,21 +44,21 @@ FROM demo_col c CROSS JOIN (VALUES (5), (10), (15)) AS x(dia);
 INSERT INTO arquivo_amostras (coleta_id, tipo, data_descarte)
 SELECT id, CASE origem WHEN 'terra' THEN 'bag' ELSE 'pote' END, data_coleta + 365 FROM demo_col;
 
--- análises (dia seguinte à coleta, em dia sim dia não; stress a cada 4 dias), com status pelo tempo
+-- análises (no mesmo dia da coleta: os prazos contam da data da análise; normal em dia sim dia não, stress a cada 4 dias), com status pelo tempo
 INSERT INTO analises (coleta_id, frasco, sub_analise, metodo, data_analise, pre_leitura_prevista, leitura_final_prevista,
                       status, registrado_por, pre_leitura_por, leitura_final_por)
-SELECT c.id, f.frasco, l.sub, l.met, c.data_coleta + 1,
-       CASE WHEN l.pre IS NULL THEN NULL ELSE c.data_coleta + 1 + l.pre END,
-       c.data_coleta + 1 + l.fin,
-       CASE WHEN c.id % 11 = 0 AND c.data_coleta + 1 + l.fin < CURRENT_DATE THEN
+SELECT c.id, f.frasco, l.sub, l.met, c.data_coleta,
+       CASE WHEN l.pre IS NULL THEN NULL ELSE c.data_coleta + l.pre END,
+       c.data_coleta + l.fin,
+       CASE WHEN c.id % 11 = 0 AND c.data_coleta + l.fin < CURRENT_DATE THEN
                  CASE WHEN l.pre IS NULL THEN 'Aguardando Leitura Final' ELSE 'Aguardando Pré-Leitura' END
-            WHEN c.data_coleta + 1 + l.fin < CURRENT_DATE THEN 'Concluído'
-            WHEN l.pre IS NOT NULL AND c.data_coleta + 1 + l.pre < CURRENT_DATE THEN 'Aguardando Leitura Final'
+            WHEN c.data_coleta + l.fin < CURRENT_DATE THEN 'Concluído'
+            WHEN l.pre IS NOT NULL AND c.data_coleta + l.pre < CURRENT_DATE THEN 'Aguardando Leitura Final'
             WHEN l.pre IS NULL THEN 'Aguardando Leitura Final'
             ELSE 'Aguardando Pré-Leitura' END,
        c.registrado_por,
-       CASE WHEN l.pre IS NOT NULL AND c.id % 11 <> 0 AND c.data_coleta + 1 + l.pre < CURRENT_DATE THEN c.registrado_por END,
-       CASE WHEN c.id % 11 <> 0 AND c.data_coleta + 1 + l.fin < CURRENT_DATE THEN c.registrado_por END
+       CASE WHEN l.pre IS NOT NULL AND c.id % 11 <> 0 AND c.data_coleta + l.pre < CURRENT_DATE THEN c.registrado_por END,
+       CASE WHEN c.id % 11 <> 0 AND c.data_coleta + l.fin < CURRENT_DATE THEN c.registrado_por END
 FROM demo_col c
 JOIN (VALUES ('Normal', 2), ('Stress', 4)) AS f(frasco, cada) ON (CURRENT_DATE - c.data_coleta) % f.cada = 0
 CROSS JOIN (VALUES ('CT', 'Profundidade', NULL::int, 2), ('BL', 'Profundidade', 3, 5),
