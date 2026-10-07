@@ -15,17 +15,19 @@ Projeto pessoal que une biomedicina e automação: o problema vem da rotina real
 - **Leitura do dia finalizada:** quem lê o dia fecha tudo o que vence hoje de uma vez, e o relatório mostra quem finalizou.
 - **Desvio de drop:** drop "não ok" abre um desvio, com repetição em 7, 13 e 25 °C e resultado por temperatura, consultável por tanque.
 - **Alerta de erro no WhatsApp:** se um fluxo do bot falha, os administradores recebem o aviso na hora (validado de ponta a ponta).
+- **Painel no Power BI:** 8 páginas (visão geral, coletas, tanques, drops, recebimento, embarque, TAB e Coliformes) em modo escuro, com filtros por navio, tanque, load, fábrica, item e período. O painel é **gerado por código** e versionado no Git, o modelo foi montado com o Power BI Modeling MCP da Microsoft, e os números foram conferidos contra o banco.
 
-**Próximo:** dashboards no **Power BI** para o laboratório e **comando por áudio**.
+**Próximo:** fechar a próxima versão (Situação ok/não ok em todo o relatório) e começar a base de um **LIMS próprio** (histórico de alterações, especificações e liberação de resultados), rumo a um app web/mobile.
 
 | Em números | |
 |---|---|
-| Nodes no workflow do n8n | 167, em 10 blocos por assunto |
+| Nodes no workflow do n8n | 177, em 10 blocos por assunto |
 | Tipos de comando | 39 |
 | Consultas ao banco | 49, todas parametrizadas |
-| Banco | 12 migrations versionadas, 19 tabelas, views para o relatório |
+| Banco | 13 migrations versionadas, 19 tabelas, 12 views (relatório e painel) |
+| Painel | Power BI com 8 páginas, gerado por código |
 | Testes automáticos | 208 (`npm test`), rodando a cada alteração numa GitHub Action |
-| Bugs reais documentados | 30, com causa raiz e lição ([troubleshooting](docs/troubleshooting.md)) |
+| Bugs reais documentados | 33, com causa raiz e lição ([troubleshooting](docs/troubleshooting.md)) |
 
 ## O problema
 
@@ -153,10 +155,16 @@ n8n · PostgreSQL · Docker / Docker Compose · Evolution API · Google Gemini A
 - [x] **V4 — Banco de dados:** migração para PostgreSQL, com restrições no banco, usuário somente leitura e backup diário (1.0.0)
 - [x] **Suco concentrado e relatório diário:** recebimento, embarque, compostas, TAB, Coliformes, Howard, C.T/B.L com alarme e o relatório diário (1.1.0)
 - [x] **Operação e IA completa:** alerta de erro no WhatsApp, leitura do dia finalizada, desvio de drop, IA para todos os comandos e regressão do prompt (próxima versão)
-- [ ] **V5 — Dashboard no Power BI** para o laboratório, sobre views do PostgreSQL, por um usuário somente leitura
-- [ ] **V3, parte 2 — IA avançada:** comando por áudio e leitura de laudo por foto, sempre com confirmação antes de gravar
+- [x] **V5 — Painel no Power BI:** 8 páginas sobre views do PostgreSQL, por um usuário somente leitura, gerado por script e com o modelo feito pelo Power BI Modeling MCP (próxima versão)
 - [ ] **Situação (ok / não ok) em todas as linhas do relatório**, com os limites do Howard e do NFC
-- [ ] **Interface web (LIMS):** última etapa
+
+**Destino: um LIMS próprio**, com app web/mobile, login e IA embutida (o WhatsApp continua como canal):
+
+- [ ] **Base de LIMS no banco:** histórico de alterações (audit trail), especificações por análise e produto, revisão e liberação de resultados por outra pessoa (requisitos de um laboratório ISO/IEC 17025)
+- [ ] **API própria** (FastAPI) com login (senha em hash + JWT) ligado aos cargos do bot
+- [ ] **App web/mobile (PWA):** primeiro só leitura (meus registros, minhas análises, painel do dia), depois registro pelo app usando o mesmo pipeline do bot
+- [ ] **V3, parte 2 — IA avançada:** comando por áudio e leitura de laudo por foto, sempre com confirmação antes de gravar
+- [ ] **Extras de LIMS:** laudo em PDF, meios e reagentes, equipamentos, QR code nas amostras, não conformidades
 - [ ] **V6 — Acabamento (contínuo):** testes, diagramas e documentação a cada marco
 
 ## Documentação
