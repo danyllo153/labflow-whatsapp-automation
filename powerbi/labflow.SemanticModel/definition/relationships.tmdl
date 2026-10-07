@@ -1,0 +1,130 @@
+relationship 3b868e2e-f550-49fe-b128-4a72b9d1d3ce
+	joinOnDateBehavior: datePartOnly
+	fromColumn: 'bi coletas'.data_coleta
+	toColumn: LocalDateTable_90ea4a27-089f-4c4a-9b1f-9742a2376b34.Date
+
+relationship 4641031d-630f-4d7b-b021-166dcc9d342e
+	joinOnDateBehavior: datePartOnly
+	fromColumn: 'bi coletas'.registrado_em
+	toColumn: LocalDateTable_a6608c0b-4cc1-49de-9571-ed9213bfb765.Date
+
+relationship 4f97fef2-1612-4849-9864-7de7b282e6bc
+	joinOnDateBehavior: datePartOnly
+	fromColumn: 'bi contagens'.prevista
+	toColumn: LocalDateTable_b5ffb9f5-5eda-4ea9-b669-59e2e2bb0d44.Date
+
+relationship 560bb80d-b67a-477c-80fd-8b67e0117a99
+	joinOnDateBehavior: datePartOnly
+	fromColumn: 'bi contagens'.data_leitura
+	toColumn: LocalDateTable_15df9fa4-61d7-46cd-b9cd-ae0104165baa.Date
+
+relationship bb1217c6-310a-43c2-a604-1e2dd620a65e
+	joinOnDateBehavior: datePartOnly
+	fromColumn: 'bi desvios'.data_coleta
+	toColumn: LocalDateTable_7681d2f6-5b59-4923-b772-0486555ac98a.Date
+
+relationship ccaf46c7-c04a-4316-ab3f-47653e4d21bc
+	joinOnDateBehavior: datePartOnly
+	fromColumn: 'bi desvios'.data_abertura
+	toColumn: LocalDateTable_18c6ac17-f577-4ece-ab43-ac60e8c59a79.Date
+
+relationship e9812b0b-91ab-48de-8cec-07fc4af3f76d
+	joinOnDateBehavior: datePartOnly
+	fromColumn: 'bi desvios'.prazo
+	toColumn: LocalDateTable_b05fadd7-04e0-4bbb-bd19-b04208d1a355.Date
+
+relationship e9254994-2851-4dfb-9ebc-bef35fb0e7dc
+	joinOnDateBehavior: datePartOnly
+	fromColumn: 'bi desvios'.data_resultado
+	toColumn: LocalDateTable_9f847797-c11e-4c5c-8281-8e59592bc23c.Date
+
+relationship adcda189-07d2-4d93-8a3a-bbf3c7db8ecd
+	joinOnDateBehavior: datePartOnly
+	fromColumn: 'bi drops'.data_coleta
+	toColumn: LocalDateTable_6af45992-34d1-4839-9bc4-0f0ecb4ea035.Date
+
+relationship 721a8e57-268e-4264-b783-1c2f3c2579a9
+	joinOnDateBehavior: datePartOnly
+	fromColumn: 'bi drops'.prevista
+	toColumn: LocalDateTable_c3a20896-6dfe-46c8-9c13-7ff1c9da8f08.Date
+
+relationship d49a565b-44cc-453b-9235-be7996df6fca
+	joinOnDateBehavior: datePartOnly
+	fromColumn: 'bi drops'.concluido_em
+	toColumn: LocalDateTable_9763ed86-41fe-46d5-8e20-0f04316fbb4a.Date
+
+relationship d84d4360-7af4-4205-8296-b6f47ebe176c
+	joinOnDateBehavior: datePartOnly
+	fromColumn: 'bi leituras_nfc'.data_coleta
+	toColumn: LocalDateTable_a107d660-47d2-4881-bc54-c368c86f52a9.Date
+
+relationship ba21d4ec-218c-4b01-b95a-c1789705579f
+	joinOnDateBehavior: datePartOnly
+	fromColumn: 'bi leituras_nfc'.data_analise
+	toColumn: LocalDateTable_91fa9946-0c63-4394-9049-68970da5de13.Date
+
+relationship fa0d7de2-2c1d-4423-81e2-0ce5ed0235cd
+	joinOnDateBehavior: datePartOnly
+	fromColumn: 'bi leituras_nfc'.prevista
+	toColumn: LocalDateTable_287786cc-8d9b-4fa3-9533-36f62235ea1c.Date
+
+relationship 8e4f57a0-d496-4c16-9ec4-11a83d4601ec
+	joinOnDateBehavior: datePartOnly
+	fromColumn: 'bi testes'.data_coleta
+	toColumn: LocalDateTable_443e4ca3-374c-4672-90dd-602470b4b574.Date
+
+relationship b48cd022-2914-402a-8d9f-6d0e9fa32231
+	joinOnDateBehavior: datePartOnly
+	fromColumn: 'bi testes'.data_feito
+	toColumn: LocalDateTable_31b3a140-d057-4379-87b7-4ecc2bae1515.Date
+
+relationship 177d59c8-59a2-4bc3-a80e-86d9e2dcf712
+	joinOnDateBehavior: datePartOnly
+	fromColumn: 'bi testes'.proxima_etapa
+	toColumn: LocalDateTable_0c96591c-6005-4785-9f89-6fae3a45b53d.Date
+
+relationship 5ac8b5a2-e9ad-4629-9570-caee1a4efb28
+	joinOnDateBehavior: datePartOnly
+	fromColumn: 'bi testes'.data_resultado
+	toColumn: LocalDateTable_f6bf5415-9eb5-4e18-8bce-986e7d3b250a.Date
+
+relationship AutoDetected_98103cb2-e40e-4f92-999d-d07a8a0da6e4
+	fromColumn: 'bi drops'.coleta_id
+	toColumn: 'bi coletas'.coleta_id
+
+relationship AutoDetected_e178dee9-8a72-4c32-8b73-7b46e46cc1ff
+	fromColumn: 'bi leituras_nfc'.coleta_id
+	toColumn: 'bi coletas'.coleta_id
+
+relationship 'Loads -> C.T e B.L'
+	fromColumn: 'bi contagens'.load
+	toColumn: Loads.Load
+
+relationship 'Loads -> Testes'
+	fromColumn: 'bi testes'.load
+	toColumn: Loads.Load
+
+relationship 'Embarques -> C.T e B.L'
+	fromColumn: 'bi contagens'.Embarque
+	toColumn: Embarques.Embarque
+
+relationship 'Embarques -> Testes'
+	fromColumn: 'bi testes'.embarque
+	toColumn: Embarques.Embarque
+
+relationship 'Calendário -> Coletas'
+	fromColumn: 'bi coletas'.data_coleta
+	toColumn: Calendário.Date
+
+relationship 'Calendário -> Testes'
+	fromColumn: 'bi testes'.data_feito
+	toColumn: Calendário.Date
+
+relationship 'Calendário -> Desvios'
+	fromColumn: 'bi desvios'.data_abertura
+	toColumn: Calendário.Date
+
+relationship 'Calendário -> C.T e B.L'
+	fromColumn: 'bi contagens'.'Data da amostra'
+	toColumn: Calendário.Date
+

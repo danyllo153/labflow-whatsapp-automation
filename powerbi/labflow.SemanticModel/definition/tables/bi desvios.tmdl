@@ -1,0 +1,209 @@
+table 'bi desvios'
+	lineageTag: 537302f3-3622-476b-9ab0-b6d9aba5a9e9
+
+	measure Desvios = COUNTROWS('bi desvios')
+		formatString: 0
+		lineageTag: 7c4e7277-8b7b-4051-ab1d-c8a6b824c497
+
+	measure 'Desvios abertos' = CALCULATE(COUNTROWS('bi desvios'), 'bi desvios'[status] = "Em confirmação")
+		formatString: 0
+		lineageTag: f6d55eab-af39-44d6-ad6b-9dc16ce55bd9
+
+	measure 'Desvios confirmados' = CALCULATE(COUNTROWS('bi desvios'), 'bi desvios'[resultado] = "Confirmado")
+		formatString: 0
+		lineageTag: cd90cc0f-74bd-426c-a243-e687909ec259
+
+	column desvio_id
+		dataType: int64
+		formatString: 0
+		lineageTag: c1be5b61-a5cd-4e8a-946e-7a277fa648f7
+		summarizeBy: sum
+		sourceColumn: desvio_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column origem
+		dataType: string
+		lineageTag: 49d76947-abd7-4bf0-ae00-a0be5eabfaa9
+		summarizeBy: none
+		sourceColumn: origem
+
+		annotation SummarizationSetBy = Automatic
+
+	column tanque
+		dataType: string
+		lineageTag: 041d7698-587a-4627-8ef7-8277e32b549c
+		summarizeBy: none
+		sourceColumn: tanque
+
+		annotation SummarizationSetBy = Automatic
+
+	column navio
+		dataType: string
+		lineageTag: 05b0f66e-69c3-4010-8100-04dab2cdf233
+		summarizeBy: none
+		sourceColumn: navio
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_coleta
+		dataType: dateTime
+		formatString: dd/MM/yyyy
+		lineageTag: 74bd7a27-4db4-4531-91cf-99e9319f1bcf
+		summarizeBy: none
+		sourceColumn: data_coleta
+
+		variation Variation
+			isDefault
+			relationship: bb1217c6-310a-43c2-a604-1e2dd620a65e
+			defaultHierarchy: LocalDateTable_7681d2f6-5b59-4923-b772-0486555ac98a.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column drop
+		dataType: string
+		lineageTag: deb8d711-3903-4486-b1ab-b3f767d6ed4b
+		summarizeBy: none
+		sourceColumn: drop
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_abertura
+		dataType: dateTime
+		formatString: dd/MM/yyyy
+		lineageTag: 2fc801fb-e73c-4d7b-8690-aea0aa677eaa
+		summarizeBy: none
+		sourceColumn: data_abertura
+
+		variation Variation
+			isDefault
+			relationship: ccaf46c7-c04a-4316-ab3f-47653e4d21bc
+			defaultHierarchy: LocalDateTable_18c6ac17-f577-4ece-ab43-ac60e8c59a79.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column prazo
+		dataType: dateTime
+		formatString: dd/MM/yyyy
+		lineageTag: 7a6d2929-cc48-419c-bbad-5572088a2629
+		summarizeBy: none
+		sourceColumn: prazo
+
+		variation Variation
+			isDefault
+			relationship: e9812b0b-91ab-48de-8cec-07fc4af3f76d
+			defaultHierarchy: LocalDateTable_b05fadd7-04e0-4bbb-bd19-b04208d1a355.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column status
+		dataType: string
+		lineageTag: d902e173-bac4-4651-9b7e-bf3042daac2f
+		summarizeBy: none
+		sourceColumn: status
+
+		annotation SummarizationSetBy = Automatic
+
+	column resultado
+		dataType: string
+		lineageTag: c4aff8bd-41b6-4e96-afa3-47ca2652fbeb
+		summarizeBy: none
+		sourceColumn: resultado
+
+		annotation SummarizationSetBy = Automatic
+
+	column temperaturas
+		dataType: string
+		lineageTag: 6e41b235-b8d5-4616-82e5-14cafd31d7e7
+		summarizeBy: none
+		sourceColumn: temperaturas
+
+		annotation SummarizationSetBy = Automatic
+
+	column cresceu_7c
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 0005279f-c9d5-41a4-9fc9-bb5621dc7982
+		summarizeBy: none
+		sourceColumn: cresceu_7c
+
+		annotation SummarizationSetBy = Automatic
+
+	column cresceu_13c
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 734b7638-3476-4f8f-bc07-fb26d2ba8256
+		summarizeBy: none
+		sourceColumn: cresceu_13c
+
+		annotation SummarizationSetBy = Automatic
+
+	column cresceu_25c
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: ee3829f0-503f-4fc8-8bae-0381beeaaa47
+		summarizeBy: none
+		sourceColumn: cresceu_25c
+
+		annotation SummarizationSetBy = Automatic
+
+	column aberto_por
+		dataType: string
+		lineageTag: 037a4a8e-c289-4c5a-870c-b03d5fe5fcdf
+		summarizeBy: none
+		sourceColumn: aberto_por
+
+		annotation SummarizationSetBy = Automatic
+
+	column resultado_por
+		dataType: string
+		lineageTag: babe04de-642d-4d08-b951-8ad57ac50bc8
+		summarizeBy: none
+		sourceColumn: resultado_por
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_resultado
+		dataType: dateTime
+		formatString: dd/MM/yyyy
+		lineageTag: 30d27199-dd24-4803-a359-8f8f69515691
+		summarizeBy: none
+		sourceColumn: data_resultado
+
+		variation Variation
+			isDefault
+			relationship: e9254994-2851-4dfb-9ebc-bef35fb0e7dc
+			defaultHierarchy: LocalDateTable_9f847797-c11e-4c5c-8281-8e59592bc23c.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column situacao
+		dataType: string
+		lineageTag: 2e3e934b-54ad-45b6-9449-5c7186d53594
+		summarizeBy: none
+		sourceColumn: situacao
+
+		annotation SummarizationSetBy = Automatic
+
+	column Local = IF(ISBLANK('bi desvios'[navio]), "Terra (tank farm)", 'bi desvios'[navio])
+		dataType: string
+		lineageTag: 0a1a36ec-66c6-4c36-aeee-b0511981fdca
+		summarizeBy: none
+
+	partition 'bi desvios' = m
+		mode: import
+		source =
+				let
+				    Fonte = PostgreSQL.Database("localhost:15432", "labflow"),
+				    bi_desvios = Fonte{[Schema="bi",Item="desvios"]}[Data]
+				in
+				    bi_desvios
+

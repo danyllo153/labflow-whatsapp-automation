@@ -24,3 +24,11 @@ __pycache__/
 *.dump
 *.sql.gz
 LabFlow_importar_n8n*.json
+
+# Power BI: cache de dados e configuracoes locais ficam fora do Git
+**/.pbi/localSettings.json
+**/.pbi/cache.abf
+*.pbix
+
+# MCP local (configuracao do Power BI Modeling MCP so desta maquina)
+.mcp.json

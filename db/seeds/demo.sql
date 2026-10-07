@@ -2,7 +2,9 @@
 --
 -- Faixas próprias, para não misturar com testes e para apagar fácil (db/seeds/limpar_demo.sql):
 --   analistas "Ana (demo)", "Bruno (demo)", "Carla (demo)" (Consultor, números inválidos)
---   tanques de terra 80 a 95, navio DEMO STAR 900, loads 90001 a 90006 (item 900, fábrica DEMO)
+--   tanques de terra 80 a 95, navio DEMO STAR 900;
+--   recebimento: loads 90001 a 90009 (itens 9100 e 9200, fábricas AQA, COL e UCH);
+--   embarque: navios DEMO OCEAN 901 (linhas 1 e 2) e DEMO WAVE 902 (linha 1), loads 90011 a 90013
 -- Datas relativas a CURRENT_DATE: rodar de novo outro dia gera outro período (limpar antes).
 -- Aplicar: psql -U labflow_app -d labflow -v ON_ERROR_STOP=1 -f db/seeds/demo.sql
 
@@ -76,17 +78,39 @@ FROM (SELECT d.*, row_number() OVER (ORDER BY d.data_prevista) AS n
         AND d.data_prevista IN (CURRENT_DATE - 20, CURRENT_DATE - 12, CURRENT_DATE - 2)) d
 WHERE n <= 3;
 
--- ---------- Concentrado: 6 loads de 10 lotes, recebidos a cada 5 dias ----------
-INSERT INTO fabricas (nome) VALUES ('DEMO');
-INSERT INTO itens (codigo) VALUES ('900');
+-- TAB dos tanques de terra (um a cada 4 dias de coleta), com o status pelo tempo: os mais recentes
+-- no caldo ou incubados, os de 13 dias em confirmação (colônia na placa), alguns positivos
+INSERT INTO testes (tipo, coleta_id, status, resultado, data_feito, feito_por, espalhar_prevista, espalhado_em, espalhado_por,
+                    leitura_prevista, confirmacao_prevista, resultado_em, resultado_por)
+SELECT 'TAB', c.id,
+       CASE WHEN c.d = 13 THEN 'Em confirmação' WHEN f + 10 < CURRENT_DATE THEN 'Concluída'
+            WHEN f + 5 <= CURRENT_DATE THEN 'Incubada' ELSE 'No caldo' END,
+       CASE WHEN f + 10 < CURRENT_DATE AND c.d <> 13 THEN CASE WHEN c.d IN (17, 25) THEN 'Positivo' ELSE 'Negativo' END END,
+       f, c.registrado_por, f + 5,
+       CASE WHEN f + 5 <= CURRENT_DATE THEN (f + 5) + time '09:00' END,
+       CASE WHEN f + 5 <= CURRENT_DATE THEN c.registrado_por END,
+       CASE WHEN f + 5 <= CURRENT_DATE THEN f + 10 END,
+       CASE WHEN c.d = 13 THEN f + 13 END,
+       CASE WHEN f + 10 < CURRENT_DATE AND c.d <> 13 THEN (f + 10) + time '14:00' END,
+       CASE WHEN f + 10 < CURRENT_DATE AND c.d <> 13 THEN c.registrado_por END
+FROM (SELECT c.*, c.data_coleta + 1 AS f, CURRENT_DATE - c.data_coleta AS d FROM demo_col c
+      WHERE c.origem = 'terra' AND (CURRENT_DATE - c.data_coleta) % 4 = 1) c;
+
+-- ---------- Concentrado: recebimento de 9 loads de 10 lotes, um a cada 4 dias ----------
+-- fábricas AQA, COL e UCH e itens 9100 e 9200 (o bot também cadastra assim; se já existirem, reaproveita)
+INSERT INTO fabricas (nome) VALUES ('AQA'), ('COL'), ('UCH') ON CONFLICT (nome) DO NOTHING;
+INSERT INTO itens (codigo) VALUES ('9100'), ('9200') ON CONFLICT (codigo) DO NOTHING;
 INSERT INTO loads (numero, item_id, fabrica_id, criado_por)
-SELECT (90000 + n)::text, (SELECT id FROM itens WHERE codigo = '900'), (SELECT id FROM fabricas WHERE nome = 'DEMO'),
+SELECT (90000 + n)::text,
+       (SELECT id FROM itens WHERE codigo = CASE WHEN n % 2 = 1 THEN '9100' ELSE '9200' END),
+       (SELECT id FROM fabricas WHERE nome = (ARRAY['AQA', 'COL', 'UCH'])[1 + n % 3]),
        (SELECT ids[1 + n % 3] FROM demo_u)
-FROM generate_series(1, 6) AS n;
+FROM generate_series(1, 9) AS n;
 
 CREATE TEMP TABLE demo_load AS
-SELECT l.id, l.numero, CURRENT_DATE - (7 - (l.numero::int - 90000)) * 5 AS recebido
-FROM loads l WHERE l.numero::int BETWEEN 90001 AND 90006 AND l.item_id = (SELECT id FROM itens WHERE codigo = '900');
+SELECT l.id, l.numero, CURRENT_DATE - (10 - (l.numero::int - 90000)) * 4 AS recebido
+FROM loads l
+WHERE l.numero::int BETWEEN 90001 AND 90009 AND l.item_id IN (SELECT id FROM itens WHERE codigo IN ('9100', '9200'));
 
 INSERT INTO recebimento_lotes (load_id, lote, data_recebimento, registrado_por)
 SELECT l.id, n, l.recebido, (SELECT ids[1 + n % 3] FROM demo_u)
@@ -105,7 +129,8 @@ SELECT a.analise, rl.id,
 FROM demo_load l
 JOIN recebimento_lotes rl ON rl.load_id = l.id
 CROSS JOIN (VALUES ('CT', 2), ('BL72', 3), ('BL120', 5)) AS a(analise, dias)
-WHERE l.recebido + a.dias < CURRENT_DATE;
+WHERE l.recebido + a.dias < CURRENT_DATE
+  AND NOT (l.numero = '90008' AND rl.lote IN (4, 9) AND a.analise = 'BL72'); -- dois B.L esquecidos (atrasados)
 -- quem passou do limite ficou com sinal '=' (valor exato)
 UPDATE contagens SET sinal = '=' WHERE valor >= 50 AND recebimento_lote_id IN (SELECT rl.id FROM recebimento_lotes rl JOIN demo_load l ON l.id = rl.load_id);
 
@@ -118,22 +143,87 @@ FROM (SELECT c.id, c.load_id, row_number() OVER (PARTITION BY c.load_id ORDER BY
       FROM compostas c JOIN demo_load l ON l.id = c.load_id) c
 JOIN recebimento_lotes rl ON rl.load_id = c.load_id AND ((c.g = 1 AND rl.lote <= 5) OR (c.g = 2 AND rl.lote > 5));
 
--- TAB (10 dias) e Coliformes (2 dias) de cada composta, com o status pelo tempo; alguns positivos
+-- ---------- Concentrado: embarque (DEMO OCEAN 901 linhas 1 e 2; DEMO WAVE 902 linha 1; fase 1; 10 amostras cada) ----------
+-- load de embarque sem fábrica (como o bot cadastra load antigo): 90011, 90012 e 90013
+INSERT INTO navios (nome, viagem) VALUES ('DEMO OCEAN', '901'), ('DEMO WAVE', '902');
+INSERT INTO loads (numero, item_id, criado_por)
+SELECT (90010 + n)::text, (SELECT id FROM itens WHERE codigo = CASE WHEN n = 2 THEN '9200' ELSE '9100' END), (SELECT ids[n] FROM demo_u)
+FROM generate_series(1, 3) AS n;
+INSERT INTO embarques (navio_id, linha, fase, criado_por)
+SELECT (SELECT id FROM navios WHERE (nome, viagem) = (x.nome, x.viagem)), x.linha, 1, (SELECT ids[x.k] FROM demo_u)
+FROM (VALUES (1, 'DEMO OCEAN', '901', 1), (2, 'DEMO OCEAN', '901', 2), (3, 'DEMO WAVE', '902', 1)) AS x(k, nome, viagem, linha);
+
+CREATE TEMP TABLE demo_emb AS
+SELECT e.id, e.linha, l.id AS load_id, CURRENT_DATE - x.dias AS embarcado, x.k
+FROM (VALUES (1, 'DEMO OCEAN', 1, 31), (2, 'DEMO OCEAN', 2, 16), (3, 'DEMO WAVE', 1, 4)) AS x(k, navio, linha, dias)
+JOIN navios n ON n.nome = x.navio AND n.viagem IN ('901', '902')
+JOIN embarques e ON e.navio_id = n.id AND e.linha = x.linha
+JOIN loads l ON l.numero = (90010 + x.k)::text AND l.item_id IN (SELECT id FROM itens WHERE codigo IN ('9100', '9200'));
+
+INSERT INTO embarque_amostras (embarque_id, load_id, numero, data_embarque, registrado_por)
+SELECT e.id, e.load_id, n, e.embarcado, (SELECT ids[1 + n % 3] FROM demo_u)
+FROM demo_emb e, generate_series(1, 10) AS n;
+
+-- C.T e B.L das amostras já vencidas: um C.T esquecido (atrasado) e dois alarmes
+INSERT INTO contagens (analise, embarque_amostra_id, sinal, valor, lido_por, lido_em)
+SELECT a.analise, ea.id,
+       CASE WHEN (e.k = 1 AND ea.numero = 3 AND a.analise = 'CT') OR (e.k = 2 AND ea.numero = 9 AND a.analise = 'BL72')
+            THEN '=' ELSE '<' END,
+       CASE WHEN e.k = 1 AND ea.numero = 3 AND a.analise = 'CT' THEN 230
+            WHEN e.k = 2 AND ea.numero = 9 AND a.analise = 'BL72' THEN 70
+            ELSE 10 END,
+       (SELECT ids[1 + (ea.numero + a.dias) % 3] FROM demo_u),
+       (e.embarcado + a.dias) + time '11:00'
+FROM demo_emb e
+JOIN embarque_amostras ea ON ea.embarque_id = e.id
+CROSS JOIN (VALUES ('CT', 2), ('BL72', 3), ('BL120', 5)) AS a(analise, dias)
+WHERE e.embarcado + a.dias < CURRENT_DATE
+  AND NOT (e.k = 3 AND ea.numero = 7 AND a.analise = 'CT');
+
+-- compostas (A1-A5)(A6-A10) de cada linha
+INSERT INTO compostas (embarque_id, criada_por)
+SELECT e.id, (SELECT ids[2] FROM demo_u) FROM demo_emb e, generate_series(1, 2);
+INSERT INTO composta_lotes (composta_id, embarque_amostra_id)
+SELECT c.id, ea.id
+FROM (SELECT c.id, c.embarque_id, row_number() OVER (PARTITION BY c.embarque_id ORDER BY c.id) AS g
+      FROM compostas c JOIN demo_emb e ON e.id = c.embarque_id) c
+JOIN embarque_amostras ea ON ea.embarque_id = c.embarque_id AND ((c.g = 1 AND ea.numero <= 5) OR (c.g = 2 AND ea.numero > 5));
+
+-- ---------- TAB (10 dias) e Coliformes (2 dias) de todas as compostas (recebimento e embarque) ----------
+-- status pelo tempo: no caldo, incubado (TAB) ou estriado (Coliformes), em confirmação nos 3 dias depois
+-- da leitura (metade das compostas) e concluído com resultado; ~20% positivos
+CREATE TEMP TABLE demo_comp AS
+SELECT c.id, l.recebido + 1 AS f FROM compostas c JOIN demo_load l ON l.id = c.load_id
+UNION ALL
+SELECT c.id, e.embarcado + 1 FROM compostas c JOIN demo_emb e ON e.id = c.embarque_id;
+
 INSERT INTO testes (tipo, composta_id, status, resultado, data_feito, feito_por, espalhar_prevista, espalhado_em, espalhado_por,
-                    leitura_prevista, resultado_em, resultado_por)
+                    leitura_prevista, confirmacao_prevista, resultado_em, resultado_por)
 SELECT x.tipo, c.id,
-       CASE WHEN f + x.fim < CURRENT_DATE THEN 'Concluída'
-            WHEN f + x.esp <= CURRENT_DATE THEN CASE x.tipo WHEN 'TAB' THEN 'Incubada' ELSE 'Estriada' END
+       CASE WHEN z.confirma THEN 'Em confirmação'
+            WHEN z.leu THEN 'Concluída'
+            WHEN c.f + x.esp <= CURRENT_DATE THEN CASE x.tipo WHEN 'TAB' THEN 'Incubada' ELSE 'Estriada' END
             ELSE 'No caldo' END,
-       CASE WHEN f + x.fim < CURRENT_DATE THEN CASE WHEN (c.id + length(x.tipo)) % 6 = 0 THEN 'Positivo' ELSE 'Negativo' END END,
-       f, (SELECT ids[1 + (c.id % 3)::int] FROM demo_u),
-       f + x.esp,
-       CASE WHEN f + x.esp <= CURRENT_DATE THEN (f + x.esp) + time '09:00' END,
-       CASE WHEN f + x.esp <= CURRENT_DATE THEN (SELECT ids[1 + ((c.id + 1) % 3)::int] FROM demo_u) END,
-       CASE WHEN f + x.esp <= CURRENT_DATE THEN f + x.fim END,
-       CASE WHEN f + x.fim < CURRENT_DATE THEN (f + x.fim) + time '14:00' END,
-       CASE WHEN f + x.fim < CURRENT_DATE THEN (SELECT ids[1 + ((c.id + 2) % 3)::int] FROM demo_u) END
-FROM (SELECT c.id, l.recebido + 1 AS f FROM compostas c JOIN demo_load l ON l.id = c.load_id) c
-CROSS JOIN (VALUES ('TAB', 5, 10), ('COLIFORMES', 1, 2)) AS x(tipo, esp, fim);
+       CASE WHEN z.leu AND NOT z.confirma THEN CASE WHEN (c.id + length(x.tipo)) % 5 = 0 THEN 'Positivo' ELSE 'Negativo' END END,
+       c.f, (SELECT ids[1 + (c.id % 3)::int] FROM demo_u),
+       c.f + x.esp,
+       CASE WHEN c.f + x.esp <= CURRENT_DATE THEN (c.f + x.esp) + time '09:00' END,
+       CASE WHEN c.f + x.esp <= CURRENT_DATE THEN (SELECT ids[1 + ((c.id + 1) % 3)::int] FROM demo_u) END,
+       CASE WHEN c.f + x.esp <= CURRENT_DATE THEN c.f + x.fim END,
+       CASE WHEN z.confirma THEN c.f + x.fim + 3 END,
+       CASE WHEN z.leu AND NOT z.confirma THEN (c.f + x.fim) + time '14:00' END,
+       CASE WHEN z.leu AND NOT z.confirma THEN (SELECT ids[1 + ((c.id + 2) % 3)::int] FROM demo_u) END
+FROM demo_comp c
+CROSS JOIN (VALUES ('TAB', 5, 10), ('COLIFORMES', 1, 2)) AS x(tipo, esp, fim)
+CROSS JOIN LATERAL (SELECT c.f + x.fim < CURRENT_DATE AS leu,
+                           c.f + x.fim < CURRENT_DATE AND c.f + x.fim + 3 >= CURRENT_DATE AND c.id % 2 = 0 AS confirma) AS z;
+
+-- Howard (só embarque): um dia, já concluído, campos positivos x 2 = %
+INSERT INTO testes (tipo, composta_id, status, campos_positivos, percentual, data_feito, feito_por, resultado_em, resultado_por)
+SELECT 'HOWARD', c.id, 'Concluída', p, p * 2, e.embarcado + 1, (SELECT ids[3] FROM demo_u),
+       (e.embarcado + 1) + time '16:00', (SELECT ids[3] FROM demo_u)
+FROM compostas c
+JOIN demo_emb e ON e.id = c.embarque_id
+CROSS JOIN LATERAL (SELECT (4 + (c.id % 5) * 3)::int AS p) AS h;
 
 COMMIT;

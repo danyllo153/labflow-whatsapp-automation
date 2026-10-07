@@ -1,0 +1,13 @@
+/// Embarques (navio + linha + fase). Liga C.T/B.L e TAB/Coliformes/Howard do embarque.
+table Embarques
+	lineageTag: 96b0f3a3-4e89-4752-a222-f4dc6e0b2a0f
+
+	column Embarque
+		lineageTag: fbd83804-6f41-432f-bbec-3ae54f5796a8
+		isNameInferred
+		sourceColumn: [Embarque]
+
+	partition Embarques = calculated
+		mode: import
+		source = DISTINCT(FILTER(UNION(SELECTCOLUMNS(FILTER('bi contagens', 'bi contagens'[origem] = "Embarque"), "Embarque", 'bi contagens'[Embarque]), SELECTCOLUMNS(FILTER('bi testes', 'bi testes'[origem] = "Embarque"), "Embarque", 'bi testes'[embarque])), NOT ISBLANK([Embarque])))
+

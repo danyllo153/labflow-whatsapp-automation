@@ -68,6 +68,22 @@ node scriptsgerar-teste-prompt-ia.js LabFlow_importar_n8n.json LabFlow_importar_
 
 Importar no n8n como workflow novo, **Execute workflow** e ler o node Placar; depois apagar o workflow. Os dois arquivos têm IDs reais e ficam fora do Git. As frases ficam no próprio script (diferentes dos exemplos do prompt, para medir generalização, incluindo frases em estilo de áudio e as intenções antigas). Rodar depois de **qualquer** mudança no prompt. Em 05/10/2026: 44 de 44.
 
+## gerar-painel-powerbi.js (painel do Power BI como código)
+
+Arquivo: [`scripts/gerar-painel-powerbi.js`](../scripts/gerar-painel-powerbi.js)
+
+Gera o painel do laboratório no projeto `powerbi/labflow.pbip` (formato PBIP: relatório em JSON/PBIR e modelo em TMDL, versionados no Git). Escreve o tema (modo escuro), as medidas e colunas calculadas do modelo e as 8 páginas (Visão geral, Coletas, Tanques, Drops, Recebimento, Embarque, TAB e Coliformes), todas no mesmo padrão: cabeçalho e cartões em HTML, filtros no topo, 3 gráficos e uma tabela. Cabeçalho, cartões e as barras de andamento são HTML montado por medida DAX e mostrado pelo visual **HTML Content Secure** (AppSource, certificado, sem scripts).
+
+```powershell
+node scripts\gerar-painel-powerbi.js
+```
+
+- **Com o Power BI fechado.** Pode rodar de novo: recria tudo sem duplicar.
+- **Só o visual, com o Power BI aberto** (e já salvo com Ctrl+S): `node scripts\gerar-painel-powerbi.js --so-relatorio` não toca no modelo; depois, recarregar no Power BI (ou fechar **sem salvar** e abrir de novo).
+- Confere os nomes antes de gravar: coluna calculada ou medida com o mesmo nome de uma coluna do banco (maiúscula e minúscula contam igual) para o script com erro ([Bug 32](troubleshooting.md)).
+- Não mexe nas tabelas de apoio (Loads, Embarques, Calendário) nem nas ligações: essas são do Power BI Modeling MCP.
+- `scripts/gerar-painel-powerbi-colorido.js` é o backup da versão colorida (fundo azul-marinho), caso o modo escuro seja descartado.
+
 ## sanitize-workflow.ps1
 
 Arquivo: [`scripts/sanitize-workflow.ps1`](../scripts/sanitize-workflow.ps1)

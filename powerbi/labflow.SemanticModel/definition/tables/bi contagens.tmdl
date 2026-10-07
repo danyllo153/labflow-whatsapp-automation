@@ -1,0 +1,231 @@
+table 'bi contagens'
+	lineageTag: 7df06b90-a577-4699-973e-a51a6c8d3129
+
+	measure 'C.T e B.L' = COUNTROWS('bi contagens')
+		formatString: 0
+		lineageTag: e94002fa-6195-4693-a95b-3f62f8c4f74f
+
+	measure 'Resultados com alarme' = CALCULATE(COUNTROWS('bi contagens'), 'bi contagens'[alarme] = TRUE())
+		formatString: 0
+		lineageTag: ca6839f6-6ee2-4920-a052-68f09e3890d1
+
+	measure 'C.T e B.L atrasados' = CALCULATE(COUNTROWS('bi contagens'), 'bi contagens'[situacao] = "Atrasado")
+		formatString: 0
+		lineageTag: e5c695ba-bc2a-45c4-9b53-dedaef90c6ce
+
+	measure 'Cor do resultado' = IF(CALCULATE(COUNTROWS('bi contagens'), KEEPFILTERS('bi contagens'[alarme] = TRUE())) > 0, "#EF4444", IF(CALCULATE(COUNTROWS('bi contagens'), KEEPFILTERS('bi contagens'[lido] = TRUE())) > 0, "#22C55E"))
+		isHidden
+		lineageTag: 4200870b-f0f7-4889-982a-33b18febfc2e
+
+	measure 'Fundo do resultado' = IF(CALCULATE(COUNTROWS('bi contagens'), KEEPFILTERS('bi contagens'[alarme] = TRUE())) > 0, "#FDE2E1", IF(CALCULATE(COUNTROWS('bi contagens'), KEEPFILTERS('bi contagens'[lido] = TRUE())) > 0, "#DFF3E3"))
+		isHidden
+		lineageTag: d3fcc0d3-8d3e-4ff5-bb49-420cfc0c3cd5
+
+	measure 'Lotes e amostras' = COUNTROWS(SUMMARIZE('bi contagens', 'bi contagens'[origem], 'bi contagens'[load], 'bi contagens'[Embarque], 'bi contagens'[lote_amostra]))
+		formatString: 0
+		lineageTag: 85a660b6-4ac7-4480-800b-0121fbcf7a9f
+
+	measure 'Loads no período' = DISTINCTCOUNT('bi contagens'[load])
+		formatString: 0
+		lineageTag: dec70fb8-31a8-4f35-894e-f273604f3167
+
+	column origem
+		dataType: string
+		lineageTag: 07bed900-4869-4321-b4f7-1aef078ccdfc
+		summarizeBy: none
+		sourceColumn: origem
+
+		annotation SummarizationSetBy = Automatic
+
+	column load
+		dataType: string
+		lineageTag: 3f8c9773-e584-4915-be01-b5f65af0533c
+		summarizeBy: none
+		sourceColumn: load
+
+		annotation SummarizationSetBy = Automatic
+
+	column item
+		dataType: string
+		lineageTag: 45c9bfdd-56bf-4d27-bfab-132f2ee50a5d
+		summarizeBy: none
+		sourceColumn: item
+
+		annotation SummarizationSetBy = Automatic
+
+	column fabrica
+		dataType: string
+		lineageTag: 262cf54a-14e1-4a63-9960-fcd7305f1d48
+		summarizeBy: none
+		sourceColumn: fabrica
+
+		annotation SummarizationSetBy = Automatic
+
+	column navio
+		dataType: string
+		lineageTag: 008223e4-e32e-4742-b798-bbd544fae127
+		summarizeBy: none
+		sourceColumn: navio
+
+		annotation SummarizationSetBy = Automatic
+
+	column linha
+		dataType: int64
+		formatString: 0
+		lineageTag: 14395f1a-9f97-4f04-9ace-c613448ba307
+		summarizeBy: sum
+		sourceColumn: linha
+
+		annotation SummarizationSetBy = Automatic
+
+	column fase
+		dataType: int64
+		formatString: 0
+		lineageTag: 6111e89c-3da7-422e-b93e-b346b95a6d3d
+		summarizeBy: sum
+		sourceColumn: fase
+
+		annotation SummarizationSetBy = Automatic
+
+	column lote_amostra
+		dataType: string
+		lineageTag: 7cdee6b3-5185-4310-ae4a-4abc25115599
+		summarizeBy: none
+		sourceColumn: lote_amostra
+
+		annotation SummarizationSetBy = Automatic
+
+	column numero
+		dataType: int64
+		formatString: 0
+		lineageTag: c4fc0ec6-7240-473c-8f52-1b7cb5c23f78
+		summarizeBy: sum
+		sourceColumn: numero
+
+		annotation SummarizationSetBy = Automatic
+
+	column analise
+		dataType: string
+		lineageTag: 3607f6b7-edb5-4340-adc1-4dd06474e90a
+		summarizeBy: none
+		sourceColumn: analise
+
+		annotation SummarizationSetBy = Automatic
+
+	column prevista
+		dataType: dateTime
+		formatString: dd/MM/yyyy
+		lineageTag: 3a227824-50fa-4b93-988e-2d47325fa441
+		summarizeBy: none
+		sourceColumn: prevista
+
+		variation Variation
+			isDefault
+			relationship: 4f97fef2-1612-4849-9864-7de7b282e6bc
+			defaultHierarchy: LocalDateTable_b5ffb9f5-5eda-4ea9-b669-59e2e2bb0d44.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column lido
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: 40dfb851-33f8-483a-a02e-143019f073e8
+		summarizeBy: none
+		sourceColumn: lido
+
+		annotation SummarizationSetBy = Automatic
+
+	column resultado
+		dataType: string
+		lineageTag: 047412d0-416a-4623-8026-6f9eac861a4e
+		summarizeBy: none
+		sourceColumn: resultado
+
+		annotation SummarizationSetBy = Automatic
+
+	column sinal
+		dataType: string
+		lineageTag: d30f4eca-fc83-4296-8ea1-3cec93dda25a
+		summarizeBy: none
+		sourceColumn: sinal
+
+		annotation SummarizationSetBy = Automatic
+
+	column valor
+		dataType: double
+		lineageTag: 147eb1dc-8fbb-4537-b010-8ef4212597d7
+		summarizeBy: sum
+		sourceColumn: valor
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column alarme
+		dataType: boolean
+		formatString: """TRUE"";""TRUE"";""FALSE"""
+		lineageTag: e4d87612-b40e-43c8-b4cb-e0f90504e949
+		summarizeBy: none
+		sourceColumn: alarme
+
+		annotation SummarizationSetBy = Automatic
+
+	column lido_por
+		dataType: string
+		lineageTag: 78a0b29c-4e99-4f0d-bc29-fd858e5442c1
+		summarizeBy: none
+		sourceColumn: lido_por
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_leitura
+		dataType: dateTime
+		formatString: dd/MM/yyyy
+		lineageTag: e1d15ad3-6651-4bcc-961e-c5771324d1d0
+		summarizeBy: none
+		sourceColumn: data_leitura
+
+		variation Variation
+			isDefault
+			relationship: 560bb80d-b67a-477c-80fd-8b67e0117a99
+			defaultHierarchy: LocalDateTable_15df9fa4-61d7-46cd-b9cd-ae0104165baa.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column situacao
+		dataType: string
+		lineageTag: c401d46c-e540-42ce-b8c3-ea23a37e56b0
+		summarizeBy: none
+		sourceColumn: situacao
+
+		annotation SummarizationSetBy = Automatic
+
+	column Embarque = IF('bi contagens'[origem] = "Embarque", 'bi contagens'[navio] & " linha " & 'bi contagens'[linha] & " fase " & 'bi contagens'[fase])
+		dataType: string
+		lineageTag: 160ffce3-747b-4b45-bafb-4b62e184d576
+		summarizeBy: none
+
+	column Faixa = IF('bi contagens'[alarme], "Alarme", IF('bi contagens'[lido], "Normal", "Aguardando"))
+		dataType: string
+		lineageTag: 87ae0d66-cffc-4fd9-8fcc-dafa4fde8585
+		summarizeBy: none
+
+	column 'Data da amostra' = 'bi contagens'[prevista] - SWITCH('bi contagens'[analise], "C.T 48h", 2, "B.L 72h", 3, 5)
+		dataType: dateTime
+		formatString: dd/MM/yyyy
+		lineageTag: a02c2c9c-590d-42e2-8598-03afbbe30f17
+		summarizeBy: none
+
+	partition 'bi contagens' = m
+		mode: import
+		source =
+				let
+				    Fonte = PostgreSQL.Database("localhost:15432", "labflow"),
+				    bi_contagens = Fonte{[Schema="bi",Item="contagens"]}[Data]
+				in
+				    bi_contagens
+
