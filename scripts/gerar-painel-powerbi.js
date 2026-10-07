@@ -18,7 +18,9 @@ const DEF = path.join(REL, 'definition');
 const MOD = path.join(RAIZ, 'labflow.SemanticModel', 'definition', 'tables');
 const VISUAL_HTML = 'htmlContent443BE3AD55E043BF878BED274D3A6865'; // HTML Content Secure (AppSource)
 const id = () => crypto.randomBytes(10).toString('hex');
-const guid = () => crypto.randomUUID();
+// identificador fixo (formato GUID) tirado de um texto: rodar o gerador de novo não muda os arquivos à toa
+const guid = (texto) => { const h = crypto.createHash('sha1').update(texto).digest('hex');
+  return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20, 32)}`; };
 const texto = (s) => `'${String(s).replace(/'/g, "''")}'`; // literal de texto do PBIR
 const lit = (v) => ({ expr: { Literal: { Value: v } } });
 const cor = (hex) => ({ solid: { color: lit(`'${hex}'`) } });
@@ -160,6 +162,24 @@ const faixaHtml = (...cartoes) => junta(
   ...cartoes.map(cartaoHtml),
   dax('</div>'));
 
+// atrasados por área: uma barra por área, proporcional à maior; zerada vira "✓ em dia" em verde
+const AREAS_ATRASADAS = [['Leituras de NFC', '[Leituras atrasadas]', COR.vermelho], ['Drops', '[Drops atrasados]', COR.laranja],
+  ['C.T e B.L do concentrado', '[C.T e B.L atrasados]', COR.teal], ['TAB e Coliformes', '[Testes atrasados]', COR.roxo]];
+const ATRASADOS_POR_AREA = AREAS_ATRASADAS.map(([, m], i) => `VAR v${i} = COALESCE(${m}, 0) `).join('')
+  + 'VAR mx = MAX(MAX(MAX(v0, v1), MAX(v2, v3)), 1) RETURN ' + junta(
+  dax(`<div style='${FONTE};padding:4px 6px'>`),
+  ...AREAS_ATRASADAS.flatMap(([nome, , hex], i) => [
+    dax(`<div style='margin-bottom:18px'><div style='display:flex;justify-content:space-between;align-items:baseline;font-size:13px;`
+      + `color:${COR.texto}'><span>${nome}</span>`),
+    `IF(v${i} > 0, ${dax(`<b style='font-size:16px;color:${hex}'>`)} & v${i} & ${dax('</b>')}, `
+      + `${dax(`<span style='font-size:12px;color:${COR.verde}'>✓ em dia</span>`)})`,
+    dax(`</div><div style='height:10px;border-radius:6px;background:${COR.grade};margin-top:7px;overflow:hidden'>`
+      + "<div style='height:100%;border-radius:6px;width:"),
+    `FORMAT(ROUND(DIVIDE(v${i}, mx) * 100, 0), "0")`,
+    dax(`%;background:${hex}'></div></div></div>`),
+  ]),
+  dax('</div>'));
+
 // uma linha por "linha do relatório": barra verde (lidas), vermelha (atrasadas) e laranja (hoje)
 const PROGRESSO_LEITURAS = 'VAR linha = SELECTEDVALUE(\'bi leituras_nfc\'[linha_relatorio]) '
   + 'VAR total = COALESCE([Leituras], 0) VAR lidas = COALESCE([Leituras lidas], 0) '
@@ -251,6 +271,7 @@ const MEDIDAS = {
     ['Analistas', "DISTINCTCOUNT('bi coletas'[registrado_por])", { formato: '0' }],
     ...Object.entries(PAGINA_HTML).map(([pag, args]) => [`HTML cabeçalho - ${pag}`, cabecalhoHtml(...args), HTML]),
     ...Object.entries(CARTOES).map(([pag, cartoes]) => [`HTML cartões - ${pag}`, faixaHtml(...cartoes), HTML]),
+    ['HTML atrasados por área', ATRASADOS_POR_AREA, HTML],
   ],
   'bi leituras_nfc': [
     ['Leituras', "COUNTROWS('bi leituras_nfc')", { formato: '0' }],
@@ -276,8 +297,8 @@ const MEDIDAS = {
     // cor do resultado na tabela (vermelho se passou do limite, verde se normal)
     ['Cor do resultado', `IF(${CALC('bi contagens', "KEEPFILTERS('bi contagens'[alarme] = TRUE())")} > 0, "${COR.vermelho}", `
       + `IF(${CALC('bi contagens', "KEEPFILTERS('bi contagens'[lido] = TRUE())")} > 0, "${COR.verde}"))`, { oculta: true }],
-    ['Fundo do resultado', `IF(${CALC('bi contagens', "KEEPFILTERS('bi contagens'[alarme] = TRUE())")} > 0, "#FDE2E1", `
-      + `IF(${CALC('bi contagens', "KEEPFILTERS('bi contagens'[lido] = TRUE())")} > 0, "#DFF3E3"))`, { oculta: true }],
+    ['Fundo do resultado', `IF(${CALC('bi contagens', "KEEPFILTERS('bi contagens'[alarme] = TRUE())")} > 0, "${PILULA.Alarme[1]}", `
+      + `IF(${CALC('bi contagens', "KEEPFILTERS('bi contagens'[lido] = TRUE())")} > 0, "${PILULA.Normal[1]}"))`, { oculta: true }],
   ],
   'bi testes': [
     ['Testes', "COUNTROWS('bi testes')", { formato: '0' }],
@@ -299,7 +320,7 @@ const MEDIDAS = {
 };
 // colunas calculadas (texto limpo para tabelas, filtros e gráficos)
 const colunaTmdl = (nome, expr, tipo, extra = '') =>
-  `\tcolumn '${nome}' = ${expr}\n\t\tdataType: ${tipo}\n${extra}\t\tlineageTag: ${guid()}\n\t\tsummarizeBy: none\n`;
+  `\tcolumn '${nome}' = ${expr}\n\t\tdataType: ${tipo}\n${extra}\t\tlineageTag: @@${nome}@@\n\t\tsummarizeBy: none\n`;
 const local = (t) => colunaTmdl('Local', `IF(ISBLANK('${t}'[navio]), "Terra (tank farm)", '${t}'[navio])`, 'string');
 const COLUNAS = {
   'bi coletas': [
@@ -341,7 +362,7 @@ const formatoColuna = (t, coluna, formato) => t.replace(
   `$1\t\tformatString: ${formato}\n$2`);
 const medidaTmdl = ([nome, expr, { formato, pasta, oculta } = {}]) => `\tmeasure '${nome}' = ${expr}\n`
   + (formato ? `\t\tformatString: ${formato}\n` : '') + (pasta ? `\t\tdisplayFolder: ${pasta}\n` : '')
-  + (oculta ? '\t\tisHidden\n' : '') + `\t\tlineageTag: ${guid()}\n`;
+  + (oculta ? '\t\tisHidden\n' : '') + `\t\tlineageTag: @@${nome}@@\n`;
 // confere os nomes antes de gravar: no Power BI maiúscula e minúscula são o mesmo nome, então coluna
 // calculada ou medida não pode repetir coluna do banco ('Desvio' x 'desvio'), e medida não se repete no modelo
 const medidasDoModelo = new Map();
@@ -366,7 +387,8 @@ for (const [tabela, medidas] of SO_RELATORIO ? [] : Object.entries(MEDIDAS)) {
   // remove as geradas antes; ao salvar, o Power BI tira as aspas dos nomes simples (measure Analistas)
   // e pode deixar linha em branco antes de "annotation", então o bloco vai até a próxima linha sem recuo duplo
   t = t.replace(/^\t(?:measure|column) (?:'[^']+'|[^\s=']+) = [^\n]*\n(?:\t\t[^\n]*\n|\n(?=\t\t))*\n?/gm, '');
-  const bloco = [...medidas.map(medidaTmdl), ...(COLUNAS[tabela] || [])].join('\n');
+  const bloco = [...medidas.map(medidaTmdl), ...(COLUNAS[tabela] || [])].join('\n')
+    .replace(/@@(.+?)@@/g, (_, nome) => guid(`${tabela}/${nome}`));
   t = t.replace(/^(table [^\n]+\n\tlineageTag: [^\n]+\n)\n/, `$1\n${bloco}\n`);
   // datas curtas (o "quarta-feira, 16 de setembro de 2026" alarga demais as tabelas)
   t = t.replace(/formatString: Long Date/g, 'formatString: dd/MM/yyyy')
@@ -560,10 +582,7 @@ const PAGINAS = [
     ...topo('Visão geral', 1872),
     html([24, 252, 620, 330], L, 'HTML andamento das leituras',
       { titulo: 'Andamento das leituras de NFC', corTitulo: COR.verde, linhas: col(L, 'linha_relatorio', 'Leitura') }),
-    grafico('clusteredBarChart', [660, 252, 600, 330], 'Atrasados por área',
-      { Y: [med(L, 'Leituras atrasadas'), med(D, 'Drops atrasados'), med(K, 'C.T e B.L atrasados'), med(T, 'Testes atrasados')] },
-      { cores: corPorMedida([[med(L, 'Leituras atrasadas'), COR.vermelho], [med(D, 'Drops atrasados'), COR.laranja],
-        [med(K, 'C.T e B.L atrasados'), COR.teal], [med(T, 'Testes atrasados'), COR.roxo]]), corTitulo: COR.vermelho }),
+    html([660, 252, 600, 330], C, 'HTML atrasados por área', { titulo: 'Atrasados por área', corTitulo: COR.vermelho }),
     grafico('donutChart', [1276, 252, 620, 330], 'Situação das leituras de NFC',
       { Category: col(L, 'situacao', 'Situação'), Y: med(L, 'Leituras') },
       { cores: corPorValor(L, 'situacao', SERIE_SITUACAO), legenda: 'Right', semRotulos: true, corTitulo: COR.marinho }),
@@ -677,11 +696,15 @@ for (const [nome, visuais, filtrosDaPagina] of PAGINAS) {
   fs.writeFileSync(path.join(dir, 'page.json'), JSON.stringify({
     $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.1.0/schema.json',
     name: pid, displayName: nome, displayOption: 'FitToPage', height: 1080, width: 1920,
-    ...(filtrosDaPagina ? { filterConfig: { filters: filtrosDaPagina } } : {}),
+    ...(filtrosDaPagina ? { filterConfig: { filters: filtrosDaPagina.map((filtro, j) =>
+      ({ ...filtro, name: crypto.createHash('sha1').update(`${nome}#filtro${j}`).digest('hex').slice(0, 20) })) } } : {}),
   }, null, 2), 'utf8');
   visuais.forEach((v, i) => {
     v.position.z = (i + 1) * 1000;
     v.position.tabOrder = (i + 1) * 1000;
+    // nome fixo (página + posição na lista): rodar de novo não troca as pastas, e o Git só mostra o que mudou
+    v.name = crypto.createHash('sha1').update(`${nome}#${i}`).digest('hex').slice(0, 20);
+    (v.filterConfig?.filters || []).forEach((filtro, j) => { filtro.name = crypto.createHash('sha1').update(`${v.name}#${j}`).digest('hex').slice(0, 20); });
     fs.mkdirSync(path.join(dir, 'visuals', v.name), { recursive: true });
     fs.writeFileSync(path.join(dir, 'visuals', v.name, 'visual.json'), JSON.stringify(v, null, 2), 'utf8');
   });

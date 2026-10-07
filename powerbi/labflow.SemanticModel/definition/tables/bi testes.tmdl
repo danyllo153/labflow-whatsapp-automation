@@ -1,45 +1,60 @@
 table 'bi testes'
 	lineageTag: df42c17b-e7c9-4a02-aa20-f8ab20d132b0
 
-	measure Testes = COUNTROWS('bi testes')
+	measure 'Testes' = COUNTROWS('bi testes')
 		formatString: 0
-		lineageTag: a9387c9e-f4cf-4c41-abe5-e0fec67f7c88
-
-	measure 'Testes positivos' = CALCULATE(COUNTROWS('bi testes'), 'bi testes'[resultado] = "Positivo")
-		formatString: 0
-		lineageTag: 2bfe9f04-c083-4b20-bd3f-9feba8f7f9e2
-
-	measure 'Testes em andamento' = CALCULATE(COUNTROWS('bi testes'), 'bi testes'[status] <> "Concluído")
-		formatString: 0
-		lineageTag: b0697938-1358-481b-94c2-ec8e9801fb99
-
-	measure 'Howard médio (%)' = AVERAGE('bi testes'[howard_percentual])
-		formatString: 0.0
-		lineageTag: e49ca3da-b2af-4e7b-80fc-f621902f5d08
+		lineageTag: eefade1c-42fe-4314-8d75-6382b1be40f1
 
 	measure 'Testes no caldo' = CALCULATE(COUNTROWS('bi testes'), 'bi testes'[status] = "No caldo")
 		formatString: 0
-		lineageTag: 5d78d12a-5229-4e1d-bf4b-1100597c02f9
+		lineageTag: 9042b419-dd30-4cb9-8fa6-e00dd6ebfbc7
 
 	measure 'Testes incubados' = CALCULATE(COUNTROWS('bi testes'), 'bi testes'[status] = "Incubado")
 		formatString: 0
-		lineageTag: c54e8da7-43a7-4e8e-b79c-a5d68cc4a476
+		lineageTag: ab0cffc5-e92b-4d41-8ee9-7328d7fa1635
 
 	measure 'Testes estriados' = CALCULATE(COUNTROWS('bi testes'), 'bi testes'[status] = "Estriado")
 		formatString: 0
-		lineageTag: 7dac38cb-53f2-4ac7-acef-cac8af7d6ede
+		lineageTag: eea66de1-1e19-4c22-b6a4-6928cba2daf0
 
 	measure 'Testes em confirmação' = CALCULATE(COUNTROWS('bi testes'), 'bi testes'[status] = "Em confirmação")
 		formatString: 0
-		lineageTag: 8231fa89-9125-4494-911d-09de6b377bad
+		lineageTag: 11d4ee81-4a43-4266-bf6f-dfda90fb5f76
+
+	measure 'Testes positivos' = CALCULATE(COUNTROWS('bi testes'), 'bi testes'[resultado] = "Positivo")
+		formatString: 0
+		lineageTag: f0b3612b-2a47-4159-86ec-ec50c3b9e46d
 
 	measure 'Testes negativos' = CALCULATE(COUNTROWS('bi testes'), 'bi testes'[resultado] = "Negativo")
 		formatString: 0
-		lineageTag: 69bad6ff-f368-455c-8408-b53223a550e1
+		lineageTag: bc25fe4d-176a-4faf-be0e-a99fa4bfad18
+
+	measure 'Testes em andamento' = CALCULATE(COUNTROWS('bi testes'), 'bi testes'[status] <> "Concluído")
+		formatString: 0
+		lineageTag: 33d4a3a0-56de-4e1d-bbd1-300f35ca9411
 
 	measure 'Testes atrasados' = CALCULATE(COUNTROWS('bi testes'), 'bi testes'[situacao] = "Atrasado")
 		formatString: 0
-		lineageTag: 5fed7e82-d964-4ff9-a735-e509a0d64504
+		lineageTag: f5d4d7b9-26e5-4ef2-a500-9eba1868eec9
+
+	measure 'Howard médio (%)' = AVERAGE('bi testes'[howard_percentual])
+		formatString: 0.0
+		lineageTag: 35034b66-ac24-442e-8648-2286088dab09
+
+	column 'Resultado ou andamento' = IF(NOT ISBLANK('bi testes'[resultado]), 'bi testes'[resultado], IF('bi testes'[teste] = "Howard", "Concluído", "Em andamento"))
+		dataType: string
+		lineageTag: f5256833-85a5-4641-82c5-3972d3cc5e32
+		summarizeBy: none
+
+	column 'Navio' = IF('bi testes'[origem] = "Embarque", TRIM(LEFT('bi testes'[embarque], SEARCH(" linha", 'bi testes'[embarque], 1, LEN('bi testes'[embarque]) + 1) - 1)))
+		dataType: string
+		lineageTag: ff71137c-c8c6-4341-a8f4-a22b5a797026
+		summarizeBy: none
+
+	column 'Identificação' = SWITCH('bi testes'[origem], "Tank farm", "Tanque " & 'bi testes'[tanque], "Embarque", 'bi testes'[embarque], "Load " & 'bi testes'[load])
+		dataType: string
+		lineageTag: a5047372-3874-4a6c-add8-547658e31a24
+		summarizeBy: none
 
 	column teste_id
 		dataType: int64
@@ -263,21 +278,6 @@ table 'bi testes'
 		sourceColumn: situacao
 
 		annotation SummarizationSetBy = Automatic
-
-	column 'Resultado ou andamento' = IF(NOT ISBLANK('bi testes'[resultado]), 'bi testes'[resultado], IF('bi testes'[teste] = "Howard", "Concluído", "Em andamento"))
-		dataType: string
-		lineageTag: 912d947d-4dd0-46fb-acea-6a23bf67154d
-		summarizeBy: none
-
-	column Navio = IF('bi testes'[origem] = "Embarque", TRIM(LEFT('bi testes'[embarque], SEARCH(" linha", 'bi testes'[embarque], 1, LEN('bi testes'[embarque]) + 1) - 1)))
-		dataType: string
-		lineageTag: 955f337f-f5e8-4d6a-8581-b212aab39e83
-		summarizeBy: none
-
-	column Identificação = SWITCH('bi testes'[origem], "Tank farm", "Tanque " & 'bi testes'[tanque], "Embarque", 'bi testes'[embarque], "Load " & 'bi testes'[load])
-		dataType: string
-		lineageTag: 3ed48b4d-1ff5-4983-a56d-4d507e73a5bf
-		summarizeBy: none
 
 	partition 'bi testes' = m
 		mode: import

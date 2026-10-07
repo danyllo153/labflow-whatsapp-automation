@@ -1,30 +1,35 @@
 table 'bi leituras_nfc'
 	lineageTag: af6bf997-5538-4378-bc58-efd35acdcc92
 
-	measure Leituras = COUNTROWS('bi leituras_nfc')
+	measure 'Leituras' = COUNTROWS('bi leituras_nfc')
 		formatString: 0
-		lineageTag: 98ea673c-07d8-49a0-a4e9-2af1eaa4373e
+		lineageTag: bf181aec-b0c6-49a9-b4bd-e23e43be0d97
 
 	measure 'Leituras lidas' = CALCULATE(COUNTROWS('bi leituras_nfc'), 'bi leituras_nfc'[situacao] = "Lido")
 		formatString: 0
-		lineageTag: 86098499-3dc6-4e32-ac67-d8007b32d30c
+		lineageTag: b8596a54-9db4-42dc-82c8-23c70c660d17
 
 	measure 'Leituras atrasadas' = CALCULATE(COUNTROWS('bi leituras_nfc'), 'bi leituras_nfc'[situacao] = "Atrasado")
 		formatString: 0
-		lineageTag: f4801b6a-4372-43b6-b5f3-0e69a2589a01
+		lineageTag: 74bc0582-4887-4410-8be8-d33225c56867
 
 	measure 'Leituras que vencem hoje' = CALCULATE(COUNTROWS('bi leituras_nfc'), 'bi leituras_nfc'[situacao] = "Vence hoje")
 		formatString: 0
-		lineageTag: d4aa392e-d835-4653-b6ee-39e14cfbf4f0
+		lineageTag: e3bfdd67-df32-4534-b5b5-7c691219a1cd
 
 	measure '% de leituras lidas' = DIVIDE([Leituras lidas], [Leituras])
 		formatString: 0%
-		lineageTag: a7b312e9-d621-4ecb-a9fb-8e711efce97e
+		lineageTag: 0cd609ca-6668-4750-8b4c-624fbe1098fa
 
 	measure 'HTML andamento das leituras' = VAR linha = SELECTEDVALUE('bi leituras_nfc'[linha_relatorio]) VAR total = COALESCE([Leituras], 0) VAR lidas = COALESCE([Leituras lidas], 0) VAR atras = COALESCE([Leituras atrasadas], 0) VAR hoje = COALESCE([Leituras que vencem hoje], 0) VAR pl = FORMAT(ROUND(DIVIDE(lidas, total, 0) * 100, 0), "0") VAR pa = FORMAT(ROUND(DIVIDE(atras, total, 0) * 100, 0), "0") VAR ph = FORMAT(ROUND(DIVIDE(hoje, total, 0) * 100, 0), "0") RETURN "<div style='margin:2px 6px 14px 6px;font-family:Segoe UI,sans-serif'><div style='display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:#F4F4F5'><b>" & linha & "</b><span style='font-size:12px;color:#A1A1AA'><b style='color:#22C55E'>" & pl & "% lidas</b> · " & lidas & " de " & total & "</span></div><div style='height:8px;border-radius:6px;background:#27272A;overflow:hidden;display:flex;margin-top:6px'><div style='width:" & pl & "%;background:#22C55E'></div><div style='width:" & pa & "%;background:#EF4444'></div><div style='width:" & ph & "%;background:#F59E0B'></div></div><div style='font-size:11px;margin-top:5px;color:#A1A1AA'><span style='color:#EF4444'>● </span>" & atras & " atrasadas&nbsp;&nbsp;<span style='color:#F59E0B'>● </span>" & hoje & " para hoje</div></div>"
-		isHidden
 		displayFolder: Painel HTML
-		lineageTag: 95be5de3-d150-48b0-8ce1-f9c6c2506d6d
+		isHidden
+		lineageTag: 50beb877-ff7c-46c2-9a53-14f23abfb826
+
+	column 'Local' = IF(ISBLANK('bi leituras_nfc'[navio]), "Terra (tank farm)", 'bi leituras_nfc'[navio])
+		dataType: string
+		lineageTag: 157ee9a4-6eb2-44b2-afb0-0a1df5b2c565
+		summarizeBy: none
 
 	column analise_id
 		dataType: int64
@@ -180,11 +185,6 @@ table 'bi leituras_nfc'
 		sourceColumn: situacao
 
 		annotation SummarizationSetBy = Automatic
-
-	column Local = IF(ISBLANK('bi leituras_nfc'[navio]), "Terra (tank farm)", 'bi leituras_nfc'[navio])
-		dataType: string
-		lineageTag: 01359a8a-955b-4eaf-bca5-329d845c6c89
-		summarizeBy: none
 
 	partition 'bi leituras_nfc' = m
 		mode: import

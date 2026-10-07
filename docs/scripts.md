@@ -78,7 +78,7 @@ Gera o painel do laboratório no projeto `powerbi/labflow.pbip` (formato PBIP: r
 node scripts\gerar-painel-powerbi.js
 ```
 
-- **Com o Power BI fechado.** Pode rodar de novo: recria tudo sem duplicar.
+- **Com o Power BI fechado.** Pode rodar de novo: recria tudo sem duplicar. Os identificadores (páginas, visuais, filtros e `lineageTag` das medidas) são fixos, tirados do nome, então rodar de novo sem mudar nada não altera nenhum arquivo, e o diff do Git mostra só o que mudou de verdade.
 - **Só o visual, com o Power BI aberto** (e já salvo com Ctrl+S): `node scripts\gerar-painel-powerbi.js --so-relatorio` não toca no modelo; depois, recarregar no Power BI (ou fechar **sem salvar** e abrir de novo).
 - Confere os nomes antes de gravar: coluna calculada ou medida com o mesmo nome de uma coluna do banco (maiúscula e minúscula contam igual) para o script com erro ([Bug 32](troubleshooting.md)).
 - Não mexe nas tabelas de apoio (Loads, Embarques, Calendário) nem nas ligações: essas são do Power BI Modeling MCP.

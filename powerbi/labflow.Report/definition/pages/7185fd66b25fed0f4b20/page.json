@@ -1,0 +1,8 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.1.0/schema.json",
+  "name": "7185fd66b25fed0f4b20",
+  "displayName": "Tanques",
+  "displayOption": "FitToPage",
+  "height": 1080,
+  "width": 1920
+}

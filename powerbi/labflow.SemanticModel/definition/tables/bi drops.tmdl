@@ -1,17 +1,39 @@
 table 'bi drops'
 	lineageTag: c82d8346-4cb4-433b-b14c-875c3ba9c464
 
-	measure Drops = COUNTROWS('bi drops')
+	measure 'Drops' = COUNTROWS('bi drops')
 		formatString: 0
-		lineageTag: 61368d78-397e-4e57-a1cb-f0097de730f3
+		lineageTag: 91698763-ebc9-455b-9c4a-d56469d20e9e
 
 	measure 'Drops atrasados' = CALCULATE(COUNTROWS('bi drops'), 'bi drops'[situacao] = "Atrasado")
 		formatString: 0
-		lineageTag: ca37110f-5ace-4079-93ec-408fa56011b8
+		lineageTag: a5ee5c34-e8ae-4074-9ab5-4786939a052e
 
 	measure 'Drops que vencem hoje' = CALCULATE(COUNTROWS('bi drops'), 'bi drops'[situacao] = "Vence hoje")
 		formatString: 0
-		lineageTag: 49eb305c-d8e0-4ef1-9eae-27b56bb9efa6
+		lineageTag: 2a2df95a-476f-465e-abda-9756d684ce36
+
+	column 'Local' = IF(ISBLANK('bi drops'[navio]), "Terra (tank farm)", 'bi drops'[navio])
+		dataType: string
+		lineageTag: 30edccac-5933-451b-b57b-0fe8ca01636a
+		summarizeBy: none
+
+	column 'Estágio' = 'bi drops'[drop]
+		dataType: string
+		sortByColumn: 'Estágio (ordem)'
+		lineageTag: e0d76fbb-2956-42ca-91c2-b0b63693778c
+		summarizeBy: none
+
+	column 'Estágio (ordem)' = INT(VALUE(MID('bi drops'[drop], 2, 3)))
+		dataType: int64
+		isHidden
+		lineageTag: c8e20028-cf92-40e1-81ba-6e83c598f2bf
+		summarizeBy: none
+
+	column 'Desvio do drop' = IF('bi drops'[desvio], COALESCE('bi drops'[desvio_resultado], "Em confirmação"), "Sem desvio")
+		dataType: string
+		lineageTag: 1e3b3998-e126-40d2-aa77-c7a5e93027da
+		summarizeBy: none
 
 	column drop_id
 		dataType: int64
@@ -150,28 +172,6 @@ table 'bi drops'
 		sourceColumn: situacao
 
 		annotation SummarizationSetBy = Automatic
-
-	column Local = IF(ISBLANK('bi drops'[navio]), "Terra (tank farm)", 'bi drops'[navio])
-		dataType: string
-		lineageTag: 0becf3df-1f76-4a8f-9a3e-537149bbc668
-		summarizeBy: none
-
-	column Estágio = 'bi drops'[drop]
-		dataType: string
-		lineageTag: c811e2fe-24cd-4688-8b9b-de5cc83e0d3d
-		summarizeBy: none
-		sortByColumn: 'Estágio (ordem)'
-
-	column 'Estágio (ordem)' = INT(VALUE(MID('bi drops'[drop], 2, 3)))
-		dataType: int64
-		isHidden
-		lineageTag: 4d9ffb67-41da-417c-b0b1-b7e57247b918
-		summarizeBy: none
-
-	column 'Desvio do drop' = IF('bi drops'[desvio], COALESCE('bi drops'[desvio_resultado], "Em confirmação"), "Sem desvio")
-		dataType: string
-		lineageTag: 4af47802-cf87-4484-bccf-178fd4fa5323
-		summarizeBy: none
 
 	partition 'bi drops' = m
 		mode: import

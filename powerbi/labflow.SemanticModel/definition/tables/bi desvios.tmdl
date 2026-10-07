@@ -1,17 +1,22 @@
 table 'bi desvios'
 	lineageTag: 537302f3-3622-476b-9ab0-b6d9aba5a9e9
 
-	measure Desvios = COUNTROWS('bi desvios')
+	measure 'Desvios' = COUNTROWS('bi desvios')
 		formatString: 0
-		lineageTag: 7c4e7277-8b7b-4051-ab1d-c8a6b824c497
+		lineageTag: 77332887-2932-4d2f-96eb-efae83ae49c2
 
 	measure 'Desvios abertos' = CALCULATE(COUNTROWS('bi desvios'), 'bi desvios'[status] = "Em confirmação")
 		formatString: 0
-		lineageTag: f6d55eab-af39-44d6-ad6b-9dc16ce55bd9
+		lineageTag: 6540da21-5898-4fac-afdf-0f7308ef7234
 
 	measure 'Desvios confirmados' = CALCULATE(COUNTROWS('bi desvios'), 'bi desvios'[resultado] = "Confirmado")
 		formatString: 0
-		lineageTag: cd90cc0f-74bd-426c-a243-e687909ec259
+		lineageTag: f5025860-a19d-4d89-8d60-c083a7756707
+
+	column 'Local' = IF(ISBLANK('bi desvios'[navio]), "Terra (tank farm)", 'bi desvios'[navio])
+		dataType: string
+		lineageTag: e231988b-cdc3-48a2-9b79-17046ace9fd7
+		summarizeBy: none
 
 	column desvio_id
 		dataType: int64
@@ -192,11 +197,6 @@ table 'bi desvios'
 		sourceColumn: situacao
 
 		annotation SummarizationSetBy = Automatic
-
-	column Local = IF(ISBLANK('bi desvios'[navio]), "Terra (tank farm)", 'bi desvios'[navio])
-		dataType: string
-		lineageTag: 0a1a36ec-66c6-4c36-aeee-b0511981fdca
-		summarizeBy: none
 
 	partition 'bi desvios' = m
 		mode: import
