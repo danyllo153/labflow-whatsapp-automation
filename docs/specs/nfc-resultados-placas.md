@@ -2,7 +2,7 @@
 title: LabFlow — Resultados de NFC placa a placa
 tags: [labflow, spec, nfc, tanques]
 status: draft
-version: v0.1
+version: v0.2
 created: 2026-10-07
 ---
 
@@ -29,7 +29,11 @@ Hoje a leitura de NFC só marca **lido** e quem leu, sem o resultado. Passa a gr
 4. **Pré-leitura** (B.L 72h e WORT 120h) com resultado fora do limite **já é não ok**.
 5. **Limites de aceitação** por análise e etapa ficam numa **tabela do banco**, carregada por um **arquivo fora do Git**. O repositório traz só um arquivo de exemplo com **valores fictícios** (regra do `CLAUDE.md`).
 6. **Não ok aparece no relatório (🚨) e no painel.** No **B.L e no WORT**, abre também um **desvio de tanque**, tratado com uma **repetição**: a análise é refeita com o frasco de arquivo, como análise nova, e os prazos voltam a contar.
-7. No **C.T**, não ok **só aparece** no relatório e no painel (sem desvio). *(confirmar)*
+7. No **C.T**, não ok (alguma placa acima do limite) **só aparece** no relatório (🚨) e no painel do Power BI, **com a contagem** que deu; não abre desvio.
+8. **Desvio de tanque (B.L e WORT):** ao gravar o não ok, o bot **pergunta** se abre o desvio, como no desvio de drop ("Desvio criado do tanque 47 (B.L 120h, Stress)").
+9. **Repetição:** refaz **só a análise que deu não ok** (ex.: só o B.L do frasco Stress), com o frasco de arquivo, em **triplicata** e com os **mesmos prazos**, contados do dia em que o desvio é aberto.
+10. **Fecha o desvio** o resultado da repetição: vale a **nova contagem**, e o relatório mostra o ok / não ok dela ("Repetição feita").
+11. **Termos:** o registro é um **desvio** (de drop ou de tanque); a análise refeita é a **repetição**. O bot **entende** "reanálise" quando o analista fala ou escreve, mas escreve "repetição" (regra do `CLAUDE.md`). *(confirmar com o Danyllo)*
 
 ## Comandos (pensados também para o áudio)
 
@@ -66,17 +70,17 @@ Migration `016`. Testada antes numa transação desfeita, com backup antes de ap
 
 ## Relatório e painel
 
-- **Relatório do dia:** cada tanque na linha da leitura com ✅ (ok) ou 🚨 (não ok); sem marca = ainda não lido.
+- **Relatório do dia:** cada tanque na linha da leitura com ✅ (ok) ou 🚨 (não ok); sem marca = ainda não lido. No C.T não ok, a linha mostra a contagem (ex.: `47 🚨 (30, 12, 8)`). Tanque em desvio aparece na linha "Desvios", como os de drop.
 - **Painel:** Situação ok / não ok nas leituras; depois, a página Tanques se divide em **Análise TT** (tanques de terra) e **Análise T.N** (tanques de navio), com **tendência** dos números por tanque.
 
 ## Perguntas a responder
 
-- [ ] Confirmar: C.T não ok **não** abre desvio (só relatório e painel)?
-- [ ] O desvio de tanque abre sozinho ao gravar o não ok, ou o bot pergunta "abrir desvio?" (como no desvio de drop)?
-- [ ] A repetição refaz **só a análise que deu não ok** (ex.: só B.L) ou todas do frasco?
-- [ ] A repetição é em triplicata e com os mesmos prazos da análise original?
-- [ ] Como o resultado da repetição fecha o desvio (confirmou / não confirmou, como no desvio de drop)?
-- [x] Termos: o registro é um **desvio** (de drop ou de tanque); no desvio de tanque, a análise refeita com o frasco de arquivo é a **repetição** (decidido em 07/10/2026; nunca "reanálise").
+- [x] C.T não ok não abre desvio: só relatório e painel, com a contagem (decisão 7).
+- [x] O bot pergunta antes de abrir o desvio, como no drop (decisão 8).
+- [x] A repetição refaz só a análise que deu não ok (decisão 9).
+- [x] Triplicata e mesmos prazos (decisão 9).
+- [x] Fecha com a nova contagem, que gera o ok / não ok (decisão 10).
+- [ ] O bot também **escreve** "reanálise" nos tanques (liberando o termo só nesse caso no `CLAUDE.md`), ou só entende e escreve "repetição"? (decisão 11)
 
 ## Plano de implementação (depois de `v1.0`)
 
