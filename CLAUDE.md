@@ -19,13 +19,14 @@ Automação de laboratório de microbiologia: WhatsApp → Evolution API → n8n
 - Nunca `push --force`; reescrita de branch só com `--force-with-lease` e depois de avisar.
 
 ## Dados e segurança (LGPD)
-- Dados **sempre fictícios** no repositório, nos testes e na documentação. Nada real da empresa.
+- Dados de laboratório (resultados, amostras, pessoas, telefones) **sempre fictícios** no repositório, nos testes, na documentação e no servidor de demonstração.
+- Documentos da empresa (métodos, procedimentos, especificações): uso para melhorar o LabFlow **autorizado pelo gestor** (07/10/2026). Podem orientar regras, cálculos e fluxos (ex.: Howard em 50 campos). O que for confidencial (limites de aceitação, nomes de clientes, cópias ou trechos dos documentos) **não vai para o repositório público**: fica numa tabela do banco, carregada por um arquivo fora do Git, e o repositório usa valores fictícios. Na dúvida, perguntar ao Danyllo antes de commitar.
 - Nunca commitar IDs reais do n8n, chaves, telefones reais, IP do servidor ou `.env`.
 - O arquivo com IDs reais é `LabFlow_importar_n8n*.json` (bloqueado no `.gitignore`). O público é o `LabFlow.json`, gerado por `scripts/sanitize-workflow.ps1` e auditado por `scripts/audit-workflow.py --public`.
 - Nunca esvaziar a tabela `usuarios` (sem usuários o bot bloqueia todo mundo). Backup antes de qualquer migration ou limpeza.
 
 ## Termos do domínio
-- Não usar o termo "reanálise". D5/D10/D15 são "análises de drop" (ou só "drops").
+- Não usar o termo "reanálise" nos textos (o regex só o aceita na entrada e o trata como "repetição", nunca como análise nova; repetição só existe para o que já deu não ok). D5/D10/D15 são "análises de drop" (ou só "drops"). Não ok vira **"desvio"** (de drop ou de tanque); no desvio de tanque (C.T, B.L ou WORT não ok), a análise refeita com o frasco de arquivo é a **"repetição"**.
 - **TAB e Coliformes são masculinos** nos textos para o usuário ("o TAB está Incubado", "os Coliformes estão Estriados"). No banco, os status continuam `Incubada`, `Estriada`, `Concluída`.
 - "Hoje" é sempre em `America/Sao_Paulo`.
 
