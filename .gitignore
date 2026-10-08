@@ -32,3 +32,7 @@ LabFlow_importar_n8n*.json
 
 # MCP local (configuracao do Power BI Modeling MCP so desta maquina)
 .mcp.json
+
+# Limites reais de NFC (confidenciais): o repositorio so tem o exemplo ficticio
+db/seeds/limites_nfc.sql
+*limites*real*.sql
