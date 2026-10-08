@@ -6,6 +6,8 @@ Documento para retomar o projeto em outro computador ou numa conversa nova do Cl
 
 ## 0. Onde paramos (leia primeiro)
 
+**07/10/2026 (noite):** spec de NFC placa a placa aprovada (`docs/specs/nfc-resultados-placas.md` v1.0, PR #30). **NFC-001** feita: migration 016 aplicada no servidor de demonstração com os limites fictícios (PR #31). Bug corrigido: "reanálise" virava análise nova, pela regex e pela IA (branch `fix/reanalise-nao-vira-analise`, testado no WhatsApp). **Próximo:** NFC-002 (comandos de placa `ct do tanque 47 normal 12,8,15` e comando de repetição só com desvio aberto). Itens 1 a 3 abaixo já feitos (PRs #26 a #29).
+
 **07/10/2026:** tudo na `main` e sincronizado (PR #22 do Power BI e PR #23 de docs mesclados). Nada pendente no notebook. Rumo do projeto definido: **LIMS próprio** com app web/mobile (seção 4).
 
 **Próximo (Fase 0, fechar a v1.2.0):**
