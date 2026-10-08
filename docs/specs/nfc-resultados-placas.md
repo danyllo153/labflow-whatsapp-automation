@@ -13,7 +13,7 @@ created: 2026-10-07
 
 ## Direção desta edição
 
-Hoje a leitura de NFC só marca **lido** e quem leu, sem o resultado. Passa a gravar **o número de cada placa** (triplicata) de cada leitura, no frasco Normal e no Stress. O analista digita **só as placas que cresceram**; o resto entra como **"<1"** quando a leitura do dia é finalizada. Com os números, cada leitura ganha **ok / não ok** (✅ / 🚨) no relatório e no painel, e o painel ganha **tendência por tanque**. No B.L e no WORT, não ok **abre um desvio de tanque**, tratado com uma **repetição**: a análise é refeita com o **frasco de arquivo**, como uma análise nova.
+Hoje a leitura de NFC só marca **lido** e quem leu, sem o resultado. Passa a gravar **o número de cada placa** (triplicata) de cada leitura, no frasco Normal e no Stress. O analista digita **só as placas que cresceram**; o resto entra como **"<1"** quando a leitura do dia é finalizada. Com os números, cada leitura ganha **ok / não ok** (✅ / 🚨) no relatório e no painel, e o painel ganha **tendência por tanque**. Em qualquer análise (C.T, B.L ou WORT), o bot pergunta se o não ok **abre um desvio de tanque**, tratado com uma **repetição**: a análise é refeita com o **frasco de arquivo**, como uma análise nova.
 
 ## O que já existe
 
