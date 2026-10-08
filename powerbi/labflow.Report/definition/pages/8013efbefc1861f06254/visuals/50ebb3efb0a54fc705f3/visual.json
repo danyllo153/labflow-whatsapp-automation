@@ -23,11 +23,11 @@
                       "Entity": "bi desvios"
                     }
                   },
-                  "Property": "drop"
+                  "Property": "Estágio"
                 }
               },
-              "queryRef": "bi desvios.drop",
-              "nativeQueryRef": "drop",
+              "queryRef": "bi desvios.Estágio",
+              "nativeQueryRef": "Estágio",
               "displayName": "Drop"
             }
           ]

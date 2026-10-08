@@ -2514,6 +2514,16 @@ cultureInfo pt-BR
 			            },
 			            "Weight": 0.582
 			          }
+			        },
+			        {
+			          "Aberto em": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
 			        }
 			      ],
 			      "SemanticType": "Time"
@@ -2554,6 +2564,16 @@ cultureInfo pt-BR
 			          "temperatura": {
 			            "State": "Generated"
 			          }
+			        },
+			        {
+			          "Temperaturas que confirmaram": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
 			        }
 			      ]
 			    },
@@ -2569,6 +2589,16 @@ cultureInfo pt-BR
 			        {
 			          "situacao": {
 			            "State": "Generated"
+			          }
+			        },
+			        {
+			          "Situação": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
 			          }
 			        }
 			      ]
@@ -5549,6 +5579,26 @@ cultureInfo pt-BR
 			            },
 			            "Weight": 0.582
 			          }
+			        },
+			        {
+			          "Coleta": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
+			          "Data da coleta": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
 			        }
 			      ],
 			      "SemanticType": "Time"
@@ -7038,6 +7088,16 @@ cultureInfo pt-BR
 			              "Agent": "Thesaurus"
 			            },
 			            "Weight": 0.452
+			          }
+			        },
+			        {
+			          "Navio / terra": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
 			          }
 			        }
 			      ]

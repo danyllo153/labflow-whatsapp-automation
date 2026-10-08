@@ -34,6 +34,18 @@ table 'bi desvios'
 		lineageTag: fbf9c567-f473-9152-c8ec-96adfa6e8f1a
 		summarizeBy: none
 
+	column 'Estágio' = 'bi desvios'[drop]
+		dataType: string
+		sortByColumn: 'Estágio (ordem)'
+		lineageTag: fd7526b9-63df-4367-44b4-1a9c1ff6278b
+		summarizeBy: none
+
+	column 'Estágio (ordem)' = INT(VALUE(MID('bi desvios'[drop], 2, 3)))
+		dataType: int64
+		isHidden
+		lineageTag: f2eb246e-22ab-b12f-a854-4d1ca7eb3616
+		summarizeBy: none
+
 	column desvio_id
 		dataType: int64
 		formatString: 0

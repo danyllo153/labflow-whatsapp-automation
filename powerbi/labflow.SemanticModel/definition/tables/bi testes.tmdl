@@ -335,6 +335,22 @@ table 'bi testes'
 
 		annotation SummarizationSetBy = Automatic
 
+	column navio_fase
+		dataType: string
+		lineageTag: c5035832-6cbe-4617-8156-315adc09aecc
+		summarizeBy: none
+		sourceColumn: navio_fase
+
+		annotation SummarizationSetBy = Automatic
+
+	column load_ou_tanque
+		dataType: string
+		lineageTag: 42667ac5-c5af-4609-aed4-950742f27971
+		summarizeBy: none
+		sourceColumn: load_ou_tanque
+
+		annotation SummarizationSetBy = Automatic
+
 	partition 'bi testes' = m
 		mode: import
 		source =
