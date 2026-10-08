@@ -37,7 +37,7 @@ const COR = {
 const PILULA = {
   'Atrasado': [COR.vermelho, '#2A1416'], 'Vence hoje': [COR.laranja, '#2A2010'], 'No prazo': [COR.azul, '#131D33'],
   'Lido': [COR.verde, '#112419'], 'Concluído': [COR.verde, '#112419'],
-  'Em confirmação': [COR.laranja, '#2A2010'], 'Composta aberta': [COR.laranja, '#2A2010'], 'Em andamento': [COR.azul, '#131D33'],
+  'Em confirmação': [COR.laranja, '#2A2010'], 'Positivo, em confirmação': [COR.laranja, '#2A2010'], 'Em andamento': [COR.azul, '#131D33'],
   'No caldo': [COR.azul, '#131D33'], 'Estriado': [COR.teal, '#0F2523'], 'Incubado': [COR.roxo, '#1E1733'],
   'Positivo': [COR.vermelho, '#2A1416'], 'Confirmado': [COR.vermelho, '#2A1416'],
   'Negativo': [COR.verde, '#112419'], 'Não confirmado': [COR.verde, '#112419'], 'Sem desvio': [COR.texto2, '#1C1C1F'],
@@ -264,7 +264,7 @@ const CARTOES = {
   TAB: cartoesTeste({ rotulo: 'Incubados', valor: '[Testes incubados]', sub: 'Lidos todo dia, na estufa', icone: '🌡️', cor: 'roxo', neutro: true },
     { rotulo: 'Em confirmação', sub: 'PCA 24h: lê no dia seguinte', zero: 'Nada em confirmação' }),
   Coliformes: cartoesTeste({ rotulo: 'Estriados', valor: '[Testes estriados]', sub: 'Na placa, aguardando leitura', icone: '🧫', cor: 'teal', neutro: true },
-    { rotulo: 'Compostas abertas', sub: 'Lote a lote em confirmação', zero: 'Nenhuma composta aberta' }),
+    { rotulo: 'Positivos em confirmação', sub: 'Composta aberta, lote a lote', zero: 'Nada em confirmação' }),
 };
 const MEDIDAS = {
   'bi coletas': [
@@ -308,7 +308,7 @@ const MEDIDAS = {
     ['Testes no caldo', CALC('bi testes', "'bi testes'[status] = \"No caldo\""), { formato: '0' }],
     ['Testes incubados', CALC('bi testes', "'bi testes'[status] = \"Incubado\""), { formato: '0' }],
     ['Testes estriados', CALC('bi testes', "'bi testes'[status] = \"Estriado\""), { formato: '0' }],
-    ['Testes em confirmação', CALC('bi testes', "'bi testes'[status] IN {\"Em confirmação\", \"Composta aberta\"}"), { formato: '0' }],
+    ['Testes em confirmação', CALC('bi testes', "'bi testes'[status] IN {\"Em confirmação\", \"Positivo, em confirmação\"}"), { formato: '0' }],
     ['Testes positivos', CALC('bi testes', "'bi testes'[resultado] = \"Positivo\""), { formato: '0' }],
     ['Testes negativos', CALC('bi testes', "'bi testes'[resultado] = \"Negativo\""), { formato: '0' }],
     ['Testes em andamento', CALC('bi testes', "'bi testes'[status] <> \"Concluído\""), { formato: '0' }],

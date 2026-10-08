@@ -3,7 +3,8 @@
 -- Depende da 014. Só a view bi.testes muda (nenhuma tabela):
 --   * lote/amostra de composta aberta: "alvo" diz qual ("Composta #12, lote 3"), "lotes" traz só o
 --     dele ("3" ou "A3") e a coluna nova "codigo" usa o código do bot ("#12.3"; composta = "#12")
---   * Coliformes em confirmação = composta aberta: status "Composta aberta" e a próxima etapa é a
+--   * Coliformes em confirmação (deu positivo na leitura e a composta foi aberta): status
+--     "Positivo, em confirmação" e a próxima etapa é a
 --     próxima data dos lotes abertos (estriar ou ler), calculada pelos próprios lotes
 -- Regra (docs/concentrado.md): cada lote é confirmado sozinho; a composta é positiva se algum lote
 -- der positivo e só é concluída quando todos os lotes têm resultado.
@@ -44,7 +45,7 @@ SELECT t.id AS teste_id,
        co.tanque,
        co.data_coleta,
        (t.teste_pai_id IS NOT NULL) AS confirmacao_por_lote,
-       CASE WHEN t.tipo = 'COLIFORMES' AND t.status = 'Em confirmação' AND t.teste_pai_id IS NULL THEN 'Composta aberta'
+       CASE WHEN t.tipo = 'COLIFORMES' AND t.status = 'Em confirmação' AND t.teste_pai_id IS NULL THEN 'Positivo, em confirmação'
             ELSE CASE t.status WHEN 'Incubada' THEN 'Incubado' WHEN 'Estriada' THEN 'Estriado'
                                WHEN 'Concluída' THEN 'Concluído' ELSE t.status END END AS status,
        t.resultado,

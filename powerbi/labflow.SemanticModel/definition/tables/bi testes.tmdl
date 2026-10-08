@@ -17,7 +17,7 @@ table 'bi testes'
 		formatString: 0
 		lineageTag: 7a4e4f87-e352-66f4-8628-1a66fd7e127d
 
-	measure 'Testes em confirmação' = CALCULATE(COUNTROWS('bi testes'), 'bi testes'[status] IN {"Em confirmação", "Composta aberta"})
+	measure 'Testes em confirmação' = CALCULATE(COUNTROWS('bi testes'), 'bi testes'[status] IN {"Em confirmação", "Positivo, em confirmação"})
 		formatString: 0
 		lineageTag: 07517911-fd19-8145-c0f7-ce922340bab4
 
