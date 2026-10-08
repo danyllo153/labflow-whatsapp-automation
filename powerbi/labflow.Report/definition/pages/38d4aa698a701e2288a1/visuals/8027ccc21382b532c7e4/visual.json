@@ -53,12 +53,27 @@
                       "Entity": "bi testes"
                     }
                   },
-                  "Property": "Identificação"
+                  "Property": "navio_fase"
                 }
               },
-              "queryRef": "bi testes.Identificação",
-              "nativeQueryRef": "Identificação",
-              "displayName": "Identificação"
+              "queryRef": "bi testes.navio_fase",
+              "nativeQueryRef": "navio_fase",
+              "displayName": "Navio"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "bi testes"
+                    }
+                  },
+                  "Property": "load_ou_tanque"
+                }
+              },
+              "queryRef": "bi testes.load_ou_tanque",
+              "nativeQueryRef": "load_ou_tanque",
+              "displayName": "Load / tanque"
             },
             {
               "field": {
@@ -4454,7 +4469,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "99D"
+                  "Value": "93D"
                 }
               }
             }
@@ -4468,7 +4483,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "149D"
+                  "Value": "140D"
                 }
               }
             }
@@ -4482,13 +4497,13 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "236D"
+                  "Value": "187D"
                 }
               }
             }
           },
           "selector": {
-            "metadata": "bi testes.Identificação"
+            "metadata": "bi testes.navio_fase"
           }
         },
         {
@@ -4496,7 +4511,21 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "99D"
+                  "Value": "117D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "bi testes.load_ou_tanque"
+          }
+        },
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "93D"
                 }
               }
             }
@@ -4510,7 +4539,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "87D"
+                  "Value": "82D"
                 }
               }
             }
@@ -4524,7 +4553,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "136D"
+                  "Value": "129D"
                 }
               }
             }
@@ -4538,7 +4567,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "136D"
+                  "Value": "129D"
                 }
               }
             }
@@ -4552,7 +4581,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "136D"
+                  "Value": "129D"
                 }
               }
             }
@@ -4566,7 +4595,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "136D"
+                  "Value": "129D"
                 }
               }
             }
@@ -4580,7 +4609,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "136D"
+                  "Value": "129D"
                 }
               }
             }
@@ -4594,7 +4623,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "174D"
+                  "Value": "164D"
                 }
               }
             }
@@ -4608,7 +4637,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "149D"
+                  "Value": "140D"
                 }
               }
             }

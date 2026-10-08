@@ -53,12 +53,27 @@
                       "Entity": "bi testes"
                     }
                   },
-                  "Property": "Identificação"
+                  "Property": "navio_fase"
                 }
               },
-              "queryRef": "bi testes.Identificação",
-              "nativeQueryRef": "Identificação",
-              "displayName": "Identificação"
+              "queryRef": "bi testes.navio_fase",
+              "nativeQueryRef": "navio_fase",
+              "displayName": "Navio"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "bi testes"
+                    }
+                  },
+                  "Property": "load_ou_tanque"
+                }
+              },
+              "queryRef": "bi testes.load_ou_tanque",
+              "nativeQueryRef": "load_ou_tanque",
+              "displayName": "Load"
             },
             {
               "field": {
@@ -4439,7 +4454,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "108D"
+                  "Value": "101D"
                 }
               }
             }
@@ -4453,7 +4468,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "162D"
+                  "Value": "152D"
                 }
               }
             }
@@ -4467,13 +4482,13 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "256D"
+                  "Value": "203D"
                 }
               }
             }
           },
           "selector": {
-            "metadata": "bi testes.Identificação"
+            "metadata": "bi testes.navio_fase"
           }
         },
         {
@@ -4481,7 +4496,21 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "108D"
+                  "Value": "127D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "bi testes.load_ou_tanque"
+          }
+        },
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "101D"
                 }
               }
             }
@@ -4495,7 +4524,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "94D"
+                  "Value": "88D"
                 }
               }
             }
@@ -4509,7 +4538,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "148D"
+                  "Value": "139D"
                 }
               }
             }
@@ -4523,7 +4552,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "148D"
+                  "Value": "139D"
                 }
               }
             }
@@ -4537,7 +4566,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "148D"
+                  "Value": "139D"
                 }
               }
             }
@@ -4551,7 +4580,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "162D"
+                  "Value": "152D"
                 }
               }
             }
@@ -4565,7 +4594,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "189D"
+                  "Value": "177D"
                 }
               }
             }
@@ -4579,7 +4608,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "162D"
+                  "Value": "152D"
                 }
               }
             }

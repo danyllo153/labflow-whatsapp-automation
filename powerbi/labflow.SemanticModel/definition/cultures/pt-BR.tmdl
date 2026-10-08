@@ -205,6 +205,16 @@ cultureInfo pt-BR
 			            "State": "Generated",
 			            "Weight": 0.7
 			          }
+			        },
+			        {
+			          "Próxima data": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
 			        }
 			      ],
 			      "SemanticType": "Time"
@@ -11190,6 +11200,27 @@ cultureInfo pt-BR
 			      "Terms": [
 			        {
 			          "Confirmação": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "bi_testes.codigo": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "bi testes",
+			          "ConceptualProperty": "codigo"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Código": {
 			            "State": "Suggested",
 			            "Source": {
 			              "Type": "External",
