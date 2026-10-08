@@ -54,4 +54,4 @@ Automação de laboratório de microbiologia: WhatsApp → Evolution API → n8n
 - Comando novo: atualizar `docs/comandos.md`, a cheatsheet do vault, o CHANGELOG e o backlog.
 
 ## Ao encerrar o dia
-Atualizar `docs/handoff.md`, o `decisoes-log` e o `backlog`, e pedir ao Danyllo que faça o commit e o push.
+Usar a skill `/fechar-dia` (`.claude/skills/fechar-dia`): atualiza `docs/handoff.md`, o `decisoes-log` e o `backlog`, commita e passa ao Danyllo o roteiro de push, PR e merge, para ele continuar em outro computador só com `git pull`.
