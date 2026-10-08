@@ -37,6 +37,10 @@ O LabFlow deixa o registro no canal que a equipe já usa (WhatsApp), calcula os 
 
 ## Como é usar
 
+![O bot no WhatsApp: coleta, frase livre virando comando, consulta, recebimento, desvios e relatório do dia](docs/img/bot/bot.gif)
+
+<sub>Conversa real com o bot no servidor de demonstração (dados fictícios): comando no formato oficial, frase livre que a IA transforma em comando (com "sim" antes de gravar), consultas e o relatório do dia.</sub>
+
 ```
 Você:     recebimento load 77001 item 444 fabrica AQA lotes 1-14
 LabFlow:  ✅ Recebimento do load 77001 (item 444, fábrica AQA) registrado por Ana.
@@ -66,6 +70,20 @@ LabFlow:  📋 Relatório do dia 05/10/2026
           ✅ Leitura do dia finalizada por Ana às 16:40.
 ```
 <sub>Respostas resumidas, com dados fictícios. Todos os comandos, com formato e exemplo: [docs/comandos.md](docs/comandos.md).</sub>
+
+## Painel no Power BI
+
+O que o bot grava vira um painel de 9 páginas para o laboratório acompanhar prazos, atrasos e resultados. Cada página segue o mesmo padrão: cartões e filtros no topo, três gráficos e uma tabela. O painel é **gerado por código** ([`scripts/gerar-painel-powerbi.js`](scripts/gerar-painel-powerbi.js)) e versionado no Git em formato PBIP; o modelo de dados foi montado com o **Power BI Modeling MCP** da Microsoft, e os números foram conferidos contra o banco.
+
+![As 9 páginas do painel](docs/img/powerbi/painel.gif)
+
+| | | |
+|---|---|---|
+| [![Coletas](docs/img/powerbi/02-coletas.png)](docs/img/powerbi/02-coletas.png)<br>**Coletas** | [![Tanques](docs/img/powerbi/03-tanques.png)](docs/img/powerbi/03-tanques.png)<br>**Tanques (NFC)** | [![Drops](docs/img/powerbi/04-drops.png)](docs/img/powerbi/04-drops.png)<br>**Drops** |
+| [![Desvios](docs/img/powerbi/05-desvios.png)](docs/img/powerbi/05-desvios.png)<br>**Desvios** | [![Recebimento](docs/img/powerbi/06-recebimento.png)](docs/img/powerbi/06-recebimento.png)<br>**Recebimento** | [![Embarque](docs/img/powerbi/07-embarque.png)](docs/img/powerbi/07-embarque.png)<br>**Embarque** |
+| [![TAB](docs/img/powerbi/08-tab.png)](docs/img/powerbi/08-tab.png)<br>**TAB** | [![Coliformes](docs/img/powerbi/09-coliformes.png)](docs/img/powerbi/09-coliformes.png)<br>**Coliformes** | [![Visão geral](docs/img/powerbi/01-visao-geral.png)](docs/img/powerbi/01-visao-geral.png)<br>**Visão geral** |
+
+<sub>Dados fictícios de demonstração. Clique numa imagem para ver em tamanho real.</sub>
 
 ## Funcionalidades
 
