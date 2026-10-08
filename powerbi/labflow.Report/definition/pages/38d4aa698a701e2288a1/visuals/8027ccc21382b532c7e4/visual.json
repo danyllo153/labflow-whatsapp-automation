@@ -23,6 +23,21 @@
                       "Entity": "bi testes"
                     }
                   },
+                  "Property": "codigo"
+                }
+              },
+              "queryRef": "bi testes.codigo",
+              "nativeQueryRef": "codigo",
+              "displayName": "Código"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "bi testes"
+                    }
+                  },
                   "Property": "origem"
                 }
               },
@@ -182,6 +197,23 @@
             }
           ]
         }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "bi testes"
+                  }
+                },
+                "Property": "codigo"
+              }
+            },
+            "direction": "Ascending"
+          }
+        ]
       }
     },
     "objects": {
@@ -1370,6 +1402,33 @@
                               },
                               "Right": {
                                 "Literal": {
+                                  "Value": "'Composta aberta'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#F59E0B'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "status"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
                                   "Value": "'Em andamento'"
                                 }
                               }
@@ -1842,6 +1901,33 @@
                               "Right": {
                                 "Literal": {
                                   "Value": "'Em confirmação'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#2A2010'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "status"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Composta aberta'"
                                 }
                               }
                             }
@@ -2380,6 +2466,33 @@
                               },
                               "Right": {
                                 "Literal": {
+                                  "Value": "'Composta aberta'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#F59E0B'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
                                   "Value": "'Em andamento'"
                                 }
                               }
@@ -2852,6 +2965,33 @@
                               "Right": {
                                 "Literal": {
                                   "Value": "'Em confirmação'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#2A2010'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Composta aberta'"
                                 }
                               }
                             }
@@ -3390,6 +3530,33 @@
                               },
                               "Right": {
                                 "Literal": {
+                                  "Value": "'Composta aberta'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#F59E0B'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
                                   "Value": "'Em andamento'"
                                 }
                               }
@@ -3888,6 +4055,33 @@
                               },
                               "Right": {
                                 "Literal": {
+                                  "Value": "'Composta aberta'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#2A2010'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
                                   "Value": "'Em andamento'"
                                 }
                               }
@@ -4260,7 +4454,21 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "159D"
+                  "Value": "99D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "bi testes.codigo"
+          }
+        },
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "149D"
                 }
               }
             }
@@ -4274,7 +4482,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "252D"
+                  "Value": "236D"
                 }
               }
             }
@@ -4288,7 +4496,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "106D"
+                  "Value": "99D"
                 }
               }
             }
@@ -4302,7 +4510,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "93D"
+                  "Value": "87D"
                 }
               }
             }
@@ -4316,7 +4524,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "146D"
+                  "Value": "136D"
                 }
               }
             }
@@ -4330,7 +4538,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "146D"
+                  "Value": "136D"
                 }
               }
             }
@@ -4344,7 +4552,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "146D"
+                  "Value": "136D"
                 }
               }
             }
@@ -4358,7 +4566,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "146D"
+                  "Value": "136D"
                 }
               }
             }
@@ -4372,7 +4580,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "146D"
+                  "Value": "136D"
                 }
               }
             }
@@ -4386,7 +4594,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "186D"
+                  "Value": "174D"
                 }
               }
             }
@@ -4400,7 +4608,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "159D"
+                  "Value": "149D"
                 }
               }
             }
