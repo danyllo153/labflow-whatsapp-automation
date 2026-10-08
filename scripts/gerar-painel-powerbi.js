@@ -126,7 +126,7 @@ const rgba = (hex, a) => `rgba(${parseInt(hex.slice(1, 3), 16)},${parseInt(hex.s
 // barra de cima: marca à esquerda e título grande da página (a navegação fica à direita, por cima)
 const cabecalhoHtml = (titulo, sub, icone) => dax(
   `<div style='height:70px;box-sizing:border-box;display:flex;align-items:center;gap:12px;padding:0 24px;${FONTE};`
-  + `background:${COR.fundo};border-bottom:1px solid ${COR.borda}'>`
+  + `background:${COR.fundo}'>`
   + `<div style='width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;`
   + `background:linear-gradient(135deg,#2563EB,#3B82F6);box-shadow:0 0 0 4px ${rgba(COR.azul, 0.15)}'>${icone}</div>`
   + `<div><div style='font-size:11px;font-weight:600;color:${COR.texto2};letter-spacing:.3px'>LabFlow · Microbiologia</div>`
@@ -570,7 +570,8 @@ const topo = (pagina, larguraCartoes, filtros = []) => {
   const colunas = Math.max(1, Math.ceil(filtros.length / 2));
   const larg = Math.floor((1896 - x0 - (colunas - 1) * 12) / colunas);
   return [
-    html([0, 0, 1920, 96], C, `HTML cabeçalho - ${pagina}`),
+    // cabeçalho só até onde começa a navegação: se cobrisse os botões, no Power BI web ele vem para a frente ao clicar
+    html([0, 0, 690, 96], C, `HTML cabeçalho - ${pagina}`),
     navegador([700, 24, 1196, 44]),
     html([24, 108, larguraCartoes, 128], C, `HTML cartões - ${pagina}`),
     ...filtros.map(([e, p, nome, modo], i) =>
