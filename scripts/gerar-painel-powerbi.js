@@ -353,7 +353,12 @@ const COLUNAS = {
     colunaTmdl('Estágio (ordem)', "INT(VALUE(MID('bi drops'[drop], 2, 3)))", 'int64', '\t\tisHidden\n'),
     colunaTmdl('Desvio do drop', "IF('bi drops'[desvio], COALESCE('bi drops'[desvio_resultado], \"Em confirmação\"), \"Sem desvio\")", 'string'),
   ],
-  'bi desvios': [local('bi desvios')],
+  'bi desvios': [
+    local('bi desvios'),
+    // D5, D10, D15 em ordem (sem isso o filtro sai D10, D15, D5)
+    colunaTmdl('Estágio', "'bi desvios'[drop]", 'string', "\t\tsortByColumn: 'Estágio (ordem)'\n"),
+    colunaTmdl('Estágio (ordem)', "INT(VALUE(MID('bi desvios'[drop], 2, 3)))", 'int64', '\t\tisHidden\n'),
+  ],
   'bi testes': [
     colunaTmdl('Resultado ou andamento', "IF(NOT ISBLANK('bi testes'[resultado]), 'bi testes'[resultado], "
       + "IF('bi testes'[teste] = \"Howard\", \"Concluído\", \"Em andamento\"))", 'string'),
@@ -672,7 +677,7 @@ const PAGINAS = [
   // desvios num lugar só (hoje os de drop; depois, desvios de tanque e amostras repetidas)
   ['Desvios', [
     ...topo('Desvios', 1100, [[V, 'Local', 'Navio / terra', 'Dropdown'], [V, 'tanque', 'Tanque', 'Dropdown'],
-      [V, 'drop', 'Drop', 'Blocos'], [V, 'data_coleta', 'Data da coleta', 'Between']]),
+      [V, 'Estágio', 'Drop', 'Blocos'], [V, 'data_coleta', 'Data da coleta', 'Between']]),
     grafico('clusteredColumnChart', G[0], 'Em qual temperatura confirmou',
       { Y: [med(V, 'Confirmou a 7 °C'), med(V, 'Confirmou a 13 °C'), med(V, 'Confirmou a 25 °C')] },
       { cores: corPorMedida([[med(V, 'Confirmou a 7 °C'), COR.teal], [med(V, 'Confirmou a 13 °C'), COR.laranja],
@@ -684,7 +689,7 @@ const PAGINAS = [
       { Category: col(V, 'resultado', 'Resultado'), Y: med(V, 'Desvios') },
       { cores: corPorValor(V, 'resultado', SERIE_DESVIO), legenda: 'Right', semRotulos: true, corTitulo: COR.laranja }),
     tabela(TABELA, 'Desvios de drop (repetição em 7, 13 e 25 °C)',
-      [col(V, 'tanque', 'Tanque'), col(V, 'Local', 'Navio / terra'), col(V, 'data_coleta', 'Coleta'), col(V, 'drop', 'Drop'),
+      [col(V, 'tanque', 'Tanque'), col(V, 'Local', 'Navio / terra'), col(V, 'data_coleta', 'Coleta'), col(V, 'Estágio', 'Drop'),
        col(V, 'data_abertura', 'Aberto em'), col(V, 'aberto_por', 'Aberto por'), col(V, 'prazo', 'Prazo'),
        col(V, 'temperaturas', 'Temperaturas que confirmaram'), col(V, 'resultado', 'Resultado'),
        col(V, 'resultado_por', 'Resultado por'), col(V, 'situacao', 'Situação')], undefined, COR.laranja),

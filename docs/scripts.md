@@ -72,7 +72,7 @@ Importar no n8n como workflow novo, **Execute workflow** e ler o node Placar; de
 
 Arquivo: [`scripts/gerar-painel-powerbi.js`](../scripts/gerar-painel-powerbi.js)
 
-Gera o painel do laboratório no projeto `powerbi/labflow.pbip` (formato PBIP: relatório em JSON/PBIR e modelo em TMDL, versionados no Git). Escreve o tema (modo escuro), as medidas e colunas calculadas do modelo e as 8 páginas (Visão geral, Coletas, Tanques, Drops, Recebimento, Embarque, TAB e Coliformes), todas no mesmo padrão: cabeçalho e cartões em HTML, filtros no topo, 3 gráficos e uma tabela. Cabeçalho, cartões e as barras de andamento são HTML montado por medida DAX e mostrado pelo visual **HTML Content Secure** (AppSource, certificado, sem scripts).
+Gera o painel do laboratório no projeto `powerbi/labflow.pbip` (formato PBIP: relatório em JSON/PBIR e modelo em TMDL, versionados no Git). Escreve o tema (modo escuro), as medidas e colunas calculadas do modelo e as 9 páginas (Visão geral, Coletas, Tanques, Drops, Desvios, Recebimento, Embarque, TAB e Coliformes), todas no mesmo padrão: cabeçalho e cartões em HTML, filtros no topo, 3 gráficos e uma tabela. Cabeçalho, cartões e as barras de andamento são HTML montado por medida DAX e mostrado pelo visual **HTML Content Secure** (AppSource, certificado, sem scripts).
 
 ```powershell
 node scripts\gerar-painel-powerbi.js
