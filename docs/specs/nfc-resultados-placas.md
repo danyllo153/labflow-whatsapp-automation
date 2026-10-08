@@ -33,7 +33,7 @@ Hoje a leitura de NFC só marca **lido** e quem leu, sem o resultado. Passa a gr
 8. **Desvio de tanque (B.L e WORT):** ao gravar o não ok, o bot **pergunta** se abre o desvio, como no desvio de drop ("Desvio criado do tanque 47 (B.L 120h, Stress)").
 9. **Repetição:** refaz **só a análise que deu não ok** (ex.: só o B.L do frasco Stress), com o frasco de arquivo, em **triplicata** e com os **mesmos prazos**, contados do dia em que o desvio é aberto.
 10. **Fecha o desvio** o resultado da repetição: vale a **nova contagem**, e o relatório mostra o ok / não ok dela ("Repetição feita").
-11. **Termos:** o registro é um **desvio** (de drop ou de tanque); a análise refeita é a **repetição**, e o bot escreve "Repetição feita". Quando o analista disser **"reanálise"** (no áudio ou no texto), o regex trata como **repetição** (o bot só entende o termo, nunca escreve).
+11. **Termos:** o registro é um **desvio** (de drop ou de tanque); a análise refeita é a **repetição**, e o bot escreve "Repetição feita". "Reanálise" e "repetição", no texto ou no áudio, **sempre** caem no regex da repetição e **nunca** no registro de análise nova. A repetição só vale para o que **já deu não ok** (leitura acima do limite, com desvio aberto).
 
 ## Comandos (pensados também para o áudio)
 
@@ -56,6 +56,13 @@ Formato:
 - Antes de gravar, o bot mostra o que entendeu e o resultado (ok / não ok) e pede **sim**.
 - Por frase livre e por áudio, a IA monta o mesmo formato ("C.T do tanque 47 normal: doze, oito e quinze").
 - `leitura do dia finalizada` passa a preencher com "<1" as placas das leituras de hoje que ninguém digitou.
+
+### Repetição (reanálise)
+
+- `repetição do tanque 47 stress bl120` ou `reanálise do tanque 47 stress bl120`: as duas formas caem no **mesmo regex** e o bot responde "Repetição feita".
+- **Nunca cai em análise:** o regex da repetição roda **antes** do registro de análise, e o de análise não aceita "reanálise" (a palavra tem que começar em "análise"). Assim "reanálise do normal do tanque 42" nunca vira análise nova.
+- **Só para o que já deu não ok:** o bot procura um **desvio aberto** daquele tanque, frasco e análise (leitura acima do limite). Sem desvio aberto, não grava e responde "O tanque 47 não tem desvio aberto no B.L 120h Stress. A repetição só vale para leitura acima do limite."
+- Testes: "reanálise" e "repetição" dão o mesmo tipo; "reanálise do normal do tanque 42, data 24/09/2026" **não** dá `registro_analise`.
 
 ## Modelo de dados (proposta)
 
@@ -85,7 +92,7 @@ Migration `016`. Testada antes numa transação desfeita, com backup antes de ap
 ## Plano de implementação (depois de `v1.0`)
 
 1. `NFC-001` Migration 016 (tabelas, view, limites de exemplo) + arquivo de limites fora do Git.
-2. `NFC-002` Regex dos comandos de placa e da repetição ("reanálise" vira repetição) + testes em `tests/interpretar-comando.test.js`.
+2. `NFC-002` Regex dos comandos de placa e da repetição ("reanálise" vira repetição, nunca análise nova) + testes em `tests/interpretar-comando.test.js`.
 3. `NFC-003` Gravação com "sim" e cálculo de ok / não ok.
 4. `NFC-004` `leitura do dia finalizada` preenchendo "<1".
 5. `NFC-005` Relatório com ✅ / 🚨 por tanque.
