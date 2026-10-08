@@ -13,6 +13,14 @@ table 'bi drops'
 		formatString: 0
 		lineageTag: 6bd4a703-bcb0-d552-0377-54548bf8aa1d
 
+	measure 'Drops concluídos' = CALCULATE(COUNTROWS('bi drops'), 'bi drops'[situacao] = "Concluído")
+		formatString: 0
+		lineageTag: 0c2db0b6-e9d5-60a1-52e1-abeb8f953947
+
+	measure 'Drops com desvio' = CALCULATE(COUNTROWS('bi drops'), 'bi drops'[desvio] = TRUE())
+		formatString: 0
+		lineageTag: 868f7735-746e-88a1-acfd-5f7a53ad31e8
+
 	column 'Local' = IF(ISBLANK('bi drops'[navio]), "Terra (tank farm)", 'bi drops'[navio])
 		dataType: string
 		lineageTag: 450b995c-6615-81b7-8f9f-a20db2f5e319

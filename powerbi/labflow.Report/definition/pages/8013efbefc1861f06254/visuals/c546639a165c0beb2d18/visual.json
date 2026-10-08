@@ -1,0 +1,3113 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
+  "name": "c546639a165c0beb2d18",
+  "position": {
+    "x": 24,
+    "y": 598,
+    "z": 11000,
+    "width": 1872,
+    "height": 466,
+    "tabOrder": 11000
+  },
+  "visual": {
+    "visualType": "tableEx",
+    "query": {
+      "queryState": {
+        "Values": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "bi desvios"
+                    }
+                  },
+                  "Property": "tanque"
+                }
+              },
+              "queryRef": "bi desvios.tanque",
+              "nativeQueryRef": "tanque",
+              "displayName": "Tanque"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "bi desvios"
+                    }
+                  },
+                  "Property": "Local"
+                }
+              },
+              "queryRef": "bi desvios.Local",
+              "nativeQueryRef": "Local",
+              "displayName": "Navio / terra"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "bi desvios"
+                    }
+                  },
+                  "Property": "data_coleta"
+                }
+              },
+              "queryRef": "bi desvios.data_coleta",
+              "nativeQueryRef": "data_coleta",
+              "displayName": "Coleta"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "bi desvios"
+                    }
+                  },
+                  "Property": "Estágio"
+                }
+              },
+              "queryRef": "bi desvios.Estágio",
+              "nativeQueryRef": "Estágio",
+              "displayName": "Drop"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "bi desvios"
+                    }
+                  },
+                  "Property": "data_abertura"
+                }
+              },
+              "queryRef": "bi desvios.data_abertura",
+              "nativeQueryRef": "data_abertura",
+              "displayName": "Aberto em"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "bi desvios"
+                    }
+                  },
+                  "Property": "aberto_por"
+                }
+              },
+              "queryRef": "bi desvios.aberto_por",
+              "nativeQueryRef": "aberto_por",
+              "displayName": "Aberto por"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "bi desvios"
+                    }
+                  },
+                  "Property": "prazo"
+                }
+              },
+              "queryRef": "bi desvios.prazo",
+              "nativeQueryRef": "prazo",
+              "displayName": "Prazo"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "bi desvios"
+                    }
+                  },
+                  "Property": "temperaturas"
+                }
+              },
+              "queryRef": "bi desvios.temperaturas",
+              "nativeQueryRef": "temperaturas",
+              "displayName": "Temperaturas que confirmaram"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "bi desvios"
+                    }
+                  },
+                  "Property": "resultado"
+                }
+              },
+              "queryRef": "bi desvios.resultado",
+              "nativeQueryRef": "resultado",
+              "displayName": "Resultado"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "bi desvios"
+                    }
+                  },
+                  "Property": "resultado_por"
+                }
+              },
+              "queryRef": "bi desvios.resultado_por",
+              "nativeQueryRef": "resultado_por",
+              "displayName": "Resultado por"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "bi desvios"
+                    }
+                  },
+                  "Property": "situacao"
+                }
+              },
+              "queryRef": "bi desvios.situacao",
+              "nativeQueryRef": "situacao",
+              "displayName": "Situação"
+            }
+          ]
+        }
+      }
+    },
+    "objects": {
+      "values": [
+        {
+          "properties": {
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "14D"
+                }
+              }
+            },
+            "wordWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        },
+        {
+          "selector": {
+            "data": [
+              {
+                "dataViewWildcard": {
+                  "matchingOption": 1
+                }
+              }
+            ],
+            "metadata": "bi desvios.Estágio"
+          },
+          "properties": {
+            "fontColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Conditional": {
+                      "Cases": [
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "Estágio"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Terra'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#22C55E'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "Estágio"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Navio'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#3B82F6'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "Estágio"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Recebimento'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#14B8A6'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "Estágio"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Embarque'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#3B82F6'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "Estágio"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Tank farm'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#22C55E'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "Estágio"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'TAB'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#8B5CF6'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "Estágio"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Coliformes'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#EC4899'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "Estágio"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Howard'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#94A3B8'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "Estágio"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'D5'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#3B82F6'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "Estágio"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'D10'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#8B5CF6'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "Estágio"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'D15'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#F59E0B'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "Estágio"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'C.T 48h'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#14B8A6'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "Estágio"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'B.L 72h'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#3B82F6'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "Estágio"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'B.L 120h'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#8B5CF6'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "Estágio"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'AQA'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#3B82F6'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "Estágio"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'COL'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#F59E0B'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "Estágio"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'UCH'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#8B5CF6'"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "selector": {
+            "data": [
+              {
+                "dataViewWildcard": {
+                  "matchingOption": 1
+                }
+              }
+            ],
+            "metadata": "bi desvios.resultado"
+          },
+          "properties": {
+            "fontColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Conditional": {
+                      "Cases": [
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Atrasado'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#EF4444'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Vence hoje'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#F59E0B'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'No prazo'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#3B82F6'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Lido'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#22C55E'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Concluído'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#22C55E'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Em confirmação'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#F59E0B'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Positivo, em confirmação'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#F59E0B'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Em andamento'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#3B82F6'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'No caldo'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#3B82F6'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Estriado'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#14B8A6'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Incubado'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#8B5CF6'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Positivo'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#EF4444'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Confirmado'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#EF4444'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Negativo'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#22C55E'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Não confirmado'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#22C55E'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Sem desvio'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#A1A1AA'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Alarme'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#EF4444'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Normal'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#22C55E'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Aguardando'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#A1A1AA'"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            "backColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Conditional": {
+                      "Cases": [
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Atrasado'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#2A1416'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Vence hoje'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#2A2010'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'No prazo'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#131D33'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Lido'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#112419'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Concluído'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#112419'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Em confirmação'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#2A2010'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Positivo, em confirmação'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#2A2010'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Em andamento'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#131D33'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'No caldo'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#131D33'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Estriado'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#0F2523'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Incubado'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#1E1733'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Positivo'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#2A1416'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Confirmado'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#2A1416'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Negativo'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#112419'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Não confirmado'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#112419'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Sem desvio'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#1C1C1F'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Alarme'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#2A1416'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Normal'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#112419'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Aguardando'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#1C1C1F'"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "selector": {
+            "data": [
+              {
+                "dataViewWildcard": {
+                  "matchingOption": 1
+                }
+              }
+            ],
+            "metadata": "bi desvios.situacao"
+          },
+          "properties": {
+            "fontColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Conditional": {
+                      "Cases": [
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Atrasado'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#EF4444'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Vence hoje'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#F59E0B'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'No prazo'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#3B82F6'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Lido'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#22C55E'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Concluído'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#22C55E'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Em confirmação'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#F59E0B'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Positivo, em confirmação'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#F59E0B'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Em andamento'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#3B82F6'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'No caldo'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#3B82F6'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Estriado'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#14B8A6'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Incubado'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#8B5CF6'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Positivo'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#EF4444'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Confirmado'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#EF4444'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Negativo'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#22C55E'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Não confirmado'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#22C55E'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Sem desvio'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#A1A1AA'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Alarme'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#EF4444'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Normal'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#22C55E'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Aguardando'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#A1A1AA'"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            "backColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Conditional": {
+                      "Cases": [
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Atrasado'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#2A1416'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Vence hoje'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#2A2010'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'No prazo'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#131D33'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Lido'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#112419'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Concluído'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#112419'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Em confirmação'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#2A2010'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Positivo, em confirmação'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#2A2010'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Em andamento'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#131D33'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'No caldo'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#131D33'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Estriado'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#0F2523'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Incubado'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#1E1733'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Positivo'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#2A1416'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Confirmado'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#2A1416'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Negativo'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#112419'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Não confirmado'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#112419'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Sem desvio'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#1C1C1F'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Alarme'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#2A1416'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Normal'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#112419'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi desvios"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Aguardando'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#1C1C1F'"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "columnHeaders": [
+        {
+          "properties": {
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "14D"
+                }
+              }
+            },
+            "backColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#18181B'"
+                    }
+                  }
+                }
+              }
+            },
+            "fontColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#A1A1AA'"
+                    }
+                  }
+                }
+              }
+            },
+            "autoSizeColumnWidth": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            },
+            "wordWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "columnWidth": [
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "97D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "bi desvios.tanque"
+          }
+        },
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "194D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "bi desvios.Local"
+          }
+        },
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "133D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "bi desvios.data_coleta"
+          }
+        },
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "97D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "bi desvios.Estágio"
+          }
+        },
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "145D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "bi desvios.data_abertura"
+          }
+        },
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "182D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "bi desvios.aberto_por"
+          }
+        },
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "145D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "bi desvios.prazo"
+          }
+        },
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "194D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "bi desvios.temperaturas"
+          }
+        },
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "170D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "bi desvios.resultado"
+          }
+        },
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "182D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "bi desvios.resultado_por"
+          }
+        },
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "145D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "bi desvios.situacao"
+          }
+        }
+      ],
+      "total": [
+        {
+          "properties": {
+            "totals": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "visualContainerObjects": {
+      "title": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "text": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Desvios de drop (repetição em 7, 13 e 25 °C)'"
+                }
+              }
+            },
+            "fontColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#F4F4F5'"
+                    }
+                  }
+                }
+              }
+            },
+            "background": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#141416'"
+                    }
+                  }
+                }
+              }
+            },
+            "bold": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            },
+            "fontSize": {
+              "expr": {
+                "Literal": {
+                  "Value": "13D"
+                }
+              }
+            }
+          }
+        }
+      ],
+      "subTitle": [
+        {
+          "properties": {
+            "show": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "drillFilterOtherVisuals": true
+  }
+}

@@ -1,13 +1,13 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
-  "name": "8c4dfbb001a62eed4178",
+  "name": "7b4c42148d3e4be9cc68",
   "position": {
-    "x": 0,
-    "y": 0,
-    "z": 1000,
-    "width": 690,
-    "height": 96,
-    "tabOrder": 1000
+    "x": 24,
+    "y": 108,
+    "z": 3000,
+    "width": 1100,
+    "height": 128,
+    "tabOrder": 3000
   },
   "visual": {
     "visualType": "htmlContent443BE3AD55E043BF878BED274D3A6865",
@@ -23,11 +23,11 @@
                       "Entity": "bi coletas"
                     }
                   },
-                  "Property": "HTML cabeçalho - Recebimento"
+                  "Property": "HTML cartões - Desvios"
                 }
               },
-              "queryRef": "bi coletas.HTML cabeçalho - Recebimento",
-              "nativeQueryRef": "HTML cabeçalho - Recebimento"
+              "queryRef": "bi coletas.HTML cartões - Desvios",
+              "nativeQueryRef": "HTML cartões - Desvios"
             }
           ]
         }

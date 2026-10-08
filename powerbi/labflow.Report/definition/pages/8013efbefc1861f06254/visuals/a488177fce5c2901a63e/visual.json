@@ -1,6 +1,6 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
-  "name": "8c4dfbb001a62eed4178",
+  "name": "a488177fce5c2901a63e",
   "position": {
     "x": 0,
     "y": 0,
@@ -23,11 +23,11 @@
                       "Entity": "bi coletas"
                     }
                   },
-                  "Property": "HTML cabeçalho - Recebimento"
+                  "Property": "HTML cabeçalho - Desvios"
                 }
               },
-              "queryRef": "bi coletas.HTML cabeçalho - Recebimento",
-              "nativeQueryRef": "HTML cabeçalho - Recebimento"
+              "queryRef": "bi coletas.HTML cabeçalho - Desvios",
+              "nativeQueryRef": "HTML cabeçalho - Desvios"
             }
           ]
         }
