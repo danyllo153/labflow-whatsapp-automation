@@ -26,7 +26,7 @@ Automação de laboratório de microbiologia: WhatsApp → Evolution API → n8n
 - Nunca esvaziar a tabela `usuarios` (sem usuários o bot bloqueia todo mundo). Backup antes de qualquer migration ou limpeza.
 
 ## Termos do domínio
-- Não usar o termo "reanálise". D5/D10/D15 são "análises de drop" (ou só "drops"). Não ok vira **"desvio"** (de drop ou de tanque); no desvio de tanque (B.L ou WORT não ok), a análise refeita com o frasco de arquivo é a **"repetição"**.
+- Não usar o termo "reanálise" nos textos (o regex só o aceita na entrada e o trata como "repetição"). D5/D10/D15 são "análises de drop" (ou só "drops"). Não ok vira **"desvio"** (de drop ou de tanque); no desvio de tanque (B.L ou WORT não ok), a análise refeita com o frasco de arquivo é a **"repetição"**.
 - **TAB e Coliformes são masculinos** nos textos para o usuário ("o TAB está Incubado", "os Coliformes estão Estriados"). No banco, os status continuam `Incubada`, `Estriada`, `Concluída`.
 - "Hoje" é sempre em `America/Sao_Paulo`.
 

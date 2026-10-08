@@ -2,7 +2,7 @@
 title: LabFlow — Resultados de NFC placa a placa
 tags: [labflow, spec, nfc, tanques]
 status: draft
-version: v0.2
+version: v0.3
 created: 2026-10-07
 ---
 
@@ -33,7 +33,7 @@ Hoje a leitura de NFC só marca **lido** e quem leu, sem o resultado. Passa a gr
 8. **Desvio de tanque (B.L e WORT):** ao gravar o não ok, o bot **pergunta** se abre o desvio, como no desvio de drop ("Desvio criado do tanque 47 (B.L 120h, Stress)").
 9. **Repetição:** refaz **só a análise que deu não ok** (ex.: só o B.L do frasco Stress), com o frasco de arquivo, em **triplicata** e com os **mesmos prazos**, contados do dia em que o desvio é aberto.
 10. **Fecha o desvio** o resultado da repetição: vale a **nova contagem**, e o relatório mostra o ok / não ok dela ("Repetição feita").
-11. **Termos:** o registro é um **desvio** (de drop ou de tanque); a análise refeita é a **repetição**. O bot **entende** "reanálise" quando o analista fala ou escreve, mas escreve "repetição" (regra do `CLAUDE.md`). *(confirmar com o Danyllo)*
+11. **Termos:** o registro é um **desvio** (de drop ou de tanque); a análise refeita é a **repetição**, e o bot escreve "Repetição feita". Quando o analista disser **"reanálise"** (no áudio ou no texto), o regex trata como **repetição** (o bot só entende o termo, nunca escreve).
 
 ## Comandos (pensados também para o áudio)
 
@@ -80,12 +80,12 @@ Migration `016`. Testada antes numa transação desfeita, com backup antes de ap
 - [x] A repetição refaz só a análise que deu não ok (decisão 9).
 - [x] Triplicata e mesmos prazos (decisão 9).
 - [x] Fecha com a nova contagem, que gera o ok / não ok (decisão 10).
-- [ ] O bot também **escreve** "reanálise" nos tanques (liberando o termo só nesse caso no `CLAUDE.md`), ou só entende e escreve "repetição"? (decisão 11)
+- [x] O bot escreve "repetição"; "reanálise" falado ou escrito cai no regex da repetição (decisão 11).
 
 ## Plano de implementação (depois de `v1.0`)
 
 1. `NFC-001` Migration 016 (tabelas, view, limites de exemplo) + arquivo de limites fora do Git.
-2. `NFC-002` Regex dos comandos de placa + testes em `tests/interpretar-comando.test.js`.
+2. `NFC-002` Regex dos comandos de placa e da repetição ("reanálise" vira repetição) + testes em `tests/interpretar-comando.test.js`.
 3. `NFC-003` Gravação com "sim" e cálculo de ok / não ok.
 4. `NFC-004` `leitura do dia finalizada` preenchendo "<1".
 5. `NFC-005` Relatório com ✅ / 🚨 por tanque.
