@@ -23,6 +23,21 @@
                       "Entity": "bi testes"
                     }
                   },
+                  "Property": "codigo"
+                }
+              },
+              "queryRef": "bi testes.codigo",
+              "nativeQueryRef": "codigo",
+              "displayName": "Código"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "bi testes"
+                    }
+                  },
                   "Property": "origem"
                 }
               },
@@ -38,12 +53,27 @@
                       "Entity": "bi testes"
                     }
                   },
-                  "Property": "Identificação"
+                  "Property": "navio_fase"
                 }
               },
-              "queryRef": "bi testes.Identificação",
-              "nativeQueryRef": "Identificação",
-              "displayName": "Identificação"
+              "queryRef": "bi testes.navio_fase",
+              "nativeQueryRef": "navio_fase",
+              "displayName": "Navio"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "bi testes"
+                    }
+                  },
+                  "Property": "load_ou_tanque"
+                }
+              },
+              "queryRef": "bi testes.load_ou_tanque",
+              "nativeQueryRef": "load_ou_tanque",
+              "displayName": "Load"
             },
             {
               "field": {
@@ -133,7 +163,7 @@
               },
               "queryRef": "bi testes.proxima_etapa",
               "nativeQueryRef": "proxima_etapa",
-              "displayName": "Próxima etapa"
+              "displayName": "Próxima data"
             },
             {
               "field": {
@@ -167,6 +197,23 @@
             }
           ]
         }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "bi testes"
+                  }
+                },
+                "Property": "codigo"
+              }
+            },
+            "direction": "Ascending"
+          }
+        ]
       }
     },
     "objects": {
@@ -177,6 +224,13 @@
               "expr": {
                 "Literal": {
                   "Value": "14D"
+                }
+              }
+            },
+            "wordWrap": {
+              "expr": {
+                "Literal": {
+                  "Value": "false"
                 }
               }
             }
@@ -1348,6 +1402,33 @@
                               },
                               "Right": {
                                 "Literal": {
+                                  "Value": "'Positivo, em confirmação'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#F59E0B'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "status"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
                                   "Value": "'Em andamento'"
                                 }
                               }
@@ -1820,6 +1901,33 @@
                               "Right": {
                                 "Literal": {
                                   "Value": "'Em confirmação'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#2A2010'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "status"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Positivo, em confirmação'"
                                 }
                               }
                             }
@@ -2358,6 +2466,33 @@
                               },
                               "Right": {
                                 "Literal": {
+                                  "Value": "'Positivo, em confirmação'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#F59E0B'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
                                   "Value": "'Em andamento'"
                                 }
                               }
@@ -2830,6 +2965,33 @@
                               "Right": {
                                 "Literal": {
                                   "Value": "'Em confirmação'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#2A2010'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Positivo, em confirmação'"
                                 }
                               }
                             }
@@ -3368,6 +3530,33 @@
                               },
                               "Right": {
                                 "Literal": {
+                                  "Value": "'Positivo, em confirmação'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#F59E0B'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
                                   "Value": "'Em andamento'"
                                 }
                               }
@@ -3840,6 +4029,33 @@
                               "Right": {
                                 "Literal": {
                                   "Value": "'Em confirmação'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#2A2010'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Positivo, em confirmação'"
                                 }
                               }
                             }
@@ -4238,7 +4454,21 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "174D"
+                  "Value": "101D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "bi testes.codigo"
+          }
+        },
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "152D"
                 }
               }
             }
@@ -4252,13 +4482,13 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "276D"
+                  "Value": "203D"
                 }
               }
             }
           },
           "selector": {
-            "metadata": "bi testes.Identificação"
+            "metadata": "bi testes.navio_fase"
           }
         },
         {
@@ -4266,13 +4496,13 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "116D"
+                  "Value": "127D"
                 }
               }
             }
           },
           "selector": {
-            "metadata": "bi testes.fabrica"
+            "metadata": "bi testes.load_ou_tanque"
           }
         },
         {
@@ -4286,6 +4516,20 @@
             }
           },
           "selector": {
+            "metadata": "bi testes.fabrica"
+          }
+        },
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "88D"
+                }
+              }
+            }
+          },
+          "selector": {
             "metadata": "bi testes.item"
           }
         },
@@ -4294,7 +4538,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "160D"
+                  "Value": "139D"
                 }
               }
             }
@@ -4308,7 +4552,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "160D"
+                  "Value": "139D"
                 }
               }
             }
@@ -4322,7 +4566,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "160D"
+                  "Value": "139D"
                 }
               }
             }
@@ -4336,7 +4580,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "174D"
+                  "Value": "152D"
                 }
               }
             }
@@ -4350,7 +4594,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "203D"
+                  "Value": "177D"
                 }
               }
             }
@@ -4364,7 +4608,7 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "174D"
+                  "Value": "152D"
                 }
               }
             }
@@ -4402,7 +4646,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Coliformes: um por composta'"
+                  "Value": "'Coliformes: composta e lotes da composta aberta'"
                 }
               }
             },

@@ -207,7 +207,7 @@ cultureInfo pt-BR
 			          }
 			        },
 			        {
-			          "Próxima etapa": {
+			          "Próxima data": {
 			            "State": "Suggested",
 			            "Source": {
 			              "Type": "External",
@@ -11164,6 +11164,69 @@ cultureInfo pt-BR
 			          "mês": {
 			            "State": "Generated",
 			            "Weight": 0.75
+			          }
+			        }
+			      ]
+			    },
+			    "bi_testes.leitura_prevista": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "bi testes",
+			          "ConceptualProperty": "leitura_prevista"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Leitura prevista": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "bi_testes.confirmacao_prevista": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "bi testes",
+			          "ConceptualProperty": "confirmacao_prevista"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Confirmação": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "bi_testes.codigo": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "bi testes",
+			          "ConceptualProperty": "codigo"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Código": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
 			          }
 			        }
 			      ]

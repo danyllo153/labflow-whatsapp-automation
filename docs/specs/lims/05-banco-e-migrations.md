@@ -12,11 +12,11 @@ created: 2026-10-07
 
 ## Direção desta edição
 
-O LIMS cresce **no mesmo banco** `labflow`, com migrations numeradas a partir da `014`, aplicadas uma de cada vez, testadas antes numa transação desfeita e com backup antes. O banco continua conferindo as regras (UNIQUE, CHECK, FK); o código dono de cada contexto decide e escreve.
+O LIMS cresce **no mesmo banco** `labflow`, com migrations numeradas a partir da `016`, aplicadas uma de cada vez, testadas antes numa transação desfeita e com backup antes. O banco continua conferindo as regras (UNIQUE, CHECK, FK); o código dono de cada contexto decide e escreve.
 
 ## O que já existe
 
-- 13 migrations, 19 tabelas, 12 views (inclusive o schema `bi` do Power BI).
+- 15 migrations, 19 tabelas, 12 views (inclusive o schema `bi` do Power BI).
 - Usuários de banco: `labflow_app` (n8n) e `labflow_leitura` (DBeaver, Power BI).
 - Datas em `America/Sao_Paulo`; `tanque` é TEXT; a coleta é o centro do NFC; no concentrado, recebimento → compostas → testes.
 
@@ -32,5 +32,5 @@ O LIMS cresce **no mesmo banco** `labflow`, com migrations numeradas a partir da
 ## Perguntas a responder
 
 - [ ] Um usuário de banco novo para a API (`labflow_api`) ou o mesmo `labflow_app`?
-- [ ] Ferramenta de migration (`dbmate`, já no backlog) antes da `014`?
+- [ ] Ferramenta de migration (`dbmate`, já no backlog) antes da `016`?
 - [ ] Os dados de demonstração (`db/seeds/demo.sql`) ganham especificações e revisões fictícias?

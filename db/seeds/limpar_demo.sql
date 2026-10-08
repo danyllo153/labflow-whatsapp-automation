@@ -9,14 +9,16 @@ WHERE registrado_por IN (SELECT id FROM usuarios WHERE telefone LIKE '5500000000
 
 -- embarques demo (CASCADE leva amostras, compostas, testes e contagens do embarque)
 DELETE FROM embarques
-WHERE navio_id IN (SELECT id FROM navios WHERE (nome, viagem) IN (('DEMO OCEAN', '901'), ('DEMO WAVE', '902')));
+WHERE navio_id IN (SELECT id FROM navios WHERE (nome, viagem) IN (('DEMO OCEAN', '901'), ('DEMO WAVE', '902'), ('D.SKY', '123'),
+                   ('D.SUN', '142'), ('D.BLOSSOM', '223'), ('D.SEA', '333'), ('D.OCEAN', '333'), ('D.STAR', '434')));
 
--- loads demo: 90001 a 90013, só dos itens demo (CASCADE leva lotes, compostas, testes e contagens)
+-- loads demo: 90001 a 90016, só dos itens demo (CASCADE leva lotes, compostas, testes e contagens)
 DELETE FROM loads
-WHERE numero::text ~ '^900(0[1-9]|1[0-3])$'
+WHERE numero::text ~ '^900(0[1-9]|1[0-6])$'
   AND item_id IN (SELECT id FROM itens WHERE codigo IN ('900', '9100', '9200'));
 
-DELETE FROM navios WHERE (nome, viagem) IN (('DEMO STAR', '900'), ('DEMO OCEAN', '901'), ('DEMO WAVE', '902'))
+DELETE FROM navios WHERE (nome, viagem) IN (('DEMO STAR', '900'), ('DEMO OCEAN', '901'), ('DEMO WAVE', '902'), ('D.SKY', '123'),
+                                         ('D.SUN', '142'), ('D.BLOSSOM', '223'), ('D.SEA', '333'), ('D.OCEAN', '333'), ('D.STAR', '434'))
   AND NOT EXISTS (SELECT 1 FROM coletas c WHERE c.navio_id = navios.id)
   AND NOT EXISTS (SELECT 1 FROM embarques e WHERE e.navio_id = navios.id);
 -- itens e fábricas só saem se ninguém mais usa (a AQA, por exemplo, pode ter load de verdade)

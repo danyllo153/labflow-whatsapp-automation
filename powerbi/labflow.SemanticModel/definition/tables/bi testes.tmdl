@@ -17,7 +17,7 @@ table 'bi testes'
 		formatString: 0
 		lineageTag: 7a4e4f87-e352-66f4-8628-1a66fd7e127d
 
-	measure 'Testes em confirmação' = CALCULATE(COUNTROWS('bi testes'), 'bi testes'[status] = "Em confirmação")
+	measure 'Testes em confirmação' = CALCULATE(COUNTROWS('bi testes'), 'bi testes'[status] IN {"Em confirmação", "Positivo, em confirmação"})
 		formatString: 0
 		lineageTag: 07517911-fd19-8145-c0f7-ce922340bab4
 
@@ -276,6 +276,62 @@ table 'bi testes'
 		lineageTag: 694b71ae-337d-48cc-9edc-fb54ee39c8b5
 		summarizeBy: none
 		sourceColumn: situacao
+
+		annotation SummarizationSetBy = Automatic
+
+	column espalhar_prevista
+		dataType: dateTime
+		formatString: dd/MM/yyyy
+		lineageTag: 73d15e97-6d37-40aa-90e4-8611efb62888
+		summarizeBy: none
+		sourceColumn: espalhar_prevista
+
+		variation Variation
+			isDefault
+			relationship: 6c54380f-f7f5-47d4-877b-cdbd707c4169
+			defaultHierarchy: LocalDateTable_bf6758cb-2caf-4681-87f0-e3e4ae5c8a17.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column leitura_prevista
+		dataType: dateTime
+		formatString: dd/MM/yyyy
+		lineageTag: 9cbecaac-2252-4e9b-a29c-dd00273cbb43
+		summarizeBy: none
+		sourceColumn: leitura_prevista
+
+		variation Variation
+			isDefault
+			relationship: 7c4b24f3-2cb3-4637-a7b5-03effd9061ce
+			defaultHierarchy: LocalDateTable_aea26dc1-7491-4638-9687-76accc8a31bb.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column confirmacao_prevista
+		dataType: dateTime
+		formatString: dd/MM/yyyy
+		lineageTag: 5675e6cc-8957-427a-93c0-8b8225c273e1
+		summarizeBy: none
+		sourceColumn: confirmacao_prevista
+
+		variation Variation
+			isDefault
+			relationship: ec4d59d5-49f9-42e9-9f86-bf2793c9a38f
+			defaultHierarchy: LocalDateTable_c229c0be-cc21-4daf-8f36-87984f2f94bd.'Hierarquia de datas'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column codigo
+		dataType: string
+		lineageTag: 075d403d-7f6d-4c20-875c-c325653dec84
+		summarizeBy: none
+		sourceColumn: codigo
 
 		annotation SummarizationSetBy = Automatic
 

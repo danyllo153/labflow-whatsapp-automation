@@ -41,6 +41,9 @@ ref table LocalDateTable_f6bf5415-9eb5-4e18-8bce-986e7d3b250a
 ref table Loads
 ref table Embarques
 ref table Calendário
+ref table LocalDateTable_bf6758cb-2caf-4681-87f0-e3e4ae5c8a17
+ref table LocalDateTable_aea26dc1-7491-4638-9687-76accc8a31bb
+ref table LocalDateTable_c229c0be-cc21-4daf-8f36-87984f2f94bd
 
 ref cultureInfo pt-BR
 

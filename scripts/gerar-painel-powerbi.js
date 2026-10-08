@@ -37,7 +37,7 @@ const COR = {
 const PILULA = {
   'Atrasado': [COR.vermelho, '#2A1416'], 'Vence hoje': [COR.laranja, '#2A2010'], 'No prazo': [COR.azul, '#131D33'],
   'Lido': [COR.verde, '#112419'], 'Concluído': [COR.verde, '#112419'],
-  'Em confirmação': [COR.laranja, '#2A2010'], 'Em andamento': [COR.azul, '#131D33'],
+  'Em confirmação': [COR.laranja, '#2A2010'], 'Positivo, em confirmação': [COR.laranja, '#2A2010'], 'Em andamento': [COR.azul, '#131D33'],
   'No caldo': [COR.azul, '#131D33'], 'Estriado': [COR.teal, '#0F2523'], 'Incubado': [COR.roxo, '#1E1733'],
   'Positivo': [COR.vermelho, '#2A1416'], 'Confirmado': [COR.vermelho, '#2A1416'],
   'Negativo': [COR.verde, '#112419'], 'Não confirmado': [COR.verde, '#112419'], 'Sem desvio': [COR.texto2, '#1C1C1F'],
@@ -216,10 +216,11 @@ const CARTOES_CTBL = [
   { rotulo: 'C.T e B.L atrasados', valor: '[C.T e B.L atrasados]', sub: 'Leitura passou do prazo', icone: '⏰', cor: 'laranja' },
 ];
 // etapas do TAB e dos Coliformes (a página já filtra o teste)
-const cartoesTeste = (meio) => [
+// confirmação: TAB = PCA 24h; Coliformes = composta aberta, cada lote confirmado sozinho
+const cartoesTeste = (meio, confirmacao) => [
   { rotulo: 'No caldo', valor: '[Testes no caldo]', sub: 'Aguardando a próxima etapa', icone: '🧪', cor: 'azul', neutro: true },
   meio,
-  { rotulo: 'Em confirmação', valor: '[Testes em confirmação]', sub: 'Colônia na placa', icone: '🔎', cor: 'laranja', zero: 'Nada em confirmação' },
+  { valor: '[Testes em confirmação]', icone: '🔎', cor: 'laranja', ...confirmacao },
   { rotulo: 'Positivos', valor: '[Testes positivos]', sub: 'Resultado final', icone: '🚨', cor: 'vermelho', zero: 'Nenhum positivo' },
   { rotulo: 'Negativos', valor: '[Testes negativos]', sub: 'Resultado final', icone: '✅', cor: 'verde', neutro: true },
 ];
@@ -260,8 +261,10 @@ const CARTOES = {
     ...CARTOES_CTBL,
     { rotulo: 'Howard médio', valor: '[Howard médio (%)]', formato: '0.0', sufixo: '%', sub: 'Campos positivos x 2', icone: '🔍', cor: 'marinho', neutro: true },
   ],
-  TAB: cartoesTeste({ rotulo: 'Incubados', valor: '[Testes incubados]', sub: 'Espalhados, na estufa', icone: '🌡️', cor: 'roxo', neutro: true }),
-  Coliformes: cartoesTeste({ rotulo: 'Estriados', valor: '[Testes estriados]', sub: 'Na placa, aguardando leitura', icone: '🧫', cor: 'teal', neutro: true }),
+  TAB: cartoesTeste({ rotulo: 'Incubados', valor: '[Testes incubados]', sub: 'Lidos todo dia, na estufa', icone: '🌡️', cor: 'roxo', neutro: true },
+    { rotulo: 'Em confirmação', sub: 'PCA 24h: lê no dia seguinte', zero: 'Nada em confirmação' }),
+  Coliformes: cartoesTeste({ rotulo: 'Estriados', valor: '[Testes estriados]', sub: 'Na placa, aguardando leitura', icone: '🧫', cor: 'teal', neutro: true },
+    { rotulo: 'Positivos em confirmação', sub: 'Composta aberta, lote a lote', zero: 'Nada em confirmação' }),
 };
 const MEDIDAS = {
   'bi coletas': [
@@ -305,7 +308,7 @@ const MEDIDAS = {
     ['Testes no caldo', CALC('bi testes', "'bi testes'[status] = \"No caldo\""), { formato: '0' }],
     ['Testes incubados', CALC('bi testes', "'bi testes'[status] = \"Incubado\""), { formato: '0' }],
     ['Testes estriados', CALC('bi testes', "'bi testes'[status] = \"Estriado\""), { formato: '0' }],
-    ['Testes em confirmação', CALC('bi testes', "'bi testes'[status] = \"Em confirmação\""), { formato: '0' }],
+    ['Testes em confirmação', CALC('bi testes', "'bi testes'[status] IN {\"Em confirmação\", \"Positivo, em confirmação\"}"), { formato: '0' }],
     ['Testes positivos', CALC('bi testes', "'bi testes'[resultado] = \"Positivo\""), { formato: '0' }],
     ['Testes negativos', CALC('bi testes', "'bi testes'[resultado] = \"Negativo\""), { formato: '0' }],
     ['Testes em andamento', CALC('bi testes', "'bi testes'[status] <> \"Concluído\""), { formato: '0' }],
@@ -468,13 +471,13 @@ const navegador = (pos) => visual('pageNavigator', pos, null, { semMoldura: true
 const PESO = { tanque: 0.8, frasco: 0.9, drop: 0.7, load: 0.9, teste: 0.8, origem: 1.2, analise: 1, lotes: 1.1,
   navio: 1.5, Local: 1.6, linha_relatorio: 1.7, metodo: 1.3, situacao: 1.2, status: 1.1, resultado: 1.4, temperaturas: 1.6,
   alvo: 1.4, lote_amostra: 1, proxima_etapa: 1.2, registrado_em: 1.6, data_resultado: 1.2, howard_percentual: 1,
-  Embarque: 2.1, embarque: 2.1, 'Estágio': 0.8, 'Desvio do drop': 1.2, 'Resultado ou andamento': 1.3, data_feito: 1.1, data_coleta: 1.1,
-  prevista: 1.1, data_leitura: 1.1, fabrica: 0.8, item: 0.7, 'Identificação': 1.9, 'Data da amostra': 1.1, Navio: 1.4 };
+  Embarque: 2.4, embarque: 2.4, 'Estágio': 0.8, 'Desvio do drop': 1.2, 'Resultado ou andamento': 1.3, data_feito: 1.1, data_coleta: 1.1,
+  prevista: 1.1, data_leitura: 1.1, leitura_prevista: 1.1, confirmacao_prevista: 1.1, codigo: 0.8, navio_fase: 1.6, load_ou_tanque: 1, fabrica: 0.8, item: 0.7, 'Identificação': 1.9, 'Data da amostra': 1.1, Navio: 1.4 };
 const peso = (c) => PESO[c.nativeQueryRef] || (/_por$/.test(c.nativeQueryRef) ? 1.5 : 1.2);
 // tabela: as colunas ocupam toda a largura do visual; status viram "pílulas" coloridas e
 // identificações (origem, teste, drop, análise) ganham cor no texto
 const K = 'bi contagens';
-const tabela = (pos, titulo, campos, filtros, corTitulo) => {
+const tabela = (pos, titulo, campos, filtros, corTitulo, ordem) => {
   const util = pos[2] - 50 - 12 * campos.length; // desconta rolagem, bordas e o espaço interno de cada célula
   const total = campos.reduce((s, c) => s + peso(c), 0);
   const larguras = campos.map((c) => ({
@@ -489,9 +492,9 @@ const tabela = (pos, titulo, campos, filtros, corTitulo) => {
     return [];
   });
   const fonte = pos[2] >= 1500 ? '14D' : pos[2] >= 900 ? '12D' : '11D';
-  return visual('tableEx', pos, { Values: { projections: campos } }, { titulo, filtros, corTitulo,
+  return visual('tableEx', pos, { Values: { projections: campos } }, { titulo, filtros, corTitulo, sort: ordem,
     objects: {
-      values: [{ properties: { fontSize: lit(fonte) } }, ...cores],
+      values: [{ properties: { fontSize: lit(fonte), wordWrap: lit('false') } }, ...cores], // uma linha por registro (texto longo corta com '...')
       columnHeaders: [{ properties: { fontSize: lit(fonte), backColor: cor(COR.cartao2), fontColor: cor(COR.texto2),
         autoSizeColumnWidth: lit('false'), wordWrap: lit('true') } }],
       columnWidth: larguras,
@@ -569,11 +572,21 @@ const paginaTeste = (teste, etapa, filtros) => [
   grafico('donutChart', G[2], `Resultado do ${teste}`,
     { Category: col(T, 'Resultado ou andamento', 'Resultado'), Y: med(T, 'Testes') },
     { cores: corPorValor(T, 'Resultado ou andamento', SERIE_RESULTADO), legenda: 'Right', semRotulos: true, corTitulo: COR.marinho }),
-  tabela(TABELA, `${teste}: um por composta${teste === 'TAB' ? ' ou tanque' : ''}`,
-    [col(T, 'origem', 'Origem'), col(T, 'Identificação', 'Identificação'), col(T, 'fabrica', 'Fábrica'), col(T, 'item', 'Item'),
-     col(T, 'lotes', 'Lotes / amostras'), col(T, 'data_feito', 'Feito em'), col(T, 'status', 'Etapa'),
-     col(T, 'proxima_etapa', 'Próxima etapa'), col(T, 'resultado', 'Resultado'), col(T, 'situacao', 'Situação')],
-    undefined, teste === 'TAB' ? COR.roxo : COR.magenta),
+  // código do bot (#12, e #12.3 para o lote 3 da composta aberta): ordenada por ele, cada composta vem seguida dos lotes
+  teste === 'TAB'
+    ? tabela(TABELA, 'TAB: um por composta ou tanque',
+      [col(T, 'codigo', 'Código'), col(T, 'origem', 'Origem'), col(T, 'navio_fase', 'Navio'), col(T, 'load_ou_tanque', 'Load / tanque'), col(T, 'fabrica', 'Fábrica'),
+       col(T, 'item', 'Item'), col(T, 'lotes', 'Lotes / amostras'), col(T, 'data_feito', 'Feito em'), col(T, 'status', 'Etapa'),
+       // duas datas: o incubado é lido todo dia e pode ir para confirmação antes da leitura prevista (migration 014)
+       col(T, 'leitura_prevista', 'Leitura prevista'), col(T, 'confirmacao_prevista', 'Confirmação'),
+       col(T, 'resultado', 'Resultado'), col(T, 'situacao', 'Situação')],
+      undefined, COR.roxo, crescente(T, 'codigo'))
+    // Coliformes: a confirmação é abrir a composta; cada lote aparece na sua linha, com etapa e resultado próprios
+    : tabela(TABELA, 'Coliformes: composta e lotes da composta aberta',
+      [col(T, 'codigo', 'Código'), col(T, 'origem', 'Origem'), col(T, 'navio_fase', 'Navio'), col(T, 'load_ou_tanque', 'Load'), col(T, 'fabrica', 'Fábrica'),
+       col(T, 'item', 'Item'), col(T, 'lotes', 'Lotes / amostras'), col(T, 'data_feito', 'Feito em'), col(T, 'status', 'Etapa'),
+       col(T, 'proxima_etapa', 'Próxima data'), col(T, 'resultado', 'Resultado'), col(T, 'situacao', 'Situação')],
+      undefined, COR.magenta, crescente(T, 'codigo')),
 ];
 
 // [nome, visuais, filtros da página inteira]

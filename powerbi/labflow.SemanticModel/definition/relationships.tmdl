@@ -128,3 +128,18 @@ relationship 'Calendário -> C.T e B.L'
 	fromColumn: 'bi contagens'.'Data da amostra'
 	toColumn: Calendário.Date
 
+relationship 6c54380f-f7f5-47d4-877b-cdbd707c4169
+	joinOnDateBehavior: datePartOnly
+	fromColumn: 'bi testes'.espalhar_prevista
+	toColumn: LocalDateTable_bf6758cb-2caf-4681-87f0-e3e4ae5c8a17.Date
+
+relationship 7c4b24f3-2cb3-4637-a7b5-03effd9061ce
+	joinOnDateBehavior: datePartOnly
+	fromColumn: 'bi testes'.leitura_prevista
+	toColumn: LocalDateTable_aea26dc1-7491-4638-9687-76accc8a31bb.Date
+
+relationship ec4d59d5-49f9-42e9-9f86-bf2793c9a38f
+	joinOnDateBehavior: datePartOnly
+	fromColumn: 'bi testes'.confirmacao_prevista
+	toColumn: LocalDateTable_c229c0be-cc21-4daf-8f36-87984f2f94bd.Date
+
