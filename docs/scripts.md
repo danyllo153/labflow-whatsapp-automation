@@ -84,6 +84,19 @@ node scripts\gerar-painel-powerbi.js
 - Não mexe nas tabelas de apoio (Loads, Embarques, Calendário) nem nas ligações: essas são do Power BI Modeling MCP.
 - `scripts/gerar-painel-powerbi-colorido.js` é o backup da versão colorida (fundo azul-marinho), caso o modo escuro seja descartado.
 
+## gerar-gif-painel.py (GIF do painel para o README)
+
+Arquivo: [`scripts/gerar-gif-painel.py`](../scripts/gerar-gif-painel.py)
+
+Junta os prints das páginas do painel (`docs/img/powerbi/01-...png` a `09-...png`, tirados em **Tela inteira** no Power BI web) num GIF de 1280 px, 2,5 s por página, em loop (`docs/img/powerbi/painel.gif`, usado no README). Precisa do Pillow.
+
+```powershell
+py -m pip install --user pillow
+py scripts/gerar-gif-painel.py
+```
+
+Depois de trocar algum print, rodar de novo. Prints sem barra do navegador nem dados da conta.
+
 ## sanitize-workflow.ps1
 
 Arquivo: [`scripts/sanitize-workflow.ps1`](../scripts/sanitize-workflow.ps1)
