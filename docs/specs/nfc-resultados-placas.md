@@ -13,13 +13,13 @@ created: 2026-10-07
 
 ## Direção desta edição
 
-Hoje a leitura de NFC só marca **lido** e quem leu, sem o resultado. Passa a gravar **o número de cada placa** (triplicata) de cada leitura, no frasco Normal e no Stress. O analista digita **só as placas que cresceram**; o resto entra como **"<1"** quando a leitura do dia é finalizada. Com os números, cada leitura ganha **ok / não ok** (✅ / 🚨) no relatório e no painel, e o painel ganha **tendência por tanque**. No B.L e no WORT, não ok **abre uma repetição**: a análise é refeita com o **frasco de arquivo**, como uma análise nova.
+Hoje a leitura de NFC só marca **lido** e quem leu, sem o resultado. Passa a gravar **o número de cada placa** (triplicata) de cada leitura, no frasco Normal e no Stress. O analista digita **só as placas que cresceram**; o resto entra como **"<1"** quando a leitura do dia é finalizada. Com os números, cada leitura ganha **ok / não ok** (✅ / 🚨) no relatório e no painel, e o painel ganha **tendência por tanque**. No B.L e no WORT, não ok **abre um desvio de tanque**, tratado com uma **repetição**: a análise é refeita com o **frasco de arquivo**, como uma análise nova.
 
 ## O que já existe
 
 - Cada análise registrada gera 4 linhas em `analises` por tanque e frasco: C.T (Profundidade), B.L (Profundidade), WORT Profundidade e WORT Superfície. Prazos contados da **data da análise**: C.T 48h; B.L pré-leitura 72h e final 120h; WORT pré-leitura 120h e final 240h (`docs/comandos.md`, seção 7).
 - A conclusão das leituras (e `leitura do dia finalizada`) marca como lido, com quem leu, sem valor.
-- O desvio de drop (migration 012) é o modelo: abre com "sim", tem prazo e resultado, e aparece na página Desvios do painel (que também vai mostrar as repetições).
+- O desvio de drop (migration 012) é o modelo: abre com "sim", tem prazo e resultado, e aparece na página Desvios do painel, que passa a mostrar também os desvios de tanque.
 
 ## Decisões (07/10/2026, com o Danyllo)
 
@@ -28,8 +28,8 @@ Hoje a leitura de NFC só marca **lido** e quem leu, sem o resultado. Passa a gr
 3. **O analista digita só as placas que cresceram.** As outras entram como "<1" automaticamente na **leitura do dia finalizada**.
 4. **Pré-leitura** (B.L 72h e WORT 120h) com resultado fora do limite **já é não ok**.
 5. **Limites de aceitação** por análise e etapa ficam numa **tabela do banco**, carregada por um **arquivo fora do Git**. O repositório traz só um arquivo de exemplo com **valores fictícios** (regra do `CLAUDE.md`).
-6. **Não ok aparece no relatório (🚨) e no painel.** No **B.L e no WORT**, abre também uma **repetição**: a análise é refeita com o frasco de arquivo, como análise nova, e os prazos voltam a contar.
-7. No **C.T**, não ok **só aparece** no relatório e no painel (sem repetição). *(confirmar)*
+6. **Não ok aparece no relatório (🚨) e no painel.** No **B.L e no WORT**, abre também um **desvio de tanque**, tratado com uma **repetição**: a análise é refeita com o frasco de arquivo, como análise nova, e os prazos voltam a contar.
+7. No **C.T**, não ok **só aparece** no relatório e no painel (sem desvio). *(confirmar)*
 
 ## Comandos (pensados também para o áudio)
 
@@ -59,7 +59,7 @@ Formato:
 |---|---|
 | `leituras_placas` | Uma linha por placa: `analise_id`, etapa (`pre` / `final`), placa (1 a 3), sinal (`<` / `=`), valor, quem leu, quando, origem (`digitado` / `automatico`). Única por análise + etapa + placa |
 | `limites_nfc` | Limite máximo por placa, por análise e etapa, com vigência. **Valores reais carregados de um arquivo fora do Git**; exemplo fictício no repositório |
-| `repeticoes_analise` | Repetição aberta por leitura não ok de B.L ou WORT: análise de origem, análise refeita com o frasco de arquivo, quem abriu, prazo, status e resultado |
+| `desvios_tanque` | Desvio aberto por leitura não ok de B.L ou WORT: análise de origem, **repetição** (análise refeita com o frasco de arquivo), quem abriu, prazo, status e resultado |
 | `vw_situacao_nfc` | Situação de cada leitura (ok / não ok) e de cada tanque no dia, para o relatório e o painel |
 
 Migration `016`. Testada antes numa transação desfeita, com backup antes de aplicar.
@@ -71,12 +71,12 @@ Migration `016`. Testada antes numa transação desfeita, com backup antes de ap
 
 ## Perguntas a responder
 
-- [ ] Confirmar: C.T não ok **não** abre repetição (só relatório e painel)?
-- [ ] A repetição abre sozinha ao gravar o não ok, ou o bot pergunta "abrir repetição?" (como no desvio de drop)?
-- [ ] A repetição com o frasco de arquivo refaz **só a análise que deu não ok** (ex.: só B.L) ou todas do frasco?
-- [ ] Repetição também em triplicata e com os mesmos prazos da análise original?
-- [ ] Como o resultado da repetição a fecha (confirmou / não confirmou, como no desvio de drop)?
-- [x] Termo: **repetição** (decidido em 07/10/2026; nunca "reanálise").
+- [ ] Confirmar: C.T não ok **não** abre desvio (só relatório e painel)?
+- [ ] O desvio de tanque abre sozinho ao gravar o não ok, ou o bot pergunta "abrir desvio?" (como no desvio de drop)?
+- [ ] A repetição refaz **só a análise que deu não ok** (ex.: só B.L) ou todas do frasco?
+- [ ] A repetição é em triplicata e com os mesmos prazos da análise original?
+- [ ] Como o resultado da repetição fecha o desvio (confirmou / não confirmou, como no desvio de drop)?
+- [x] Termos: o registro é um **desvio** (de drop ou de tanque); no desvio de tanque, a análise refeita com o frasco de arquivo é a **repetição** (decidido em 07/10/2026; nunca "reanálise").
 
 ## Plano de implementação (depois de `v1.0`)
 
@@ -85,6 +85,6 @@ Migration `016`. Testada antes numa transação desfeita, com backup antes de ap
 3. `NFC-003` Gravação com "sim" e cálculo de ok / não ok.
 4. `NFC-004` `leitura do dia finalizada` preenchendo "<1".
 5. `NFC-005` Relatório com ✅ / 🚨 por tanque.
-6. `NFC-006` Repetição (B.L e WORT) com o frasco de arquivo.
+6. `NFC-006` Desvio de tanque (B.L e WORT) com a repetição pelo frasco de arquivo; página Desvios mostrando também os de tanque.
 7. `NFC-007` IA: catálogo com os comandos novos (texto e áudio).
 8. `NFC-008` Painel: Situação, tendência e páginas Análise TT / Análise T.N.
