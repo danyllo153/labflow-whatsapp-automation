@@ -84,18 +84,19 @@ node scripts\gerar-painel-powerbi.js
 - Não mexe nas tabelas de apoio (Loads, Embarques, Calendário) nem nas ligações: essas são do Power BI Modeling MCP.
 - `scripts/gerar-painel-powerbi-colorido.js` é o backup da versão colorida (fundo azul-marinho), caso o modo escuro seja descartado.
 
-## gerar-gif-painel.py (GIF do painel para o README)
+## gerar-gif.py (GIFs do README: painel e bot)
 
-Arquivo: [`scripts/gerar-gif-painel.py`](../scripts/gerar-gif-painel.py)
+Arquivo: [`scripts/gerar-gif.py`](../scripts/gerar-gif.py)
 
-Junta os prints das páginas do painel (`docs/img/powerbi/01-...png` a `09-...png`, tirados em **Tela inteira** no Power BI web) num GIF de 1280 px, 2,5 s por página, em loop (`docs/img/powerbi/painel.gif`, usado no README). Precisa do Pillow.
+Junta prints numerados de uma pasta (`01-...png`, `02-...png`...) num GIF em loop. Prints de tamanhos diferentes são centralizados num fundo da cor do próprio print, sem esticar. Usado para `docs/img/powerbi/painel.gif` (9 páginas do painel, tiradas em **Tela inteira** no Power BI web) e `docs/img/bot/bot.gif` (conversa no WhatsApp, sem o número do bot). Precisa do Pillow.
 
 ```powershell
 py -m pip install --user pillow
-py scripts/gerar-gif-painel.py
+py scripts/gerar-gif.py docs/img/powerbi docs/img/powerbi/painel.gif
+py scripts/gerar-gif.py docs/img/bot docs/img/bot/bot.gif --largura 900 --tempo 4500
 ```
 
-Depois de trocar algum print, rodar de novo. Prints sem barra do navegador nem dados da conta.
+Depois de trocar algum print, rodar de novo. Prints sem barra do navegador, sem dados da conta e sem o número do bot.
 
 ## sanitize-workflow.ps1
 

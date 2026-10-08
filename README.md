@@ -37,6 +37,10 @@ O LabFlow deixa o registro no canal que a equipe já usa (WhatsApp), calcula os 
 
 ## Como é usar
 
+![O bot no WhatsApp: coleta, frase livre virando comando, consulta, recebimento, desvios e relatório do dia](docs/img/bot/bot.gif)
+
+<sub>Conversa real com o bot no servidor de demonstração (dados fictícios): comando no formato oficial, frase livre que a IA transforma em comando (com "sim" antes de gravar), consultas e o relatório do dia.</sub>
+
 ```
 Você:     recebimento load 77001 item 444 fabrica AQA lotes 1-14
 LabFlow:  ✅ Recebimento do load 77001 (item 444, fábrica AQA) registrado por Ana.
