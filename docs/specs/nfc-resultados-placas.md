@@ -28,9 +28,9 @@ Hoje a leitura de NFC só marca **lido** e quem leu, sem o resultado. Passa a gr
 3. **O analista digita só as placas que cresceram.** As outras entram como "<1" automaticamente na **leitura do dia finalizada**.
 4. **Pré-leitura** (B.L 72h e WORT 120h) com resultado fora do limite **já é não ok**.
 5. **Limites de aceitação** por análise e etapa ficam numa **tabela do banco**, carregada por um **arquivo fora do Git**. O repositório traz só um arquivo de exemplo com **valores fictícios** (regra do `CLAUDE.md`).
-6. **Não ok aparece no relatório (🚨) e no painel.** No **B.L e no WORT**, abre também um **desvio de tanque**, tratado com uma **repetição**: a análise é refeita com o frasco de arquivo, como análise nova, e os prazos voltam a contar.
-7. No **C.T**, não ok (alguma placa acima do limite) **só aparece** no relatório (🚨) e no painel do Power BI, **com a contagem** que deu; não abre desvio.
-8. **Desvio de tanque (B.L e WORT):** ao gravar o não ok, o bot **pergunta** se abre o desvio, como no desvio de drop ("Desvio criado do tanque 47 (B.L 120h, Stress)").
+6. **Não ok aparece no relatório (🚨) e no painel**, com a contagem. Em **todas as análises (C.T, B.L e WORT)**, pode abrir também um **desvio de tanque**, tratado com uma **repetição**: a análise é refeita com o frasco de arquivo, como análise nova, e os prazos voltam a contar.
+7. No **C.T**, não ok (alguma placa acima do limite) aparece no relatório (🚨) e no painel do Power BI **com a contagem** que deu, e o bot **também pergunta** se abre o desvio, como no B.L e no WORT.
+8. **Desvio de tanque (C.T, B.L e WORT):** ao gravar o não ok, o bot **pergunta** se abre o desvio, como no desvio de drop ("Desvio criado do tanque 47 (C.T, Normal)"). Com "não", fica só o 🚨 no relatório e no painel.
 9. **Repetição:** refaz **só a análise que deu não ok** (ex.: só o B.L do frasco Stress), com o frasco de arquivo, em **triplicata** e com os **mesmos prazos**, contados do dia em que o desvio é aberto.
 10. **Fecha o desvio** o resultado da repetição: vale a **nova contagem**, e o relatório mostra o ok / não ok dela ("Repetição feita").
 11. **Termos:** o registro é um **desvio** (de drop ou de tanque); a análise refeita é a **repetição**, e o bot escreve "Repetição feita". "Reanálise" e "repetição", no texto ou no áudio, **sempre** caem no regex da repetição e **nunca** no registro de análise nova. A repetição só vale para o que **já deu não ok** (leitura acima do limite, com desvio aberto).
@@ -70,7 +70,7 @@ Formato:
 |---|---|
 | `leituras_placas` | Uma linha por placa: `analise_id`, etapa (`pre` / `final`), placa (1 a 3), sinal (`<` / `=`), valor, quem leu, quando, origem (`digitado` / `automatico`). Única por análise + etapa + placa |
 | `limites_nfc` | Limite máximo por placa, por análise e etapa, com vigência. **Valores reais carregados de um arquivo fora do Git**; exemplo fictício no repositório |
-| `desvios_tanque` | Desvio aberto por leitura não ok de B.L ou WORT: análise de origem, **repetição** (análise refeita com o frasco de arquivo), quem abriu, prazo, status e resultado |
+| `desvios_tanque` | Desvio aberto por leitura não ok de C.T, B.L ou WORT: análise de origem, **repetição** (análise refeita com o frasco de arquivo), quem abriu, prazo, status e resultado |
 | `vw_situacao_nfc` | Situação de cada leitura (ok / não ok) e de cada tanque no dia, para o relatório e o painel |
 
 Migration `016`. Testada antes numa transação desfeita, com backup antes de aplicar.
@@ -82,7 +82,7 @@ Migration `016`. Testada antes numa transação desfeita, com backup antes de ap
 
 ## Perguntas a responder
 
-- [x] C.T não ok não abre desvio: só relatório e painel, com a contagem (decisão 7).
+- [x] C.T não ok também pergunta se abre o desvio, como B.L e WORT (decisão 7).
 - [x] O bot pergunta antes de abrir o desvio, como no drop (decisão 8).
 - [x] A repetição refaz só a análise que deu não ok (decisão 9).
 - [x] Triplicata e mesmos prazos (decisão 9).
@@ -96,6 +96,6 @@ Migration `016`. Testada antes numa transação desfeita, com backup antes de ap
 3. `NFC-003` Gravação com "sim" e cálculo de ok / não ok.
 4. `NFC-004` `leitura do dia finalizada` preenchendo "<1".
 5. `NFC-005` Relatório com ✅ / 🚨 por tanque.
-6. `NFC-006` Desvio de tanque (B.L e WORT) com a repetição pelo frasco de arquivo; página Desvios mostrando também os de tanque.
+6. `NFC-006` Desvio de tanque (C.T, B.L e WORT) com a repetição pelo frasco de arquivo; página Desvios mostrando também os de tanque.
 7. `NFC-007` IA: catálogo com os comandos novos (texto e áudio).
 8. `NFC-008` Painel: Situação, tendência e páginas Análise TT / Análise T.N.
