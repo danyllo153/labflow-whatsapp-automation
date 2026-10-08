@@ -362,3 +362,11 @@ test('campos: desvio de drop (abrir pela coleta, resultado por temperatura, cons
   assert.equal(r.tipo, 'erro_coleta');
   assert.match(r.textoResposta, /7, 13 ou 25/);
 });
+
+// "reanálise" nunca vira análise nova (é repetição de algo que deu não ok; spec NFC, decisão 11)
+test('reanalise nao cai no registro de analise', () => {
+  for (const frase of ['reanalise do normal do tanque 42, data 24/09/2026',
+                       'Reanálise do Stress do tanque 42, data 24/09/2026']) {
+    assert.notEqual(interpretar(frase)?.tipo, 'registro_analise', `frase: ${frase}`);
+  }
+});
