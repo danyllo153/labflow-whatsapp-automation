@@ -472,7 +472,7 @@ const PESO = { tanque: 0.8, frasco: 0.9, drop: 0.7, load: 0.9, teste: 0.8, orige
   navio: 1.5, Local: 1.6, linha_relatorio: 1.7, metodo: 1.3, situacao: 1.2, status: 1.1, resultado: 1.4, temperaturas: 1.6,
   alvo: 1.4, lote_amostra: 1, proxima_etapa: 1.2, registrado_em: 1.6, data_resultado: 1.2, howard_percentual: 1,
   Embarque: 2.4, embarque: 2.4, 'Estágio': 0.8, 'Desvio do drop': 1.2, 'Resultado ou andamento': 1.3, data_feito: 1.1, data_coleta: 1.1,
-  prevista: 1.1, data_leitura: 1.1, leitura_prevista: 1.1, confirmacao_prevista: 1.1, codigo: 0.8, fabrica: 0.8, item: 0.7, 'Identificação': 1.9, 'Data da amostra': 1.1, Navio: 1.4 };
+  prevista: 1.1, data_leitura: 1.1, leitura_prevista: 1.1, confirmacao_prevista: 1.1, codigo: 0.8, navio_fase: 1.6, load_ou_tanque: 1, fabrica: 0.8, item: 0.7, 'Identificação': 1.9, 'Data da amostra': 1.1, Navio: 1.4 };
 const peso = (c) => PESO[c.nativeQueryRef] || (/_por$/.test(c.nativeQueryRef) ? 1.5 : 1.2);
 // tabela: as colunas ocupam toda a largura do visual; status viram "pílulas" coloridas e
 // identificações (origem, teste, drop, análise) ganham cor no texto
@@ -575,7 +575,7 @@ const paginaTeste = (teste, etapa, filtros) => [
   // código do bot (#12, e #12.3 para o lote 3 da composta aberta): ordenada por ele, cada composta vem seguida dos lotes
   teste === 'TAB'
     ? tabela(TABELA, 'TAB: um por composta ou tanque',
-      [col(T, 'codigo', 'Código'), col(T, 'origem', 'Origem'), col(T, 'Identificação', 'Identificação'), col(T, 'fabrica', 'Fábrica'),
+      [col(T, 'codigo', 'Código'), col(T, 'origem', 'Origem'), col(T, 'navio_fase', 'Navio'), col(T, 'load_ou_tanque', 'Load / tanque'), col(T, 'fabrica', 'Fábrica'),
        col(T, 'item', 'Item'), col(T, 'lotes', 'Lotes / amostras'), col(T, 'data_feito', 'Feito em'), col(T, 'status', 'Etapa'),
        // duas datas: o incubado é lido todo dia e pode ir para confirmação antes da leitura prevista (migration 014)
        col(T, 'leitura_prevista', 'Leitura prevista'), col(T, 'confirmacao_prevista', 'Confirmação'),
@@ -583,7 +583,7 @@ const paginaTeste = (teste, etapa, filtros) => [
       undefined, COR.roxo, crescente(T, 'codigo'))
     // Coliformes: a confirmação é abrir a composta; cada lote aparece na sua linha, com etapa e resultado próprios
     : tabela(TABELA, 'Coliformes: composta e lotes da composta aberta',
-      [col(T, 'codigo', 'Código'), col(T, 'origem', 'Origem'), col(T, 'Identificação', 'Identificação'), col(T, 'fabrica', 'Fábrica'),
+      [col(T, 'codigo', 'Código'), col(T, 'origem', 'Origem'), col(T, 'navio_fase', 'Navio'), col(T, 'load_ou_tanque', 'Load'), col(T, 'fabrica', 'Fábrica'),
        col(T, 'item', 'Item'), col(T, 'lotes', 'Lotes / amostras'), col(T, 'data_feito', 'Feito em'), col(T, 'status', 'Etapa'),
        col(T, 'proxima_etapa', 'Próxima data'), col(T, 'resultado', 'Resultado'), col(T, 'situacao', 'Situação')],
       undefined, COR.magenta, crescente(T, 'codigo')),

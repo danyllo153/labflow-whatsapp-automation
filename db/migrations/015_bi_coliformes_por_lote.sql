@@ -65,7 +65,12 @@ SELECT t.id AS teste_id,
        CASE WHEN t.coleta_id IS NOT NULL THEN NULL
             WHEN t.recebimento_lote_id IS NOT NULL THEN '#' || v.id || '.' || rl.lote
             WHEN t.embarque_amostra_id IS NOT NULL THEN '#' || v.id || '.' || ea.numero
-            ELSE '#' || v.id END AS codigo
+            ELSE '#' || v.id END AS codigo,
+       -- novas (015): navio abreviado só no embarque ("D.SKY 123 L2 F3"; vazio fora dele) e o load
+       -- (no TAB do tank farm, o tanque), para as tabelas de TAB e Coliformes
+       CASE WHEN v.origem = 'embarque'
+            THEN regexp_replace(v.rotulo, ' linha (\d+) fase (\d+)$', ' L\1 F\2') END AS navio_fase,
+       CASE WHEN t.coleta_id IS NOT NULL THEN 'Tanque ' || co.tanque ELSE v.load::text END AS load_ou_tanque
 FROM t
 LEFT JOIN testes pai ON pai.id = t.teste_pai_id
 LEFT JOIN vw_compostas v ON v.id = COALESCE(t.composta_id, pai.composta_id)

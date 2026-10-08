@@ -4,7 +4,8 @@
 --   analistas "Ana (demo)", "Bruno (demo)", "Carla (demo)" (Consultor, números inválidos)
 --   tanques de terra 80 a 95, navio DEMO STAR 900;
 --   recebimento: loads 90001 a 90009 (itens 9100 e 9200, fábricas AQA, COL e UCH);
---   embarque: navios DEMO OCEAN 901 (linhas 1 e 2) e DEMO WAVE 902 (linha 1), loads 90011 a 90013
+--   embarque: navios fictícios D.SKY 123, D.SUN 142, D.BLOSSOM 223, D.SEA 333, D.OCEAN 333 e D.STAR 434
+--   (linha 1 a 9, fase 1 a 4), loads 90011 a 90016
 -- Datas relativas a CURRENT_DATE: rodar de novo outro dia gera outro período (limpar antes).
 -- Aplicar: psql -U labflow_app -d labflow -v ON_ERROR_STOP=1 -f db/seeds/demo.sql
 
@@ -143,21 +144,28 @@ FROM (SELECT c.id, c.load_id, row_number() OVER (PARTITION BY c.load_id ORDER BY
       FROM compostas c JOIN demo_load l ON l.id = c.load_id) c
 JOIN recebimento_lotes rl ON rl.load_id = c.load_id AND ((c.g = 1 AND rl.lote <= 5) OR (c.g = 2 AND rl.lote > 5));
 
--- ---------- Concentrado: embarque (DEMO OCEAN 901 linhas 1 e 2; DEMO WAVE 902 linha 1; fase 1; 10 amostras cada) ----------
--- load de embarque sem fábrica (como o bot cadastra load antigo): 90011, 90012 e 90013
-INSERT INTO navios (nome, viagem) VALUES ('DEMO OCEAN', '901'), ('DEMO WAVE', '902');
+-- ---------- Concentrado: embarque (6 navios fictícios, linha 1 a 9 e fase 1 a 4, 10 amostras cada) ----------
+-- nomes FICTÍCIOS no formato dos navios de suco (sem a frota real da empresa); load de embarque sem fábrica
+-- (como o bot cadastra load antigo): 90011 a 90016
+CREATE TEMP TABLE demo_navio (k int, nome text, viagem text, linha int, fase int, dias int);
+INSERT INTO demo_navio VALUES
+  (1, 'D.SKY', '123', 2, 3, 31), (2, 'D.SUN', '142', 5, 1, 26), (3, 'D.BLOSSOM', '223', 8, 4, 20),
+  (4, 'D.SEA', '333', 1, 2, 16), (5, 'D.OCEAN', '333', 9, 3, 9), (6, 'D.STAR', '434', 4, 4, 4);
+
+INSERT INTO navios (nome, viagem) SELECT nome, viagem FROM demo_navio;
 INSERT INTO loads (numero, item_id, criado_por)
-SELECT (90010 + n)::text, (SELECT id FROM itens WHERE codigo = CASE WHEN n = 2 THEN '9200' ELSE '9100' END), (SELECT ids[n] FROM demo_u)
-FROM generate_series(1, 3) AS n;
+SELECT (90010 + k)::text, (SELECT id FROM itens WHERE codigo = CASE WHEN k % 2 = 0 THEN '9200' ELSE '9100' END),
+       (SELECT ids[1 + k % 3] FROM demo_u)
+FROM demo_navio;
 INSERT INTO embarques (navio_id, linha, fase, criado_por)
-SELECT (SELECT id FROM navios WHERE (nome, viagem) = (x.nome, x.viagem)), x.linha, 1, (SELECT ids[x.k] FROM demo_u)
-FROM (VALUES (1, 'DEMO OCEAN', '901', 1), (2, 'DEMO OCEAN', '901', 2), (3, 'DEMO WAVE', '902', 1)) AS x(k, nome, viagem, linha);
+SELECT (SELECT id FROM navios n WHERE (n.nome, n.viagem) = (x.nome, x.viagem)), x.linha, x.fase, (SELECT ids[1 + x.k % 3] FROM demo_u)
+FROM demo_navio x;
 
 CREATE TEMP TABLE demo_emb AS
 SELECT e.id, e.linha, l.id AS load_id, CURRENT_DATE - x.dias AS embarcado, x.k
-FROM (VALUES (1, 'DEMO OCEAN', 1, 31), (2, 'DEMO OCEAN', 2, 16), (3, 'DEMO WAVE', 1, 4)) AS x(k, navio, linha, dias)
-JOIN navios n ON n.nome = x.navio AND n.viagem IN ('901', '902')
-JOIN embarques e ON e.navio_id = n.id AND e.linha = x.linha
+FROM demo_navio x
+JOIN navios n ON (n.nome, n.viagem) = (x.nome, x.viagem)
+JOIN embarques e ON e.navio_id = n.id AND e.linha = x.linha AND e.fase = x.fase
 JOIN loads l ON l.numero = (90010 + x.k)::text AND l.item_id IN (SELECT id FROM itens WHERE codigo IN ('9100', '9200'));
 
 INSERT INTO embarque_amostras (embarque_id, load_id, numero, data_embarque, registrado_por)
