@@ -1,14 +1,14 @@
 ---
 title: LabFlow — Resultados de NFC placa a placa
 tags: [labflow, spec, nfc, tanques]
-status: draft
-version: v0.3
+status: aprovada
+version: v1.0
 created: 2026-10-07
 ---
 
 # Resultados de NFC placa a placa (C.T, B.L e WORT)
 
-> **Status:** planejamento (`v0.x`). Vira tarefa e código só quando estiver `v1.0`, aprovada pelo Danyllo.
+> **Status:** `v1.0`, aprovada pelo Danyllo em 07/10/2026. Implementação pelas tarefas `NFC-001` a `NFC-008` (abaixo).
 > **Parte da Fase 0** (Situação ok/não ok em todo o relatório) e base da tendência por tanque no painel.
 
 ## Direção desta edição
@@ -73,7 +73,7 @@ Formato:
 | `desvios_tanque` | Desvio aberto por leitura não ok de C.T, B.L ou WORT: análise de origem, **repetição** (análise refeita com o frasco de arquivo), quem abriu, prazo, status e resultado |
 | `vw_situacao_nfc` | Situação de cada leitura (ok / não ok) e de cada tanque no dia, para o relatório e o painel |
 
-Migration `016`. Testada antes numa transação desfeita, com backup antes de aplicar.
+Migration `016` (`db/migrations/016_nfc_placas.sql`). A repetição é uma linha nova em `analises`, com `repeticao_de` apontando para a análise que deu não ok; também existe a `vw_desvios_tanque`. Testada numa transação desfeita; backup antes de aplicar.
 
 ## Relatório e painel
 
@@ -89,9 +89,9 @@ Migration `016`. Testada antes numa transação desfeita, com backup antes de ap
 - [x] Fecha com a nova contagem, que gera o ok / não ok (decisão 10).
 - [x] O bot escreve "repetição"; "reanálise" falado ou escrito cai no regex da repetição (decisão 11).
 
-## Plano de implementação (depois de `v1.0`)
+## Plano de implementação
 
-1. `NFC-001` Migration 016 (tabelas, view, limites de exemplo) + arquivo de limites fora do Git.
+1. `NFC-001` Migration 016 (tabelas, view, limites de exemplo) + arquivo de limites fora do Git. **Feita** (`db/migrations/016_nfc_placas.sql`, `db/seeds/limites_nfc_exemplo.sql`; testada numa transação desfeita).
 2. `NFC-002` Regex dos comandos de placa e da repetição ("reanálise" vira repetição, nunca análise nova) + testes em `tests/interpretar-comando.test.js`.
 3. `NFC-003` Gravação com "sim" e cálculo de ok / não ok.
 4. `NFC-004` `leitura do dia finalizada` preenchendo "<1".
