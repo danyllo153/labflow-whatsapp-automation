@@ -80,3 +80,13 @@ test('ia: intencoes antigas continuam como antes (coleta pede sim, consulta vai 
   assert.equal(coleta.comando_ia, 'registrar coleta tanque terra 42 data 30/09/2026');
   assert.equal(validar({ intencao: 'consulta_drops' }).reenviarComando, 'drops para hoje');
 });
+
+test('reanalise/repeticao: a IA nao transforma em registro de analise', () => {
+  const ia = { intencao: 'registro_analise', analise: 'normal', tipo: 'terra', tanques: ['42'], data: '24/09/2026' };
+  for (const mensagem of ['reanalise do normal do tanque 42, data 24/09/2026', 'repetição do tanque 42 normal']) {
+    const r = validar(ia, { mensagem });
+    assert.equal(r.comando_ia, null, mensagem);
+    assert.match(r.textoResposta, /Nada foi gravado/);
+  }
+  assert.notEqual(validar(ia, { mensagem: 'analise do normal do tanque 42' }).comando_ia, null);
+});
