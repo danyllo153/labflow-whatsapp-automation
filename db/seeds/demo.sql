@@ -65,19 +65,23 @@ JOIN (VALUES ('Normal', 2), ('Stress', 4)) AS f(frasco, cada) ON (CURRENT_DATE -
 CROSS JOIN (VALUES ('CT', 'Profundidade', NULL::int, 2), ('BL', 'Profundidade', 3, 5),
                    ('WORT', 'Profundidade', 5, 10), ('WORT', 'Superficie', 5, 10)) AS l(sub, met, pre, fin);
 
--- desvios de drop: um confirmado a 25 °C, um não confirmado, um aberto
-INSERT INTO desvios_drop (drop_id, data_abertura, leitura_prevista, aberto_por, status, resultado, temperaturas, resultado_por, resultado_em)
-SELECT d.id, d.data_prevista, d.data_prevista + 5, (SELECT ids[1] FROM demo_u),
-       CASE n WHEN 3 THEN 'Em confirmação' ELSE 'Concluído' END,
-       CASE n WHEN 1 THEN 'Confirmado' WHEN 2 THEN 'Não confirmado' END,
-       CASE n WHEN 1 THEN ARRAY[25] ELSE '{}'::int[] END,
-       CASE WHEN n < 3 THEN (SELECT ids[2] FROM demo_u) END,
-       CASE WHEN n < 3 THEN (d.data_prevista + 4) + time '15:00' END
-FROM (SELECT d.*, row_number() OVER (ORDER BY d.data_prevista) AS n
+-- desvios de drop (~12): terra e navio, D5/D10/D15, analistas variados. Os abertos nos últimos 4 dias
+-- ficam em confirmação (5 dias de prazo); os outros já têm resultado: confirmado em 25 °C, em 13 e 25 °C
+-- ou nas três temperaturas, ou não confirmado
+INSERT INTO desvios_drop (drop_id, data_abertura, leitura_prevista, aberto_por, aberto_em, status, resultado, temperaturas,
+                          resultado_por, resultado_em)
+SELECT d.id, d.data_prevista, d.data_prevista + 5, (SELECT ids[1 + n % 3] FROM demo_u), d.data_prevista + time '16:00',
+       CASE WHEN aberto THEN 'Em confirmação' ELSE 'Concluído' END,
+       CASE WHEN aberto THEN NULL WHEN n % 4 = 0 THEN 'Não confirmado' ELSE 'Confirmado' END,
+       CASE WHEN aberto OR n % 4 = 0 THEN '{}'::int[]
+            WHEN n % 4 = 1 THEN ARRAY[25] WHEN n % 4 = 2 THEN ARRAY[13, 25] ELSE ARRAY[7, 13, 25] END,
+       CASE WHEN NOT aberto THEN (SELECT ids[1 + (n + 1) % 3] FROM demo_u) END,
+       CASE WHEN NOT aberto THEN (d.data_prevista + 1 + (n % 4)::int) + time '15:00' END
+FROM (SELECT d.*, row_number() OVER (ORDER BY (d.id * 7) % 13, d.id) AS n,
+             d.data_prevista >= CURRENT_DATE - 4 AS aberto
       FROM drops d JOIN demo_col c ON c.id = d.coleta_id
-      WHERE d.status = 'Concluído' AND d.dia = 5
-        AND d.data_prevista IN (CURRENT_DATE - 20, CURRENT_DATE - 12, CURRENT_DATE - 2)) d
-WHERE n <= 3;
+      WHERE d.status = 'Concluído' AND d.data_prevista BETWEEN CURRENT_DATE - 25 AND CURRENT_DATE - 1) d
+WHERE n <= 12;
 
 -- TAB dos tanques de terra (um a cada 4 dias de coleta), com o status pelo tempo: os mais recentes
 -- no caldo ou incubados, os de 13 dias em confirmação (colônia na placa; a confirmação é no dia seguinte à leitura), alguns positivos

@@ -13,6 +13,22 @@ table 'bi desvios'
 		formatString: 0
 		lineageTag: 5c1c1e44-fbe3-8695-d3c7-e95299ae8c63
 
+	measure 'Desvios não confirmados' = CALCULATE(COUNTROWS('bi desvios'), 'bi desvios'[resultado] = "Não confirmado")
+		formatString: 0
+		lineageTag: 1a4730b9-d269-0ecd-208d-4d96d369c754
+
+	measure 'Confirmou a 7 °C' = CALCULATE(COUNTROWS('bi desvios'), 'bi desvios'[cresceu_7c] = TRUE())
+		formatString: 0
+		lineageTag: fee59a16-23d0-1311-d461-ca44ac2caf6e
+
+	measure 'Confirmou a 13 °C' = CALCULATE(COUNTROWS('bi desvios'), 'bi desvios'[cresceu_13c] = TRUE())
+		formatString: 0
+		lineageTag: cdd17372-cb62-d6b8-176b-b7945b39f81a
+
+	measure 'Confirmou a 25 °C' = CALCULATE(COUNTROWS('bi desvios'), 'bi desvios'[cresceu_25c] = TRUE())
+		formatString: 0
+		lineageTag: 6b1132e2-d912-5706-9b8e-3976c9db121d
+
 	column 'Local' = IF(ISBLANK('bi desvios'[navio]), "Terra (tank farm)", 'bi desvios'[navio])
 		dataType: string
 		lineageTag: fbf9c567-f473-9152-c8ec-96adfa6e8f1a

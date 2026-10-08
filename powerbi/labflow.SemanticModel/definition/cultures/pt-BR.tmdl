@@ -11230,6 +11230,58 @@ cultureInfo pt-BR
 			          }
 			        }
 			      ]
+			    },
+			    "bi_testes.navio_fase": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "bi testes",
+			          "ConceptualProperty": "navio_fase"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Navio": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "bi_testes.load_ou_tanque": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "bi testes",
+			          "ConceptualProperty": "load_ou_tanque"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Load / tanque": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
+			          "Load": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
 			    }
 			  },
 			  "Relationships": {

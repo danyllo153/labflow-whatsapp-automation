@@ -10,7 +10,7 @@
     "tabOrder": 11000
   },
   "visual": {
-    "visualType": "donutChart",
+    "visualType": "barChart",
     "query": {
       "queryState": {
         "Category": {
@@ -20,15 +20,34 @@
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "bi desvios"
+                      "Entity": "bi drops"
                     }
                   },
-                  "Property": "resultado"
+                  "Property": "Local"
                 }
               },
-              "queryRef": "bi desvios.resultado",
-              "nativeQueryRef": "resultado",
-              "displayName": "Resultado"
+              "queryRef": "bi drops.Local",
+              "nativeQueryRef": "Local",
+              "displayName": "Navio / terra"
+            }
+          ]
+        },
+        "Series": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "bi drops"
+                    }
+                  },
+                  "Property": "situacao"
+                }
+              },
+              "queryRef": "bi drops.situacao",
+              "nativeQueryRef": "situacao",
+              "displayName": "Situação"
             }
           ]
         },
@@ -39,14 +58,14 @@
                 "Measure": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "bi desvios"
+                      "Entity": "bi drops"
                     }
                   },
-                  "Property": "Desvios"
+                  "Property": "Drops"
                 }
               },
-              "queryRef": "bi desvios.Desvios",
-              "nativeQueryRef": "Desvios"
+              "queryRef": "bi drops.Drops",
+              "nativeQueryRef": "Drops"
             }
           ]
         }
@@ -78,10 +97,502 @@
                       "Column": {
                         "Expression": {
                           "SourceRef": {
-                            "Entity": "bi desvios"
+                            "Entity": "bi drops"
                           }
                         },
-                        "Property": "resultado"
+                        "Property": "situacao"
+                      }
+                    },
+                    "Right": {
+                      "Literal": {
+                        "Value": "'Atrasado'"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "properties": {
+            "fill": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#F59E0B'"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "selector": {
+            "data": [
+              {
+                "scopeId": {
+                  "Comparison": {
+                    "ComparisonKind": 0,
+                    "Left": {
+                      "Column": {
+                        "Expression": {
+                          "SourceRef": {
+                            "Entity": "bi drops"
+                          }
+                        },
+                        "Property": "situacao"
+                      }
+                    },
+                    "Right": {
+                      "Literal": {
+                        "Value": "'Vence hoje'"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "properties": {
+            "fill": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#3B82F6'"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "selector": {
+            "data": [
+              {
+                "scopeId": {
+                  "Comparison": {
+                    "ComparisonKind": 0,
+                    "Left": {
+                      "Column": {
+                        "Expression": {
+                          "SourceRef": {
+                            "Entity": "bi drops"
+                          }
+                        },
+                        "Property": "situacao"
+                      }
+                    },
+                    "Right": {
+                      "Literal": {
+                        "Value": "'No prazo'"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "properties": {
+            "fill": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#22C55E'"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "selector": {
+            "data": [
+              {
+                "scopeId": {
+                  "Comparison": {
+                    "ComparisonKind": 0,
+                    "Left": {
+                      "Column": {
+                        "Expression": {
+                          "SourceRef": {
+                            "Entity": "bi drops"
+                          }
+                        },
+                        "Property": "situacao"
+                      }
+                    },
+                    "Right": {
+                      "Literal": {
+                        "Value": "'Lido'"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "properties": {
+            "fill": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#22C55E'"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "selector": {
+            "data": [
+              {
+                "scopeId": {
+                  "Comparison": {
+                    "ComparisonKind": 0,
+                    "Left": {
+                      "Column": {
+                        "Expression": {
+                          "SourceRef": {
+                            "Entity": "bi drops"
+                          }
+                        },
+                        "Property": "situacao"
+                      }
+                    },
+                    "Right": {
+                      "Literal": {
+                        "Value": "'Concluído'"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "properties": {
+            "fill": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#F59E0B'"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "selector": {
+            "data": [
+              {
+                "scopeId": {
+                  "Comparison": {
+                    "ComparisonKind": 0,
+                    "Left": {
+                      "Column": {
+                        "Expression": {
+                          "SourceRef": {
+                            "Entity": "bi drops"
+                          }
+                        },
+                        "Property": "situacao"
+                      }
+                    },
+                    "Right": {
+                      "Literal": {
+                        "Value": "'Em confirmação'"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "properties": {
+            "fill": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#F59E0B'"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "selector": {
+            "data": [
+              {
+                "scopeId": {
+                  "Comparison": {
+                    "ComparisonKind": 0,
+                    "Left": {
+                      "Column": {
+                        "Expression": {
+                          "SourceRef": {
+                            "Entity": "bi drops"
+                          }
+                        },
+                        "Property": "situacao"
+                      }
+                    },
+                    "Right": {
+                      "Literal": {
+                        "Value": "'Positivo, em confirmação'"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "properties": {
+            "fill": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#3B82F6'"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "selector": {
+            "data": [
+              {
+                "scopeId": {
+                  "Comparison": {
+                    "ComparisonKind": 0,
+                    "Left": {
+                      "Column": {
+                        "Expression": {
+                          "SourceRef": {
+                            "Entity": "bi drops"
+                          }
+                        },
+                        "Property": "situacao"
+                      }
+                    },
+                    "Right": {
+                      "Literal": {
+                        "Value": "'Em andamento'"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "properties": {
+            "fill": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#3B82F6'"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "selector": {
+            "data": [
+              {
+                "scopeId": {
+                  "Comparison": {
+                    "ComparisonKind": 0,
+                    "Left": {
+                      "Column": {
+                        "Expression": {
+                          "SourceRef": {
+                            "Entity": "bi drops"
+                          }
+                        },
+                        "Property": "situacao"
+                      }
+                    },
+                    "Right": {
+                      "Literal": {
+                        "Value": "'No caldo'"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "properties": {
+            "fill": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#14B8A6'"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "selector": {
+            "data": [
+              {
+                "scopeId": {
+                  "Comparison": {
+                    "ComparisonKind": 0,
+                    "Left": {
+                      "Column": {
+                        "Expression": {
+                          "SourceRef": {
+                            "Entity": "bi drops"
+                          }
+                        },
+                        "Property": "situacao"
+                      }
+                    },
+                    "Right": {
+                      "Literal": {
+                        "Value": "'Estriado'"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "properties": {
+            "fill": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#8B5CF6'"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "selector": {
+            "data": [
+              {
+                "scopeId": {
+                  "Comparison": {
+                    "ComparisonKind": 0,
+                    "Left": {
+                      "Column": {
+                        "Expression": {
+                          "SourceRef": {
+                            "Entity": "bi drops"
+                          }
+                        },
+                        "Property": "situacao"
+                      }
+                    },
+                    "Right": {
+                      "Literal": {
+                        "Value": "'Incubado'"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "properties": {
+            "fill": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#EF4444'"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "selector": {
+            "data": [
+              {
+                "scopeId": {
+                  "Comparison": {
+                    "ComparisonKind": 0,
+                    "Left": {
+                      "Column": {
+                        "Expression": {
+                          "SourceRef": {
+                            "Entity": "bi drops"
+                          }
+                        },
+                        "Property": "situacao"
+                      }
+                    },
+                    "Right": {
+                      "Literal": {
+                        "Value": "'Positivo'"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "properties": {
+            "fill": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#EF4444'"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "selector": {
+            "data": [
+              {
+                "scopeId": {
+                  "Comparison": {
+                    "ComparisonKind": 0,
+                    "Left": {
+                      "Column": {
+                        "Expression": {
+                          "SourceRef": {
+                            "Entity": "bi drops"
+                          }
+                        },
+                        "Property": "situacao"
                       }
                     },
                     "Right": {
@@ -119,10 +630,51 @@
                       "Column": {
                         "Expression": {
                           "SourceRef": {
-                            "Entity": "bi desvios"
+                            "Entity": "bi drops"
                           }
                         },
-                        "Property": "resultado"
+                        "Property": "situacao"
+                      }
+                    },
+                    "Right": {
+                      "Literal": {
+                        "Value": "'Negativo'"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "properties": {
+            "fill": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#22C55E'"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "selector": {
+            "data": [
+              {
+                "scopeId": {
+                  "Comparison": {
+                    "ComparisonKind": 0,
+                    "Left": {
+                      "Column": {
+                        "Expression": {
+                          "SourceRef": {
+                            "Entity": "bi drops"
+                          }
+                        },
+                        "Property": "situacao"
                       }
                     },
                     "Right": {
@@ -143,7 +695,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#F59E0B'"
+                      "Value": "'#A1A1AA'"
                     }
                   }
                 }
@@ -160,15 +712,138 @@
                       "Column": {
                         "Expression": {
                           "SourceRef": {
-                            "Entity": "bi desvios"
+                            "Entity": "bi drops"
                           }
                         },
-                        "Property": "resultado"
+                        "Property": "situacao"
                       }
                     },
                     "Right": {
                       "Literal": {
-                        "Value": "'Em confirmação'"
+                        "Value": "'Sem desvio'"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "properties": {
+            "fill": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#EF4444'"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "selector": {
+            "data": [
+              {
+                "scopeId": {
+                  "Comparison": {
+                    "ComparisonKind": 0,
+                    "Left": {
+                      "Column": {
+                        "Expression": {
+                          "SourceRef": {
+                            "Entity": "bi drops"
+                          }
+                        },
+                        "Property": "situacao"
+                      }
+                    },
+                    "Right": {
+                      "Literal": {
+                        "Value": "'Alarme'"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "properties": {
+            "fill": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#22C55E'"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "selector": {
+            "data": [
+              {
+                "scopeId": {
+                  "Comparison": {
+                    "ComparisonKind": 0,
+                    "Left": {
+                      "Column": {
+                        "Expression": {
+                          "SourceRef": {
+                            "Entity": "bi drops"
+                          }
+                        },
+                        "Property": "situacao"
+                      }
+                    },
+                    "Right": {
+                      "Literal": {
+                        "Value": "'Normal'"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "properties": {
+            "fill": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#A1A1AA'"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "selector": {
+            "data": [
+              {
+                "scopeId": {
+                  "Comparison": {
+                    "ComparisonKind": 0,
+                    "Left": {
+                      "Column": {
+                        "Expression": {
+                          "SourceRef": {
+                            "Entity": "bi drops"
+                          }
+                        },
+                        "Property": "situacao"
+                      }
+                    },
+                    "Right": {
+                      "Literal": {
+                        "Value": "'Aguardando'"
                       }
                     }
                   }
@@ -184,7 +859,7 @@
             "show": {
               "expr": {
                 "Literal": {
-                  "Value": "false"
+                  "Value": "true"
                 }
               }
             },
@@ -200,7 +875,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#D4D4D8'"
+                      "Value": "'#FFFFFF'"
                     }
                   }
                 }
@@ -222,7 +897,7 @@
             "position": {
               "expr": {
                 "Literal": {
-                  "Value": "'Right'"
+                  "Value": "'Top'"
                 }
               }
             }
@@ -244,7 +919,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Desvios por resultado'"
+                  "Value": "'Drops por navio / terra e situação'"
                 }
               }
             },
