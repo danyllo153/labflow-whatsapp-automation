@@ -13,13 +13,13 @@ created: 2026-10-07
 
 ## Direção desta edição
 
-Hoje a leitura de NFC só marca **lido** e quem leu, sem o resultado. Passa a gravar **o número de cada placa** (triplicata) de cada leitura, no frasco Normal e no Stress. O analista digita **só as placas que cresceram**; o resto entra como **"<1"** quando a leitura do dia é finalizada. Com os números, cada leitura ganha **ok / não ok** (✅ / 🚨) no relatório e no painel, e o painel ganha **tendência por tanque**. No B.L e no WORT, não ok **abre desvio**: a análise é repetida com o **frasco de arquivo**, como uma análise nova.
+Hoje a leitura de NFC só marca **lido** e quem leu, sem o resultado. Passa a gravar **o número de cada placa** (triplicata) de cada leitura, no frasco Normal e no Stress. O analista digita **só as placas que cresceram**; o resto entra como **"<1"** quando a leitura do dia é finalizada. Com os números, cada leitura ganha **ok / não ok** (✅ / 🚨) no relatório e no painel, e o painel ganha **tendência por tanque**. No B.L e no WORT, não ok **abre uma repetição**: a análise é refeita com o **frasco de arquivo**, como uma análise nova.
 
 ## O que já existe
 
 - Cada análise registrada gera 4 linhas em `analises` por tanque e frasco: C.T (Profundidade), B.L (Profundidade), WORT Profundidade e WORT Superfície. Prazos contados da **data da análise**: C.T 48h; B.L pré-leitura 72h e final 120h; WORT pré-leitura 120h e final 240h (`docs/comandos.md`, seção 7).
 - A conclusão das leituras (e `leitura do dia finalizada`) marca como lido, com quem leu, sem valor.
-- O desvio de drop (migration 012) é o modelo de desvio: abre com "sim", tem prazo, resultado e aparece na página Desvios do painel.
+- O desvio de drop (migration 012) é o modelo: abre com "sim", tem prazo e resultado, e aparece na página Desvios do painel (que também vai mostrar as repetições).
 
 ## Decisões (07/10/2026, com o Danyllo)
 
@@ -28,8 +28,8 @@ Hoje a leitura de NFC só marca **lido** e quem leu, sem o resultado. Passa a gr
 3. **O analista digita só as placas que cresceram.** As outras entram como "<1" automaticamente na **leitura do dia finalizada**.
 4. **Pré-leitura** (B.L 72h e WORT 120h) com resultado fora do limite **já é não ok**.
 5. **Limites de aceitação** por análise e etapa ficam numa **tabela do banco**, carregada por um **arquivo fora do Git**. O repositório traz só um arquivo de exemplo com **valores fictícios** (regra do `CLAUDE.md`).
-6. **Não ok aparece no relatório (🚨) e no painel.** No **B.L e no WORT**, abre também um **desvio de análise**: repetição com o frasco de arquivo, como análise nova, e os prazos voltam a contar.
-7. No **C.T**, não ok **só aparece** no relatório e no painel (sem desvio). *(confirmar)*
+6. **Não ok aparece no relatório (🚨) e no painel.** No **B.L e no WORT**, abre também uma **repetição**: a análise é refeita com o frasco de arquivo, como análise nova, e os prazos voltam a contar.
+7. No **C.T**, não ok **só aparece** no relatório e no painel (sem repetição). *(confirmar)*
 
 ## Comandos (pensados também para o áudio)
 
@@ -59,7 +59,7 @@ Formato:
 |---|---|
 | `leituras_placas` | Uma linha por placa: `analise_id`, etapa (`pre` / `final`), placa (1 a 3), sinal (`<` / `=`), valor, quem leu, quando, origem (`digitado` / `automatico`). Única por análise + etapa + placa |
 | `limites_nfc` | Limite máximo por placa, por análise e etapa, com vigência. **Valores reais carregados de um arquivo fora do Git**; exemplo fictício no repositório |
-| `desvios_analise` | Desvio aberto por leitura não ok de B.L ou WORT: análise de origem, análise de repetição (frasco de arquivo), quem abriu, prazo, status e resultado |
+| `repeticoes_analise` | Repetição aberta por leitura não ok de B.L ou WORT: análise de origem, análise refeita com o frasco de arquivo, quem abriu, prazo, status e resultado |
 | `vw_situacao_nfc` | Situação de cada leitura (ok / não ok) e de cada tanque no dia, para o relatório e o painel |
 
 Migration `016`. Testada antes numa transação desfeita, com backup antes de aplicar.
@@ -71,12 +71,12 @@ Migration `016`. Testada antes numa transação desfeita, com backup antes de ap
 
 ## Perguntas a responder
 
-- [ ] Confirmar: C.T não ok **não** abre desvio (só relatório e painel)?
-- [ ] O desvio de análise abre sozinho ao gravar o não ok, ou o bot pergunta "abrir desvio?" (como no drop)?
-- [ ] Na repetição com o frasco de arquivo, repete **só a análise que deu não ok** (ex.: só B.L) ou todas do frasco?
+- [ ] Confirmar: C.T não ok **não** abre repetição (só relatório e painel)?
+- [ ] A repetição abre sozinha ao gravar o não ok, ou o bot pergunta "abrir repetição?" (como no desvio de drop)?
+- [ ] A repetição com o frasco de arquivo refaz **só a análise que deu não ok** (ex.: só B.L) ou todas do frasco?
 - [ ] Repetição também em triplicata e com os mesmos prazos da análise original?
-- [ ] Como o resultado da repetição fecha o desvio (confirmou / não confirmou, como no drop)?
-- [ ] Nome do termo para o analista: "desvio de análise", "repetição do arquivo" ou outro?
+- [ ] Como o resultado da repetição a fecha (confirmou / não confirmou, como no desvio de drop)?
+- [x] Termo: **repetição** (decidido em 07/10/2026; nunca "reanálise").
 
 ## Plano de implementação (depois de `v1.0`)
 
@@ -85,6 +85,6 @@ Migration `016`. Testada antes numa transação desfeita, com backup antes de ap
 3. `NFC-003` Gravação com "sim" e cálculo de ok / não ok.
 4. `NFC-004` `leitura do dia finalizada` preenchendo "<1".
 5. `NFC-005` Relatório com ✅ / 🚨 por tanque.
-6. `NFC-006` Desvio de análise (B.L e WORT) e repetição com o frasco de arquivo.
+6. `NFC-006` Repetição (B.L e WORT) com o frasco de arquivo.
 7. `NFC-007` IA: catálogo com os comandos novos (texto e áudio).
 8. `NFC-008` Painel: Situação, tendência e páginas Análise TT / Análise T.N.
