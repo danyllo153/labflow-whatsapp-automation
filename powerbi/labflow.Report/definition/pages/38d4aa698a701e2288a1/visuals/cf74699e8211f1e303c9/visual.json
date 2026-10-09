@@ -5,8 +5,8 @@
     "x": 1424,
     "y": 108,
     "z": 6000,
-    "width": 230,
     "height": 60,
+    "width": 230,
     "tabOrder": 6000
   },
   "visual": {
@@ -28,6 +28,7 @@
               },
               "queryRef": "bi testes.tanque",
               "nativeQueryRef": "tanque",
+              "active": true,
               "displayName": "Tanque de terra"
             }
           ]
@@ -63,7 +64,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#A1A1AA'"
+                      "Value": "'#5B6B85'"
                     }
                   }
                 }

@@ -5,8 +5,8 @@
     "x": 24,
     "y": 598,
     "z": 11000,
-    "width": 1872,
     "height": 466,
+    "width": 1872,
     "tabOrder": 11000
   },
   "visual": {
@@ -130,16 +130,6 @@
           }
         },
         {
-          "selector": {
-            "data": [
-              {
-                "dataViewWildcard": {
-                  "matchingOption": 1
-                }
-              }
-            ],
-            "metadata": "bi coletas.origem"
-          },
           "properties": {
             "fontColor": {
               "solid": {
@@ -170,7 +160,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#22C55E'"
+                              "Value": "'#16A34A'"
                             }
                           }
                         },
@@ -197,7 +187,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#3B82F6'"
+                              "Value": "'#1D6FE8'"
                             }
                           }
                         },
@@ -224,7 +214,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#14B8A6'"
+                              "Value": "'#0E8A96'"
                             }
                           }
                         },
@@ -251,7 +241,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#3B82F6'"
+                              "Value": "'#1D6FE8'"
                             }
                           }
                         },
@@ -278,7 +268,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#22C55E'"
+                              "Value": "'#16A34A'"
                             }
                           }
                         },
@@ -305,7 +295,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#8B5CF6'"
+                              "Value": "'#7C3AED'"
                             }
                           }
                         },
@@ -332,7 +322,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#EC4899'"
+                              "Value": "'#DB2777'"
                             }
                           }
                         },
@@ -359,7 +349,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#94A3B8'"
+                              "Value": "'#3B5B8C'"
                             }
                           }
                         },
@@ -386,7 +376,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#3B82F6'"
+                              "Value": "'#1D6FE8'"
                             }
                           }
                         },
@@ -413,7 +403,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#8B5CF6'"
+                              "Value": "'#7C3AED'"
                             }
                           }
                         },
@@ -440,7 +430,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#F59E0B'"
+                              "Value": "'#D97706'"
                             }
                           }
                         },
@@ -467,7 +457,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#14B8A6'"
+                              "Value": "'#0E8A96'"
                             }
                           }
                         },
@@ -494,7 +484,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#3B82F6'"
+                              "Value": "'#1D6FE8'"
                             }
                           }
                         },
@@ -521,7 +511,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#8B5CF6'"
+                              "Value": "'#7C3AED'"
                             }
                           }
                         },
@@ -548,7 +538,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#3B82F6'"
+                              "Value": "'#1D6FE8'"
                             }
                           }
                         },
@@ -575,7 +565,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#F59E0B'"
+                              "Value": "'#D97706'"
                             }
                           }
                         },
@@ -602,7 +592,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#8B5CF6'"
+                              "Value": "'#7C3AED'"
                             }
                           }
                         }
@@ -612,6 +602,16 @@
                 }
               }
             }
+          },
+          "selector": {
+            "data": [
+              {
+                "dataViewWildcard": {
+                  "matchingOption": 1
+                }
+              }
+            ],
+            "metadata": "bi coletas.origem"
           }
         }
       ],
@@ -630,7 +630,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#18181B'"
+                      "Value": "'#F5F8FD'"
                     }
                   }
                 }
@@ -641,7 +641,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#A1A1AA'"
+                      "Value": "'#5B6B85'"
                     }
                   }
                 }
@@ -650,7 +650,7 @@
             "autoSizeColumnWidth": {
               "expr": {
                 "Literal": {
-                  "Value": "false"
+                  "Value": "true"
                 }
               }
             },
@@ -787,7 +787,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#F4F4F5'"
+                      "Value": "'#0F2547'"
                     }
                   }
                 }
@@ -798,7 +798,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#141416'"
+                      "Value": "'#FFFFFF'"
                     }
                   }
                 }

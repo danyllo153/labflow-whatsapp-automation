@@ -5,8 +5,8 @@
     "x": 1262,
     "y": 176,
     "z": 8000,
-    "width": 310,
     "height": 60,
+    "width": 310,
     "tabOrder": 8000
   },
   "visual": {
@@ -28,6 +28,7 @@
               },
               "queryRef": "Calendário.Date",
               "nativeQueryRef": "Date",
+              "active": true,
               "displayName": "Período da coleta"
             }
           ]
@@ -63,7 +64,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#A1A1AA'"
+                      "Value": "'#5B6B85'"
                     }
                   }
                 }

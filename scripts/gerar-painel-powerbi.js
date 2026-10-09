@@ -25,23 +25,36 @@ const texto = (s) => `'${String(s).replace(/'/g, "''")}'`; // literal de texto d
 const lit = (v) => ({ expr: { Literal: { Value: v } } });
 const cor = (hex) => ({ solid: { color: lit(`'${hex}'`) } });
 
-// ---------------------------------------------------------------- cores (modo escuro)
-// fundo quase preto, cartões grafite com borda fina e cores vivas só onde há significado
-const COR = {
+// ---------------------------------------------------------------- cores
+// claro (padrão): fundo azul-gelo, cartões brancos com borda suave, texto marinho e as mesmas cores de significado
+// escuro (--escuro): fundo quase preto, cartões grafite com borda fina
+const ESCURO = process.argv.includes('--escuro');
+const COR = ESCURO ? {
   fundo: '#0A0A0B', cartao: '#141416', cartao2: '#18181B', borda: '#26262B', grade: '#27272A',
-  texto: '#F4F4F5', texto2: '#A1A1AA', apagado: '#71717A',
+  texto: '#F4F4F5', texto2: '#A1A1AA', apagado: '#71717A', corpo: '#E4E4E7', rotuloFora: '#D4D4D8',
+  hover: '#1F1F23', selecionado: '#2563EB', aguardando: '#3F3F46', sombra: 'none',
   marinho: '#94A3B8', azul: '#3B82F6', verde: '#22C55E', laranja: '#F59E0B', vermelho: '#EF4444',
   roxo: '#8B5CF6', magenta: '#EC4899', teal: '#14B8A6', cinza: '#71717A', branco: '#FFFFFF',
+} : {
+  fundo: '#EEF3FB', cartao: '#FFFFFF', cartao2: '#F5F8FD', borda: '#E2E9F4', grade: '#E9EEF6',
+  texto: '#0F2547', texto2: '#5B6B85', apagado: '#94A3B8', corpo: '#1E2B45', rotuloFora: '#334155',
+  hover: '#E7EFFC', selecionado: '#1D6FE8', aguardando: '#CBD5E1', sombra: '0 2px 6px rgba(15,37,71,.06)',
+  marinho: '#3B5B8C', azul: '#1D6FE8', verde: '#16A34A', laranja: '#D97706', vermelho: '#DC2626',
+  roxo: '#7C3AED', magenta: '#DB2777', teal: '#0E8A96', cinza: '#94A3B8', branco: '#FFFFFF',
 };
+// mistura a cor com o fundo do cartão (fundo das pílulas: tom bem claro no modo claro, bem escuro no escuro)
+const mistura = (hex, a) => '#' + [1, 3, 5].map((i) => Math.round(parseInt(hex.slice(i, i + 2), 16) * a
+  + parseInt(COR.cartao.slice(i, i + 2), 16) * (1 - a)).toString(16).padStart(2, '0')).join('').toUpperCase();
+const P = (c) => [c, mistura(c, ESCURO ? 0.12 : 0.1)];
 // valores de status: [cor do texto, cor do fundo] (vira "pílula" colorida nas tabelas e cor das séries nos gráficos)
 const PILULA = {
-  'Atrasado': [COR.vermelho, '#2A1416'], 'Vence hoje': [COR.laranja, '#2A2010'], 'No prazo': [COR.azul, '#131D33'],
-  'Lido': [COR.verde, '#112419'], 'Concluído': [COR.verde, '#112419'],
-  'Em confirmação': [COR.laranja, '#2A2010'], 'Positivo, em confirmação': [COR.laranja, '#2A2010'], 'Em andamento': [COR.azul, '#131D33'],
-  'No caldo': [COR.azul, '#131D33'], 'Estriado': [COR.teal, '#0F2523'], 'Incubado': [COR.roxo, '#1E1733'],
-  'Positivo': [COR.vermelho, '#2A1416'], 'Confirmado': [COR.vermelho, '#2A1416'],
-  'Negativo': [COR.verde, '#112419'], 'Não confirmado': [COR.verde, '#112419'], 'Sem desvio': [COR.texto2, '#1C1C1F'],
-  'Alarme': [COR.vermelho, '#2A1416'], 'Normal': [COR.verde, '#112419'], 'Aguardando': [COR.texto2, '#1C1C1F'],
+  'Atrasado': P(COR.vermelho), 'Vence hoje': P(COR.laranja), 'No prazo': P(COR.azul),
+  'Lido': P(COR.verde), 'Concluído': P(COR.verde),
+  'Em confirmação': P(COR.laranja), 'Positivo, em confirmação': P(COR.laranja), 'Em andamento': P(COR.azul),
+  'No caldo': P(COR.azul), 'Estriado': P(COR.teal), 'Incubado': P(COR.roxo),
+  'Positivo': P(COR.vermelho), 'Confirmado': P(COR.vermelho),
+  'Negativo': P(COR.verde), 'Não confirmado': P(COR.verde), 'Sem desvio': P(COR.texto2),
+  'Alarme': P(COR.vermelho), 'Normal': P(COR.verde), 'Aguardando': P(COR.texto2),
 };
 // valores de identificação: só a cor do texto
 const ROTULO = {
@@ -55,12 +68,12 @@ const SERIE_SITUACAO = Object.fromEntries(Object.entries(PILULA).map(([v, [t]]) 
 const SERIE_ORIGEM = { Terra: COR.teal, Navio: COR.azul };
 const SERIE_RESULTADO = { Positivo: COR.vermelho, Negativo: COR.verde, 'Em andamento': COR.azul };
 const SERIE_DESVIO = { Confirmado: COR.vermelho, 'Não confirmado': COR.verde, 'Em confirmação': COR.laranja };
-const SERIE_FAIXA = { Alarme: COR.vermelho, Normal: COR.teal, Aguardando: '#3F3F46' };
+const SERIE_FAIXA = { Alarme: COR.vermelho, Normal: COR.teal, Aguardando: COR.aguardando };
 
 // ---------------------------------------------------------------- tema LabFlow (escuro)
 const solido = (hex) => ({ solid: { color: hex } });
 const TEMA = {
-  name: 'LabFlow escuro',
+  name: ESCURO ? 'LabFlow escuro' : 'LabFlow claro',
   dataColors: [COR.azul, COR.teal, COR.laranja, COR.roxo, COR.magenta, COR.vermelho, COR.verde, '#EAB308', COR.marinho],
   foreground: COR.texto, foregroundNeutralSecondary: COR.texto2, background: COR.cartao, backgroundLight: COR.cartao2,
   backgroundNeutral: COR.borda, tableAccent: COR.azul,
@@ -90,14 +103,14 @@ const TEMA = {
     tableEx: { '*': {
       columnHeaders: [{ backColor: solido(COR.cartao2), fontColor: solido(COR.texto2), bold: true }],
       values: [{ backColorPrimary: solido(COR.cartao), backColorSecondary: solido(COR.cartao2),
-        fontColorPrimary: solido('#E4E4E7'), fontColorSecondary: solido('#E4E4E7') }],
+        fontColorPrimary: solido(COR.corpo), fontColorSecondary: solido(COR.corpo) }],
       grid: [{ gridHorizontal: true, gridHorizontalColor: solido(COR.grade), gridVertical: false, outlineColor: solido(COR.borda) }],
     } },
     slicer: { '*': {
       header: [{ fontColor: solido(COR.texto2), bold: false }],
-      items: [{ fontColor: solido('#E4E4E7'), background: solido(COR.cartao2), outlineColor: solido(COR.borda) }],
-      date: [{ fontColor: solido('#E4E4E7'), background: solido(COR.cartao2) }],
-      numericInputStyle: [{ fontColor: solido('#E4E4E7'), background: solido(COR.cartao2) }],
+      items: [{ fontColor: solido(COR.corpo), background: solido(COR.cartao2), outlineColor: solido(COR.borda) }],
+      date: [{ fontColor: solido(COR.corpo), background: solido(COR.cartao2) }],
+      numericInputStyle: [{ fontColor: solido(COR.corpo), background: solido(COR.cartao2) }],
       slider: [{ color: solido(COR.azul) }],
     } },
   },
@@ -120,15 +133,16 @@ fs.writeFileSync(path.join(DEF, 'report.json'), JSON.stringify(report, null, 2),
 const dax = (s) => `"${s.replace(/"/g, '""')}"`; // texto -> literal DAX
 const junta = (...partes) => partes.join(' & '); // concatenação DAX
 const FONTE = 'font-family:Segoe UI,sans-serif';
+const SEM_ROLAGEM = '<style>html,body{margin:0;padding:0;height:100%;overflow:hidden}</style>'; // o visual não mostra barra de rolagem
 // cor com transparência (para o fundo das pílulas e dos ícones)
 const rgba = (hex, a) => `rgba(${parseInt(hex.slice(1, 3), 16)},${parseInt(hex.slice(3, 5), 16)},${parseInt(hex.slice(5, 7), 16)},${a})`;
 
 // barra de cima: marca à esquerda e título grande da página (a navegação fica à direita, por cima)
 const cabecalhoHtml = (titulo, sub, icone) => dax(
-  `<div style='height:70px;box-sizing:border-box;display:flex;align-items:center;gap:12px;padding:0 24px;${FONTE};`
+  `${SEM_ROLAGEM}<div style='height:100%;box-sizing:border-box;display:flex;align-items:center;gap:12px;padding:0 24px;${FONTE};`
   + `background:${COR.fundo}'>`
   + `<div style='width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;`
-  + `background:linear-gradient(135deg,#2563EB,#3B82F6);box-shadow:0 0 0 4px ${rgba(COR.azul, 0.15)}'>${icone}</div>`
+  + `background:linear-gradient(135deg,#1D6FE8,#3B9BF5);box-shadow:0 0 0 4px ${rgba(COR.azul, 0.15)}'>${icone}</div>`
   + `<div><div style='font-size:11px;font-weight:600;color:${COR.texto2};letter-spacing:.3px'>LabFlow · Microbiologia</div>`
   + `<div style='font-size:20px;font-weight:700;color:${COR.texto};line-height:1.2;letter-spacing:-.3px'>${titulo}</div>`
   + `<div style='font-size:11px;color:${COR.apagado};line-height:1.3'>${sub} · dados fictícios de demonstração</div></div></div>`);
@@ -139,18 +153,19 @@ const cartaoHtml = ({ rotulo, valor, sub, icone, cor: c, neutro, formato = '0', 
   const v = `COALESCE(${valor}, 0)`;
   const k = COR[c] || COR.azul;
   const se = (sim, nao) => (neutro ? sim : `IF(${v} > 0, ${sim}, ${nao})`);
-  const pilula = (hex, texto, ponto) => `<span style='display:inline-flex;align-items:center;gap:6px;max-width:100%;padding:3px 9px;`
+  const pilula = (hex, texto, ponto) => `<span style='display:inline-flex;align-self:flex-start;align-items:center;gap:6px;max-width:100%;padding:3px 9px;`
     + `border-radius:999px;font-size:11px;font-weight:600;color:${hex};background:${rgba(hex, 0.14)};white-space:nowrap;`
     + "overflow:hidden;text-overflow:ellipsis'>"
     + (ponto ? `<span style='width:7px;height:7px;border-radius:50%;background:${hex};animation:lfPulso 1.4s infinite'></span>` : '')
     + `${texto}</span>`;
   return junta(
-    dax(`<div style='flex:1;min-width:0;position:relative;box-sizing:border-box;border-radius:16px;padding:12px 16px;`
-      + `background:${COR.cartao};border:1px solid ${COR.borda}'>`
+    dax(`<div style='flex:1;min-width:0;position:relative;box-sizing:border-box;border-radius:16px;padding:10px 14px;`
+      + 'display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;'
+      + `background:${COR.cartao};border:1px solid ${COR.borda};box-shadow:${COR.sombra}'>`
       + `<div style='position:absolute;top:12px;right:14px;width:30px;height:30px;border-radius:9px;display:flex;align-items:center;`
       + `justify-content:center;font-size:15px;background:${rgba(k, 0.14)};color:${k}'>${icone}</div>`
       + `<div style='font-size:12px;color:${COR.texto2};padding-right:40px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis'>`
-      + `${rotulo}</div><div style='font-size:30px;font-weight:700;color:${COR.texto};line-height:1.15;margin:4px 0 6px;letter-spacing:-.5px'>`),
+      + `${rotulo}</div><div style='font-size:28px;font-weight:700;color:${COR.texto};line-height:1.1;margin:2px 0 4px;letter-spacing:-.5px'>`),
     `FORMAT(${v}, "${formato}")`,
     dax(`${sufixo}</div>`),
     se(dax(pilula(k, sub, !neutro)), dax(pilula(COR.verde, `✓ ${zero}`, false))),
@@ -158,8 +173,8 @@ const cartaoHtml = ({ rotulo, valor, sub, icone, cor: c, neutro, formato = '0', 
   );
 };
 const faixaHtml = (...cartoes) => junta(
-  dax('<style>@keyframes lfPulso{0%{opacity:1}50%{opacity:.25}100%{opacity:1}}</style>'
-    + `<div style='display:flex;gap:12px;width:100%;height:104px;padding:0 8px 0 0;box-sizing:border-box;${FONTE}'>`),
+  dax(`${SEM_ROLAGEM}<style>@keyframes lfPulso{0%{opacity:1}50%{opacity:.25}100%{opacity:1}}</style>`
+    + `<div style='display:flex;gap:12px;width:100%;height:calc(100% - 8px);padding:0 8px 0 0;box-sizing:border-box;overflow:hidden;${FONTE}'>`),
   ...cartoes.map(cartaoHtml),
   dax('</div>'));
 
@@ -478,8 +493,8 @@ const html = (pos, e, m, extras = {}) => visual(VISUAL_HTML, pos, {
 const navegador = (pos) => visual('pageNavigator', pos, null, { semMoldura: true, objects: {
   fill: [
     { properties: { show: lit('true'), fillColor: cor(COR.cartao), transparency: lit('0D') }, selector: { id: 'default' } },
-    { properties: { fillColor: cor('#1F1F23') }, selector: { id: 'hover' } },
-    { properties: { fillColor: cor('#2563EB') }, selector: { id: 'selected' } },
+    { properties: { fillColor: cor(COR.hover) }, selector: { id: 'hover' } },
+    { properties: { fillColor: cor(COR.selecionado) }, selector: { id: 'selected' } },
   ],
   text: [
     { properties: { show: lit('true'), fontColor: cor(COR.texto2), fontSize: lit('11D'), bold: lit('true') }, selector: { id: 'default' } },
@@ -540,7 +555,7 @@ const grafico = (tipo, pos, titulo, papeis, op = {}) => {
       ...(op.cores ? { dataPoint: op.cores } : {}),
       ...(op.corUnica ? { dataPoint: [{ properties: { fill: cor(op.corUnica) } }] } : {}),
       labels: [{ properties: { show: lit(op.semRotulos ? 'false' : 'true'), fontSize: lit('10D'),
-        color: cor(empilhado ? COR.branco : '#D4D4D8') } }],
+        color: cor(empilhado ? COR.branco : COR.rotuloFora) } }],
       legend: [{ properties: { show: lit(op.semLegenda ? 'false' : 'true'), position: lit(texto(op.legenda || 'Top')) } }],
       ...(tipo === 'lineChart' ? { lineStyles: [{ properties: { strokeWidth: lit('3D'), showMarker: lit('true') } }] } : {}),
     },

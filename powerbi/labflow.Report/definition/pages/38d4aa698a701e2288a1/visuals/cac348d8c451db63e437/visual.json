@@ -5,8 +5,8 @@
     "x": 24,
     "y": 252,
     "z": 11000,
-    "width": 560,
     "height": 330,
+    "width": 560,
     "tabOrder": 11000
   },
   "visual": {
@@ -28,6 +28,7 @@
               },
               "queryRef": "Calendário.Mês",
               "nativeQueryRef": "Mês",
+              "active": true,
               "displayName": "Mês"
             }
           ]
@@ -97,7 +98,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#14B8A6'"
+                      "Value": "'#0E8A96'"
                     }
                   }
                 }
@@ -138,7 +139,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#3B82F6'"
+                      "Value": "'#1D6FE8'"
                     }
                   }
                 }
@@ -179,7 +180,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#22C55E'"
+                      "Value": "'#16A34A'"
                     }
                   }
                 }
@@ -236,7 +237,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#D4D4D8'"
+                      "Value": "'#334155'"
                     }
                   }
                 }
@@ -289,7 +290,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#F4F4F5'"
+                      "Value": "'#0F2547'"
                     }
                   }
                 }
@@ -300,7 +301,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#141416'"
+                      "Value": "'#FFFFFF'"
                     }
                   }
                 }

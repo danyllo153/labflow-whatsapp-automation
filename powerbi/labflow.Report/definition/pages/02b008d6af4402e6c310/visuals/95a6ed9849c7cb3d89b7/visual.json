@@ -5,8 +5,8 @@
     "x": 24,
     "y": 598,
     "z": 12000,
-    "width": 1872,
     "height": 466,
+    "width": 1872,
     "tabOrder": 12000
   },
   "visual": {
@@ -160,16 +160,6 @@
           }
         },
         {
-          "selector": {
-            "data": [
-              {
-                "dataViewWildcard": {
-                  "matchingOption": 1
-                }
-              }
-            ],
-            "metadata": "bi drops.Estágio"
-          },
           "properties": {
             "fontColor": {
               "solid": {
@@ -200,7 +190,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#22C55E'"
+                              "Value": "'#16A34A'"
                             }
                           }
                         },
@@ -227,7 +217,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#3B82F6'"
+                              "Value": "'#1D6FE8'"
                             }
                           }
                         },
@@ -254,7 +244,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#14B8A6'"
+                              "Value": "'#0E8A96'"
                             }
                           }
                         },
@@ -281,7 +271,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#3B82F6'"
+                              "Value": "'#1D6FE8'"
                             }
                           }
                         },
@@ -308,7 +298,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#22C55E'"
+                              "Value": "'#16A34A'"
                             }
                           }
                         },
@@ -335,7 +325,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#8B5CF6'"
+                              "Value": "'#7C3AED'"
                             }
                           }
                         },
@@ -362,7 +352,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#EC4899'"
+                              "Value": "'#DB2777'"
                             }
                           }
                         },
@@ -389,7 +379,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#94A3B8'"
+                              "Value": "'#3B5B8C'"
                             }
                           }
                         },
@@ -416,7 +406,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#3B82F6'"
+                              "Value": "'#1D6FE8'"
                             }
                           }
                         },
@@ -443,7 +433,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#8B5CF6'"
+                              "Value": "'#7C3AED'"
                             }
                           }
                         },
@@ -470,7 +460,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#F59E0B'"
+                              "Value": "'#D97706'"
                             }
                           }
                         },
@@ -497,7 +487,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#14B8A6'"
+                              "Value": "'#0E8A96'"
                             }
                           }
                         },
@@ -524,7 +514,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#3B82F6'"
+                              "Value": "'#1D6FE8'"
                             }
                           }
                         },
@@ -551,7 +541,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#8B5CF6'"
+                              "Value": "'#7C3AED'"
                             }
                           }
                         },
@@ -578,7 +568,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#3B82F6'"
+                              "Value": "'#1D6FE8'"
                             }
                           }
                         },
@@ -605,7 +595,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#F59E0B'"
+                              "Value": "'#D97706'"
                             }
                           }
                         },
@@ -632,7 +622,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#8B5CF6'"
+                              "Value": "'#7C3AED'"
                             }
                           }
                         }
@@ -642,9 +632,1071 @@
                 }
               }
             }
+          },
+          "selector": {
+            "data": [
+              {
+                "dataViewWildcard": {
+                  "matchingOption": 1
+                }
+              }
+            ],
+            "metadata": "bi drops.Estágio"
           }
         },
         {
+          "properties": {
+            "fontColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Conditional": {
+                      "Cases": [
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi drops"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Atrasado'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#DC2626'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi drops"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Vence hoje'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#D97706'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi drops"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'No prazo'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#1D6FE8'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi drops"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Lido'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#16A34A'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi drops"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Concluído'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#16A34A'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi drops"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Em confirmação'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#D97706'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi drops"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Positivo, em confirmação'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#D97706'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi drops"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Em andamento'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#1D6FE8'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi drops"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'No caldo'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#1D6FE8'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi drops"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Estriado'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#0E8A96'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi drops"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Incubado'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#7C3AED'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi drops"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Positivo'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#DC2626'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi drops"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Confirmado'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#DC2626'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi drops"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Negativo'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#16A34A'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi drops"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Não confirmado'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#16A34A'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi drops"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Sem desvio'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#5B6B85'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi drops"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Alarme'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#DC2626'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi drops"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Normal'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#16A34A'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi drops"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Aguardando'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#5B6B85'"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            "backColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Conditional": {
+                      "Cases": [
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi drops"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Atrasado'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#FCE9E9'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi drops"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Vence hoje'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#FBF1E6'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi drops"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'No prazo'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#E8F1FD'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi drops"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Lido'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#E8F6ED'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi drops"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Concluído'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#E8F6ED'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi drops"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Em confirmação'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#FBF1E6'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi drops"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Positivo, em confirmação'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#FBF1E6'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi drops"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Em andamento'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#E8F1FD'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi drops"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'No caldo'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#E8F1FD'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi drops"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Estriado'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#E7F3F5'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi drops"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Incubado'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#F2EBFD'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi drops"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Positivo'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#FCE9E9'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi drops"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Confirmado'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#FCE9E9'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi drops"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Negativo'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#E8F6ED'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi drops"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Não confirmado'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#E8F6ED'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi drops"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Sem desvio'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#EFF0F3'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi drops"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Alarme'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#FCE9E9'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi drops"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Normal'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#E8F6ED'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi drops"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Aguardando'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#EFF0F3'"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
           "selector": {
             "data": [
               {
@@ -654,7 +1706,9 @@
               }
             ],
             "metadata": "bi drops.situacao"
-          },
+          }
+        },
+        {
           "properties": {
             "fontColor": {
               "solid": {
@@ -673,7 +1727,7 @@
                                       "Entity": "bi drops"
                                     }
                                   },
-                                  "Property": "situacao"
+                                  "Property": "Desvio do drop"
                                 }
                               },
                               "Right": {
@@ -685,7 +1739,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#EF4444'"
+                              "Value": "'#DC2626'"
                             }
                           }
                         },
@@ -700,7 +1754,7 @@
                                       "Entity": "bi drops"
                                     }
                                   },
-                                  "Property": "situacao"
+                                  "Property": "Desvio do drop"
                                 }
                               },
                               "Right": {
@@ -712,7 +1766,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#F59E0B'"
+                              "Value": "'#D97706'"
                             }
                           }
                         },
@@ -727,7 +1781,7 @@
                                       "Entity": "bi drops"
                                     }
                                   },
-                                  "Property": "situacao"
+                                  "Property": "Desvio do drop"
                                 }
                               },
                               "Right": {
@@ -739,7 +1793,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#3B82F6'"
+                              "Value": "'#1D6FE8'"
                             }
                           }
                         },
@@ -754,7 +1808,7 @@
                                       "Entity": "bi drops"
                                     }
                                   },
-                                  "Property": "situacao"
+                                  "Property": "Desvio do drop"
                                 }
                               },
                               "Right": {
@@ -766,7 +1820,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#22C55E'"
+                              "Value": "'#16A34A'"
                             }
                           }
                         },
@@ -781,7 +1835,7 @@
                                       "Entity": "bi drops"
                                     }
                                   },
-                                  "Property": "situacao"
+                                  "Property": "Desvio do drop"
                                 }
                               },
                               "Right": {
@@ -793,7 +1847,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#22C55E'"
+                              "Value": "'#16A34A'"
                             }
                           }
                         },
@@ -808,7 +1862,7 @@
                                       "Entity": "bi drops"
                                     }
                                   },
-                                  "Property": "situacao"
+                                  "Property": "Desvio do drop"
                                 }
                               },
                               "Right": {
@@ -820,7 +1874,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#F59E0B'"
+                              "Value": "'#D97706'"
                             }
                           }
                         },
@@ -835,7 +1889,7 @@
                                       "Entity": "bi drops"
                                     }
                                   },
-                                  "Property": "situacao"
+                                  "Property": "Desvio do drop"
                                 }
                               },
                               "Right": {
@@ -847,7 +1901,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#F59E0B'"
+                              "Value": "'#D97706'"
                             }
                           }
                         },
@@ -862,7 +1916,7 @@
                                       "Entity": "bi drops"
                                     }
                                   },
-                                  "Property": "situacao"
+                                  "Property": "Desvio do drop"
                                 }
                               },
                               "Right": {
@@ -874,7 +1928,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#3B82F6'"
+                              "Value": "'#1D6FE8'"
                             }
                           }
                         },
@@ -889,7 +1943,7 @@
                                       "Entity": "bi drops"
                                     }
                                   },
-                                  "Property": "situacao"
+                                  "Property": "Desvio do drop"
                                 }
                               },
                               "Right": {
@@ -901,7 +1955,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#3B82F6'"
+                              "Value": "'#1D6FE8'"
                             }
                           }
                         },
@@ -916,7 +1970,7 @@
                                       "Entity": "bi drops"
                                     }
                                   },
-                                  "Property": "situacao"
+                                  "Property": "Desvio do drop"
                                 }
                               },
                               "Right": {
@@ -928,7 +1982,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#14B8A6'"
+                              "Value": "'#0E8A96'"
                             }
                           }
                         },
@@ -943,7 +1997,7 @@
                                       "Entity": "bi drops"
                                     }
                                   },
-                                  "Property": "situacao"
+                                  "Property": "Desvio do drop"
                                 }
                               },
                               "Right": {
@@ -955,7 +2009,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#8B5CF6'"
+                              "Value": "'#7C3AED'"
                             }
                           }
                         },
@@ -970,7 +2024,7 @@
                                       "Entity": "bi drops"
                                     }
                                   },
-                                  "Property": "situacao"
+                                  "Property": "Desvio do drop"
                                 }
                               },
                               "Right": {
@@ -982,7 +2036,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#EF4444'"
+                              "Value": "'#DC2626'"
                             }
                           }
                         },
@@ -997,7 +2051,7 @@
                                       "Entity": "bi drops"
                                     }
                                   },
-                                  "Property": "situacao"
+                                  "Property": "Desvio do drop"
                                 }
                               },
                               "Right": {
@@ -1009,7 +2063,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#EF4444'"
+                              "Value": "'#DC2626'"
                             }
                           }
                         },
@@ -1024,7 +2078,7 @@
                                       "Entity": "bi drops"
                                     }
                                   },
-                                  "Property": "situacao"
+                                  "Property": "Desvio do drop"
                                 }
                               },
                               "Right": {
@@ -1036,7 +2090,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#22C55E'"
+                              "Value": "'#16A34A'"
                             }
                           }
                         },
@@ -1051,7 +2105,7 @@
                                       "Entity": "bi drops"
                                     }
                                   },
-                                  "Property": "situacao"
+                                  "Property": "Desvio do drop"
                                 }
                               },
                               "Right": {
@@ -1063,7 +2117,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#22C55E'"
+                              "Value": "'#16A34A'"
                             }
                           }
                         },
@@ -1078,7 +2132,7 @@
                                       "Entity": "bi drops"
                                     }
                                   },
-                                  "Property": "situacao"
+                                  "Property": "Desvio do drop"
                                 }
                               },
                               "Right": {
@@ -1090,7 +2144,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#A1A1AA'"
+                              "Value": "'#5B6B85'"
                             }
                           }
                         },
@@ -1105,7 +2159,7 @@
                                       "Entity": "bi drops"
                                     }
                                   },
-                                  "Property": "situacao"
+                                  "Property": "Desvio do drop"
                                 }
                               },
                               "Right": {
@@ -1117,7 +2171,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#EF4444'"
+                              "Value": "'#DC2626'"
                             }
                           }
                         },
@@ -1132,7 +2186,7 @@
                                       "Entity": "bi drops"
                                     }
                                   },
-                                  "Property": "situacao"
+                                  "Property": "Desvio do drop"
                                 }
                               },
                               "Right": {
@@ -1144,7 +2198,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#22C55E'"
+                              "Value": "'#16A34A'"
                             }
                           }
                         },
@@ -1159,7 +2213,7 @@
                                       "Entity": "bi drops"
                                     }
                                   },
-                                  "Property": "situacao"
+                                  "Property": "Desvio do drop"
                                 }
                               },
                               "Right": {
@@ -1171,7 +2225,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#A1A1AA'"
+                              "Value": "'#5B6B85'"
                             }
                           }
                         }
@@ -1198,7 +2252,7 @@
                                       "Entity": "bi drops"
                                     }
                                   },
-                                  "Property": "situacao"
+                                  "Property": "Desvio do drop"
                                 }
                               },
                               "Right": {
@@ -1210,7 +2264,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#2A1416'"
+                              "Value": "'#FCE9E9'"
                             }
                           }
                         },
@@ -1225,7 +2279,7 @@
                                       "Entity": "bi drops"
                                     }
                                   },
-                                  "Property": "situacao"
+                                  "Property": "Desvio do drop"
                                 }
                               },
                               "Right": {
@@ -1237,7 +2291,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#2A2010'"
+                              "Value": "'#FBF1E6'"
                             }
                           }
                         },
@@ -1252,7 +2306,7 @@
                                       "Entity": "bi drops"
                                     }
                                   },
-                                  "Property": "situacao"
+                                  "Property": "Desvio do drop"
                                 }
                               },
                               "Right": {
@@ -1264,7 +2318,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#131D33'"
+                              "Value": "'#E8F1FD'"
                             }
                           }
                         },
@@ -1279,7 +2333,7 @@
                                       "Entity": "bi drops"
                                     }
                                   },
-                                  "Property": "situacao"
+                                  "Property": "Desvio do drop"
                                 }
                               },
                               "Right": {
@@ -1291,7 +2345,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#112419'"
+                              "Value": "'#E8F6ED'"
                             }
                           }
                         },
@@ -1306,7 +2360,7 @@
                                       "Entity": "bi drops"
                                     }
                                   },
-                                  "Property": "situacao"
+                                  "Property": "Desvio do drop"
                                 }
                               },
                               "Right": {
@@ -1318,7 +2372,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#112419'"
+                              "Value": "'#E8F6ED'"
                             }
                           }
                         },
@@ -1333,7 +2387,7 @@
                                       "Entity": "bi drops"
                                     }
                                   },
-                                  "Property": "situacao"
+                                  "Property": "Desvio do drop"
                                 }
                               },
                               "Right": {
@@ -1345,7 +2399,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#2A2010'"
+                              "Value": "'#FBF1E6'"
                             }
                           }
                         },
@@ -1360,7 +2414,7 @@
                                       "Entity": "bi drops"
                                     }
                                   },
-                                  "Property": "situacao"
+                                  "Property": "Desvio do drop"
                                 }
                               },
                               "Right": {
@@ -1372,7 +2426,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#2A2010'"
+                              "Value": "'#FBF1E6'"
                             }
                           }
                         },
@@ -1387,7 +2441,7 @@
                                       "Entity": "bi drops"
                                     }
                                   },
-                                  "Property": "situacao"
+                                  "Property": "Desvio do drop"
                                 }
                               },
                               "Right": {
@@ -1399,7 +2453,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#131D33'"
+                              "Value": "'#E8F1FD'"
                             }
                           }
                         },
@@ -1414,7 +2468,7 @@
                                       "Entity": "bi drops"
                                     }
                                   },
-                                  "Property": "situacao"
+                                  "Property": "Desvio do drop"
                                 }
                               },
                               "Right": {
@@ -1426,7 +2480,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#131D33'"
+                              "Value": "'#E8F1FD'"
                             }
                           }
                         },
@@ -1441,7 +2495,7 @@
                                       "Entity": "bi drops"
                                     }
                                   },
-                                  "Property": "situacao"
+                                  "Property": "Desvio do drop"
                                 }
                               },
                               "Right": {
@@ -1453,7 +2507,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#0F2523'"
+                              "Value": "'#E7F3F5'"
                             }
                           }
                         },
@@ -1468,7 +2522,7 @@
                                       "Entity": "bi drops"
                                     }
                                   },
-                                  "Property": "situacao"
+                                  "Property": "Desvio do drop"
                                 }
                               },
                               "Right": {
@@ -1480,7 +2534,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#1E1733'"
+                              "Value": "'#F2EBFD'"
                             }
                           }
                         },
@@ -1495,7 +2549,7 @@
                                       "Entity": "bi drops"
                                     }
                                   },
-                                  "Property": "situacao"
+                                  "Property": "Desvio do drop"
                                 }
                               },
                               "Right": {
@@ -1507,7 +2561,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#2A1416'"
+                              "Value": "'#FCE9E9'"
                             }
                           }
                         },
@@ -1522,7 +2576,7 @@
                                       "Entity": "bi drops"
                                     }
                                   },
-                                  "Property": "situacao"
+                                  "Property": "Desvio do drop"
                                 }
                               },
                               "Right": {
@@ -1534,7 +2588,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#2A1416'"
+                              "Value": "'#FCE9E9'"
                             }
                           }
                         },
@@ -1549,7 +2603,7 @@
                                       "Entity": "bi drops"
                                     }
                                   },
-                                  "Property": "situacao"
+                                  "Property": "Desvio do drop"
                                 }
                               },
                               "Right": {
@@ -1561,7 +2615,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#112419'"
+                              "Value": "'#E8F6ED'"
                             }
                           }
                         },
@@ -1576,7 +2630,7 @@
                                       "Entity": "bi drops"
                                     }
                                   },
-                                  "Property": "situacao"
+                                  "Property": "Desvio do drop"
                                 }
                               },
                               "Right": {
@@ -1588,7 +2642,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#112419'"
+                              "Value": "'#E8F6ED'"
                             }
                           }
                         },
@@ -1603,7 +2657,7 @@
                                       "Entity": "bi drops"
                                     }
                                   },
-                                  "Property": "situacao"
+                                  "Property": "Desvio do drop"
                                 }
                               },
                               "Right": {
@@ -1615,7 +2669,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#1C1C1F'"
+                              "Value": "'#EFF0F3'"
                             }
                           }
                         },
@@ -1630,7 +2684,7 @@
                                       "Entity": "bi drops"
                                     }
                                   },
-                                  "Property": "situacao"
+                                  "Property": "Desvio do drop"
                                 }
                               },
                               "Right": {
@@ -1642,7 +2696,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#2A1416'"
+                              "Value": "'#FCE9E9'"
                             }
                           }
                         },
@@ -1657,7 +2711,7 @@
                                       "Entity": "bi drops"
                                     }
                                   },
-                                  "Property": "situacao"
+                                  "Property": "Desvio do drop"
                                 }
                               },
                               "Right": {
@@ -1669,7 +2723,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#112419'"
+                              "Value": "'#E8F6ED'"
                             }
                           }
                         },
@@ -1684,7 +2738,7 @@
                                       "Entity": "bi drops"
                                     }
                                   },
-                                  "Property": "situacao"
+                                  "Property": "Desvio do drop"
                                 }
                               },
                               "Right": {
@@ -1696,7 +2750,7 @@
                           },
                           "Value": {
                             "Literal": {
-                              "Value": "'#1C1C1F'"
+                              "Value": "'#EFF0F3'"
                             }
                           }
                         }
@@ -1706,9 +2760,7 @@
                 }
               }
             }
-          }
-        },
-        {
+          },
           "selector": {
             "data": [
               {
@@ -1718,1058 +2770,6 @@
               }
             ],
             "metadata": "bi drops.Desvio do drop"
-          },
-          "properties": {
-            "fontColor": {
-              "solid": {
-                "color": {
-                  "expr": {
-                    "Conditional": {
-                      "Cases": [
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi drops"
-                                    }
-                                  },
-                                  "Property": "Desvio do drop"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Atrasado'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#EF4444'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi drops"
-                                    }
-                                  },
-                                  "Property": "Desvio do drop"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Vence hoje'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#F59E0B'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi drops"
-                                    }
-                                  },
-                                  "Property": "Desvio do drop"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'No prazo'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#3B82F6'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi drops"
-                                    }
-                                  },
-                                  "Property": "Desvio do drop"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Lido'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#22C55E'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi drops"
-                                    }
-                                  },
-                                  "Property": "Desvio do drop"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Concluído'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#22C55E'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi drops"
-                                    }
-                                  },
-                                  "Property": "Desvio do drop"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Em confirmação'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#F59E0B'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi drops"
-                                    }
-                                  },
-                                  "Property": "Desvio do drop"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Positivo, em confirmação'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#F59E0B'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi drops"
-                                    }
-                                  },
-                                  "Property": "Desvio do drop"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Em andamento'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#3B82F6'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi drops"
-                                    }
-                                  },
-                                  "Property": "Desvio do drop"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'No caldo'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#3B82F6'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi drops"
-                                    }
-                                  },
-                                  "Property": "Desvio do drop"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Estriado'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#14B8A6'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi drops"
-                                    }
-                                  },
-                                  "Property": "Desvio do drop"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Incubado'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#8B5CF6'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi drops"
-                                    }
-                                  },
-                                  "Property": "Desvio do drop"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Positivo'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#EF4444'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi drops"
-                                    }
-                                  },
-                                  "Property": "Desvio do drop"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Confirmado'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#EF4444'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi drops"
-                                    }
-                                  },
-                                  "Property": "Desvio do drop"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Negativo'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#22C55E'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi drops"
-                                    }
-                                  },
-                                  "Property": "Desvio do drop"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Não confirmado'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#22C55E'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi drops"
-                                    }
-                                  },
-                                  "Property": "Desvio do drop"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Sem desvio'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#A1A1AA'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi drops"
-                                    }
-                                  },
-                                  "Property": "Desvio do drop"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Alarme'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#EF4444'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi drops"
-                                    }
-                                  },
-                                  "Property": "Desvio do drop"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Normal'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#22C55E'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi drops"
-                                    }
-                                  },
-                                  "Property": "Desvio do drop"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Aguardando'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#A1A1AA'"
-                            }
-                          }
-                        }
-                      ]
-                    }
-                  }
-                }
-              }
-            },
-            "backColor": {
-              "solid": {
-                "color": {
-                  "expr": {
-                    "Conditional": {
-                      "Cases": [
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi drops"
-                                    }
-                                  },
-                                  "Property": "Desvio do drop"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Atrasado'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#2A1416'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi drops"
-                                    }
-                                  },
-                                  "Property": "Desvio do drop"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Vence hoje'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#2A2010'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi drops"
-                                    }
-                                  },
-                                  "Property": "Desvio do drop"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'No prazo'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#131D33'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi drops"
-                                    }
-                                  },
-                                  "Property": "Desvio do drop"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Lido'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#112419'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi drops"
-                                    }
-                                  },
-                                  "Property": "Desvio do drop"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Concluído'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#112419'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi drops"
-                                    }
-                                  },
-                                  "Property": "Desvio do drop"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Em confirmação'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#2A2010'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi drops"
-                                    }
-                                  },
-                                  "Property": "Desvio do drop"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Positivo, em confirmação'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#2A2010'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi drops"
-                                    }
-                                  },
-                                  "Property": "Desvio do drop"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Em andamento'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#131D33'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi drops"
-                                    }
-                                  },
-                                  "Property": "Desvio do drop"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'No caldo'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#131D33'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi drops"
-                                    }
-                                  },
-                                  "Property": "Desvio do drop"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Estriado'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#0F2523'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi drops"
-                                    }
-                                  },
-                                  "Property": "Desvio do drop"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Incubado'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#1E1733'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi drops"
-                                    }
-                                  },
-                                  "Property": "Desvio do drop"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Positivo'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#2A1416'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi drops"
-                                    }
-                                  },
-                                  "Property": "Desvio do drop"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Confirmado'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#2A1416'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi drops"
-                                    }
-                                  },
-                                  "Property": "Desvio do drop"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Negativo'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#112419'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi drops"
-                                    }
-                                  },
-                                  "Property": "Desvio do drop"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Não confirmado'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#112419'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi drops"
-                                    }
-                                  },
-                                  "Property": "Desvio do drop"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Sem desvio'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#1C1C1F'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi drops"
-                                    }
-                                  },
-                                  "Property": "Desvio do drop"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Alarme'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#2A1416'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi drops"
-                                    }
-                                  },
-                                  "Property": "Desvio do drop"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Normal'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#112419'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi drops"
-                                    }
-                                  },
-                                  "Property": "Desvio do drop"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Aguardando'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#1C1C1F'"
-                            }
-                          }
-                        }
-                      ]
-                    }
-                  }
-                }
-              }
-            }
           }
         }
       ],
@@ -2788,7 +2788,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#18181B'"
+                      "Value": "'#F5F8FD'"
                     }
                   }
                 }
@@ -2799,7 +2799,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#A1A1AA'"
+                      "Value": "'#5B6B85'"
                     }
                   }
                 }
@@ -2808,7 +2808,7 @@
             "autoSizeColumnWidth": {
               "expr": {
                 "Literal": {
-                  "Value": "false"
+                  "Value": "true"
                 }
               }
             },
@@ -2973,7 +2973,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#F4F4F5'"
+                      "Value": "'#0F2547'"
                     }
                   }
                 }
@@ -2984,7 +2984,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#141416'"
+                      "Value": "'#FFFFFF'"
                     }
                   }
                 }

@@ -5,8 +5,8 @@
     "x": 24,
     "y": 598,
     "z": 7000,
-    "width": 920,
     "height": 466,
+    "width": 920,
     "tabOrder": 7000
   },
   "visual": {
@@ -28,6 +28,7 @@
               },
               "queryRef": "bi coletas.data_coleta",
               "nativeQueryRef": "data_coleta",
+              "active": true,
               "displayName": "Dia"
             }
           ]
@@ -80,7 +81,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#14B8A6'"
+                      "Value": "'#0E8A96'"
                     }
                   }
                 }
@@ -121,7 +122,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#3B82F6'"
+                      "Value": "'#1D6FE8'"
                     }
                   }
                 }
@@ -231,7 +232,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#F4F4F5'"
+                      "Value": "'#0F2547'"
                     }
                   }
                 }
@@ -242,7 +243,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#141416'"
+                      "Value": "'#FFFFFF'"
                     }
                   }
                 }

@@ -1,7 +1,7 @@
 table 'bi leituras_nfc'
 	lineageTag: af6bf997-5538-4378-bc58-efd35acdcc92
 
-	measure 'Leituras' = COUNTROWS('bi leituras_nfc')
+	measure Leituras = COUNTROWS('bi leituras_nfc')
 		formatString: 0
 		lineageTag: 6a337df8-f0ce-6c16-a1cf-15951a5321c9
 
@@ -21,15 +21,10 @@ table 'bi leituras_nfc'
 		formatString: 0%
 		lineageTag: d4b20409-9afc-da62-fe25-cd7fe2c9e996
 
-	measure 'HTML andamento das leituras' = VAR linha = SELECTEDVALUE('bi leituras_nfc'[linha_relatorio]) VAR total = COALESCE([Leituras], 0) VAR lidas = COALESCE([Leituras lidas], 0) VAR atras = COALESCE([Leituras atrasadas], 0) VAR hoje = COALESCE([Leituras que vencem hoje], 0) VAR pl = FORMAT(ROUND(DIVIDE(lidas, total, 0) * 100, 0), "0") VAR pa = FORMAT(ROUND(DIVIDE(atras, total, 0) * 100, 0), "0") VAR ph = FORMAT(ROUND(DIVIDE(hoje, total, 0) * 100, 0), "0") RETURN "<div style='margin:2px 6px 14px 6px;font-family:Segoe UI,sans-serif'><div style='display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:#F4F4F5'><b>" & linha & "</b><span style='font-size:12px;color:#A1A1AA'><b style='color:#22C55E'>" & pl & "% lidas</b> · " & lidas & " de " & total & "</span></div><div style='height:8px;border-radius:6px;background:#27272A;overflow:hidden;display:flex;margin-top:6px'><div style='width:" & pl & "%;background:#22C55E'></div><div style='width:" & pa & "%;background:#EF4444'></div><div style='width:" & ph & "%;background:#F59E0B'></div></div><div style='font-size:11px;margin-top:5px;color:#A1A1AA'><span style='color:#EF4444'>● </span>" & atras & " atrasadas&nbsp;&nbsp;<span style='color:#F59E0B'>● </span>" & hoje & " para hoje</div></div>"
-		displayFolder: Painel HTML
+	measure 'HTML andamento das leituras' = VAR linha = SELECTEDVALUE('bi leituras_nfc'[linha_relatorio]) VAR total = COALESCE([Leituras], 0) VAR lidas = COALESCE([Leituras lidas], 0) VAR atras = COALESCE([Leituras atrasadas], 0) VAR hoje = COALESCE([Leituras que vencem hoje], 0) VAR pl = FORMAT(ROUND(DIVIDE(lidas, total, 0) * 100, 0), "0") VAR pa = FORMAT(ROUND(DIVIDE(atras, total, 0) * 100, 0), "0") VAR ph = FORMAT(ROUND(DIVIDE(hoje, total, 0) * 100, 0), "0") RETURN "<div style='margin:2px 6px 14px 6px;font-family:Segoe UI,sans-serif'><div style='display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:#0F2547'><b>" & linha & "</b><span style='font-size:12px;color:#5B6B85'><b style='color:#16A34A'>" & pl & "% lidas</b> · " & lidas & " de " & total & "</span></div><div style='height:8px;border-radius:6px;background:#E9EEF6;overflow:hidden;display:flex;margin-top:6px'><div style='width:" & pl & "%;background:#16A34A'></div><div style='width:" & pa & "%;background:#DC2626'></div><div style='width:" & ph & "%;background:#D97706'></div></div><div style='font-size:11px;margin-top:5px;color:#5B6B85'><span style='color:#DC2626'>● </span>" & atras & " atrasadas&nbsp;&nbsp;<span style='color:#D97706'>● </span>" & hoje & " para hoje</div></div>"
 		isHidden
+		displayFolder: Painel HTML
 		lineageTag: a80ccfb8-b633-93af-fdea-db239e5ece96
-
-	column 'Local' = IF(ISBLANK('bi leituras_nfc'[navio]), "Terra (tank farm)", 'bi leituras_nfc'[navio])
-		dataType: string
-		lineageTag: 33913422-b371-e5e8-e5b8-dada829eb094
-		summarizeBy: none
 
 	column analise_id
 		dataType: int64
@@ -185,6 +180,11 @@ table 'bi leituras_nfc'
 		sourceColumn: situacao
 
 		annotation SummarizationSetBy = Automatic
+
+	column Local = IF(ISBLANK('bi leituras_nfc'[navio]), "Terra (tank farm)", 'bi leituras_nfc'[navio])
+		dataType: string
+		lineageTag: 33913422-b371-e5e8-e5b8-dada829eb094
+		summarizeBy: none
 
 	partition 'bi leituras_nfc' = m
 		mode: import

@@ -5,8 +5,8 @@
     "x": 1140,
     "y": 108,
     "z": 4000,
-    "width": 372,
     "height": 60,
+    "width": 372,
     "tabOrder": 4000
   },
   "visual": {
@@ -28,6 +28,7 @@
               },
               "queryRef": "Embarques.Embarque",
               "nativeQueryRef": "Embarque",
+              "active": true,
               "displayName": "Embarque"
             }
           ]
@@ -63,7 +64,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#A1A1AA'"
+                      "Value": "'#5B6B85'"
                     }
                   }
                 }
