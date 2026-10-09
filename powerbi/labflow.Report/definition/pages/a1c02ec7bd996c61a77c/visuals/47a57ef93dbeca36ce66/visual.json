@@ -5,8 +5,8 @@
     "x": 1524,
     "y": 176,
     "z": 7000,
-    "width": 372,
     "height": 60,
+    "width": 372,
     "tabOrder": 7000
   },
   "visual": {
@@ -28,6 +28,7 @@
               },
               "queryRef": "Calendário.Date",
               "nativeQueryRef": "Date",
+              "active": true,
               "displayName": "Período"
             }
           ]

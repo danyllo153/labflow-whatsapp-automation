@@ -1,7 +1,7 @@
 table 'bi drops'
 	lineageTag: c82d8346-4cb4-433b-b14c-875c3ba9c464
 
-	measure 'Drops' = COUNTROWS('bi drops')
+	measure Drops = COUNTROWS('bi drops')
 		formatString: 0
 		lineageTag: 53b2c7a6-0f1d-9b31-c3ad-500e825aba38
 
@@ -20,28 +20,6 @@ table 'bi drops'
 	measure 'Drops com desvio' = CALCULATE(COUNTROWS('bi drops'), 'bi drops'[desvio] = TRUE())
 		formatString: 0
 		lineageTag: 868f7735-746e-88a1-acfd-5f7a53ad31e8
-
-	column 'Local' = IF(ISBLANK('bi drops'[navio]), "Terra (tank farm)", 'bi drops'[navio])
-		dataType: string
-		lineageTag: 450b995c-6615-81b7-8f9f-a20db2f5e319
-		summarizeBy: none
-
-	column 'Estágio' = 'bi drops'[drop]
-		dataType: string
-		sortByColumn: 'Estágio (ordem)'
-		lineageTag: 054dfcb1-1ea2-f181-59df-083c53aad0a8
-		summarizeBy: none
-
-	column 'Estágio (ordem)' = INT(VALUE(MID('bi drops'[drop], 2, 3)))
-		dataType: int64
-		isHidden
-		lineageTag: 674b53a8-00a4-0fcd-122c-1cbc50adf0f4
-		summarizeBy: none
-
-	column 'Desvio do drop' = IF('bi drops'[desvio], COALESCE('bi drops'[desvio_resultado], "Em confirmação"), "Sem desvio")
-		dataType: string
-		lineageTag: 7fa65f43-801d-702b-d618-a6f1ec78be16
-		summarizeBy: none
 
 	column drop_id
 		dataType: int64
@@ -180,6 +158,28 @@ table 'bi drops'
 		sourceColumn: situacao
 
 		annotation SummarizationSetBy = Automatic
+
+	column Local = IF(ISBLANK('bi drops'[navio]), "Terra (tank farm)", 'bi drops'[navio])
+		dataType: string
+		lineageTag: 450b995c-6615-81b7-8f9f-a20db2f5e319
+		summarizeBy: none
+
+	column Estágio = 'bi drops'[drop]
+		dataType: string
+		lineageTag: 054dfcb1-1ea2-f181-59df-083c53aad0a8
+		summarizeBy: none
+		sortByColumn: 'Estágio (ordem)'
+
+	column 'Estágio (ordem)' = INT(VALUE(MID('bi drops'[drop], 2, 3)))
+		dataType: int64
+		isHidden
+		lineageTag: 674b53a8-00a4-0fcd-122c-1cbc50adf0f4
+		summarizeBy: none
+
+	column 'Desvio do drop' = IF('bi drops'[desvio], COALESCE('bi drops'[desvio_resultado], "Em confirmação"), "Sem desvio")
+		dataType: string
+		lineageTag: 7fa65f43-801d-702b-d618-a6f1ec78be16
+		summarizeBy: none
 
 	partition 'bi drops' = m
 		mode: import

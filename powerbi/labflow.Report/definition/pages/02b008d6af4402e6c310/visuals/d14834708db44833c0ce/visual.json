@@ -5,8 +5,8 @@
     "x": 1262,
     "y": 108,
     "z": 5000,
-    "width": 310,
     "height": 60,
+    "width": 310,
     "tabOrder": 5000
   },
   "visual": {
@@ -28,6 +28,7 @@
               },
               "queryRef": "bi drops.tanque",
               "nativeQueryRef": "tanque",
+              "active": true,
               "displayName": "Tanque"
             }
           ]

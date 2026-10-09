@@ -5,8 +5,8 @@
     "x": 1666,
     "y": 108,
     "z": 7000,
-    "width": 230,
     "height": 60,
+    "width": 230,
     "tabOrder": 7000
   },
   "visual": {
@@ -28,6 +28,7 @@
               },
               "queryRef": "bi testes.load",
               "nativeQueryRef": "load",
+              "active": true,
               "displayName": "Load"
             }
           ]

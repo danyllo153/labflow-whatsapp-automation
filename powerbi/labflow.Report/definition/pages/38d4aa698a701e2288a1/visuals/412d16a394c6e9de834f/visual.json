@@ -5,8 +5,8 @@
     "x": 940,
     "y": 176,
     "z": 8000,
-    "width": 230,
     "height": 60,
+    "width": 230,
     "tabOrder": 8000
   },
   "visual": {
@@ -28,6 +28,7 @@
               },
               "queryRef": "bi testes.fabrica",
               "nativeQueryRef": "fabrica",
+              "active": true,
               "displayName": "Fábrica"
             }
           ]

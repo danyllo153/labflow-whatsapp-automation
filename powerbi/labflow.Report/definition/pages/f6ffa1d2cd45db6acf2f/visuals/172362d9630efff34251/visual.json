@@ -5,8 +5,8 @@
     "x": 1140,
     "y": 176,
     "z": 6000,
-    "width": 372,
     "height": 60,
+    "width": 372,
     "tabOrder": 6000
   },
   "visual": {
@@ -28,6 +28,7 @@
               },
               "queryRef": "bi coletas.registrado_por",
               "nativeQueryRef": "registrado_por",
+              "active": true,
               "displayName": "Quem coletou"
             }
           ]

@@ -5,8 +5,8 @@
     "x": 1182,
     "y": 108,
     "z": 5000,
-    "width": 230,
     "height": 60,
+    "width": 230,
     "tabOrder": 5000
   },
   "visual": {
@@ -28,6 +28,7 @@
               },
               "queryRef": "bi testes.Navio",
               "nativeQueryRef": "Navio",
+              "active": true,
               "displayName": "Navio"
             }
           ]

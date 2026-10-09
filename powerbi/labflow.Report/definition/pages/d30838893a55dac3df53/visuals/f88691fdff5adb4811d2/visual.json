@@ -5,8 +5,8 @@
     "x": 24,
     "y": 598,
     "z": 7000,
-    "width": 920,
     "height": 466,
+    "width": 920,
     "tabOrder": 7000
   },
   "visual": {
@@ -28,6 +28,7 @@
               },
               "queryRef": "bi coletas.data_coleta",
               "nativeQueryRef": "data_coleta",
+              "active": true,
               "displayName": "Dia"
             }
           ]

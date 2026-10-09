@@ -5,8 +5,8 @@
     "x": 24,
     "y": 598,
     "z": 11000,
-    "width": 1872,
     "height": 466,
+    "width": 1872,
     "tabOrder": 11000
   },
   "visual": {
@@ -190,6 +190,479 @@
           }
         },
         {
+          "properties": {
+            "fontColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Conditional": {
+                      "Cases": [
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi contagens"
+                                    }
+                                  },
+                                  "Property": "fabrica"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Terra'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#16A34A'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi contagens"
+                                    }
+                                  },
+                                  "Property": "fabrica"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Navio'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#1D6FE8'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi contagens"
+                                    }
+                                  },
+                                  "Property": "fabrica"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Recebimento'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#0E8A96'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi contagens"
+                                    }
+                                  },
+                                  "Property": "fabrica"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Embarque'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#1D6FE8'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi contagens"
+                                    }
+                                  },
+                                  "Property": "fabrica"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Tank farm'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#16A34A'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi contagens"
+                                    }
+                                  },
+                                  "Property": "fabrica"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'TAB'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#7C3AED'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi contagens"
+                                    }
+                                  },
+                                  "Property": "fabrica"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Coliformes'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#DB2777'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi contagens"
+                                    }
+                                  },
+                                  "Property": "fabrica"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Howard'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#3B5B8C'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi contagens"
+                                    }
+                                  },
+                                  "Property": "fabrica"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'D5'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#1D6FE8'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi contagens"
+                                    }
+                                  },
+                                  "Property": "fabrica"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'D10'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#7C3AED'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi contagens"
+                                    }
+                                  },
+                                  "Property": "fabrica"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'D15'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#D97706'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi contagens"
+                                    }
+                                  },
+                                  "Property": "fabrica"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'C.T 48h'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#0E8A96'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi contagens"
+                                    }
+                                  },
+                                  "Property": "fabrica"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'B.L 72h'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#1D6FE8'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi contagens"
+                                    }
+                                  },
+                                  "Property": "fabrica"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'B.L 120h'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#7C3AED'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi contagens"
+                                    }
+                                  },
+                                  "Property": "fabrica"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'AQA'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#1D6FE8'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi contagens"
+                                    }
+                                  },
+                                  "Property": "fabrica"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'COL'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#D97706'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi contagens"
+                                    }
+                                  },
+                                  "Property": "fabrica"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'UCH'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#7C3AED'"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          },
           "selector": {
             "data": [
               {
@@ -199,7 +672,9 @@
               }
             ],
             "metadata": "bi contagens.fabrica"
-          },
+          }
+        },
+        {
           "properties": {
             "fontColor": {
               "solid": {
@@ -218,7 +693,7 @@
                                       "Entity": "bi contagens"
                                     }
                                   },
-                                  "Property": "fabrica"
+                                  "Property": "analise"
                                 }
                               },
                               "Right": {
@@ -245,7 +720,7 @@
                                       "Entity": "bi contagens"
                                     }
                                   },
-                                  "Property": "fabrica"
+                                  "Property": "analise"
                                 }
                               },
                               "Right": {
@@ -272,7 +747,7 @@
                                       "Entity": "bi contagens"
                                     }
                                   },
-                                  "Property": "fabrica"
+                                  "Property": "analise"
                                 }
                               },
                               "Right": {
@@ -299,7 +774,7 @@
                                       "Entity": "bi contagens"
                                     }
                                   },
-                                  "Property": "fabrica"
+                                  "Property": "analise"
                                 }
                               },
                               "Right": {
@@ -326,7 +801,7 @@
                                       "Entity": "bi contagens"
                                     }
                                   },
-                                  "Property": "fabrica"
+                                  "Property": "analise"
                                 }
                               },
                               "Right": {
@@ -353,7 +828,7 @@
                                       "Entity": "bi contagens"
                                     }
                                   },
-                                  "Property": "fabrica"
+                                  "Property": "analise"
                                 }
                               },
                               "Right": {
@@ -380,7 +855,7 @@
                                       "Entity": "bi contagens"
                                     }
                                   },
-                                  "Property": "fabrica"
+                                  "Property": "analise"
                                 }
                               },
                               "Right": {
@@ -407,7 +882,7 @@
                                       "Entity": "bi contagens"
                                     }
                                   },
-                                  "Property": "fabrica"
+                                  "Property": "analise"
                                 }
                               },
                               "Right": {
@@ -434,7 +909,7 @@
                                       "Entity": "bi contagens"
                                     }
                                   },
-                                  "Property": "fabrica"
+                                  "Property": "analise"
                                 }
                               },
                               "Right": {
@@ -461,7 +936,7 @@
                                       "Entity": "bi contagens"
                                     }
                                   },
-                                  "Property": "fabrica"
+                                  "Property": "analise"
                                 }
                               },
                               "Right": {
@@ -488,7 +963,7 @@
                                       "Entity": "bi contagens"
                                     }
                                   },
-                                  "Property": "fabrica"
+                                  "Property": "analise"
                                 }
                               },
                               "Right": {
@@ -515,7 +990,7 @@
                                       "Entity": "bi contagens"
                                     }
                                   },
-                                  "Property": "fabrica"
+                                  "Property": "analise"
                                 }
                               },
                               "Right": {
@@ -542,7 +1017,7 @@
                                       "Entity": "bi contagens"
                                     }
                                   },
-                                  "Property": "fabrica"
+                                  "Property": "analise"
                                 }
                               },
                               "Right": {
@@ -569,7 +1044,7 @@
                                       "Entity": "bi contagens"
                                     }
                                   },
-                                  "Property": "fabrica"
+                                  "Property": "analise"
                                 }
                               },
                               "Right": {
@@ -596,7 +1071,7 @@
                                       "Entity": "bi contagens"
                                     }
                                   },
-                                  "Property": "fabrica"
+                                  "Property": "analise"
                                 }
                               },
                               "Right": {
@@ -623,7 +1098,7 @@
                                       "Entity": "bi contagens"
                                     }
                                   },
-                                  "Property": "fabrica"
+                                  "Property": "analise"
                                 }
                               },
                               "Right": {
@@ -650,7 +1125,7 @@
                                       "Entity": "bi contagens"
                                     }
                                   },
-                                  "Property": "fabrica"
+                                  "Property": "analise"
                                 }
                               },
                               "Right": {
@@ -672,9 +1147,7 @@
                 }
               }
             }
-          }
-        },
-        {
+          },
           "selector": {
             "data": [
               {
@@ -684,492 +1157,9 @@
               }
             ],
             "metadata": "bi contagens.analise"
-          },
-          "properties": {
-            "fontColor": {
-              "solid": {
-                "color": {
-                  "expr": {
-                    "Conditional": {
-                      "Cases": [
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi contagens"
-                                    }
-                                  },
-                                  "Property": "analise"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Terra'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#16A34A'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi contagens"
-                                    }
-                                  },
-                                  "Property": "analise"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Navio'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#1D6FE8'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi contagens"
-                                    }
-                                  },
-                                  "Property": "analise"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Recebimento'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#0E8A96'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi contagens"
-                                    }
-                                  },
-                                  "Property": "analise"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Embarque'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#1D6FE8'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi contagens"
-                                    }
-                                  },
-                                  "Property": "analise"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Tank farm'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#16A34A'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi contagens"
-                                    }
-                                  },
-                                  "Property": "analise"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'TAB'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#7C3AED'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi contagens"
-                                    }
-                                  },
-                                  "Property": "analise"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Coliformes'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#DB2777'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi contagens"
-                                    }
-                                  },
-                                  "Property": "analise"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Howard'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#3B5B8C'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi contagens"
-                                    }
-                                  },
-                                  "Property": "analise"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'D5'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#1D6FE8'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi contagens"
-                                    }
-                                  },
-                                  "Property": "analise"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'D10'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#7C3AED'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi contagens"
-                                    }
-                                  },
-                                  "Property": "analise"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'D15'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#D97706'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi contagens"
-                                    }
-                                  },
-                                  "Property": "analise"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'C.T 48h'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#0E8A96'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi contagens"
-                                    }
-                                  },
-                                  "Property": "analise"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'B.L 72h'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#1D6FE8'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi contagens"
-                                    }
-                                  },
-                                  "Property": "analise"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'B.L 120h'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#7C3AED'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi contagens"
-                                    }
-                                  },
-                                  "Property": "analise"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'AQA'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#1D6FE8'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi contagens"
-                                    }
-                                  },
-                                  "Property": "analise"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'COL'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#D97706'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi contagens"
-                                    }
-                                  },
-                                  "Property": "analise"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'UCH'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#7C3AED'"
-                            }
-                          }
-                        }
-                      ]
-                    }
-                  }
-                }
-              }
-            }
           }
         },
         {
-          "selector": {
-            "data": [
-              {
-                "dataViewWildcard": {
-                  "matchingOption": 1
-                }
-              }
-            ],
-            "metadata": "bi contagens.resultado"
-          },
           "properties": {
             "fontColor": {
               "solid": {
@@ -1203,9 +1193,7 @@
                 }
               }
             }
-          }
-        },
-        {
+          },
           "selector": {
             "data": [
               {
@@ -1214,8 +1202,10 @@
                 }
               }
             ],
-            "metadata": "bi contagens.situacao"
-          },
+            "metadata": "bi contagens.resultado"
+          }
+        },
+        {
           "properties": {
             "fontColor": {
               "solid": {
@@ -2267,6 +2257,16 @@
                 }
               }
             }
+          },
+          "selector": {
+            "data": [
+              {
+                "dataViewWildcard": {
+                  "matchingOption": 1
+                }
+              }
+            ],
+            "metadata": "bi contagens.situacao"
           }
         }
       ],
@@ -2305,7 +2305,7 @@
             "autoSizeColumnWidth": {
               "expr": {
                 "Literal": {
-                  "Value": "false"
+                  "Value": "true"
                 }
               }
             },

@@ -5,8 +5,8 @@
     "x": 1316,
     "y": 252,
     "z": 10000,
-    "width": 580,
     "height": 330,
+    "width": 580,
     "tabOrder": 10000
   },
   "visual": {
@@ -28,6 +28,7 @@
               },
               "queryRef": "bi leituras_nfc.situacao",
               "nativeQueryRef": "situacao",
+              "active": true,
               "displayName": "Situação"
             }
           ]

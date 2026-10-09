@@ -11342,6 +11342,27 @@ cultureInfo pt-BR
 			          }
 			        }
 			      ]
+			    },
+			    "bi_desvios.estágio": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "bi desvios",
+			          "ConceptualProperty": "Estágio"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Drop": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
 			    }
 			  },
 			  "Relationships": {

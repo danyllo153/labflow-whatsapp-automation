@@ -5,8 +5,8 @@
     "x": 940,
     "y": 108,
     "z": 4000,
-    "width": 310,
     "height": 60,
+    "width": 310,
     "tabOrder": 4000
   },
   "visual": {
@@ -28,6 +28,7 @@
               },
               "queryRef": "bi testes.origem",
               "nativeQueryRef": "origem",
+              "active": true,
               "displayName": "Origem"
             }
           ]

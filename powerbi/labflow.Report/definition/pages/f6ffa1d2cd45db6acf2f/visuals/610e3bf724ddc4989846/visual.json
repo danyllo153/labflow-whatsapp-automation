@@ -5,8 +5,8 @@
     "x": 24,
     "y": 598,
     "z": 11000,
-    "width": 1872,
     "height": 466,
+    "width": 1872,
     "tabOrder": 11000
   },
   "visual": {
@@ -130,16 +130,6 @@
           }
         },
         {
-          "selector": {
-            "data": [
-              {
-                "dataViewWildcard": {
-                  "matchingOption": 1
-                }
-              }
-            ],
-            "metadata": "bi coletas.origem"
-          },
           "properties": {
             "fontColor": {
               "solid": {
@@ -612,6 +602,16 @@
                 }
               }
             }
+          },
+          "selector": {
+            "data": [
+              {
+                "dataViewWildcard": {
+                  "matchingOption": 1
+                }
+              }
+            ],
+            "metadata": "bi coletas.origem"
           }
         }
       ],
@@ -650,7 +650,7 @@
             "autoSizeColumnWidth": {
               "expr": {
                 "Literal": {
-                  "Value": "false"
+                  "Value": "true"
                 }
               }
             },
