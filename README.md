@@ -17,7 +17,9 @@ Projeto pessoal que une biomedicina e automação: o problema vem da rotina real
 - **Alerta de erro no WhatsApp:** se um fluxo do bot falha, os administradores recebem o aviso na hora (validado de ponta a ponta).
 - **Painel no Power BI:** 9 páginas (visão geral, coletas, tanques, drops, desvios, recebimento, embarque, TAB e Coliformes) em modo escuro, com filtros por navio, tanque, load, fábrica, item e período. O painel é **gerado por código** e versionado no Git, o modelo foi montado com o Power BI Modeling MCP da Microsoft, e os números foram conferidos contra o banco.
 
-**Próximo:** fechar a próxima versão (Situação ok/não ok em todo o relatório) e começar a base de um **LIMS próprio** (histórico de alterações, especificações e liberação de resultados), rumo a um app web/mobile.
+**Em andamento:** resultado **ok / não ok** em todo o relatório, começando pelo NFC placa a placa (triplicata, desvio de tanque e repetição; [especificação](docs/specs/nfc-resultados-placas.md) aprovada e banco pronto).
+
+**Próximo:** uma **plataforma própria do laboratório** (web e app de computador), com login por usuário, a tela do dia, as pendências do turno e o assistente de IA embutido; **consulta às instruções de trabalho com IA (RAG)**; e **laudos preenchidos automaticamente**. O WhatsApp continua como canal opcional, com as mesmas regras (detalhes no [Roadmap](#roadmap)).
 
 | Em números | |
 |---|---|
@@ -176,13 +178,18 @@ n8n · PostgreSQL · Docker / Docker Compose · Evolution API · Google Gemini A
 - [x] **V5 — Painel no Power BI:** 9 páginas sobre views do PostgreSQL, por um usuário somente leitura, gerado por script e com o modelo feito pelo Power BI Modeling MCP (próxima versão)
 - [ ] **Situação (ok / não ok) em todas as linhas do relatório**, com os limites do Howard e do NFC
 
-**Destino: um LIMS próprio**, com app web/mobile, login e IA embutida (o WhatsApp continua como canal):
+**Destino: uma plataforma própria do laboratório (LIMS)**, que o analista usa no lugar do WhatsApp pessoal. O WhatsApp **continua como canal opcional** (com um número da empresa): os dois usam as mesmas regras e o mesmo banco, então o que é registrado num aparece no outro.
+
+- [ ] **Resultados de NFC placa a placa** (em andamento): triplicata, ok / não ok com alerta, desvio de tanque e repetição pelo frasco de arquivo
 
 - [ ] **Base de LIMS no banco:** histórico de alterações (audit trail), especificações por análise e produto, revisão e liberação de resultados por outra pessoa (requisitos de um laboratório ISO/IEC 17025)
 - [ ] **API própria** (FastAPI) com login (senha em hash + JWT) ligado aos cargos do bot
-- [ ] **App web/mobile (PWA):** primeiro só leitura (meus registros, minhas análises, painel do dia), depois registro pelo app usando o mesmo pipeline do bot
+- [ ] **Plataforma web e app de computador:** login por usuário; **tela do dia** (o que cada um tem para analisar e quais leituras vencem); **pendências do turno** visíveis para quem entra no turno seguinte; resultados e painéis no mesmo lugar. Primeiro só leitura, depois registro
+- [ ] **Assistente de IA na plataforma:** a mesma função do chat do WhatsApp (texto ou voz), com o mesmo pipeline do bot e confirmação antes de gravar
+- [ ] **IA que consulta os documentos do laboratório (RAG):** responde dúvidas a partir das instruções de trabalho em vigor, citando a fonte; os documentos ficam no servidor da empresa, com acesso por perfil
+- [ ] **Laudos preenchidos automaticamente** a partir dos resultados já registrados, sem redigitação; o analista revisa e outra pessoa libera
 - [ ] **V3, parte 2 — IA avançada:** comando por áudio e leitura de laudo por foto, sempre com confirmação antes de gravar
-- [ ] **Extras de LIMS:** laudo em PDF, meios e reagentes, equipamentos, QR code nas amostras, não conformidades
+- [ ] **Extras de LIMS:** meios e reagentes, equipamentos, QR code nas amostras, não conformidades
 - [ ] **V6 — Acabamento (contínuo):** testes, diagramas e documentação a cada marco
 
 ## Documentação
