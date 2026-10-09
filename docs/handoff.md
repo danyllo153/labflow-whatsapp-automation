@@ -6,18 +6,16 @@ Documento para retomar o projeto em outro computador ou numa conversa nova do Cl
 
 ## 0. Onde paramos (leia primeiro)
 
-**07/10/2026 (noite):** spec de NFC placa a placa aprovada (`docs/specs/nfc-resultados-placas.md` v1.0, PR #30). **NFC-001** feita: migration 016 aplicada no servidor de demonstração com os limites fictícios (PR #31). Bug corrigido: "reanálise" virava análise nova, pela regex e pela IA (PR #32, testado no WhatsApp). Skill `/fechar-dia` criada para encerrar a sessão e continuar em outro computador. **Próximo:** NFC-002 (comandos de placa `ct do tanque 47 normal 12,8,15` e comando de repetição só com desvio aberto). Itens 1 a 3 abaixo já feitos (PRs #26 a #29).
+**08/10/2026:** proposta do LabFlow enviada ao gerente (Henry) para a iniciativa de IA da Diretoria: PDF de 3 páginas (fora do Git, em `apresentacao/`, só no notebook) e README com os próximos passos (plataforma própria com login, tela do dia e pendências do turno; RAG das instruções de trabalho; laudos automáticos; WhatsApp continua como canal opcional; PR #34). **Painel do Power BI em modo claro** (fundo azul-gelo, cartões brancos, mesmas cores de significado; o escuro fica no `--escuro`), na branch `feat/painel-claro` (commits locais, falta push e PR).
 
-**07/10/2026:** tudo na `main` e sincronizado (PR #22 do Power BI e PR #23 de docs mesclados). Nada pendente no notebook. Rumo do projeto definido: **LIMS próprio** com app web/mobile (seção 4).
+**Pela metade:** o último ajuste da faixa de cartões (tirar a barrinha de rolagem à direita, `calc(100% - 8px)`) está no gerador mas **ainda não foi aplicado**: rodar `node scripts/gerar-painel-powerbi.js` com o Power BI **fechado**, abrir, atualizar (túnel `ssh -N -L 15432:172.16.2.2:5432 dan@IP-DO-SERVIDOR` ligado) e conferir a Visão geral e Coliformes. Depois, refazer os prints de `docs/img/powerbi/` e o `painel.gif` (`py scripts/gerar-gif.py docs/img/powerbi docs/img/powerbi/painel.gif`).
 
-**Próximo (Fase 0, fechar a v1.2.0):**
-1. **Actions do GitHub**: subir as versões (`actions/checkout`, `setup-python`, `setup-node` avisam de Node.js 20 em desuso; o `ubuntu-latest` muda a partir de **19/10/2026**). Conferir que `audit-workflow.yml` e `testes.yml` continuam verdes.
-2. **Acabamentos do painel**: filtro de Período começar onde há dados (hoje mostra 2025 a 2027); nomes longos de embarque quebrando linha nas tabelas estreitas.
-3. **README**: marcar o Power BI (V5) como feito, roadmap do LIMS e prints/GIF das 8 páginas.
-4. **Situação ok/não ok** em todas as linhas do relatório (falta a regra do Howard, do NFC e dos drops; ver seção 6).
-5. **Lançar a v1.2.0** (tag + release; antes, `git switch main && git pull`, Bug 30).
+**Próximo:**
+1. Fechar o painel claro (acima), prints e GIF novos no README, PR.
+2. **NFC-002**: comandos de placa (`ct do tanque 47 normal 12,8,15`, `bl72`, `bl120`, `wort profundidade/superficie 120h/240h`) e comando de repetição (só com desvio aberto) + testes (`docs/specs/nfc-resultados-placas.md`). Depois NFC-003 a NFC-008.
+3. Lançar a **v1.2.0** (tag + release; antes, `git switch main && git pull`, Bug 30). Conferir as Actions depois de 19/10/2026.
 
-**Ao abrir em outro PC:** instalar Python (marcando *Add python.exe to PATH*) e Node LTS, `git pull`, e conferir com `py --version`, `node --version` e `npm.cmd test` (no PowerShell com scripts bloqueados, use `npm.cmd` e `npx.cmd`). Roteiro completo na nota `Git/16 Trocar de PC e handoff` do Obsidian.
+**07/10/2026:** spec de NFC aprovada (v1.0, PR #30); NFC-001 (migration 016 aplicada com limites fictícios, PR #31); "reanálise" não vira mais análise nova (PR #32); skill `/fechar-dia` (PR #33).
 
 ## 1. Quem sou e como gosto de trabalhar
 
