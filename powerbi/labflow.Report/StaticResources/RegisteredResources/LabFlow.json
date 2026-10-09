@@ -1,45 +1,45 @@
 {
-  "name": "LabFlow escuro",
+  "name": "LabFlow claro",
   "dataColors": [
-    "#3B82F6",
-    "#14B8A6",
-    "#F59E0B",
-    "#8B5CF6",
-    "#EC4899",
-    "#EF4444",
-    "#22C55E",
+    "#1D6FE8",
+    "#0E8A96",
+    "#D97706",
+    "#7C3AED",
+    "#DB2777",
+    "#DC2626",
+    "#16A34A",
     "#EAB308",
-    "#94A3B8"
+    "#3B5B8C"
   ],
-  "foreground": "#F4F4F5",
-  "foregroundNeutralSecondary": "#A1A1AA",
-  "background": "#141416",
-  "backgroundLight": "#18181B",
-  "backgroundNeutral": "#26262B",
-  "tableAccent": "#3B82F6",
-  "good": "#22C55E",
-  "neutral": "#F59E0B",
-  "bad": "#EF4444",
+  "foreground": "#0F2547",
+  "foregroundNeutralSecondary": "#5B6B85",
+  "background": "#FFFFFF",
+  "backgroundLight": "#F5F8FD",
+  "backgroundNeutral": "#E2E9F4",
+  "tableAccent": "#1D6FE8",
+  "good": "#16A34A",
+  "neutral": "#D97706",
+  "bad": "#DC2626",
   "textClasses": {
     "title": {
       "fontFace": "Segoe UI Semibold",
       "fontSize": 13,
-      "color": "#F4F4F5"
+      "color": "#0F2547"
     },
     "label": {
       "fontFace": "Segoe UI",
       "fontSize": 10,
-      "color": "#A1A1AA"
+      "color": "#5B6B85"
     },
     "callout": {
       "fontFace": "Segoe UI Semibold",
       "fontSize": 30,
-      "color": "#F4F4F5"
+      "color": "#0F2547"
     },
     "header": {
       "fontFace": "Segoe UI Semibold",
       "fontSize": 12,
-      "color": "#F4F4F5"
+      "color": "#0F2547"
     }
   },
   "visualStyles": {
@@ -50,7 +50,7 @@
             "show": true,
             "color": {
               "solid": {
-                "color": "#141416"
+                "color": "#FFFFFF"
               }
             },
             "transparency": 0
@@ -61,7 +61,7 @@
             "show": true,
             "color": {
               "solid": {
-                "color": "#26262B"
+                "color": "#E2E9F4"
               }
             },
             "radius": 16
@@ -77,12 +77,12 @@
             "show": true,
             "fontColor": {
               "solid": {
-                "color": "#F4F4F5"
+                "color": "#0F2547"
               }
             },
             "background": {
               "solid": {
-                "color": "#141416"
+                "color": "#FFFFFF"
               }
             },
             "fontSize": 13,
@@ -94,7 +94,7 @@
             "show": true,
             "labelColor": {
               "solid": {
-                "color": "#A1A1AA"
+                "color": "#5B6B85"
               }
             },
             "fontSize": 9,
@@ -106,7 +106,7 @@
             "show": true,
             "labelColor": {
               "solid": {
-                "color": "#71717A"
+                "color": "#94A3B8"
               }
             },
             "fontSize": 9,
@@ -114,7 +114,7 @@
             "gridlineShow": true,
             "gridlineColor": {
               "solid": {
-                "color": "#27272A"
+                "color": "#E9EEF6"
               }
             },
             "gridlineStyle": "dashed"
@@ -126,7 +126,7 @@
             "position": "Top",
             "labelColor": {
               "solid": {
-                "color": "#A1A1AA"
+                "color": "#5B6B85"
               }
             },
             "fontSize": 10
@@ -136,17 +136,17 @@
           {
             "background": {
               "solid": {
-                "color": "#141416"
+                "color": "#FFFFFF"
               }
             },
             "foreground": {
               "solid": {
-                "color": "#A1A1AA"
+                "color": "#5B6B85"
               }
             },
             "border": {
               "solid": {
-                "color": "#26262B"
+                "color": "#E2E9F4"
               }
             }
           }
@@ -159,7 +159,7 @@
           {
             "color": {
               "solid": {
-                "color": "#0A0A0B"
+                "color": "#EEF3FB"
               }
             },
             "transparency": 0
@@ -169,7 +169,7 @@
           {
             "color": {
               "solid": {
-                "color": "#0A0A0B"
+                "color": "#EEF3FB"
               }
             }
           }
@@ -182,12 +182,12 @@
           {
             "backColor": {
               "solid": {
-                "color": "#18181B"
+                "color": "#F5F8FD"
               }
             },
             "fontColor": {
               "solid": {
-                "color": "#A1A1AA"
+                "color": "#5B6B85"
               }
             },
             "bold": true
@@ -197,22 +197,22 @@
           {
             "backColorPrimary": {
               "solid": {
-                "color": "#141416"
+                "color": "#FFFFFF"
               }
             },
             "backColorSecondary": {
               "solid": {
-                "color": "#18181B"
+                "color": "#F5F8FD"
               }
             },
             "fontColorPrimary": {
               "solid": {
-                "color": "#E4E4E7"
+                "color": "#1E2B45"
               }
             },
             "fontColorSecondary": {
               "solid": {
-                "color": "#E4E4E7"
+                "color": "#1E2B45"
               }
             }
           }
@@ -222,13 +222,13 @@
             "gridHorizontal": true,
             "gridHorizontalColor": {
               "solid": {
-                "color": "#27272A"
+                "color": "#E9EEF6"
               }
             },
             "gridVertical": false,
             "outlineColor": {
               "solid": {
-                "color": "#26262B"
+                "color": "#E2E9F4"
               }
             }
           }
@@ -241,7 +241,7 @@
           {
             "fontColor": {
               "solid": {
-                "color": "#A1A1AA"
+                "color": "#5B6B85"
               }
             },
             "bold": false
@@ -251,17 +251,17 @@
           {
             "fontColor": {
               "solid": {
-                "color": "#E4E4E7"
+                "color": "#1E2B45"
               }
             },
             "background": {
               "solid": {
-                "color": "#18181B"
+                "color": "#F5F8FD"
               }
             },
             "outlineColor": {
               "solid": {
-                "color": "#26262B"
+                "color": "#E2E9F4"
               }
             }
           }
@@ -270,12 +270,12 @@
           {
             "fontColor": {
               "solid": {
-                "color": "#E4E4E7"
+                "color": "#1E2B45"
               }
             },
             "background": {
               "solid": {
-                "color": "#18181B"
+                "color": "#F5F8FD"
               }
             }
           }
@@ -284,12 +284,12 @@
           {
             "fontColor": {
               "solid": {
-                "color": "#E4E4E7"
+                "color": "#1E2B45"
               }
             },
             "background": {
               "solid": {
-                "color": "#18181B"
+                "color": "#F5F8FD"
               }
             }
           }
@@ -298,7 +298,7 @@
           {
             "color": {
               "solid": {
-                "color": "#3B82F6"
+                "color": "#1D6FE8"
               }
             }
           }

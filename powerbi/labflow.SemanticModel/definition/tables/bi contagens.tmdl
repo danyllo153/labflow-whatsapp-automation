@@ -21,11 +21,11 @@ table 'bi contagens'
 		formatString: 0
 		lineageTag: f391ee5e-dba0-d468-f7a6-e04093a71fdb
 
-	measure 'Cor do resultado' = IF(CALCULATE(COUNTROWS('bi contagens'), KEEPFILTERS('bi contagens'[alarme] = TRUE())) > 0, "#EF4444", IF(CALCULATE(COUNTROWS('bi contagens'), KEEPFILTERS('bi contagens'[lido] = TRUE())) > 0, "#22C55E"))
+	measure 'Cor do resultado' = IF(CALCULATE(COUNTROWS('bi contagens'), KEEPFILTERS('bi contagens'[alarme] = TRUE())) > 0, "#DC2626", IF(CALCULATE(COUNTROWS('bi contagens'), KEEPFILTERS('bi contagens'[lido] = TRUE())) > 0, "#16A34A"))
 		isHidden
 		lineageTag: 269b8ce6-fb37-0760-b272-f67b14ecab99
 
-	measure 'Fundo do resultado' = IF(CALCULATE(COUNTROWS('bi contagens'), KEEPFILTERS('bi contagens'[alarme] = TRUE())) > 0, "#2A1416", IF(CALCULATE(COUNTROWS('bi contagens'), KEEPFILTERS('bi contagens'[lido] = TRUE())) > 0, "#112419"))
+	measure 'Fundo do resultado' = IF(CALCULATE(COUNTROWS('bi contagens'), KEEPFILTERS('bi contagens'[alarme] = TRUE())) > 0, "#FCE9E9", IF(CALCULATE(COUNTROWS('bi contagens'), KEEPFILTERS('bi contagens'[lido] = TRUE())) > 0, "#E8F6ED"))
 		isHidden
 		lineageTag: 0ce7e433-212d-22ad-df0d-e1b5e06c3e3a
 
