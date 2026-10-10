@@ -1,7 +1,7 @@
 table 'bi desvios'
 	lineageTag: 537302f3-3622-476b-9ab0-b6d9aba5a9e9
 
-	measure Desvios = COUNTROWS('bi desvios')
+	measure 'Desvios' = COUNTROWS('bi desvios')
 		formatString: 0
 		lineageTag: ee95e39c-f8dd-6eb1-6989-f3153bf7240c
 
@@ -28,6 +28,23 @@ table 'bi desvios'
 	measure 'Confirmou a 25 °C' = CALCULATE(COUNTROWS('bi desvios'), 'bi desvios'[cresceu_25c] = TRUE())
 		formatString: 0
 		lineageTag: 6b1132e2-d912-5706-9b8e-3976c9db121d
+
+	column 'Local' = IF(ISBLANK('bi desvios'[navio]), "Terra (tank farm)", 'bi desvios'[navio])
+		dataType: string
+		lineageTag: fbf9c567-f473-9152-c8ec-96adfa6e8f1a
+		summarizeBy: none
+
+	column 'Estágio' = 'bi desvios'[drop]
+		dataType: string
+		sortByColumn: 'Estágio (ordem)'
+		lineageTag: fd7526b9-63df-4367-44b4-1a9c1ff6278b
+		summarizeBy: none
+
+	column 'Estágio (ordem)' = INT(VALUE(MID('bi desvios'[drop], 2, 3)))
+		dataType: int64
+		isHidden
+		lineageTag: f2eb246e-22ab-b12f-a854-4d1ca7eb3616
+		summarizeBy: none
 
 	column desvio_id
 		dataType: int64
@@ -208,23 +225,6 @@ table 'bi desvios'
 		sourceColumn: situacao
 
 		annotation SummarizationSetBy = Automatic
-
-	column Local = IF(ISBLANK('bi desvios'[navio]), "Terra (tank farm)", 'bi desvios'[navio])
-		dataType: string
-		lineageTag: fbf9c567-f473-9152-c8ec-96adfa6e8f1a
-		summarizeBy: none
-
-	column Estágio = 'bi desvios'[drop]
-		dataType: string
-		lineageTag: fd7526b9-63df-4367-44b4-1a9c1ff6278b
-		summarizeBy: none
-		sortByColumn: 'Estágio (ordem)'
-
-	column 'Estágio (ordem)' = INT(VALUE(MID('bi desvios'[drop], 2, 3)))
-		dataType: int64
-		isHidden
-		lineageTag: f2eb246e-22ab-b12f-a854-4d1ca7eb3616
-		summarizeBy: none
 
 	partition 'bi desvios' = m
 		mode: import

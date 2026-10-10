@@ -1,21 +1,9 @@
 table 'bi testes'
 	lineageTag: df42c17b-e7c9-4a02-aa20-f8ab20d132b0
 
-	measure Testes = COUNTROWS('bi testes')
+	measure 'Testes' = COUNTROWS('bi testes')
 		formatString: 0
 		lineageTag: c2202884-966a-43df-a47f-8d25ac506895
-
-	measure 'Testes positivos' = CALCULATE(COUNTROWS('bi testes'), 'bi testes'[resultado] = "Positivo")
-		formatString: 0
-		lineageTag: 52555ab8-3289-a227-4e71-32e93c8a6ca2
-
-	measure 'Testes em andamento' = CALCULATE(COUNTROWS('bi testes'), 'bi testes'[status] <> "Concluído")
-		formatString: 0
-		lineageTag: 69d60922-22c0-c7b9-45e2-d02ce6dc3e9b
-
-	measure 'Howard médio (%)' = AVERAGE('bi testes'[howard_percentual])
-		formatString: 0.0
-		lineageTag: 4f5d59b2-2f4b-6e1d-35d1-d979a3c870e6
 
 	measure 'Testes no caldo' = CALCULATE(COUNTROWS('bi testes'), 'bi testes'[status] = "No caldo")
 		formatString: 0
@@ -33,13 +21,40 @@ table 'bi testes'
 		formatString: 0
 		lineageTag: 07517911-fd19-8145-c0f7-ce922340bab4
 
+	measure 'Testes positivos' = CALCULATE(COUNTROWS('bi testes'), 'bi testes'[resultado] = "Positivo")
+		formatString: 0
+		lineageTag: 52555ab8-3289-a227-4e71-32e93c8a6ca2
+
 	measure 'Testes negativos' = CALCULATE(COUNTROWS('bi testes'), 'bi testes'[resultado] = "Negativo")
 		formatString: 0
 		lineageTag: c90e2cbe-280d-7c29-4c7e-3a3c5899687f
 
+	measure 'Testes em andamento' = CALCULATE(COUNTROWS('bi testes'), 'bi testes'[status] <> "Concluído")
+		formatString: 0
+		lineageTag: 69d60922-22c0-c7b9-45e2-d02ce6dc3e9b
+
 	measure 'Testes atrasados' = CALCULATE(COUNTROWS('bi testes'), 'bi testes'[situacao] = "Atrasado")
 		formatString: 0
 		lineageTag: 8a132ca7-99b1-60c5-f3a9-618bb1a60b23
+
+	measure 'Howard médio (%)' = AVERAGE('bi testes'[howard_percentual])
+		formatString: 0.0
+		lineageTag: 4f5d59b2-2f4b-6e1d-35d1-d979a3c870e6
+
+	column 'Resultado ou andamento' = IF(NOT ISBLANK('bi testes'[resultado]), 'bi testes'[resultado], IF('bi testes'[teste] = "Howard", "Concluído", "Em andamento"))
+		dataType: string
+		lineageTag: 4638ddb3-1fd2-aed1-d85c-1e326d9a8421
+		summarizeBy: none
+
+	column 'Navio' = IF('bi testes'[origem] = "Embarque", TRIM(LEFT('bi testes'[embarque], SEARCH(" linha", 'bi testes'[embarque], 1, LEN('bi testes'[embarque]) + 1) - 1)))
+		dataType: string
+		lineageTag: c8299ae4-ae4b-2f75-ae18-bba26b75e3e8
+		summarizeBy: none
+
+	column 'Identificação' = SWITCH('bi testes'[origem], "Tank farm", "Tanque " & 'bi testes'[tanque], "Embarque", 'bi testes'[embarque], "Load " & 'bi testes'[load])
+		dataType: string
+		lineageTag: 79470ea7-8bcf-66ae-7fa3-2013a78542fb
+		summarizeBy: none
 
 	column teste_id
 		dataType: int64
@@ -263,21 +278,6 @@ table 'bi testes'
 		sourceColumn: situacao
 
 		annotation SummarizationSetBy = Automatic
-
-	column 'Resultado ou andamento' = IF(NOT ISBLANK('bi testes'[resultado]), 'bi testes'[resultado], IF('bi testes'[teste] = "Howard", "Concluído", "Em andamento"))
-		dataType: string
-		lineageTag: 4638ddb3-1fd2-aed1-d85c-1e326d9a8421
-		summarizeBy: none
-
-	column Navio = IF('bi testes'[origem] = "Embarque", TRIM(LEFT('bi testes'[embarque], SEARCH(" linha", 'bi testes'[embarque], 1, LEN('bi testes'[embarque]) + 1) - 1)))
-		dataType: string
-		lineageTag: c8299ae4-ae4b-2f75-ae18-bba26b75e3e8
-		summarizeBy: none
-
-	column Identificação = SWITCH('bi testes'[origem], "Tank farm", "Tanque " & 'bi testes'[tanque], "Embarque", 'bi testes'[embarque], "Load " & 'bi testes'[load])
-		dataType: string
-		lineageTag: 79470ea7-8bcf-66ae-7fa3-2013a78542fb
-		summarizeBy: none
 
 	column espalhar_prevista
 		dataType: dateTime

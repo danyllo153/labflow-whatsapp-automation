@@ -5,8 +5,8 @@
     "x": 1140,
     "y": 176,
     "z": 6000,
-    "height": 60,
     "width": 372,
+    "height": 60,
     "tabOrder": 6000
   },
   "visual": {
@@ -28,7 +28,6 @@
               },
               "queryRef": "bi contagens.load",
               "nativeQueryRef": "load",
-              "active": true,
               "displayName": "Load"
             }
           ]

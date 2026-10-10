@@ -9,26 +9,26 @@ Projeto pessoal que une biomedicina e automação: o problema vem da rotina real
 
 ## Onde o projeto está
 
-**Versão publicada: [v1.1.0](docs/CHANGELOG.md)**, em uso de teste ponta a ponta pelo WhatsApp. Já entrou na `main` e vai para a próxima versão:
+**Versão publicada: [v1.2.0](docs/CHANGELOG.md)**, em uso de teste ponta a ponta pelo WhatsApp. O que entrou nela:
+
+- **Resultados de NFC placa a placa:** o analista manda as 3 placas (`ct do tanque 47 normal 12,8,15`) e o bot responde **ok** ou **não ok** pelo limite. Não ok abre, com "sim", um **desvio de tanque**: a análise é repetida com o frasco de arquivo e a nova contagem fecha o desvio sozinha. O relatório do dia mostra 🚨 com a contagem, e o painel ganhou as páginas **Análise TT** e **Análise T.N**, com a tendência do C.T por tanque.
 
 - **A IA entende todos os comandos.** Frase livre ("chegaram os lotes 1 a 14 do load 77001 item 444 da fábrica AQA", "apareceu colônia no TAB 11", "relatório diário") vira o comando oficial; o código confere antes de gravar. Testada no Gemini real com 44 frases que não estão no prompt: **44 de 44**, inclusive frases em estilo de áudio.
 - **Leitura do dia finalizada:** quem lê o dia fecha tudo o que vence hoje de uma vez, e o relatório mostra quem finalizou.
 - **Desvio de drop:** drop "não ok" abre um desvio, com repetição em 7, 13 e 25 °C e resultado por temperatura, consultável por tanque.
 - **Alerta de erro no WhatsApp:** se um fluxo do bot falha, os administradores recebem o aviso na hora (validado de ponta a ponta).
-- **Painel no Power BI:** 9 páginas (visão geral, coletas, tanques, drops, desvios, recebimento, embarque, TAB e Coliformes) em modo escuro, com filtros por navio, tanque, load, fábrica, item e período. O painel é **gerado por código** e versionado no Git, o modelo foi montado com o Power BI Modeling MCP da Microsoft, e os números foram conferidos contra o banco.
-
-**Em andamento:** resultado **ok / não ok** em todo o relatório, começando pelo NFC placa a placa (triplicata, desvio de tanque e repetição; [especificação](docs/specs/nfc-resultados-placas.md) aprovada e banco pronto).
+- **Painel no Power BI:** 10 páginas (visão geral, coletas, análise dos tanques de terra e de navio, drops, desvios, recebimento, embarque, TAB e Coliformes) em modo claro, com filtros por navio, tanque, load, fábrica, item e período. O painel é **gerado por código** e versionado no Git, o modelo foi montado com o Power BI Modeling MCP da Microsoft, e os números foram conferidos contra o banco.
 
 **Próximo:** uma **plataforma própria do laboratório** (web e app de computador), com login por usuário, a tela do dia, as pendências do turno e o assistente de IA embutido; **consulta às instruções de trabalho com IA (RAG)**; e **laudos preenchidos automaticamente**. O WhatsApp continua como canal opcional, com as mesmas regras (detalhes no [Roadmap](#roadmap)).
 
 | Em números | |
 |---|---|
-| Nodes no workflow do n8n | 177, em 10 blocos por assunto |
-| Tipos de comando | 39 |
-| Consultas ao banco | 49, todas parametrizadas |
-| Banco | 15 migrations versionadas, 19 tabelas, 12 views (relatório e painel) |
-| Painel | Power BI com 9 páginas, gerado por código |
-| Testes automáticos | 208 (`npm test`), rodando a cada alteração numa GitHub Action |
+| Nodes no workflow do n8n | 185, em 10 blocos por assunto |
+| Tipos de comando | 41 |
+| Consultas ao banco | 53, todas parametrizadas |
+| Banco | 18 migrations versionadas, 23 tabelas, 14 views (relatório e painel) |
+| Painel | Power BI com 10 páginas, gerado por código |
+| Testes automáticos | 229 (`npm test`), rodando a cada alteração numa GitHub Action |
 | Bugs reais documentados | 33, com causa raiz e lição ([troubleshooting](docs/troubleshooting.md)) |
 
 ## O problema
@@ -145,10 +145,10 @@ n8n · PostgreSQL · Docker / Docker Compose · Evolution API · Google Gemini A
 
 ## Engenharia e qualidade
 
-- **Testes dos Code nodes fora do n8n.** O código real dos nodes é extraído do workflow exportado e executado com mensagens de exemplo (`npm test`, 208 testes): reconhecimento de cada comando, campos extraídos, prazos de negócio, recusas, permissões, a validação da IA e o alerta de erro. Os testes foram validados **injetando defeitos de propósito**: um teste que nunca falha não protege nada.
+- **Testes dos Code nodes fora do n8n.** O código real dos nodes é extraído do workflow exportado e executado com mensagens de exemplo (`npm test`, 229 testes): reconhecimento de cada comando, campos extraídos, prazos de negócio, recusas, permissões, a validação da IA e o alerta de erro. Os testes foram validados **injetando defeitos de propósito**: um teste que nunca falha não protege nada.
 - **Regressão do prompt.** O Gemini não roda offline, então um script gera um workflow de teste com o mesmo prompt do bot e frases que não estão nos exemplos, e mostra um placar ([scripts.md](docs/scripts.md)). Roda depois de qualquer mudança no prompt.
 - **Auditoria automática do workflow.** [`scripts/audit-workflow.py`](scripts/audit-workflow.py) procura nodes órfãos, ramos sem resposta ao webhook e dados sensíveis no arquivo público. Duas GitHub Actions rodam a auditoria e os testes a cada alteração.
-- **Banco versionado.** 12 migrations numeradas, aplicadas uma de cada vez, sempre testadas antes numa transação desfeita e com backup antes de aplicar.
+- **Banco versionado.** 18 migrations numeradas, aplicadas uma de cada vez, sempre testadas antes numa transação desfeita e com backup antes de aplicar.
 - **Bugs documentados.** 30 bugs reais com sintoma, causa raiz, solução e lição ([troubleshooting](docs/troubleshooting.md)).
 
 ## Decisões técnicas
@@ -176,11 +176,11 @@ n8n · PostgreSQL · Docker / Docker Compose · Evolution API · Google Gemini A
 - [x] **Suco concentrado e relatório diário:** recebimento, embarque, compostas, TAB, Coliformes, Howard, C.T/B.L com alarme e o relatório diário (1.1.0)
 - [x] **Operação e IA completa:** alerta de erro no WhatsApp, leitura do dia finalizada, desvio de drop, IA para todos os comandos e regressão do prompt (próxima versão)
 - [x] **V5 — Painel no Power BI:** 9 páginas sobre views do PostgreSQL, por um usuário somente leitura, gerado por script e com o modelo feito pelo Power BI Modeling MCP (próxima versão)
-- [ ] **Situação (ok / não ok) em todas as linhas do relatório**, com os limites do Howard e do NFC
+- [x] **Situação (ok / não ok) em todas as linhas do relatório**, com os limites do Howard e do NFC em tabela, com vigência (1.2.0)
 
 **Destino: uma plataforma própria do laboratório (LIMS)**, que o analista usa no lugar do WhatsApp pessoal. O WhatsApp **continua como canal opcional** (com um número da empresa): os dois usam as mesmas regras e o mesmo banco, então o que é registrado num aparece no outro.
 
-- [ ] **Resultados de NFC placa a placa** (em andamento): triplicata, ok / não ok com alerta, desvio de tanque e repetição pelo frasco de arquivo
+- [x] **Resultados de NFC placa a placa** (1.2.0): triplicata, ok / não ok com alerta, desvio de tanque e repetição pelo frasco de arquivo
 
 - [ ] **Base de LIMS no banco:** histórico de alterações (audit trail), especificações por análise e produto, revisão e liberação de resultados por outra pessoa (requisitos de um laboratório ISO/IEC 17025)
 - [ ] **API própria** (FastAPI) com login (senha em hash + JWT) ligado aos cargos do bot

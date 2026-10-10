@@ -67,4 +67,10 @@ module.exports = [
   ['quais bl120 foram lidos hoje?', 'consulta_contagens', 'consulta'],
   ['quais desvios de drops do tanque 45?', 'consulta_desvios', 'consulta'],
   ['quais desvios estão abertos?', 'consulta_desvios', 'consulta'],
+  // Placas de NFC dos tanques e repetição (o fluxo pergunta "sim" antes de gravar)
+  ['ct do tanque 47 normal 12,8,15', 'placas_nfc', 'pede_sim'],
+  ['bl72 do tanque 5 navio O.SKY 123 stress 0,1,0', 'placas_nfc', 'pede_sim'],
+  ['bl120 do tanque 47 normal 0,0,2', 'placas_nfc', 'pede_sim'],
+  ['wort superficie 240h do tanque 47 normal 0,0,1 coleta 01/10/2026', 'placas_nfc', 'pede_sim'],
+  ['repetição do tanque 47 stress bl120', 'repeticao_nfc', 'pede_sim'],
 ];

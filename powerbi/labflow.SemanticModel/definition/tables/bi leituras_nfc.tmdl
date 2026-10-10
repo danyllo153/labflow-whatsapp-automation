@@ -1,7 +1,7 @@
 table 'bi leituras_nfc'
 	lineageTag: af6bf997-5538-4378-bc58-efd35acdcc92
 
-	measure Leituras = COUNTROWS('bi leituras_nfc')
+	measure 'Leituras' = COUNTROWS('bi leituras_nfc')
 		formatString: 0
 		lineageTag: 6a337df8-f0ce-6c16-a1cf-15951a5321c9
 
@@ -21,10 +21,31 @@ table 'bi leituras_nfc'
 		formatString: 0%
 		lineageTag: d4b20409-9afc-da62-fe25-cd7fe2c9e996
 
+	measure 'Leituras não ok' = CALCULATE(COUNTROWS('bi leituras_nfc'), 'bi leituras_nfc'[resultado] = "Não ok")
+		formatString: 0
+		lineageTag: 82671692-25d8-29aa-0d64-14a229c2e93a
+
+	measure 'Leituras ok' = CALCULATE(COUNTROWS('bi leituras_nfc'), 'bi leituras_nfc'[resultado] = "Ok")
+		formatString: 0
+		lineageTag: 41fad63d-b984-2d57-4059-e772d8796f1e
+
+	measure 'Desvios de tanque abertos' = CALCULATE(COUNTROWS('bi leituras_nfc'), 'bi leituras_nfc'[desvio] = "Em repetição")
+		formatString: 0
+		lineageTag: c3287a2f-41b3-1865-9ffa-d845faee79c3
+
+	measure 'Maior placa (média)' = AVERAGE('bi leituras_nfc'[maior])
+		formatString: 0.0
+		lineageTag: dcaa1bc8-3141-924f-17b7-1a8635257d66
+
 	measure 'HTML andamento das leituras' = VAR linha = SELECTEDVALUE('bi leituras_nfc'[linha_relatorio]) VAR total = COALESCE([Leituras], 0) VAR lidas = COALESCE([Leituras lidas], 0) VAR atras = COALESCE([Leituras atrasadas], 0) VAR hoje = COALESCE([Leituras que vencem hoje], 0) VAR pl = FORMAT(ROUND(DIVIDE(lidas, total, 0) * 100, 0), "0") VAR pa = FORMAT(ROUND(DIVIDE(atras, total, 0) * 100, 0), "0") VAR ph = FORMAT(ROUND(DIVIDE(hoje, total, 0) * 100, 0), "0") RETURN "<div style='margin:2px 6px 14px 6px;font-family:Segoe UI,sans-serif'><div style='display:flex;justify-content:space-between;align-items:baseline;font-size:13px;color:#0F2547'><b>" & linha & "</b><span style='font-size:12px;color:#5B6B85'><b style='color:#16A34A'>" & pl & "% lidas</b> · " & lidas & " de " & total & "</span></div><div style='height:8px;border-radius:6px;background:#E9EEF6;overflow:hidden;display:flex;margin-top:6px'><div style='width:" & pl & "%;background:#16A34A'></div><div style='width:" & pa & "%;background:#DC2626'></div><div style='width:" & ph & "%;background:#D97706'></div></div><div style='font-size:11px;margin-top:5px;color:#5B6B85'><span style='color:#DC2626'>● </span>" & atras & " atrasadas&nbsp;&nbsp;<span style='color:#D97706'>● </span>" & hoje & " para hoje</div></div>"
-		isHidden
 		displayFolder: Painel HTML
+		isHidden
 		lineageTag: a80ccfb8-b633-93af-fdea-db239e5ece96
+
+	column 'Local' = IF(ISBLANK('bi leituras_nfc'[navio]), "Terra (tank farm)", 'bi leituras_nfc'[navio])
+		dataType: string
+		lineageTag: 33913422-b371-e5e8-e5b8-dada829eb094
+		summarizeBy: none
 
 	column analise_id
 		dataType: int64
@@ -181,10 +202,73 @@ table 'bi leituras_nfc'
 
 		annotation SummarizationSetBy = Automatic
 
-	column Local = IF(ISBLANK('bi leituras_nfc'[navio]), "Terra (tank farm)", 'bi leituras_nfc'[navio])
-		dataType: string
-		lineageTag: 33913422-b371-e5e8-e5b8-dada829eb094
+	column placa_1
+		dataType: double
+		formatString: 0
+		lineageTag: 2c5a4f91-abd6-2a20-e03e-78e96ba9d545
 		summarizeBy: none
+		sourceColumn: placa_1
+
+		annotation SummarizationSetBy = Automatic
+
+	column placa_2
+		dataType: double
+		formatString: 0
+		lineageTag: 14a41967-aef2-03e2-ff7e-32d32ec53899
+		summarizeBy: none
+		sourceColumn: placa_2
+
+		annotation SummarizationSetBy = Automatic
+
+	column placa_3
+		dataType: double
+		formatString: 0
+		lineageTag: ecaa1e72-144f-3a7c-9ed8-6b3db9a751ae
+		summarizeBy: none
+		sourceColumn: placa_3
+
+		annotation SummarizationSetBy = Automatic
+
+	column contagem
+		dataType: string
+		lineageTag: 39612e2c-6577-5e7e-b424-3b32979ae963
+		summarizeBy: none
+		sourceColumn: contagem
+
+		annotation SummarizationSetBy = Automatic
+
+	column maior
+		dataType: double
+		formatString: 0
+		lineageTag: 4a569577-1e85-96b1-8471-1a8390a8d921
+		summarizeBy: none
+		sourceColumn: maior
+
+		annotation SummarizationSetBy = Automatic
+
+	column resultado
+		dataType: string
+		lineageTag: 878622dd-02b9-1464-5e28-c7c32978eb36
+		summarizeBy: none
+		sourceColumn: resultado
+
+		annotation SummarizationSetBy = Automatic
+
+	column repeticao
+		dataType: boolean
+		lineageTag: 642db079-932d-210c-a8cc-ea3f457d1c62
+		summarizeBy: none
+		sourceColumn: repeticao
+
+		annotation SummarizationSetBy = Automatic
+
+	column desvio
+		dataType: string
+		lineageTag: 4aaac62b-1948-0af4-3283-2e61b00ff6f1
+		summarizeBy: none
+		sourceColumn: desvio
+
+		annotation SummarizationSetBy = Automatic
 
 	partition 'bi leituras_nfc' = m
 		mode: import

@@ -5,8 +5,8 @@
     "x": 960,
     "y": 598,
     "z": 8000,
-    "height": 466,
     "width": 936,
+    "height": 466,
     "tabOrder": 8000
   },
   "visual": {
@@ -28,7 +28,6 @@
               },
               "queryRef": "Calendário.Mês",
               "nativeQueryRef": "Mês",
-              "active": true,
               "displayName": "Mês"
             }
           ]

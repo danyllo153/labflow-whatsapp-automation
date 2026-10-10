@@ -6,16 +6,21 @@ Documento para retomar o projeto em outro computador ou numa conversa nova do Cl
 
 ## 0. Onde paramos (leia primeiro)
 
-**08/10/2026:** proposta do LabFlow enviada ao gerente (Henry) para a iniciativa de IA da Diretoria: PDF de 3 páginas (fora do Git, em `apresentacao/`, só no notebook) e README com os próximos passos (plataforma própria com login, tela do dia e pendências do turno; RAG das instruções de trabalho; laudos automáticos; WhatsApp continua como canal opcional; PR #34). **Painel do Power BI em modo claro** (fundo azul-gelo, cartões brancos, mesmas cores de significado; o escuro fica no `--escuro`), na branch `feat/painel-claro` (commits locais, falta push e PR).
+**09/10/2026:** versão **1.2.0** pronta na branch `feat/nfc-placas` (commits locais, falta push, PR, merge e tag). Entrou:
+NFC placa a placa (NFC-002 a NFC-008: comandos de placas, desvio de tanque com repetição, `<1` automático, relatório com ✅/🚨
+e contagem, IA, páginas **Análise TT** e **Análise T.N** no painel), ok / não ok de Howard e drops no relatório, consulta de desvios
+de drop e de tanque e o **Bug 29** resolvido (resposta do "sim" só depois de gravar). No servidor de demonstração: migrations
+**017 e 018** aplicadas (backups `labflow_2026-10-09_2203` a `_2206`), limites fictícios e `db/seeds/demo_placas.sql` carregados.
 
-**Pela metade:** o último ajuste da faixa de cartões (tirar a barrinha de rolagem à direita, `calc(100% - 8px)`) está no gerador mas **ainda não foi aplicado**: rodar `node scripts/gerar-painel-powerbi.js` com o Power BI **fechado**, abrir, atualizar (túnel `ssh -N -L 15432:172.16.2.2:5432 dan@IP-DO-SERVIDOR` ligado) e conferir a Visão geral e Coliformes. Depois, refazer os prints de `docs/img/powerbi/` e o `painel.gif` (`py scripts/gerar-gif.py docs/img/powerbi docs/img/powerbi/painel.gif`).
+**Falta (com o Danyllo):**
+1. Importar `LabFlow_importar_n8n.json` **como cópia** no n8n, ativar e testar pelo WhatsApp (roteiro em `docs/comandos.md` 15.3).
+   Rollback: `LabFlow_importar_n8n_antes_nfc.json` (o workflow anterior).
+2. Abrir o Power BI (túnel ligado), **Atualizar** e conferir as páginas Análise TT e Análise T.N.
+3. Push, PR, merge e tag `v1.2.0` com release (antes: `git switch main && git pull`, Bug 30).
+4. Refazer os prints e o GIF do painel (modo claro, 10 páginas) e o carrossel do LinkedIn.
 
-**Próximo:**
-1. Fechar o painel claro (acima), prints e GIF novos no README, PR.
-2. **NFC-002**: comandos de placa (`ct do tanque 47 normal 12,8,15`, `bl72`, `bl120`, `wort profundidade/superficie 120h/240h`) e comando de repetição (só com desvio aberto) + testes (`docs/specs/nfc-resultados-placas.md`). Depois NFC-003 a NFC-008.
-3. Lançar a **v1.2.0** (tag + release; antes, `git switch main && git pull`, Bug 30). Conferir as Actions depois de 19/10/2026.
-
-**07/10/2026:** spec de NFC aprovada (v1.0, PR #30); NFC-001 (migration 016 aplicada com limites fictícios, PR #31); "reanálise" não vira mais análise nova (PR #32); skill `/fechar-dia` (PR #33).
+**Próximo depois da 1.2.0:** página Desvios do painel com os desvios de tanque; Fase 1 do LIMS (audit trail, especificações,
+revisão e liberação), seguindo `docs/specs/lims/`.
 
 ## 1. Quem sou e como gosto de trabalhar
 
@@ -39,7 +44,7 @@ Documento para retomar o projeto em outro computador ou numa conversa nova do Cl
 
 **Em números:** 177 nodes no `LabFlow.json` (35 terminam em `Respond to Webhook`) · 49 consultas parametrizadas (nodes de Postgres) · 15 migrations, 19 tabelas e 12 views · 208 testes (`npm test`) · 33 bugs documentados em [`troubleshooting.md`](troubleshooting.md).
 
-**No servidor:** migrations `001` a `016` aplicadas (016 em 07/10, com os limites de NFC de exemplo); dados de demonstração carregados (`db/seeds/demo.sql`, reaplicados em 06/10); backup diário às 3h, 14 dias, em `~/labflow/backups` (`./backup-db.sh`). DBeaver: conexões `LabFlow (leitura)` e `LabFlow (app)` (tipo Production).
+**No servidor:** migrations `001` a `018` aplicadas (016 em 07/10; 017 e 018 em 09/10; limites de NFC e Howard de exemplo e placas de demonstração); dados de demonstração carregados (`db/seeds/demo.sql`, reaplicados em 06/10); backup diário às 3h, 14 dias, em `~/labflow/backups` (`./backup-db.sh`). DBeaver: conexões `LabFlow (leitura)` e `LabFlow (app)` (tipo Production).
 
 **Arquivos de workflow (na pasta do projeto):**
 - `LabFlow.json` e `LabFlow_Alerta_Erro.json`: versões **públicas**, sem IDs reais (vão para o Git).
@@ -86,7 +91,7 @@ Detalhes e o comparativo "o que temos × o que falta para ser um LIMS" na nota `
 
 ## 5. Banco de dados
 
-Plano e decisões em [`postgres-migracao.md`](postgres-migracao.md); migrations em [`../db/migrations/`](../db/migrations/) (`001` a `016`, uma de cada vez, com `-v ON_ERROR_STOP=1`). A coleta é o centro (drops, arquivo e análises apontam para `coleta_id`); no concentrado, a ordem é *recebimento → compostas → testes*. `tanque` é TEXT; datas em `America/Sao_Paulo`; o banco confere as regras de novo (UNIQUE, CHECK, FK). Usuários: `labflow_app` (n8n) e `labflow_leitura` (DBeaver e Power BI). Senhas só em `~/labflow/.env` no servidor.
+Plano e decisões em [`postgres-migracao.md`](postgres-migracao.md); migrations em [`../db/migrations/`](../db/migrations/) (`001` a `018`, uma de cada vez, com `-v ON_ERROR_STOP=1`). A coleta é o centro (drops, arquivo e análises apontam para `coleta_id`); no concentrado, a ordem é *recebimento → compostas → testes*. `tanque` é TEXT; datas em `America/Sao_Paulo`; o banco confere as regras de novo (UNIQUE, CHECK, FK). Usuários: `labflow_app` (n8n) e `labflow_leitura` (DBeaver e Power BI). Senhas só em `~/labflow/.env` no servidor.
 
 Aplicar uma migration a partir do PC (antes: testar numa transação desfeita e fazer backup com `ssh labflow "cd ~/labflow && ./backup-db.sh"`):
 

@@ -12,7 +12,18 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 
 ## [Não lançado]
 
+## [1.2.0] - 2026-10-09
+
 ### Adicionado
+- **Resultados de NFC placa a placa** (`docs/specs/nfc-resultados-placas.md` v1.0, tarefas NFC-002 a NFC-008): comandos de placas em triplicata (`ct do tanque 47 normal 12,8,15`, `bl72`, `bl120`, `wort profundidade|superficie 120h|240h`), com ok / não ok pelo limite e "sim" antes de gravar; gravar as placas marca a leitura como feita. Leitura não ok em C.T, B.L ou WORT: o bot pergunta se abre o **desvio de tanque**, que cria a **repetição** (frasco de arquivo, triplicata, mesmos prazos) e fecha sozinho com a nova contagem. `repetição do tanque 47 stress bl120` registra a repetição feita ("reanálise" é o mesmo comando e nunca vira análise nova). Seção 15.3 do `docs/comandos.md`.
+- `leitura do dia finalizada` preenche **<1** nas placas de NFC que ninguém digitou.
+- Relatório do dia: tanque com leitura não ok aparece com 🚨 e a contagem (`47 🚨 (30, 12, 8)`), alerta por leitura, linha **Desvios de tanque**; no `completo`, `— ok` / `— não ok` também nas linhas de NFC, drops e Howard (limite com vigência na tabela `limites_howard`).
+- Consulta de desvios (`quais desvios estão abertos?`, `quais desvios do tanque 47?`) mostra desvios de drop e de tanque.
+- IA: catálogo com os comandos de placas e de repetição (texto e frases de áudio), e testes do catálogo.
+- Migration `017` (situação no relatório, fechamento automático do desvio de tanque, `limites_howard`) e `018` (placas, resultado e desvio em `bi.leituras_nfc`).
+- Painel: a página Tanques virou **Análise TT** (tanques de terra) e **Análise T.N** (tanques de navio): resultado das placas, tendência do C.T por coleta e desvios de tanque (10 páginas).
+- Dados de demonstração das placas e de desvios de tanque (`db/seeds/demo_placas.sql`).
+- Testes do NFC placa a placa (`tests/nfc-placas.test.js`): 229 testes no total.
 - **Painel do Power BI** (`powerbi/labflow.pbip`, formato PBIP versionado): 8 páginas (Visão geral, Coletas, Tanques, Drops, Recebimento, Embarque, TAB e Coliformes), modo escuro, cabeçalho e cartões em HTML (visual HTML Content Secure), filtros por navio/terra, tanque, load, fábrica, item e período. Lê as views `bi.*` (migration 013) pelo usuário somente leitura, por túnel SSH. Gerado por `scripts/gerar-painel-powerbi.js` (com o modo `--so-relatorio`); tabelas de apoio (Loads, Embarques, Calendário) e ligações criadas pelo Power BI Modeling MCP. Números conferidos contra o banco. Backup da versão colorida em `scripts/gerar-painel-powerbi-colorido.js`.
 - Migration `014`: a view `bi.testes` ganha as datas de cada etapa (`espalhar_prevista`, `leitura_prevista` e `confirmacao_prevista`), e as páginas TAB e Coliformes mostram **Leitura prevista** e **Confirmação** separadas (o TAB incubado é lido todo dia e pode ir para confirmação antes da leitura prevista).
 - Migration `015`: na view `bi.testes`, cada lote da composta de Coliformes aberta aparece com o seu número e o código do bot (`#12.3`), a composta que deu positivo e foi aberta aparece como "Positivo, em confirmação" e a sua próxima data vem dos próprios lotes. A tabela de Coliformes mostra a composta seguida dos lotes, cada um com etapa e resultado próprios (a composta é positiva se algum lote der positivo).
@@ -27,6 +38,10 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 - **`leitura do dia finalizada`**: quem lê o dia fecha tudo o que sai hoje de uma vez (leituras de NFC e drops como lidos; TAB e Coliformes sem crescimento como Negativo), com "sim" antes. O que está em confirmação não muda e C.T/B.L do concentrado ficam pendentes até digitar o valor. O relatório do dia termina com "finalizada por X às HH:MM". Migration `011`. Ver `docs/comandos.md` 15.1.
 - **Desvio de drop**: `drop d5 do tanque 45 data 30/09/2026 não ok` abre desvio (com "sim"): repetição do drop de arquivo em 7, 13 e 25 °C por até 5 dias; resultado por temperatura (`confirmou em 13 e 25 graus` ou `não confirmou`); consultas `quais desvios de drops do tanque 45?` e `quais desvios estão abertos?`. No relatório, drop não ok = 🚨 e linha "Desvios". Migration `012`. Ver `docs/comandos.md` 15.2.
 - Testes automatizados do node `Interpretar comando` (`tests/`, 80 casos): reconhecimento dos comandos, campos extraídos, prazos de negócio, recusas e permissões. Rodam com `npm test` e na GitHub Action `testes.yml`. Ver `docs/scripts.md`.
+
+### Corrigido
+- Resposta do "sim" só depois de gravar (Bug 29): as gravações rodam em fila e só então o bot responde; se o banco recusar, não sai "✅ Feito".
+- "Reanálise" virava registro de análise nova, pela regex e pela IA (PR #32).
 
 ### Alterado
 - A auditoria só cobra "Respond to Webhook" de workflow que tem Webhook.

@@ -1162,6 +1162,11 @@ antes de importar. (c) Ponto fraco que continua: o "✅" não depende do resulta
 (a confirmação sai antes). Melhoria futura: responder só depois de gravar e mostrar o erro
 quando o banco recusar.
 
+**Correção definitiva (09/10/2026):** depois do "sim", as gravações rodam **em fila** (`BD · Apagar pendência` →
+`Concluir leituras` → `Atualizar TABs` → `Finalizar leitura do dia` → `Executar desvio` → `Executar NFC`), e só
+então o node `Retomar resposta do sim` monta a resposta. Se o banco recusar, o fluxo para com erro (e o alerta
+de erro avisa os administradores) em vez de mandar "✅ Feito".
+
 ---
 
 ## Bug 30 — A tag `v1.0.0` apontava para o commit anterior aos docs
