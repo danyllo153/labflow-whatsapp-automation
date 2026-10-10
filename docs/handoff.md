@@ -44,7 +44,7 @@ revisão e liberação), seguindo `docs/specs/lims/`.
 
 **Em números:** 177 nodes no `LabFlow.json` (35 terminam em `Respond to Webhook`) · 49 consultas parametrizadas (nodes de Postgres) · 15 migrations, 19 tabelas e 12 views · 208 testes (`npm test`) · 33 bugs documentados em [`troubleshooting.md`](troubleshooting.md).
 
-**No servidor:** migrations `001` a `018` aplicadas (016 em 07/10; 017 e 018 em 09/10; limites de NFC e Howard de exemplo e placas de demonstração); dados de demonstração carregados (`db/seeds/demo.sql`, reaplicados em 06/10); backup diário às 3h, 14 dias, em `~/labflow/backups` (`./backup-db.sh`). DBeaver: conexões `LabFlow (leitura)` e `LabFlow (app)` (tipo Production).
+**No servidor:** migrations `001` a `019` aplicadas (016 em 07/10; 017 a 019 em 09/10; limites de NFC e Howard de exemplo e placas de demonstração); dados de demonstração carregados (`db/seeds/demo.sql`, reaplicados em 06/10); backup diário às 3h, 14 dias, em `~/labflow/backups` (`./backup-db.sh`). DBeaver: conexões `LabFlow (leitura)` e `LabFlow (app)` (tipo Production).
 
 **Arquivos de workflow (na pasta do projeto):**
 - `LabFlow.json` e `LabFlow_Alerta_Erro.json`: versões **públicas**, sem IDs reais (vão para o Git).
@@ -91,7 +91,7 @@ Detalhes e o comparativo "o que temos × o que falta para ser um LIMS" na nota `
 
 ## 5. Banco de dados
 
-Plano e decisões em [`postgres-migracao.md`](postgres-migracao.md); migrations em [`../db/migrations/`](../db/migrations/) (`001` a `018`, uma de cada vez, com `-v ON_ERROR_STOP=1`). A coleta é o centro (drops, arquivo e análises apontam para `coleta_id`); no concentrado, a ordem é *recebimento → compostas → testes*. `tanque` é TEXT; datas em `America/Sao_Paulo`; o banco confere as regras de novo (UNIQUE, CHECK, FK). Usuários: `labflow_app` (n8n) e `labflow_leitura` (DBeaver e Power BI). Senhas só em `~/labflow/.env` no servidor.
+Plano e decisões em [`postgres-migracao.md`](postgres-migracao.md); migrations em [`../db/migrations/`](../db/migrations/) (`001` a `019`, uma de cada vez, com `-v ON_ERROR_STOP=1`). A coleta é o centro (drops, arquivo e análises apontam para `coleta_id`); no concentrado, a ordem é *recebimento → compostas → testes*. `tanque` é TEXT; datas em `America/Sao_Paulo`; o banco confere as regras de novo (UNIQUE, CHECK, FK). Usuários: `labflow_app` (n8n) e `labflow_leitura` (DBeaver e Power BI). Senhas só em `~/labflow/.env` no servidor.
 
 Aplicar uma migration a partir do PC (antes: testar numa transação desfeita e fazer backup com `ssh labflow "cd ~/labflow && ./backup-db.sh"`):
 
