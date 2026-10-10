@@ -38,6 +38,9 @@ Automação de laboratório de microbiologia: WhatsApp → Evolution API → n8n
 - Comando novo ou regra nova: acrescentar o caso em `tests/interpretar-comando.test.js` no mesmo PR.
 - Todo ramo termina em `Respond to Webhook`. Node depois de um node com várias linhas precisa de `executeOnce`.
 - Permissão é validada **no código**, nunca no prompt da IA (Bug 23).
+- Áudio: o texto transcrito vai **direto para a IA** (nunca para a regex, que grava alguns comandos sem perguntar), e tudo que grava pede **"sim"**. Áudio de até 2 s só vale "sim" ou "não" (no silêncio o Gemini inventa palavras). O áudio não é guardado.
+- Depois do "sim", as gravações rodam **em fila** e só então o bot responde (Bug 29): node novo de gravação entra na fila antes do `Retomar resposta do sim`.
+- Limites de aceitação (NFC, Howard) ficam nas tabelas com vigência (`limites_nfc`, `limites_howard`); o repositório só tem os fictícios de `db/seeds/limites_nfc_exemplo.sql`.
 - Depois de mudar o prompt da IA, reenviar uma frase de cada intenção (regressão).
 - Passando código de node para o Danyllo colar, mandar só o código como texto enquanto iteram.
 
