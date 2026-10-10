@@ -2,55 +2,17 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
   "name": "c96e7bc38d7f6cb45db7",
   "position": {
-    "x": 600,
+    "x": 24,
     "y": 252,
     "z": 9000,
-    "width": 700,
+    "width": 560,
     "height": 330,
     "tabOrder": 9000
   },
   "visual": {
-    "visualType": "barChart",
+    "visualType": "clusteredColumnChart",
     "query": {
       "queryState": {
-        "Category": {
-          "projections": [
-            {
-              "field": {
-                "Column": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "bi desvios"
-                    }
-                  },
-                  "Property": "aberto_por"
-                }
-              },
-              "queryRef": "bi desvios.aberto_por",
-              "nativeQueryRef": "aberto_por",
-              "displayName": "Aberto por"
-            }
-          ]
-        },
-        "Series": {
-          "projections": [
-            {
-              "field": {
-                "Column": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "bi desvios"
-                    }
-                  },
-                  "Property": "resultado"
-                }
-              },
-              "queryRef": "bi desvios.resultado",
-              "nativeQueryRef": "resultado",
-              "displayName": "Resultado"
-            }
-          ]
-        },
         "Y": {
           "projections": [
             {
@@ -61,11 +23,39 @@
                       "Entity": "bi desvios"
                     }
                   },
-                  "Property": "Desvios"
+                  "Property": "Confirmou a 7 °C"
                 }
               },
-              "queryRef": "bi desvios.Desvios",
-              "nativeQueryRef": "Desvios"
+              "queryRef": "bi desvios.Confirmou a 7 °C",
+              "nativeQueryRef": "Confirmou a 7 °C"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "bi desvios"
+                    }
+                  },
+                  "Property": "Confirmou a 13 °C"
+                }
+              },
+              "queryRef": "bi desvios.Confirmou a 13 °C",
+              "nativeQueryRef": "Confirmou a 13 °C"
+            },
+            {
+              "field": {
+                "Measure": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "bi desvios"
+                    }
+                  },
+                  "Property": "Confirmou a 25 °C"
+                }
+              },
+              "queryRef": "bi desvios.Confirmou a 25 °C",
+              "nativeQueryRef": "Confirmou a 25 °C"
             }
           ]
         }
@@ -80,7 +70,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#DC2626'"
+                      "Value": "'#0E8A96'"
                     }
                   }
                 }
@@ -88,71 +78,7 @@
             }
           },
           "selector": {
-            "data": [
-              {
-                "scopeId": {
-                  "Comparison": {
-                    "ComparisonKind": 0,
-                    "Left": {
-                      "Column": {
-                        "Expression": {
-                          "SourceRef": {
-                            "Entity": "bi desvios"
-                          }
-                        },
-                        "Property": "resultado"
-                      }
-                    },
-                    "Right": {
-                      "Literal": {
-                        "Value": "'Confirmado'"
-                      }
-                    }
-                  }
-                }
-              }
-            ]
-          }
-        },
-        {
-          "properties": {
-            "fill": {
-              "solid": {
-                "color": {
-                  "expr": {
-                    "Literal": {
-                      "Value": "'#16A34A'"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "selector": {
-            "data": [
-              {
-                "scopeId": {
-                  "Comparison": {
-                    "ComparisonKind": 0,
-                    "Left": {
-                      "Column": {
-                        "Expression": {
-                          "SourceRef": {
-                            "Entity": "bi desvios"
-                          }
-                        },
-                        "Property": "resultado"
-                      }
-                    },
-                    "Right": {
-                      "Literal": {
-                        "Value": "'Não confirmado'"
-                      }
-                    }
-                  }
-                }
-              }
-            ]
+            "metadata": "bi desvios.Confirmou a 7 °C"
           }
         },
         {
@@ -170,30 +96,25 @@
             }
           },
           "selector": {
-            "data": [
-              {
-                "scopeId": {
-                  "Comparison": {
-                    "ComparisonKind": 0,
-                    "Left": {
-                      "Column": {
-                        "Expression": {
-                          "SourceRef": {
-                            "Entity": "bi desvios"
-                          }
-                        },
-                        "Property": "resultado"
-                      }
-                    },
-                    "Right": {
-                      "Literal": {
-                        "Value": "'Em confirmação'"
-                      }
+            "metadata": "bi desvios.Confirmou a 13 °C"
+          }
+        },
+        {
+          "properties": {
+            "fill": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#DC2626'"
                     }
                   }
                 }
               }
-            ]
+            }
+          },
+          "selector": {
+            "metadata": "bi desvios.Confirmou a 25 °C"
           }
         }
       ],
@@ -219,7 +140,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#FFFFFF'"
+                      "Value": "'#334155'"
                     }
                   }
                 }
@@ -263,7 +184,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Desvios por quem abriu e resultado'"
+                  "Value": "'Drops: em qual temperatura confirmou'"
                 }
               }
             },

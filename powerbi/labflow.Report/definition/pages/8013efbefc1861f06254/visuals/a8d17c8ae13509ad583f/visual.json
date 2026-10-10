@@ -1,13 +1,13 @@
 {
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
-  "name": "8027ccc21382b532c7e4",
+  "name": "a8d17c8ae13509ad583f",
   "position": {
     "x": 24,
     "y": 598,
-    "z": 14000,
+    "z": 12000,
     "width": 1872,
     "height": 466,
-    "tabOrder": 14000
+    "tabOrder": 12000
   },
   "visual": {
     "visualType": "tableEx",
@@ -20,178 +20,178 @@
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "bi testes"
+                      "Entity": "bi desvios"
                     }
                   },
-                  "Property": "codigo"
+                  "Property": "tipo"
                 }
               },
-              "queryRef": "bi testes.codigo",
-              "nativeQueryRef": "codigo",
-              "displayName": "Código"
+              "queryRef": "bi desvios.tipo",
+              "nativeQueryRef": "tipo",
+              "displayName": "Tipo"
             },
             {
               "field": {
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "bi testes"
+                      "Entity": "bi desvios"
                     }
                   },
-                  "Property": "origem"
+                  "Property": "tanque"
                 }
               },
-              "queryRef": "bi testes.origem",
-              "nativeQueryRef": "origem",
-              "displayName": "Origem"
+              "queryRef": "bi desvios.tanque",
+              "nativeQueryRef": "tanque",
+              "displayName": "Tanque"
             },
             {
               "field": {
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "bi testes"
+                      "Entity": "bi desvios"
                     }
                   },
-                  "Property": "navio_fase"
+                  "Property": "Local"
                 }
               },
-              "queryRef": "bi testes.navio_fase",
-              "nativeQueryRef": "navio_fase",
-              "displayName": "Navio"
+              "queryRef": "bi desvios.Local",
+              "nativeQueryRef": "Local",
+              "displayName": "Navio / terra"
             },
             {
               "field": {
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "bi testes"
+                      "Entity": "bi desvios"
                     }
                   },
-                  "Property": "load_ou_tanque"
+                  "Property": "data_coleta"
                 }
               },
-              "queryRef": "bi testes.load_ou_tanque",
-              "nativeQueryRef": "load_ou_tanque",
-              "displayName": "Load / tanque"
+              "queryRef": "bi desvios.data_coleta",
+              "nativeQueryRef": "data_coleta",
+              "displayName": "Coleta"
             },
             {
               "field": {
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "bi testes"
+                      "Entity": "bi desvios"
                     }
                   },
-                  "Property": "fabrica"
+                  "Property": "analise"
                 }
               },
-              "queryRef": "bi testes.fabrica",
-              "nativeQueryRef": "fabrica",
-              "displayName": "Fábrica"
+              "queryRef": "bi desvios.analise",
+              "nativeQueryRef": "analise",
+              "displayName": "Análise"
             },
             {
               "field": {
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "bi testes"
+                      "Entity": "bi desvios"
                     }
                   },
-                  "Property": "item"
+                  "Property": "frasco"
                 }
               },
-              "queryRef": "bi testes.item",
-              "nativeQueryRef": "item",
-              "displayName": "Item"
+              "queryRef": "bi desvios.frasco",
+              "nativeQueryRef": "frasco",
+              "displayName": "Frasco"
             },
             {
               "field": {
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "bi testes"
+                      "Entity": "bi desvios"
                     }
                   },
-                  "Property": "lotes"
+                  "Property": "contagem"
                 }
               },
-              "queryRef": "bi testes.lotes",
-              "nativeQueryRef": "lotes",
-              "displayName": "Lotes / amostras"
+              "queryRef": "bi desvios.contagem",
+              "nativeQueryRef": "contagem",
+              "displayName": "Placas"
             },
             {
               "field": {
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "bi testes"
+                      "Entity": "bi desvios"
                     }
                   },
-                  "Property": "data_feito"
+                  "Property": "data_abertura"
                 }
               },
-              "queryRef": "bi testes.data_feito",
-              "nativeQueryRef": "data_feito",
-              "displayName": "Feito em"
+              "queryRef": "bi desvios.data_abertura",
+              "nativeQueryRef": "data_abertura",
+              "displayName": "Aberto em"
             },
             {
               "field": {
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "bi testes"
+                      "Entity": "bi desvios"
                     }
                   },
-                  "Property": "status"
+                  "Property": "aberto_por"
                 }
               },
-              "queryRef": "bi testes.status",
-              "nativeQueryRef": "status",
-              "displayName": "Etapa"
+              "queryRef": "bi desvios.aberto_por",
+              "nativeQueryRef": "aberto_por",
+              "displayName": "Aberto por"
             },
             {
               "field": {
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "bi testes"
+                      "Entity": "bi desvios"
                     }
                   },
-                  "Property": "leitura_prevista"
+                  "Property": "prazo"
                 }
               },
-              "queryRef": "bi testes.leitura_prevista",
-              "nativeQueryRef": "leitura_prevista",
-              "displayName": "Leitura prevista"
+              "queryRef": "bi desvios.prazo",
+              "nativeQueryRef": "prazo",
+              "displayName": "Prazo"
             },
             {
               "field": {
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "bi testes"
+                      "Entity": "bi desvios"
                     }
                   },
-                  "Property": "confirmacao_prevista"
+                  "Property": "temperaturas"
                 }
               },
-              "queryRef": "bi testes.confirmacao_prevista",
-              "nativeQueryRef": "confirmacao_prevista",
-              "displayName": "Confirmação"
+              "queryRef": "bi desvios.temperaturas",
+              "nativeQueryRef": "temperaturas",
+              "displayName": "Temperaturas"
             },
             {
               "field": {
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "bi testes"
+                      "Entity": "bi desvios"
                     }
                   },
                   "Property": "resultado"
                 }
               },
-              "queryRef": "bi testes.resultado",
+              "queryRef": "bi desvios.resultado",
               "nativeQueryRef": "resultado",
               "displayName": "Resultado"
             },
@@ -200,35 +200,33 @@
                 "Column": {
                   "Expression": {
                     "SourceRef": {
-                      "Entity": "bi testes"
+                      "Entity": "bi desvios"
+                    }
+                  },
+                  "Property": "resultado_por"
+                }
+              },
+              "queryRef": "bi desvios.resultado_por",
+              "nativeQueryRef": "resultado_por",
+              "displayName": "Resultado por"
+            },
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "bi desvios"
                     }
                   },
                   "Property": "situacao"
                 }
               },
-              "queryRef": "bi testes.situacao",
+              "queryRef": "bi desvios.situacao",
               "nativeQueryRef": "situacao",
               "displayName": "Situação"
             }
           ]
         }
-      },
-      "sortDefinition": {
-        "sort": [
-          {
-            "field": {
-              "Column": {
-                "Expression": {
-                  "SourceRef": {
-                    "Entity": "bi testes"
-                  }
-                },
-                "Property": "codigo"
-              }
-            },
-            "direction": "Ascending"
-          }
-        ]
       }
     },
     "objects": {
@@ -260,7 +258,7 @@
                 }
               }
             ],
-            "metadata": "bi testes.origem"
+            "metadata": "bi desvios.tipo"
           },
           "properties": {
             "fontColor": {
@@ -277,10 +275,10 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
-                                  "Property": "origem"
+                                  "Property": "tipo"
                                 }
                               },
                               "Right": {
@@ -304,10 +302,10 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
-                                  "Property": "origem"
+                                  "Property": "tipo"
                                 }
                               },
                               "Right": {
@@ -331,10 +329,10 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
-                                  "Property": "origem"
+                                  "Property": "tipo"
                                 }
                               },
                               "Right": {
@@ -358,10 +356,10 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
-                                  "Property": "origem"
+                                  "Property": "tipo"
                                 }
                               },
                               "Right": {
@@ -385,10 +383,10 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
-                                  "Property": "origem"
+                                  "Property": "tipo"
                                 }
                               },
                               "Right": {
@@ -412,10 +410,10 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
-                                  "Property": "origem"
+                                  "Property": "tipo"
                                 }
                               },
                               "Right": {
@@ -439,10 +437,10 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
-                                  "Property": "origem"
+                                  "Property": "tipo"
                                 }
                               },
                               "Right": {
@@ -466,10 +464,10 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
-                                  "Property": "origem"
+                                  "Property": "tipo"
                                 }
                               },
                               "Right": {
@@ -493,10 +491,10 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
-                                  "Property": "origem"
+                                  "Property": "tipo"
                                 }
                               },
                               "Right": {
@@ -520,10 +518,10 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
-                                  "Property": "origem"
+                                  "Property": "tipo"
                                 }
                               },
                               "Right": {
@@ -547,10 +545,10 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
-                                  "Property": "origem"
+                                  "Property": "tipo"
                                 }
                               },
                               "Right": {
@@ -574,10 +572,10 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
-                                  "Property": "origem"
+                                  "Property": "tipo"
                                 }
                               },
                               "Right": {
@@ -601,10 +599,10 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
-                                  "Property": "origem"
+                                  "Property": "tipo"
                                 }
                               },
                               "Right": {
@@ -628,10 +626,10 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
-                                  "Property": "origem"
+                                  "Property": "tipo"
                                 }
                               },
                               "Right": {
@@ -655,10 +653,10 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
-                                  "Property": "origem"
+                                  "Property": "tipo"
                                 }
                               },
                               "Right": {
@@ -682,10 +680,10 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
-                                  "Property": "origem"
+                                  "Property": "tipo"
                                 }
                               },
                               "Right": {
@@ -709,10 +707,10 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
-                                  "Property": "origem"
+                                  "Property": "tipo"
                                 }
                               },
                               "Right": {
@@ -736,10 +734,10 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
-                                  "Property": "origem"
+                                  "Property": "tipo"
                                 }
                               },
                               "Right": {
@@ -763,10 +761,10 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
-                                  "Property": "origem"
+                                  "Property": "tipo"
                                 }
                               },
                               "Right": {
@@ -799,7 +797,7 @@
                 }
               }
             ],
-            "metadata": "bi testes.fabrica"
+            "metadata": "bi desvios.analise"
           },
           "properties": {
             "fontColor": {
@@ -816,10 +814,10 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
-                                  "Property": "fabrica"
+                                  "Property": "analise"
                                 }
                               },
                               "Right": {
@@ -843,10 +841,10 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
-                                  "Property": "fabrica"
+                                  "Property": "analise"
                                 }
                               },
                               "Right": {
@@ -870,10 +868,10 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
-                                  "Property": "fabrica"
+                                  "Property": "analise"
                                 }
                               },
                               "Right": {
@@ -897,10 +895,10 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
-                                  "Property": "fabrica"
+                                  "Property": "analise"
                                 }
                               },
                               "Right": {
@@ -924,10 +922,10 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
-                                  "Property": "fabrica"
+                                  "Property": "analise"
                                 }
                               },
                               "Right": {
@@ -951,10 +949,10 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
-                                  "Property": "fabrica"
+                                  "Property": "analise"
                                 }
                               },
                               "Right": {
@@ -978,10 +976,10 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
-                                  "Property": "fabrica"
+                                  "Property": "analise"
                                 }
                               },
                               "Right": {
@@ -1005,10 +1003,10 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
-                                  "Property": "fabrica"
+                                  "Property": "analise"
                                 }
                               },
                               "Right": {
@@ -1032,10 +1030,10 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
-                                  "Property": "fabrica"
+                                  "Property": "analise"
                                 }
                               },
                               "Right": {
@@ -1059,10 +1057,10 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
-                                  "Property": "fabrica"
+                                  "Property": "analise"
                                 }
                               },
                               "Right": {
@@ -1086,10 +1084,10 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
-                                  "Property": "fabrica"
+                                  "Property": "analise"
                                 }
                               },
                               "Right": {
@@ -1113,10 +1111,10 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
-                                  "Property": "fabrica"
+                                  "Property": "analise"
                                 }
                               },
                               "Right": {
@@ -1140,10 +1138,10 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
-                                  "Property": "fabrica"
+                                  "Property": "analise"
                                 }
                               },
                               "Right": {
@@ -1167,10 +1165,10 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
-                                  "Property": "fabrica"
+                                  "Property": "analise"
                                 }
                               },
                               "Right": {
@@ -1194,10 +1192,10 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
-                                  "Property": "fabrica"
+                                  "Property": "analise"
                                 }
                               },
                               "Right": {
@@ -1221,10 +1219,10 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
-                                  "Property": "fabrica"
+                                  "Property": "analise"
                                 }
                               },
                               "Right": {
@@ -1248,10 +1246,10 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
-                                  "Property": "fabrica"
+                                  "Property": "analise"
                                 }
                               },
                               "Right": {
@@ -1275,10 +1273,10 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
-                                  "Property": "fabrica"
+                                  "Property": "analise"
                                 }
                               },
                               "Right": {
@@ -1302,10 +1300,10 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
-                                  "Property": "fabrica"
+                                  "Property": "analise"
                                 }
                               },
                               "Right": {
@@ -1338,7 +1336,7 @@
                 }
               }
             ],
-            "metadata": "bi testes.status"
+            "metadata": "bi desvios.resultado"
           },
           "properties": {
             "fontColor": {
@@ -1355,1503 +1353,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Atrasado'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#DC2626'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Vence hoje'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#D97706'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'No prazo'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#1D6FE8'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Lido'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#16A34A'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Concluído'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#16A34A'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Em confirmação'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#D97706'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Positivo, em confirmação'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#D97706'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Em andamento'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#1D6FE8'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'No caldo'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#1D6FE8'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Estriado'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#0E8A96'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Incubado'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#7C3AED'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Positivo'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#DC2626'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Confirmado'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#DC2626'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Negativo'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#16A34A'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Não confirmado'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#16A34A'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Sem desvio'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#5B6B85'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Alarme'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#DC2626'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Normal'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#16A34A'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Aguardando'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#5B6B85'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Ok'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#16A34A'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Não ok'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#DC2626'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Pendente'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#5B6B85'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Sem limite'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#5B6B85'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Sem placas'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#5B6B85'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Em repetição'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#D97706'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Repetição ok'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#16A34A'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Repetição não ok'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#DC2626'"
-                            }
-                          }
-                        }
-                      ]
-                    }
-                  }
-                }
-              }
-            },
-            "backColor": {
-              "solid": {
-                "color": {
-                  "expr": {
-                    "Conditional": {
-                      "Cases": [
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Atrasado'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#FCE9E9'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Vence hoje'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#FBF1E6'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'No prazo'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#E8F1FD'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Lido'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#E8F6ED'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Concluído'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#E8F6ED'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Em confirmação'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#FBF1E6'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Positivo, em confirmação'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#FBF1E6'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Em andamento'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#E8F1FD'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'No caldo'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#E8F1FD'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Estriado'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#E7F3F5'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Incubado'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#F2EBFD'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Positivo'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#FCE9E9'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Confirmado'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#FCE9E9'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Negativo'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#E8F6ED'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Não confirmado'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#E8F6ED'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Sem desvio'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#EFF0F3'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Alarme'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#FCE9E9'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Normal'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#E8F6ED'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Aguardando'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#EFF0F3'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Ok'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#E8F6ED'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Não ok'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#FCE9E9'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Pendente'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#EFF0F3'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Sem limite'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#EFF0F3'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Sem placas'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#EFF0F3'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Em repetição'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#FBF1E6'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Repetição ok'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#E8F6ED'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Repetição não ok'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#FCE9E9'"
-                            }
-                          }
-                        }
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        {
-          "selector": {
-            "data": [
-              {
-                "dataViewWildcard": {
-                  "matchingOption": 1
-                }
-              }
-            ],
-            "metadata": "bi testes.resultado"
-          },
-          "properties": {
-            "fontColor": {
-              "solid": {
-                "color": {
-                  "expr": {
-                    "Conditional": {
-                      "Cases": [
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -2878,7 +1380,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -2905,7 +1407,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -2932,7 +1434,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -2959,7 +1461,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -2986,7 +1488,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -3013,7 +1515,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -3040,7 +1542,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -3067,7 +1569,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -3094,7 +1596,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -3121,7 +1623,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -3148,7 +1650,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -3175,7 +1677,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -3202,7 +1704,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -3229,7 +1731,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -3256,7 +1758,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -3283,7 +1785,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -3310,7 +1812,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -3337,7 +1839,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -3364,7 +1866,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -3391,7 +1893,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -3418,7 +1920,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -3445,7 +1947,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -3472,7 +1974,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -3499,7 +2001,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -3526,7 +2028,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -3553,7 +2055,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -3592,7 +2094,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -3619,7 +2121,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -3646,7 +2148,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -3673,7 +2175,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -3700,7 +2202,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -3727,7 +2229,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -3754,7 +2256,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -3781,7 +2283,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -3808,7 +2310,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -3835,7 +2337,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -3862,7 +2364,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -3889,7 +2391,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -3916,7 +2418,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -3943,7 +2445,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -3970,7 +2472,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -3997,7 +2499,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -4024,7 +2526,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -4051,7 +2553,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -4078,7 +2580,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -4105,7 +2607,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -4132,7 +2634,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -4159,7 +2661,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -4186,7 +2688,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -4213,7 +2715,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -4240,7 +2742,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -4267,7 +2769,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -4294,7 +2796,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "resultado"
@@ -4330,7 +2832,7 @@
                 }
               }
             ],
-            "metadata": "bi testes.situacao"
+            "metadata": "bi desvios.situacao"
           },
           "properties": {
             "fontColor": {
@@ -4347,7 +2849,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -4374,7 +2876,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -4401,7 +2903,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -4428,7 +2930,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -4455,7 +2957,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -4482,7 +2984,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -4509,7 +3011,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -4536,7 +3038,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -4563,7 +3065,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -4590,7 +3092,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -4617,7 +3119,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -4644,7 +3146,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -4671,7 +3173,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -4698,7 +3200,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -4725,7 +3227,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -4752,7 +3254,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -4779,7 +3281,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -4806,7 +3308,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -4833,7 +3335,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -4860,7 +3362,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -4887,7 +3389,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -4914,7 +3416,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -4941,7 +3443,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -4968,7 +3470,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -4995,7 +3497,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -5022,7 +3524,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -5049,7 +3551,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -5088,7 +3590,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -5115,7 +3617,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -5142,7 +3644,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -5169,7 +3671,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -5196,7 +3698,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -5223,7 +3725,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -5250,7 +3752,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -5277,7 +3779,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -5304,7 +3806,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -5331,7 +3833,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -5358,7 +3860,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -5385,7 +3887,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -5412,7 +3914,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -5439,7 +3941,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -5466,7 +3968,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -5493,7 +3995,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -5520,7 +4022,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -5547,7 +4049,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -5574,7 +4076,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -5601,7 +4103,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -5628,7 +4130,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -5655,7 +4157,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -5682,7 +4184,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -5709,7 +4211,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -5736,7 +4238,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -5763,7 +4265,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -5790,7 +4292,7 @@
                                 "Column": {
                                   "Expression": {
                                     "SourceRef": {
-                                      "Entity": "bi testes"
+                                      "Entity": "bi desvios"
                                     }
                                   },
                                   "Property": "situacao"
@@ -5873,13 +4375,13 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "93D"
+                  "Value": "113D"
                 }
               }
             }
           },
           "selector": {
-            "metadata": "bi testes.codigo"
+            "metadata": "bi desvios.tipo"
           }
         },
         {
@@ -5887,13 +4389,13 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "140D"
+                  "Value": "75D"
                 }
               }
             }
           },
           "selector": {
-            "metadata": "bi testes.origem"
+            "metadata": "bi desvios.tanque"
           }
         },
         {
@@ -5901,13 +4403,13 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "187D"
+                  "Value": "151D"
                 }
               }
             }
           },
           "selector": {
-            "metadata": "bi testes.navio_fase"
+            "metadata": "bi desvios.Local"
           }
         },
         {
@@ -5915,13 +4417,13 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "117D"
+                  "Value": "103D"
                 }
               }
             }
           },
           "selector": {
-            "metadata": "bi testes.load_ou_tanque"
+            "metadata": "bi desvios.data_coleta"
           }
         },
         {
@@ -5929,13 +4431,13 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "93D"
+                  "Value": "94D"
                 }
               }
             }
           },
           "selector": {
-            "metadata": "bi testes.fabrica"
+            "metadata": "bi desvios.analise"
           }
         },
         {
@@ -5943,13 +4445,13 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "82D"
+                  "Value": "85D"
                 }
               }
             }
           },
           "selector": {
-            "metadata": "bi testes.item"
+            "metadata": "bi desvios.frasco"
           }
         },
         {
@@ -5957,13 +4459,13 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "129D"
+                  "Value": "122D"
                 }
               }
             }
           },
           "selector": {
-            "metadata": "bi testes.lotes"
+            "metadata": "bi desvios.contagem"
           }
         },
         {
@@ -5971,13 +4473,13 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "129D"
+                  "Value": "113D"
                 }
               }
             }
           },
           "selector": {
-            "metadata": "bi testes.data_feito"
+            "metadata": "bi desvios.data_abertura"
           }
         },
         {
@@ -5985,13 +4487,13 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "129D"
+                  "Value": "141D"
                 }
               }
             }
           },
           "selector": {
-            "metadata": "bi testes.status"
+            "metadata": "bi desvios.aberto_por"
           }
         },
         {
@@ -5999,13 +4501,13 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "129D"
+                  "Value": "113D"
                 }
               }
             }
           },
           "selector": {
-            "metadata": "bi testes.leitura_prevista"
+            "metadata": "bi desvios.prazo"
           }
         },
         {
@@ -6013,13 +4515,13 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "129D"
+                  "Value": "151D"
                 }
               }
             }
           },
           "selector": {
-            "metadata": "bi testes.confirmacao_prevista"
+            "metadata": "bi desvios.temperaturas"
           }
         },
         {
@@ -6027,13 +4529,13 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "164D"
+                  "Value": "132D"
                 }
               }
             }
           },
           "selector": {
-            "metadata": "bi testes.resultado"
+            "metadata": "bi desvios.resultado"
           }
         },
         {
@@ -6041,13 +4543,27 @@
             "value": {
               "expr": {
                 "Literal": {
-                  "Value": "140D"
+                  "Value": "141D"
                 }
               }
             }
           },
           "selector": {
-            "metadata": "bi testes.situacao"
+            "metadata": "bi desvios.resultado_por"
+          }
+        },
+        {
+          "properties": {
+            "value": {
+              "expr": {
+                "Literal": {
+                  "Value": "113D"
+                }
+              }
+            }
+          },
+          "selector": {
+            "metadata": "bi desvios.situacao"
           }
         }
       ],
@@ -6079,7 +4595,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'TAB: um por composta ou tanque'"
+                  "Value": "'Desvios de drop e de tanque'"
                 }
               }
             },

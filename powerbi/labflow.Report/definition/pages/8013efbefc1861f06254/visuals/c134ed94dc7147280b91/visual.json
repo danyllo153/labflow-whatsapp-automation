@@ -2,123 +2,53 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
   "name": "c134ed94dc7147280b91",
   "position": {
-    "x": 24,
-    "y": 252,
+    "x": 1396,
+    "y": 176,
     "z": 8000,
-    "width": 560,
-    "height": 330,
+    "width": 244,
+    "height": 60,
     "tabOrder": 8000
   },
   "visual": {
-    "visualType": "clusteredColumnChart",
+    "visualType": "slicer",
     "query": {
       "queryState": {
-        "Y": {
+        "Values": {
           "projections": [
             {
               "field": {
-                "Measure": {
+                "Column": {
                   "Expression": {
                     "SourceRef": {
                       "Entity": "bi desvios"
                     }
                   },
-                  "Property": "Confirmou a 7 °C"
+                  "Property": "data_coleta"
                 }
               },
-              "queryRef": "bi desvios.Confirmou a 7 °C",
-              "nativeQueryRef": "Confirmou a 7 °C"
-            },
-            {
-              "field": {
-                "Measure": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "bi desvios"
-                    }
-                  },
-                  "Property": "Confirmou a 13 °C"
-                }
-              },
-              "queryRef": "bi desvios.Confirmou a 13 °C",
-              "nativeQueryRef": "Confirmou a 13 °C"
-            },
-            {
-              "field": {
-                "Measure": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "bi desvios"
-                    }
-                  },
-                  "Property": "Confirmou a 25 °C"
-                }
-              },
-              "queryRef": "bi desvios.Confirmou a 25 °C",
-              "nativeQueryRef": "Confirmou a 25 °C"
+              "queryRef": "bi desvios.data_coleta",
+              "nativeQueryRef": "data_coleta",
+              "displayName": "Data da coleta"
             }
           ]
         }
       }
     },
     "objects": {
-      "dataPoint": [
+      "data": [
         {
           "properties": {
-            "fill": {
-              "solid": {
-                "color": {
-                  "expr": {
-                    "Literal": {
-                      "Value": "'#0E8A96'"
-                    }
-                  }
+            "mode": {
+              "expr": {
+                "Literal": {
+                  "Value": "'Between'"
                 }
               }
             }
-          },
-          "selector": {
-            "metadata": "bi desvios.Confirmou a 7 °C"
-          }
-        },
-        {
-          "properties": {
-            "fill": {
-              "solid": {
-                "color": {
-                  "expr": {
-                    "Literal": {
-                      "Value": "'#D97706'"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "selector": {
-            "metadata": "bi desvios.Confirmou a 13 °C"
-          }
-        },
-        {
-          "properties": {
-            "fill": {
-              "solid": {
-                "color": {
-                  "expr": {
-                    "Literal": {
-                      "Value": "'#DC2626'"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "selector": {
-            "metadata": "bi desvios.Confirmou a 25 °C"
           }
         }
       ],
-      "labels": [
+      "header": [
         {
           "properties": {
             "show": {
@@ -128,41 +58,34 @@
                 }
               }
             },
-            "fontSize": {
+            "fontColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#5B6B85'"
+                    }
+                  }
+                }
+              }
+            },
+            "textSize": {
               "expr": {
                 "Literal": {
                   "Value": "10D"
                 }
               }
-            },
-            "color": {
-              "solid": {
-                "color": {
-                  "expr": {
-                    "Literal": {
-                      "Value": "'#334155'"
-                    }
-                  }
-                }
-              }
             }
           }
         }
       ],
-      "legend": [
+      "items": [
         {
           "properties": {
-            "show": {
+            "textSize": {
               "expr": {
                 "Literal": {
-                  "Value": "true"
-                }
-              }
-            },
-            "position": {
-              "expr": {
-                "Literal": {
-                  "Value": "'Top'"
+                  "Value": "10D"
                 }
               }
             }
@@ -177,50 +100,7 @@
             "show": {
               "expr": {
                 "Literal": {
-                  "Value": "true"
-                }
-              }
-            },
-            "text": {
-              "expr": {
-                "Literal": {
-                  "Value": "'Em qual temperatura confirmou'"
-                }
-              }
-            },
-            "fontColor": {
-              "solid": {
-                "color": {
-                  "expr": {
-                    "Literal": {
-                      "Value": "'#0F2547'"
-                    }
-                  }
-                }
-              }
-            },
-            "background": {
-              "solid": {
-                "color": {
-                  "expr": {
-                    "Literal": {
-                      "Value": "'#FFFFFF'"
-                    }
-                  }
-                }
-              }
-            },
-            "bold": {
-              "expr": {
-                "Literal": {
-                  "Value": "true"
-                }
-              }
-            },
-            "fontSize": {
-              "expr": {
-                "Literal": {
-                  "Value": "13D"
+                  "Value": "false"
                 }
               }
             }
