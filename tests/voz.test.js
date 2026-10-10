@@ -44,7 +44,7 @@ const rodar = (texto, segundos = 10) => new Function('$', '$input', codigoDoNode
   { first: () => ({ json: { content: { parts: [{ text: texto }] } } }) })[0].json;
 
 test('áudio de até 2 s só vale "sim" ou "não" (clique sem querer não vira comando)', () => {
-  assert.equal(rodar('Sim.', 1).transcricao, 'Sim.');
+  assert.equal(rodar('Sim.', 1).transcricao, 'sim');
   assert.equal(rodar('não', 2).transcricao, 'não');
   const inventado = rodar('coletado tanque 85', 1);
   assert.equal(inventado.transcricao, '');
