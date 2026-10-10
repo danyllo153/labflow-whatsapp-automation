@@ -522,7 +522,7 @@ const navegador = (pos) => visual('pageNavigator', pos, null, { semMoldura: true
     { properties: { fillColor: cor(COR.selecionado) }, selector: { id: 'selected' } },
   ],
   text: [
-    { properties: { show: lit('true'), fontColor: cor(COR.texto2), fontSize: lit('11D'), bold: lit('true') }, selector: { id: 'default' } },
+    { properties: { show: lit('true'), fontColor: cor(COR.texto2), fontSize: lit('10D'), bold: lit('true') }, selector: { id: 'default' } },
     { properties: { fontColor: cor(COR.branco) }, selector: { id: 'selected' } },
   ],
   outline: NENHUM,
@@ -613,7 +613,7 @@ const topo = (pagina, larguraCartoes, filtros = []) => {
     // cabeçalho só até onde começa a navegação: se cobrisse os botões, no Power BI web ele vem para a frente ao clicar
     html([0, 0, 690, 96], C, `HTML cabeçalho - ${pagina}`),
     navegador([700, 24, 1196, 44]),
-    html([24, 108, larguraCartoes, 128], C, `HTML cartões - ${pagina}`),
+    html([24, 104, larguraCartoes, 140], C, `HTML cartões - ${pagina}`),
     ...filtros.map(([e, p, nome, modo], i) =>
       segmentacao([x0 + (i % colunas) * (larg + 12), 108 + Math.floor(i / colunas) * 68, larg, 60], e, p, nome, modo)),
   ];
