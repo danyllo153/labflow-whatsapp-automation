@@ -7,8 +7,8 @@ Documento para retomar o projeto em outro computador ou numa conversa nova do Cl
 ## 0. Onde paramos (leia primeiro)
 
 **09/10/2026 (noite):** **v1.2.0 lançada** (PR #36, tag e release: NFC placa a placa, desvio de tanque, ok / não ok no
-relatório, páginas Análise TT e T.N, Bug 29). Depois da tag, na branch **`feat/voz`** (commits locais, falta push e PR; ela
-já inclui a `fix/painel-navegacao`, que não precisa ser enviada à parte):
+relatório, páginas Análise TT e T.N, Bug 29). Depois da tag, no **PR #37** (`feat/voz`, mergeado; ele
+incluiu o ajuste da navegação do painel):
 - painel: navegação com 10 páginas e página **Desvios geral** (drop e tanque, migration **019** aplicada no servidor);
 - **comando por áudio**: o Gemini transcreve, o bot responde "🎤 Ouvi" e o texto vai direto para a IA, que sempre pede "sim";
   áudio de até 2 s só vale "sim" ou "não"; "sim, sim" falado vale; vocabulário do laboratório na transcrição
@@ -18,7 +18,7 @@ já inclui a `fix/painel-navegacao`, que não precisa ser enviada à parte):
 **Próximo:**
 1. Danyllo: importar o `LabFlow_importar_n8n.json` mais recente (como cópia) e repetir um áudio de placas + "sim, sim".
 2. Rodar a regressão das 52 frases no n8n e conferir o placar.
-3. Push e PR da `feat/voz`; lançar a **v1.3.0** (voz + Desvios geral).
+3. Lançar a **v1.3.0** (voz + Desvios geral; o código já está na `main`, falta só CHANGELOG, tag e release).
 4. Prints, GIF e carrossel do painel no modo claro (10 páginas).
 5. Fase 1 do LIMS: audit trail.
 
