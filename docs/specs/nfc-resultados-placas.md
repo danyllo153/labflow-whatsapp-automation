@@ -8,7 +8,7 @@ created: 2026-10-07
 
 # Resultados de NFC placa a placa (C.T, B.L e WORT)
 
-> **Status:** `v1.0`, aprovada pelo Danyllo em 07/10/2026. Implementação pelas tarefas `NFC-001` a `NFC-008` (abaixo).
+> **Status:** `v1.0`, aprovada pelo Danyllo em 07/10/2026. **Implementada** na versão 1.2.0 (09/10/2026), tarefas `NFC-001` a `NFC-008` (abaixo).
 > **Parte da Fase 0** (Situação ok/não ok em todo o relatório) e base da tendência por tanque no painel.
 
 ## Direção desta edição
@@ -92,10 +92,10 @@ Migration `016` (`db/migrations/016_nfc_placas.sql`). A repetição é uma linha
 ## Plano de implementação
 
 1. `NFC-001` Migration 016 (tabelas, view, limites de exemplo) + arquivo de limites fora do Git. **Feita** (`db/migrations/016_nfc_placas.sql`, `db/seeds/limites_nfc_exemplo.sql`; testada numa transação desfeita).
-2. `NFC-002` Regex dos comandos de placa e da repetição ("reanálise" vira repetição, nunca análise nova) + testes em `tests/interpretar-comando.test.js`.
-3. `NFC-003` Gravação com "sim" e cálculo de ok / não ok.
-4. `NFC-004` `leitura do dia finalizada` preenchendo "<1".
-5. `NFC-005` Relatório com ✅ / 🚨 por tanque.
-6. `NFC-006` Desvio de tanque (C.T, B.L e WORT) com a repetição pelo frasco de arquivo; página Desvios mostrando também os de tanque.
-7. `NFC-007` IA: catálogo com os comandos novos (texto e áudio).
-8. `NFC-008` Painel: Situação, tendência e páginas Análise TT / Análise T.N.
+2. `NFC-002` Regex dos comandos de placa e da repetição ("reanálise" vira repetição, nunca análise nova) + testes. **Feita** (`tests/nfc-placas.test.js`).
+3. `NFC-003` Gravação com "sim" e cálculo de ok / não ok. **Feita** (nodes `BD · Buscar leitura NFC`, `Montar pergunta placas`, `BD · Executar NFC`).
+4. `NFC-004` `leitura do dia finalizada` preenchendo "<1". **Feita**.
+5. `NFC-005` Relatório com ✅ / 🚨 por tanque. **Feita** (migration `017`: `vw_relatorio_nfc` com `nao_ok`, `contagem` e `repeticao`).
+6. `NFC-006` Desvio de tanque (C.T, B.L e WORT) com a repetição pelo frasco de arquivo. **Feita**: o desvio fecha sozinho (trigger da migration `017`), e `repetição do tanque ...` registra quem fez. Os desvios de tanque aparecem nas consultas do bot, no relatório e nas páginas Análise TT / T.N do painel; a página Desvios continua só com os de drop (fica para depois).
+7. `NFC-007` IA: catálogo com os comandos novos. **Feita** para texto e frases no estilo de áudio; o áudio de verdade (transcrição) é da Fase 5.
+8. `NFC-008` Painel: situação, tendência e páginas Análise TT / Análise T.N. **Feita** (migration `018`).

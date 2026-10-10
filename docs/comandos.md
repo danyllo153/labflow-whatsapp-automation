@@ -512,7 +512,7 @@ relatório do dia tanques terra           só NFC (também: tanques navio, tanqu
 ### Marcas e alertas
 - **✅** = lido. **🚨** = fora do limite: **B.L a partir de 50** ou **C.T a partir de 200** (`<10` nunca alarma), ou TAB/Coliformes **positivo**.
 - Depois das linhas de cada bloco, uma linha de alerta por problema: `🚨 C.T 48h ≥ 200 — 77001: lote 6 = 250`, `🚨 TAB POSITIVO — 77001 (6-8)`.
-- No `completo`, cada linha do concentrado termina em `— ok` ou `— não ok` (não ok se algum item lido estiver fora do limite ou positivo). Linha sem leitura fica `-`, e o Howard e o NFC não têm Situação, porque ainda não há limite definido para eles.
+- No `completo`, cada linha do concentrado termina em `— ok` ou `— não ok` (não ok se algum item lido estiver fora do limite ou positivo). Linha sem leitura fica `-`. Vale também para o **Howard** (não ok acima do limite da tabela `limites_howard`, migration `017`; valor fictício no repositório), para as **leituras de NFC** (placas, seção 15.3) e para os **drops** (não ok = drop com desvio).
 - O `completo` termina com `✅ lido: X de Y` e, se faltar leitura, o aviso `⚠️ Ainda há N leituras de hoje por fazer`.
 - Depois do `leitura do dia finalizada` (seção 15.1), o relatório termina com `✅ Leitura do dia finalizada por Ana às 16:40.`
 - **Drops com desvio** (seção 15.2): o drop "não ok" de hoje aparece com 🚨 no lugar do ✅, mais o alerta `🚨 Drop D5 NÃO OK — tanque 45 (coleta 30/09): desvio aberto, ler até 10/10`. A linha `Desvios:` (embaixo dos drops) mostra as leituras de desvio vencidas ou feitas hoje, e um desvio confirmado gera `🚨 Desvio CONFIRMADO ...`.
@@ -542,6 +542,7 @@ LabFlow: ✅ Leitura do dia finalizada por Ana. Relatório do dia: todo lido, me
 | TAB e Coliformes no dia da leitura | Fecha como **Negativo** |
 | TAB e Coliformes **em confirmação**, lotes de composta aberta, desvios de drop | **Não mexe** (precisam do resultado) |
 | C.T e B.L do concentrado (valor numérico) | **Ficam pendentes** até digitar o valor |
+| Placas de NFC que ninguém digitou (seção 15.3) | Entram como **<1** nas 3 placas (origem automática) |
 
 O dia fica registrado na tabela `leituras_finalizadas` (migration `011`). Se der o comando de novo no mesmo dia, vale o último.
 
@@ -562,3 +563,57 @@ quais desvios estão abertos?                                    desvios em conf
 - No resultado, a data da coleta é opcional: sem ela, o bot pega o desvio aberto daquele tanque e drop.
 - Temperaturas válidas: 7, 13 e 25 °C (o banco também confere). Um desvio por drop.
 - Tabela `desvios_drop` e view `vw_desvios_drop` (migration `012`).
+
+## 15.3 Placas de NFC (triplicata) e desvio de tanque
+
+Especificação: [`docs/specs/nfc-resultados-placas.md`](specs/nfc-resultados-placas.md) (v1.0). Cada leitura de C.T, B.L e WORT (Psicrotróficos) é feita em **3 placas**, no frasco Normal e no Stress. O analista manda **o número de cada placa** só das leituras que **cresceram**; as outras entram como **"<1"** quando a leitura do dia é finalizada (seção 15.1).
+
+```
+<análise> do tanque <t> [navio <navio e viagem>] <normal|stress> <placa 1>,<placa 2>,<placa 3> [coleta dd/mm/aaaa]
+```
+
+| Análise no comando | Leitura | Exemplo |
+|---|---|---|
+| `ct` | C.T 48h (final) | `ct do tanque 47 normal 12,8,15` |
+| `bl72` | B.L 72h (pré-leitura) | `bl72 do tanque 47 stress 0,1,0` |
+| `bl120` (ou só `bl`) | B.L 120h (final) | `bl120 do tanque 5 navio O.SKY 123 normal 0,0,2` |
+| `wort profundidade 120h` / `240h` | WORT Profundidade | `wort profundidade 240h do tanque 47 normal 0,0,1` |
+| `wort superficie 120h` / `240h` | WORT Superfície | `wort superficie 120h do tanque 47 stress 1,0,0` |
+
+- **Sempre as 3 placas**, na ordem da bancada. `0` ou `<1` = sem colônia; `>300` = incontável. Separador: vírgula ou "e" ("30, 12 e 8").
+- A leitura é a **prevista para hoje** daquele tanque e frasco (ou a mais recente atrasada). Para outra coleta, acrescente `coleta dd/mm/aaaa`.
+- O bot mostra o resultado e pede **sim**: ✅ **ok** (nenhuma placa acima do limite) ou 🚨 **não ok** (alguma acima). A pré-leitura (B.L 72h, WORT 120h) acima do limite **já é não ok**. Gravar as placas marca a leitura como feita, com quem leu. Mandar de novo substitui os valores.
+- Os **limites** ficam na tabela `limites_nfc` (migration `016`), com vigência. O repositório só tem valores **fictícios** (`db/seeds/limites_nfc_exemplo.sql`); os reais são carregados por um arquivo fora do Git.
+
+```
+Você:    ct do tanque 47 normal 30, 12 e 8
+LabFlow: ❓ C.T 48h do tanque 47 (Normal), coleta 07/10/2026: 30, 12, 8 → 🚨 *não ok*.
+         Depois de gravar, pergunto se abre o desvio.
+         Responda *sim* para gravar ou *não* para cancelar.
+Você:    sim
+LabFlow: ✅ Gravado: C.T 48h do tanque 47 (Normal), coleta 07/10/2026: 30, 12, 8 → 🚨 não ok.
+         Por: Ana
+
+         ❓ Abrir desvio do tanque 47 (C.T 48h, Normal)? A análise é repetida com o frasco de arquivo, em triplicata e com os mesmos prazos. Responda *sim* ou *não*.
+Você:    sim
+LabFlow: ⚠️ Desvio criado do tanque 47 (C.T 48h, Normal). Repetição com o frasco de arquivo, em triplicata e com os mesmos prazos.
+```
+
+### Desvio de tanque e repetição
+
+- **Não ok em C.T, B.L ou WORT**: o bot pergunta se abre o desvio (como no desvio de drop). Com "sim", o desvio é aberto e a **repetição** é criada: uma análise nova **só daquela análise**, com o frasco de arquivo, em triplicata e com os mesmos prazos contados de hoje. Com "não", fica só o 🚨 no relatório e no painel.
+- As leituras da repetição entram com os **mesmos comandos de placas** (a repetição é a leitura prevista para o dia). A **nova contagem fecha o desvio sozinha**: alguma placa acima do limite → **repetição não ok**; leitura final ok → **repetição ok**.
+- Para registrar quem fez a repetição:
+
+```
+repetição do tanque 47 stress bl120        (também: reanálise do tanque 47 ...; frasco e análise são opcionais)
+```
+
+- **"Reanálise" e "repetição" são o mesmo comando** e **nunca** viram análise nova (nem pela IA). Só vale para o que **já deu não ok**: sem desvio aberto, o bot responde "O tanque 47 não tem desvio aberto... A repetição só vale para leitura acima do limite."
+- `quais desvios estão abertos?` e `quais desvios do tanque 47?` mostram os desvios de **drop e de tanque**.
+
+### No relatório e no painel
+
+- Relatório do dia: o tanque com leitura não ok aparece com 🚨 e a contagem (`47 🚨 (30, 12, 8)`), mais o alerta `🚨 C.T 48h NÃO OK — tanque 47 (Normal): 30, 12, 8`. A repetição aparece como `47 (repetição)`, e a linha **Desvios de tanque** lista os em repetição e os fechados hoje.
+- Painel: páginas **Análise TT** (tanques de terra) e **Análise T.N** (tanques de navio), com o resultado das placas, a tendência do C.T por coleta e os desvios de tanque.
+
