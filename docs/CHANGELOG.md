@@ -12,6 +12,14 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 
 ## [Não lançado]
 
+### Adicionado
+- **Comando por áudio** (Fase 5 adiantada): o Gemini transcreve o áudio do WhatsApp (até 1 minuto), o bot responde "🎤 Ouvi" e o texto vai direto para a IA, que sempre pede "sim" antes de gravar; "sim"/"não" falados confirmam. Seção 16 do `docs/comandos.md`; testes em `tests/voz.test.js`.
+- Regressão do prompt da IA com frases de placas e de repetição (`scripts/gerar-teste-prompt-ia.js`, 52 frases).
+- Painel: a página **Desvios** junta os desvios de drop e de tanque (migration `019`), com filtro por tipo e por análise, e a tabela com placas, prazo e resultado.
+
+### Alterado
+- Painel: navegação com 10 páginas sem cortar o nome e faixa de cartões mais alta (sem barra de rolagem).
+
 ## [1.2.0] - 2026-10-09
 
 ### Adicionado

@@ -32,6 +32,8 @@ function interpretar(texto, opcoes = {}) {
     nome = 'Usuario Teste',
     cadastrado = true,
     reenvio = false,
+    audio = null, // segundos: simula um audio do WhatsApp (sem texto)
+    transcrito = false, // texto que voltou da transcricao de um audio (labflowAudio)
   } = opcoes;
 
   const webhook = {
@@ -39,10 +41,11 @@ function interpretar(texto, opcoes = {}) {
       data: {
         key: { remoteJid: `${numero}@s.whatsapp.net`, fromMe: false },
         pushName: nome,
-        message: { conversation: texto },
+        message: audio !== null ? { audioMessage: { seconds: audio } } : { conversation: texto },
         messageTimestamp: Math.floor(Date.now() / 1000),
       },
       ...(reenvio ? { labflowReenvio: true } : {}),
+      ...(transcrito ? { labflowAudio: true } : {}),
     },
   };
 

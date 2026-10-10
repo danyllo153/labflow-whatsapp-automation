@@ -59,6 +59,15 @@ const FRASES = [
   ['chegaram os lotes um a cinco do load setenta e oito mil e cinco item quinhentos e cinquenta e cinco fábrica ZTX', 'recebimento load 78005 item 555 fabrica ZTX lotes 1-5'],
   ['o drop d cinco do tanque quarenta e cinco da coleta de trinta do nove de dois mil e vinte e seis deu não ok', 'drop d5 do tanque 45 data 30/09/2026 não ok'],
   ['terminei a leitura do dia de hoje', 'leitura do dia finalizada'],
+  // placas de NFC e repetição (versão 1.2.0)
+  ['o C.T do tanque 47 normal deu trinta, doze e oito', 'ct do tanque 47 normal 30,12,8'],
+  ['nada cresceu no bl72 do tanque 5 stress', 'bl72 do tanque 5 stress 0,0,0'],
+  ['bl do tanque 48 normal deu 0, 2 e 0', 'bl120 do tanque 48 normal 0,2,0|bl do tanque 48 normal 0,2,0'],
+  ['wort superfície 240 horas do tanque 47 stress zero zero e um', 'wort superficie 240h do tanque 47 stress 0,0,1'],
+  ['li o C.T do tanque 1C do navio D.SKY 123 stress: 5, 3 e 0', 'ct do tanque 1C navio D.SKY 123 stress 5,3,0'],
+  ['o C.T do tanque 47 deu 12 e 8', 'intencao:incompleto'],
+  ['fiz a reanálise do tanque 47 stress bl120', 'repetição do tanque 47 stress bl120'],
+  ['repeti o ct do tanque 47 normal com o frasco de arquivo', 'repetição do tanque 47 normal ct|repetição do tanque 47 ct normal'],
   // intenções antigas (regressão)
   ['coletei os tanques 70 e 71 hoje', 'intencao:coleta_terra'],
   ['fiz os drops D10 de terra', 'intencao:concluir_drops'],

@@ -571,6 +571,60 @@
                               },
                               "Right": {
                                 "Literal": {
+                                  "Value": "'Drop'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#0E8A96'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi drops"
+                                    }
+                                  },
+                                  "Property": "Estágio"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Tanque'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#7C3AED'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi drops"
+                                    }
+                                  },
+                                  "Property": "Estágio"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
                                   "Value": "'AQA'"
                                 }
                               }

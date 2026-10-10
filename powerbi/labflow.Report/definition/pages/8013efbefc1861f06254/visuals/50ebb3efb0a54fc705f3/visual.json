@@ -2,10 +2,10 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
   "name": "50ebb3efb0a54fc705f3",
   "position": {
-    "x": 1140,
-    "y": 176,
+    "x": 1652,
+    "y": 108,
     "z": 6000,
-    "width": 372,
+    "width": 244,
     "height": 60,
     "tabOrder": 6000
   },
@@ -23,12 +23,12 @@
                       "Entity": "bi desvios"
                     }
                   },
-                  "Property": "Estágio"
+                  "Property": "tipo"
                 }
               },
-              "queryRef": "bi desvios.Estágio",
-              "nativeQueryRef": "Estágio",
-              "displayName": "Drop"
+              "queryRef": "bi desvios.tipo",
+              "nativeQueryRef": "tipo",
+              "displayName": "Tipo"
             }
           ]
         }

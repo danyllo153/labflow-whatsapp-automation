@@ -6,21 +6,21 @@ Documento para retomar o projeto em outro computador ou numa conversa nova do Cl
 
 ## 0. Onde paramos (leia primeiro)
 
-**09/10/2026:** versão **1.2.0** pronta na branch `feat/nfc-placas` (commits locais, falta push, PR, merge e tag). Entrou:
-NFC placa a placa (NFC-002 a NFC-008: comandos de placas, desvio de tanque com repetição, `<1` automático, relatório com ✅/🚨
-e contagem, IA, páginas **Análise TT** e **Análise T.N** no painel), ok / não ok de Howard e drops no relatório, consulta de desvios
-de drop e de tanque e o **Bug 29** resolvido (resposta do "sim" só depois de gravar). No servidor de demonstração: migrations
-**017 e 018** aplicadas (backups `labflow_2026-10-09_2203` a `_2206`), limites fictícios e `db/seeds/demo_placas.sql` carregados.
+**09/10/2026 (noite):** **v1.2.0 lançada** (PR #36, tag e release: NFC placa a placa, desvio de tanque, ok / não ok no
+relatório, páginas Análise TT e T.N, Bug 29). Depois da tag, na branch **`feat/voz`** (commits locais, falta push e PR; ela
+já inclui a `fix/painel-navegacao`, que não precisa ser enviada à parte):
+- painel: navegação com 10 páginas e página **Desvios geral** (drop e tanque, migration **019** aplicada no servidor);
+- **comando por áudio**: o Gemini transcreve, o bot responde "🎤 Ouvi" e o texto vai direto para a IA, que sempre pede "sim";
+  áudio de até 2 s só vale "sim" ou "não"; "sim, sim" falado vale; vocabulário do laboratório na transcrição
+  (`docs/comandos.md` seção 16, `tests/voz.test.js`). Testado pelo WhatsApp (coleta, análise, placas, sim e não falados).
+- IA: placas sem data de coleta inventada; regressão do prompt com 52 frases (`LabFlow_importar_n8n_teste_ia.json`).
 
-**Falta (com o Danyllo):**
-1. Importar `LabFlow_importar_n8n.json` **como cópia** no n8n, ativar e testar pelo WhatsApp (roteiro em `docs/comandos.md` 15.3).
-   Rollback: `LabFlow_importar_n8n_antes_nfc.json` (o workflow anterior).
-2. Abrir o Power BI (túnel ligado), **Atualizar** e conferir as páginas Análise TT e Análise T.N.
-3. Push, PR, merge e tag `v1.2.0` com release (antes: `git switch main && git pull`, Bug 30).
-4. Refazer os prints e o GIF do painel (modo claro, 10 páginas) e o carrossel do LinkedIn.
-
-**Próximo depois da 1.2.0:** página Desvios do painel com os desvios de tanque; Fase 1 do LIMS (audit trail, especificações,
-revisão e liberação), seguindo `docs/specs/lims/`.
+**Próximo:**
+1. Danyllo: importar o `LabFlow_importar_n8n.json` mais recente (como cópia) e repetir um áudio de placas + "sim, sim".
+2. Rodar a regressão das 52 frases no n8n e conferir o placar.
+3. Push e PR da `feat/voz`; lançar a **v1.3.0** (voz + Desvios geral).
+4. Prints, GIF e carrossel do painel no modo claro (10 páginas).
+5. Fase 1 do LIMS: audit trail.
 
 ## 1. Quem sou e como gosto de trabalhar
 
@@ -44,7 +44,7 @@ revisão e liberação), seguindo `docs/specs/lims/`.
 
 **Em números:** 177 nodes no `LabFlow.json` (35 terminam em `Respond to Webhook`) · 49 consultas parametrizadas (nodes de Postgres) · 15 migrations, 19 tabelas e 12 views · 208 testes (`npm test`) · 33 bugs documentados em [`troubleshooting.md`](troubleshooting.md).
 
-**No servidor:** migrations `001` a `018` aplicadas (016 em 07/10; 017 e 018 em 09/10; limites de NFC e Howard de exemplo e placas de demonstração); dados de demonstração carregados (`db/seeds/demo.sql`, reaplicados em 06/10); backup diário às 3h, 14 dias, em `~/labflow/backups` (`./backup-db.sh`). DBeaver: conexões `LabFlow (leitura)` e `LabFlow (app)` (tipo Production).
+**No servidor:** migrations `001` a `019` aplicadas (016 em 07/10; 017 a 019 em 09/10; limites de NFC e Howard de exemplo e placas de demonstração); dados de demonstração carregados (`db/seeds/demo.sql`, reaplicados em 06/10); backup diário às 3h, 14 dias, em `~/labflow/backups` (`./backup-db.sh`). DBeaver: conexões `LabFlow (leitura)` e `LabFlow (app)` (tipo Production).
 
 **Arquivos de workflow (na pasta do projeto):**
 - `LabFlow.json` e `LabFlow_Alerta_Erro.json`: versões **públicas**, sem IDs reais (vão para o Git).
@@ -91,7 +91,7 @@ Detalhes e o comparativo "o que temos × o que falta para ser um LIMS" na nota `
 
 ## 5. Banco de dados
 
-Plano e decisões em [`postgres-migracao.md`](postgres-migracao.md); migrations em [`../db/migrations/`](../db/migrations/) (`001` a `018`, uma de cada vez, com `-v ON_ERROR_STOP=1`). A coleta é o centro (drops, arquivo e análises apontam para `coleta_id`); no concentrado, a ordem é *recebimento → compostas → testes*. `tanque` é TEXT; datas em `America/Sao_Paulo`; o banco confere as regras de novo (UNIQUE, CHECK, FK). Usuários: `labflow_app` (n8n) e `labflow_leitura` (DBeaver e Power BI). Senhas só em `~/labflow/.env` no servidor.
+Plano e decisões em [`postgres-migracao.md`](postgres-migracao.md); migrations em [`../db/migrations/`](../db/migrations/) (`001` a `019`, uma de cada vez, com `-v ON_ERROR_STOP=1`). A coleta é o centro (drops, arquivo e análises apontam para `coleta_id`); no concentrado, a ordem é *recebimento → compostas → testes*. `tanque` é TEXT; datas em `America/Sao_Paulo`; o banco confere as regras de novo (UNIQUE, CHECK, FK). Usuários: `labflow_app` (n8n) e `labflow_leitura` (DBeaver e Power BI). Senhas só em `~/labflow/.env` no servidor.
 
 Aplicar uma migration a partir do PC (antes: testar numa transação desfeita e fazer backup com `ssh labflow "cd ~/labflow && ./backup-db.sh"`):
 

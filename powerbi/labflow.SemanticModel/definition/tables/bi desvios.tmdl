@@ -5,15 +5,15 @@ table 'bi desvios'
 		formatString: 0
 		lineageTag: ee95e39c-f8dd-6eb1-6989-f3153bf7240c
 
-	measure 'Desvios abertos' = CALCULATE(COUNTROWS('bi desvios'), 'bi desvios'[status] = "Em confirmação")
+	measure 'Desvios abertos' = CALCULATE(COUNTROWS('bi desvios'), 'bi desvios'[status] IN {"Em confirmação", "Em repetição"})
 		formatString: 0
 		lineageTag: 68d04ec2-eea9-e47b-746d-fe121558f932
 
-	measure 'Desvios confirmados' = CALCULATE(COUNTROWS('bi desvios'), 'bi desvios'[resultado] = "Confirmado")
+	measure 'Desvios confirmados' = CALCULATE(COUNTROWS('bi desvios'), 'bi desvios'[resultado] IN {"Confirmado", "Repetição não ok"})
 		formatString: 0
 		lineageTag: 5c1c1e44-fbe3-8695-d3c7-e95299ae8c63
 
-	measure 'Desvios não confirmados' = CALCULATE(COUNTROWS('bi desvios'), 'bi desvios'[resultado] = "Não confirmado")
+	measure 'Desvios não confirmados' = CALCULATE(COUNTROWS('bi desvios'), 'bi desvios'[resultado] IN {"Não confirmado", "Repetição ok"})
 		formatString: 0
 		lineageTag: 1a4730b9-d269-0ecd-208d-4d96d369c754
 
@@ -32,18 +32,6 @@ table 'bi desvios'
 	column 'Local' = IF(ISBLANK('bi desvios'[navio]), "Terra (tank farm)", 'bi desvios'[navio])
 		dataType: string
 		lineageTag: fbf9c567-f473-9152-c8ec-96adfa6e8f1a
-		summarizeBy: none
-
-	column 'Estágio' = 'bi desvios'[drop]
-		dataType: string
-		sortByColumn: 'Estágio (ordem)'
-		lineageTag: fd7526b9-63df-4367-44b4-1a9c1ff6278b
-		summarizeBy: none
-
-	column 'Estágio (ordem)' = INT(VALUE(MID('bi desvios'[drop], 2, 3)))
-		dataType: int64
-		isHidden
-		lineageTag: f2eb246e-22ab-b12f-a854-4d1ca7eb3616
 		summarizeBy: none
 
 	column desvio_id
@@ -223,6 +211,49 @@ table 'bi desvios'
 		lineageTag: 2e3e934b-54ad-45b6-9449-5c7186d53594
 		summarizeBy: none
 		sourceColumn: situacao
+
+		annotation SummarizationSetBy = Automatic
+
+	column tipo
+		dataType: string
+		lineageTag: 8a4b48b4-8252-d0a8-4150-217cfe4d4a28
+		summarizeBy: none
+		sourceColumn: tipo
+
+		annotation SummarizationSetBy = Automatic
+
+	column analise
+		dataType: string
+		sortByColumn: analise_ordem
+		lineageTag: e76a244c-8692-73b2-8951-f8d449a4f1ca
+		summarizeBy: none
+		sourceColumn: analise
+
+		annotation SummarizationSetBy = Automatic
+
+	column analise_ordem
+		dataType: int64
+		formatString: 0
+		isHidden
+		lineageTag: 33b4755f-8cc0-23ce-6248-a42677d7e471
+		summarizeBy: none
+		sourceColumn: analise_ordem
+
+		annotation SummarizationSetBy = Automatic
+
+	column frasco
+		dataType: string
+		lineageTag: 2a679e5f-5fa5-ccd8-b52d-6ee0dc4d3f77
+		summarizeBy: none
+		sourceColumn: frasco
+
+		annotation SummarizationSetBy = Automatic
+
+	column contagem
+		dataType: string
+		lineageTag: 3315be13-885f-3622-5bb9-c691aec81e06
+		summarizeBy: none
+		sourceColumn: contagem
 
 		annotation SummarizationSetBy = Automatic
 

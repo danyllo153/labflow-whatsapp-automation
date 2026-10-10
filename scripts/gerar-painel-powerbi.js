@@ -63,16 +63,18 @@ const PILULA = {
 const ROTULO = {
   'Terra': COR.verde, 'Navio': COR.azul, 'Recebimento': COR.teal, 'Embarque': COR.azul, 'Tank farm': COR.verde,
   'TAB': COR.roxo, 'Coliformes': COR.magenta, 'Howard': COR.marinho, 'D5': COR.azul, 'D10': COR.roxo, 'D15': COR.laranja,
-  'C.T 48h': COR.teal, 'B.L 72h': COR.azul, 'B.L 120h': COR.roxo, 'AQA': COR.azul, 'COL': COR.laranja, 'UCH': COR.roxo,
+  'C.T 48h': COR.teal, 'B.L 72h': COR.azul, 'B.L 120h': COR.roxo, 'Drop': COR.teal, 'Tanque': COR.roxo, 'AQA': COR.azul, 'COL': COR.laranja, 'UCH': COR.roxo,
 };
 const COLS_PILULA = new Set(['situacao', 'status', 'resultado', 'desvio_resultado', 'Resultado ou andamento', 'Desvio do drop', 'Faixa', 'desvio']);
-const COLS_ROTULO = new Set(['origem', 'teste', 'drop', 'Estágio', 'analise', 'fabrica']);
+const COLS_ROTULO = new Set(['origem', 'teste', 'drop', 'Estágio', 'analise', 'fabrica', 'tipo']);
 const SERIE_SITUACAO = Object.fromEntries(Object.entries(PILULA).map(([v, [t]]) => [v, t]));
 const SERIE_ORIGEM = { Terra: COR.teal, Navio: COR.azul };
 const SERIE_RESULTADO = { Positivo: COR.vermelho, Negativo: COR.verde, 'Em andamento': COR.azul };
 const SERIE_PLACAS = { Ok: COR.verde, 'Não ok': COR.vermelho, Pendente: COR.aguardando, 'Sem limite': COR.cinza, 'Sem placas': COR.cinza };
 const SERIE_FRASCO = { Normal: COR.azul, Stress: COR.laranja };
-const SERIE_DESVIO = { Confirmado: COR.vermelho, 'Não confirmado': COR.verde, 'Em confirmação': COR.laranja };
+const SERIE_DESVIO = { Confirmado: COR.vermelho, 'Não confirmado': COR.verde, 'Em confirmação': COR.laranja,
+  'Repetição não ok': COR.vermelho, 'Repetição ok': COR.verde, 'Em repetição': COR.laranja };
+const SERIE_TIPO_DESVIO = { Drop: COR.teal, Tanque: COR.roxo };
 const SERIE_FAIXA = { Alarme: COR.vermelho, Normal: COR.teal, Aguardando: COR.aguardando };
 
 // ---------------------------------------------------------------- tema LabFlow (escuro)
@@ -227,7 +229,7 @@ const PAGINA_HTML = {
   'Análise TT': ['Análise TT (tanques de terra)', 'C.T, B.L e Psicrotróficos placa a placa: resultado, tendência e desvios', '🛢️'],
   'Análise T.N': ['Análise T.N (tanques de navio)', 'C.T, B.L e Psicrotróficos placa a placa: resultado, tendência e desvios', '🚢'],
   Drops: ['Drops', 'D5, D10 e D15 por estágio, por mês e por navio/terra', '💧'],
-  Desvios: ['Desvios', 'Desvios de drop: repetição em 7, 13 e 25 °C, por tanque, navio e analista', '🌡️'],
+  Desvios: ['Desvios', 'Desvios de drop e de tanque: resultado, prazo e quem abriu, por tanque, navio e analista', '🌡️'],
   Recebimento: ['Recebimento de concentrado', 'FCOJ: lotes recebidos e C.T e B.L por fábrica, item e load', '📦'],
   Embarque: ['Embarque de concentrado', 'FCOJ: amostras, C.T e B.L e Howard por navio, linha e fase', '⚓'],
   TAB: ['TAB', 'Do caldo ao resultado: recebimento, embarque e tanques de terra', '🦠'],
@@ -277,12 +279,12 @@ const CARTOES = {
     { rotulo: 'Drops concluídos', valor: '[Drops concluídos]', sub: 'Nos filtros escolhidos', icone: '✅', cor: 'verde', neutro: true },
     { rotulo: 'Drops com desvio', valor: '[Drops com desvio]', sub: 'Detalhes na página Desvios', icone: '🌡️', cor: 'laranja', zero: 'Nenhum desvio' },
   ],
-  // página própria dos desvios (depois: desvios de tanque e amostras repetidas)
+  // página própria dos desvios: drops (repetição em 7, 13 e 25 °C) e tanques (repetição com o frasco de arquivo)
   Desvios: [
-    { rotulo: 'Desvios abertos', valor: '[Desvios abertos]', sub: 'Em confirmação (até 5 dias)', icone: '🌡️', cor: 'laranja', zero: 'Nenhum aberto' },
-    { rotulo: 'Confirmados', valor: '[Desvios confirmados]', sub: 'Cresceu em alguma temperatura', icone: '⚠️', cor: 'vermelho', zero: 'Nenhum confirmado' },
-    { rotulo: 'Não confirmados', valor: '[Desvios não confirmados]', sub: 'Não cresceu em 7, 13 nem 25 °C', icone: '✅', cor: 'verde', neutro: true },
-    { rotulo: 'Desvios', valor: '[Desvios]', sub: 'Nos filtros escolhidos', icone: '📋', cor: 'azul', neutro: true },
+    { rotulo: 'Desvios abertos', valor: '[Desvios abertos]', sub: 'Em confirmação ou em repetição', icone: '🌡️', cor: 'laranja', zero: 'Nenhum aberto' },
+    { rotulo: 'Confirmados', valor: '[Desvios confirmados]', sub: 'Drop cresceu ou repetição não ok', icone: '⚠️', cor: 'vermelho', zero: 'Nenhum confirmado' },
+    { rotulo: 'Não confirmados', valor: '[Desvios não confirmados]', sub: 'Drop limpo ou repetição ok', icone: '✅', cor: 'verde', neutro: true },
+    { rotulo: 'Desvios', valor: '[Desvios]', sub: 'Drops e tanques, nos filtros', icone: '📋', cor: 'azul', neutro: true },
   ],
   Recebimento: [
     { rotulo: 'Lotes recebidos', valor: '[Lotes e amostras]', sub: 'Nos filtros escolhidos', icone: '📦', cor: 'azul', neutro: true },
@@ -356,9 +358,9 @@ const MEDIDAS = {
   ],
   'bi desvios': [
     ['Desvios', "COUNTROWS('bi desvios')", { formato: '0' }],
-    ['Desvios abertos', CALC('bi desvios', "'bi desvios'[status] = \"Em confirmação\""), { formato: '0' }],
-    ['Desvios confirmados', CALC('bi desvios', "'bi desvios'[resultado] = \"Confirmado\""), { formato: '0' }],
-    ['Desvios não confirmados', CALC('bi desvios', "'bi desvios'[resultado] = \"Não confirmado\""), { formato: '0' }],
+    ['Desvios abertos', CALC('bi desvios', "'bi desvios'[status] IN {\"Em confirmação\", \"Em repetição\"}"), { formato: '0' }],
+    ['Desvios confirmados', CALC('bi desvios', "'bi desvios'[resultado] IN {\"Confirmado\", \"Repetição não ok\"}"), { formato: '0' }],
+    ['Desvios não confirmados', CALC('bi desvios', "'bi desvios'[resultado] IN {\"Não confirmado\", \"Repetição ok\"}"), { formato: '0' }],
     ['Confirmou a 7 °C', CALC('bi desvios', "'bi desvios'[cresceu_7c] = TRUE()"), { formato: '0' }],
     ['Confirmou a 13 °C', CALC('bi desvios', "'bi desvios'[cresceu_13c] = TRUE()"), { formato: '0' }],
     ['Confirmou a 25 °C', CALC('bi desvios', "'bi desvios'[cresceu_25c] = TRUE()"), { formato: '0' }],
@@ -381,12 +383,7 @@ const COLUNAS = {
     colunaTmdl('Estágio (ordem)', "INT(VALUE(MID('bi drops'[drop], 2, 3)))", 'int64', '\t\tisHidden\n'),
     colunaTmdl('Desvio do drop', "IF('bi drops'[desvio], COALESCE('bi drops'[desvio_resultado], \"Em confirmação\"), \"Sem desvio\")", 'string'),
   ],
-  'bi desvios': [
-    local('bi desvios'),
-    // D5, D10, D15 em ordem (sem isso o filtro sai D10, D15, D5)
-    colunaTmdl('Estágio', "'bi desvios'[drop]", 'string', "\t\tsortByColumn: 'Estágio (ordem)'\n"),
-    colunaTmdl('Estágio (ordem)', "INT(VALUE(MID('bi desvios'[drop], 2, 3)))", 'int64', '\t\tisHidden\n'),
-  ],
+  'bi desvios': [local('bi desvios')],
   'bi testes': [
     colunaTmdl('Resultado ou andamento', "IF(NOT ISBLANK('bi testes'[resultado]), 'bi testes'[resultado], "
       + "IF('bi testes'[teste] = \"Howard\", \"Concluído\", \"Em andamento\"))", 'string'),
@@ -410,9 +407,12 @@ const COLUNAS = {
 const COLUNAS_BANCO = {
   'bi leituras_nfc': [['placa_1', 'double'], ['placa_2', 'double'], ['placa_3', 'double'], ['contagem', 'string'],
     ['maior', 'double'], ['resultado', 'string'], ['repeticao', 'boolean'], ['desvio', 'string']],
+  'bi desvios': [['tipo', 'string'], ['analise', 'string', 'analise_ordem'], ['analise_ordem', 'int64', '', true],
+    ['frasco', 'string'], ['contagem', 'string']],
 };
-const colunaBancoTmdl = (tabela, [nome, tipo]) => `\tcolumn ${nome}\n\t\tdataType: ${tipo}\n`
-  + (tipo === 'double' ? '\t\tformatString: 0\n' : '') + `\t\tlineageTag: ${guid(`${tabela}/banco/${nome}`)}\n`
+const colunaBancoTmdl = (tabela, [nome, tipo, ordenarPor, oculta]) => `\tcolumn ${nome}\n\t\tdataType: ${tipo}\n`
+  + (tipo === 'double' || tipo === 'int64' ? '\t\tformatString: 0\n' : '') + (oculta ? '\t\tisHidden\n' : '')
+  + (ordenarPor ? `\t\tsortByColumn: ${ordenarPor}\n` : '') + `\t\tlineageTag: ${guid(`${tabela}/banco/${nome}`)}\n`
   + `\t\tsummarizeBy: none\n\t\tsourceColumn: ${nome}\n\n\t\tannotation SummarizationSetBy = Automatic\n\n`;
 // formato de coluna que já vem do banco
 const FORMATOS = { 'bi testes': { howard_percentual: '0.0' } };
@@ -522,7 +522,7 @@ const navegador = (pos) => visual('pageNavigator', pos, null, { semMoldura: true
     { properties: { fillColor: cor(COR.selecionado) }, selector: { id: 'selected' } },
   ],
   text: [
-    { properties: { show: lit('true'), fontColor: cor(COR.texto2), fontSize: lit('11D'), bold: lit('true') }, selector: { id: 'default' } },
+    { properties: { show: lit('true'), fontColor: cor(COR.texto2), fontSize: lit('10D'), bold: lit('true') }, selector: { id: 'default' } },
     { properties: { fontColor: cor(COR.branco) }, selector: { id: 'selected' } },
   ],
   outline: NENHUM,
@@ -613,7 +613,7 @@ const topo = (pagina, larguraCartoes, filtros = []) => {
     // cabeçalho só até onde começa a navegação: se cobrisse os botões, no Power BI web ele vem para a frente ao clicar
     html([0, 0, 690, 96], C, `HTML cabeçalho - ${pagina}`),
     navegador([700, 24, 1196, 44]),
-    html([24, 108, larguraCartoes, 128], C, `HTML cartões - ${pagina}`),
+    html([24, 104, larguraCartoes, 140], C, `HTML cartões - ${pagina}`),
     ...filtros.map(([e, p, nome, modo], i) =>
       segmentacao([x0 + (i % colunas) * (larg + 12), 108 + Math.floor(i / colunas) * 68, larg, 60], e, p, nome, modo)),
   ];
@@ -725,25 +725,25 @@ const PAGINAS = [
        col(D, 'prevista', 'Prevista'), col(D, 'situacao', 'Situação'), col(D, 'concluido_por', 'Concluído por'),
        col(D, 'Desvio do drop', 'Desvio')], undefined, COR.teal),
   ]],
-  // desvios num lugar só (hoje os de drop; depois, desvios de tanque e amostras repetidas)
+  // desvios num lugar só: drops e tanques (depois, amostras repetidas)
   ['Desvios', [
     ...topo('Desvios', 1100, [[V, 'Local', 'Navio / terra', 'Dropdown'], [V, 'tanque', 'Tanque', 'Dropdown'],
-      [V, 'Estágio', 'Drop', 'Blocos'], [V, 'data_coleta', 'Data da coleta', 'Between']]),
-    grafico('clusteredColumnChart', G[0], 'Em qual temperatura confirmou',
+      [V, 'tipo', 'Tipo', 'Blocos'], [V, 'analise', 'Análise', 'Dropdown'], [V, 'data_coleta', 'Data da coleta', 'Between']]),
+    grafico('clusteredColumnChart', G[0], 'Drops: em qual temperatura confirmou',
       { Y: [med(V, 'Confirmou a 7 °C'), med(V, 'Confirmou a 13 °C'), med(V, 'Confirmou a 25 °C')] },
       { cores: corPorMedida([[med(V, 'Confirmou a 7 °C'), COR.teal], [med(V, 'Confirmou a 13 °C'), COR.laranja],
         [med(V, 'Confirmou a 25 °C'), COR.vermelho]]), corTitulo: COR.vermelho }),
     grafico('barChart', G[1], 'Desvios por quem abriu e resultado',
       { Category: col(V, 'aberto_por', 'Aberto por'), Series: col(V, 'resultado', 'Resultado'), Y: med(V, 'Desvios') },
       { cores: corPorValor(V, 'resultado', SERIE_DESVIO), corTitulo: COR.marinho }),
-    grafico('donutChart', G[2], 'Resultado dos desvios',
-      { Category: col(V, 'resultado', 'Resultado'), Y: med(V, 'Desvios') },
-      { cores: corPorValor(V, 'resultado', SERIE_DESVIO), legenda: 'Right', semRotulos: true, corTitulo: COR.laranja }),
-    tabela(TABELA, 'Desvios de drop (repetição em 7, 13 e 25 °C)',
-      [col(V, 'tanque', 'Tanque'), col(V, 'Local', 'Navio / terra'), col(V, 'data_coleta', 'Coleta'), col(V, 'Estágio', 'Drop'),
-       col(V, 'data_abertura', 'Aberto em'), col(V, 'aberto_por', 'Aberto por'), col(V, 'prazo', 'Prazo'),
-       col(V, 'temperaturas', 'Temperaturas que confirmaram'), col(V, 'resultado', 'Resultado'),
-       col(V, 'resultado_por', 'Resultado por'), col(V, 'situacao', 'Situação')], undefined, COR.laranja),
+    grafico('donutChart', G[2], 'Desvios por tipo',
+      { Category: col(V, 'tipo', 'Tipo'), Y: med(V, 'Desvios') },
+      { cores: corPorValor(V, 'tipo', SERIE_TIPO_DESVIO), legenda: 'Right', semRotulos: true, corTitulo: COR.laranja }),
+    tabela(TABELA, 'Desvios de drop e de tanque',
+      [col(V, 'tipo', 'Tipo'), col(V, 'tanque', 'Tanque'), col(V, 'Local', 'Navio / terra'), col(V, 'data_coleta', 'Coleta'),
+       col(V, 'analise', 'Análise'), col(V, 'frasco', 'Frasco'), col(V, 'contagem', 'Placas'), col(V, 'data_abertura', 'Aberto em'),
+       col(V, 'aberto_por', 'Aberto por'), col(V, 'prazo', 'Prazo'), col(V, 'temperaturas', 'Temperaturas'),
+       col(V, 'resultado', 'Resultado'), col(V, 'resultado_por', 'Resultado por'), col(V, 'situacao', 'Situação')], undefined, COR.laranja),
   ]],
   ['Recebimento', [
     ...topo('Recebimento', 1100, [[K, 'fabrica', 'Fábrica', 'Dropdown'], [K, 'item', 'Item', 'Dropdown'],

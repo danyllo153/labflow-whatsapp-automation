@@ -617,3 +617,20 @@ repetição do tanque 47 stress bl120        (também: reanálise do tanque 47 .
 - Relatório do dia: o tanque com leitura não ok aparece com 🚨 e a contagem (`47 🚨 (30, 12, 8)`), mais o alerta `🚨 C.T 48h NÃO OK — tanque 47 (Normal): 30, 12, 8`. A repetição aparece como `47 (repetição)`, e a linha **Desvios de tanque** lista os em repetição e os fechados hoje.
 - Painel: páginas **Análise TT** (tanques de terra) e **Análise T.N** (tanques de navio), com o resultado das placas, a tendência do C.T por coleta e os desvios de tanque.
 
+## 16. Comando por áudio
+
+Qualquer comando pode ser **falado** num áudio do WhatsApp (até **1 minuto**). O Gemini transcreve, o bot responde **🎤 Ouvi: "..."** para a pessoa conferir, e o texto segue **direto para a IA**, que monta o comando oficial e **sempre pede "sim"** antes de gravar (a transcrição pode errar, e alguns comandos da regex gravariam sem perguntar). Consultas respondem direto.
+
+```
+Você:    🎤 (áudio) "o cê tê do tanque quarenta e sete normal deu doze, oito e quinze"
+LabFlow: 🎤 Ouvi: "O C.T do tanque 47 normal deu 12, 8 e 15"
+LabFlow: ❓ C.T 48h do tanque 47 (Normal), coleta 07/10/2026: 12, 8, 15 → ✅ *ok*.
+         Responda *sim* para gravar ou *não* para cancelar.
+Você:    🎤 (áudio) "sim"
+LabFlow: ✅ Gravado: ...
+```
+
+- "Sim" e "não" falados (ou escritos com ponto: "Sim.") confirmam e cancelam.
+- Áudio sem fala, que não deu para entender, ou de até 2 segundos que não seja "sim" ou "não" (clique sem querer): "🎤 Não entendi o áudio. Pode repetir ou mandar por escrito?" No silêncio a transcrição pode inventar palavras, então áudio curto nunca vira comando.
+- Quem não é cadastrado é bloqueado antes da transcrição (sem custo de IA). O áudio **não é guardado**: a Evolution entrega o arquivo ao n8n só para a transcrição.
+- Fluxo no n8n: `Evolution · Baixar áudio` → `Áudio em arquivo` → `Gemini · Transcrever áudio` → `Montar transcrição` → `Zap · Ouvi` → `Reenviar áudio como texto` (marca `labflowAudio`, que o `Interpretar comando` manda direto para a IA).

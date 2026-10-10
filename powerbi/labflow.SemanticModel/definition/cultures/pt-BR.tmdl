@@ -849,16 +849,6 @@ cultureInfo pt-BR
 			            },
 			            "Weight": 0.452
 			          }
-			        },
-			        {
-			          "Navio / terra": {
-			            "State": "Suggested",
-			            "Source": {
-			              "Type": "External",
-			              "Agent": "PowerBI.VisualColumnRename"
-			            },
-			            "Weight": 0.9
-			          }
 			        }
 			      ]
 			    },
@@ -934,6 +924,16 @@ cultureInfo pt-BR
 			        },
 			        {
 			          "Situação": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
+			          "Prazo": {
 			            "State": "Suggested",
 			            "Source": {
 			              "Type": "External",
@@ -11354,6 +11354,69 @@ cultureInfo pt-BR
 			      "Terms": [
 			        {
 			          "Drop": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "bi_leituras_nfc.resultado": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "bi leituras_nfc",
+			          "ConceptualProperty": "resultado"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Resultado": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "bi_leituras_nfc.contagem": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "bi leituras_nfc",
+			          "ConceptualProperty": "contagem"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Placas": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "bi_leituras_nfc.desvio": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "bi leituras_nfc",
+			          "ConceptualProperty": "desvio"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Desvio": {
 			            "State": "Suggested",
 			            "Source": {
 			              "Type": "External",
