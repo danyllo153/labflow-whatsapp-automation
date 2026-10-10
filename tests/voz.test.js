@@ -52,6 +52,14 @@ test('áudio de até 2 s só vale "sim" ou "não" (clique sem querer não vira c
   assert.equal(rodar('coletado tanque 85 data 07/10/2026', 5).transcricao, 'coletado tanque 85 data 07/10/2026');
 });
 
+test('"Sim, sim.", "sim, pode gravar" e "não, cancela" falados viram "sim" e "não"', () => {
+  assert.equal(rodar('Sim, sim.', 3).transcricao, 'sim');
+  assert.equal(rodar('sim, pode gravar', 3).transcricao, 'sim');
+  assert.equal(rodar('Não, cancela.', 3).transcricao, 'não');
+  // com número não é resposta curta: segue como comando
+  assert.equal(rodar('sim tanque 48', 5).transcricao, 'sim tanque 48');
+});
+
 test('transcrição: "🎤 Ouvi" com o texto; vazio pede para repetir', () => {
   const ok = rodar('  "C.T do tanque 47 normal 12, 8 e 15"\n');
   assert.equal(ok.transcricao, 'C.T do tanque 47 normal 12, 8 e 15');
