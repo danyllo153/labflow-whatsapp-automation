@@ -5,8 +5,8 @@
     "x": 1182,
     "y": 176,
     "z": 9000,
-    "height": 60,
     "width": 230,
+    "height": 60,
     "tabOrder": 9000
   },
   "visual": {
@@ -28,7 +28,6 @@
               },
               "queryRef": "bi testes.item",
               "nativeQueryRef": "item",
-              "active": true,
               "displayName": "Item"
             }
           ]

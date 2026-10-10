@@ -55,6 +55,9 @@ const PILULA = {
   'Positivo': P(COR.vermelho), 'Confirmado': P(COR.vermelho),
   'Negativo': P(COR.verde), 'Não confirmado': P(COR.verde), 'Sem desvio': P(COR.texto2),
   'Alarme': P(COR.vermelho), 'Normal': P(COR.verde), 'Aguardando': P(COR.texto2),
+  // placas de NFC (resultado da leitura) e desvio de tanque
+  'Ok': P(COR.verde), 'Não ok': P(COR.vermelho), 'Pendente': P(COR.texto2), 'Sem limite': P(COR.texto2), 'Sem placas': P(COR.texto2),
+  'Em repetição': P(COR.laranja), 'Repetição ok': P(COR.verde), 'Repetição não ok': P(COR.vermelho),
 };
 // valores de identificação: só a cor do texto
 const ROTULO = {
@@ -62,11 +65,13 @@ const ROTULO = {
   'TAB': COR.roxo, 'Coliformes': COR.magenta, 'Howard': COR.marinho, 'D5': COR.azul, 'D10': COR.roxo, 'D15': COR.laranja,
   'C.T 48h': COR.teal, 'B.L 72h': COR.azul, 'B.L 120h': COR.roxo, 'AQA': COR.azul, 'COL': COR.laranja, 'UCH': COR.roxo,
 };
-const COLS_PILULA = new Set(['situacao', 'status', 'resultado', 'desvio_resultado', 'Resultado ou andamento', 'Desvio do drop', 'Faixa']);
+const COLS_PILULA = new Set(['situacao', 'status', 'resultado', 'desvio_resultado', 'Resultado ou andamento', 'Desvio do drop', 'Faixa', 'desvio']);
 const COLS_ROTULO = new Set(['origem', 'teste', 'drop', 'Estágio', 'analise', 'fabrica']);
 const SERIE_SITUACAO = Object.fromEntries(Object.entries(PILULA).map(([v, [t]]) => [v, t]));
 const SERIE_ORIGEM = { Terra: COR.teal, Navio: COR.azul };
 const SERIE_RESULTADO = { Positivo: COR.vermelho, Negativo: COR.verde, 'Em andamento': COR.azul };
+const SERIE_PLACAS = { Ok: COR.verde, 'Não ok': COR.vermelho, Pendente: COR.aguardando, 'Sem limite': COR.cinza, 'Sem placas': COR.cinza };
+const SERIE_FRASCO = { Normal: COR.azul, Stress: COR.laranja };
 const SERIE_DESVIO = { Confirmado: COR.vermelho, 'Não confirmado': COR.verde, 'Em confirmação': COR.laranja };
 const SERIE_FAIXA = { Alarme: COR.vermelho, Normal: COR.teal, Aguardando: COR.aguardando };
 
@@ -219,7 +224,8 @@ const HTML = { pasta: 'Painel HTML', oculta: true };
 const PAGINA_HTML = {
   'Visão geral': ['Visão geral', 'O que precisa de atenção hoje: NFC, concentrado e drops', '🧫'],
   Coletas: ['Coletas', 'Tanques coletados por mês, por dia e por analista, de terra e de navio', '🛢️'],
-  Tanques: ['Tanques (NFC)', 'Leituras de C.T, B.L e Psicrotróficos dos tanques de terra e de navio', '🧪'],
+  'Análise TT': ['Análise TT (tanques de terra)', 'C.T, B.L e Psicrotróficos placa a placa: resultado, tendência e desvios', '🛢️'],
+  'Análise T.N': ['Análise T.N (tanques de navio)', 'C.T, B.L e Psicrotróficos placa a placa: resultado, tendência e desvios', '🚢'],
   Drops: ['Drops', 'D5, D10 e D15 por estágio, por mês e por navio/terra', '💧'],
   Desvios: ['Desvios', 'Desvios de drop: repetição em 7, 13 e 25 °C, por tanque, navio e analista', '🌡️'],
   Recebimento: ['Recebimento de concentrado', 'FCOJ: lotes recebidos e C.T e B.L por fábrica, item e load', '📦'],
@@ -241,6 +247,13 @@ const cartoesTeste = (meio, confirmacao) => [
   { rotulo: 'Positivos', valor: '[Testes positivos]', sub: 'Resultado final', icone: '🚨', cor: 'vermelho', zero: 'Nenhum positivo' },
   { rotulo: 'Negativos', valor: '[Testes negativos]', sub: 'Resultado final', icone: '✅', cor: 'verde', neutro: true },
 ];
+// páginas Análise TT e Análise T.N (a página já filtra terra ou navio)
+const CARTOES_ANALISE = [
+  { rotulo: 'Leituras não ok', valor: '[Leituras não ok]', sub: 'Alguma placa acima do limite', icone: '🚨', cor: 'vermelho', zero: 'Nenhuma não ok' },
+  { rotulo: 'Desvios em repetição', valor: '[Desvios de tanque abertos]', sub: 'Frasco de arquivo', icone: '🔁', cor: 'laranja', zero: 'Nenhum aberto' },
+  { rotulo: 'Leituras atrasadas', valor: '[Leituras atrasadas]', sub: 'Passaram da data prevista', icone: '⏰', cor: 'laranja' },
+  { rotulo: 'Leituras feitas', valor: '[% de leituras lidas]', formato: '0%', sub: 'Do total previsto', icone: '✅', cor: 'verde', neutro: true },
+];
 const CARTOES = {
   'Visão geral': [
     { rotulo: 'Leituras atrasadas', valor: '[Leituras atrasadas]', sub: 'NFC: passaram da data prevista', icone: '🚨', cor: 'vermelho' },
@@ -256,12 +269,8 @@ const CARTOES = {
     { rotulo: 'Tanques de navio', valor: '[Tanques de navio]', sub: 'Coletas nos navios', icone: '🚢', cor: 'teal', neutro: true },
     { rotulo: 'Analistas', valor: '[Analistas]', sub: 'Pessoas que coletaram', icone: '🔬', cor: 'marinho', neutro: true },
   ],
-  Tanques: [
-    { rotulo: 'Leituras atrasadas', valor: '[Leituras atrasadas]', sub: 'Passaram da data prevista', icone: '🚨', cor: 'vermelho' },
-    { rotulo: 'Leituras para hoje', valor: '[Leituras que vencem hoje]', sub: 'Ler até o fim do dia', icone: '⏰', cor: 'laranja', zero: 'Nada para hoje' },
-    { rotulo: 'Leituras feitas', valor: '[% de leituras lidas]', formato: '0%', sub: 'Do total previsto', icone: '✅', cor: 'verde', neutro: true },
-    { rotulo: 'Leituras previstas', valor: '[Leituras]', sub: 'Nos filtros escolhidos', icone: '🧪', cor: 'azul', neutro: true },
-  ],
+  'Análise TT': CARTOES_ANALISE,
+  'Análise T.N': CARTOES_ANALISE,
   Drops: [
     { rotulo: 'Drops atrasados', valor: '[Drops atrasados]', sub: 'Passaram da data prevista', icone: '💧', cor: 'vermelho' },
     { rotulo: 'Drops para hoje', valor: '[Drops que vencem hoje]', sub: 'Concluir até o fim do dia', icone: '⏰', cor: 'laranja', zero: 'Nada para hoje' },
@@ -306,6 +315,10 @@ const MEDIDAS = {
     ['Leituras atrasadas', CALC('bi leituras_nfc', "'bi leituras_nfc'[situacao] = \"Atrasado\""), { formato: '0' }],
     ['Leituras que vencem hoje', CALC('bi leituras_nfc', "'bi leituras_nfc'[situacao] = \"Vence hoje\""), { formato: '0' }],
     ['% de leituras lidas', 'DIVIDE([Leituras lidas], [Leituras])', { formato: '0%' }],
+    ['Leituras não ok', CALC('bi leituras_nfc', "'bi leituras_nfc'[resultado] = \"Não ok\""), { formato: '0' }],
+    ['Leituras ok', CALC('bi leituras_nfc', "'bi leituras_nfc'[resultado] = \"Ok\""), { formato: '0' }],
+    ['Desvios de tanque abertos', CALC('bi leituras_nfc', "'bi leituras_nfc'[desvio] = \"Em repetição\""), { formato: '0' }],
+    ['Maior placa (média)', "AVERAGE('bi leituras_nfc'[maior])", { formato: '0.0' }],
     ['HTML andamento das leituras', PROGRESSO_LEITURAS, HTML],
   ],
   'bi drops': [
@@ -393,6 +406,14 @@ const COLUNAS = {
       'dateTime', '\t\tformatString: dd/MM/yyyy\n'),
   ],
 };
+// colunas novas do banco (views bi.*): entram no modelo antes da partição, se ainda não estiverem lá
+const COLUNAS_BANCO = {
+  'bi leituras_nfc': [['placa_1', 'double'], ['placa_2', 'double'], ['placa_3', 'double'], ['contagem', 'string'],
+    ['maior', 'double'], ['resultado', 'string'], ['repeticao', 'boolean'], ['desvio', 'string']],
+};
+const colunaBancoTmdl = (tabela, [nome, tipo]) => `\tcolumn ${nome}\n\t\tdataType: ${tipo}\n`
+  + (tipo === 'double' ? '\t\tformatString: 0\n' : '') + `\t\tlineageTag: ${guid(`${tabela}/banco/${nome}`)}\n`
+  + `\t\tsummarizeBy: none\n\t\tsourceColumn: ${nome}\n\n\t\tannotation SummarizationSetBy = Automatic\n\n`;
 // formato de coluna que já vem do banco
 const FORMATOS = { 'bi testes': { howard_percentual: '0.0' } };
 const formatoColuna = (t, coluna, formato) => t.replace(
@@ -405,7 +426,9 @@ const medidaTmdl = ([nome, expr, { formato, pasta, oculta } = {}]) => `\tmeasure
 // calculada ou medida não pode repetir coluna do banco ('Desvio' x 'desvio'), e medida não se repete no modelo
 const medidasDoModelo = new Map();
 for (const [tabela, medidas] of Object.entries(MEDIDAS)) {
-  const t = fs.readFileSync(path.join(MOD, `${tabela}.tmdl`), 'utf8').replace(/\r\n/g, '\n');
+  const t = fs.readFileSync(path.join(MOD, `${tabela}.tmdl`), 'utf8').replace(/\r\n/g, '\n')
+    + (COLUNAS_BANCO[tabela] || []).filter(([nome]) => !new RegExp(`^\\tcolumn ${nome}$`, 'm').test(
+      fs.readFileSync(path.join(MOD, `${tabela}.tmdl`), 'utf8').replace(/\r\n/g, '\n'))).map(([nome]) => `\tcolumn ${nome}\n`).join('');
   const naTabela = new Map([...t.matchAll(/^\tcolumn (?:'([^']+)'|(\S+))$/gm)]
     .map((m) => [(m[1] || m[2]).toLowerCase(), 'coluna do banco']));
   const novos = [...medidas.map(([nome]) => ['medida', nome]),
@@ -428,6 +451,8 @@ for (const [tabela, medidas] of SO_RELATORIO ? [] : Object.entries(MEDIDAS)) {
   const bloco = [...medidas.map(medidaTmdl), ...(COLUNAS[tabela] || [])].join('\n')
     .replace(/@@(.+?)@@/g, (_, nome) => guid(`${tabela}/${nome}`));
   t = t.replace(/^(table [^\n]+\n\tlineageTag: [^\n]+\n)\n/, `$1\n${bloco}\n`);
+  const faltam = (COLUNAS_BANCO[tabela] || []).filter(([nome]) => !new RegExp(`^\\tcolumn ${nome}$`, 'm').test(t));
+  if (faltam.length) t = t.replace(/^\tpartition /m, () => faltam.map((c) => colunaBancoTmdl(tabela, c)).join('') + '\tpartition ');
   // datas curtas (o "quarta-feira, 16 de setembro de 2026" alarga demais as tabelas)
   t = t.replace(/formatString: Long Date/g, 'formatString: dd/MM/yyyy')
     .replace(/formatString: General Date/g, 'formatString: dd/MM/yyyy HH:mm');
@@ -504,7 +529,7 @@ const navegador = (pos) => visual('pageNavigator', pos, null, { semMoldura: true
 } });
 // largura de cada coluna (quanto texto costuma ter); o resto vale 1.2
 const PESO = { tanque: 0.8, frasco: 0.9, drop: 0.7, load: 0.9, teste: 0.8, origem: 1.2, analise: 1, lotes: 1.1,
-  navio: 1.5, Local: 1.6, linha_relatorio: 1.7, metodo: 1.3, situacao: 1.2, status: 1.1, resultado: 1.4, temperaturas: 1.6,
+  navio: 1.5, Local: 1.6, contagem: 1.3, desvio: 1.4, linha_relatorio: 1.7, metodo: 1.3, situacao: 1.2, status: 1.1, resultado: 1.4, temperaturas: 1.6,
   alvo: 1.4, lote_amostra: 1, proxima_etapa: 1.2, registrado_em: 1.6, data_resultado: 1.2, howard_percentual: 1,
   Embarque: 2.4, embarque: 2.4, 'Estágio': 0.8, 'Desvio do drop': 1.2, 'Resultado ou andamento': 1.3, data_feito: 1.1, data_coleta: 1.1,
   prevista: 1.1, data_leitura: 1.1, leitura_prevista: 1.1, confirmacao_prevista: 1.1, codigo: 0.8, navio_fase: 1.6, load_ou_tanque: 1, fabrica: 0.8, item: 0.7, 'Identificação': 1.9, 'Data da amostra': 1.1, Navio: 1.4 };
@@ -625,6 +650,30 @@ const paginaTeste = (teste, etapa, filtros) => [
       undefined, COR.magenta, crescente(T, 'codigo')),
 ];
 
+// página de análise de NFC (terra ou navio): placas, tendência e desvios de tanque
+const paginaAnalise = (nome, origem) => [
+  ...topo(nome, 1100, [
+    ...(origem === 'Navio' ? [[L, 'navio', 'Navio', 'Dropdown']] : []),
+    [L, 'tanque', 'Tanque', 'Dropdown'], [L, 'linha_relatorio', 'Leitura', 'Dropdown'],
+    ...(origem === 'Navio' ? [] : [[L, 'resultado', 'Resultado', 'Dropdown']]),
+    [CAL, 'Date', 'Período da coleta', 'Between']]),
+  // tendência: média da maior placa do C.T por data da coleta (escolha o tanque no filtro)
+  grafico('lineChart', G[0], 'Tendência do C.T (maior placa por coleta)',
+    { Category: col(L, 'data_coleta', 'Coleta'), Series: col(L, 'frasco', 'Frasco'), Y: med(L, 'Maior placa (média)') },
+    { filtros: [filtroEm(L, 'analise', [texto('C.T')])], cores: corPorValor(L, 'frasco', SERIE_FRASCO), semRotulos: true, corTitulo: COR.azul }),
+  grafico('columnChart', G[1], 'Resultado das leituras por tanque',
+    { Category: col(L, 'tanque', 'Tanque'), Series: col(L, 'resultado', 'Resultado'), Y: med(L, 'Leituras') },
+    { cores: corPorValor(L, 'resultado', SERIE_PLACAS), sort: crescente(L, 'tanque'), semRotulos: true, corTitulo: COR.teal }),
+  grafico('donutChart', G[2], 'Resultado das placas',
+    { Category: col(L, 'resultado', 'Resultado'), Y: med(L, 'Leituras') },
+    { cores: corPorValor(L, 'resultado', SERIE_PLACAS), legenda: 'Right', semRotulos: true, corTitulo: COR.marinho }),
+  tabela(TABELA, 'Leituras e placas (triplicata)',
+    [col(L, 'tanque', 'Tanque'), ...(origem === 'Navio' ? [col(L, 'navio', 'Navio')] : []), col(L, 'data_coleta', 'Coleta'),
+     col(L, 'frasco', 'Frasco'), col(L, 'linha_relatorio', 'Leitura'), col(L, 'metodo', 'Método'), col(L, 'contagem', 'Placas'),
+     col(L, 'resultado', 'Resultado'), col(L, 'situacao', 'Prazo'), col(L, 'lida_por', 'Lida por'), col(L, 'desvio', 'Desvio')],
+    undefined, COR.azul, crescente(L, 'data_coleta')),
+];
+
 // [nome, visuais, filtros da página inteira]
 const PAGINAS = [
   ['Visão geral', [
@@ -658,22 +707,8 @@ const PAGINAS = [
       [col(C, 'origem', 'Origem'), col(C, 'Local', 'Navio / terra'), col(C, 'tanque', 'Tanque'), col(C, 'data_coleta', 'Data da coleta'),
        col(C, 'registrado_por', 'Quem coletou'), col(C, 'registrado_em', 'Registrado em')], undefined, COR.verde),
   ]],
-  ['Tanques', [
-    ...topo('Tanques', 1100, [[L, 'Local', 'Navio / terra', 'Dropdown'],
-      [L, 'tanque', 'Tanque', 'Dropdown'], [L, 'situacao', 'Situação', 'Dropdown'], [CAL, 'Date', 'Período da coleta', 'Between']]),
-    grafico('columnChart', G[0], 'Leituras por mês da coleta',
-      ...Object.values(porMes(col(L, 'situacao', 'Situação'), med(L, 'Leituras'), corPorValor(L, 'situacao', SERIE_SITUACAO)))),
-    grafico('columnChart', G[1], 'Leituras por tanque e situação',
-      { Category: col(L, 'tanque', 'Tanque'), Series: col(L, 'situacao', 'Situação'), Y: med(L, 'Leituras') },
-      { cores: corPorValor(L, 'situacao', SERIE_SITUACAO), sort: crescente(L, 'tanque'), semRotulos: true, corTitulo: COR.teal }),
-    grafico('donutChart', G[2], 'Situação das leituras',
-      { Category: col(L, 'situacao', 'Situação'), Y: med(L, 'Leituras') },
-      { cores: corPorValor(L, 'situacao', SERIE_SITUACAO), legenda: 'Right', semRotulos: true, corTitulo: COR.marinho }),
-    tabela(TABELA, 'Leituras de NFC (C.T, B.L e Psicrotróficos)',
-      [col(L, 'tanque', 'Tanque'), col(L, 'Local', 'Navio / terra'), col(L, 'data_coleta', 'Coleta'), col(L, 'frasco', 'Frasco'),
-       col(L, 'linha_relatorio', 'Leitura'), col(L, 'metodo', 'Método'), col(L, 'prevista', 'Prevista'),
-       col(L, 'situacao', 'Situação'), col(L, 'lida_por', 'Lida por')], undefined, COR.azul),
-  ]],
+  ['Análise TT', paginaAnalise('Análise TT', 'Terra'), [so(L, 'Terra')]],
+  ['Análise T.N', paginaAnalise('Análise T.N', 'Navio'), [so(L, 'Navio')]],
   ['Drops', [
     ...topo('Drops', 900, [[D, 'Local', 'Navio / terra', 'Dropdown'], [D, 'tanque', 'Tanque', 'Dropdown'],
       [D, 'Estágio', 'Drop', 'Blocos'], [D, 'situacao', 'Situação', 'Dropdown'], [CAL, 'Date', 'Período da coleta', 'Between']]),

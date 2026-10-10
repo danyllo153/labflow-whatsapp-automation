@@ -13,6 +13,14 @@ table 'bi contagens'
 		formatString: 0
 		lineageTag: abccbf77-6c78-a92b-6f10-34709227e4e5
 
+	measure 'Lotes e amostras' = COUNTROWS(SUMMARIZE('bi contagens', 'bi contagens'[origem], 'bi contagens'[load], 'bi contagens'[Embarque], 'bi contagens'[lote_amostra]))
+		formatString: 0
+		lineageTag: 04348d10-b26a-2ab5-2fe9-cab9b72e1dc0
+
+	measure 'Loads no período' = DISTINCTCOUNT('bi contagens'[load])
+		formatString: 0
+		lineageTag: f391ee5e-dba0-d468-f7a6-e04093a71fdb
+
 	measure 'Cor do resultado' = IF(CALCULATE(COUNTROWS('bi contagens'), KEEPFILTERS('bi contagens'[alarme] = TRUE())) > 0, "#DC2626", IF(CALCULATE(COUNTROWS('bi contagens'), KEEPFILTERS('bi contagens'[lido] = TRUE())) > 0, "#16A34A"))
 		isHidden
 		lineageTag: 269b8ce6-fb37-0760-b272-f67b14ecab99
@@ -21,13 +29,21 @@ table 'bi contagens'
 		isHidden
 		lineageTag: 0ce7e433-212d-22ad-df0d-e1b5e06c3e3a
 
-	measure 'Lotes e amostras' = COUNTROWS(SUMMARIZE('bi contagens', 'bi contagens'[origem], 'bi contagens'[load], 'bi contagens'[Embarque], 'bi contagens'[lote_amostra]))
-		formatString: 0
-		lineageTag: 04348d10-b26a-2ab5-2fe9-cab9b72e1dc0
+	column 'Embarque' = IF('bi contagens'[origem] = "Embarque", 'bi contagens'[navio] & " linha " & 'bi contagens'[linha] & " fase " & 'bi contagens'[fase])
+		dataType: string
+		lineageTag: fba5f990-418b-233d-1c7b-f4067002615d
+		summarizeBy: none
 
-	measure 'Loads no período' = DISTINCTCOUNT('bi contagens'[load])
-		formatString: 0
-		lineageTag: f391ee5e-dba0-d468-f7a6-e04093a71fdb
+	column 'Faixa' = IF('bi contagens'[alarme], "Alarme", IF('bi contagens'[lido], "Normal", "Aguardando"))
+		dataType: string
+		lineageTag: 69af4c26-6b92-b43d-4259-32bccc5b3286
+		summarizeBy: none
+
+	column 'Data da amostra' = 'bi contagens'[prevista] - SWITCH('bi contagens'[analise], "C.T 48h", 2, "B.L 72h", 3, 5)
+		dataType: dateTime
+		formatString: dd/MM/yyyy
+		lineageTag: c652fef4-c7fa-a759-e36c-0af53a4b0bc9
+		summarizeBy: none
 
 	column origem
 		dataType: string
@@ -203,22 +219,6 @@ table 'bi contagens'
 		sourceColumn: situacao
 
 		annotation SummarizationSetBy = Automatic
-
-	column Embarque = IF('bi contagens'[origem] = "Embarque", 'bi contagens'[navio] & " linha " & 'bi contagens'[linha] & " fase " & 'bi contagens'[fase])
-		dataType: string
-		lineageTag: fba5f990-418b-233d-1c7b-f4067002615d
-		summarizeBy: none
-
-	column Faixa = IF('bi contagens'[alarme], "Alarme", IF('bi contagens'[lido], "Normal", "Aguardando"))
-		dataType: string
-		lineageTag: 69af4c26-6b92-b43d-4259-32bccc5b3286
-		summarizeBy: none
-
-	column 'Data da amostra' = 'bi contagens'[prevista] - SWITCH('bi contagens'[analise], "C.T 48h", 2, "B.L 72h", 3, 5)
-		dataType: dateTime
-		formatString: dd/MM/yyyy
-		lineageTag: c652fef4-c7fa-a759-e36c-0af53a4b0bc9
-		summarizeBy: none
 
 	partition 'bi contagens' = m
 		mode: import

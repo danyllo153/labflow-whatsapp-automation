@@ -5,8 +5,8 @@
     "x": 24,
     "y": 598,
     "z": 14000,
-    "height": 466,
     "width": 1872,
+    "height": 466,
     "tabOrder": 14000
   },
   "visual": {
@@ -252,479 +252,6 @@
           }
         },
         {
-          "properties": {
-            "fontColor": {
-              "solid": {
-                "color": {
-                  "expr": {
-                    "Conditional": {
-                      "Cases": [
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "origem"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Terra'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#16A34A'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "origem"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Navio'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#1D6FE8'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "origem"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Recebimento'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#0E8A96'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "origem"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Embarque'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#1D6FE8'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "origem"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Tank farm'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#16A34A'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "origem"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'TAB'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#7C3AED'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "origem"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Coliformes'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#DB2777'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "origem"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Howard'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#3B5B8C'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "origem"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'D5'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#1D6FE8'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "origem"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'D10'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#7C3AED'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "origem"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'D15'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#D97706'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "origem"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'C.T 48h'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#0E8A96'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "origem"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'B.L 72h'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#1D6FE8'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "origem"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'B.L 120h'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#7C3AED'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "origem"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'AQA'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#1D6FE8'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "origem"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'COL'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#D97706'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "origem"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'UCH'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#7C3AED'"
-                            }
-                          }
-                        }
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          },
           "selector": {
             "data": [
               {
@@ -734,9 +261,492 @@
               }
             ],
             "metadata": "bi testes.origem"
+          },
+          "properties": {
+            "fontColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Conditional": {
+                      "Cases": [
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "origem"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Terra'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#16A34A'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "origem"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Navio'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#1D6FE8'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "origem"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Recebimento'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#0E8A96'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "origem"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Embarque'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#1D6FE8'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "origem"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Tank farm'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#16A34A'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "origem"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'TAB'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#7C3AED'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "origem"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Coliformes'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#DB2777'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "origem"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Howard'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#3B5B8C'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "origem"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'D5'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#1D6FE8'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "origem"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'D10'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#7C3AED'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "origem"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'D15'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#D97706'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "origem"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'C.T 48h'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#0E8A96'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "origem"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'B.L 72h'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#1D6FE8'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "origem"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'B.L 120h'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#7C3AED'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "origem"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'AQA'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#1D6FE8'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "origem"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'COL'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#D97706'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "origem"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'UCH'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#7C3AED'"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         {
+          "selector": {
+            "data": [
+              {
+                "dataViewWildcard": {
+                  "matchingOption": 1
+                }
+              }
+            ],
+            "metadata": "bi testes.fabrica"
+          },
           "properties": {
             "fontColor": {
               "solid": {
@@ -1209,1071 +1219,9 @@
                 }
               }
             }
-          },
-          "selector": {
-            "data": [
-              {
-                "dataViewWildcard": {
-                  "matchingOption": 1
-                }
-              }
-            ],
-            "metadata": "bi testes.fabrica"
           }
         },
         {
-          "properties": {
-            "fontColor": {
-              "solid": {
-                "color": {
-                  "expr": {
-                    "Conditional": {
-                      "Cases": [
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Atrasado'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#DC2626'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Vence hoje'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#D97706'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'No prazo'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#1D6FE8'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Lido'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#16A34A'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Concluído'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#16A34A'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Em confirmação'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#D97706'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Positivo, em confirmação'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#D97706'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Em andamento'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#1D6FE8'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'No caldo'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#1D6FE8'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Estriado'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#0E8A96'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Incubado'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#7C3AED'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Positivo'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#DC2626'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Confirmado'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#DC2626'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Negativo'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#16A34A'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Não confirmado'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#16A34A'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Sem desvio'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#5B6B85'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Alarme'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#DC2626'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Normal'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#16A34A'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Aguardando'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#5B6B85'"
-                            }
-                          }
-                        }
-                      ]
-                    }
-                  }
-                }
-              }
-            },
-            "backColor": {
-              "solid": {
-                "color": {
-                  "expr": {
-                    "Conditional": {
-                      "Cases": [
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Atrasado'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#FCE9E9'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Vence hoje'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#FBF1E6'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'No prazo'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#E8F1FD'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Lido'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#E8F6ED'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Concluído'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#E8F6ED'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Em confirmação'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#FBF1E6'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Positivo, em confirmação'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#FBF1E6'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Em andamento'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#E8F1FD'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'No caldo'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#E8F1FD'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Estriado'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#E7F3F5'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Incubado'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#F2EBFD'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Positivo'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#FCE9E9'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Confirmado'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#FCE9E9'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Negativo'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#E8F6ED'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Não confirmado'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#E8F6ED'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Sem desvio'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#EFF0F3'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Alarme'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#FCE9E9'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Normal'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#E8F6ED'"
-                            }
-                          }
-                        },
-                        {
-                          "Condition": {
-                            "Comparison": {
-                              "ComparisonKind": 0,
-                              "Left": {
-                                "Column": {
-                                  "Expression": {
-                                    "SourceRef": {
-                                      "Entity": "bi testes"
-                                    }
-                                  },
-                                  "Property": "status"
-                                }
-                              },
-                              "Right": {
-                                "Literal": {
-                                  "Value": "'Aguardando'"
-                                }
-                              }
-                            }
-                          },
-                          "Value": {
-                            "Literal": {
-                              "Value": "'#EFF0F3'"
-                            }
-                          }
-                        }
-                      ]
-                    }
-                  }
-                }
-              }
-            }
-          },
           "selector": {
             "data": [
               {
@@ -2283,9 +1231,7 @@
               }
             ],
             "metadata": "bi testes.status"
-          }
-        },
-        {
+          },
           "properties": {
             "fontColor": {
               "solid": {
@@ -2304,7 +1250,7 @@
                                       "Entity": "bi testes"
                                     }
                                   },
-                                  "Property": "resultado"
+                                  "Property": "status"
                                 }
                               },
                               "Right": {
@@ -2331,7 +1277,7 @@
                                       "Entity": "bi testes"
                                     }
                                   },
-                                  "Property": "resultado"
+                                  "Property": "status"
                                 }
                               },
                               "Right": {
@@ -2358,7 +1304,7 @@
                                       "Entity": "bi testes"
                                     }
                                   },
-                                  "Property": "resultado"
+                                  "Property": "status"
                                 }
                               },
                               "Right": {
@@ -2385,7 +1331,7 @@
                                       "Entity": "bi testes"
                                     }
                                   },
-                                  "Property": "resultado"
+                                  "Property": "status"
                                 }
                               },
                               "Right": {
@@ -2412,7 +1358,7 @@
                                       "Entity": "bi testes"
                                     }
                                   },
-                                  "Property": "resultado"
+                                  "Property": "status"
                                 }
                               },
                               "Right": {
@@ -2439,7 +1385,7 @@
                                       "Entity": "bi testes"
                                     }
                                   },
-                                  "Property": "resultado"
+                                  "Property": "status"
                                 }
                               },
                               "Right": {
@@ -2466,7 +1412,7 @@
                                       "Entity": "bi testes"
                                     }
                                   },
-                                  "Property": "resultado"
+                                  "Property": "status"
                                 }
                               },
                               "Right": {
@@ -2493,7 +1439,7 @@
                                       "Entity": "bi testes"
                                     }
                                   },
-                                  "Property": "resultado"
+                                  "Property": "status"
                                 }
                               },
                               "Right": {
@@ -2520,7 +1466,7 @@
                                       "Entity": "bi testes"
                                     }
                                   },
-                                  "Property": "resultado"
+                                  "Property": "status"
                                 }
                               },
                               "Right": {
@@ -2547,7 +1493,7 @@
                                       "Entity": "bi testes"
                                     }
                                   },
-                                  "Property": "resultado"
+                                  "Property": "status"
                                 }
                               },
                               "Right": {
@@ -2574,7 +1520,7 @@
                                       "Entity": "bi testes"
                                     }
                                   },
-                                  "Property": "resultado"
+                                  "Property": "status"
                                 }
                               },
                               "Right": {
@@ -2601,7 +1547,7 @@
                                       "Entity": "bi testes"
                                     }
                                   },
-                                  "Property": "resultado"
+                                  "Property": "status"
                                 }
                               },
                               "Right": {
@@ -2628,7 +1574,7 @@
                                       "Entity": "bi testes"
                                     }
                                   },
-                                  "Property": "resultado"
+                                  "Property": "status"
                                 }
                               },
                               "Right": {
@@ -2655,7 +1601,7 @@
                                       "Entity": "bi testes"
                                     }
                                   },
-                                  "Property": "resultado"
+                                  "Property": "status"
                                 }
                               },
                               "Right": {
@@ -2682,7 +1628,7 @@
                                       "Entity": "bi testes"
                                     }
                                   },
-                                  "Property": "resultado"
+                                  "Property": "status"
                                 }
                               },
                               "Right": {
@@ -2709,7 +1655,7 @@
                                       "Entity": "bi testes"
                                     }
                                   },
-                                  "Property": "resultado"
+                                  "Property": "status"
                                 }
                               },
                               "Right": {
@@ -2736,7 +1682,7 @@
                                       "Entity": "bi testes"
                                     }
                                   },
-                                  "Property": "resultado"
+                                  "Property": "status"
                                 }
                               },
                               "Right": {
@@ -2763,7 +1709,7 @@
                                       "Entity": "bi testes"
                                     }
                                   },
-                                  "Property": "resultado"
+                                  "Property": "status"
                                 }
                               },
                               "Right": {
@@ -2790,7 +1736,7 @@
                                       "Entity": "bi testes"
                                     }
                                   },
-                                  "Property": "resultado"
+                                  "Property": "status"
                                 }
                               },
                               "Right": {
@@ -2803,6 +1749,222 @@
                           "Value": {
                             "Literal": {
                               "Value": "'#5B6B85'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "status"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Ok'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#16A34A'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "status"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Não ok'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#DC2626'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "status"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Pendente'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#5B6B85'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "status"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Sem limite'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#5B6B85'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "status"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Sem placas'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#5B6B85'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "status"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Em repetição'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#D97706'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "status"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Repetição ok'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#16A34A'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "status"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Repetição não ok'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#DC2626'"
                             }
                           }
                         }
@@ -2829,7 +1991,7 @@
                                       "Entity": "bi testes"
                                     }
                                   },
-                                  "Property": "resultado"
+                                  "Property": "status"
                                 }
                               },
                               "Right": {
@@ -2856,7 +2018,7 @@
                                       "Entity": "bi testes"
                                     }
                                   },
-                                  "Property": "resultado"
+                                  "Property": "status"
                                 }
                               },
                               "Right": {
@@ -2883,7 +2045,7 @@
                                       "Entity": "bi testes"
                                     }
                                   },
-                                  "Property": "resultado"
+                                  "Property": "status"
                                 }
                               },
                               "Right": {
@@ -2910,7 +2072,7 @@
                                       "Entity": "bi testes"
                                     }
                                   },
-                                  "Property": "resultado"
+                                  "Property": "status"
                                 }
                               },
                               "Right": {
@@ -2937,7 +2099,7 @@
                                       "Entity": "bi testes"
                                     }
                                   },
-                                  "Property": "resultado"
+                                  "Property": "status"
                                 }
                               },
                               "Right": {
@@ -2964,7 +2126,7 @@
                                       "Entity": "bi testes"
                                     }
                                   },
-                                  "Property": "resultado"
+                                  "Property": "status"
                                 }
                               },
                               "Right": {
@@ -2991,7 +2153,7 @@
                                       "Entity": "bi testes"
                                     }
                                   },
-                                  "Property": "resultado"
+                                  "Property": "status"
                                 }
                               },
                               "Right": {
@@ -3018,7 +2180,7 @@
                                       "Entity": "bi testes"
                                     }
                                   },
-                                  "Property": "resultado"
+                                  "Property": "status"
                                 }
                               },
                               "Right": {
@@ -3045,7 +2207,7 @@
                                       "Entity": "bi testes"
                                     }
                                   },
-                                  "Property": "resultado"
+                                  "Property": "status"
                                 }
                               },
                               "Right": {
@@ -3072,7 +2234,7 @@
                                       "Entity": "bi testes"
                                     }
                                   },
-                                  "Property": "resultado"
+                                  "Property": "status"
                                 }
                               },
                               "Right": {
@@ -3099,7 +2261,7 @@
                                       "Entity": "bi testes"
                                     }
                                   },
-                                  "Property": "resultado"
+                                  "Property": "status"
                                 }
                               },
                               "Right": {
@@ -3126,7 +2288,7 @@
                                       "Entity": "bi testes"
                                     }
                                   },
-                                  "Property": "resultado"
+                                  "Property": "status"
                                 }
                               },
                               "Right": {
@@ -3153,7 +2315,7 @@
                                       "Entity": "bi testes"
                                     }
                                   },
-                                  "Property": "resultado"
+                                  "Property": "status"
                                 }
                               },
                               "Right": {
@@ -3180,7 +2342,7 @@
                                       "Entity": "bi testes"
                                     }
                                   },
-                                  "Property": "resultado"
+                                  "Property": "status"
                                 }
                               },
                               "Right": {
@@ -3207,7 +2369,7 @@
                                       "Entity": "bi testes"
                                     }
                                   },
-                                  "Property": "resultado"
+                                  "Property": "status"
                                 }
                               },
                               "Right": {
@@ -3234,7 +2396,7 @@
                                       "Entity": "bi testes"
                                     }
                                   },
-                                  "Property": "resultado"
+                                  "Property": "status"
                                 }
                               },
                               "Right": {
@@ -3261,7 +2423,7 @@
                                       "Entity": "bi testes"
                                     }
                                   },
-                                  "Property": "resultado"
+                                  "Property": "status"
                                 }
                               },
                               "Right": {
@@ -3288,7 +2450,7 @@
                                       "Entity": "bi testes"
                                     }
                                   },
-                                  "Property": "resultado"
+                                  "Property": "status"
                                 }
                               },
                               "Right": {
@@ -3315,7 +2477,7 @@
                                       "Entity": "bi testes"
                                     }
                                   },
-                                  "Property": "resultado"
+                                  "Property": "status"
                                 }
                               },
                               "Right": {
@@ -3330,6 +2492,222 @@
                               "Value": "'#EFF0F3'"
                             }
                           }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "status"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Ok'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#E8F6ED'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "status"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Não ok'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#FCE9E9'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "status"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Pendente'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#EFF0F3'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "status"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Sem limite'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#EFF0F3'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "status"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Sem placas'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#EFF0F3'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "status"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Em repetição'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#FBF1E6'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "status"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Repetição ok'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#E8F6ED'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "status"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Repetição não ok'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#FCE9E9'"
+                            }
+                          }
                         }
                       ]
                     }
@@ -3337,7 +2715,9 @@
                 }
               }
             }
-          },
+          }
+        },
+        {
           "selector": {
             "data": [
               {
@@ -3347,9 +2727,1503 @@
               }
             ],
             "metadata": "bi testes.resultado"
+          },
+          "properties": {
+            "fontColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Conditional": {
+                      "Cases": [
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Atrasado'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#DC2626'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Vence hoje'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#D97706'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'No prazo'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#1D6FE8'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Lido'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#16A34A'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Concluído'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#16A34A'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Em confirmação'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#D97706'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Positivo, em confirmação'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#D97706'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Em andamento'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#1D6FE8'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'No caldo'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#1D6FE8'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Estriado'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#0E8A96'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Incubado'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#7C3AED'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Positivo'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#DC2626'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Confirmado'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#DC2626'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Negativo'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#16A34A'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Não confirmado'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#16A34A'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Sem desvio'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#5B6B85'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Alarme'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#DC2626'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Normal'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#16A34A'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Aguardando'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#5B6B85'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Ok'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#16A34A'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Não ok'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#DC2626'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Pendente'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#5B6B85'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Sem limite'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#5B6B85'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Sem placas'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#5B6B85'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Em repetição'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#D97706'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Repetição ok'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#16A34A'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Repetição não ok'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#DC2626'"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            "backColor": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Conditional": {
+                      "Cases": [
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Atrasado'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#FCE9E9'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Vence hoje'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#FBF1E6'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'No prazo'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#E8F1FD'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Lido'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#E8F6ED'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Concluído'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#E8F6ED'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Em confirmação'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#FBF1E6'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Positivo, em confirmação'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#FBF1E6'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Em andamento'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#E8F1FD'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'No caldo'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#E8F1FD'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Estriado'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#E7F3F5'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Incubado'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#F2EBFD'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Positivo'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#FCE9E9'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Confirmado'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#FCE9E9'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Negativo'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#E8F6ED'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Não confirmado'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#E8F6ED'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Sem desvio'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#EFF0F3'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Alarme'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#FCE9E9'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Normal'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#E8F6ED'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Aguardando'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#EFF0F3'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Ok'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#E8F6ED'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Não ok'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#FCE9E9'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Pendente'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#EFF0F3'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Sem limite'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#EFF0F3'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Sem placas'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#EFF0F3'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Em repetição'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#FBF1E6'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Repetição ok'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#E8F6ED'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "resultado"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Repetição não ok'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#FCE9E9'"
+                            }
+                          }
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
           }
         },
         {
+          "selector": {
+            "data": [
+              {
+                "dataViewWildcard": {
+                  "matchingOption": 1
+                }
+              }
+            ],
+            "metadata": "bi testes.situacao"
+          },
           "properties": {
             "fontColor": {
               "solid": {
@@ -3867,6 +4741,222 @@
                           "Value": {
                             "Literal": {
                               "Value": "'#5B6B85'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Ok'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#16A34A'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Não ok'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#DC2626'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Pendente'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#5B6B85'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Sem limite'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#5B6B85'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Sem placas'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#5B6B85'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Em repetição'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#D97706'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Repetição ok'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#16A34A'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Repetição não ok'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#DC2626'"
                             }
                           }
                         }
@@ -4394,6 +5484,222 @@
                               "Value": "'#EFF0F3'"
                             }
                           }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Ok'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#E8F6ED'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Não ok'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#FCE9E9'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Pendente'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#EFF0F3'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Sem limite'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#EFF0F3'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Sem placas'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#EFF0F3'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Em repetição'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#FBF1E6'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Repetição ok'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#E8F6ED'"
+                            }
+                          }
+                        },
+                        {
+                          "Condition": {
+                            "Comparison": {
+                              "ComparisonKind": 0,
+                              "Left": {
+                                "Column": {
+                                  "Expression": {
+                                    "SourceRef": {
+                                      "Entity": "bi testes"
+                                    }
+                                  },
+                                  "Property": "situacao"
+                                }
+                              },
+                              "Right": {
+                                "Literal": {
+                                  "Value": "'Repetição não ok'"
+                                }
+                              }
+                            }
+                          },
+                          "Value": {
+                            "Literal": {
+                              "Value": "'#FCE9E9'"
+                            }
+                          }
                         }
                       ]
                     }
@@ -4401,16 +5707,6 @@
                 }
               }
             }
-          },
-          "selector": {
-            "data": [
-              {
-                "dataViewWildcard": {
-                  "matchingOption": 1
-                }
-              }
-            ],
-            "metadata": "bi testes.situacao"
           }
         }
       ],
@@ -4449,7 +5745,7 @@
             "autoSizeColumnWidth": {
               "expr": {
                 "Literal": {
-                  "Value": "true"
+                  "Value": "false"
                 }
               }
             },
