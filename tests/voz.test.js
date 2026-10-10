@@ -34,9 +34,25 @@ test('"sim" e "não" falados confirmam ou cancelam a pendência', () => {
   assert.equal(interpretar('não', { transcrito: true }).tipo, 'cancelar_pendencia');
 });
 
+test('áudio leva a duração para a transcrição', () => {
+  assert.equal(interpretar('', { audio: 8 }).segundos, 8);
+});
+
+// roda o node "Montar transcrição" com a resposta do Gemini e a duração do áudio
+const rodar = (texto, segundos = 10) => new Function('$', '$input', codigoDoNode('Montar transcrição'))(
+  () => ({ first: () => ({ json: { segundos } }) }),
+  { first: () => ({ json: { content: { parts: [{ text: texto }] } } }) })[0].json;
+
+test('áudio de até 2 s só vale "sim" ou "não" (clique sem querer não vira comando)', () => {
+  assert.equal(rodar('Sim.', 1).transcricao, 'Sim.');
+  assert.equal(rodar('não', 2).transcricao, 'não');
+  const inventado = rodar('coletado tanque 85', 1);
+  assert.equal(inventado.transcricao, '');
+  assert.match(inventado.textoResposta, /Não entendi o áudio/);
+  assert.equal(rodar('coletado tanque 85 data 07/10/2026', 5).transcricao, 'coletado tanque 85 data 07/10/2026');
+});
+
 test('transcrição: "🎤 Ouvi" com o texto; vazio pede para repetir', () => {
-  const rodar = (texto) => new Function('$input', codigoDoNode('Montar transcrição'))(
-    { first: () => ({ json: { content: { parts: [{ text: texto }] } } }) })[0].json;
   const ok = rodar('  "C.T do tanque 47 normal 12, 8 e 15"\n');
   assert.equal(ok.transcricao, 'C.T do tanque 47 normal 12, 8 e 15');
   assert.match(ok.textoResposta, /^🎤 Ouvi: "C.T do tanque 47/);

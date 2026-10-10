@@ -631,6 +631,6 @@ LabFlow: ✅ Gravado: ...
 ```
 
 - "Sim" e "não" falados (ou escritos com ponto: "Sim.") confirmam e cancelam.
-- Áudio sem fala ou que não deu para entender: "🎤 Não entendi o áudio. Pode repetir ou mandar por escrito?"
+- Áudio sem fala, que não deu para entender, ou de até 2 segundos que não seja "sim" ou "não" (clique sem querer): "🎤 Não entendi o áudio. Pode repetir ou mandar por escrito?" No silêncio a transcrição pode inventar palavras, então áudio curto nunca vira comando.
 - Quem não é cadastrado é bloqueado antes da transcrição (sem custo de IA). O áudio **não é guardado**: a Evolution entrega o arquivo ao n8n só para a transcrição.
 - Fluxo no n8n: `Evolution · Baixar áudio` → `Áudio em arquivo` → `Gemini · Transcrever áudio` → `Montar transcrição` → `Zap · Ouvi` → `Reenviar áudio como texto` (marca `labflowAudio`, que o `Interpretar comando` manda direto para a IA).
