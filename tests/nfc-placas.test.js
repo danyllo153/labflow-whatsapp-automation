@@ -100,6 +100,37 @@ test('pergunta das placas: repetição não ok não abre outro desvio; sem leitu
   assert.match(nada.textoResposta, /Não achei leitura de C\.T 48h do tanque 47 \(Normal\)/);
 });
 
+test('pergunta das placas: com mais de uma coleta aberta e sem data, pergunta qual em vez de escolher', () => {
+  const opcoes = '04/10/2026 (atrasada, prevista 06/10/2026); 11/10/2026 (vence hoje)';
+  const item = pedido('ct do tanque 47 normal 12,8,15');
+  const r = rodar('Montar pergunta placas', leitura({ coletas_abertas: 2, opcoes }), { 'Interpretar comando': item });
+  assert.equal(r.salvar, false, 'nada pode ficar pendente de "sim"');
+  assert.match(r.textoResposta, /O tanque 47 tem 2 coletas com C\.T 48h \(Normal\) para ler/);
+  assert.ok(r.textoResposta.includes(opcoes), 'lista as coletas com a situação de cada uma');
+  assert.match(r.textoResposta, /coleta dd\/mm\/aaaa/);
+  assert.match(r.textoResposta, /Nada foi gravado/);
+  assert.equal(r.payload, '{}');
+});
+
+test('pergunta das placas: navio aparece na pergunta de qual coleta', () => {
+  const item = pedido('bl120 do tanque 5 navio O.SKY 123 normal 0,0,2');
+  const r = rodar('Montar pergunta placas', leitura({ tanque: '5', navio: 'O.SKY 123', coletas_abertas: 2, opcoes: 'a; b' }), { 'Interpretar comando': item });
+  assert.match(r.textoResposta, /O tanque 5 \(navio O\.SKY 123\) tem 2 coletas com B\.L 120h/);
+});
+
+test('pergunta das placas: com a data da coleta, ou com uma só aberta, segue normal', () => {
+  const comData = pedido('ct do tanque 47 normal 12,8,15 coleta 04/10/2026');
+  const a = rodar('Montar pergunta placas', leitura({ coletas_abertas: 1, opcoes: '04/10/2026' }), { 'Interpretar comando': comData });
+  assert.equal(a.salvar, true);
+  assert.match(a.textoResposta, /12, 8, 15 → ✅ \*ok\*/);
+  // mesmo que a consulta traga várias, quem já disse a coleta não é perguntado de novo
+  const b = rodar('Montar pergunta placas', leitura({ coletas_abertas: 3, opcoes: 'x; y; z' }), { 'Interpretar comando': comData });
+  assert.equal(b.salvar, true);
+  const uma = pedido('ct do tanque 47 normal 12,8,15');
+  const c = rodar('Montar pergunta placas', leitura({ coletas_abertas: 1, opcoes: '11/10/2026 (vence hoje)' }), { 'Interpretar comando': uma });
+  assert.equal(c.salvar, true);
+});
+
 // ---------------------------------------------------------------- pergunta da repetição
 const desvio = (extra = {}) => ({ desvio_id: '3', etapa: 'final', repeticao_feita: false, frasco: 'Stress', sub_analise: 'BL',
   metodo: 'Profundidade', tanque: '47', navio: null, data_coleta: '07/10/2026', contagem: '0, 5, 0', rep_pre: '12/10/2026',
