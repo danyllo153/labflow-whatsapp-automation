@@ -1,36 +1,54 @@
 ---
-title: LabFlow LIMS — Banco e migrations
+title: LabFlow LIMS — Banco e migrations (Fase 1)
 tags: [labflow, lims, spec, banco, postgres]
 status: draft
-version: v0.1
+version: v0.2
 created: 2026-10-07
+updated: 2026-10-12
 ---
 
-# Banco e migrations
+# Banco e migrations (Fase 1)
 
 **Navegação:** [Índice](index.md) · Anterior: [Revisão e liberação](04-revisao-e-liberacao.md) · Próximo: [API e autenticação](06-api-e-auth.md)
 
-## Direção desta edição
+> v0.2 (corrigido em 13/10): ordem e escopo das migrations da Fase 1. **Estado real:** a `main` já tem as migrations `001` a `019` (016 NFC placa a placa, 017 limites do Howard e Situação do relatório, 018 e 019 views do Power BI). Por isso a Fase 1 começa na **`020`**. Nomes de colunas das tabelas existentes ainda **a confirmar no schema** antes de cada migration.
 
-O LIMS cresce **no mesmo banco** `labflow`, com migrations numeradas a partir da `016`, aplicadas uma de cada vez, testadas antes numa transação desfeita e com backup antes. O banco continua conferindo as regras (UNIQUE, CHECK, FK); o código dono de cada contexto decide e escreve.
+## Princípios (herdados)
 
-## O que já existe
+- Uma migration por vez, transacional, `-v ON_ERROR_STOP=1`, **backup antes**, e antes testada numa transação desfeita (`BEGIN ... ROLLBACK`).
+- O banco confere as regras (UNIQUE, CHECK, FK, trigger); o código decide e escreve.
+- Dados de demonstração fictícios; nada real.
 
-- 15 migrations, 19 tabelas, 12 views (inclusive o schema `bi` do Power BI).
-- Usuários de banco: `labflow_app` (n8n) e `labflow_leitura` (DBeaver, Power BI).
-- Datas em `America/Sao_Paulo`; `tanque` é TEXT; a coleta é o centro do NFC; no concentrado, recebimento → compostas → testes.
+## Ordem proposta
 
-## Tabelas novas previstas (a detalhar)
+| Migration | Conteúdo | Doc |
+|---|---|---|
+| `020_auditoria.sql` | tabela `auditoria`, trigger `registrar_auditoria()`, bloqueio de UPDATE/DELETE, view `vw_historico`, variável `labflow.usuario_id` obrigatória | [02](02-audit-trail.md) |
+| `021_auditoria_nas_tabelas.sql` | liga o trigger às tabelas de resultado e a `usuarios` | [02](02-audit-trail.md) |
+| `022_especificacoes.sql` | tabela `especificacoes`, restrição de vigência sem sobreposição, linhas iniciais (limites atuais), função de escolha da mais específica | [03](03-especificacoes.md) |
+| `023_resultado_estado.sql` | colunas de estado, `lancado_por`, `liberado_por`, `liberacao_automatica`, `substitui_id`, `especificacao_id`, `veredito`; CHECKs (R2, R5); regra de liberação automática do `ok` (sem estado "revisado" separado) | [04](04-revisao-e-liberacao.md) |
+| `024_fora_de_especificacao.sql` | tabela do registro de fora de especificação | [04](04-revisao-e-liberacao.md) |
+| `025_views_bi.sql` | atualiza as views do Power BI para ler só resultados vigentes e liberados | [04](04-revisao-e-liberacao.md) |
 
-| Tabela | Doc de origem |
-|---|---|
-| `auditoria` | [02](02-audit-trail.md) |
-| `especificacoes` | [03](03-especificacoes.md) |
-| Estado de revisão (coluna ou tabela) | [04](04-revisao-e-liberacao.md) |
-| Senha/login dos usuários | [06](06-api-e-auth.md) |
+Cada uma entra num PR próprio, com testes antes de aplicar no servidor. A `021` depende da `020`; a `023` depende da `022`.
 
-## Perguntas a responder
+## Cuidados específicos
 
-- [ ] Um usuário de banco novo para a API (`labflow_api`) ou o mesmo `labflow_app`?
-- [ ] Ferramenta de migration (`dbmate`, já no backlog) antes da `016`?
-- [ ] Os dados de demonstração (`db/seeds/demo.sql`) ganham especificações e revisões fictícias?
+- **Resultados existentes:** a `023` os marca como `liberado` e `veredito` calculado pelas especificações iniciais, com a nota "migrado em <data>", para o painel não zerar. Isso vai para o texto da migration.
+- **Compatibilidade do bot:** ligar o trigger de auditoria (`021`) **antes** de o n8n enviar `labflow.usuario_id` quebraria as gravações (regra A4). A ordem é: mudar o n8n (preenche a variável) → aplicar a `021`.
+- **Power BI:** as views do schema `bi` mudam na `025`; avisar antes e conferir as 8 páginas.
+- **Reversão:** cada migration tem o seu SQL de desfazer escrito junto (`NNN_desfazer.sql`), testado.
+- **Usuário do banco:** `labflow_app` continua; ele **perde** UPDATE/DELETE em `auditoria`. A API (Fase 2) decide depois se ganha um usuário próprio.
+
+## Ferramenta de migration
+
+**Recomendo** adotar o `dbmate` **antes** da `020` (já está no backlog): registra o que foi aplicado e evita rodar duas vezes. Se preferir não, manter o procedimento manual atual.
+
+## Perguntas ainda abertas
+
+- [ ] `dbmate` antes da `020`?
+- [ ] `db/seeds/demo.sql` ganha especificações e revisões fictícias? (Recomendo sim, para o painel e os testes.)
+
+## Pronto quando
+
+As migrations `020` a `025` aplicam, desfazem e reaplicam sem erro num banco de teste; os 208 testes do projeto e os do banco passam; o painel continua mostrando os mesmos números dos resultados migrados.
