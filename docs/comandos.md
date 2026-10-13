@@ -582,6 +582,7 @@ Especificação: [`docs/specs/nfc-resultados-placas.md`](specs/nfc-resultados-pl
 
 - **Sempre as 3 placas**, na ordem da bancada. `0` ou `<1` = sem colônia; `>300` = incontável. Separador: vírgula ou "e" ("30, 12 e 8").
 - A leitura é a **prevista para hoje** daquele tanque e frasco (ou a mais recente atrasada). Para outra coleta, acrescente `coleta dd/mm/aaaa`.
+- **Mais de uma coleta aberta:** se o mesmo tanque tem, por exemplo, duas coletas (de 3 em 3 dias) ainda sem placas para aquela leitura e você **não** mandou a data, o bot **não escolhe**: responde `⚠️ O tanque 47 tem 2 coletas com C.T 48h (Normal) para ler: 04/10/2026 (atrasada, prevista 06/10/2026); 11/10/2026 (vence hoje). De qual é? Mande de novo acrescentando coleta dd/mm/aaaa no fim. Nada foi gravado.` Mande o mesmo comando com `coleta dd/mm/aaaa`. Com uma só coleta aberta, ou com a data no comando, não pergunta.
 - O bot mostra o resultado e pede **sim**: ✅ **ok** (nenhuma placa acima do limite) ou 🚨 **não ok** (alguma acima). A pré-leitura (B.L 72h, WORT 120h) acima do limite **já é não ok**. Gravar as placas marca a leitura como feita, com quem leu. Mandar de novo substitui os valores.
 - Os **limites** ficam na tabela `limites_nfc` (migration `016`), com vigência. O repositório só tem valores **fictícios** (`db/seeds/limites_nfc_exemplo.sql`); os reais são carregados por um arquivo fora do Git.
 
