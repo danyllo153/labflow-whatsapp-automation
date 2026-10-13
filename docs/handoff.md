@@ -2,7 +2,7 @@
 
 Documento para retomar o projeto em outro computador ou numa conversa nova do Claude Code. Leia inteiro antes de propor qualquer coisa. O que está em **decidido** já foi combinado com o Danyllo; o que está em **a definir** precisa ser perguntado antes de implementar. Em caso de dúvida, o repositório (README, [`CHANGELOG.md`](CHANGELOG.md), `CLAUDE.md`) é a fonte da verdade. O "próximo" detalhado mora no `backlog` do Obsidian; o histórico com datas, no `decisoes-log`.
 
-Última atualização: 07/10/2026 (rumo do LIMS definido; Power BI na `main`).
+Última atualização: 13/10/2026 (especificações da Fase 1 do LIMS em `v0.2`; v1.2.0 lançada e comando por áudio na `main`).
 
 ## 0. Onde paramos (leia primeiro)
 
@@ -15,12 +15,13 @@ incluiu o ajuste da navegação do painel):
   (`docs/comandos.md` seção 16, `tests/voz.test.js`). Testado pelo WhatsApp (coleta, análise, placas, sim e não falados).
 - IA: placas sem data de coleta inventada; regressão do prompt com 52 frases (`LabFlow_importar_n8n_teste_ia.json`).
 
+**13/10/2026 (especificações da Fase 1, branch `docs/specs-lims-fase1`):** os documentos 02 (audit trail), 03 (especificações), 04 (revisão e liberação) e 05 (banco e migrations) de [`specs/lims/`](specs/lims/index.md) foram reescritos em **`v0.2`**, a partir de um estudo de LIMS (QBench, LabWare, SENAITE e normas ISO 17025 / 21 CFR Part 11), só com material público. **Decidido:** (a) revisão **só para resultado ruim**: resultado `ok` é liberado automaticamente; `nao_ok` e `sem_especificacao` ficam pendentes e só **outra pessoa** libera ou recusa (revisar e liberar são um passo só); (b) corrigir um resultado = **invalidar** o antigo (motivo obrigatório) e criar outro ligado a ele, nunca sobrescrever; (c) a tabela `especificacoes` **unifica** `limites_nfc`, `limites_howard` e os limites ainda fixos no código (C.T/B.L, TAB/Coliformes). As migrations da Fase 1 são **`020` a `025`** (016 a 019 já existem). **Em aberto (travam a v1.0):** o que é "cliente" numa especificação e se os limites variam por item/cliente; limites oficiais do que ainda falta; cargo `Revisor` novo ou Admin/Operador (recomendado: sem cargo novo); prazo e alerta de resultado ruim parado; `sem_especificacao` vai para revisão (recomendado: sim); retenção da auditoria; `dbmate` antes da `020`. O comando de correção de C.T/B.L por repetição, hoje sobrescreve: muda com a invalidação.
 **Próximo:**
 1. Danyllo: importar o `LabFlow_importar_n8n.json` mais recente (como cópia) e repetir um áudio de placas + "sim, sim".
 2. Rodar a regressão das 52 frases no n8n e conferir o placar.
 3. Lançar a **v1.3.0** (voz + Desvios geral; o código já está na `main`, falta só CHANGELOG, tag e release).
 4. Prints, GIF e carrossel do painel no modo claro (10 páginas).
-5. Fase 1 do LIMS: audit trail.
+5. Fase 1 do LIMS: responder as perguntas em aberto dos documentos 03 e 04 (acima), levar cada documento a `v1.0` e só então gerar as tarefas `LIMS-001`... (regras do `guia-pratico.md`). Começa pela `020` (audit trail).
 
 ## 1. Quem sou e como gosto de trabalhar
 
@@ -105,7 +106,7 @@ cmd /c "type db\migrations\NNN_nome.sql | ssh -o ClearAllForwardings=yes labflow
 
 1. **Situação ok/não ok:** limites oficiais do Howard e do NFC (C.T, B.L, Psicrotróficos) e regra dos drops. Decidido em 04/10: TAB/Coliformes positivo = `não ok` e 🚨. **Sugestão:** gravar os limites numa tabela simples já agora (análise → limite), que vira a tabela de especificações da Fase 1 sem retrabalho.
 2. **Ordem do áudio:** está na Fase 5; sugestão do Claude é adiantar para logo depois da v1.2.0 (é barato, porque a IA já entende números por extenso e o pipeline existe, e tem valor prático, já que o analista usa luva, e de portfólio).
-3. **Quem revisa e libera resultados** (Fase 1): só Admin ou um cargo novo?
+3. **Quem libera resultados ruins** (Fase 1): cargo `Revisor` novo ou Admin/Operador liberando o que outra pessoa lançou (recomendado). Ver seção 0.
 4. **API:** FastAPI (sugerido) ou Node.
 5. **Acesso externo ao app sem abrir porta:** Cloudflare Tunnel ou Tailscale.
 6. **Cópia do backup fora do servidor** (enquanto os dados forem fictícios, pode ir para o OneDrive) e **monitor externo** (Uptime Kuma).
