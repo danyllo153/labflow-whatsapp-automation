@@ -11,7 +11,7 @@
 module.exports = [
   // Recebimento e compostas
   ['recebimento load 77001 item 444 fabrica AQA lotes 1-14', 'recebimento', 'grava'],
-  ['recebimento load 77002 item 3333 fabrica BCD lotes 1-3,5 data 01/10/2026', 'recebimento', 'grava'],
+  ['recebimento load 77002 item 3333 fabrica ITA lotes 1-3,5 data 01/10/2026', 'recebimento', 'grava'],
   ['compostas do load 77001 (1-5)(6-10)(11,12,15)', 'criar_compostas', 'grava'],
   ['compostas do load 77001 item 444 (1-5)', 'criar_compostas', 'grava'],
   // Embarque
