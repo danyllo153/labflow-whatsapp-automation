@@ -688,3 +688,17 @@ A transcrição do áudio (e o ditado do teclado do celular) erra de forma previ
 **Navios:** `Orange Sky 123` vira `O.SKY 123` (também `Orange Star` = `O.STAR`, `Orange Blossom` = `O.BLOSSOM`).
 
 **Tanques de navio por extenso:** `1 center` = `1C`, `2 port` = `2P`, `3 starboard` = `3S`. `2PS` é o atalho dos dois lados e vira `2P, 2S`. `1 center e 2 port` vira `1C, 2P`.
+
+### 16.4 Consultas: quem coletou e resultados
+
+Qualquer cargo (inclusive Consultor) pode perguntar. Não gravam nada; sem "sim".
+
+| Pergunta | O que o bot responde |
+|---|---|
+| `quem coletou o tanque 41 do dia 14/10/2026?` | quem registrou a coleta, o dia, terra ou navio e o horário do registro. Sem a data, mostra as mais recentes; com `do navio O.SKY 123`, só daquele navio |
+| `quem coletou os tanques do navio O.SKY 123?` | os tanques agrupados por pessoa (`João: 1C, 2P`) e o total; se houver mais de um dia, mostra o dia em cada grupo |
+| `quanto está o CT do load 44444 até agora?` | os lotes e os resultados já lidos do C.T (também `bl72`, `bl120`, `bl`, ou só `resultados do load 44444` para todos), os lotes que faltam com o prazo, e 🚨 nos acima do limite. Inclui as amostras de embarque do mesmo load |
+| `resultado do tanque 41 do dia 14/10/2026` (ou `como está o tanque 41`) | a contagem das 3 placas de C.T, B.L e WORT, com ✅ ok, 🚨 não ok ou a previsão da leitura |
+| `desvios do tanque 41 do dia 14/10/2026` | os desvios daquela coleta (a consulta de desvios ganhou o filtro de data) |
+
+"Coletou" é quem registrou a coleta no bot (a tabela `coletas` guarda `registrado_por`). Datas aceitas: `dd/mm/aaaa`, `dd/mm` (ano de hoje), `hoje`, `ontem`; data impossível (31/02) é recusada. O pedido educado no fim ("me envia os nomes de todos") é ignorado. Ajuda: `comandos consultas`.
