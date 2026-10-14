@@ -37,6 +37,16 @@ descrito em [`concentrado.md`](concentrado.md).
 | [`008_embarque.sql`](../db/migrations/008_embarque.sql) | `embarques`, `embarque_amostras`, compostas de embarque, `vw_compostas` com as duas origens, funções de busca por amostra e Howard (`campos_positivos`) |
 | [`009_contagens.sql`](../db/migrations/009_contagens.sql) | `contagens` (C.T e B.L por lote e por amostra), `vw_contagens` (com o alarme) e `vw_contagens_previstas` |
 | [`010_testes_embarque.sql`](../db/migrations/010_testes_embarque.sql) | testes por amostra de embarque |
+| [`011_leitura_finalizada.sql`](../db/migrations/011_leitura_finalizada.sql) | "leitura do dia finalizada" por analista |
+| [`012_desvio_drop.sql`](../db/migrations/012_desvio_drop.sql) | desvio de drop (repetição em 7, 13 e 25 °C) |
+| [`013_views_bi.sql`](../db/migrations/013_views_bi.sql) | schema `bi` com as views do painel do Power BI |
+| [`014_bi_testes_datas.sql`](../db/migrations/014_bi_testes_datas.sql) | `bi.testes`: leitura prevista × confirmação |
+| [`015_bi_coliformes_por_lote.sql`](../db/migrations/015_bi_coliformes_por_lote.sql) | `bi.testes`: Coliformes lote a lote |
+| [`016_nfc_placas.sql`](../db/migrations/016_nfc_placas.sql) | NFC placa a placa, limites e desvio de tanque |
+| [`017_nfc_situacao_relatorio.sql`](../db/migrations/017_nfc_situacao_relatorio.sql) | ok / não ok no relatório e limite do Howard |
+| [`018_bi_placas_nfc.sql`](../db/migrations/018_bi_placas_nfc.sql) | painel: placas de NFC |
+| [`019_bi_desvios_gerais.sql`](../db/migrations/019_bi_desvios_gerais.sql) | painel: desvios de drop e de tanque juntos |
+| [`020_uso_ia.sql`](../db/migrations/020_uso_ia.sql) | contador diário de uso da IA (limite por pessoa e no total) |
 | [`011_leitura_finalizada.sql`](../db/migrations/011_leitura_finalizada.sql) | tabela `leituras_finalizadas` (quem finalizou a leitura de cada dia) e pendência `DIA` |
 | [`012_desvio_drop.sql`](../db/migrations/012_desvio_drop.sql) | tabela `desvios_drop`, view `vw_desvios_drop` (desvio de drop em 7, 13 e 25 °C) e pendência `DESVIO` |
 | [`013_views_bi.sql`](../db/migrations/013_views_bi.sql) | schema `bi` com 6 views para o Power BI (`coletas`, `leituras_nfc`, `drops`, `desvios`, `contagens`, `testes`), com a coluna `situacao` (Lido, Atrasado, Vence hoje, No prazo) e sem telefone; leitura pelo `labflow_leitura` |

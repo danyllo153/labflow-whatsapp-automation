@@ -19,7 +19,7 @@ O que decide **ok / não ok** sai do código e vai para uma tabela de especifica
 
 ## Ponto de partida real (conferido na `main` em 13/10)
 
-Já existem tabelas de limite com vigência: **`limites_nfc`** (migration 016: limites do NFC por análise) e **`limites_howard`** (017), e a Situação ok/não ok do NFC, dos drops e do Howard já sai delas (`vw_situacao_nfc`, `vw_relatorio_nfc`). O C.T/B.L do concentrado (B.L ≥ 50, C.T ≥ 200) e o TAB/Coliformes (positivo = não ok) ainda estão **fixos no código**. Então a `especificacoes` **não nasce do zero**: ela **unifica** `limites_nfc`, `limites_howard` e os limites fixos numa tabela só (com item e cliente), e as duas tabelas antigas viram *views* ou são migradas para ela. As migrations ficam em `022` (ver doc 05).
+Já existem tabelas de limite com vigência: **`limites_nfc`** (migration 016: limites do NFC por análise) e **`limites_howard`** (017), e a Situação ok/não ok do NFC, dos drops e do Howard já sai delas (`vw_situacao_nfc`, `vw_relatorio_nfc`). O C.T/B.L do concentrado (B.L ≥ 50, C.T ≥ 200) e o TAB/Coliformes (positivo = não ok) ainda estão **fixos no código**. Então a `especificacoes` **não nasce do zero**: ela **unifica** `limites_nfc`, `limites_howard` e os limites fixos numa tabela só (com item e cliente), e as duas tabelas antigas viram *views* ou são migradas para ela. As migrations ficam em `023` (ver doc 05).
 
 ## Modelo
 

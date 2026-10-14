@@ -33,7 +33,7 @@ Executa o `jsCode` **real** do node `Interpretar comando` (extraído do `LabFlow
 npm test
 ```
 
-O que os testes cobrem (208 casos; 9 são do alerta de erro, em `tests/alerta-erro.test.js`, e 107 da IA, em `tests/validar-ia.test.js`):
+O que os testes cobrem (271 casos; 31 da IA resiliente e da fala, em `tests/ia-resiliente.test.js`; 9 são do alerta de erro, em `tests/alerta-erro.test.js`, e 107 da IA, em `tests/validar-ia.test.js`):
 
 - **Reconhecimento:** cada comando da referência ([comandos.md](comandos.md)) cai na intenção (`tipo`) certa.
 - **Campos extraídos:** lotes, compostas, navio/linha/fase, grupos de C.T/B.L com o sinal (`<` nunca vira igual), data da coleta do TAB de NFC.
@@ -49,6 +49,8 @@ Para testar outro arquivo, por exemplo o de importação, antes de subir no n8n:
 ```powershell
 $env:LABFLOW_JSON = 'LabFlow_importar_n8n.json'; npm test
 ```
+
+- **IA resiliente e fala (	ests/ia-resiliente.test.js):** o desenho da cadeia (Gemini, Groq, Gemini 3.8, limite diário, atalho), tempo máximo e saída de erro de cada chamada, nenhuma chave no arquivo, o normalizador de resposta de cada provedor, o limite atingido, o Validar com limite e erro, o áudio em arquivo, e o pré-tratamento da fala com as frases reais do piloto (menor que 10, lotes 11 a 16, Lod 43 699, ditado de C.T, recebimento ditado).
 
 Os testes foram validados injetando defeitos de propósito numa cópia do workflow (prazo do BL, limite de tanques, prazo de descarte, permissão do Consultor): todos fizeram algum teste falhar.
 
@@ -101,6 +103,8 @@ Depois de trocar algum print, rodar de novo. Prints sem barra do navegador, sem 
 ## sanitize-workflow.ps1
 
 Arquivo: [`scripts/sanitize-workflow.ps1`](../scripts/sanitize-workflow.ps1)
+
+Troca o ID real de cada credencial por um placeholder **do tipo** (`GEMINI_CREDENTIAL_ID`, `EVOLUTION_CREDENTIAL_ID`, `POSTGRES_CREDENTIAL_ID`); credenciais do mesmo tipo (chave em cabeçalho) são distinguidas pelo **nome**: `Groq API` vira `GROQ_CREDENTIAL_ID`. Para um nome novo, acrescente em `$porNome`.
 
 Gera o `LabFlow.json` **público** a partir do export do n8n com IDs reais (`LabFlow_importar_n8n.json`, que nunca vai para o Git). Roda no Windows PowerShell 5.1.
 
