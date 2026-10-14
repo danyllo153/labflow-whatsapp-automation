@@ -76,7 +76,7 @@ docker exec -d labflow-n8n sh -c "N8N_RUNNERS_BROKER_PORT=5791 N8N_RUNNERS_ENABL
 
 As duas variáveis são necessárias: sem elas o comando tenta abrir a mesma porta do n8n que está no ar e falha. Leva uns 10 minutos; o resultado (JSON do node Placar) sai no arquivo. Depois **apagar o workflow de teste** (pela tela do n8n; o servidor não tem comando para apagar). Os dois arquivos têm IDs reais e ficam fora do Git. As frases ficam no próprio script (diferentes dos exemplos do prompt, para medir generalização, incluindo frases em estilo de áudio, fábricas por nome de cidade, navio `Orange Sky` e as consultas novas). Rodar depois de **qualquer** mudança no prompt.
 
-Histórico: 05/10/2026, 44 de 44 (prompt antigo). 14/10/2026, prompt atual (fábricas travadas, navios, tanques e consultas): ainda em execução no servidor quando esta nota foi escrita: o resultado (JSON do node Placar) sai em `/tmp/placar-ia.json` do container `labflow-n8n` (`docker exec labflow-n8n cat /tmp/placar-ia.json`); **não reinicie o n8n antes de ele sair**.
+Histórico: 05/10/2026, 44 de 44 (prompt antigo). 14/10/2026, prompt atual (fábricas travadas, navios, tanques e consultas): **24 de 60, inconclusivo**: as 24 frases que o Gemini respondeu saíram todas certas; as outras 36 ficaram sem resposta por `503 Service unavailable` e queda de conexão do Google, mesmo com 3 tentativas cada (o teste rodou duas vezes ao mesmo tempo, uma pelo servidor e outra pela tela, o que pode ter dobrado a carga no plano gratuito). **Repetir uma vez só, em hora calma**, e ler o node Placar.
 
 ## gerar-painel-powerbi.js (painel do Power BI como código)
 
