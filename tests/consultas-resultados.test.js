@@ -117,7 +117,7 @@ test('resposta: resultado do embarque usa amostras (A1...) e identifica o navio'
 });
 
 test('resposta: resultado do tanque mostra contagem e situação; sem leitura mostra a previsão', () => {
-  const l = (o) => ({ data_coleta: '14/10/2026', origem: 'terra', navio: null, frasco: 'Normal', sub_analise: 'CT', metodo: 'Profundidade', etapa: 'final', contagem: null, situacao: 'Pendente', prevista: '16/10/2026', repeticao: false, ...o });
+  const l = (o) => { const x = { data_coleta: '14/10/2026', origem: 'terra', navio: null, frasco: 'Normal', sub_analise: 'CT', metodo: 'Profundidade', etapa: 'final', contagem: null, situacao: 'Pendente', prevista: '16/10/2026', repeticao: false, ...o }; return { analise_id: `${x.sub_analise}-${x.metodo}-${x.frasco}`, ...x }; };
   const t = responder('Montar resposta resultado do tanque', 'resultado do tanque 41 do dia 14/10/2026', [
     l({ contagem: '30, 12, 8', situacao: 'Ok' }),
     l({ sub_analise: 'BL', etapa: 'pre', contagem: '60, 2, 1', situacao: 'Não ok' }),
@@ -163,4 +163,24 @@ test('a IA conhece os formatos das consultas novas', () => {
   assert.match(prompt, /30\. quem coletou o tanque/);
   assert.match(prompt, /31\. resultados do load/);
   assert.match(prompt, /32\. resultado do tanque/);
+});
+
+test('resposta: a leitura prevista que ninguém lançou conta como ok quando a final da mesma análise saiu ok', () => {
+  const l = (o) => ({ analise_id: 1, data_coleta: '14/10/2026', origem: 'terra', navio: null, frasco: 'Normal', sub_analise: 'BL', metodo: 'Profundidade', etapa: 'final', contagem: '<1, <1, <1', situacao: 'Ok', prevista: '19/10/2026', repeticao: false, ...o });
+  const pre = (o) => l({ etapa: 'pre', contagem: null, situacao: 'Pendente', prevista: '17/10/2026', ...o });
+  const t = responder('Montar resposta resultado do tanque', 'resultado do tanque 41 do dia 14/10/2026', [
+    l({}), pre({}),
+    l({ analise_id: 2, sub_analise: 'WORT', metodo: 'Superficie' }), pre({ analise_id: 2, sub_analise: 'WORT', metodo: 'Superficie' }),
+    l({ analise_id: 3, frasco: 'Stress', situacao: 'Não ok', contagem: '3, 1, 1' }), pre({ analise_id: 3, frasco: 'Stress' }),
+    l({ analise_id: 4, frasco: 'Stress', sub_analise: 'WORT', situacao: 'Pendente', contagem: null }), pre({ analise_id: 4, frasco: 'Stress', sub_analise: 'WORT' }),
+    l({ analise_id: 5, etapa: 'pre', contagem: '<1, <1, <1', situacao: 'Ok', sub_analise: 'BL', frasco: 'Normal' }),
+  ]);
+  assert.match(t, /B\.L 72h normal: — · ✅ ok \(a leitura final de 120h está ok\)/);
+  assert.match(t, /WORT superfície 120h normal: — · ✅ ok \(a leitura final de 240h está ok\)/);
+  // final não ok: a prévia continua sem leitura
+  assert.match(t, /B\.L 72h stress: — · aguardando leitura \(prevista 17\/10\/2026\)/);
+  // final ainda não lida: a prévia continua aguardando
+  assert.match(t, /WORT profundidade 120h stress: — · aguardando leitura/);
+  // prévia que foi lida mostra a contagem de verdade
+  assert.match(t, /B\.L 72h normal: <1, <1, <1 · ✅ ok/);
 });
