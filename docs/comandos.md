@@ -750,3 +750,20 @@ recebimento nfc load 44300 fab aqa lotes 10-12 fresh 10 elevado a 3, lote 10 pas
 - **O mesmo lote pode entrar nos dois tipos** (lote 10 `past` e lote 10 `fresh`). Repetir o lote e o tipo **corrige** a diluição e a data, e o bot avisa (`corrigido: era 10^1`). Duas diluições para o mesmo lote e tipo na mesma mensagem são recusadas.
 - Grava direto (como o recebimento do concentrado); Consultor não registra. O load reaproveita a tabela `loads` (item 129); os lotes ficam em `recebimento_nfc` (migration `027`), **sem misturar** com os lotes do concentrado, as compostas e os prazos de C.T/B.L.
 - **Por foto:** o formulário "Recebimento NFC" é lido pela foto do laudo (`comandos foto`): um comando por load, com o resumo "o que isso registra" antes do sim.
+
+### 17.1 Resultados de C.T e B.L do NFC (multiplicados pela diluição)
+
+O laudo também tem **C.T 48h, B.L 72h e B.L 120h** por lote, com os mesmos prazos do concentrado (+2, +3 e +5 dias do recebimento). O resultado é escrito **como saiu na placa** e o sistema **multiplica pela diluição do lote**: com `10 elevado a 1`, 14 vira **140**, 22 vira **220** e 74 vira **740** (acrescenta um zero por expoente; `10^3` acrescenta três). A diluição vem do que foi registrado no recebimento do lote.
+
+```
+ct nfc load 44300 lote 10 past deu 14
+bl72 nfc load 44300 lote 10 past deu 22, lote 11 fresh deu <10
+bl120 nfc load 44300 lotes 10-12 fresh deu 7
+```
+
+- O bot mostra a conta antes de gravar (`lote 10 · past · 10^1: 14 × 10^1 = 140`) e pede **sim**, como no concentrado. `nfc` pode ser trocado por `item 129`. O tipo (`past` ou `fresh`) é obrigatório, porque o mesmo lote pode ter os dois.
+- `<10` com 10^1 vira `<100` (o sinal fica e **nunca alarma**); vale decimal (`1,5`). **Alarme** sobre o **valor final**: C.T ≥ 200 e B.L ≥ 50, os mesmos limites do concentrado (confirmar se o NFC terá limites próprios).
+- Resultado repetido **corrige** o anterior (o bot avisa `era 90`). Se a diluição do lote for **corrigida** no recebimento, os resultados já gravados são **recalculados** a partir do número lido (`14 × 10^2 = 1400`).
+- **Consultas:** `quais ct tenho para ler hoje?`, `quais bl72 foram lidos hoje?` e `quanto está o CT do load 44300 até agora` agora incluem o NFC (`NFC load 44300 · past 10^1: 10-11`).
+- **Por foto:** quando o laudo traz os resultados e os lotes **já estão registrados**, a foto mostra uma linha por lote e tipo (`CT 14 → 140 · BL72 22 → 220 🚨`) e grava tudo com um sim (valor riscado não vale; vale a diluição do sistema e o bot avisa se o papel diz outra). Se os lotes ainda não existem, o primeiro sim registra o recebimento e o bot pede a foto de novo para os resultados.
+- Tabela `contagens_nfc` (valor lido, diluição e valor final) e views `vw_contagens_nfc` e `vw_contagens_nfc_previstas` (migration `027`). **Ainda não entram:** o relatório do dia e o painel do Power BI.

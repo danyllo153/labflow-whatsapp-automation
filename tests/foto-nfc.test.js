@@ -174,7 +174,8 @@ test('workflow: o lote entra entre o desvio e o executor de NFC e só age com ac
   const c = workflow.connections;
   assert.deepEqual(c['BD · Executar desvio'].main[0].map((x) => x.node), ['BD · Executar placas da foto']);
   assert.deepEqual(c['BD · Executar placas da foto'].main[0].map((x) => x.node), ['BD · Gravar contagens da foto']);
-  assert.deepEqual(c['BD · Gravar contagens da foto'].main[0].map((x) => x.node), ['BD · Executar NFC']);
+  assert.deepEqual(c['BD · Gravar contagens da foto'].main[0].map((x) => x.node), ['BD · Gravar contagens NFC']);
+  assert.deepEqual(c['BD · Gravar contagens NFC'].main[0].map((x) => x.node), ['BD · Executar NFC']);
   const n = workflow.nodes.find((x) => x.name === 'BD · Executar placas da foto');
   assert.match(n.parameters.query, /p\.j ->> 'acao' = 'placas_lote'/);
   assert.doesNotMatch(n.parameters.query, /desvios_tanque/, 'não abre desvio');
