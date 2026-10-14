@@ -250,3 +250,14 @@ test('NFC: o comando de correção sugerido para a célula de fora é aceito pel
     assert.equal(c.dataColeta, '30/08/2026');
   }
 });
+
+test('NFC: nenhuma placa passa de 99: 3 dígitos colados = 1+1+1 e 6 dígitos = 2+2+2; 4 e 5 dígitos não separam', () => {
+  const r = ler(LAUDO({}, [{ tanque: '1C', normal: { ct: '392', bl120: '121415', wort_prof_240: ['121415'], wort_sup_240: '1214' }, stress: { ct: '12105', bl120: ['10', '20', '30'], wort_prof_240: '102030' } }]));
+  const v = (frasco, col) => (r.nfc.itens.find((i) => i.frasco === frasco && i.col === col) || { placas: [] }).placas.map((p) => p.valor);
+  assert.deepEqual(v('Normal', 'ct'), [3, 9, 2]);
+  assert.deepEqual(v('Normal', 'bl120'), [12, 14, 15]);
+  assert.deepEqual(v('Normal', 'wort_prof_240'), [12, 14, 15], 'lista de 1 item com 6 dígitos também');
+  assert.deepEqual(v('Stress', 'bl120'), [10, 20, 30]);
+  assert.deepEqual(v('Stress', 'wort_prof_240'), [10, 20, 30]);
+  assert.deepEqual(r.nfc.excluidos.map((e) => [e.frasco, e.col, e.escrito]).sort(), [['Normal', 'wort_sup_240', '1214'], ['Stress', 'ct', '12105']]);
+});
