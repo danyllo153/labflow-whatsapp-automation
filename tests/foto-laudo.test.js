@@ -291,3 +291,30 @@ test('workflow: o "sim" com lista passa por Expandir comandos e o reenvio roda u
   const se = workflow.nodes.find((n) => n.name === 'Reenviar comando da IA?');
   assert.match(se.parameters.conditions.conditions[0].leftValue, /reenviarComandos/);
 });
+
+test('confirmação do recebimento explica em linguagem simples o que será criado, load por load', () => {
+  const solto = (ns) => ns.map((n) => ({ n, fecha: true }));
+  const d = ler(RECEBIMENTO({ blocos: [
+    { load: '43601', item: '2748', fabrica: 'COL', lotes: lotes([1, 4, false]) },
+    { load: '43602', item: '2748', fabrica: 'COL', lotes: solto([27, 28, 34, 35, 36]) },
+    { load: '43603', item: '2748', fabrica: 'COL', lotes: [{ n: 1 }, { n: 2 }, { n: 3, fecha: true }, { n: 4 }, { n: 5, fecha: true }] },
+  ] }));
+  const r = resposta(d, [{}]);
+  assert.match(r.textoResposta, /🧪 O que isso cria:/);
+  assert.match(r.textoResposta, /• load 43601: recebimento dos lotes 1-4 \(nenhuma composta: sem marca na foto\)/);
+  assert.match(r.textoResposta, /• load 43602: recebimento dos lotes 27-28,34-36 e 5 compostas:\n     1ª composta = lote 27\n     2ª composta = lote 28\n     3ª composta = lote 34/);
+  assert.match(r.textoResposta, /5ª composta = lote 36/);
+  assert.match(r.textoResposta, /• load 43603: recebimento dos lotes 1-5 e 2 compostas:\n     1ª composta = lotes 1-3\n     2ª composta = lotes 4-5/);
+  assert.match(r.textoResposta, /o número # de cada composta aparece depois que criar/);
+  // o resumo vem antes das dúvidas e o pedido de sim continua no fim
+  assert.ok(r.textoResposta.indexOf('O que isso cria') < r.textoResposta.indexOf('Confira'));
+  assert.match(r.textoResposta, /Responda \*sim\* para registrar tudo/);
+  // sem nenhuma marca em nenhum load: não promete número de composta
+  const semMarca = resposta(ler(RECEBIMENTO({ blocos: [{ load: '43601', item: '2748', fabrica: 'COL', lotes: lotes([1, 4, false]) }] })), [{}]);
+  assert.doesNotMatch(semMarca.textoResposta, /número # de cada composta/);
+});
+
+test('TAB e Coliformes não ganham o resumo do recebimento', () => {
+  const d = ler({ formulario: 'tab', blocos: [{ load: '43598', item: '2703', compostas: ['1-5'] }] });
+  assert.doesNotMatch(resposta(d, [{ kind: 'composta', idx: 0, composta_id: 41 }]).textoResposta, /O que isso cria/);
+});

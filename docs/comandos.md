@@ -709,7 +709,7 @@ Mande a **foto do laudo preenchido** no WhatsApp (Operador e Admin; Consultor n�
 
 1. O bot baixa a foto, conta 1 no limite diário de IA (tipo `foto`) e pede a leitura ao Gemini com visão (`gemini-3-flash-preview`, com reserva em `gemini-3.5-flash-lite`; cada um tenta até 3 vezes). Os modelos da foto foram escolhidos testando imagem direto no Google: `gemini-3.1-flash-lite` e `gemini-3.8-flash` davam 503 com imagem. O Groq não lê imagem: se os dois Gemini falharem, o bot avisa e pede o comando.
 2. A IA só devolve dados (formulário, load, item, fábrica, lotes, marcas). O **código valida** e monta os **comandos oficiais**.
-3. O bot responde com a lista numerada, as dúvidas ("Confira") e pede **um sim** para tudo. Nada grava antes. A pendência vale 10 minutos.
+3. O bot responde com a lista numerada, um resumo "O que isso cria" (no recebimento: os lotes de cada load e cada composta, `1ª composta = lote 27`), as dúvidas ("Confira") e pede **um sim** para tudo. Nada grava antes. A pendência vale 10 minutos.
 4. No **sim**, os comandos rodam **um por vez, na ordem**, e cada um responde com a sua mensagem de sempre.
 
 | Formulário | Comandos montados |
@@ -723,7 +723,7 @@ Regras: ponto, barra ou traço depois do número do lote fecha a composta, e o �
 **Laudo de NFC (resultados das placas dos tanques).** A foto do "Laudo de Análises Microbiológica de NFC" traz uma linha por tanque, com as colunas C.T 48h, B.L profundidade 120h e psicrotróficos (WORT) profundidade e superfície 240h, no bloco Normal e no bloco Stress, e cada célula tem as 3 placas. O bot lê tudo e mostra **uma linha por tanque e frasco**, com 🚨 nas leituras acima do limite, o resumo (`16 leituras (48 placas): 15 ok · 1 🚨 não ok`) e pede **um só sim**, que grava todas as placas e marca as leituras como feitas.
 
 - A coleta vem da coluna Coleta do papel (`30.08.26`). O bot acha, para cada tanque, frasco e análise, a leitura já registrada dessa coleta; o que não tiver análise registrada fica de fora, com aviso.
-- **Placas coladas:** `<1<1<1`, `954` e `11<1` têm exatamente 3 valores e são aceitos. Quando não dá para separar (`12105`, `>300` colado), a célula fica de fora e o bot avisa o que leu, para você mandar o comando.
+- **Placas coladas:** nenhuma placa passa de 99, então 3 dígitos viram 1+1+1 (`392` = 3, 9, 2) e 6 dígitos viram 2+2+2 (`121415` = 12, 14, 15); `<1<1<1` e `11<1` também valem. Quando não dá para separar (4 ou 5 dígitos como `12105`, `>300` colado), a célula fica de fora e o bot avisa o que leu e mostra o **comando pronto para corrigir** (`ct do tanque 6P navio O.STAR 112 stress V1,V2,V3 coleta 30/08/2026`: troque V1,V2,V3 pelas 3 placas, na ordem do papel).
 - Tanque de navio precisa da letra C, P ou S; sem ela, o tanque fica de fora. A coluna B.L superfície não existe no sistema e é ignorada. Repetição (frasco de arquivo) continua só por comando.
 - **Nunca abre desvio sozinho.** Depois do sim, a mensagem lista os não ok, cada um com o comando pronto (`bl120 do tanque 2P navio O.STAR 112 normal 80,1,1 coleta 30/08/2026`). Mandar esse comando cai no fluxo de placas de sempre, que pergunta se abre o desvio.
 - Leitura que já tinha placas é substituída (o bot avisa antes do sim).

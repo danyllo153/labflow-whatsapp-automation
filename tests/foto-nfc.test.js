@@ -147,7 +147,10 @@ test('NFC: tanque sem análise registrada e célula ilegível ficam de fora com 
   const r = resposta(d, linhas);
   assert.equal(r.salvar, '1');
   assert.match(r.textoResposta, /tanque 3S normal: não achei análise para ler \(CT, BL120, WP240, WS240\); fica de fora/);
-  assert.match(r.textoResposta, /tanque 2P normal CT: não separei as 3 placas \("12105"\); fica de fora, mande o comando/);
+  assert.match(r.textoResposta, /tanque 2P normal CT \("12105"\): não separei as 3 placas; fica de fora\. Depois do sim, mande: ct do tanque 2P navio O\.STAR 112 normal V1,V2,V3 coleta 30\/08\/2026/);
+  assert.match(r.textoResposta, /troque V1,V2,V3 pelas 3 placas, na ordem do papel \(0 ou <1 = sem colônia\)/);
+  assert.match(r.resumo, /Ficaram de fora \(troque V1,V2,V3/);
+  assert.match(r.resumo, /mande ct do tanque 2P navio O\.STAR 112 normal V1,V2,V3 coleta 30\/08\/2026/);
   assert.match(r.resumo, /Ficaram de fora/);
   assert.equal(JSON.parse(r.payload).itens.length, 7, 'as 3 leituras boas do 2P normal e as 4 do 2P stress');
   const nada = resposta(d, [{}]);
@@ -218,4 +221,43 @@ test('workflow: a busca usa a data da coleta do papel quando ela foi lida', () =
   const q = workflow.nodes.find((x) => x.name === 'BD · Compostas da foto').parameters.query;
   assert.match(q, /c\.data_coleta = to_date\(b\.coleta, 'DD\/MM\/YYYY'\)/);
   assert.match(q, /<= CURRENT_DATE/, 'sem a data, só leituras já na hora de ler');
+});
+
+test('NFC: célula devolvida como lista de 1 item ("392") vale como texto corrido; 12105 continua de fora', () => {
+  const r = ler(LAUDO({}, [{ tanque: '2S', normal: celulas(), stress: celulas({ ct: ['392'], bl120: ['954'], wort_prof_240: ['12', '105'], wort_sup_240: ['<1', '1'] }) }]));
+  const pega = (col) => r.nfc.itens.find((i) => i.frasco === 'Stress' && i.col === col);
+  assert.deepEqual(pega('ct').placas.map((p) => p.valor), [3, 9, 2]);
+  assert.deepEqual(pega('bl120').placas.map((p) => p.valor), [9, 5, 4]);
+  assert.equal(pega('wort_prof_240'), undefined, '12 e 105 juntos dão 12105: não dá para separar');
+  assert.equal(pega('wort_sup_240'), undefined, 'só 2 placas');
+  assert.deepEqual(r.nfc.excluidos.map((e) => e.col), ['wort_prof_240', 'wort_sup_240']);
+  assert.equal(r.nfc.excluidos[0].cmd, 'wort profundidade 240h');
+  assert.equal(r.nfc.excluidos[0].navio, 'O.STAR 112');
+});
+
+test('NFC: o comando de correção sugerido para a célula de fora é aceito pelo bot com 3 valores', () => {
+  const d = ler(LAUDO({}, [{ tanque: '6P', normal: celulas(), stress: celulas({ ct: '12105', wort_sup_240: '1,2' }) }]));
+  const r = resposta(d, d.nfc.itens.map((it) => linhaBanco(it)));
+  const modelos = [...r.textoResposta.matchAll(/mande: (.+ V1,V2,V3.*)/g)].map((m) => m[1]);
+  assert.equal(modelos.length, 2);
+  for (const m of modelos) {
+    const cmd = m.replace('V1,V2,V3', '1,2,105');
+    const c = interpretar(cmd);
+    assert.equal(c.tipo, 'placas_nfc', cmd);
+    assert.equal(c.tanque, '6P');
+    assert.equal(c.navio, 'O.STAR 112');
+    assert.equal(c.frasco, 'Stress');
+    assert.equal(c.dataColeta, '30/08/2026');
+  }
+});
+
+test('NFC: nenhuma placa passa de 99: 3 dígitos colados = 1+1+1 e 6 dígitos = 2+2+2; 4 e 5 dígitos não separam', () => {
+  const r = ler(LAUDO({}, [{ tanque: '1C', normal: { ct: '392', bl120: '121415', wort_prof_240: ['121415'], wort_sup_240: '1214' }, stress: { ct: '12105', bl120: ['10', '20', '30'], wort_prof_240: '102030' } }]));
+  const v = (frasco, col) => (r.nfc.itens.find((i) => i.frasco === frasco && i.col === col) || { placas: [] }).placas.map((p) => p.valor);
+  assert.deepEqual(v('Normal', 'ct'), [3, 9, 2]);
+  assert.deepEqual(v('Normal', 'bl120'), [12, 14, 15]);
+  assert.deepEqual(v('Normal', 'wort_prof_240'), [12, 14, 15], 'lista de 1 item com 6 dígitos também');
+  assert.deepEqual(v('Stress', 'bl120'), [10, 20, 30]);
+  assert.deepEqual(v('Stress', 'wort_prof_240'), [10, 20, 30]);
+  assert.deepEqual(r.nfc.excluidos.map((e) => [e.frasco, e.col, e.escrito]).sort(), [['Normal', 'wort_sup_240', '1214'], ['Stress', 'ct', '12105']]);
 });
