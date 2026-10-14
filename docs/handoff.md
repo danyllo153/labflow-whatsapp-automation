@@ -2,48 +2,69 @@
 
 Documento para retomar o projeto em outro computador ou numa conversa nova do Claude Code. Leia inteiro antes de propor qualquer coisa. O que está em **decidido** já foi combinado com o Danyllo; o que está em **a definir** precisa ser perguntado antes de implementar. Em caso de dúvida, o repositório (README, [`CHANGELOG.md`](CHANGELOG.md), `CLAUDE.md`) é a fonte da verdade. O "próximo" detalhado mora no `backlog` do Obsidian; o histórico com datas, no `decisoes-log`.
 
-Última atualização: 14/10/2026 (especificações da Fase 1 do LIMS em `v0.2`; v1.2.0 lançada e comando por áudio na `main`).
+Última atualização: 14/10/2026, fim do dia (foto de laudo, consultas e fábricas travadas no ar; PRs #41 a #53).
 
 ## 0. Onde paramos (leia primeiro)
 
-**09/10/2026 (noite):** **v1.2.0 lançada** (PR #36, tag e release: NFC placa a placa, desvio de tanque, ok / não ok no
-relatório, páginas Análise TT e T.N, Bug 29). Depois da tag, no **PR #37** (`feat/voz`, mergeado; ele
-incluiu o ajuste da navegação do painel):
-- painel: navegação com 10 páginas e página **Desvios geral** (drop e tanque, migration **019** aplicada no servidor);
-- **comando por áudio**: o Gemini transcreve, o bot responde "🎤 Ouvi" e o texto vai direto para a IA, que sempre pede "sim";
-  áudio de até 2 s só vale "sim" ou "não"; "sim, sim" falado vale; vocabulário do laboratório na transcrição
-  (`docs/comandos.md` seção 16, `tests/voz.test.js`). Testado pelo WhatsApp (coleta, análise, placas, sim e não falados).
-- IA: placas sem data de coleta inventada; regressão do prompt com 52 frases (`LabFlow_importar_n8n_teste_ia.json`).
+**14/10/2026, fim do dia.** O piloto de 1 mês segue no ar desde 13/10 (5 Operadores + Admin, dados do mês de teste, autorizado pelo gestor). Tudo o que está abaixo está na `main` (último PR: **#53**) **e publicado no n8n**.
 
-**14/10/2026 (tarde): IA resiliente NO AR.** PRs #41 e #42 mesclados; credencial `Groq API` (Header Auth, ID `Kn81hwp56vJdhUfy`) criada; migration `020_uso_ia` aplicada; workflow de 209 nodes (`MJMm3QnbqFrCafsz`, renomeado "LabFlow (Postgres) 14/10") **ativo desde 10:10**, o antigo (`hTFpwaaHX0l6LZQp`, 194 nodes) desativado como plano B. Testado ao vivo com o Admin: frase solta pelo Gemini em 1,6 s (`provedor: gemini`), ditado de C.T tratado, contador de IA = 1. **Ainda não provado ao vivo:** a reserva do Groq (só roda se o Gemini falhar) e o áudio. A cópia importada **não traz o alerta de erro**: o arquivo de importação novo já vem com `errorWorkflow` (`CNMWXppKMjl3EAXc`); em importação manual, religar em Settings → Error workflow.
+### O que está no ar agora
+- **Workflow ativo:** `MJMm3QnbqFrCafsz` ("LabFlow (Postgres)"), **235 nodes**, publicado em 14/10 às 15:41 (idêntico ao `LabFlow.json` da `main`). Os outros workflows chamados "LabFlow" no n8n são cópias antigas, **inativas** (plano B: `hTFpwaaHX0l6LZQp`, 194 nodes). O alerta de erro é o `CNMWXppKMjl3EAXc`.
+- **Backups do workflow antes de cada publicação:** `~/labflow/backups-n8n/` no servidor e `C:\Dev\backups-labflow\LabFlow-MJMm3QnbqFrCafsz-pre48…pre53-20261014.json` (é o rollback: importar o arquivo e publicar).
+- **Banco:** migrations `001` a `020` aplicadas. A `020_uso_ia` é o limite diário de IA (100 por pessoa, 500 no total). **Nenhuma migration nova hoje.**
+- **IA:** texto livre Gemini 3.1 Flash-Lite → Groq (`openai/gpt-oss-120b`) → Gemini 3.8; áudio Gemini → Whisper do Groq; **foto** `gemini-3-flash-preview` (principal) e `gemini-3.5-flash-lite` (reserva), 3 tentativas em cada. **Motivo da escolha:** teste direto no Google mostrou que `gemini-3.1-flash-lite` dá 503 com qualquer imagem e `gemini-3.8-flash` dá 503 até com texto; 3.5-flash, 3.6, 3.7 e `flash-latest` também deram 503 com imagem; os modelos 2.5 não existem para a chave. O Google oscila (plano gratuito): se der 503, esperar e repetir.
 
-**Branch `feat/ajuda-completa`:** o menu `comandos` só tinha temas de tanques; agora lista NFC, Concentrado e Geral, e cada assunto abre. 307 testes. Para entrar no ar: PR, merge e **importar de novo `LabFlow_importar_n8n_ia.json`** (cópia; já com credenciais e alerta de erro), desativar o ativo e publicar o novo.
+### O que foi feito hoje (PRs #41 a #53)
+- **IA resiliente** (#41, #42): tempo máximo, reservas, limite diário, atalho de áudio sem IA. **Ajuda completa** (#43): `comandos` lista NFC, Concentrado e Geral. **Fala com vírgula e milhar** (#44).
+- **Fábricas travadas** (#45): só AQA, CON, COL, UCH, ITA, TMG (nome da cidade vira sigla; letra torta só se a candidata for única; outra é recusada). **Navios** `Orange Sky` = `O.SKY`; **tanques** `1 center` = `1C`, `2 port` = `2P`, `3 starboard` = `3S`, **`2PS` = `2P, 2S`** (os dois lados).
+- **Consultas novas** (#46): `quem coletou o tanque 41 do dia 14/10/2026`, `quem coletou os tanques do navio O.SKY 123`, `quanto está o CT do load 44444 até agora`, `resultado do tanque 41 do dia ...`, `desvios do tanque 41 do dia ...` (`comandos consultas`; seção 16.4 do `comandos.md`).
+- **Leitura de laudo por foto** (#47 a #53; spec em `docs/specs/foto-laudo.md`, seção 16.5 do `comandos.md`, ajuda `comandos foto`): recebimento + compostas; TAB e Coliformes de caldo (**um comando só** com todas as compostas, uma mensagem de resposta); laudo de **NFC** (placas dos tanques, normal e stress, **um sim**, **nunca abre desvio sozinho**: lista os não ok com o comando pronto); laudo de **embarque** (registro por linha do papel) e **resultados de C.T/B.L por amostra** (valor riscado não vale; só grava se o embarque já existe). O "sim" agora executa uma **lista** de comandos em ordem (`Expandir comandos`, reenvio um por vez). Placas coladas: 3 dígitos = 1+1+1, 6 dígitos = 2+2+2 (nenhuma placa passa de 99); 4 e 5 dígitos ficam de fora com o comando para corrigir (`V1,V2,V3`). **Ainda não lê:** C.T/B.L do recebimento por lote, o "+" da confirmação (legenda com a palavra `confirmação`) e TAB/Coliformes de embarque (navio, linha, fase).
+- **Resultado do tanque** (#51): a leitura prévia sem lançamento (B.L 72h, WORT 120h) conta como ok quando a final já saiu ok.
+- **Teste ao vivo das fotos:** NFC do O.Star 112 (79 leituras gravadas com um sim), recebimento (2 loads, 4 compostas), embarque (3 linhas) e TAB (17 compostas) funcionaram.
 
-**14/10/2026 (IA resiliente, branch `feat/ia-resiliente`, pronta, 271 testes; falta push, PR, merge e importar no n8n):** no piloto o Gemini respondeu `503` em ~1 de cada 7 chamadas (23:50 a 23:59 de 13/10, até 5 min por chamada); "A IA está indisponível" e áudio lento. O painel do AI Studio confirma: plano **gratuito**, 215 solicitações em 13/10 com 73,95 % de sucesso (todas as falhas `503`; o `429` de limite aconteceu antes, perto de 1/10, nos testes em rajada). O que mudou (detalhes em `docs/arquitetura.md`, "IA resiliente"): Gemini com tempo máximo de 20 a 30 s e **sem repetir sozinho**, reserva **Groq** (gpt-oss-120b no texto, Whisper no áudio) e **Gemini 3.8 Flash** (último recurso no texto); resposta padronizada pelo node `IA · Normalizar`; **limite diário de IA** (100 por pessoa, 500 no total, migration `020_uso_ia.sql`); **pré-tratamento da fala** (`menor que 10` → `<10`, `lotes 11 a 16`, números por extenso, `Lod 43 699`, ordem item/fábrica, ditado de C.T); **atalho de áudio** (fala que já é comando completo não chama IA).
-- **Para entrar no ar (fora do expediente, pelo notebook):** (1) criar a conta gratuita no Groq e a chave; (2) no n8n, **Credentials → Header Auth**, nome exato `Groq API`, header `Authorization`, valor `Bearer <chave>`; (3) aplicar a migration (`cmd /c "type db\migrations\020_uso_ia.sql | ssh -o ClearAllForwardings=yes labflow docker exec -i labflow-postgres psql -U labflow_app -d labflow -v ON_ERROR_STOP=1"`, depois do backup); (4) importar `LabFlow_importar_n8n_ia.json` **como cópia** (209 nodes; fica no PC desktop e no OneDrive, fora do Git); nos 2 nodes `IA · Groq texto` e `IA · Groq Whisper`, escolher a credencial `Groq API`; (5) conferir os nomes dos modelos (`openai/gpt-oss-120b`, `whisper-large-v3-turbo`, `gemini-3.8-flash`): erro 404 indica nome errado; (6) trocar o ativo; (7) testar: `comandos`, um áudio de C.T, um áudio de recebimento e uma frase solta que vá para a IA. Sem a chave do Groq o bot funciona igual (a reserva só falha e segue).
-- **As migrations da Fase 1 do LIMS passaram para 021 a 026** (a `020` agora é `uso_ia`).
-- **Próximo, já combinado:** leitura de laudo por **foto** (recebimento com as compostas marcadas por barra ou ponto entre os lotes; resultados de C.T/B.L por lote, ignorando o riscado; embarque sem composta automática, que só se cria no fim do carregamento do load), em cima desta cadeia de IA. Os exemplos de laudo ficam só na conversa do Danyllo (têm o logotipo da empresa; **nunca no repositório**).
-**13/10/2026 (especificações da Fase 1, branch `docs/specs-lims-fase1`):** os documentos 02 (audit trail), 03 (especificações), 04 (revisão e liberação) e 05 (banco e migrations) de [`specs/lims/`](specs/lims/index.md) foram reescritos em **`v0.2`**, a partir de um estudo de LIMS (QBench, LabWare, SENAITE e normas ISO 17025 / 21 CFR Part 11), só com material público. **Decidido:** (a) revisão **só para resultado ruim**: resultado `ok` é liberado automaticamente; `nao_ok` e `sem_especificacao` ficam pendentes e só **outra pessoa** libera ou recusa (revisar e liberar são um passo só); (b) corrigir um resultado = **invalidar** o antigo (motivo obrigatório) e criar outro ligado a ele, nunca sobrescrever; (c) a tabela `especificacoes` **unifica** `limites_nfc`, `limites_howard` e os limites ainda fixos no código (C.T/B.L, TAB/Coliformes). As migrations da Fase 1 são **`020` a `025`** (016 a 019 já existem). **Em aberto (travam a v1.0):** o que é "cliente" numa especificação e se os limites variam por item/cliente; limites oficiais do que ainda falta; cargo `Revisor` novo ou Admin/Operador (recomendado: sem cargo novo); prazo e alerta de resultado ruim parado; `sem_especificacao` vai para revisão (recomendado: sim); retenção da auditoria; `dbmate` antes da `020`. O comando de correção de C.T/B.L por repetição, hoje sobrescreve: muda com a invalidação.
-**Próximo:**
-1. Danyllo: importar o `LabFlow_importar_n8n.json` mais recente (como cópia) e repetir um áudio de placas + "sim, sim".
-2. Rodar a regressão das 52 frases no n8n e conferir o placar.
-3. Lançar a **v1.3.0** (voz + Desvios geral; o código já está na `main`, falta só CHANGELOG, tag e release).
-4. Prints, GIF e carrossel do painel no modo claro (10 páginas).
-5. Fase 1 do LIMS: responder as perguntas em aberto dos documentos 03 e 04 (acima), levar cada documento a `v1.0` e só então gerar as tarefas `LIMS-001`... (regras do `guia-pratico.md`). Começa pela `021` (audit trail).
+### Como publicar uma mudança no n8n (pelo servidor, sem abrir a tela do n8n)
+Só com o pedido do Danyllo ("aplique" / "mescle e publique"): o n8n fica fora do ar por alguns segundos no reinício.
+1. PR com testes e auditoria verdes; mesclar (`gh pr merge <n> --squash --delete-branch`); `git pull` na `main`.
+2. Gerar o arquivo de importação com os IDs reais: `node C:\Dev\estudos\patch\gerar-importacao.js` e gravar o resultado em `LabFlow_importar_n8n_ia.json`; conferir que `scripts/sanitize-workflow.ps1` devolve o `LabFlow.json` idêntico. Para publicar, trocar `id` por `MJMm3QnbqFrCafsz` e `name` por `LabFlow (Postgres)` (assim o import **sobrescreve** em vez de criar cópia).
+3. No servidor: `docker exec labflow-n8n n8n export:workflow --id=MJMm3QnbqFrCafsz --output=/tmp/bk.json` (backup) → `docker cp` para `~/labflow/backups-n8n/` → copiar o arquivo novo → `n8n import:workflow --input=...` → `n8n publish:workflow --id=MJMm3QnbqFrCafsz` → `docker restart labflow-n8n` → esperar `http://127.0.0.1:5679/healthz`.
+4. Conferir no banco do n8n (cópia do sqlite, só leitura): workflow ativo, nº de nodes, webhook `labflow-registro` registrado uma vez. Testar com mensagens pelo webhook (script `teste-pos-import.sh`).
+Os scripts prontos estão em `C:\Dev\estudos\ia\` (`n8n-publicar*.sh`, `n8n-verifica.sh`, `teste-pos-import.sh`) e na cópia `Valts\estudos-labflow\` do OneDrive. Os construtores de patch (`construir*.js` + `aplicar-patch.ps1`) editam o `LabFlow.json` preservando o formato do repositório.
+
+### Dados de teste no banco e a regra de limpeza (NADA foi apagado ainda, exceto 17 TABs de teste)
+**Regra do Danyllo:** manter só o que ele cadastrou com data **depois de 08/10/2026**; apagar o resto (teste). Prévia feita em 14/10 (só leitura):
+- **Apagar (teste):** navio `O.STAR 112` (10 coletas, 80 análises, 240 placas); loads **43601** e **43602** (recebimento 03/09, compostas #14 a #17); loads **43598** e **43370** (recebimento 21/09, compostas #18 a #34); embarques dos loads **43339, 43340, 43411** (linha 4 fase 1 e 2, linha 7 fase 2 do O.STAR 112) e o que foi gravado neles. Apagar o navio/coletas/loads leva junto (cascata) drops, análises, placas, compostas e testes.
+- **Manter (do Danyllo, depois de 08/10):** navios `O.SKY 189` e `ORANGE SKY 189` (duplicado de nome: nasceu antes da normalização; unificar ou apagar o duplicado), loads **43668, 43699, 43701**, 11 TABs de 13/10, 8 contagens de C.T/B.L e 20 amostras de embarque.
+- **Voltar os limites do NFC:** movi `limites_nfc.vigente_de` de `2026-10-13` para `2026-01-01` (só para testar a foto de agosto). Ao terminar os testes: `UPDATE limites_nfc SET vigente_de = DATE '2026-10-13' WHERE vigente_de = DATE '2026-01-01' AND vigente_ate IS NULL;`. Os valores nunca vão para o repositório.
+- Apagar só com o Danyllo pedindo, com a lista exata na mão e dentro de transação com trava de contagem (como feito com os 17 TABs).
+
+### O que falta / próximos passos
+1. **Testes ao vivo pendentes:** foto de TAB de novo (esperado: uma mensagem só); foto de embarque **com resultados** (só grava se o embarque já existe; valor riscado não vale); foto de NFC com uma placa acima do limite (ver o 🚨 e o comando de desvio).
+2. **Dúvida aberta do Danyllo para a leitura de resultados:** nas fotos de embarque há risco diagonal nas colunas de C.T/B.L. Ele respondeu que **riscado não vale** (tudo riscado = nada a ler). Ajustar o prompt com as primeiras fotos reais.
+3. **Fase seguinte da foto:** C.T/B.L do recebimento por lote (precisa de uma foto de recebimento preenchida com resultados), o "+" da confirmação com a palavra `confirmação` na legenda, TAB/Coliformes de embarque.
+4. **Regressão do prompt de texto** (`scripts/gerar-teste-prompt-ia.js`, 52 frases → importar `LabFlow_importar_n8n_teste_ia.json` como workflow de teste): o prompt da IA mudou (fábricas, navios, tanques, consultas) e ainda não foi rodada.
+5. **Limpeza dos dados de teste** (regra acima) e voltar os limites.
+6. **Housekeeping:** apagar branches locais antigas já mescladas (`git branch --merged main`); a branch `docs/handoff-piloto` não foi enviada (este handoff a substitui); fim do piloto: `C:\Dev\estudos\fim-do-piloto.sh` só com a confirmação dele; cópia semanal do backup para `C:\Dev\backups-labflow`; guardar a mensagem escrita do gestor.
+7. **Lançar a v1.3.0** (voz, desvios geral, IA resiliente, fotos, consultas): CHANGELOG, tag e release (só quando ele pedir).
+8. **Fase 1 do LIMS** (specs v0.2; migrations passaram a 021 a 026) e plano pago do Gemini com teto de gasto para uso definitivo (privacidade e disponibilidade).
+
+### Cuidados
+- Nada de foto de laudo no repositório (têm o logotipo da empresa); os testes usam respostas simuladas da IA.
+- Nunca escrever telefones, chaves ou valores de limites reais em notas ou no repositório. A chave do Gemini só existe criptografada no n8n; para testar o Google direto, usar `C:\Dev\estudos\testar-gemini-foto*.ps1` (pergunta a chave e não grava).
+- O console do PowerShell do Claude bloqueia texto com `rm`; para limpar arquivos temporários no servidor usar `find ... -delete`.
 
 ## 1. Quem sou e como gosto de trabalhar
 
 - Danyllo Gomes, biomédico (microbiologia / controle de qualidade de suco) e estudante de Ciência da Computação. O LabFlow é projeto de portfólio para transição de carreira (dados, automação, bioinformática).
 - Explicações passo a passo, em comandos pequenos, um de cada vez. Sem experiência prévia em PostgreSQL, Power BI e n8n avançado; no n8n, um node por vez.
-- O Claude pode commitar localmente; **push, PR, merge e tag são do Danyllo**, pelo PowerShell (branch por mudança, Conventional Commits em português). Nunca editar pelo site do GitHub. Sem trailer `Co-Authored-By` nem rodapé de ferramenta.
+- O Claude commita, faz push e abre o PR; **mescla, taguea e publica no n8n só quando o Danyllo pede** ("mescle", "aplique"), a cada vez. Branch por mudança, Conventional Commits em português, **sem** trailer `Co-Authored-By` nem rodapé de ferramenta. Nunca editar pelo site do GitHub.
 - Enquanto iteramos em nodes: só o código/prompt do node como texto. `LabFlow.json` completo e JSON de importação só quando ele pedir. Mudança grande no workflow: o Claude monta o JSON de importação por script, ele importa **como cópia**, troca o ativo e testa pelo WhatsApp; o arquivo anterior é o rollback.
 - Dicas práticas de mercado e portfólio no meio da ajuda técnica. Respostas em português.
 - Dados sempre fictícios (LGPD). Nada real da empresa no repositório, nos testes ou na documentação.
 - Termos: não usar "reanálise" (D5/D10/D15 são "drops"); **TAB e Coliformes são masculinos** nos textos ao usuário ("o TAB está Incubado"); no banco os status continuam `Incubada`, `Estriada`, `Concluída`.
 
-## 2. Estado atual (07/10/2026)
+## 2. Estado atual (base de 07/10/2026; números atualizados em 14/10)
 
-**Versão publicada:** `v1.1.0` (04/10/2026). **Na `main`, ainda não lançado:** IA para todos os comandos, `leitura do dia finalizada`, desvio de drop, alerta de erro e painel do Power BI → `v1.2.0`.
+**Versão publicada:** `v1.2.0` (09/10/2026). **Na `main`, ainda não lançado (`v1.3.0`):** comando por áudio, painel Desvios geral, IA resiliente (Groq + limite diário), ajuda completa, fábricas travadas, consultas de quem coletou e de resultados, leitura de laudo por foto.
 
 **Repositório:** `github.com/danyllo153/labflow-whatsapp-automation` (público), clone em `C:\Dev\labflow-whatsapp-automation`. Notas no Obsidian (vault `PROJETO- LABFLOW`). Cópia no OneDrive: `Valts\labflow-whatsapp-automation` (o `C:\Dev\sync-valts.bat` copia para lá).
 
@@ -51,9 +72,9 @@ incluiu o ajuste da navegação do painel):
 
 **Stack** (VPS Linux, `~/labflow`, Docker, sem porta pública, acesso só por túnel SSH): WhatsApp Business (eSIM dedicado) → Evolution API 2.3.7 (`labflow2`) → n8n 2.38.6 → PostgreSQL (banco `labflow`, separado do banco da Evolution) → resposta no WhatsApp. IA: Gemini (`models/gemini-3.1-flash-lite`) só como fallback da regex.
 
-**Em números:** 177 nodes no `LabFlow.json` (35 terminam em `Respond to Webhook`) · 49 consultas parametrizadas (nodes de Postgres) · 15 migrations, 19 tabelas e 12 views · 208 testes (`npm test`) · 33 bugs documentados em [`troubleshooting.md`](troubleshooting.md).
+**Em números:** 235 nodes no `LabFlow.json` · 20 migrations · 406 testes (`npm test`) · auditoria do workflow com 0 erros · GitHub Actions (auditoria + testes) verdes · PRs até o #53.
 
-**No servidor:** migrations `001` a `019` aplicadas (016 em 07/10; 017 a 019 em 09/10; limites de NFC e Howard de exemplo e placas de demonstração); dados de demonstração carregados (`db/seeds/demo.sql`, reaplicados em 06/10); backup diário às 3h, 14 dias, em `~/labflow/backups` (`./backup-db.sh`). DBeaver: conexões `LabFlow (leitura)` e `LabFlow (app)` (tipo Production).
+**No servidor:** migrations `001` a `020` aplicadas; backup diário às 3h (14 dias) em `~/labflow/backups`, e backups do workflow do n8n em `~/labflow/backups-n8n`; aviso de queda no healthchecks.io (`~/labflow/heartbeat.sh`, cron a cada 5 min). O banco tem **dados reais do mês de teste do piloto** (a apagar no fim) misturados com dados de teste do desenvolvimento (ver seção 0). Limites do NFC e do Howard: os do laboratório, só no banco.
 
 **Arquivos de workflow (na pasta do projeto):**
 - `LabFlow.json` e `LabFlow_Alerta_Erro.json`: versões **públicas**, sem IDs reais (vão para o Git).
