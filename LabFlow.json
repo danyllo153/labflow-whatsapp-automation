@@ -6434,7 +6434,7 @@
                   {
                       "parameters":  {
                                          "method":  "POST",
-                                         "url":  "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent",
+                                         "url":  "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent",
                                          "authentication":  "predefinedCredentialType",
                                          "nodeCredentialType":  "googlePalmApi",
                                          "sendBody":  true,
@@ -6452,38 +6452,6 @@
                                    ],
                       "id":  "5b438a7f-cf46-44b2-b2cf-d1f9a4ac9b7d",
                       "name":  "IA · Gemini foto",
-                      "onError":  "continueErrorOutput",
-                      "credentials":  {
-                                          "googlePalmApi":  {
-                                                                "id":  "GEMINI_CREDENTIAL_ID",
-                                                                "name":  "Gemini (LabFlow)"
-                                                            }
-                                      },
-                      "retryOnFail":  true,
-                      "maxTries":  3,
-                      "waitBetweenTries":  4000
-                  },
-                  {
-                      "parameters":  {
-                                         "method":  "POST",
-                                         "url":  "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-lite:generateContent",
-                                         "authentication":  "predefinedCredentialType",
-                                         "nodeCredentialType":  "googlePalmApi",
-                                         "sendBody":  true,
-                                         "specifyBody":  "json",
-                                         "jsonBody":  "={{ $(\u0027Foto · Montar pedido\u0027).first().json.pedido }}",
-                                         "options":  {
-                                                         "timeout":  45000
-                                                     }
-                                     },
-                      "type":  "n8n-nodes-base.httpRequest",
-                      "typeVersion":  4.5,
-                      "position":  [
-                                       15664,
-                                       29400
-                                   ],
-                      "id":  "ba5e1cff-2888-41eb-ae64-17d09550d50c",
-                      "name":  "IA · Gemini 3.1 foto",
                       "onError":  "continueErrorOutput",
                       "credentials":  {
                                           "googlePalmApi":  {
@@ -6680,6 +6648,38 @@
                                                        }
                                       },
                       "executeOnce":  true
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash-lite:generateContent",
+                                         "authentication":  "predefinedCredentialType",
+                                         "nodeCredentialType":  "googlePalmApi",
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={{ $(\u0027Foto · Montar pedido\u0027).first().json.pedido }}",
+                                         "options":  {
+                                                         "timeout":  45000
+                                                     }
+                                     },
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.5,
+                      "position":  [
+                                       15664,
+                                       29400
+                                   ],
+                      "id":  "93c3221e-c1ec-4b1d-aabb-92c3ee615a5d",
+                      "name":  "IA · Gemini reserva foto",
+                      "onError":  "continueErrorOutput",
+                      "credentials":  {
+                                          "googlePalmApi":  {
+                                                                "id":  "GEMINI_CREDENTIAL_ID",
+                                                                "name":  "Gemini (LabFlow)"
+                                                            }
+                                      },
+                      "retryOnFail":  true,
+                      "maxTries":  3,
+                      "waitBetweenTries":  4000
                   }
               ],
     "pinData":  {
@@ -8992,42 +8992,6 @@
                                                                   ]
                                                               ]
                                                  },
-                        "IA · Gemini foto":  {
-                                                 "main":  [
-                                                              [
-                                                                  {
-                                                                      "node":  "IA · Normalizar foto",
-                                                                      "type":  "main",
-                                                                      "index":  0
-                                                                  }
-                                                              ],
-                                                              [
-                                                                  {
-                                                                      "node":  "IA · Gemini 3.1 foto",
-                                                                      "type":  "main",
-                                                                      "index":  0
-                                                                  }
-                                                              ]
-                                                          ]
-                                             },
-                        "IA · Gemini 3.1 foto":  {
-                                                     "main":  [
-                                                                  [
-                                                                      {
-                                                                          "node":  "IA · Normalizar foto",
-                                                                          "type":  "main",
-                                                                          "index":  0
-                                                                      }
-                                                                  ],
-                                                                  [
-                                                                      {
-                                                                          "node":  "IA · Normalizar foto",
-                                                                          "type":  "main",
-                                                                          "index":  0
-                                                                      }
-                                                                  ]
-                                                              ]
-                                                 },
                         "IA · Normalizar foto":  {
                                                      "main":  [
                                                                   [
@@ -9115,7 +9079,43 @@
                                                                               }
                                                                           ]
                                                                       ]
-                                                         }
+                                                         },
+                        "IA · Gemini foto":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "IA · Normalizar foto",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ],
+                                                              [
+                                                                  {
+                                                                      "node":  "IA · Gemini reserva foto",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "IA · Gemini reserva foto":  {
+                                                         "main":  [
+                                                                      [
+                                                                          {
+                                                                              "node":  "IA · Normalizar foto",
+                                                                              "type":  "main",
+                                                                              "index":  0
+                                                                          }
+                                                                      ],
+                                                                      [
+                                                                          {
+                                                                              "node":  "IA · Normalizar foto",
+                                                                              "type":  "main",
+                                                                              "index":  0
+                                                                          }
+                                                                      ]
+                                                                  ]
+                                                     }
                     },
     "active":  true,
     "settings":  {
