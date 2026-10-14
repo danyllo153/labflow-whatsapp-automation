@@ -192,7 +192,7 @@ test('confirmação: TAB mostra o #N da composta achada; a que não existe fica 
   // as compostas achadas viram UM comando só (uma mensagem só), e o #N de cada uma aparece por load
   assert.match(r.textoResposta, /1️⃣ Tab feito das compostas #41, #42\n/);
   assert.doesNotMatch(r.textoResposta, /2️⃣/);
-  assert.match(r.textoResposta, /TAB no caldo, as 2 compostas juntas, numa mensagem só:\n• load 43598 \(item 2703\): #41 \(1-5\) · #42 \(6-10\)/);
+  assert.match(r.textoResposta, /TAB no caldo, as 2 compostas juntas:\n• load 43598 \(item 2703\): #41 \(1-5\) · #42 \(6-10\)/);
   assert.match(r.textoResposta, /load 43598 lotes 11-12: não achei essa composta \(ficou de fora\)/);
   assert.deepEqual(JSON.parse(r.payload).comandos, ['Tab feito das compostas #41, #42']);
 });
