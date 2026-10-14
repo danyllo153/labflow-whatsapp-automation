@@ -271,6 +271,11 @@ test('workflow: a foto vai do roteador até o WhatsApp, com reserva de modelo e 
   const por = (n) => workflow.nodes.find((x) => x.name === n);
   assert.equal(por('IA · Gemini foto').onError, 'continueErrorOutput');
   assert.equal(por('IA · Gemini 3.1 foto').onError, 'continueErrorOutput');
+  // o Google devolve 503 (alta demanda) de vez em quando: cada modelo tenta 3 vezes antes de passar para a reserva
+  for (const n of ['IA · Gemini foto', 'IA · Gemini 3.1 foto']) {
+    assert.equal(por(n).retryOnFail, true, n);
+    assert.equal(por(n).maxTries, 3, n);
+  }
   assert.match(por('IA · Gemini foto').parameters.url, /gemini-3\.8-flash/);
   assert.match(por('IA · Gemini 3.1 foto').parameters.url, /gemini-3\.1-flash-lite/);
   assert.match(por('BD · Limite IA foto').parameters.options.queryReplacement, /"foto"/);
