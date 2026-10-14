@@ -566,7 +566,7 @@ No piloto de 13/10/2026 o Gemini respondeu `503 Service unavailable` em cerca de
 
 ```
 Texto livre:  atalho "já entendi?" → limite diário → montar pedido → Gemini 3.1 Flash Lite (20 s)
-              → [falhou] Groq / Llama (20 s) → [falhou] Gemini 3.8 Flash (25 s) → normalizar → Validar resposta da IA
+              → [falhou] Groq / gpt-oss-120b (20 s) → [falhou] Gemini 3.8 Flash (25 s) → normalizar → Validar resposta da IA
 Áudio:        limite diário → Gemini (30 s) → [falhou] Whisper do Groq (25 s) → normalizar → Montar transcrição
 ```
 
@@ -579,7 +579,7 @@ Texto livre:  atalho "já entendi?" → limite diário → montar pedido → Gem
 - **Reenvio do áudio:** o node `Reenviar áudio como texto` espera o fluxo inteiro; agora com tempo de 120 s e sem derrubar a execução (a mensagem já foi tratada pelo fluxo reenviado), para não gerar alerta de erro por lentidão.
 - **Privacidade:** no plano gratuito o Google (e o Groq, conferir os termos) pode usar o conteúdo para melhorar produtos. No piloto vale a autorização do gestor; para uso definitivo, plano pago com teto de gasto.
 
-Limites conhecidos: o Groq e o Gemini 3.8 Flash entram como reserva, mas só a regressão do prompt e a medição de tempo com frases reais dizem qual vale como principal; o nome do modelo do Groq (`llama-3.3-70b-versatile`) e do Google (`gemini-3.8-flash`) deve ser conferido nas contas.
+Limites do Groq no plano gratuito (tela de limites da conta, 14/10): texto **30 pedidos e 8 mil tokens por minuto, 1.000 pedidos e 200 mil tokens por dia**; áudio (`whisper-large-v3-turbo`) 20 pedidos por minuto e 28,8 mil segundos por dia. Como o prompt de texto tem alguns milhares de tokens, o Groq de texto aguenta cerca de **1 pedido por minuto**: é reserva, não principal (encurtar o prompt para o Groq é um próximo passo). O modelo `llama-3.3-70b-versatile` **não existe** nessa conta, por isso o texto usa `openai/gpt-oss-120b`.`n`nLimites conhecidos: o Groq e o Gemini 3.8 Flash entram como reserva, mas só a regressão do prompt e a medição de tempo com frases reais dizem qual vale como principal; o nome do modelo do Groq (`openai/gpt-oss-120b`, que consta na lista de limites da conta) e do Google (`gemini-3.8-flash`) deve ser conferido nas contas.
 ## Arquitetura no tempo do Google Sheets (resumo, até a 0.9.0)
 
 ```
