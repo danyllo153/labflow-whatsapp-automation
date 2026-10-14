@@ -668,3 +668,23 @@ A transcrição do áudio (e o ditado do teclado do celular) erra de forma previ
 `comandos nfc` e `comandos concentrado` mostram só a lista do grupo. Os nomes aceitam variações (`comandos de leitura`, `comandos para drops`, `comandos analise nfc`, `comandos c.t e b.l`). Assunto desconhecido responde "Não encontrei comandos para ..." e mostra o menu. Antes da 1.3.0 o menu só listava os temas de tanques e todos pareciam "consultar".
 
 `tests/ajuda.test.js` abre cada assunto e **executa cada comando de exemplo** que a ajuda mostra, então a ajuda não ensina comando que o bot não entende.
+### 16.3 Fábricas travadas, navios "Orange" e tanques de navio
+
+**Fábricas** (recebimento): só estas seis existem, e o bot não cadastra outra.
+
+| Sigla | Fábrica | Também aceito |
+|---|---|---|
+| AQA | Araraquara | `AOQ`, `AOA`, `AKA`, `A0A` (letra torta ou transcrição) |
+| CON | Conchal | `C0N`, `COH` |
+| COL | Colina | `COI`, `C0L` |
+| UCH | Uchoa | `VCH` |
+| ITA | Itápolis | `1TA` |
+| TMG | Terminal Guarujá | `Guarujá`, `Terminal do Guarujá` |
+
+- Falar ou escrever o **nome da cidade** vira a sigla (`fábrica Araraquara` = `fábrica AQA`).
+- Letra torta só é corrigida quando **toda** letra diferente é uma confusão conhecida e há **uma única** sigla parecida. O bot avisa na resposta: `ℹ️ Li a fábrica como "AOQ" e entendi AQA. Se estiver errado, avise.`
+- Qualquer outra (`XYZ`, `CAL`...) é recusada: `❌ Fábrica "XYZ" não reconhecida. Use AQA (Araraquara), CON (Conchal), COL (Colina), UCH (Uchoa), ITA (Itápolis) ou TMG (Terminal Guarujá). Nada foi gravado.`
+
+**Navios:** `Orange Sky 123` vira `O.SKY 123` (também `Orange Star` = `O.STAR`, `Orange Blossom` = `O.BLOSSOM`).
+
+**Tanques de navio por extenso:** `1 center` = `1C`, `2 port` ou `2PS` = `2P`, `3 starboard` = `3S`. `1 center e 2 port` vira `1C, 2P`.

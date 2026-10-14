@@ -33,7 +33,7 @@ Executa o `jsCode` **real** do node `Interpretar comando` (extraído do `LabFlow
 npm test
 ```
 
-O que os testes cobrem (311 casos; 36 da ajuda, em `tests/ajuda.test.js`; 31 da IA resiliente e da fala, em `tests/ia-resiliente.test.js`; 9 são do alerta de erro, em `tests/alerta-erro.test.js`, e 107 da IA, em `tests/validar-ia.test.js`):
+O que os testes cobrem (321 casos; 10 das fábricas, navios e tanques, em `tests/fabricas-nomes.test.js`; 36 da ajuda, em `tests/ajuda.test.js`; 31 da IA resiliente e da fala, em `tests/ia-resiliente.test.js`; 9 são do alerta de erro, em `tests/alerta-erro.test.js`, e 107 da IA, em `tests/validar-ia.test.js`):
 
 - **Reconhecimento:** cada comando da referência ([comandos.md](comandos.md)) cai na intenção (`tipo`) certa.
 - **Campos extraídos:** lotes, compostas, navio/linha/fase, grupos de C.T/B.L com o sinal (`<` nunca vira igual), data da coleta do TAB de NFC.
