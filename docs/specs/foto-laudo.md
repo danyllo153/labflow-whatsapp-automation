@@ -59,4 +59,4 @@ Fases seguintes: resultados de C.T e B.L por lote (ignorando o riscado), confirm
 - Letra de mão e rasuras: por isso a confirmação sempre mostra a leitura e marca dúvidas.
 - Privacidade: no plano gratuito o Google pode usar o conteúdo; o gestor autorizou a foto de laudo no piloto. Para uso definitivo, plano pago com teto de gasto.
 - O "sim" agora executa uma **lista** (pendência payload.comandos), um comando por vez, na ordem; antes confirmava um só.
-- **Fase 1 (feita):** recebimento + compostas, TAB e Coliformes de caldo (load e lotes), tanques de NFC. **Fase 2:** resultados de C.T/B.L por lote e o "+" da confirmação (palavra confirmação na legenda). **Fase 3:** laudos de embarque.
+- **Fase 1 (feita):** recebimento + compostas, TAB e Coliformes de caldo (load e lotes), tanques de NFC. **Fase 2a (feita):** laudo de NFC com as placas dos tanques (um sim, sem abrir desvio). **Fase 2b:** C.T/B.L do concentrado por lote e o "+" da confirmação (palavra confirmação na legenda). **Fase 3:** laudos de embarque.
