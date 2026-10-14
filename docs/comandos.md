@@ -702,3 +702,22 @@ Qualquer cargo (inclusive Consultor) pode perguntar. Não gravam nada; sem "sim"
 | `desvios do tanque 41 do dia 14/10/2026` | os desvios daquela coleta (a consulta de desvios ganhou o filtro de data) |
 
 "Coletou" é quem registrou a coleta no bot (a tabela `coletas` guarda `registrado_por`). Datas aceitas: `dd/mm/aaaa`, `dd/mm` (ano de hoje), `hoje`, `ontem`; data impossível (31/02) é recusada. O pedido educado no fim ("me envia os nomes de todos") é ignorado. Ajuda: `comandos consultas`.
+
+### 16.5 Foto do laudo (recebimento, TAB e Coliformes)
+
+Mande a **foto do laudo preenchido** no WhatsApp (Operador e Admin; Consultor não registra). A legenda é opcional.
+
+1. O bot baixa a foto, conta 1 no limite diário de IA (tipo `foto`) e pede a leitura ao Gemini com visão (`gemini-3.8-flash`, com reserva em `gemini-3.1-flash-lite`). O Groq não lê imagem: se os dois Gemini falharem, o bot avisa e pede o comando.
+2. A IA só devolve dados (formulário, load, item, fábrica, lotes, marcas). O **código valida** e monta os **comandos oficiais**.
+3. O bot responde com a lista numerada, as dúvidas ("Confira") e pede **um sim** para tudo. Nada grava antes. A pendência vale 10 minutos.
+4. No **sim**, os comandos rodam **um por vez, na ordem**, e cada um responde com a sua mensagem de sempre.
+
+| Formulário | Comandos montados |
+|---|---|
+| Recebimento | `Recebimento load L item I fabrica F lotes ... data dd/mm/aaaa` e `Compostas do load L item I (1-5)(6-10)` |
+| TAB (caldo) | `Tab feito do load L item I lotes 1-5` por composta, e `Tab feito dos tanques terra 42,43 coleta dd/mm/aaaa` para os tanques de NFC |
+| Coliformes (caldo) | `Coliformes feitos do load L item I lotes 1-5` por composta |
+
+Regras: ponto, barra ou traço depois do número do lote fecha a composta, e o último lote fecha a última; sem nenhuma marca grava só o recebimento e avisa. "Data da Análise" é a data do recebimento. Fábrica fora das seis (AQA, CON, COL, UCH, ITA, TMG) recusa aquele load; leitura torta (`AOQ`) vira a sigla e avisa. No TAB e nos Coliformes o bot acha a composta **já existente** pelo load e pelos lotes e mostra o `#N`; a que não existir fica de fora, com aviso (a foto nunca cria composta no TAB/Coliformes). Tanque de NFC (`42  17/08`) usa o ano de hoje; se a data cairia no futuro, o ano anterior.
+
+Ainda não lê: resultados de C.T/B.L, o "+" da confirmação, laudos de embarque (navio, linha e fase). Esses laudos pedem o comando. Spec: `docs/specs/foto-laudo.md`.
