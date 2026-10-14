@@ -6,7 +6,7 @@
 #
 # O que faz:
 #   1. troca o ID real de cada credencial por um placeholder (GEMINI_CREDENTIAL_ID,
-#      EVOLUTION_CREDENTIAL_ID, POSTGRES_CREDENTIAL_ID) e remove meta.instanceId,
+#      EVOLUTION_CREDENTIAL_ID, GROQ_CREDENTIAL_ID, POSTGRES_CREDENTIAL_ID) e remove meta.instanceId,
 #      mexendo so no texto bruto do arquivo;
 #   2. grava no mesmo formato do arquivo versionado (JSON indentado pelo PowerShell,
 #      terminando em LF), para o diff do Git mostrar so o que mudou de verdade;
@@ -28,6 +28,10 @@ $mapa = @{
     'httpHeaderAuth' = 'EVOLUTION_CREDENTIAL_ID'
     'postgres'       = 'POSTGRES_CREDENTIAL_ID'
 }
+# credenciais do MESMO tipo (chave em cabecalho) distinguidas pelo nome: nome da credencial -> placeholder
+$porNome = @{
+    'Groq API' = 'GROQ_CREDENTIAL_ID'
+}
 
 $utf8 = New-Object System.Text.UTF8Encoding($false)
 $raw = [System.IO.File]::ReadAllText((Resolve-Path $Entrada), $utf8)
@@ -39,7 +43,9 @@ foreach ($n in $wf.nodes) {
         foreach ($p in $n.credentials.PSObject.Properties) {
             if (-not $mapa.ContainsKey($p.Name)) { throw "Tipo de credencial sem placeholder definido: $($p.Name). Acrescente em `$mapa." }
             $id = [string]$p.Value.id
-            if ($id -and $id -ne $mapa[$p.Name]) { $reais[$id] = $mapa[$p.Name] }
+            $ph = $mapa[$p.Name]
+            if ($porNome.ContainsKey([string]$p.Value.name)) { $ph = $porNome[[string]$p.Value.name] }
+            if ($id -and $id -ne $ph) { $reais[$id] = $ph }
         }
     }
 }
