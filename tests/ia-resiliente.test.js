@@ -307,3 +307,36 @@ test('atalho de áudio: o comando pronto passa pelo Validar e pede "sim" quando 
     { 'Interpretar comando': { json: { numero: 'x@s.whatsapp.net', nomeContato: 'T', nivelAtual: 'Consultor', mensagem_original: 'x', hoje: '14/10/2026' } } })[0].json;
   assert.match(consultor.textoResposta, /somente de consulta/);
 });
+// ------------------------------------------------------------------ áudios reais do piloto (14/10)
+test('áudio real 1 (Gemini): C.T com grupos sem vírgula vira comando pronto, sem chamar a IA', () => {
+  const r = falado('CT load 46699 lote 9 deu 0 lote 10 deu 120 lotes 11 a 16 deu 0');
+  assert.equal(r.tipo, 'interpretar_ia');
+  assert.equal(r.mensagem_original, 'ct load 46699 lote 9 deu 0, lote 10 deu 120, lotes 11-16 deu 0');
+  assert.equal(JSON.parse(r.ia_pronta).comando, 'ct load 46699 lote 9 deu 0, lote 10 deu 120, lotes 11-16 deu 0');
+  // e o comando pronto é o que a regex do C.T entende
+  const c = interpretar(JSON.parse(r.ia_pronta).comando);
+  assert.equal(c.tipo, 'contagem_registrar');
+  assert.deepEqual(c.grupos.map((g) => `${g.numeros.length}:${g.valor}`), ['1:0', '1:120', '6:0']);
+});
+
+test('áudio real 2 (Whisper): "Recebimento, load, 46,699, fábrica AQA, item, 2655, lotes, 35 a 38." vira comando pronto', () => {
+  const r = falado('Recebimento, load, 46,699, fábrica AQA, item, 2655, lotes, 35 a 38.');
+  assert.equal(r.mensagem_original, 'Recebimento load 46699 item 2655 fábrica AQA lotes 35-38');
+  assert.equal(JSON.parse(r.ia_pronta).comando, 'Recebimento load 46699 item 2655 fábrica AQA lotes 35-38');
+  const c = interpretar(JSON.parse(r.ia_pronta).comando);
+  assert.equal(c.tipo, 'recebimento');
+  assert.deepEqual([c.load, c.item, c.fabrica, c.lotes.join(',')], ['46699', '2655', 'AQA', '35,36,37,38']);
+});
+
+test('fala com vírgula depois da palavra-chave: "CT, load, 46,699, lote 9 deu 0."', () => {
+  const r = interpretar('CT, load, 46,699, lote 9 deu 0.');
+  assert.equal(r.tipo, 'contagem_registrar');
+  assert.equal(r.load, '46699');
+});
+
+test('texto comum com vírgula não é mexido ("lotes 4, 5 e 6", "tanques 42, 43")', () => {
+  assert.equal(interpretar('lotes 4, 5 e 6 chegaram').mensagem_original, 'lotes 4, 5 e 6 chegaram');
+  const c = interpretar('registrar coleta tanque terra 42, 43 data 24/09/2026');
+  assert.equal(c.tipo, 'coleta_terra');
+  assert.deepEqual(c.tanques, ['42', '43']);
+});
