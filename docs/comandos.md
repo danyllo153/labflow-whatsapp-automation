@@ -717,6 +717,7 @@ Mande a **foto do laudo preenchido** no WhatsApp (Operador e Admin; Consultor n�
 | Recebimento | `Recebimento load L item I fabrica F lotes ... data dd/mm/aaaa` e `Compostas do load L item I (1-5)(6-10)` |
 | TAB (caldo) | `Tab feito do load L item I lotes 1-5` por composta, e `Tab feito dos tanques terra 42,43 coleta dd/mm/aaaa` para os tanques de NFC |
 | Coliformes (caldo) | `Coliformes feitos do load L item I lotes 1-5` por composta |
+| Embarque (FCOJ) | `Embarque navio O.STAR 112 linha 7 fase 1 load 43412 item 2648 amostras 1-3 data 28/08/2026` por linha do papel |
 
 Regras: ponto, barra ou traço depois do número do lote fecha a composta, e o último lote fecha a última; sem nenhuma marca grava só o recebimento e avisa. "Data da Análise" é a data do recebimento. Fábrica fora das seis (AQA, CON, COL, UCH, ITA, TMG) recusa aquele load; leitura torta (`AOQ`) vira a sigla e avisa. No TAB e nos Coliformes o bot acha a composta **já existente** pelo load e pelos lotes e mostra o `#N`; a que não existir fica de fora, com aviso (a foto nunca cria composta no TAB/Coliformes). Tanque de NFC (`42  17/08`) usa o ano de hoje; se a data cairia no futuro, o ano anterior.
 
@@ -728,4 +729,6 @@ Regras: ponto, barra ou traço depois do número do lote fecha a composta, e o �
 - **Nunca abre desvio sozinho.** Depois do sim, a mensagem lista os não ok, cada um com o comando pronto (`bl120 do tanque 2P navio O.STAR 112 normal 80,1,1 coleta 30/08/2026`). Mandar esse comando cai no fluxo de placas de sempre, que pergunta se abre o desvio.
 - Leitura que já tinha placas é substituída (o bot avisa antes do sim).
 
-Ainda não lê: C.T/B.L do concentrado por lote, o "+" da confirmação e laudos de embarque. Esses pedem o comando. Spec: `docs/specs/foto-laudo.md`.
+**Laudo de embarque (FCOJ).** Navio e Embarque (a viagem) do topo viram `O.STAR 112`; cada linha do papel (Linha/Fase, Load, amostras A1..A3, Observação `Item: 2648`) vira um comando de embarque. A Data da Análise só vem escrita na primeira linha e vale para as seguintes. A foto **não cria composta de embarque** (isso é feito quando o carregamento do load termina). Linha com load, item ou amostras ilegíveis fica de fora, com aviso.
+
+Ainda não lê: os resultados de C.T/B.L do concentrado (do recebimento e do embarque), o "+" da confirmação e o TAB/Coliformes de embarque. Esses pedem o comando. Spec: `docs/specs/foto-laudo.md`.
