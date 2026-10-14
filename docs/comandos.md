@@ -715,11 +715,11 @@ Mande a **foto do laudo preenchido** no WhatsApp (Operador e Admin; Consultor n�
 | Formulário | Comandos montados |
 |---|---|
 | Recebimento | `Recebimento load L item I fabrica F lotes ... data dd/mm/aaaa` e `Compostas do load L item I (1-5)(6-10)` |
-| TAB (caldo) | `Tab feito do load L item I lotes 1-5` por composta, e `Tab feito dos tanques terra 42,43 coleta dd/mm/aaaa` para os tanques de NFC |
-| Coliformes (caldo) | `Coliformes feitos do load L item I lotes 1-5` por composta |
+| TAB (caldo) | **um comando só** com todas as compostas achadas, `Tab feito das compostas #18 a #34` (uma mensagem de resposta só), e `Tab feito dos tanques terra 42,43 coleta dd/mm/aaaa` para os tanques de NFC |
+| Coliformes (caldo) | **um comando só**, `Coliformes feitos das compostas #18 a #34` |
 | Embarque (FCOJ) | `Embarque navio O.STAR 112 linha 7 fase 1 load 43412 item 2648 amostras 1-3 data 28/08/2026` por linha do papel |
 
-Regras: ponto, barra ou traço depois do número do lote fecha a composta, e o último lote fecha a última; sem nenhuma marca grava só o recebimento e avisa. "Data da Análise" é a data do recebimento. Fábrica fora das seis (AQA, CON, COL, UCH, ITA, TMG) recusa aquele load; leitura torta (`AOQ`) vira a sigla e avisa. No TAB e nos Coliformes o bot acha a composta **já existente** pelo load e pelos lotes e mostra o `#N`; a que não existir fica de fora, com aviso (a foto nunca cria composta no TAB/Coliformes). Tanque de NFC (`42  17/08`) usa o ano de hoje; se a data cairia no futuro, o ano anterior.
+Regras: ponto, barra ou traço depois do número do lote fecha a composta, e o último lote fecha a última; sem nenhuma marca grava só o recebimento e avisa. "Data da Análise" é a data do recebimento. Fábrica fora das seis (AQA, CON, COL, UCH, ITA, TMG) recusa aquele load; leitura torta (`AOQ`) vira a sigla e avisa. No TAB e nos Coliformes o bot acha a composta **já existente** pelo load e pelos lotes, mostra o `#N` de cada uma por load e junta todas num **único comando** (as compostas do papel vão juntas para o caldo, então a resposta do bot é uma mensagem só). A data do papel vale quando é de hoje ou dos últimos 3 dias; antes disso vale a de hoje e o bot avisa; a que não existir fica de fora, com aviso (a foto nunca cria composta no TAB/Coliformes). Tanque de NFC (`42  17/08`) usa o ano de hoje; se a data cairia no futuro, o ano anterior.
 
 **Laudo de NFC (resultados das placas dos tanques).** A foto do "Laudo de Análises Microbiológica de NFC" traz uma linha por tanque, com as colunas C.T 48h, B.L profundidade 120h e psicrotróficos (WORT) profundidade e superfície 240h, no bloco Normal e no bloco Stress, e cada célula tem as 3 placas. O bot lê tudo e mostra **uma linha por tanque e frasco**, com 🚨 nas leituras acima do limite, o resumo (`16 leituras (48 placas): 15 ok · 1 🚨 não ok`) e pede **um só sim**, que grava todas as placas e marca as leituras como feitas.
 
