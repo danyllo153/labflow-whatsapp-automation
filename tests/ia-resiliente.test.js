@@ -77,6 +77,10 @@ test('provedores e modelos configurados', () => {
   assert.match(node('IA · Gemini 3.8 texto').parameters.url, /models\/gemini-3\.8-flash:generateContent$/);
   assert.match(node('IA · Gemini áudio').parameters.url, /models\/gemini-3\.1-flash-lite:generateContent$/);
   assert.equal(node('IA · Groq texto').parameters.url, 'https://api.groq.com/openai/v1/chat/completions');
+  // o modelo precisa existir na conta do Groq (lista de Limits do console): llama-3.3 nao existe mais la
+  assert.match(node('IA · Groq texto').parameters.jsonBody, /model: 'openai\/gpt-oss-120b'/);
+  assert.doesNotMatch(node('IA · Groq texto').parameters.jsonBody, /llama/);
+  assert.match(node('IA · Groq texto').parameters.jsonBody, /max_tokens: 1200/, 'resposta curta: o limite gratuito e de 8 mil tokens por minuto');
   assert.equal(node('IA · Groq Whisper').parameters.url, 'https://api.groq.com/openai/v1/audio/transcriptions');
   // a chave do Gemini e a do Groq ficam em credenciais do n8n, nunca no arquivo
   assert.equal(node('IA · Gemini texto').parameters.nodeCredentialType, 'googlePalmApi');

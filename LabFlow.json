@@ -5718,7 +5718,7 @@
                                          "genericAuthType":  "httpHeaderAuth",
                                          "sendBody":  true,
                                          "specifyBody":  "json",
-                                         "jsonBody":  "={{ { model: \u0027llama-3.3-70b-versatile\u0027, messages: [{ role: \u0027user\u0027, content: $(\u0027IA · Montar pedido\u0027).first().json.prompt }], temperature: 0, max_tokens: 1000, response_format: { type: \u0027json_object\u0027 } } }}",
+                                         "jsonBody":  "={{ { model: \u0027openai/gpt-oss-120b\u0027, messages: [{ role: \u0027user\u0027, content: $(\u0027IA · Montar pedido\u0027).first().json.prompt }], temperature: 0, max_tokens: 1200 } }}",
                                          "options":  {
                                                          "timeout":  20000
                                                      }
