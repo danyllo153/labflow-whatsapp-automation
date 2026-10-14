@@ -87,12 +87,13 @@ test('multiplicação: "<10" com 10^1 vira "<100" (o sinal fica) e nunca alarma'
   assert.doesNotMatch(r.textoResposta, /🚨/);
 });
 
-test('alarme usa o valor final: C.T 20 com 10^1 = 200 alarma; B.L 5 com 10^1 = 50 alarma; B.L 4 com 10^1 = 40 não', () => {
+test('sem alarme: o NFC recebido não ganha 🚨 nem aviso de limite, mesmo com valor final alto', () => {
   const ct = pergunta('ct nfc load 44300 lote 10 past deu 20', [linhaBanco(10, 'past', 1)]);
-  assert.match(ct.textoResposta, /= 200 🚨/);
-  assert.match(ct.textoResposta, /Acima do limite \(C\.T ≥ 200\): 10 \(past\) = 200/);
-  assert.match(pergunta('bl120 nfc load 44300 lote 10 past deu 5', [linhaBanco(10, 'past', 1)]).textoResposta, /= 50 🚨/);
-  assert.doesNotMatch(pergunta('bl120 nfc load 44300 lote 10 past deu 4', [linhaBanco(10, 'past', 1)]).textoResposta, /🚨/);
+  assert.match(ct.textoResposta, /lote 10 · past · 10\^1: 20 × 10\^1 = 200\n/);
+  assert.doesNotMatch(ct.textoResposta, /🚨|Acima do limite/);
+  const bl = pergunta('bl120 nfc load 44300 lote 10 past deu 5000', [linhaBanco(10, 'past', 3)]);
+  assert.equal(JSON.parse(bl.payload).itens[0].valor, 5000000);
+  assert.doesNotMatch(bl.textoResposta, /🚨|Acima do limite/);
 });
 
 test('confirmação avisa a correção do resultado anterior; recusa load e lote que não existem', () => {
@@ -141,6 +142,7 @@ test('consultas: "quais ct tenho para ler hoje" e o resultado do load incluem o 
   assert.match(ler, /FROM vw_contagens_nfc_previstas vn/);
   assert.match(ler, /'nfc'::text AS origem/);
   assert.match(ler, /ORDER BY ord_data, origem, rotulo, "load", numero/);
+  assert.match(ler, /false AS alarme,\n       vn\.prevista AS ord_data/, 'o NFC não alarma');
   const load = workflow.nodes.find((n) => n.name === 'BD · Resultado do load').parameters.query;
   assert.match(load, /FROM vw_contagens_nfc_previstas vn/);
   // a resposta de "para ler hoje" agrupa por tipo e diluição, e a do load mostra o NFC
@@ -158,6 +160,11 @@ test('consultas: "quais ct tenho para ler hoje" e o resultado do load incluem o 
   assert.match(respLoad, /NFC load 44300 · item 129 · fábrica AQA · past 10\^1/);
   assert.match(respLoad, /C\.T 48h: 10 = 140/);
   assert.match(respLoad, /faltam lote 11/);
+  assert.doesNotMatch(respLoad, /acima do limite/, 'só NFC: sem o rodapé de alarme do concentrado');
+  assert.match(rodar('Montar resposta resultado do load', [
+    { origem: 'recebimento', load: '77001', item: '444', fabrica: 'AQA', analise: 'CT', numero: 1, prevista: '16/10/2026', resultado: '250', alarme: true, amostra: null, diluicao: null },
+    { origem: 'nfc', load: '77001', item: '129', fabrica: 'AQA', analise: 'CT', numero: 1, prevista: '16/10/2026', resultado: '500', alarme: false, amostra: 'past', diluicao: 1 },
+  ], { item: { ...ctx, load: '77001', analises: 'CT' } })[0].json.textoResposta, /🚨 = acima do limite/, 'o concentrado mantém o alarme');
 });
 
 test('IA e ajuda conhecem o resultado do NFC', () => {
@@ -190,9 +197,10 @@ test('foto: com os lotes já registrados, um sim grava tudo, multiplicado pela d
   assert.equal(r.salvar, '1');
   assert.equal(r.tipoPendencia, 'TAB');
   assert.match(r.textoResposta, /Li os resultados do laudo de recebimento NFC/);
-  assert.match(r.textoResposta, /load 44300:\n   lote 10 · past · 10\^1: CT 14 → 140 · BL72 22 → 220 🚨 · BL120 74 → 740 🚨/);
+  assert.match(r.textoResposta, /load 44300:\n   lote 10 · past · 10\^1: CT 14 → 140 · BL72 22 → 220 · BL120 74 → 740\n/);
   assert.match(r.textoResposta, /3 resultados de C\.T\/B\.L\. O número lido é multiplicado pela diluição/);
   assert.match(r.textoResposta, /Valor riscado no papel não foi lido\. Responda \*sim\*/);
+  assert.doesNotMatch(r.textoResposta, /🚨|Acima do limite/);
   const payload = JSON.parse(r.payload);
   assert.equal(payload.acao, 'contagem_nfc');
   assert.deepEqual(payload.itens.map((i) => [i.analise, i.valor, i.lido, i.id]), [['CT', 140, 14, 510], ['BL72', 220, 22, 510], ['BL120', 740, 74, 510]]);
@@ -224,7 +232,7 @@ test('foto: texto que não é número fica de fora com aviso; "<" não alarma; o
   const d = lerFoto(LAUDO([{ lote: 10, tipo: 'past', diluicao: 1, ct: 'abc', bl72: '<300', bl120: '10' }]));
   assert.ok(d.duvidas.some((x) => /lote 10 past CT: não entendi "abc"; fica de fora/.test(x)));
   const r = respFoto(d, noBanco(d));
-  assert.doesNotMatch(r.textoResposta, /BL72 <300 → <3000 🚨/);
+  assert.doesNotMatch(r.textoResposta, /🚨/);
   assert.match(r.textoResposta, /BL72 <300 → <3000/);
   const [{ json }] = rodar('Foto · Montar pedido', {}, { 'Foto em arquivo': { foto_b64: 'QUJD', mime: 'image/jpeg' } });
   const p = json.pedido.contents[0].parts[0].text;

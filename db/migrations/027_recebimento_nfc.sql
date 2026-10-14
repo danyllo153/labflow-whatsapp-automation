@@ -63,14 +63,12 @@ CREATE TABLE contagens_nfc (
     UNIQUE (analise, recebimento_nfc_id)
 );
 
--- Resultado como o analista escreveria ("140", "<100") e o alarme (mesmos limites do concentrado: B.L >= 50, C.T >= 200)
+-- Resultado como o analista escreveria ("140", "<100"). Sem alarme: o NFC recebido nao usa os limites do concentrado
+-- e fica fora do relatorio do dia (decisao de 14/10/2026); os resultados vao para uma pagina propria do Power BI.
 CREATE OR REPLACE VIEW vw_contagens_nfc AS
 SELECT c.*,
        (CASE WHEN c.sinal = '=' THEN trim_scale(c.valor)::text
-             ELSE c.sinal || trim_scale(c.valor)::text END) AS resultado,
-       (CASE WHEN c.sinal = '<' THEN false
-             WHEN c.analise = 'CT' THEN c.valor >= 200
-             ELSE c.valor >= 50 END) AS alarme
+             ELSE c.sinal || trim_scale(c.valor)::text END) AS resultado
 FROM contagens_nfc c;
 
 -- O que vence e quando: C.T 48h (+2 dias), B.L 72h (+3) e B.L 120h (+5), contados do recebimento
@@ -84,5 +82,34 @@ SELECT a.analise,
        (r.data_recebimento + a.dias) AS prevista
 FROM recebimento_nfc r
 CROSS JOIN (VALUES ('CT', 2), ('BL72', 3), ('BL120', 5)) AS a(analise, dias);
+
+-- Painel (Power BI): uma linha por lote, tipo e analise prevista, com o resultado (lido e final) se ja houver
+CREATE OR REPLACE VIEW bi.recebimento_nfc AS
+SELECT l.numero AS load,
+       it.codigo AS item,
+       fb.nome AS fabrica,
+       vn.lote,
+       CASE vn.amostra WHEN 'past' THEN 'Pasteurizado' ELSE 'Fresh' END AS amostra,
+       vn.diluicao,
+       '10^' || vn.diluicao AS diluicao_texto,
+       r.data_recebimento,
+       CASE vn.analise WHEN 'CT' THEN 'C.T 48h' WHEN 'BL72' THEN 'B.L 72h' ELSE 'B.L 120h' END AS analise,
+       vn.prevista,
+       (c.id IS NOT NULL) AS lido,
+       c.valor_lido,
+       c.valor AS valor_final,
+       c.sinal,
+       c.resultado,
+       u.nome AS lido_por,
+       (c.lido_em AT TIME ZONE 'America/Sao_Paulo')::date AS data_leitura,
+       CASE WHEN c.id IS NOT NULL THEN 'Lido' WHEN vn.prevista < CURRENT_DATE THEN 'Atrasado'
+            WHEN vn.prevista = CURRENT_DATE THEN 'Vence hoje' ELSE 'No prazo' END AS situacao
+FROM vw_contagens_nfc_previstas vn
+JOIN recebimento_nfc r ON r.id = vn.recebimento_nfc_id
+JOIN loads l ON l.id = vn.load_id
+LEFT JOIN itens it ON it.id = l.item_id
+LEFT JOIN fabricas fb ON fb.id = l.fabrica_id
+LEFT JOIN vw_contagens_nfc c ON c.analise = vn.analise AND c.recebimento_nfc_id = vn.recebimento_nfc_id
+LEFT JOIN usuarios u ON u.id = c.lido_por;
 
 COMMIT;
