@@ -33,7 +33,7 @@ Executa o `jsCode` **real** do node `Interpretar comando` (extraído do `LabFlow
 npm test
 ```
 
-O que os testes cobrem (271 casos; 31 da IA resiliente e da fala, em `tests/ia-resiliente.test.js`; 9 são do alerta de erro, em `tests/alerta-erro.test.js`, e 107 da IA, em `tests/validar-ia.test.js`):
+O que os testes cobrem (307 casos; 36 da ajuda, em `tests/ajuda.test.js`; 31 da IA resiliente e da fala, em `tests/ia-resiliente.test.js`; 9 são do alerta de erro, em `tests/alerta-erro.test.js`, e 107 da IA, em `tests/validar-ia.test.js`):
 
 - **Reconhecimento:** cada comando da referência ([comandos.md](comandos.md)) cai na intenção (`tipo`) certa.
 - **Campos extraídos:** lotes, compostas, navio/linha/fase, grupos de C.T/B.L com o sinal (`<` nunca vira igual), data da coleta do TAB de NFC.
@@ -104,7 +104,7 @@ Depois de trocar algum print, rodar de novo. Prints sem barra do navegador, sem 
 
 Arquivo: [`scripts/sanitize-workflow.ps1`](../scripts/sanitize-workflow.ps1)
 
-Troca o ID real de cada credencial por um placeholder **do tipo** (`GEMINI_CREDENTIAL_ID`, `EVOLUTION_CREDENTIAL_ID`, `POSTGRES_CREDENTIAL_ID`); credenciais do mesmo tipo (chave em cabeçalho) são distinguidas pelo **nome**: `Groq API` vira `GROQ_CREDENTIAL_ID`. Para um nome novo, acrescente em `$porNome`.
+Troca o ID real de cada credencial por um placeholder **do tipo** (`GEMINI_CREDENTIAL_ID`, `EVOLUTION_CREDENTIAL_ID`, `POSTGRES_CREDENTIAL_ID`); credenciais do mesmo tipo (chave em cabeçalho) são distinguidas pelo **nome**: `Groq API` vira `GROQ_CREDENTIAL_ID`. Para um nome novo, acrescente em `$porNome`. Também remove `settings.errorWorkflow` (a ligação do alerta de erro é da instância; ao importar o arquivo com IDs reais, ele precisa ser religado em Settings → Error workflow, ou vir já no arquivo de importação).
 
 Gera o `LabFlow.json` **público** a partir do export do n8n com IDs reais (`LabFlow_importar_n8n.json`, que nunca vai para o Git). Roda no Windows PowerShell 5.1.
 
