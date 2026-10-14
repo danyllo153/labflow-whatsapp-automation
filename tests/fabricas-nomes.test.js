@@ -84,10 +84,12 @@ test('navios: "Orange Sky" vira O.SKY, também com a viagem', () => {
   assert.equal(interpretar('Coleta navio O.SKY 123 tanques 5 data 13/10/2026').navio, 'O.SKY 123', 'já certo passa igual');
 });
 
-test('tanques de navio: center vira C, port ou PS vira P, starboard vira S', () => {
+test('tanques de navio: center vira C, port vira P, starboard vira S, PS vira os dois lados', () => {
   const r = interpretar('Coleta navio Orange Sky 123 tanques 1 center, 2 port, 3 starboard, 4PS, 5S, 6 central data 13/10/2026');
   assert.equal(r.tipo, 'coleta_navio');
-  assert.deepEqual(r.tanques, ['1C', '2P', '3S', '4P', '5S', '6C']);
+  assert.deepEqual(r.tanques, ['1C', '2P', '3S', '4P', '4S', '5S', '6C']);
+  const ps = interpretar('Coleta navio Orange Sky 123 tanques 1 center, 2PS, 3 ps data 13/10/2026');
+  assert.deepEqual(ps.tanques, ['1C', '2P', '2S', '3P', '3S'], 'PS = os dois lados');
   const falado = interpretar('Coleta navio Orange Sky 123 tanques 1 center e 2 port data 13/10/2026');
   assert.deepEqual(falado.tanques, ['1C', '2P']);
 });

@@ -687,4 +687,4 @@ A transcrição do áudio (e o ditado do teclado do celular) erra de forma previ
 
 **Navios:** `Orange Sky 123` vira `O.SKY 123` (também `Orange Star` = `O.STAR`, `Orange Blossom` = `O.BLOSSOM`).
 
-**Tanques de navio por extenso:** `1 center` = `1C`, `2 port` ou `2PS` = `2P`, `3 starboard` = `3S`. `1 center e 2 port` vira `1C, 2P`.
+**Tanques de navio por extenso:** `1 center` = `1C`, `2 port` = `2P`, `3 starboard` = `3S`. `2PS` é o atalho dos dois lados e vira `2P, 2S`. `1 center e 2 port` vira `1C, 2P`.
