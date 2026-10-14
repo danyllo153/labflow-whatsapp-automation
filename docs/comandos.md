@@ -709,7 +709,7 @@ Mande a **foto do laudo preenchido** no WhatsApp (Operador e Admin; Consultor n�
 
 1. O bot baixa a foto, conta 1 no limite diário de IA (tipo `foto`) e pede a leitura ao Gemini com visão (`gemini-3-flash-preview`, com reserva em `gemini-3.5-flash-lite`; cada um tenta até 3 vezes). Os modelos da foto foram escolhidos testando imagem direto no Google: `gemini-3.1-flash-lite` e `gemini-3.8-flash` davam 503 com imagem. O Groq não lê imagem: se os dois Gemini falharem, o bot avisa e pede o comando.
 2. A IA só devolve dados (formulário, load, item, fábrica, lotes, marcas). O **código valida** e monta os **comandos oficiais**.
-3. O bot responde com a lista numerada, as dúvidas ("Confira") e pede **um sim** para tudo. Nada grava antes. A pendência vale 10 minutos.
+3. O bot responde com a lista numerada, um resumo "O que isso cria" (no recebimento: os lotes de cada load e cada composta, `1ª composta = lote 27`), as dúvidas ("Confira") e pede **um sim** para tudo. Nada grava antes. A pendência vale 10 minutos.
 4. No **sim**, os comandos rodam **um por vez, na ordem**, e cada um responde com a sua mensagem de sempre.
 
 | Formulário | Comandos montados |
