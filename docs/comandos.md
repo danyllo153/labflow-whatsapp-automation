@@ -720,4 +720,12 @@ Mande a **foto do laudo preenchido** no WhatsApp (Operador e Admin; Consultor n�
 
 Regras: ponto, barra ou traço depois do número do lote fecha a composta, e o último lote fecha a última; sem nenhuma marca grava só o recebimento e avisa. "Data da Análise" é a data do recebimento. Fábrica fora das seis (AQA, CON, COL, UCH, ITA, TMG) recusa aquele load; leitura torta (`AOQ`) vira a sigla e avisa. No TAB e nos Coliformes o bot acha a composta **já existente** pelo load e pelos lotes e mostra o `#N`; a que não existir fica de fora, com aviso (a foto nunca cria composta no TAB/Coliformes). Tanque de NFC (`42  17/08`) usa o ano de hoje; se a data cairia no futuro, o ano anterior.
 
-Ainda não lê: resultados de C.T/B.L, o "+" da confirmação, laudos de embarque (navio, linha e fase). Esses laudos pedem o comando. Spec: `docs/specs/foto-laudo.md`.
+**Laudo de NFC (resultados das placas dos tanques).** A foto do "Laudo de Análises Microbiológica de NFC" traz uma linha por tanque, com as colunas C.T 48h, B.L profundidade 120h e psicrotróficos (WORT) profundidade e superfície 240h, no bloco Normal e no bloco Stress, e cada célula tem as 3 placas. O bot lê tudo e mostra **uma linha por tanque e frasco**, com 🚨 nas leituras acima do limite, o resumo (`16 leituras (48 placas): 15 ok · 1 🚨 não ok`) e pede **um só sim**, que grava todas as placas e marca as leituras como feitas.
+
+- A coleta vem da coluna Coleta do papel (`30.08.26`). O bot acha, para cada tanque, frasco e análise, a leitura já registrada dessa coleta; o que não tiver análise registrada fica de fora, com aviso.
+- **Placas coladas:** `<1<1<1`, `954` e `11<1` têm exatamente 3 valores e são aceitos. Quando não dá para separar (`12105`, `>300` colado), a célula fica de fora e o bot avisa o que leu, para você mandar o comando.
+- Tanque de navio precisa da letra C, P ou S; sem ela, o tanque fica de fora. A coluna B.L superfície não existe no sistema e é ignorada. Repetição (frasco de arquivo) continua só por comando.
+- **Nunca abre desvio sozinho.** Depois do sim, a mensagem lista os não ok, cada um com o comando pronto (`bl120 do tanque 2P navio O.STAR 112 normal 80,1,1 coleta 30/08/2026`). Mandar esse comando cai no fluxo de placas de sempre, que pergunta se abre o desvio.
+- Leitura que já tinha placas é substituída (o bot avisa antes do sim).
+
+Ainda não lê: C.T/B.L do concentrado por lote, o "+" da confirmação e laudos de embarque. Esses pedem o comando. Spec: `docs/specs/foto-laudo.md`.

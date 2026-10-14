@@ -188,7 +188,7 @@ test('confirmação: lista os comandos em ordem, avisa as dúvidas e guarda a li
 
 test('confirmação: TAB mostra o #N da composta achada; a que não existe fica de fora com aviso', () => {
   const d = ler({ formulario: 'tab', blocos: [{ load: '43598', item: '2703', compostas: ['1-5', '6-10', '11-12'] }] });
-  const r = resposta(d, [{ idx: 0, composta_id: 41 }, { idx: 1, composta_id: 42 }, { idx: 2, composta_id: null }]);
+  const r = resposta(d, [{ kind: 'composta', idx: 0, composta_id: 41 }, { kind: 'composta', idx: 1, composta_id: 42 }, { kind: 'composta', idx: 2, composta_id: null }]);
   assert.match(r.textoResposta, /Tab feito do load 43598 item 2703 lotes 1-5  \(composta #41\)/);
   assert.match(r.textoResposta, /lotes 6-10  \(composta #42\)/);
   assert.doesNotMatch(r.textoResposta, /lotes 11-12  \(composta/);
@@ -198,7 +198,7 @@ test('confirmação: TAB mostra o #N da composta achada; a que não existe fica 
 
 test('confirmação: se nenhuma composta existe, nada é guardado', () => {
   const d = ler({ formulario: 'coliformes', blocos: [{ load: '43598', item: '2703', compostas: ['1-5'] }] });
-  const r = resposta(d, [{ idx: 0, composta_id: null }]);
+  const r = resposta(d, [{ kind: 'composta', idx: 0, composta_id: null }]);
   assert.equal(r.salvar, '0');
   assert.match(r.textoResposta, /nenhum comando ficou pronto/);
   assert.match(r.textoResposta, /Nada foi gravado/);
