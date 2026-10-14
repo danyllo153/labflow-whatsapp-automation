@@ -33,6 +33,7 @@ function interpretar(texto, opcoes = {}) {
     cadastrado = true,
     reenvio = false,
     audio = null, // segundos: simula um audio do WhatsApp (sem texto)
+    imagem = null, // { caption }: simula uma foto do WhatsApp (sem texto)
     transcrito = false, // texto que voltou da transcricao de um audio (labflowAudio)
   } = opcoes;
 
@@ -41,7 +42,7 @@ function interpretar(texto, opcoes = {}) {
       data: {
         key: { remoteJid: `${numero}@s.whatsapp.net`, fromMe: false },
         pushName: nome,
-        message: audio !== null ? { audioMessage: { seconds: audio } } : { conversation: texto },
+        message: imagem ? { imageMessage: imagem } : audio !== null ? { audioMessage: { seconds: audio } } : { conversation: texto },
         messageTimestamp: Math.floor(Date.now() / 1000),
       },
       ...(reenvio ? { labflowReenvio: true } : {}),
