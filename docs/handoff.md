@@ -39,19 +39,20 @@ Só com o pedido do Danyllo ("aplique" / "mescle e publique"): o n8n fica fora d
 4. Conferir no banco do n8n (cópia do sqlite, só leitura): workflow ativo, nº de nodes, webhook `labflow-registro` registrado uma vez. Testar com mensagens pelo webhook (script `teste-pos-import.sh`).
 Os scripts prontos estão em `C:\Dev\estudos\ia\` (`n8n-publicar*.sh`, `n8n-verifica.sh`, `teste-pos-import.sh`) e na cópia `Valts\estudos-labflow\` do OneDrive. Os construtores de patch (`construir*.js` + `aplicar-patch.ps1`) editam o `LabFlow.json` preservando o formato do repositório.
 
-### Dados de teste no banco e a regra de limpeza (NADA foi apagado ainda, exceto 17 TABs de teste)
-**Regra do Danyllo:** manter só o que ele cadastrou com data **depois de 08/10/2026**; apagar o resto (teste). Prévia feita em 14/10 (só leitura):
-- **Apagar (teste):** navio `O.STAR 112` (10 coletas, 80 análises, 240 placas); loads **43601** e **43602** (recebimento 03/09, compostas #14 a #17); loads **43598** e **43370** (recebimento 21/09, compostas #18 a #34); embarques dos loads **43339, 43340, 43411** (linha 4 fase 1 e 2, linha 7 fase 2 do O.STAR 112) e o que foi gravado neles. Apagar o navio/coletas/loads leva junto (cascata) drops, análises, placas, compostas e testes.
-- **Manter (do Danyllo, depois de 08/10):** navios `O.SKY 189` e `ORANGE SKY 189` (duplicado de nome: nasceu antes da normalização; unificar ou apagar o duplicado), loads **43668, 43699, 43701**, 11 TABs de 13/10, 8 contagens de C.T/B.L e 20 amostras de embarque.
-- **Voltar os limites do NFC:** movi `limites_nfc.vigente_de` de `2026-10-13` para `2026-01-01` (só para testar a foto de agosto). Ao terminar os testes: `UPDATE limites_nfc SET vigente_de = DATE '2026-10-13' WHERE vigente_de = DATE '2026-01-01' AND vigente_ate IS NULL;`. Os valores nunca vão para o repositório.
-- Apagar só com o Danyllo pedindo, com a lista exata na mão e dentro de transação com trava de contagem (como feito com os 17 TABs).
+### Dados de teste: limpeza FEITA em 14/10/2026
+**Regra do Danyllo:** manter só o que ele cadastrou com data **depois de 08/10/2026**; o resto é teste. Feita em 14/10 (tarde), depois de um backup do banco (`~/labflow/backups/labflow_2026-10-14_1336.dump`) e uma simulação desfeita, numa transação com travas de contagem:
+- **Apagado:** navio `O.STAR 112` (10 coletas, 80 análises, 240 placas, 30 drops, 3 embarques e 9 amostras), loads **43601, 43602, 43598, 43370** (86 lotes, 21 compostas, 17 TABs de teste) e **43339, 43340, 43411** (embarque). A cascata levou drops, análises, placas, compostas, testes e amostras junto.
+- **Limites do NFC:** `limites_nfc.vigente_de` voltou para `2026-10-13` (estava em `2026-01-01` só para testar a foto de agosto).
+- **Ficou (data depois de 08/10):** navios `O.SKY 133`, `O.SKY 189` e `ORANGE SKY 189`; loads **43175, 43668, 43699, 43701 e 77010**; 9 coletas de navio, 59 lotes recebidos, 11 TABs de 13/10, 8 contagens de C.T/B.L e 20 amostras de embarque. Conferido: nada com data até 08/10 sobrou (coletas, lotes, amostras, testes e análises).
+- **A conferir com o Danyllo:** `43175`, `77010` e `O.SKY 133` ficaram porque têm data depois de 08/10, mas os nomes lembram exemplos de teste; `ORANGE SKY 189` é duplicado de `O.SKY 189` (nasceu antes da normalização). Só apagar ou unificar se ele pedir, com a lista na mão e transação com trava.
+- Os scripts da limpeza ficam em `C:\Dev\estudos\ia\limpeza-teste.sql` (com `ROLLBACK`) e `limpeza-real.sql` (com `COMMIT`), na cópia `Valts\estudos-labflow`.
 
 ### O que falta / próximos passos
 1. **Testes ao vivo pendentes:** foto de TAB de novo (esperado: uma mensagem só); foto de embarque **com resultados** (só grava se o embarque já existe; valor riscado não vale); foto de NFC com uma placa acima do limite (ver o 🚨 e o comando de desvio).
 2. **Dúvida aberta do Danyllo para a leitura de resultados:** nas fotos de embarque há risco diagonal nas colunas de C.T/B.L. Ele respondeu que **riscado não vale** (tudo riscado = nada a ler). Ajustar o prompt com as primeiras fotos reais.
 3. **Fase seguinte da foto:** C.T/B.L do recebimento **do concentrado** por lote (precisa de uma foto de recebimento preenchida com resultados), o "+" da confirmação com a palavra `confirmação` na legenda, TAB/Coliformes de embarque. (O recebimento **NFC** já tem os resultados no PR #56.)
 4. **Regressão do prompt de texto:** rodada em 14/10 (placar ainda em execução no servidor quando esta nota foi escrita (resultado em `/tmp/placar-ia.json` do container `labflow-n8n`; não reiniciar o n8n antes de ele sair)); rodar de novo depois do #56, que acrescentou os formatos 33 e 34 ao prompt.
-5. **Limpeza dos dados de teste** (regra acima) e voltar os limites.
+5. **Limpeza dos dados de teste:** feita em 14/10 (ver acima). Falta só decidir o destino de `43175`, `77010`, `O.SKY 133` e do duplicado `ORANGE SKY 189`.
 6. **Housekeeping:** apagar branches locais antigas já mescladas (`git branch --merged main`); a branch `docs/handoff-piloto` não foi enviada (este handoff a substitui); fim do piloto: `C:\Dev\estudos\fim-do-piloto.sh` só com a confirmação dele; cópia semanal do backup para `C:\Dev\backups-labflow`; guardar a mensagem escrita do gestor.
 7. **Lançar a v1.3.0** (voz, desvios geral, IA resiliente, fotos, consultas): CHANGELOG, tag e release (só quando ele pedir).
 8. **Fase 1 do LIMS** (specs v0.2; migrations passaram a 021 a 026) e plano pago do Gemini com teto de gasto para uso definitivo (privacidade e disponibilidade).
