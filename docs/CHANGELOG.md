@@ -20,6 +20,8 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 - **Limite diário de IA** por pessoa (100) e no total (500), com a migration `020_uso_ia.sql`: passou do limite, o bot avisa e não chama nenhum provedor.
 - **Pré-tratamento da fala e do ditado** sem IA (`menor que 10` → `<10`, `lotes 11 a 16` → `11-16`, números por extenso, `Lod 43 699`, `ente 2655`, ordem item/fábrica, ditado de C.T/B.L) e **atalho de áudio**: fala que já é um comando completo de C.T/B.L, recebimento ou compostas não chama a IA (continua pedindo "sim"). 31 testes novos.
 - `scripts/sanitize-workflow.ps1` distingue credenciais do mesmo tipo pelo nome (`Groq API` → `GROQ_CREDENTIAL_ID`).
+- **Ajuda completa:** o menu comandos agora lista **NFC, Concentrado e Geral** e cada assunto abre (comandos recebimento, comandos tab, comandos coliformes, comandos embarque, comandos howard, comandos ct bl, comandos placas...). Antes só tinha os temas de tanques, escritos como "consultar". 36 testes executam cada comando de exemplo da ajuda.
+- scripts/sanitize-workflow.ps1 remove settings.errorWorkflow (ligação do alerta de erro, própria da instância) do arquivo público.
 
 ### Alterado
 - **Placas de NFC com mais de uma coleta aberta:** quando o mesmo tanque (e frasco e análise) tem mais de uma coleta ainda sem placas e o comando não traz `coleta dd/mm/aaaa`, o bot **pergunta de qual coleta é** (lista cada uma com a data prevista) e não grava nada, em vez de escolher uma sozinho. Com a data, ou com uma só aberta, nada muda. Consulta `BD · Buscar leitura NFC` e node `Montar pergunta placas`; 3 testes novos.

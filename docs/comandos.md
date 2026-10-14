@@ -655,3 +655,16 @@ A transcrição do áudio (e o ditado do teclado do celular) erra de forma previ
 - **Áudio que já é um comando completo** (C.T/B.L, recebimento, compostas) **não chama a IA**: o bot mostra "Entendi: ..." e pede **sim** antes de gravar. Frase solta ("coletei os tanques 60 e 61 hoje") vai para a IA, que também pede "sim".
 - **Limite diário de IA:** 100 pedidos por pessoa e 500 no total por dia (texto livre e áudio). Passou: "⚠️ Limite diário de IA atingido... Use o formato do comando". Os comandos no formato padrão **não usam IA** e continuam funcionando.
 - **Se o Gemini falhar**, o bot tenta o Groq e depois o Gemini 3.8 Flash antes de dizer que a IA está indisponível (ver `arquitetura.md`).
+### 16.2 Ajuda por assunto (`comandos`)
+
+`comandos` mostra o menu, agrupado em **NFC (tanques)**, **Concentrado** e **Geral**. `comandos <assunto>` abre cada um (sem IA, para qualquer cargo):
+
+| Grupo | Assuntos |
+|---|---|
+| NFC (tanques) | `comandos coleta`, `comandos análise`, `comandos placas`, `comandos drops`, `comandos leituras`, `comandos descarte` |
+| Concentrado | `comandos recebimento` (e compostas), `comandos tab`, `comandos coliformes`, `comandos embarque`, `comandos howard`, `comandos ct bl` |
+| Geral | `comandos relatório`, `comandos cargos` |
+
+`comandos nfc` e `comandos concentrado` mostram só a lista do grupo. Os nomes aceitam variações (`comandos de leitura`, `comandos para drops`, `comandos analise nfc`, `comandos c.t e b.l`). Assunto desconhecido responde "Não encontrei comandos para ..." e mostra o menu. Antes da 1.3.0 o menu só listava os temas de tanques e todos pareciam "consultar".
+
+`tests/ajuda.test.js` abre cada assunto e **executa cada comando de exemplo** que a ajuda mostra, então a ajuda não ensina comando que o bot não entende.
