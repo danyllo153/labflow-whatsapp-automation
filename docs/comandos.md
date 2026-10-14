@@ -635,3 +635,23 @@ LabFlow: ✅ Gravado: ...
 - Áudio sem fala, que não deu para entender, ou de até 2 segundos que não seja "sim" ou "não" (clique sem querer): "🎤 Não entendi o áudio. Pode repetir ou mandar por escrito?" No silêncio a transcrição pode inventar palavras, então áudio curto nunca vira comando.
 - Quem não é cadastrado é bloqueado antes da transcrição (sem custo de IA). O áudio **não é guardado**: a Evolution entrega o arquivo ao n8n só para a transcrição.
 - Fluxo no n8n: `Evolution · Baixar áudio` → `Áudio em arquivo` → `Gemini · Transcrever áudio` → `Montar transcrição` → `Zap · Ouvi` → `Reenviar áudio como texto` (marca `labflowAudio`, que o `Interpretar comando` manda direto para a IA).
+
+### 16.1 Fala e ditado tratados, e limite diário de IA
+
+A transcrição do áudio (e o ditado do teclado do celular) erra de forma previsível. Antes das regexes, o bot conserta o que dá para consertar **sem IA**:
+
+| Você diz ou ditou | O bot entende |
+|---|---|
+| `CT load 43699, lote 9 deu 0, lotes 11 a 16 deu 0` | `lotes 11-16` |
+| `lote 3 menor que 10` | `lote 3 deu <10` |
+| `lote nove deu cento e vinte` | `lote 9 deu 120` |
+| `CT Lod 43 699` | `load 43699` |
+| `Recebimento load 43699 fábrica AQA ente 2655` | `item 2655 fábrica AQA` (o item vai antes da fábrica) |
+| `lotes 35 36 37 e 38` | `lotes 35,36,37,38` |
+| `Leitura do CT do lote 43668. Lote 3 menor que 10, lote 4 20...` | `ct load 43668 lote 3 deu <10, lote 4 deu 20...` |
+
+- No ditado de C.T/B.L, a **data no fim** ("Data 10/10/2026") é ignorada: o resultado vale para o dia em que você registra.
+- Comando que já está certo **não muda**. "uma composta" não vira o número 1.
+- **Áudio que já é um comando completo** (C.T/B.L, recebimento, compostas) **não chama a IA**: o bot mostra "Entendi: ..." e pede **sim** antes de gravar. Frase solta ("coletei os tanques 60 e 61 hoje") vai para a IA, que também pede "sim".
+- **Limite diário de IA:** 100 pedidos por pessoa e 500 no total por dia (texto livre e áudio). Passou: "⚠️ Limite diário de IA atingido... Use o formato do comando". Os comandos no formato padrão **não usam IA** e continuam funcionando.
+- **Se o Gemini falhar**, o bot tenta o Groq e depois o Gemini 3.8 Flash antes de dizer que a IA está indisponível (ver `arquitetura.md`).

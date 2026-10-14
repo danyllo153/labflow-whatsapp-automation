@@ -16,6 +16,10 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 - **Comando por áudio** (Fase 5 adiantada): o Gemini transcreve o áudio do WhatsApp (até 1 minuto), o bot responde "🎤 Ouvi" e o texto vai direto para a IA, que sempre pede "sim" antes de gravar; "sim"/"não" falados confirmam. Seção 16 do `docs/comandos.md`; testes em `tests/voz.test.js`.
 - Regressão do prompt da IA com frases de placas e de repetição (`scripts/gerar-teste-prompt-ia.js`, 52 frases).
 - Painel: a página **Desvios** junta os desvios de drop e de tanque (migration `019`), com filtro por tipo e por análise, e a tabela com placas, prazo e resultado.
+- **IA resiliente** (piloto de 13/10: o Gemini respondeu `503` em ~1 de cada 7 chamadas, com chamadas penduradas por mais de 5 minutos): texto livre e áudio agora usam chamadas HTTP com **tempo máximo de 20 a 30 s** e **reserva automática** (Gemini → Groq → Gemini 3.8 Flash no texto; Gemini → Whisper do Groq no áudio), com resposta padronizada para o resto do fluxo. Ver `docs/arquitetura.md`.
+- **Limite diário de IA** por pessoa (100) e no total (500), com a migration `020_uso_ia.sql`: passou do limite, o bot avisa e não chama nenhum provedor.
+- **Pré-tratamento da fala e do ditado** sem IA (`menor que 10` → `<10`, `lotes 11 a 16` → `11-16`, números por extenso, `Lod 43 699`, `ente 2655`, ordem item/fábrica, ditado de C.T/B.L) e **atalho de áudio**: fala que já é um comando completo de C.T/B.L, recebimento ou compostas não chama a IA (continua pedindo "sim"). 31 testes novos.
+- `scripts/sanitize-workflow.ps1` distingue credenciais do mesmo tipo pelo nome (`Groq API` → `GROQ_CREDENTIAL_ID`).
 
 ### Alterado
 - **Placas de NFC com mais de uma coleta aberta:** quando o mesmo tanque (e frasco e análise) tem mais de uma coleta ainda sem placas e o comando não traz `coleta dd/mm/aaaa`, o bot **pergunta de qual coleta é** (lista cada uma com a data prevista) e não grava nada, em vez de escolher uma sozinho. Com a data, ou com uma só aberta, nada muda. Consulta `BD · Buscar leitura NFC` e node `Montar pergunta placas`; 3 testes novos.

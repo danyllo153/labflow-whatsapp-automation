@@ -560,6 +560,26 @@ Error Trigger → BD · Buscar Admins → Montar alerta de erro → Zap · Alert
 
 A auditoria (`scripts/audit-workflow.py`) só cobra "Respond to Webhook" de workflows que têm Webhook; este não tem. O código do node é coberto por `tests/alerta-erro.test.js` (ver [`scripts.md`](scripts.md)).
 
+## IA resiliente: tempo máximo, reserva e limite diário
+
+No piloto de 13/10/2026 o Gemini respondeu `503 Service unavailable` em cerca de 1 de cada 7 chamadas, e algumas ficaram penduradas por mais de 5 minutos (sem tempo máximo, e com até 5 tentativas seguidas). Efeito: "A IA está indisponível" e áudio lento. O bot em si ficou de pé: o comando no formato padrão continuou gravando. A cadeia de IA agora é assim:
+
+```
+Texto livre:  atalho "já entendi?" → limite diário → montar pedido → Gemini 3.1 Flash Lite (20 s)
+              → [falhou] Groq / Llama (20 s) → [falhou] Gemini 3.8 Flash (25 s) → normalizar → Validar resposta da IA
+Áudio:        limite diário → Gemini (30 s) → [falhou] Whisper do Groq (25 s) → normalizar → Montar transcrição
+```
+
+- **Tempo máximo e reserva:** cada chamada tem tempo máximo de 20 a 30 s e **não repete sozinha**; se falhar, o próximo provedor é a nova tentativa (saída de erro do node HTTP). Se todos falharem, o `Normalizar` devolve `{ error }` e o bot diz que a IA está indisponível, como antes. Os provedores são independentes: o Groq não depende do Google.
+- **Resposta padronizada:** o node `IA · Normalizar` converte a resposta de qualquer provedor para `{ content: { parts: [{ text }] }, provedor }`, o formato que `Validar resposta da IA` e `Montar transcrição` já liam. Por isso o resto do fluxo quase não mudou (só trata `limite` e `error`).
+- **Limite diário** (migration `020_uso_ia.sql`): cada pedido de IA soma 1 em `uso_ia` (dia, pessoa, tipo) **antes** de chamar qualquer provedor, e só soma se ainda estiver dentro de **100 por pessoa e 500 no total por dia**. Passou do limite: o bot avisa "limite diário de IA atingido, use o formato do comando" e não chama ninguém. Os números estão no SQL dos nodes `BD · Limite IA texto` e `BD · Limite IA áudio`. Isto protege a cota gratuita do Gemini (limite por minuto e por dia) e qualquer custo futuro.
+- **Atalho "já entendi?":** áudio cuja fala (já tratada) é um comando completo de C.T/B.L, recebimento ou compostas **não chama a IA**: segue como se a IA tivesse devolvido esse comando, e o `Validar` continua pedindo "sim" antes de gravar. Funciona mesmo com o Gemini fora do ar e economiza cota.
+- **Pré-tratamento da fala** (no `Interpretar comando`, sem IA): "menor que 10" vira `<10`, "lotes 11 a 16" vira `11-16`, número por extenso vira algarismo ("cento e vinte" = 120, "um" só depois de lote/amostra/tanque), "Lod 43 699" vira `load 43699`, "ente 2655" vira `item 2655`, "fábrica AQA item 2655" vira "item 2655 fábrica AQA", lista de lotes por espaço ou "e" vira `35,36,37,38`, e o ditado de contagens ("Leitura do CT do lote 43668. Lote 3 menor que 10, lote 4 20...") vira o comando padrão. Comando que já está certo passa **sem mudar**. A IA recebe o texto já tratado.
+- **Chaves:** a do Gemini fica na credencial do n8n (tipo Google Gemini/PaLM), e a do Groq numa credencial "Groq API" (cabeçalho `Authorization: Bearer ...`). Nenhuma chave no arquivo (`tests/ia-resiliente.test.js` confere).
+- **Reenvio do áudio:** o node `Reenviar áudio como texto` espera o fluxo inteiro; agora com tempo de 120 s e sem derrubar a execução (a mensagem já foi tratada pelo fluxo reenviado), para não gerar alerta de erro por lentidão.
+- **Privacidade:** no plano gratuito o Google (e o Groq, conferir os termos) pode usar o conteúdo para melhorar produtos. No piloto vale a autorização do gestor; para uso definitivo, plano pago com teto de gasto.
+
+Limites conhecidos: o Groq e o Gemini 3.8 Flash entram como reserva, mas só a regressão do prompt e a medição de tempo com frases reais dizem qual vale como principal; o nome do modelo do Groq (`llama-3.3-70b-versatile`) e do Google (`gemini-3.8-flash`) deve ser conferido nas contas.
 ## Arquitetura no tempo do Google Sheets (resumo, até a 0.9.0)
 
 ```
