@@ -259,9 +259,9 @@ test('workflow: a foto vai do roteador até o WhatsApp, com reserva de modelo e 
   assert.deepEqual(destino('IA · Limite atingido foto'), ['Foto · Interpretar']);
   assert.deepEqual(destino('Foto · Montar pedido'), ['IA · Gemini foto']);
   assert.deepEqual(destino('IA · Gemini foto', 0), ['IA · Normalizar foto']);
-  assert.deepEqual(destino('IA · Gemini foto', 1), ['IA · Gemini 3.1 foto']);
-  assert.deepEqual(destino('IA · Gemini 3.1 foto', 0), ['IA · Normalizar foto']);
-  assert.deepEqual(destino('IA · Gemini 3.1 foto', 1), ['IA · Normalizar foto']);
+  assert.deepEqual(destino('IA · Gemini foto', 1), ['IA · Gemini reserva foto']);
+  assert.deepEqual(destino('IA · Gemini reserva foto', 0), ['IA · Normalizar foto']);
+  assert.deepEqual(destino('IA · Gemini reserva foto', 1), ['IA · Normalizar foto']);
   assert.deepEqual(destino('IA · Normalizar foto'), ['Foto · Interpretar']);
   assert.deepEqual(destino('Foto · Interpretar'), ['BD · Compostas da foto']);
   assert.deepEqual(destino('BD · Compostas da foto'), ['Foto · Montar resposta']);
@@ -270,9 +270,14 @@ test('workflow: a foto vai do roteador até o WhatsApp, com reserva de modelo e 
   assert.deepEqual(destino('Zap · Foto'), ['Fim · Foto']);
   const por = (n) => workflow.nodes.find((x) => x.name === n);
   assert.equal(por('IA · Gemini foto').onError, 'continueErrorOutput');
-  assert.equal(por('IA · Gemini 3.1 foto').onError, 'continueErrorOutput');
-  assert.match(por('IA · Gemini foto').parameters.url, /gemini-3\.8-flash/);
-  assert.match(por('IA · Gemini 3.1 foto').parameters.url, /gemini-3\.1-flash-lite/);
+  assert.equal(por('IA · Gemini reserva foto').onError, 'continueErrorOutput');
+  // o Google devolve 503 (alta demanda) de vez em quando: cada modelo tenta 3 vezes antes de passar para a reserva
+  for (const n of ['IA · Gemini foto', 'IA · Gemini reserva foto']) {
+    assert.equal(por(n).retryOnFail, true, n);
+    assert.equal(por(n).maxTries, 3, n);
+  }
+  assert.match(por('IA · Gemini foto').parameters.url, /gemini-3-flash-preview/);
+  assert.match(por('IA · Gemini reserva foto').parameters.url, /gemini-3\.5-flash-lite/);
   assert.match(por('BD · Limite IA foto').parameters.options.queryReplacement, /"foto"/);
   assert.match(por('BD · Salvar pendência foto').parameters.query, /\$4::text = '1'/);
 });
