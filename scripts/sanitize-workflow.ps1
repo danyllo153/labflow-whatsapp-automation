@@ -8,7 +8,7 @@
 #   1. troca o ID real de cada credencial por um placeholder (GEMINI_CREDENTIAL_ID,
 #      EVOLUTION_CREDENTIAL_ID, GROQ_CREDENTIAL_ID, POSTGRES_CREDENTIAL_ID) e remove meta.instanceId,
 #      mexendo so no texto bruto do arquivo;
-#   2. grava no mesmo formato do arquivo versionado (JSON indentado pelo PowerShell,
+#   1b. remove settings.errorWorkflow (a ligacao com o workflow de alerta de erro e da instancia)`n#   2. grava no mesmo formato do arquivo versionado (JSON indentado pelo PowerShell,
 #      terminando em LF), para o diff do Git mostrar so o que mudou de verdade;
 #   3. confere que nenhum ID real sobrou e que nao ha pinData.
 # Depois, rode a auditoria: python scripts/audit-workflow.py LabFlow.json --public
@@ -53,6 +53,8 @@ foreach ($id in $reais.Keys) { $raw = $raw.Replace($id, $reais[$id]) }
 $raw = [regex]::Replace($raw, '"meta"\s*:\s*\{\s*"instanceId"\s*:\s*"[^"]*"\s*\}', '"meta": {}')
 
 $obj = $raw | ConvertFrom-Json
+# a ligacao com o workflow de alerta de erro e da instancia: nao vai para o arquivo publico
+if ($obj.settings -and $obj.settings.PSObject.Properties['errorWorkflow']) { [void]$obj.settings.PSObject.Properties.Remove('errorWorkflow') }
 if ($obj.pinData -and @($obj.pinData.PSObject.Properties).Count -gt 0) { throw 'pinData preenchido: apague os dados fixados no n8n antes de exportar.' }
 $texto = (($obj | ConvertTo-Json -Depth 100) -replace "`r`n", "`n") + "`n"
 
