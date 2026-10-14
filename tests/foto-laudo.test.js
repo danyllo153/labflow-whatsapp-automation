@@ -189,11 +189,12 @@ test('confirmação: lista os comandos em ordem, avisa as dúvidas e guarda a li
 test('confirmação: TAB mostra o #N da composta achada; a que não existe fica de fora com aviso', () => {
   const d = ler({ formulario: 'tab', blocos: [{ load: '43598', item: '2703', compostas: ['1-5', '6-10', '11-12'] }] });
   const r = resposta(d, [{ kind: 'composta', idx: 0, composta_id: 41 }, { kind: 'composta', idx: 1, composta_id: 42 }, { kind: 'composta', idx: 2, composta_id: null }]);
-  assert.match(r.textoResposta, /Tab feito do load 43598 item 2703 lotes 1-5  \(composta #41\)/);
-  assert.match(r.textoResposta, /lotes 6-10  \(composta #42\)/);
-  assert.doesNotMatch(r.textoResposta, /lotes 11-12  \(composta/);
+  // as compostas achadas viram UM comando só (uma mensagem só), e o #N de cada uma aparece por load
+  assert.match(r.textoResposta, /1️⃣ Tab feito das compostas #41, #42\n/);
+  assert.doesNotMatch(r.textoResposta, /2️⃣/);
+  assert.match(r.textoResposta, /TAB no caldo, as 2 compostas juntas, numa mensagem só:\n• load 43598 \(item 2703\): #41 \(1-5\) · #42 \(6-10\)/);
   assert.match(r.textoResposta, /load 43598 lotes 11-12: não achei essa composta \(ficou de fora\)/);
-  assert.equal(JSON.parse(r.payload).comandos.length, 2);
+  assert.deepEqual(JSON.parse(r.payload).comandos, ['Tab feito das compostas #41, #42']);
 });
 
 test('confirmação: se nenhuma composta existe, nada é guardado', () => {
@@ -317,4 +318,50 @@ test('confirmação do recebimento explica em linguagem simples o que será cria
 test('TAB e Coliformes não ganham o resumo do recebimento', () => {
   const d = ler({ formulario: 'tab', blocos: [{ load: '43598', item: '2703', compostas: ['1-5'] }] });
   assert.doesNotMatch(resposta(d, [{ kind: 'composta', idx: 0, composta_id: 41 }]).textoResposta, /O que isso cria/);
+});
+
+test('TAB e Coliformes: várias compostas e loads viram UM comando com faixas, aceito pelo bot, e a mensagem lista por load', () => {
+  const d = ler({ formulario: 'tab', data: '14/10/2026', blocos: [
+    { load: '43598', item: '2703', compostas: ['1-5', '6-10', '11-15'] },
+    { load: '43370', item: '2452', compostas: ['1-3', '4-6', '15,16'] },
+  ] });
+  const ids = [18, 19, 20, 27, 28, 31];
+  const r = resposta(d, ids.map((id, idx) => ({ kind: 'composta', idx, composta_id: id })));
+  const payload = JSON.parse(r.payload);
+  assert.equal(payload.comandos.length, 1, 'uma mensagem só, não uma por composta');
+  assert.equal(payload.comandos[0], 'Tab feito das compostas #18 a #20, #27, #28, #31');
+  assert.match(r.textoResposta, /• load 43598 \(item 2703\): #18 \(1-5\) · #19 \(6-10\) · #20 \(11-15\)/);
+  assert.match(r.textoResposta, /• load 43370 \(item 2452\): #27 \(1-3\) · #28 \(4-6\) · #31 \(15-16\)/);
+  const c = interpretar(payload.comandos[0], { reenvio: true });
+  assert.equal(c.tipo, 'tab_feito');
+  assert.deepEqual(c.compostaIds, [18, 19, 20, 27, 28, 31]);
+  // coliformes usa o mesmo desenho
+  const col = ler({ formulario: 'coliformes', blocos: [{ load: '43598', item: '2703', compostas: ['1-5', '6-10'] }] });
+  const rc = resposta(col, [{ kind: 'composta', idx: 0, composta_id: 18 }, { kind: 'composta', idx: 1, composta_id: 19 }]);
+  assert.deepEqual(JSON.parse(rc.payload).comandos, ['Coliformes feitos das compostas #18, #19']);
+  assert.equal(interpretar('Coliformes feitos das compostas #18, #19', { reenvio: true }).teste, 'COLIFORMES');
+});
+
+test('TAB: uma composta só e tanques de NFC continuam em comandos próprios', () => {
+  const d = ler({ formulario: 'tab', blocos: [{ load: '43598', item: '2703', compostas: ['1-5'], tanques: [{ tanque: '42', data: '17/08' }] }] });
+  const r = resposta(d, [{ kind: 'composta', idx: 0, composta_id: 41 }]);
+  assert.deepEqual(JSON.parse(r.payload).comandos, ['Tab feito das compostas #41', 'Tab feito dos tanques terra 42 coleta 17/08/2026']);
+  assert.equal(interpretar('Tab feito das compostas #41', { reenvio: true }).tipo, 'tab_feito');
+});
+
+test('TAB: a data do papel vale quando é de hoje ou dos últimos 3 dias; antes disso vale hoje e avisa', () => {
+  const hoje = ctx.hoje; // dd/mm/aaaa
+  const [dd, mm, aa] = hoje.split('/').map(Number);
+  const fmt = (d) => String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
+  const menos = (n) => fmt(new Date(aa, mm - 1, dd - n));
+  const tab = (data) => ler({ formulario: 'tab', data, blocos: [{ load: '43598', item: '2703', compostas: ['1-5'] }] });
+  assert.equal(tab(hoje).dataFeito, '', 'hoje: sem data no comando');
+  assert.equal(tab(menos(2)).dataFeito, menos(2));
+  assert.equal(tab(menos(3)).dataFeito, menos(3));
+  const velha = tab(menos(10));
+  assert.equal(velha.dataFeito, '');
+  assert.ok(velha.duvidas.some((x) => /não é de hoje nem dos últimos 3 dias: vale a data de hoje/.test(x)));
+  assert.equal(tab(fmt(new Date(aa, mm - 1, dd + 2))).dataFeito, '', 'data no futuro não vale');
+  const r = resposta(tab(menos(2)), [{ kind: 'composta', idx: 0, composta_id: 41 }]);
+  assert.deepEqual(JSON.parse(r.payload).comandos, ['Tab feito das compostas #41 data ' + menos(2)]);
 });
