@@ -29,6 +29,7 @@ const ASSUNTOS = {
   howard: ['howard'],
   ctbl: ['ct bl', 'c.t e b.l', 'ct', 'bl', 'contagens'],
   relatorio: ['relatório', 'relatorio do dia'],
+  consultas: ['consultas', 'quem coletou', 'resultados'],
   cargos: ['cargos'],
 };
 
@@ -36,7 +37,7 @@ test('o menu lista NFC e concentrado, e não só consultas', () => {
   const menu = ajuda('comandos');
   assert.match(menu, /\*NFC \(tanques\)\*/);
   assert.match(menu, /\*Concentrado\*/);
-  for (const assunto of ['coleta', 'análise', 'placas', 'drops', 'leituras', 'descarte', 'recebimento', 'tab', 'coliformes', 'embarque', 'howard', 'ct bl', 'relatório', 'cargos']) {
+  for (const assunto of ['coleta', 'análise', 'placas', 'drops', 'leituras', 'descarte', 'recebimento', 'tab', 'coliformes', 'embarque', 'howard', 'ct bl', 'relatório', 'consultas', 'cargos']) {
     assert.ok(menu.includes(`• comandos ${assunto}`), `o menu não lista "comandos ${assunto}"`);
   }
   assert.doesNotMatch(menu, /consultar /, 'o menu antigo falava em "consultar"');
