@@ -62,13 +62,21 @@ A GitHub Action [`testes.yml`](../.github/workflows/testes.yml) roda `npm test` 
 
 Arquivo: [`scripts/gerar-teste-prompt-ia.js`](../scripts/gerar-teste-prompt-ia.js)
 
-O Gemini não roda offline, então o prompt é testado no próprio n8n. O script gera um workflow descartável com **o mesmo prompt do bot** (lido do arquivo de importação) e uma lista de frases com o resultado esperado; o workflow manda uma frase por vez ao Gemini (4 s entre elas) e o node **Placar** mostra quantas acertou e, nas erradas, a frase, o esperado e o obtido.
+O Gemini não roda offline, então o prompt é testado no próprio n8n. O script gera um workflow descartável com **o mesmo pedido do bot** (o prompt é lido do node `IA · Montar pedido` do arquivo de importação e a chamada copia o `IA · Gemini texto`) e uma lista de **60 frases** com o resultado esperado; o workflow manda uma frase por vez ao Gemini (4 s entre elas) e o node **Placar** mostra quantas acertou e, nas erradas, a frase, o esperado e o obtido.
 
 ```powershell
-node scriptsgerar-teste-prompt-ia.js LabFlow_importar_n8n.json LabFlow_importar_n8n_teste_ia.json
+node scripts\gerar-teste-prompt-ia.js LabFlow_importar_n8n_ia.json LabFlow_importar_n8n_teste_ia.json
 ```
 
-Importar no n8n como workflow novo, **Execute workflow** e ler o node Placar; depois apagar o workflow. Os dois arquivos têm IDs reais e ficam fora do Git. As frases ficam no próprio script (diferentes dos exemplos do prompt, para medir generalização, incluindo frases em estilo de áudio e as intenções antigas). Rodar depois de **qualquer** mudança no prompt. Em 05/10/2026: 44 de 44.
+**Rodar pelo servidor** (sem abrir a tela do n8n): copiar o arquivo gerado, `docker exec labflow-n8n n8n import:workflow --input=/tmp/arquivo.json` (o script já põe um `id`), achar o id com `n8n list:workflow` e executar:
+
+```bash
+docker exec -d labflow-n8n sh -c "N8N_RUNNERS_BROKER_PORT=5791 N8N_RUNNERS_ENABLED=false n8n execute --id=<id> --rawOutput > /tmp/placar-ia.json"
+```
+
+As duas variáveis são necessárias: sem elas o comando tenta abrir a mesma porta do n8n que está no ar e falha. Leva uns 10 minutos; o resultado (JSON do node Placar) sai no arquivo. Depois **apagar o workflow de teste** (pela tela do n8n; o servidor não tem comando para apagar). Os dois arquivos têm IDs reais e ficam fora do Git. As frases ficam no próprio script (diferentes dos exemplos do prompt, para medir generalização, incluindo frases em estilo de áudio, fábricas por nome de cidade, navio `Orange Sky` e as consultas novas). Rodar depois de **qualquer** mudança no prompt.
+
+Histórico: 05/10/2026, 44 de 44 (prompt antigo). 14/10/2026, prompt atual (fábricas travadas, navios, tanques e consultas): **duas rodadas em 14/10 (24 e 27 de 60), com muitos `503` do Google: 46 das 60 frases foram acertadas em pelo menos uma rodada, nenhuma resposta veio errada e 14 frases nunca receberam resposta** (não testadas). Prompt sem regressão detectada; falta só repetir as 14 sem resposta, uma rodada de cada vez e em hora calma.
 
 ## gerar-painel-powerbi.js (painel do Power BI como código)
 
