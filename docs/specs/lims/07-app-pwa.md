@@ -173,7 +173,11 @@ Sem gráfico "por pessoa" (pode soar como vigilância).
 O mesmo texto do `relatório do dia` do bot (pedido ao bot pelo assistente, para ser idêntico), mostrado formatado e **sem emojis** (etiquetas de texto no lugar), com os filtros como botões (`completo`, `recebimento`, `embarque`, `tanques`) e **Imprimir**.
 
 ### 10. Admin
-Usuários (nome, cargo), convite de primeiro acesso, zerar senha, bloquear acesso ao app, horários padrão dos turnos, reabrir turno encerrado. Trocar cargo continua pelo bot enquanto o cargo morar em `usuarios`; com a função do banco, passa a ser também pelo app.
+- **Pessoas** (decidido em 15/10, já na primeira versão): lista com nome, usuário, cargo e situação (ativo, convite pendente, bloqueado).
+  - **"Nova pessoa"**: nome, telefone, cargo (Admin, Operador, Consultor; Coletor no futuro) e **usuário curto** (ex.: `ana.souza`). **"Cadastrar e gerar convite"** confirma uma vez e mostra o **código de primeiro acesso** (8 letras e números, 24 h, uso único) para o Admin entregar.
+  - **Trocar cargo**, **gerar novo convite** (zerar senha) e **bloquear acesso**, cada um com confirmação; fica registrado quem fez e quando.
+  - Cadastrar e trocar cargo usam as **funções do banco** pedidas à sessão do bot (PB5), as mesmas do comando do WhatsApp: quem é cadastrado pelo app já é reconhecido no bot, e vice-versa.
+- Horários padrão dos turnos, atividades fixas de cada turno, estufas (nome e temperatura de referência), reabrir turno encerrado.
 
 ## Permissões (decididas em 15/10)
 
