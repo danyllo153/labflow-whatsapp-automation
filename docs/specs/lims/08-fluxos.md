@@ -69,7 +69,7 @@ Erros: o que acontece quando algo falha
 - **Passos:** 1) Voz: o áudio vira texto (como no bot; áudio não é guardado). 2) O texto segue o **mesmo pipeline do bot** (regex → IA → validação no código). 3) O assistente responde com o que entendeu e **um botão Sim / Não** (uma mensagem, um sim para a lista inteira). 4) Sim → grava, em fila, pela mesma regra do bot. 5) Resposta com o link para a página ("6 leituras marcadas. Ver em Tanques").
 - **Regras:** permissão no código (nunca no prompt); limite diário de IA por pessoa, somado com o WhatsApp; tudo que grava pede sim.
 - **Resultado:** igual ao comando do WhatsApp; a página se atualiza.
-- **Pergunta aberta:** como o app chega ao pipeline do bot (seção "Perguntas").
+- **Como chega ao pipeline do bot:** decidido em 15/10 (seção "Assistente e o pipeline do bot", abaixo; pedido PB6).
 
 ### A5. Foto de laudo
 - **Gatilho:** a pessoa toca em Foto no assistente e fotografa o laudo.
@@ -114,10 +114,10 @@ Erros: o que acontece quando algo falha
 
 ## Perguntas
 
-- [ ] **A4 — como o assistente do app chega ao pipeline do bot?** Proposta abaixo.
+- [x] ~~A4 — como o assistente do app chega ao pipeline do bot?~~ **Mesmo webhook do n8n com `canal: app`** (15/10, pedido PB6).
 - [ ] **A11 — o Consultor pode exportar para Excel?**
 
-### Proposta para A4 (a decidir)
+### Assistente e o pipeline do bot (decidido em 15/10)
 
 O bot hoje recebe as mensagens do WhatsApp pela Evolution, num webhook do n8n, e responde chamando a Evolution de volta. Para o app usar **o mesmo pipeline sem duplicar regras**:
 
