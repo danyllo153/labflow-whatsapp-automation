@@ -190,7 +190,7 @@ O cargo **Coletor** depende do pedido PB2 à sessão do bot.
 - **Estilo** dos LIMS comerciais. **Computador e tablet:** menu na lateral, cartões com números grandes, tabelas com filtros, listas com barra de andamento. **Celular:** barra embaixo (**Início · Turno · Páginas · Esterilização · Assistente**) e cartões empilhados; tabelas viram cartões por linha.
 - **Três tamanhos** desde o começo: celular, tablet e computador.
 - **Fácil para leigos:** botões grandes com texto (não só ícone), uma ação principal por tela, confirmação sempre em português simples, nada se perde sem perguntar.
-- **Paleta clara** (laranja claro e creme), ponto de partida a ajustar na tela:
+- **Paleta clara** (laranja claro e creme), **aprovada pelo Danyllo em 15/10** depois de uma prévia visual com dados fictícios (fora do repositório):
 
   | Uso | Cor |
   |---|---|
@@ -198,6 +198,8 @@ O cargo **Coletor** depende do pedido PB2 à sessão do bot.
   | Cartões | branco `#FFFFFF` com borda `#EADFC4` |
   | Principal (barra, destaques) | laranja claro `#F6B04A` |
   | Texto | marrom-escuro `#4A3418` |
+  | Laranja suave (filtros, linha selecionada) | `#FCE7C3` |
+  | Texto secundário | `#7A6448` |
   | Botões de ação | azul `#2F7BC4` |
   | Ok · Não ok · Atenção | verde `#2E8B57` · vermelho `#C0392B` · âmbar `#E0A100` |
 
@@ -233,7 +235,6 @@ Notificação no celular, modo offline, loja de aplicativos, enviar relatório p
 ## Perguntas ainda abertas
 
 - [ ] **Gráficos:** começar com G1 a G4?
-- [ ] **Paleta:** os códigos de cor acima servem como ponto de partida?
 
 ## Pronto quando
 
