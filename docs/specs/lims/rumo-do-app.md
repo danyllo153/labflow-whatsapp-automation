@@ -43,6 +43,7 @@ As quatro decisões que estavam em aberto foram respondidas pelo Danyllo em 15/1
   - Cada registro entra no relatório pelo **turno** (sem mostrar a hora). **Cada pessoa entra no turno pelo próprio app** ("sou da Tarde, 16h–00h", horário editável à mão ao entrar); tudo o que ela registrar enquanto estiver no turno (pelo app ou pelo WhatsApp, pelo mesmo usuário) fica ligado a esse turno. Sem entrada no turno, vale o horário.
   - Campos: Data, Turno, **Analistas do turno** (quem entrou no turno pelo app; editável à mão), Análises feitas e Análises pendentes (automáticos), Esterilizações realizadas e pendentes, Ocorrências do dia (texto livre).
   - **Página do relatório compartilhada** e sincronizada para todos do turno. Ao sair, a pessoa atualiza e **encerra o turno**; tudo o que ficou pendente (automático e escrito à mão) **passa para o relatório do próximo turno**.
+  - **Encerramento:** cada pessoa registra a própria saída; o turno se encerra quando **a última pessoa sai** e toca em "Encerrar turno"; se ninguém encerrar, ele se **encerra sozinho** quando o próximo turno começa (aviso "encerrado automaticamente"). Encerrado = só leitura; o Admin reabre com motivo.
   - Pendente = vence hoje e não feito, atrasados, desvios abertos e repetições, TAB/Coliformes em confirmação, C.T/B.L sem valor.
   - **Esterilização:** registro à mão (a autoclave não exporta dados), por botões **Ponteira, Meio, Frasco, Descarte** e texto livre, **com o número do ciclo** (ex.: "meio de cultura, ciclo 100"; "ponteira, ciclo 102"); tabela própria do app. **Sem resultado da fita**: o ok/não ok sai da nota da autoclave. A anotação no **Word continua** (é o rastreio oficial da empresa); o app só ajuda a saber o que foi feito e o que falta no turno. É **sob demanda** (sem rotina fixa): "Esterilizações pendentes" é um **campo escrito à mão**, sem cálculo automático.
 - [x] **Ordem:** o app começa **lendo as tabelas atuais** do bot, sempre por views; não espera as migrations 021–026 do LIMS.
@@ -67,7 +68,6 @@ As quatro decisões que estavam em aberto foram respondidas pelo Danyllo em 15/1
 
 ## Decisões em aberto (perguntar, não decidir sozinho)
 
-- [ ] Quem encerra o turno quando há duas pessoas (a última a sair? qualquer uma?) e se o Admin pode reabrir um turno encerrado.
 
 ## Pedidos para a sessão do bot
 
