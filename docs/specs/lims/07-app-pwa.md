@@ -173,9 +173,9 @@ Sem gráfico "por pessoa" (pode soar como vigilância).
 O mesmo texto do `relatório do dia` do bot (pedido ao bot pelo assistente, para ser idêntico), mostrado formatado e **sem emojis** (etiquetas de texto no lugar), com os filtros como botões (`completo`, `recebimento`, `embarque`, `tanques`) e **Imprimir**.
 
 ### 10. Admin
-- **Pessoas** (decidido em 15/10, já na primeira versão): lista com nome, usuário, cargo e situação (ativo, convite pendente, bloqueado).
-  - **"Nova pessoa"**: nome, telefone, cargo (Admin, Operador, Consultor; Coletor no futuro) e **usuário curto** (ex.: `ana.souza`). **"Cadastrar e gerar convite"** confirma uma vez e mostra o **código de primeiro acesso** (8 letras e números, 24 h, uso único) para o Admin entregar.
-  - **Trocar cargo**, **gerar novo convite** (zerar senha) e **bloquear acesso**, cada um com confirmação; fica registrado quem fez e quando.
+- **Pessoas** (decidido em 15/10, já na primeira versão): lista com nome, usuário, cargo e situação (ativo, senha provisória pendente, bloqueado).
+  - **"Nova pessoa"**: nome, telefone, cargo (Admin, Operador, Consultor; Coletor no futuro) e **usuário curto** (ex.: `ana.souza`). **"Cadastrar e gerar senha provisória"** confirma uma vez e mostra uma **senha aleatória** (24 h) para o Admin entregar; no primeiro login a pessoa é obrigada a trocá-la ([06](06-api-e-auth.md)).
+  - **Trocar cargo**, **gerar senha provisória** (esqueceu a senha) e **bloquear acesso**, cada um com confirmação; fica registrado quem fez e quando.
   - Cadastrar e trocar cargo usam as **funções do banco** pedidas à sessão do bot (PB5), as mesmas do comando do WhatsApp: quem é cadastrado pelo app já é reconhecido no bot, e vice-versa.
 - Horários padrão dos turnos, atividades fixas de cada turno, estufas (nome e temperatura de referência), reabrir turno encerrado.
 
@@ -193,7 +193,7 @@ O **Operador é o analista em geral**.
 | Corrigir registro (com motivo) | Sim | Sim | Não | Só a própria coleta, no mesmo dia |
 | Excluir registro (com motivo e confirmação; fica no histórico) | Sim | Sim | Não | Pede ao Admin |
 | Usar o assistente | Sim | Sim | Só consultas | Só coletas |
-| Adicionar pessoa, convite, senha, trocar cargo | Sim | Não | Não | Não |
+| Adicionar pessoa, gerar senha provisória, trocar cargo | Sim | Não | Não | Não |
 | Horários padrão dos turnos, reabrir turno | Sim | Não | Não | Não |
 
 O cargo **Coletor** depende do pedido PB2 à sessão do bot.
