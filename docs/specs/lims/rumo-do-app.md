@@ -43,7 +43,7 @@ As quatro decisões que estavam em aberto foram respondidas pelo Danyllo em 15/1
   - Cada registro entra no relatório pelo **turno** (sem mostrar a hora). Na troca de turno, vale o turno em que **quem registrou** está marcado como analista; sem marcação, vale o horário.
   - Campos: Data, Turno, **Analistas do turno** (marcados à mão por quem abre o relatório), Análises feitas e Análises pendentes (automáticos), Esterilizações realizadas e pendentes, Ocorrências do dia (texto livre).
   - Pendente = vence hoje e não feito, atrasados, desvios abertos e repetições, TAB/Coliformes em confirmação, C.T/B.L sem valor.
-  - **Esterilização:** registro à mão (a autoclave não exporta dados), por botões **Ponteira, Meio, Frasco, Descarte** e texto livre; tabela própria do app. É **sob demanda** (sem rotina fixa): "Esterilizações pendentes" é um **campo escrito à mão**, sem cálculo automático.
+  - **Esterilização:** registro à mão (a autoclave não exporta dados), por botões **Ponteira, Meio, Frasco, Descarte** e texto livre, **com o número do ciclo** (ex.: "meio de cultura, ciclo 100"; "ponteira, ciclo 102"); tabela própria do app. **Sem resultado da fita**: o ok/não ok sai da nota da autoclave. A anotação no **Word continua** (é o rastreio oficial da empresa); o app só ajuda a saber o que foi feito e o que falta no turno. É **sob demanda** (sem rotina fixa): "Esterilizações pendentes" é um **campo escrito à mão**, sem cálculo automático.
 - [x] **Ordem:** o app começa **lendo as tabelas atuais** do bot, sempre por views; não espera as migrations 021–026 do LIMS.
 - [x] **Visual, offline e notificações:**
   - Visual no estilo dos LIMS comerciais (menu lateral e cartões no computador e no tablet; barra embaixo no celular), **paleta clara**: fundo creme, laranja claro, texto marrom-escuro, azul nos botões. **Sem nome, logotipo nem fotos da empresa** no repositório e no app de demonstração (aparece só "LabFlow").
@@ -53,7 +53,6 @@ As quatro decisões que estavam em aberto foram respondidas pelo Danyllo em 15/1
 ## Decisões em aberto (perguntar, não decidir sozinho)
 
 - [ ] A hora das leituras de placa do NFC (`analises` não guarda) entra no turno pelo dia até a sessão do bot gravar a hora: pedido para a sessão do bot?
-- [ ] Esterilização: guardar também o número do ciclo e "fita ok / não ok" (substitui a anotação no Word)?
 
 ## Regras que não mudam
 
@@ -79,3 +78,5 @@ As quatro decisões que estavam em aberto foram respondidas pelo Danyllo em 15/1
 - 15/10/2026: publicar o app nas lojas (Google Play ~US$ 25 uma vez; App Store ~US$ 99/ano), avaliar depois do piloto.
 - 15/10/2026: controle de escala por pessoa (quem trabalha em qual dia), se o relatório do turno pedir.
 - 15/10/2026: modo offline (gravar sem internet e enviar depois), avaliar depois.
+- 15/10/2026: ligar as análises do dia aos ciclos de esterilização usados (ex.: "recebimento analisado com PDA do ciclo 102 e ponteiras do ciclo 103"), para rastreio.
+- 15/10/2026: com o RAG, preencher alguns laudos automaticamente, usando os ciclos registrados.
