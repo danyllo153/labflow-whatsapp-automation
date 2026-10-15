@@ -43,7 +43,7 @@ As quatro decisões que estavam em aberto foram respondidas pelo Danyllo em 15/1
   - Cada registro entra no relatório pelo **turno** (sem mostrar a hora). Na troca de turno, vale o turno em que **quem registrou** está marcado como analista; sem marcação, vale o horário.
   - Campos: Data, Turno, **Analistas do turno** (marcados à mão por quem abre o relatório), Análises feitas e Análises pendentes (automáticos), Esterilizações realizadas e pendentes, Ocorrências do dia (texto livre).
   - Pendente = vence hoje e não feito, atrasados, desvios abertos e repetições, TAB/Coliformes em confirmação, C.T/B.L sem valor.
-  - **Esterilização:** registro à mão (a autoclave não exporta dados), por botões **Ponteira, Meio, Frasco, Descarte** e texto livre; tabela própria do app. Pendente = tipo previsto para o turno e não marcado (a confirmar no 07).
+  - **Esterilização:** registro à mão (a autoclave não exporta dados), por botões **Ponteira, Meio, Frasco, Descarte** e texto livre; tabela própria do app. É **sob demanda** (sem rotina fixa): "Esterilizações pendentes" é um **campo escrito à mão**, sem cálculo automático.
 - [x] **Ordem:** o app começa **lendo as tabelas atuais** do bot, sempre por views; não espera as migrations 021–026 do LIMS.
 - [x] **Visual, offline e notificações:**
   - Visual no estilo dos LIMS comerciais (menu lateral e cartões no computador e no tablet; barra embaixo no celular), **paleta clara**: fundo creme, laranja claro, texto marrom-escuro, azul nos botões. **Sem nome, logotipo nem fotos da empresa** no repositório e no app de demonstração (aparece só "LabFlow").
@@ -53,7 +53,6 @@ As quatro decisões que estavam em aberto foram respondidas pelo Danyllo em 15/1
 ## Decisões em aberto (perguntar, não decidir sozinho)
 
 - [ ] A hora das leituras de placa do NFC (`analises` não guarda) entra no turno pelo dia até a sessão do bot gravar a hora: pedido para a sessão do bot?
-- [ ] Esterilização: há uma lista fixa de tipos por turno (para calcular o pendente) ou é sob demanda?
 - [ ] Esterilização: guardar também o número do ciclo e "fita ok / não ok" (substitui a anotação no Word)?
 
 ## Regras que não mudam
