@@ -117,4 +117,5 @@ O app não mexe nas tabelas nem no workflow do bot: o que ele precisa vira pedid
 - 15/10/2026: telas e listas mais **compactas** (a prévia ficou grande).
 - 15/10/2026: **temperatura das estufas** por turno, falada ou digitada, gravada com hora e turno (número de estufas a ser passado pelo Danyllo).
 - 15/10/2026: telefone opcional para quem usa só o app (hoje `usuarios` exige telefone), avaliar na Fase E.
-- 15/10/2026: código de primeiro acesso mandado pelo próprio bot (`acesso ao app`), quando houver mais gente.
+- 15/10/2026: senha provisória mandada pelo próprio bot (`acesso ao app`), quando houver mais gente.
+- 15/10/2026: recuperação de senha por e-mail (exige cadastrar o e-mail de cada pessoa e um serviço de envio), avaliar depois do piloto.
