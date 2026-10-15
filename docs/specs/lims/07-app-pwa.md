@@ -129,7 +129,7 @@ Cada página do Power BI vira uma página do app, **no mesmo padrão**: cartões
 - **Tocar numa linha** abre o **detalhe**: todos os dados, quem fez e quando, e os botões **Editar**, **Excluir**, **Corrigir com o assistente** e **Histórico** (conforme o cargo).
 - **Gráficos** de cada página respondem ao mesmo filtro; tocar numa barra filtra a tabela.
 
-**Ordem de entrega recomendada:** primeiro **só leitura** (filtros, impressão, exportação), página por página; editar e excluir chegam **página por página**, à medida que a sessão do bot cria as funções do banco daquela área (começando por **Coletas** e **Recebimento**).
+**Ordem de entrega (decidida em 15/10):** primeiro **todas as páginas só em leitura** (filtros, impressão, exportação). Editar e excluir chegam **página por página**, à medida que a sessão do bot cria as funções do banco daquela área: **1) Coletas e Recebimento** (os mais usados, uma linha por registro); **2)** Drops, TAB e Coliformes, Embarque; **3)** resultados (C.T/B.L, leituras de NFC), depois da revisão e liberação da Fase 1 do LIMS.
 
 ### 6. Gráficos
 Ficam **dentro das páginas** (cada página com os seus), não numa tela separada. Os números vêm das mesmas views do Power BI, para baterem. **Recomendo** começar com:
@@ -234,7 +234,6 @@ Notificação no celular, modo offline, loja de aplicativos, enviar relatório p
 - [ ] **Gráficos:** começar com G1 a G4?
 - [ ] **Paleta:** os códigos de cor acima servem como ponto de partida?
 - [ ] **Impressão:** só A4 retrato, ou também paisagem para tabelas largas (Embarque, Tanques)?
-- [ ] **Primeiras páginas com editar/excluir:** Coletas e Recebimento, como recomendado?
 
 ## Pronto quando
 
