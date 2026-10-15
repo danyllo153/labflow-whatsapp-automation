@@ -34,6 +34,7 @@ O WhatsApp continua no ar durante o piloto (decisão de 15/10); o app tende a se
 - Permissão conferida **no código da API** a cada chamada, pelo cargo; nunca no prompt da IA.
 - **Só online.** Primeiro só no servidor de demonstração, com dados fictícios.
 - Termos do bot: **drop**, **desvio**, **repetição** (nunca "reanálise"); TAB e Coliformes no masculino.
+- **Visual formal, sem emoji** (decidido em 15/10): emoji é coisa do WhatsApp. No app, a situação aparece como **etiqueta de texto** com cor: **Ok**, **Não ok**, **Positivo**, **Negativo**, **Pendente**, **Em confirmação**, **Excluído**. Textos que vêm do bot (respostas do assistente, relatório do dia) são mostrados **sem os emojis**, trocados pela etiqueta equivalente (ex.: o ✅ do bot vira "Ok"; o alerta vira "Não ok").
 
 ## Três jeitos de fazer qualquer coisa
 
@@ -103,7 +104,7 @@ Usuário e senha. Primeiro acesso e recuperação de senha em [06](06-api-e-auth
 4. Se ninguém encerrar, o turno **se encerra sozinho** quando o próximo começa ("encerrado automaticamente").
 5. Encerrado = **só leitura**; o Admin reabre com motivo.
 
-Botão **Imprimir** (o relatório inteiro, em uma folha A4).
+Botão **Imprimir** (o relatório inteiro, A4 em pé).
 
 ### 5. Páginas do laboratório (as do Power BI, interativas)
 
@@ -111,20 +112,20 @@ Cada página do Power BI vira uma página do app, **no mesmo padrão**: cartões
 
 | Página | O que mostra | Fonte (views) |
 |---|---|---|
-| **Visão geral** | Números do período, pendências por bloco, alertas 🚨 | `bi.*` |
+| **Visão geral** | Números do período, pendências por bloco, alertas (Não ok) | `bi.*` |
 | **Coletas** | Coletas de terra e navio, quem coletou, tanque, data | `bi.coletas` |
 | **Tanques** | Leituras de C.T, B.L, WORT por tanque (normal e stress), situação ok/não ok | `bi.leituras_nfc`, `vw_situacao_nfc` |
 | **Drops** | D5, D10, D15 previstos e concluídos, quem concluiu | `bi.drops` |
 | **Desvios** | Desvios de drop e de tanque, repetições, abertos × fechados | `bi.desvios` |
-| **Recebimento** | Loads, lotes, compostas, C.T/B.L por lote com 🚨 | `bi.contagens`, `vw_compostas` |
+| **Recebimento** | Loads, lotes, compostas, C.T/B.L por lote com a situação Ok / Não ok | `bi.contagens`, `vw_compostas` |
 | **Embarque** | Navio, linha, fase, amostras, C.T/B.L, Howard | `bi.contagens`, `bi.testes` |
 | **TAB e Coliformes** | Por composta e por tanque: status (Incubado, Estriado...), resultado | `bi.testes` |
-| **Recebimento NFC** | Lotes do item 129, fresh/past, diluição, C.T/B.L já multiplicados (sem 🚨) | `bi.recebimento_nfc` |
+| **Recebimento NFC** | Lotes do item 129, fresh/past, diluição, C.T/B.L já multiplicados (sem situação Ok / Não ok) | `bi.recebimento_nfc` |
 | **Navios** (nova) | Por navio e viagem: tanques coletados, analisados, pendentes, desvios | `bi.coletas`, `bi.leituras_nfc`, `bi.desvios` |
 
 **Em toda página com lista:**
 - **Filtros** no topo: período, load, lote, tanque, navio, fábrica, usuário (quem fez), situação (ok, não ok, pendente). O filtro escolhido aparece como "etiquetas" removíveis.
-- **Imprimir só o que está filtrado**, como no Excel: a tabela filtrada vira uma página A4 limpa, com o título, os filtros usados, a data e quem imprimiu.
+- **Imprimir só o que está filtrado**, como no Excel (decidido em 15/10): A4, **em pé** por padrão para relatórios e listas estreitas (Coletas, Drops) e **deitado** para tabelas largas (Embarque, Tanques, Recebimento com C.T/B.L); a pessoa **pode trocar** antes de imprimir. No topo: título da página, filtros usados, data e quem imprimiu; no rodapé: "página 1 de 3". Formal, sem emoji, legível em preto e branco.
 - **Exportar para Excel** (`.xlsx`) o que está filtrado.
 - **Tocar numa linha** abre o **detalhe**: todos os dados, quem fez e quando, e os botões **Editar**, **Excluir**, **Corrigir com o assistente** e **Histórico** (conforme o cargo).
 - **Gráficos** de cada página respondem ao mesmo filtro; tocar numa barra filtra a tabela.
@@ -137,7 +138,7 @@ Ficam **dentro das páginas** (cada página com os seus), não numa tela separad
 | # | Gráfico | Página | Tipo |
 |---|---|---|---|
 | G1 | **Feito × pendente por turno**, 14 dias | Visão geral | Barras empilhadas |
-| G2 | **C.T e B.L por load** ao longo do tempo, com a **linha do limite** | Recebimento | Pontos; acima do limite em vermelho com 🚨 |
+| G2 | **C.T e B.L por load** ao longo do tempo, com a **linha do limite** | Recebimento | Pontos; acima do limite em vermelho, com a etiqueta "Não ok" |
 | G3 | **Desvios por semana**, abertos × fechados | Desvios | Barras |
 | G4 | **Esterilizações por tipo e turno**, semana | Esterilização | Barras agrupadas |
 
@@ -154,13 +155,13 @@ Sem gráfico "por pessoa" (pode soar como vigilância).
 - Faz **tudo o que o bot faz** (mesmos comandos, mesmas regras, mesmo pipeline regex → IA → "sim"), mais:
   - **Contexto da tela:** aberto a partir de uma linha ("Corrigir com o assistente"), já sabe qual registro é.
   - **Resposta com botões:** "Sim" e "Não" viram botões; vale a regra do bot de **uma mensagem e um sim** para a lista inteira, explicando o que será criado.
-  - **Depois do sim, leva à página:** "✅ 6 leituras marcadas. **Ver em Tanques**".
+  - **Depois do sim, leva à página:** "6 leituras marcadas. **Ver em Tanques**".
 - **Foto de laudo:** mesmo fluxo do bot ([foto-laudo](../foto-laudo.md)): lê, mostra o que entendeu e o que ficou em dúvida, **um sim**, e a página de leituras se atualiza. Nunca abre desvio sozinho (lista os não ok com o botão pronto).
 - **Voz:** mesmo fluxo do áudio do bot (o texto transcrito vai para a IA; tudo que grava pede sim).
 - Desenho técnico (como o app conversa com o n8n) em [06](06-api-e-auth.md) e [08](08-fluxos.md).
 
 ### 9. Relatório do dia
-O mesmo texto do `relatório do dia` do bot (pedido ao bot pelo assistente, para ser idêntico), mostrado formatado, com os filtros como botões (`completo`, `recebimento`, `embarque`, `tanques`) e **Imprimir**.
+O mesmo texto do `relatório do dia` do bot (pedido ao bot pelo assistente, para ser idêntico), mostrado formatado e **sem emojis** (etiquetas de texto no lugar), com os filtros como botões (`completo`, `recebimento`, `embarque`, `tanques`) e **Imprimir**.
 
 ### 10. Admin
 Usuários (nome, cargo), convite de primeiro acesso, zerar senha, bloquear acesso ao app, horários padrão dos turnos, reabrir turno encerrado. Trocar cargo continua pelo bot enquanto o cargo morar em `usuarios`; com a função do banco, passa a ser também pelo app.
@@ -171,16 +172,16 @@ O **Operador é o analista em geral**.
 
 | Ação | Admin | Operador | Consultor | Coletor (futuro) |
 |---|---|---|---|---|
-| Ver Início, páginas, gráficos e relatórios; filtrar, imprimir, exportar | ✅ | ✅ | ✅ | Só as próprias coletas e as pendências de coleta |
-| Entrar no turno e editar o próprio horário | ✅ | ✅ | ❌ | ✅ |
-| Encerrar o turno | ✅ | ✅ | ❌ | ❌ |
-| Registrar coletas | ✅ | ✅ | ❌ | ✅ |
-| Registrar análises, resultados, desvios e esterilização | ✅ | ✅ | ❌ | ❌ |
-| Corrigir registro (com motivo) | ✅ | ✅ | ❌ | Só a própria coleta, no mesmo dia |
-| Excluir registro (com motivo e confirmação; fica no histórico) | ✅ | ✅ | ❌ | Pede ao Admin |
-| Usar o assistente | ✅ | ✅ | Só consultas | Só coletas |
-| Adicionar pessoa, convite, senha, trocar cargo | ✅ | ❌ | ❌ | ❌ |
-| Horários padrão dos turnos, reabrir turno | ✅ | ❌ | ❌ | ❌ |
+| Ver Início, páginas, gráficos e relatórios; filtrar, imprimir, exportar | Sim | Sim | Sim | Só as próprias coletas e as pendências de coleta |
+| Entrar no turno e editar o próprio horário | Sim | Sim | Não | Sim |
+| Encerrar o turno | Sim | Sim | Não | Não |
+| Registrar coletas | Sim | Sim | Não | Sim |
+| Registrar análises, resultados, desvios e esterilização | Sim | Sim | Não | Não |
+| Corrigir registro (com motivo) | Sim | Sim | Não | Só a própria coleta, no mesmo dia |
+| Excluir registro (com motivo e confirmação; fica no histórico) | Sim | Sim | Não | Pede ao Admin |
+| Usar o assistente | Sim | Sim | Só consultas | Só coletas |
+| Adicionar pessoa, convite, senha, trocar cargo | Sim | Não | Não | Não |
+| Horários padrão dos turnos, reabrir turno | Sim | Não | Não | Não |
 
 O cargo **Coletor** depende do pedido PB2 à sessão do bot.
 
@@ -200,7 +201,7 @@ O cargo **Coletor** depende do pedido PB2 à sessão do bot.
   | Botões de ação | azul `#2F7BC4` |
   | Ok · Não ok · Atenção | verde `#2E8B57` · vermelho `#C0392B` · âmbar `#E0A100` |
 
-  Ok/não ok **nunca só pela cor**: sempre com ✅, 🚨 ou o texto. Impressão em preto e branco legível.
+  Ok/não ok **nunca só pela cor**: sempre com o texto da etiqueta. Impressão em preto e branco legível.
 - **Sem nome, logotipo ou fotos da empresa** no repositório e no app de demonstração: o app aparece só como **"LabFlow"**.
 
 ## Tabelas do app (schema `app`, a partir da 030)
@@ -233,7 +234,6 @@ Notificação no celular, modo offline, loja de aplicativos, enviar relatório p
 
 - [ ] **Gráficos:** começar com G1 a G4?
 - [ ] **Paleta:** os códigos de cor acima servem como ponto de partida?
-- [ ] **Impressão:** só A4 retrato, ou também paisagem para tabelas largas (Embarque, Tanques)?
 
 ## Pronto quando
 
