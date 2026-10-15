@@ -27,7 +27,7 @@ O WhatsApp continua no ar durante o piloto (decisão de 15/10); o app tende a se
 
 - **Leitura** das tabelas do bot **sempre por views**.
 - **Gravação nas tabelas do bot só por funções do banco aprovadas** (decisão de 15/10, opção A): cada ação (criar, corrigir, excluir) é uma função no PostgreSQL, por exemplo `excluir_coleta(id, quem, motivo)` ou `corrigir_recebimento(id, campos, quem, motivo)`. O **app e o bot usam as mesmas funções**, então a regra mora num lugar só. As funções são criadas **com a sessão do bot** (pedido PB4 no rumo).
-- **Tabelas próprias do app** (turno, relatório do turno, esterilização) no schema `app`, migrations a partir da `030`.
+- **Tabelas próprias do app** (turno, relatório do turno, esterilização) no schema `app`, migrations a partir da `050` (027–049 são da sessão do bot).
 - **Tudo que grava mostra o que vai mudar e pede uma confirmação**, como o "sim" do bot: "antes → depois" na correção; a lista inteira na foto (**um sim** para a lista toda).
 - **Excluir não apaga** (decidido em 15/10): o registro sai das páginas e das contas, mas fica guardado como **excluído**, com quem, quando e o motivo; o Admin vê na aba Histórico e pode recuperar (é o "invalidar" do doc [04](04-revisao-e-liberacao.md); ISO 17025: o dado original não se perde).
 - **Excluir e corrigir pedem motivo** e ficam no histórico (com o LIMS, o histórico é o da [auditoria](02-audit-trail.md)).
@@ -220,7 +220,7 @@ O cargo **Coletor** depende do pedido PB2 à sessão do bot.
   Ok/não ok **nunca só pela cor**: sempre com o texto da etiqueta. Impressão em preto e branco legível.
 - **Sem nome, logotipo ou fotos da empresa** no repositório e no app de demonstração: o app aparece só como **"LabFlow"**.
 
-## Tabelas do app (schema `app`, a partir da 030)
+## Tabelas do app (schema `app`, a partir da 050)
 
 Nomes a confirmar na migration. Nenhuma altera tabela do bot (só referenciam `usuarios(id)`).
 
