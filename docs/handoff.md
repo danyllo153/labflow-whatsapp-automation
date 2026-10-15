@@ -6,6 +6,8 @@ Documento para retomar o projeto em outro computador ou numa conversa nova do Cl
 
 ## 0. Onde paramos (leia primeiro)
 
+> **v1.3.0 lançada em 15/10/2026** (PR #80, tag `v1.3.0` e release no GitHub). A próxima versão fica para a Fase 1 do LIMS ou o app.
+>
 > **15/10/2026, fim do dia — leia isto primeiro.** Tudo está na `main` (último PR de código: **#70**) e **publicado no n8n**: workflow `MJMm3QnbqFrCafsz` com **244 nós**, migrations `001` a `020`, **`027`, `028` e `029`** aplicadas (backup do banco antes: `labflow_2026-10-15_1056.dump`). Backups do workflow: `pre56`, `pre57`, `pre58`, `pre58b` em `~/labflow/backups-n8n`.
 >
 > **O que mudou em 15/10 (PRs #56, #66, #68, #70, #73 e #74):**
