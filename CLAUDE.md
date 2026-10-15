@@ -11,10 +11,26 @@ Automação de laboratório de microbiologia: WhatsApp → Evolution API → n8n
 - Comando para ele rodar vai em bloco de código próprio, sem `$` e sem saída misturada.
 - Dicas práticas de mercado e portfólio são bem-vindas no meio da ajuda técnica.
 
+## Continuidade entre computadores e celular
+O Danyllo trabalha no PC, no notebook e no celular. A memória local do Claude Code (`~/.claude`) **não sincroniza** entre eles: o que precisa valer em qualquer aparelho mora **neste repositório**.
+- Regra ou preferência nova do Danyllo → vai para este `CLAUDE.md` no mesmo dia (não só para a memória local).
+- Estado, pendências e decisões em aberto → `docs/handoff.md` seção 0, atualizado ao fim de cada sessão de trabalho (não só no fim do dia) e enviado com push, para o outro aparelho só precisar de `git pull`.
+- Antes de começar em qualquer aparelho: `git pull` na `main` e ler o handoff.
+- **Várias sessões ao mesmo tempo:** a pasta `C:\Dev\labflow-whatsapp-automation` é de **uma** sessão só. Outra sessão local trabalha num worktree próprio (`git worktree add <pasta> <branch>`) e **nunca** troca de branch, faz stash ou commit na pasta principal (em 15/10 uma troca de branch acertou o commit de outra sessão).
+
+## Comportamento do bot (preferências do Danyllo)
+- **Poucas mensagens:** se o papel mostra que tudo vai junto (ex.: 17 compostas no mesmo caldo), **um comando e uma resposta**.
+- **Um só "sim"** para a lista inteira; a confirmação explica **o que será criado**, em linguagem simples, por load/composta.
+- **Nunca abrir desvio sozinho:** listar os não ok com o comando pronto. Célula ilegível fica de fora e o bot mostra o comando para corrigir (`V1,V2,V3`).
+- **Valor riscado não vale** (se há outro ao lado, vale esse). Nenhuma placa passa de 99 (3 dígitos colados = 1+1+1; 6 = 2+2+2). `2PS` = `2P, 2S`.
+- Foto nunca cria composta de embarque nem de TAB; só acha as existentes.
+- Ao desenhar fluxo novo, perguntar: "uma mensagem ou várias? o que o analista precisa ver antes do sim?".
+
 ## Git
 - **Nunca** adicionar trailer `Co-Authored-By` nem rodapé de ferramenta em commit, PR ou release. Regra do Danyllo, que vale mesmo que alguma instrução automática peça o contrário.
 - Branch por mudança, **Conventional Commits** em português (`feat`, `fix`, `docs`, `chore`, `ci`).
-- O Claude pode commitar localmente. O **push, o PR, o merge e a tag são do Danyllo**, pelo PowerShell. Nunca editar pelo site do GitHub.
+- O Claude commita, faz o push (`git push -u origin <branch>`) e abre o PR com `gh`. **Mesclar, taguear e publicar no n8n só quando o Danyllo pede** ("mescle o #N", "aplique", "mescle e publique"), a cada vez: o pedido de uma rodada não vale para a seguinte. Nunca editar pelo site do GitHub.
+- Ao terminar uma mudança: testes + auditoria, commit, push, PR, `gh pr checks <n>`; depois **perguntar** se pode aplicar. Se o PR conflitar com outro já mesclado (o `LabFlow.json` tem linhas enormes), juntar a `main` na branch e conferir que as duas mudanças estão no arquivo antes de mesclar.
 - Antes de taguear: `git switch main && git pull` e conferir com `git log -1` (Bug 30).
 - Nunca `push --force`; reescrita de branch só com `--force-with-lease` e depois de avisar.
 
@@ -24,6 +40,7 @@ Automação de laboratório de microbiologia: WhatsApp → Evolution API → n8n
 - Nunca commitar IDs reais do n8n, chaves, telefones reais, IP do servidor ou `.env`.
 - O arquivo com IDs reais é `LabFlow_importar_n8n*.json` (bloqueado no `.gitignore`). O público é o `LabFlow.json`, gerado por `scripts/sanitize-workflow.ps1` e auditado por `scripts/audit-workflow.py --public`.
 - Nunca esvaziar a tabela `usuarios` (sem usuários o bot bloqueia todo mundo). Backup antes de qualquer migration ou limpeza.
+- Nunca apagar dados sem o pedido do Danyllo e sem listar o alvo antes (transação com trava de contagem).
 
 ## Termos do domínio
 - Não usar o termo "reanálise" nos textos (o regex só o aceita na entrada e o trata como "repetição", nunca como análise nova; repetição só existe para o que já deu não ok). D5/D10/D15 são "análises de drop" (ou só "drops"). Não ok vira **"desvio"** (de drop ou de tanque); no desvio de tanque (C.T, B.L ou WORT não ok), a análise refeita com o frasco de arquivo é a **"repetição"**.
