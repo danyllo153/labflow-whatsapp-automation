@@ -68,6 +68,7 @@ As quatro decisões que estavam em aberto foram respondidas pelo Danyllo em 15/1
 
 ## Decisões em aberto (perguntar, não decidir sozinho)
 
+_(nenhuma no momento; as novas dúvidas da revisão do 07 ficam no próprio 07)_
 
 ## Pedidos para a sessão do bot
 
