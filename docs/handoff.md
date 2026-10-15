@@ -6,6 +6,8 @@ Documento para retomar o projeto em outro computador ou numa conversa nova do Cl
 
 ## 0. Onde paramos (leia primeiro)
 
+> **15/10/2026 — Recebimento NFC no ar (PR #56):** migration `027` aplicada (backup `labflow_2026-10-15_1056.dump`), workflow com 240 nós publicado (backup `LabFlow-MJMm3QnbqFrCafsz-pre56-20261015.json`). Item 129 = NFC; um lote por comando; past só AQA 10^1; fresh 10^2 a 10^4. Página `Recebimento NFC` do Power BI gerada (abrir `powerbi/labflow.pbip`, atualizar e conferir). Pendente: testar com a foto real do laudo NFC.
+
 **14/10/2026, fim do dia.** O piloto de 1 mês segue no ar desde 13/10 (5 Operadores + Admin, dados do mês de teste, autorizado pelo gestor). Tudo o que está em "O que está no ar" está na `main` (último PR de código publicado: **#55**). O **PR #56 (Recebimento NFC) está aberto e NÃO está no ar** (seção "Em andamento").
 
 ### O que está no ar agora
