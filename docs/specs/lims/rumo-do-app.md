@@ -78,6 +78,7 @@ O app não mexe nas tabelas nem no workflow do bot: o que ele precisa vira pedid
 |---|---|---|---|
 | PB1 | **Toda leitura, análise e registro com a hora** em que foi feito. Hoje falta em `analises`: a pré-leitura e a leitura final guardam só quem (`pre_leitura_por`, `leitura_final_por`), sem a hora. Sugestão: colunas `pre_leitura_em` e `leitura_final_em` numa migration do bot (028/029), preenchidas pelo workflow | O relatório do turno precisa saber em qual turno cada coisa foi feita (rastreio) | Pedido em 15/10/2026, autorizado pelo Danyllo |
 | PB2 | Cargo **Coletor** (só registra coletas) na tabela `usuarios` e nas permissões do bot | Novo perfil previsto; o bot e o app precisam do mesmo cargo | Cargo decidido em 15/10; pedir quando o primeiro Coletor for entrar |
+| PB4 | **Funções do banco para editar e excluir** (ex.: `excluir_coleta(id, quem, motivo)`, `corrigir_recebimento(...)`), usadas pelo app e pelo bot; começar por **Coletas** e **Recebimento**. Excluir **guarda** o registro como excluído (não apaga de vez) | Decisão de 15/10 (opção A): a regra mora num lugar só | Pedido em 15/10/2026; desenho detalhado no [08](08-fluxos.md) |
 
 
 ## Regras que não mudam
