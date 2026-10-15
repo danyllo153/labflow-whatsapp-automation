@@ -103,8 +103,8 @@ Erros: o que acontece quando algo falha
 
 ### A11. Filtrar, imprimir e exportar
 - **Passos:** escolher filtros (período, load, lote, tanque, navio, fábrica, usuário, situação) → **Imprimir** (A4 em pé ou deitado, à escolha) ou **Exportar Excel**.
-- **Resultado:** só o que está filtrado; no topo, título, filtros, data e quem imprimiu; sem emoji.
-- **Regra:** exportar sai do controle do banco ([09](09-pontos-de-atencao.md)): todos os cargos que veem a página podem exportar (a confirmar se o Consultor pode).
+- **Resultado:** só o que está filtrado; no topo, título, filtros e data; sem emoji.
+- **Regra (decidida em 15/10):** **todos os cargos** que veem a página podem imprimir e exportar, **inclusive o Consultor**; impressão e exportação são **livres, sem registro** de quem fez.
 
 ## B. Fluxos do LIMS (Fase 1, continuam em aberto)
 
@@ -115,7 +115,7 @@ Erros: o que acontece quando algo falha
 ## Perguntas
 
 - [x] ~~A4 — como o assistente do app chega ao pipeline do bot?~~ **Mesmo webhook do n8n com `canal: app`** (15/10, pedido PB6).
-- [ ] **A11 — o Consultor pode exportar para Excel?**
+- [x] ~~A11 — o Consultor pode exportar para Excel?~~ **Sim, e sem registro de quem imprimiu ou exportou** (15/10).
 
 ### Assistente e o pipeline do bot (decidido em 15/10)
 
