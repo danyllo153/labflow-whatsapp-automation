@@ -639,6 +639,8 @@ const grafico = (tipo, pos, titulo, papeis, op = {}) => {
 // Todas seguem o padrão da página Coletas: cabeçalho, cartões e filtros no topo, 3 gráficos e UMA tabela.
 const N = 'bi recebimento_nfc';
 const SERIE_AMOSTRA = { Pasteurizado: COR.laranja, Fresh: COR.verde };
+const SERIE_FABRICA_NFC = { AQA: COR.azul, COL: COR.laranja, UCH: COR.roxo, CON: COR.teal, ITA: COR.magenta, TMG: COR.marinho };
+const SERIE_ANALISE_NFC = { 'C.T 48h': COR.teal, 'B.L 72h': COR.azul, 'B.L 120h': COR.roxo };
 const C = 'bi coletas', L = 'bi leituras_nfc', D = 'bi drops', T = 'bi testes', V = 'bi desvios';
 // tabelas de apoio criadas pelo MCP do Power BI (ligadas às tabelas do painel): um filtro nelas vale para a página inteira
 const LOADS = 'Loads', EMBARQUES = 'Embarques', CAL = 'Calendário';
@@ -815,14 +817,20 @@ const PAGINAS = [
   ['Recebimento NFC', [
     ...topo('Recebimento NFC', 1200, [[N, 'fabrica', 'Fábrica', 'Dropdown'], [N, 'amostra', 'Tipo', 'Dropdown'],
       [N, 'load', 'Load', 'Dropdown'], [N, 'analise', 'Análise', 'Blocos'], [CAL, 'Date', 'Período do recebimento', 'Between']]),
-    grafico('clusteredColumnChart', G[0], 'Lotes recebidos por mês e tipo',
-      ...Object.values(porMes(col(N, 'amostra', 'Tipo'), med(N, 'NFC lotes'), corPorValor(N, 'amostra', SERIE_AMOSTRA)))),
-    grafico('clusteredColumnChart', G[1], 'Resultado final médio (UFC/ml) por análise e tipo',
-      { Category: col(N, 'analise', 'Análise'), Series: col(N, 'amostra', 'Tipo'), Y: med(N, 'NFC resultado final (média)') },
-      { cores: corPorValor(N, 'amostra', SERIE_AMOSTRA), corTitulo: COR.teal, numeroInteiro: true }),
-    grafico('barChart', G[2], 'Lotes por fábrica e tipo',
-      { Category: col(N, 'fabrica', 'Fábrica'), Series: col(N, 'amostra', 'Tipo'), Y: med(N, 'NFC lotes') },
-      { cores: corPorValor(N, 'amostra', SERIE_AMOSTRA), corTitulo: COR.marinho }),
+    // tendência do resultado final (lido x 10^diluição) pela data do recebimento; fresh e pasteurizado em gráficos separados.
+    // O filtro Fábrica, no topo, troca entre todas e uma só. Gráficos de linha: eles seguem o período escolhido.
+    grafico('lineChart', G[0], 'Tendência do C.T 48h · Fresh (por fábrica)',
+      { Category: col(N, 'data_recebimento', 'Recebido em'), Series: col(N, 'fabrica', 'Fábrica'), Y: med(N, 'NFC resultado final (média)') },
+      { filtros: [filtroEm(N, 'amostra', [texto('Fresh')]), filtroEm(N, 'analise', [texto('C.T 48h')])],
+        cores: corPorValor(N, 'fabrica', SERIE_FABRICA_NFC), corTitulo: COR.verde, numeroInteiro: true, sort: crescente(N, 'data_recebimento') }),
+    grafico('lineChart', G[1], 'Tendência do B.L · Fresh (72h e 120h)',
+      { Category: col(N, 'data_recebimento', 'Recebido em'), Series: col(N, 'analise', 'Análise'), Y: med(N, 'NFC resultado final (média)') },
+      { filtros: [filtroEm(N, 'amostra', [texto('Fresh')]), filtroEm(N, 'analise', [texto('B.L 72h'), texto('B.L 120h')])],
+        cores: corPorValor(N, 'analise', SERIE_ANALISE_NFC), corTitulo: COR.azul, numeroInteiro: true, sort: crescente(N, 'data_recebimento') }),
+    grafico('lineChart', G[2], 'Tendência · Pasteurizado (só AQA): C.T e B.L',
+      { Category: col(N, 'data_recebimento', 'Recebido em'), Series: col(N, 'analise', 'Análise'), Y: med(N, 'NFC resultado final (média)') },
+      { filtros: [filtroEm(N, 'amostra', [texto('Pasteurizado')])],
+        cores: corPorValor(N, 'analise', SERIE_ANALISE_NFC), corTitulo: COR.laranja, numeroInteiro: true, sort: crescente(N, 'data_recebimento') }),
     tabela(TABELA, 'Recebimento de NFC: diluição, resultado lido e resultado final',
       [col(N, 'fabrica', 'Fábrica'), col(N, 'load', 'Load'), col(N, 'lote', 'Lote'), col(N, 'amostra', 'Tipo'),
        col(N, 'diluicao_texto', 'Diluição'), col(N, 'data_recebimento', 'Recebido em'), col(N, 'analise', 'Análise'),

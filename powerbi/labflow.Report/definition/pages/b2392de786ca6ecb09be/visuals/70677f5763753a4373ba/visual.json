@@ -10,10 +10,29 @@
     "tabOrder": 10000
   },
   "visual": {
-    "visualType": "clusteredColumnChart",
+    "visualType": "lineChart",
     "query": {
       "queryState": {
         "Category": {
+          "projections": [
+            {
+              "field": {
+                "Column": {
+                  "Expression": {
+                    "SourceRef": {
+                      "Entity": "bi recebimento_nfc"
+                    }
+                  },
+                  "Property": "data_recebimento"
+                }
+              },
+              "queryRef": "bi recebimento_nfc.data_recebimento",
+              "nativeQueryRef": "data_recebimento",
+              "displayName": "Recebido em"
+            }
+          ]
+        },
+        "Series": {
           "projections": [
             {
               "field": {
@@ -29,25 +48,6 @@
               "queryRef": "bi recebimento_nfc.analise",
               "nativeQueryRef": "analise",
               "displayName": "Análise"
-            }
-          ]
-        },
-        "Series": {
-          "projections": [
-            {
-              "field": {
-                "Column": {
-                  "Expression": {
-                    "SourceRef": {
-                      "Entity": "bi recebimento_nfc"
-                    }
-                  },
-                  "Property": "amostra"
-                }
-              },
-              "queryRef": "bi recebimento_nfc.amostra",
-              "nativeQueryRef": "amostra",
-              "displayName": "Tipo"
             }
           ]
         },
@@ -69,6 +69,23 @@
             }
           ]
         }
+      },
+      "sortDefinition": {
+        "sort": [
+          {
+            "field": {
+              "Column": {
+                "Expression": {
+                  "SourceRef": {
+                    "Entity": "bi recebimento_nfc"
+                  }
+                },
+                "Property": "data_recebimento"
+              }
+            },
+            "direction": "Ascending"
+          }
+        ]
       }
     },
     "objects": {
@@ -80,7 +97,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#D97706'"
+                      "Value": "'#0E8A96'"
                     }
                   }
                 }
@@ -100,12 +117,12 @@
                             "Entity": "bi recebimento_nfc"
                           }
                         },
-                        "Property": "amostra"
+                        "Property": "analise"
                       }
                     },
                     "Right": {
                       "Literal": {
-                        "Value": "'Pasteurizado'"
+                        "Value": "'C.T 48h'"
                       }
                     }
                   }
@@ -121,7 +138,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#16A34A'"
+                      "Value": "'#1D6FE8'"
                     }
                   }
                 }
@@ -141,12 +158,53 @@
                             "Entity": "bi recebimento_nfc"
                           }
                         },
-                        "Property": "amostra"
+                        "Property": "analise"
                       }
                     },
                     "Right": {
                       "Literal": {
-                        "Value": "'Fresh'"
+                        "Value": "'B.L 72h'"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "properties": {
+            "fill": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
+                      "Value": "'#7C3AED'"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "selector": {
+            "data": [
+              {
+                "scopeId": {
+                  "Comparison": {
+                    "ComparisonKind": 0,
+                    "Left": {
+                      "Column": {
+                        "Expression": {
+                          "SourceRef": {
+                            "Entity": "bi recebimento_nfc"
+                          }
+                        },
+                        "Property": "analise"
+                      }
+                    },
+                    "Right": {
+                      "Literal": {
+                        "Value": "'B.L 120h'"
                       }
                     }
                   }
@@ -226,6 +284,26 @@
             }
           }
         }
+      ],
+      "lineStyles": [
+        {
+          "properties": {
+            "strokeWidth": {
+              "expr": {
+                "Literal": {
+                  "Value": "3D"
+                }
+              }
+            },
+            "showMarker": {
+              "expr": {
+                "Literal": {
+                  "Value": "true"
+                }
+              }
+            }
+          }
+        }
       ]
     },
     "visualContainerObjects": {
@@ -242,7 +320,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Resultado final médio (UFC/ml) por análise e tipo'"
+                  "Value": "'Tendência do B.L · Fresh (72h e 120h)'"
                 }
               }
             },
@@ -300,5 +378,122 @@
       ]
     },
     "drillFilterOtherVisuals": true
+  },
+  "filterConfig": {
+    "filters": [
+      {
+        "name": "99c9462758dccc39fe01",
+        "type": "Categorical",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "bi recebimento_nfc"
+              }
+            },
+            "Property": "amostra"
+          }
+        },
+        "filter": {
+          "Version": 2,
+          "From": [
+            {
+              "Name": "f",
+              "Entity": "bi recebimento_nfc",
+              "Type": 0
+            }
+          ],
+          "Where": [
+            {
+              "Condition": {
+                "In": {
+                  "Expressions": [
+                    {
+                      "Column": {
+                        "Expression": {
+                          "SourceRef": {
+                            "Source": "f"
+                          }
+                        },
+                        "Property": "amostra"
+                      }
+                    }
+                  ],
+                  "Values": [
+                    [
+                      {
+                        "Literal": {
+                          "Value": "'Fresh'"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      },
+      {
+        "name": "9b41d4ffd11dc468a562",
+        "type": "Categorical",
+        "field": {
+          "Column": {
+            "Expression": {
+              "SourceRef": {
+                "Entity": "bi recebimento_nfc"
+              }
+            },
+            "Property": "analise"
+          }
+        },
+        "filter": {
+          "Version": 2,
+          "From": [
+            {
+              "Name": "f",
+              "Entity": "bi recebimento_nfc",
+              "Type": 0
+            }
+          ],
+          "Where": [
+            {
+              "Condition": {
+                "In": {
+                  "Expressions": [
+                    {
+                      "Column": {
+                        "Expression": {
+                          "SourceRef": {
+                            "Source": "f"
+                          }
+                        },
+                        "Property": "analise"
+                      }
+                    }
+                  ],
+                  "Values": [
+                    [
+                      {
+                        "Literal": {
+                          "Value": "'B.L 72h'"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "Literal": {
+                          "Value": "'B.L 120h'"
+                        }
+                      }
+                    ]
+                  ]
+                }
+              }
+            }
+          ]
+        }
+      }
+    ]
   }
 }
