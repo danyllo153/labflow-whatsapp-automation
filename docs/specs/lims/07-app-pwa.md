@@ -75,8 +75,9 @@ Usuário e senha. Primeiro acesso e recuperação de senha em [06](06-api-e-auth
 
 ### 3. Início (a minha lista do dia)
 - **Cartões no topo** (números grandes): `Para hoje` · `Atrasados` · `Desvios abertos` · `Feito no turno`. Tocar num cartão abre a lista por trás dele.
-- **Pendências herdadas** do turno anterior (automáticas e escritas à mão), com quem encerrou.
-- **"Para fazer agora"**, nos blocos do relatório do dia (FCOJ Recebimento, FCOJ Embarque, NFC Tank farm, NFC Navio), com barra de andamento por bloco (feito × previsto). Cada linha tem **"Fazer"**: abre o formulário ou o assistente já com o item escolhido (ex.: "concluir drops de hoje").
+- **Pendências herdadas** do turno anterior (automáticas e escritas à mão), com quem encerrou. Cada item tem uma **caixa de marcar "Feito"** ao lado (decidido em 15/10): no item escrito à mão, marcar grava quem fez e quando; no item automático (ex.: uma leitura), marcar abre a confirmação do registro correspondente e grava pela função do banco.
+- **"Para fazer agora" = as atividades fixas do turno** (decidido em 15/10): uma lista de verificação com as tarefas fixas de cada turno (cadastradas pelo Admin em `app.atividades_fixas`; **a lista será passada pelo Danyllo**), cada uma com a caixa **"Feito"** (grava quem e quando). Abaixo, o que **vence hoje** no banco (drops, leituras, C.T/B.L, TAB/Coliformes), nos blocos do relatório do dia, com o botão **"Fazer"** que abre o formulário ou o assistente já com o item escolhido.
+- **Tamanho:** cartões e listas **compactos** (o celular precisa mostrar a lista do turno sem rolar muito); números grandes só nos quatro cartões do topo.
 - **"Meus registros de hoje"**: o que eu fiz, com atalho para corrigir.
 
 ### 4. Relatório do turno (página compartilhada)
@@ -148,6 +149,12 @@ Sem gráfico "por pessoa" (pode soar como vigilância).
 - Grava tipo, ciclo, quem e quando em `app.esterilizacoes`. **Sem resultado da fita** (o ok/não ok sai da nota da autoclave). A anotação no **Word continua** como rastreio oficial.
 - Lista das esterilizações do turno embaixo dos botões, com corrigir e excluir (com motivo).
 
+### 7.1 Temperatura das estufas
+- Tela **Estufas** (e um cartão no Início): para cada estufa, a pessoa **digita ou fala** a temperatura lida ("estufa 2, 35,1 graus"), e o app grava numa tabela do app (`app.leituras_estufa`): estufa, temperatura (°C, uma casa decimal), quem, **quando** (data e hora) e o **turno** (pela hora e pela entrada no turno, como os outros registros).
+- Mostra a última leitura de cada estufa no turno e marca **Pendente** a estufa ainda não lida no turno atual. Aparece no relatório do turno.
+- **Falta (o Danyllo vai passar):** quantas estufas são, o nome ou número de cada uma, e se há **faixa aceitável** por estufa (se houver, o valor real fica só no banco, carregado fora do Git; no repositório, só valores fictícios, como os limites do NFC).
+- Com faixa cadastrada, temperatura fora dela vira a etiqueta **Não ok** e entra nas ocorrências do turno (sem abrir nada sozinho).
+
 ### 8. Assistente de IA (botão flutuante)
 - **Em todas as telas**, um botão redondo no canto: toca e escolhe **escrever**, **falar** ou **foto**.
 - Faz **tudo o que o bot faz** (mesmos comandos, mesmas regras, mesmo pipeline regex → IA → "sim"), mais:
@@ -215,6 +222,10 @@ Nomes a confirmar na migration. Nenhuma altera tabela do bot (só referenciam `u
 | `app.entradas_turno` | Quem entrou em qual turno e dia, com entrada e saída editadas pela pessoa |
 | `app.relatorios_turno` | Uma linha por turno e dia: textos escritos à mão, encerrado por/em, automático sim/não, reaberto por/em/motivo |
 | `app.esterilizacoes` | Tipo, ciclo, meio (opcional), quem, quando |
+| `app.atividades_fixas` | Atividades fixas de cada turno (texto, turno, dias da semana, ordem), cadastradas pelo Admin |
+| `app.atividades_feitas` | Atividade fixa ou pendência herdada marcada como feita: quem, quando, turno |
+| `app.estufas` | Cada estufa (nome/número, faixa aceitável opcional com vigência) |
+| `app.leituras_estufa` | Estufa, temperatura, quem, quando, turno |
 
 Login em [06](06-api-e-auth.md). As **funções do banco** para editar e excluir dados do bot não são tabelas do app: são criadas com a sessão do bot (PB4).
 
@@ -232,6 +243,10 @@ Login em [06](06-api-e-auth.md). As **funções do banco** para editar e excluir
 Notificação no celular, modo offline, loja de aplicativos, enviar relatório pelo WhatsApp, gráfico por pessoa. (Ideias no [rumo](rumo-do-app.md).)
 
 ## Perguntas ainda abertas
+
+- [ ] **Atividades fixas de cada turno:** a lista (o Danyllo vai passar).
+- [ ] **Estufas:** quantas, nome/número de cada uma e se há faixa aceitável por estufa (o Danyllo vai passar).
+- [ ] **Temperatura das estufas:** quantas leituras por turno (uma por estufa no início do turno? no início e no fim?).
 
 
 ## Pronto quando
