@@ -17,6 +17,7 @@ Lista dos comandos reconhecidos pelo bot do WhatsApp, com o formato esperado e u
 | **Admin** | ✅ | ✅ | ✅ |
 | **Operador** | ✅ | ✅ | ❌ |
 | **Consultor** | ❌ | ✅ | ❌ |
+| **Coletor** | só a própria coleta (e corrigi-la) | ❌ | ❌ |
 
 ## 1. Registrar coleta de terra
 
@@ -123,10 +124,25 @@ mudar cargo <cargo> para o número <número> nome <nome>
 adicionar cargo de Operador para o número 5511999999999 nome João
 ```
 
-Os cargos válidos são **Admin**, **Operador** ou **Consultor**. O nome é opcional; se omitido, o sistema tenta usar o nome já cadastrado (ou o nome de contato do WhatsApp, se o alvo for quem está enviando a mensagem).
+Os cargos válidos são **Admin**, **Operador**, **Consultor** ou **Coletor** (veja 6.1). O nome é opcional; se omitido, o sistema tenta usar o nome já cadastrado (ou o nome de contato do WhatsApp, se o alvo for quem está enviando a mensagem).
 
 Também funciona por frase livre (seção 11), por exemplo `muda o cargo do 11 99999-1234 para operador`. Nesse caso o bot mostra o comando entendido e só executa depois do "sim". O cargo precisa estar escrito na mensagem como Admin (ou administrador), Operador ou Consultor. Uma palavra parecida, como "gerente", é recusada com `Cargo inválido`.
 
+### 6.1 Cargo Coletor
+Para quem só coleta (pessoal da micro e da física no piloto). O Admin cadastra com `adicionar cargo Coletor para o número 5511987654321 nome Joyce`. O Coletor **só pode**:
+- registrar a **própria** coleta (terra e navio; não vale `coletado por <outro nome>`);
+- **corrigir ou apagar a própria coleta** quando errar o tanque;
+- ver a ajuda (`comandos` mostra só o que ele pode).
+```
+corrigir coleta tanque terra 42 para 43
+corrigir coleta navio O.SKY 123 tanque 1C para 2C data 15/10/2026
+apagar coleta tanque terra 42
+apagar coleta navio O.SKY 123 tanque 1C
+```
+- Sem a data, vale a coleta **mais recente** daquele tanque (últimos 7 dias). Sinônimos: `alterar`, `trocar`, `cancelar`, `remover`, `excluir`.
+- Só altera a coleta que a pessoa **registrou** (Admin e Operador alteram qualquer uma) e **só enquanto ela não tem análise, drop concluído nem TAB**. Corrigir leva os drops e o arquivo junto; apagar remove a coleta com os drops e o arquivo dela. Se o tanque novo já existe na mesma data, o bot recusa.
+- Qualquer outro comando (consultas, análises, recebimento, relatório, cargos, foto) é recusado com a mensagem do cargo, **inclusive por frase livre ou áudio**. Admin e Operador também podem usar os comandos de correção.
+- Exige a migration `029` (o banco passa a aceitar o cargo Coletor).
 ## 7. Registrar análise de tanque
 
 ```
