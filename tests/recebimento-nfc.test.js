@@ -261,3 +261,64 @@ test('foto: past fora da AQA ou diluição fora do padrão vira problema; cada l
   assert.ok(d.problemas.some((p) => /load 43741: lote 64 past: só a AQA tem pasteurizado/.test(p)));
   assert.ok(d.problemas.some((p) => /load 43671: lote 142 fresh: diluição 10\^1 fora do padrão/.test(p)));
 });
+test('diluição falada de vários jeitos vale: elevado à terceira, diluído à primeira, 10 à terceira, 10^3, ao cubo, por extenso', () => {
+  const casos = [
+    ['load 44300 fab aqa item 129 lote 10 past 10 elevado a 1', 'past', 1],
+    ['load 44300 fab aqa item 129 lote 10 past 10 elevado à primeira', 'past', 1],
+    ['load 44300 fab aqa item 129 lote 10 past 10 diluído à primeira', 'past', 1],
+    ['load 44300 fab aqa item 129 lote 10 past 10 à primeira', 'past', 1],
+    ['load 44300 fab aqa item 129 lote 10 past 10 elevado a um', 'past', 1],
+    ['load 44300 fab col item 129 lote 12 fresh 10 elevado à terceira', 'fresh', 3],
+    ['load 44300 fab col item 129 lote 12 fresh 10 diluído à terceira', 'fresh', 3],
+    ['load 44300 fab col item 129 lote 12 fresh 10 à terceira', 'fresh', 3],
+    ['load 44300 fab col item 129 lote 12 fresh 10 a 3', 'fresh', 3],
+    ['load 44300 fab col item 129 lote 12 fresh 10^3', 'fresh', 3],
+    ['load 44300 fab col item 129 lote 12 fresco diluição 10 elevado ao cubo', 'fresh', 3],
+    ['load 44300 fab col item 129 lote 12 fresh dez elevado a quatro', 'fresh', 4],
+    ['load 44300 fab col item 129 lote 12 fresh 10 elevado à segunda', 'fresh', 2],
+  ];
+  for (const [frase, tipo, dil] of casos) {
+    const r = nfc(frase);
+    assert.equal(r.tipo, 'recebimento_nfc', frase);
+    assert.deepEqual(r.itens.map((i) => [i.amostra, i.diluicao]), [[tipo, dil]], frase);
+  }
+  assert.equal(nfc('load 44300 fab col item 129 lote 12 fresh 1011').tipo, 'erro_coleta', '1011 não é diluição');
+  // o 10 colado no expoente, vírgula depois do tipo, "tipo past", fresca, 1:1000, "diluição 3", potência, expoente, menos
+  const mais = [
+    ['aqa lote 10 past 101', 'past', 1], ['aqa lote 10 past 10 1', 'past', 1], ['col lote 12 fresh 102', 'fresh', 2],
+    ['col lote 12 fresh 103', 'fresh', 3], ['col lote 12 fresh 104', 'fresh', 4], ['aqa lote 10 past, 10 elevado a 1', 'past', 1],
+    ['aqa lote 10, past, 10 elevado a 1', 'past', 1], ['aqa lote 10 do tipo past 10 elevado a 1', 'past', 1],
+    ['aqa lote 10 amostra pasteurizada 10 elevado a primeira', 'past', 1], ['col lote 12 fresca 10 elevado a 3', 'fresh', 3],
+    ['col lote 12 in natura 10 à terceira', 'fresh', 3], ['col lote 12 fresh diluição 3', 'fresh', 3],
+    ['col lote 12 fresh diluição de 10 elevado a 3', 'fresh', 3], ['col lote 12 fresh dil 3', 'fresh', 3],
+    ['col lote 12 fresh 1:1000', 'fresh', 3], ['col lote 12 fresh 1/100', 'fresh', 2], ['col lote 12 fresh 10 elevado na terceira', 'fresh', 3],
+    ['col lote 12 fresh 10 em 3', 'fresh', 3], ['col lote 12 fresh 10 potência de 3', 'fresh', 3], ['col lote 12 fresh 10 expoente 3', 'fresh', 3],
+    ['col lote 12 fresh 10 elevado ao expoente 3', 'fresh', 3], ['col lote 12 fresh 10 elevado a menos 3', 'fresh', 3],
+    ['col lote 12 fresh 10 elevada à terceira', 'fresh', 3],
+  ];
+  for (const [resto, tipo, dil] of mais) {
+    const r = nfc('load 44300 fab ' + resto);
+    assert.equal(r.tipo, 'recebimento_nfc', resto);
+    assert.deepEqual(r.itens.map((i) => [i.amostra, i.diluicao]), [[tipo, dil]], resto);
+  }
+  assert.match(nfc('load 44300 fab col lote 12 fresh 105').textoResposta, /Diluição fora do padrão/, '105 vira 10^5 e é recusado pela regra');
+  assert.match(nfc('load 44300 fab col item 129 lote 12 fresh 10 à quinta').textoResposta, /Não entendi os lotes/);
+  const prompt = workflow.nodes.find((n) => n.name === 'IA · Montar pedido').parameters.assignments.assignments[0].value;
+  assert.match(prompt, /10 elevado à terceira.*10 diluído à terceira.*10 à primeira/);
+});
+test('foto: o 10 colado no expoente (101, 102, 103, 104) vale como 10^1 a 10^4', () => {
+  const r = ler(LAUDO({ blocos: [
+    { load: '44300', fabrica: 'AQA', item: '129', lotes: [{ lote: 10, tipo: 'past', diluicao: '101' }] },
+    { load: '44301', fabrica: 'COL', item: '129', lotes: [{ lote: 11, tipo: 'fresh', diluicao: 103 }] },
+    { load: '44302', fabrica: 'UCH', item: '129', lotes: [{ lote: 12, tipo: 'fresh', diluicao: '10 4' }] },
+    { load: '44303', fabrica: 'CON', item: '129', lotes: [{ lote: 13, tipo: 'fresh', diluicao: '10\u00b2' }] },
+    { load: '44304', fabrica: 'ITA', item: '129', lotes: [{ lote: 14, tipo: 'fresh', diluicao: '105' }] }] }));
+  assert.deepEqual(r.comandos.map((c) => c.texto), [
+    'Recebimento NFC load 44300 fab AQA item 129 lote 10 past 10 elevado a 1 data 14/10/2026',
+    'Recebimento NFC load 44301 fab COL item 129 lote 11 fresh 10 elevado a 3 data 14/10/2026',
+    'Recebimento NFC load 44302 fab UCH item 129 lote 12 fresh 10 elevado a 4 data 14/10/2026',
+    'Recebimento NFC load 44303 fab CON item 129 lote 13 fresh 10 elevado a 2 data 14/10/2026']);
+  assert.ok(r.problemas.some((p) => /load 44304: lote 14 fresh: diluição 10\^5 fora do padrão/.test(p)), '105 colado vira 10^5 e fica fora do padrão');
+  const [{ json }] = rodar('Foto · Montar pedido', {}, { 'Foto em arquivo': { foto_b64: 'QUJD', mime: 'image/jpeg' } });
+  assert.match(json.pedido.contents[0].parts[0].text, /colados \(101, 102, 103, 104\), o expoente é o último algarismo/);
+});
