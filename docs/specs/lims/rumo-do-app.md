@@ -40,8 +40,9 @@ As quatro decisões que estavam em aberto foram respondidas pelo Danyllo em 15/1
 - [x] **Relatório do turno:**
   - Turnos de **revezamento** nos 7 dias, editáveis pelo Admin: Manhã 08h–16h, Tarde 16h–00h, Madrugada 00h–08h. O turno que passa da meia-noite conta no dia em que começou.
   - As escalas fixas do ADM (ex.: 08h–17h, 15h–00h, sábado 08h–12h ou 14h–18h) **não** viram turno: a pessoa é marcada no turno com que coincide.
-  - Cada registro entra no relatório pelo **turno** (sem mostrar a hora). Na troca de turno, vale o turno em que **quem registrou** está marcado como analista; sem marcação, vale o horário.
-  - Campos: Data, Turno, **Analistas do turno** (marcados à mão por quem abre o relatório), Análises feitas e Análises pendentes (automáticos), Esterilizações realizadas e pendentes, Ocorrências do dia (texto livre).
+  - Cada registro entra no relatório pelo **turno** (sem mostrar a hora). **Cada pessoa entra no turno pelo próprio app** ("sou da Tarde, 16h–00h", horário editável à mão ao entrar); tudo o que ela registrar enquanto estiver no turno (pelo app ou pelo WhatsApp, pelo mesmo usuário) fica ligado a esse turno. Sem entrada no turno, vale o horário.
+  - Campos: Data, Turno, **Analistas do turno** (quem entrou no turno pelo app; editável à mão), Análises feitas e Análises pendentes (automáticos), Esterilizações realizadas e pendentes, Ocorrências do dia (texto livre).
+  - **Página do relatório compartilhada** e sincronizada para todos do turno. Ao sair, a pessoa atualiza e **encerra o turno**; tudo o que ficou pendente (automático e escrito à mão) **passa para o relatório do próximo turno**.
   - Pendente = vence hoje e não feito, atrasados, desvios abertos e repetições, TAB/Coliformes em confirmação, C.T/B.L sem valor.
   - **Esterilização:** registro à mão (a autoclave não exporta dados), por botões **Ponteira, Meio, Frasco, Descarte** e texto livre, **com o número do ciclo** (ex.: "meio de cultura, ciclo 100"; "ponteira, ciclo 102"); tabela própria do app. **Sem resultado da fita**: o ok/não ok sai da nota da autoclave. A anotação no **Word continua** (é o rastreio oficial da empresa); o app só ajuda a saber o que foi feito e o que falta no turno. É **sob demanda** (sem rotina fixa): "Esterilizações pendentes" é um **campo escrito à mão**, sem cálculo automático.
 - [x] **Ordem:** o app começa **lendo as tabelas atuais** do bot, sempre por views; não espera as migrations 021–026 do LIMS.
@@ -52,7 +53,18 @@ As quatro decisões que estavam em aberto foram respondidas pelo Danyllo em 15/1
 
 ## Decisões em aberto (perguntar, não decidir sozinho)
 
-- [ ] A hora das leituras de placa do NFC (`analises` não guarda) entra no turno pelo dia até a sessão do bot gravar a hora: pedido para a sessão do bot?
+- [ ] **Permissões por cargo no app** (Admin, Operador, Consultor e o futuro **Coletor**, que só registra coletas): proposta em discussão em 15/10; entra no [07](07-app-pwa.md) quando aprovada.
+- [ ] Quem encerra o turno quando há duas pessoas (a última a sair? qualquer uma?) e se o Admin pode reabrir um turno encerrado.
+
+## Pedidos para a sessão do bot
+
+O app não mexe nas tabelas nem no workflow do bot: o que ele precisa vira pedido aqui, e a sessão do bot decide como e quando fazer.
+
+| # | Pedido | Por quê | Situação |
+|---|---|---|---|
+| PB1 | **Toda leitura, análise e registro com a hora** em que foi feito. Hoje falta em `analises`: a pré-leitura e a leitura final guardam só quem (`pre_leitura_por`, `leitura_final_por`), sem a hora. Sugestão: colunas `pre_leitura_em` e `leitura_final_em` numa migration do bot (028/029), preenchidas pelo workflow | O relatório do turno precisa saber em qual turno cada coisa foi feita (rastreio) | Pedido em 15/10/2026, autorizado pelo Danyllo |
+| PB2 | Cargo **Coletor** (só registra coletas) na tabela `usuarios` e nas permissões do bot | Novo perfil previsto; o bot e o app precisam do mesmo cargo | Aguarda a decisão das permissões |
+
 
 ## Regras que não mudam
 
