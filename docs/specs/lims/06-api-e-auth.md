@@ -31,7 +31,7 @@ Uma **API própria** fica entre o app e o banco. Ela **lê** as tabelas do bot p
 
 ## Proposta (a confirmar)
 
-- **FastAPI** (Python, sugerido) num container novo da stack `~/labflow`.
+- **FastAPI (Python)**, decidido em 15/10, num container novo da stack `~/labflow`. Por quê: Python é mais fácil de ler para quem está aprendendo, gera a documentação da API sozinho (`/docs`) e é forte em dados, Excel, PDF e, no futuro, RAG e laudos automáticos.
 - Senha em hash (argon2) e sessão por cookie seguro (o JavaScript da página não consegue ler).
 - Permissão conferida na API a cada chamada, pelo cargo lido de `usuarios`, igual ao bot.
 - Sem porta pública: acesso por Cloudflare Tunnel ou Tailscale.
@@ -55,5 +55,5 @@ Uma **API própria** fica entre o app e o banco. Ela **lê** as tabelas do bot p
 
 - [x] ~~Como o usuário cria a senha pela primeira vez~~ **Senha provisória gerada pelo Admin** (15/10).
 - [x] ~~Recuperação de senha~~ **Nova senha provisória pelo Admin**; e-mail fica para depois (15/10).
-- [ ] FastAPI ou Node?
+- [x] ~~FastAPI ou Node?~~ **FastAPI** (15/10).
 - [ ] Cloudflare Tunnel ou Tailscale?
