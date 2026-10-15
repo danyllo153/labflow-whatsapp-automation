@@ -16,7 +16,7 @@ Uma linha por decisão, mais recente no topo, com o porquê. O que está aqui n�
 
 ## Decidido
 
-- **2026-10-15** (app) **Login e API:** API em **FastAPI**; primeiro acesso e esqueci a senha por **senha provisória** gerada pelo Admin (24 h, troca obrigatória no primeiro login); login pelo usuário curto; bloqueio após 5 senhas erradas; sessão até "Sair" ou 30 dias sem uso; tela **Nova pessoa** já na primeira versão (pedido PB5). Por quê: Python é mais fácil de aprender e forte em dados; a senha provisória é simples para 6 pessoas e não depende de e-mail.
+- **2026-10-15** (app) **Login e API:** API em **FastAPI**; primeiro acesso e esqueci a senha por **senha provisória** gerada pelo Admin (24 h, troca obrigatória no primeiro login); login pelo usuário curto; bloqueio após 5 senhas erradas; sessão até "Sair" ou 30 dias sem uso; acesso por **Tailscale nos testes** e **Cloudflare Tunnel no piloto** (precisa de domínio próprio); tela **Nova pessoa** já na primeira versão (pedido PB5). Por quê: Python é mais fácil de aprender e forte em dados; a senha provisória é simples para 6 pessoas e não depende de e-mail.
 
 - **2026-10-15** (app) **Visual formal, sem emoji:** situação como etiqueta de texto com cor (Ok, Não ok, Positivo, Negativo, Pendente); textos vindos do bot aparecem sem emoji. **Impressão** do que está filtrado em A4, em pé por padrão e deitada para tabelas largas, à escolha de quem imprime. Por quê: emoji é do WhatsApp; o app e o papel impresso devem ser formais.
 
@@ -41,5 +41,4 @@ Uma linha por decisão, mais recente no topo, com o porquê. O que está aqui n�
 
 - Adiantar o áudio para logo depois da v1.2.0?
 - Revisor: cargo novo ou papel do Admin?
-- Cloudflare Tunnel ou Tailscale.
 - Limites oficiais do Howard e do NFC.
