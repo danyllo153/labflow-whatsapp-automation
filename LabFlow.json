@@ -614,7 +614,7 @@
                                                                                    },
                                                                                    {
                                                                                        "name":  "text",
-                                                                                       "value":  "={{ $(\u0027Interpretar comando\u0027).item.json.textoResposta }}"
+                                                                                       "value":  "={{ $json.textoResposta }}"
                                                                                    }
                                                                                ]
                                                             },
@@ -3271,9 +3271,9 @@
                   {
                       "parameters":  {
                                          "operation":  "executeQuery",
-                                         "query":  "INSERT INTO usuarios (telefone, nome, cargo)\nVALUES ($1, NULLIF($2, \u0027\u0027), $3)\nON CONFLICT (telefone) DO UPDATE\n  SET cargo = EXCLUDED.cargo,\n      nome  = COALESCE(EXCLUDED.nome, usuarios.nome)\nRETURNING id;",
+                                         "query":  "-- Cria a pessoa ou troca o cargo pelas funções do banco (migration 031): a regra fica num lugar só, igual à do app.\n-- Devolve \u0027ok\u0027 ou \u0027erro: ...\u0027 (o bot mostra o erro no WhatsApp). $1 telefone da pessoa, $2 nome (ou vazio), $3 cargo, $4 telefone de quem mandou.\nSELECT gravar_cargo_bot($1::text, $2::text, $3::text, $4::text) AS resultado;\n",
                                          "options":  {
-                                                         "queryReplacement":  "={{ [$json.NumeroAlvo, $json.NomeAlvo || \"\", $json.NivelNovo] }}"
+                                                         "queryReplacement":  "={{ [$json.NumeroAlvo, $json.NomeAlvo || \"\", $json.NivelNovo, $json._numeroRemetenteLimpo] }}"
                                                      }
                                      },
                       "type":  "n8n-nodes-base.postgres",
@@ -6975,6 +6975,19 @@
                                    ],
                       "id":  "334daf66-f058-4e4d-a110-b0e929a221a9",
                       "name":  "Fim · Corrigir coleta"
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "// A gravação do cargo já foi feita pelas funções do banco. Mostra a confirmação ou o motivo da recusa.\nconst r = $input.first().json;\nconst item = $(\u0027Interpretar comando\u0027).first().json;\nconst res = String(r.resultado || \u0027\u0027);\nif (res === \u0027ok\u0027) return [{ json: { ...item } }];\nreturn [{ json: { ...item, textoResposta: \u0027❌ \u0027 + res.replace(/^erro:\\s*/, \u0027\u0027) + \u0027 Nada foi alterado.\u0027 } }];\n"
+                                     },
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       13056,
+                                       19968
+                                   ],
+                      "id":  "514bda52-f6c3-4960-ac67-60e9be729399",
+                      "name":  "Montar resposta cargo"
                   }
               ],
     "pinData":  {
@@ -7602,17 +7615,6 @@
                                                                       ]
                                                                   ]
                                                      },
-                        "BD · Gravar cargo":  {
-                                                  "main":  [
-                                                               [
-                                                                   {
-                                                                       "node":  "Zap · Cargo atualizado",
-                                                                       "type":  "main",
-                                                                       "index":  0
-                                                                   }
-                                                               ]
-                                                           ]
-                                              },
                         "BD · Concluir drops":  {
                                                     "main":  [
                                                                  [
@@ -9530,6 +9532,28 @@
                                                                    [
                                                                        {
                                                                            "node":  "Fim · Corrigir coleta",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ]
+                                                               ]
+                                                  },
+                        "BD · Gravar cargo":  {
+                                                  "main":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "Montar resposta cargo",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
+                                                           ]
+                                              },
+                        "Montar resposta cargo":  {
+                                                      "main":  [
+                                                                   [
+                                                                       {
+                                                                           "node":  "Zap · Cargo atualizado",
                                                                            "type":  "main",
                                                                            "index":  0
                                                                        }
