@@ -146,7 +146,7 @@ O **Operador é o analista em geral**.
 | Registrar coletas | ✅ | ✅ | ❌ | ✅ |
 | Registrar análises, resultados, desvios e esterilização | ✅ | ✅ | ❌ | ❌ |
 | Corrigir registro (com motivo) | ✅ | ✅ | ❌ | Só a própria coleta, no mesmo dia |
-| Excluir registro | ✅ (com motivo) | Pede ao Admin | ❌ | Pede ao Admin |
+| Excluir registro (com motivo e confirmação; fica no histórico) | ✅ | ✅ | ❌ | Pede ao Admin |
 | Adicionar pessoa, convite, senha, trocar cargo | ✅ | ❌ | ❌ | ❌ |
 | Editar horários padrão dos turnos, reabrir turno | ✅ | ❌ | ❌ | ❌ |
 
