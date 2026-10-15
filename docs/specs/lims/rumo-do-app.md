@@ -79,6 +79,7 @@ O app não mexe nas tabelas nem no workflow do bot: o que ele precisa vira pedid
 | PB1 | **Toda leitura, análise e registro com a hora** em que foi feito. Hoje falta em `analises`: a pré-leitura e a leitura final guardam só quem (`pre_leitura_por`, `leitura_final_por`), sem a hora. Sugestão: colunas `pre_leitura_em` e `leitura_final_em` numa migration do bot (028/029), preenchidas pelo workflow | O relatório do turno precisa saber em qual turno cada coisa foi feita (rastreio) | Pedido em 15/10/2026, autorizado pelo Danyllo |
 | PB2 | Cargo **Coletor** (só registra coletas) na tabela `usuarios` e nas permissões do bot | Novo perfil previsto; o bot e o app precisam do mesmo cargo | Cargo decidido em 15/10; pedir quando o primeiro Coletor for entrar |
 | PB4 | **Funções do banco para editar e excluir** (ex.: `excluir_coleta(id, quem, motivo)`, `corrigir_recebimento(...)`), usadas pelo app e pelo bot; começar por **Coletas** e **Recebimento**. Excluir **guarda** o registro como excluído (não apaga de vez) | Decisão de 15/10 (opção A): a regra mora num lugar só | Pedido em 15/10/2026; desenho detalhado no [08](08-fluxos.md) |
+| PB5 | **Funções do banco para cadastrar pessoa e trocar cargo** (`cadastrar_usuario(nome, telefone, cargo, quem)`, `trocar_cargo(...)`), usadas pelo app (tela "Nova pessoa") e pelo bot (`adicionar cargo de ...`) | O app sai com a tela de adicionar pessoa já na primeira versão (decisão de 15/10) | Pedido em 15/10/2026; **precisa estar pronto antes do lançamento do app** |
 
 
 ## Regras que não mudam
@@ -115,3 +116,5 @@ O app não mexe nas tabelas nem no workflow do bot: o que ele precisa vira pedid
 - 15/10/2026: **"Para fazer agora" = atividades fixas de cada turno** (lista a ser passada pelo Danyllo), com check de feito.
 - 15/10/2026: telas e listas mais **compactas** (a prévia ficou grande).
 - 15/10/2026: **temperatura das estufas** por turno, falada ou digitada, gravada com hora e turno (número de estufas a ser passado pelo Danyllo).
+- 15/10/2026: telefone opcional para quem usa só o app (hoje `usuarios` exige telefone), avaliar na Fase E.
+- 15/10/2026: código de primeiro acesso mandado pelo próprio bot (`acesso ao app`), quando houver mais gente.
