@@ -29,6 +29,7 @@ Esta pasta é a **"semente"** do LIMS (Spec-Driven Development): primeiro decidi
 | 09 | [Pontos de atenção](09-pontos-de-atencao.md) | LGPD, ISO/IEC 17025, segurança e riscos |
 | 10 | [Decisões](10-decisoes.md) | O que já foi decidido e por quê |
 | — | [Guia prático](guia-pratico.md) | Como semear estes docs, gerar tarefas e implementar |
+| — | [Rumo do app](rumo-do-app.md) | Bússola do app: para onde vamos, fase atual e o que perguntar antes de decidir |
 
 ## Ordem de trabalho
 
