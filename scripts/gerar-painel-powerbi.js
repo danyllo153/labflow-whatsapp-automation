@@ -627,8 +627,9 @@ const grafico = (tipo, pos, titulo, papeis, op = {}) => {
       ...(op.cores ? { dataPoint: op.cores } : {}),
       ...(op.corUnica ? { dataPoint: [{ properties: { fill: cor(op.corUnica) } }] } : {}),
       labels: [{ properties: { show: lit(op.semRotulos ? 'false' : 'true'), fontSize: lit('10D'),
-        color: cor(empilhado ? COR.branco : COR.rotuloFora) } }],
+        color: cor(empilhado ? COR.branco : COR.rotuloFora), ...(op.numeroInteiro ? { labelDisplayUnits: lit('1D') } : {}) } }],
       legend: [{ properties: { show: lit(op.semLegenda ? 'false' : 'true'), position: lit(texto(op.legenda || 'Top')) } }],
+      ...(op.numeroInteiro ? { valueAxis: [{ properties: { labelDisplayUnits: lit('1D') } }] } : {}),
       ...(tipo === 'lineChart' ? { lineStyles: [{ properties: { strokeWidth: lit('3D'), showMarker: lit('true') } }] } : {}),
     },
   });
@@ -812,13 +813,13 @@ const PAGINAS = [
   ], [so(K, 'Recebimento')]],
   // recebimento de NFC (item 129): só a diluição, o que foi lido na placa e o resultado já multiplicado (tabela para apresentação)
   ['Recebimento NFC', [
-    ...topo('Recebimento NFC', 1200, [[N, 'fabrica', 'Fábrica', 'Dropdown'], [N, 'amostra', 'Tipo', 'Blocos'],
+    ...topo('Recebimento NFC', 1200, [[N, 'fabrica', 'Fábrica', 'Dropdown'], [N, 'amostra', 'Tipo', 'Dropdown'],
       [N, 'load', 'Load', 'Dropdown'], [N, 'analise', 'Análise', 'Blocos'], [CAL, 'Date', 'Período do recebimento', 'Between']]),
     grafico('clusteredColumnChart', G[0], 'Lotes recebidos por mês e tipo',
       ...Object.values(porMes(col(N, 'amostra', 'Tipo'), med(N, 'NFC lotes'), corPorValor(N, 'amostra', SERIE_AMOSTRA)))),
     grafico('clusteredColumnChart', G[1], 'Resultado final médio (UFC/ml) por análise e tipo',
       { Category: col(N, 'analise', 'Análise'), Series: col(N, 'amostra', 'Tipo'), Y: med(N, 'NFC resultado final (média)') },
-      { cores: corPorValor(N, 'amostra', SERIE_AMOSTRA), corTitulo: COR.teal }),
+      { cores: corPorValor(N, 'amostra', SERIE_AMOSTRA), corTitulo: COR.teal, numeroInteiro: true }),
     grafico('barChart', G[2], 'Lotes por fábrica e tipo',
       { Category: col(N, 'fabrica', 'Fábrica'), Series: col(N, 'amostra', 'Tipo'), Y: med(N, 'NFC lotes') },
       { cores: corPorValor(N, 'amostra', SERIE_AMOSTRA), corTitulo: COR.marinho }),
@@ -854,6 +855,7 @@ const PAGINAS = [
 
 // ---------------------------------------------------------------- grava (recria todas as páginas)
 const PAGS = path.join(DEF, 'pages');
+const NOME_NO_MENU = { 'Recebimento NFC': 'Receb. NFC' }; // o botão do menu corta nomes longos
 for (const p of fs.readdirSync(PAGS)) {
   if (fs.statSync(path.join(PAGS, p)).isDirectory()) fs.rmSync(path.join(PAGS, p), { recursive: true, force: true });
 }
@@ -865,7 +867,7 @@ for (const [nome, visuais, filtrosDaPagina] of PAGINAS) {
   fs.mkdirSync(path.join(dir, 'visuals'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'page.json'), JSON.stringify({
     $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.1.0/schema.json',
-    name: pid, displayName: nome, displayOption: 'FitToPage', height: 1080, width: 1920,
+    name: pid, displayName: NOME_NO_MENU[nome] || nome, displayOption: 'FitToPage', height: 1080, width: 1920,
     ...(filtrosDaPagina ? { filterConfig: { filters: filtrosDaPagina.map((filtro, j) =>
       ({ ...filtro, name: crypto.createHash('sha1').update(`${nome}#filtro${j}`).digest('hex').slice(0, 20) })) } } : {}),
   }, null, 2), 'utf8');
