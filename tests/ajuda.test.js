@@ -31,6 +31,7 @@ const ASSUNTOS = {
   relatorio: ['relatório', 'relatorio do dia'],
   consultas: ['consultas', 'quem coletou', 'resultados'],
   foto: ['foto', 'foto do laudo', 'laudo'],
+  recebimento_nfc: ['recebimento nfc', 'nfc recebimento', 'recebimento de nfc'],
   cargos: ['cargos'],
 };
 

@@ -64,9 +64,10 @@ const ROTULO = {
   'Terra': COR.verde, 'Navio': COR.azul, 'Recebimento': COR.teal, 'Embarque': COR.azul, 'Tank farm': COR.verde,
   'TAB': COR.roxo, 'Coliformes': COR.magenta, 'Howard': COR.marinho, 'D5': COR.azul, 'D10': COR.roxo, 'D15': COR.laranja,
   'C.T 48h': COR.teal, 'B.L 72h': COR.azul, 'B.L 120h': COR.roxo, 'Drop': COR.teal, 'Tanque': COR.roxo, 'AQA': COR.azul, 'COL': COR.laranja, 'UCH': COR.roxo,
+  'Pasteurizado': COR.laranja, 'Fresh': COR.verde, 'CON': COR.teal, 'ITA': COR.magenta, 'TMG': COR.marinho,
 };
 const COLS_PILULA = new Set(['situacao', 'status', 'resultado', 'desvio_resultado', 'Resultado ou andamento', 'Desvio do drop', 'Faixa', 'desvio']);
-const COLS_ROTULO = new Set(['origem', 'teste', 'drop', 'Estágio', 'analise', 'fabrica', 'tipo']);
+const COLS_ROTULO = new Set(['origem', 'teste', 'drop', 'Estágio', 'analise', 'fabrica', 'tipo', 'amostra']);
 const SERIE_SITUACAO = Object.fromEntries(Object.entries(PILULA).map(([v, [t]]) => [v, t]));
 const SERIE_ORIGEM = { Terra: COR.teal, Navio: COR.azul };
 const SERIE_RESULTADO = { Positivo: COR.vermelho, Negativo: COR.verde, 'Em andamento': COR.azul };
@@ -230,6 +231,7 @@ const PAGINA_HTML = {
   'Análise T.N': ['Análise T.N (tanques de navio)', 'C.T, B.L e Psicrotróficos placa a placa: resultado, tendência e desvios', '🚢'],
   Drops: ['Drops', 'D5, D10 e D15 por estágio, por mês e por navio/terra', '💧'],
   Desvios: ['Desvios', 'Desvios de drop e de tanque: resultado, prazo e quem abriu, por tanque, navio e analista', '🌡️'],
+  'Recebimento NFC': ['Recebimento de NFC', 'Suco pronto (item 129): past x fresh, diluição, resultado lido e resultado final por lote', '🍊'],
   Recebimento: ['Recebimento de concentrado', 'FCOJ: lotes recebidos e C.T e B.L por fábrica, item e load', '📦'],
   Embarque: ['Embarque de concentrado', 'FCOJ: amostras, C.T e B.L e Howard por navio, linha e fase', '⚓'],
   TAB: ['TAB', 'Do caldo ao resultado: recebimento, embarque e tanques de terra', '🦠'],
@@ -290,6 +292,13 @@ const CARTOES = {
     { rotulo: 'Lotes recebidos', valor: '[Lotes e amostras]', sub: 'Nos filtros escolhidos', icone: '📦', cor: 'azul', neutro: true },
     { rotulo: 'Loads', valor: '[Loads no período]', sub: 'Com lotes no período', icone: '🏭', cor: 'teal', neutro: true },
     ...CARTOES_CTBL,
+  ],
+  'Recebimento NFC': [
+    { rotulo: 'Lotes recebidos', valor: '[NFC lotes]', sub: 'Nos filtros escolhidos', icone: '🍊', cor: 'azul', neutro: true },
+    { rotulo: 'Pasteurizado', valor: '[NFC lotes past]', sub: 'Só a AQA, sempre 10^1', icone: '🔥', cor: 'laranja', neutro: true },
+    { rotulo: 'Fresh', valor: '[NFC lotes fresh]', sub: 'Diluição de 10^2 a 10^4', icone: '🌿', cor: 'verde', neutro: true },
+    { rotulo: 'Resultados lidos', valor: '[NFC resultados lidos]', sub: 'C.T e B.L já registrados', icone: '✅', cor: 'teal', neutro: true },
+    { rotulo: 'Leituras atrasadas', valor: '[NFC leituras atrasadas]', sub: 'Passaram do prazo', icone: '⏰', cor: 'laranja', zero: 'Nada atrasado' },
   ],
   Embarque: [
     { rotulo: 'Amostras', valor: '[Lotes e amostras]', sub: 'Nos filtros escolhidos', icone: '⚓', cor: 'azul', neutro: true },
@@ -356,6 +365,17 @@ const MEDIDAS = {
     ['Testes atrasados', CALC('bi testes', "'bi testes'[situacao] = \"Atrasado\""), { formato: '0' }],
     ['Howard médio (%)', "AVERAGE('bi testes'[howard_percentual])", { formato: '0.0' }],
   ],
+  'bi recebimento_nfc': [
+    // um lote conta uma vez, mesmo com C.T, B.L 72h e B.L 120h (e past e fresh contam à parte)
+    ['NFC lotes', "COUNTROWS(SUMMARIZE('bi recebimento_nfc', 'bi recebimento_nfc'[load], 'bi recebimento_nfc'[lote], 'bi recebimento_nfc'[amostra]))", { formato: '0' }],
+    ['NFC lotes past', "CALCULATE([NFC lotes], 'bi recebimento_nfc'[amostra] = \"Pasteurizado\")", { formato: '0' }],
+    ['NFC lotes fresh', "CALCULATE([NFC lotes], 'bi recebimento_nfc'[amostra] = \"Fresh\")", { formato: '0' }],
+    ['NFC loads', "DISTINCTCOUNT('bi recebimento_nfc'[load])", { formato: '0' }],
+    ['NFC resultados lidos', CALC('bi recebimento_nfc', "'bi recebimento_nfc'[lido] = TRUE()"), { formato: '0' }],
+    ['NFC leituras atrasadas', CALC('bi recebimento_nfc', "'bi recebimento_nfc'[situacao] = \"Atrasado\""), { formato: '0' }],
+    // média do valor final (lido x 10^diluição); o "<" não entra na conta
+    ['NFC resultado final (média)', "AVERAGEX(FILTER('bi recebimento_nfc', 'bi recebimento_nfc'[lido] = TRUE() && 'bi recebimento_nfc'[sinal] = \"=\"), 'bi recebimento_nfc'[valor_final])", { formato: '#,0' }],
+  ],
   'bi desvios': [
     ['Desvios', "COUNTROWS('bi desvios')", { formato: '0' }],
     ['Desvios abertos', CALC('bi desvios', "'bi desvios'[status] IN {\"Em confirmação\", \"Em repetição\"}"), { formato: '0' }],
@@ -414,6 +434,33 @@ const colunaBancoTmdl = (tabela, [nome, tipo, ordenarPor, oculta]) => `\tcolumn 
   + (tipo === 'double' || tipo === 'int64' ? '\t\tformatString: 0\n' : '') + (oculta ? '\t\tisHidden\n' : '')
   + (ordenarPor ? `\t\tsortByColumn: ${ordenarPor}\n` : '') + `\t\tlineageTag: ${guid(`${tabela}/banco/${nome}`)}\n`
   + `\t\tsummarizeBy: none\n\t\tsourceColumn: ${nome}\n\n\t\tannotation SummarizationSetBy = Automatic\n\n`;
+// tabela do recebimento de NFC (view bi.recebimento_nfc, migration 027): criada aqui se ainda não existir no modelo
+const COLUNAS_NFC = [['load', 'string'], ['item', 'string'], ['fabrica', 'string'], ['lote', 'int64'], ['amostra', 'string'],
+  ['diluicao', 'int64'], ['diluicao_texto', 'string'], ['data_recebimento', 'dateTime'], ['analise', 'string'], ['prevista', 'dateTime'],
+  ['lido', 'boolean'], ['valor_lido', 'double'], ['valor_final', 'double'], ['sinal', 'string'], ['resultado', 'string'],
+  ['lido_por', 'string'], ['data_leitura', 'dateTime'], ['situacao', 'string']];
+const NFC_T = 'bi recebimento_nfc';
+if (!SO_RELATORIO) {
+  const arq = path.join(MOD, NFC_T + '.tmdl');
+  if (!fs.existsSync(arq)) {
+    const colunas = COLUNAS_NFC.map(([nome, tipo]) => `\tcolumn ${nome}\n\t\tdataType: ${tipo}\n`
+      + (tipo === 'int64' ? '\t\tformatString: 0\n' : tipo === 'dateTime' ? '\t\tformatString: dd/MM/yyyy\n' : tipo === 'double' ? '\t\tformatString: #,0.##\n' : '')
+      + `\t\tlineageTag: ${guid(NFC_T + '/banco/' + nome)}\n\t\tsummarizeBy: none\n\t\tsourceColumn: ${nome}\n\n\t\tannotation SummarizationSetBy = Automatic\n\n`).join('');
+    fs.writeFileSync(arq, `table '${NFC_T}'\n\tlineageTag: ${guid(NFC_T)}\n\n${colunas}\tpartition '${NFC_T}' = m\n\t\tmode: import\n\t\tsource =\n\t\t\t\tlet\n\t\t\t\t    Fonte = PostgreSQL.Database("localhost:15432", "labflow"),\n\t\t\t\t    bi_recebimento_nfc = Fonte{[Schema="bi",Item="recebimento_nfc"]}[Data]\n\t\t\t\tin\n\t\t\t\t    bi_recebimento_nfc\n`, 'utf8');
+  }
+  const mod = path.join(MOD, '..', 'model.tmdl');
+  let m = fs.readFileSync(mod, 'utf8').replace(/\r\n/g, '\n');
+  if (!m.includes(`ref table '${NFC_T}'`)) {
+    m = m.replace('"bi leituras_nfc","bi testes"]', '"bi leituras_nfc","bi recebimento_nfc","bi testes"]').replace("ref table 'bi testes'\n", `ref table '${NFC_T}'\nref table 'bi testes'\n`);
+    fs.writeFileSync(mod, m, 'utf8');
+  }
+  const rel = path.join(MOD, '..', 'relationships.tmdl');
+  let r = fs.readFileSync(rel, 'utf8').replace(/\r\n/g, '\n');
+  if (!r.includes("'Calendário -> Recebimento NFC'")) {
+    r = r.replace(/\n*$/, '\n') + "\nrelationship 'Calendário -> Recebimento NFC'\n\tfromColumn: 'bi recebimento_nfc'.data_recebimento\n\ttoColumn: Calendário.Date\n";
+    fs.writeFileSync(rel, r, 'utf8');
+  }
+}
 // formato de coluna que já vem do banco
 const FORMATOS = { 'bi testes': { howard_percentual: '0.0' } };
 const formatoColuna = (t, coluna, formato) => t.replace(
@@ -589,6 +636,8 @@ const grafico = (tipo, pos, titulo, papeis, op = {}) => {
 
 // ---------------------------------------------------------------- páginas
 // Todas seguem o padrão da página Coletas: cabeçalho, cartões e filtros no topo, 3 gráficos e UMA tabela.
+const N = 'bi recebimento_nfc';
+const SERIE_AMOSTRA = { Pasteurizado: COR.laranja, Fresh: COR.verde };
 const C = 'bi coletas', L = 'bi leituras_nfc', D = 'bi drops', T = 'bi testes', V = 'bi desvios';
 // tabelas de apoio criadas pelo MCP do Power BI (ligadas às tabelas do painel): um filtro nelas vale para a página inteira
 const LOADS = 'Loads', EMBARQUES = 'Embarques', CAL = 'Calendário';
@@ -761,6 +810,24 @@ const PAGINAS = [
        col(K, 'analise', 'Análise'), col(K, 'Data da amostra', 'Recebido em'), col(K, 'prevista', 'Prevista'),
        col(K, 'resultado', 'Resultado'), col(K, 'lido_por', 'Lido por'), col(K, 'situacao', 'Situação')], undefined, COR.azul),
   ], [so(K, 'Recebimento')]],
+  // recebimento de NFC (item 129): só a diluição, o que foi lido na placa e o resultado já multiplicado (tabela para apresentação)
+  ['Recebimento NFC', [
+    ...topo('Recebimento NFC', 1200, [[N, 'fabrica', 'Fábrica', 'Dropdown'], [N, 'amostra', 'Tipo', 'Blocos'],
+      [N, 'load', 'Load', 'Dropdown'], [N, 'analise', 'Análise', 'Blocos'], [CAL, 'Date', 'Período do recebimento', 'Between']]),
+    grafico('clusteredColumnChart', G[0], 'Lotes recebidos por mês e tipo',
+      ...Object.values(porMes(col(N, 'amostra', 'Tipo'), med(N, 'NFC lotes'), corPorValor(N, 'amostra', SERIE_AMOSTRA)))),
+    grafico('clusteredColumnChart', G[1], 'Resultado final médio (UFC/ml) por análise e tipo',
+      { Category: col(N, 'analise', 'Análise'), Series: col(N, 'amostra', 'Tipo'), Y: med(N, 'NFC resultado final (média)') },
+      { cores: corPorValor(N, 'amostra', SERIE_AMOSTRA), corTitulo: COR.teal }),
+    grafico('barChart', G[2], 'Lotes por fábrica e tipo',
+      { Category: col(N, 'fabrica', 'Fábrica'), Series: col(N, 'amostra', 'Tipo'), Y: med(N, 'NFC lotes') },
+      { cores: corPorValor(N, 'amostra', SERIE_AMOSTRA), corTitulo: COR.marinho }),
+    tabela(TABELA, 'Recebimento de NFC: diluição, resultado lido e resultado final',
+      [col(N, 'fabrica', 'Fábrica'), col(N, 'load', 'Load'), col(N, 'lote', 'Lote'), col(N, 'amostra', 'Tipo'),
+       col(N, 'diluicao_texto', 'Diluição'), col(N, 'data_recebimento', 'Recebido em'), col(N, 'analise', 'Análise'),
+       col(N, 'prevista', 'Prevista'), col(N, 'valor_lido', 'Lido na placa'), col(N, 'resultado', 'Resultado final'),
+       col(N, 'lido_por', 'Lido por'), col(N, 'situacao', 'Situação')], undefined, COR.laranja, crescente(N, 'data_recebimento')),
+  ]],
   ['Embarque', [
     ...topo('Embarque', 1100, [[EMBARQUES, 'Embarque', 'Embarque', 'Dropdown'], [K, 'load', 'Load', 'Dropdown'],
       [K, 'analise', 'Análise', 'Blocos'], [CAL, 'Date', 'Período', 'Between']]),

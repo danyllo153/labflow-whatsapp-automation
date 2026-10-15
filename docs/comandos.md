@@ -734,3 +734,39 @@ Regras: ponto, barra ou traço depois do número do lote fecha a composta, e o �
 **Resultados do embarque (C.T, B.L 72h e B.L 120h por amostra).** Com o embarque **já registrado**, a mesma foto também lê os resultados de cada amostra (A1, A2...) e mostra uma linha por amostra (`A1: CT <10 · BL72 60 🚨 · BL120 <10`), com 🚨 nos acima do limite (C.T ≥ 200, B.L ≥ 50), o aviso de quando o resultado **corrige um anterior**, e pede **um só sim** que grava tudo. **Valor riscado não vale**: se há outro valor escrito ao lado para a mesma amostra e coluna, vale esse; se não, a célula fica sem leitura. Se o papel inteiro estiver riscado ou em branco, o bot avisa e não grava nada. Se o embarque ainda **não** estiver registrado, o primeiro sim registra o embarque e o bot avisa para mandar a foto de novo para gravar os resultados. Se uma amostra estiver em outro load no sistema, o bot avisa.
 
 Ainda não lê: os resultados de C.T/B.L do recebimento, o "+" da confirmação e o TAB/Coliformes de embarque. Esses pedem o comando. Spec: `docs/specs/foto-laudo.md`.
+
+## 17. Recebimento de NFC (item 129)
+
+Recebimento de lotes de NFC (suco pronto). É o mesmo desenho do recebimento do concentrado (load, fábrica, lote), mas o **item é sempre 129** e cada lote leva, na observação, o **tipo da amostra** (`fresh` = fresco, `past` = pasteurizado) e a **diluição analisada** (`10 elevado a 1`, `10 elevado a 3`...). Ajuda: `comandos recebimento nfc`.
+
+```
+recebimento nfc load 44300 fab aqa item 129 lote 10 past 10 elevado a 1
+load 44300 fab aqa item 129 lote 10 fresh 10 elevado a 3
+recebimento nfc load 44301 fab col item 129 lote 12 fresh 10 elevado a 2 data 14/10/2026
+```
+
+- O início `recebimento nfc` é opcional, o item pode ficar de fora (vale 129; outro item é recusado), `fab` ou `fábrica` valem, e a fábrica segue a regra das seis (AQA, CON, COL, UCH, ITA, TMG; nome da cidade vira a sigla).
+- **Um lote por comando** (sem faixas nem vários lotes); se o mesmo lote foi analisado nos dois tipos, são dois comandos. Também vale `10^3` e `pasteurizado`/`fresco`. Sem data, vale hoje.
+- **O mesmo lote pode entrar nos dois tipos** (lote 10 `past` e lote 10 `fresh`), em comandos separados. Repetir o lote e o tipo **corrige** a diluição e a data, e o bot avisa (`corrigido: era 10^1`).
+- Grava direto (como o recebimento do concentrado); Consultor não registra. O load reaproveita a tabela `loads` (item 129); os lotes ficam em `recebimento_nfc` (migration `027`), **sem misturar** com os lotes do concentrado, as compostas e os prazos de C.T/B.L.
+- **Por foto:** o formulário "Recebimento NFC" é lido pela foto do laudo (`comandos foto`): um comando por lote (uma linha do papel), com o resumo "o que isso registra" antes do sim.
+
+
+**Regras do laboratório (15/10):** o laudo de recebimento do NFC tem o mesmo título do concentrado (`Recebimento`); o que o identifica é o **item 129**, na foto e no comando (`recebimento load N item 129 ...` sem tipo e diluição é recusado, com o exemplo certo). Um laudo que mistura item 129 com concentrado lê só o NFC e pede o concentrado em outra foto. A análise é por lote, sem compostas, e a diluição é seriada de 1 a 4: **`past` só existe na AQA e é sempre 10 elevado a 1; `fresh` vai de 10 elevado a 2 a 10 elevado a 4** (qualquer fábrica, inclusive a AQA). Na foto, cada linha do papel traz a sua própria data da análise. Os dados servem para acompanhar o comportamento do recebimento de suco fresco e pasteurizado (tabelas para apresentação).
+
+### 17.1 Resultados de C.T e B.L do NFC (multiplicados pela diluição)
+
+O laudo também tem **C.T 48h, B.L 72h e B.L 120h** por lote, com os mesmos prazos do concentrado (+2, +3 e +5 dias do recebimento). O resultado é escrito **como saiu na placa** e o sistema **multiplica pela diluição do lote**: com `10 elevado a 1`, 14 vira **140**, 22 vira **220** e 74 vira **740** (acrescenta um zero por expoente; `10^3` acrescenta três). A diluição vem do que foi registrado no recebimento do lote.
+
+```
+ct nfc load 44300 lote 10 past deu 14
+bl72 nfc load 44300 lote 10 past deu 22, lote 11 fresh deu <10
+bl120 nfc load 44300 lotes 10-12 fresh deu 7
+```
+
+- O bot mostra a conta antes de gravar (`lote 10 · past · 10^1: 14 × 10^1 = 140`) e pede **sim**, como no concentrado. `nfc` pode ser trocado por `item 129`. O tipo (`past` ou `fresh`) é obrigatório, porque o mesmo lote pode ter os dois.
+- `<10` com 10^1 vira `<100` (o sinal fica); vale decimal (`1,5`). **Sem alarme:** o NFC recebido não usa os limites do concentrado, então não aparece 🚨 nem aviso de limite, e **fica fora do relatório do dia** (decisão de 14/10/2026).
+- Resultado repetido **corrige** o anterior (o bot avisa `era 90`). Se a diluição do lote for **corrigida** no recebimento, os resultados já gravados são **recalculados** a partir do número lido (`14 × 10^2 = 1400`).
+- **Consultas:** `quais ct tenho para ler hoje?`, `quais bl72 foram lidos hoje?` e `quanto está o CT do load 44300 até agora` agora incluem o NFC (`NFC load 44300 · past 10^1: 10-11`).
+- **Por foto:** quando o laudo traz os resultados e os lotes **já estão registrados**, a foto mostra uma linha por lote e tipo (`CT 14 → 140 · BL72 22 → 220`) e grava tudo com um sim (valor riscado não vale; vale a diluição do sistema e o bot avisa se o papel diz outra). Se os lotes ainda não existem, o primeiro sim registra o recebimento e o bot pede a foto de novo para os resultados.
+- Tabela `contagens_nfc` (valor lido, diluição e valor final) e views `vw_contagens_nfc` e `vw_contagens_nfc_previstas` (migration `027`). O painel do Power BI terá **uma página própria** para esses resultados (visão `bi.recebimento_nfc`, já na migration `027`; a página ainda será criada).

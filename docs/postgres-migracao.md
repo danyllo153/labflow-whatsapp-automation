@@ -47,6 +47,7 @@ descrito em [`concentrado.md`](concentrado.md).
 | [`018_bi_placas_nfc.sql`](../db/migrations/018_bi_placas_nfc.sql) | painel: placas de NFC |
 | [`019_bi_desvios_gerais.sql`](../db/migrations/019_bi_desvios_gerais.sql) | painel: desvios de drop e de tanque juntos |
 | [`020_uso_ia.sql`](../db/migrations/020_uso_ia.sql) | contador diário de uso da IA (limite por pessoa e no total) |
+| [`027_recebimento_nfc.sql`](../db/migrations/027_recebimento_nfc.sql) | recebimento de NFC (item 129): lote, tipo `fresh`/`past`, diluição e resultados de C.T/B.L (valor lido x 10^diluição); as `021` a `026` ficam reservadas à Fase 1 do LIMS |
 | [`011_leitura_finalizada.sql`](../db/migrations/011_leitura_finalizada.sql) | tabela `leituras_finalizadas` (quem finalizou a leitura de cada dia) e pendência `DIA` |
 | [`012_desvio_drop.sql`](../db/migrations/012_desvio_drop.sql) | tabela `desvios_drop`, view `vw_desvios_drop` (desvio de drop em 7, 13 e 25 °C) e pendência `DESVIO` |
 | [`013_views_bi.sql`](../db/migrations/013_views_bi.sql) | schema `bi` com 6 views para o Power BI (`coletas`, `leituras_nfc`, `drops`, `desvios`, `contagens`, `testes`), com a coluna `situacao` (Lido, Atrasado, Vence hoje, No prazo) e sem telefone; leitura pelo `labflow_leitura` |

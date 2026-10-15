@@ -143,3 +143,6 @@ relationship ec4d59d5-49f9-42e9-9f86-bf2793c9a38f
 	fromColumn: 'bi testes'.confirmacao_prevista
 	toColumn: LocalDateTable_c229c0be-cc21-4daf-8f36-87984f2f94bd.Date
 
+relationship 'Calendário -> Recebimento NFC'
+	fromColumn: 'bi recebimento_nfc'.data_recebimento
+	toColumn: Calendário.Date
