@@ -9,8 +9,13 @@ Projeto pessoal que une biomedicina e automação: o problema vem da rotina real
 
 ## Onde o projeto está
 
-**Versão publicada: [v1.2.0](docs/CHANGELOG.md)**, em uso de teste ponta a ponta pelo WhatsApp. O que entrou nela:
+**Versão publicada: [v1.3.0](docs/CHANGELOG.md)**, em **piloto de 1 mês no laboratório** desde 13/10/2026 (5 operadores e 1 admin). O que entrou nela (a v1.2.0, abaixo, segue valendo):
 
+- **Leitura de laudo por foto:** a foto do laudo de recebimento, TAB, Coliformes, NFC (placas), embarque e Recebimento NFC vira uma lista de comandos oficiais com **um só sim**; a IA de visão só lê, o código valida, valor riscado não vale e nunca abre desvio sozinho.
+- **Comando por áudio** e **IA resiliente:** o Gemini transcreve e interpreta, com reserva automática no Groq, tempo máximo por chamada e limite diário por pessoa; a IA sempre pede um sim antes de gravar.
+- **Recebimento de NFC (item 129):** tipo fresh ou past e diluição por lote; o resultado lido é multiplicado pela diluição (14 com 10^1 = 140), sem alarme e com página própria no painel (tendência do C.T e do B.L, fresh e pasteurizado).
+- **Quem coletou e o cargo Coletor:** `coletado por Joyce` registra quem coletou; o cargo **Coletor** só registra e corrige a própria coleta quando erra o tanque.
+- **Fábricas travadas**, navios e tanques por extenso, **consultas** de quem coletou e de resultados por tanque e por load, ajuda completa por assunto, e túnel automático do Power BI.
 - **Resultados de NFC placa a placa:** o analista manda as 3 placas (`ct do tanque 47 normal 12,8,15`) e o bot responde **ok** ou **não ok** pelo limite. Não ok abre, com "sim", um **desvio de tanque**: a análise é repetida com o frasco de arquivo e a nova contagem fecha o desvio sozinha. O relatório do dia mostra 🚨 com a contagem, e o painel ganhou as páginas **Análise TT** e **Análise T.N**, com a tendência do C.T por tanque.
 
 - **A IA entende todos os comandos.** Frase livre ("chegaram os lotes 1 a 14 do load 77001 item 444 da fábrica AQA", "apareceu colônia no TAB 11", "relatório diário") vira o comando oficial; o código confere antes de gravar. Testada no Gemini real com 44 frases que não estão no prompt: **44 de 44**, inclusive frases em estilo de áudio.
