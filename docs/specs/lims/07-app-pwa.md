@@ -126,8 +126,9 @@ Cada página do Power BI vira uma página do app, **no mesmo padrão**: cartões
 
 **Em toda página com lista:**
 - **Filtros** no topo: período, load, lote, tanque, navio, fábrica, usuário (quem fez), situação (ok, não ok, pendente). O filtro escolhido aparece como "etiquetas" removíveis.
-- **Imprimir só o que está filtrado**, como no Excel (decidido em 15/10): A4, **em pé** por padrão para relatórios e listas estreitas (Coletas, Drops) e **deitado** para tabelas largas (Embarque, Tanques, Recebimento com C.T/B.L); a pessoa **pode trocar** antes de imprimir. No topo: título da página, filtros usados, data e quem imprimiu; no rodapé: "página 1 de 3". Formal, sem emoji, legível em preto e branco.
+- **Imprimir só o que está filtrado**, como no Excel (decidido em 15/10): A4, **em pé** por padrão para relatórios e listas estreitas (Coletas, Drops) e **deitado** para tabelas largas (Embarque, Tanques, Recebimento com C.T/B.L); a pessoa **pode trocar** antes de imprimir. No topo: título da página, filtros usados e data; no rodapé: "página 1 de 3". Formal, sem emoji, legível em preto e branco.
 - **Exportar para Excel** (`.xlsx`) o que está filtrado.
+- Imprimir e exportar são **livres para todos os cargos que veem a página, inclusive o Consultor, sem registro** de quem fez (decidido em 15/10).
 - **Tocar numa linha** abre o **detalhe**: todos os dados, quem fez e quando, e os botões **Editar**, **Excluir**, **Corrigir com o assistente** e **Histórico** (conforme o cargo).
 - **Gráficos** de cada página respondem ao mesmo filtro; tocar numa barra filtra a tabela.
 
