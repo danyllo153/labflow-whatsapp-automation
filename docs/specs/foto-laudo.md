@@ -27,7 +27,7 @@ Em vez de falar ou digitar parte por parte, a pessoa manda a **foto do laudo pre
 | **Recebimento** | load, fábrica, item, data da análise, lotes e as **marcas de composta** | `recebimento ...` e `compostas do load ...` |
 | **TAB** (caldo, sem marcas) | load e faixas de lotes (recebimento), item e fábrica do bloco, data | `tab feito ...` de cada composta |
 | **Coliformes** (caldo, sem marcas) | o mesmo, mais navio, linha e fase no embarque | `coliformes feitos ...` |
-| **Recebimento NFC** (item 129) | load, fábrica, lotes e, por lote, o tipo (`fresh`/`past`) e o expoente da diluição | `Recebimento NFC load L fab F item 129 lote 10 past 10 elevado a 1, ...` |
+| **Recebimento NFC** (item 129; o título no papel é só `Recebimento`) | uma linha por lote, com a própria data da análise, load, fábrica, lote, tipo (`fresh`/`past`) e expoente da diluição; past só AQA e 10^1, fresh 10^2 a 10^4 | `Recebimento NFC load L fab F item 129 lote 10 past 10 elevado a 1, ...` |
 
 Fases seguintes: resultados de C.T e B.L por lote (ignorando o riscado), confirmação por "+", embarque.
 

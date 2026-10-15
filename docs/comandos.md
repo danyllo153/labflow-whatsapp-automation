@@ -751,6 +751,9 @@ recebimento nfc load 44300 fab aqa lotes 10-12 fresh 10 elevado a 3, lote 10 pas
 - Grava direto (como o recebimento do concentrado); Consultor não registra. O load reaproveita a tabela `loads` (item 129); os lotes ficam em `recebimento_nfc` (migration `027`), **sem misturar** com os lotes do concentrado, as compostas e os prazos de C.T/B.L.
 - **Por foto:** o formulário "Recebimento NFC" é lido pela foto do laudo (`comandos foto`): um comando por load, com o resumo "o que isso registra" antes do sim.
 
+
+**Regras do laboratório (15/10):** o laudo de recebimento do NFC tem o mesmo título do concentrado (`Recebimento`); o que o identifica é o **item 129**, na foto e no comando (`recebimento load N item 129 ...` sem tipo e diluição é recusado, com o exemplo certo). Um laudo que mistura item 129 com concentrado lê só o NFC e pede o concentrado em outra foto. A análise é por lote, sem compostas, e a diluição é seriada de 1 a 4: **`past` só existe na AQA e é sempre 10 elevado a 1; `fresh` vai de 10 elevado a 2 a 10 elevado a 4** (qualquer fábrica, inclusive a AQA). Na foto, cada linha do papel traz a sua própria data da análise. Os dados servem para acompanhar o comportamento do recebimento de suco fresco e pasteurizado (tabelas para apresentação).
+
 ### 17.1 Resultados de C.T e B.L do NFC (multiplicados pela diluição)
 
 O laudo também tem **C.T 48h, B.L 72h e B.L 120h** por lote, com os mesmos prazos do concentrado (+2, +3 e +5 dias do recebimento). O resultado é escrito **como saiu na placa** e o sistema **multiplica pela diluição do lote**: com `10 elevado a 1`, 14 vira **140**, 22 vira **220** e 74 vira **740** (acrescenta um zero por expoente; `10^3` acrescenta três). A diluição vem do que foi registrado no recebimento do lote.
