@@ -94,6 +94,16 @@ node scripts\gerar-painel-powerbi.js
 - Não mexe nas tabelas de apoio (Loads, Embarques, Calendário) nem nas ligações: essas são do Power BI Modeling MCP.
 - `scripts/gerar-painel-powerbi-colorido.js` é o backup da versão colorida (fundo azul-marinho), caso o modo escuro seja descartado.
 
+## tunel-powerbi.ps1 (túnel do Power BI sempre de pé)
+Arquivo: [`scripts/tunel-powerbi.ps1`](../scripts/tunel-powerbi.ps1)
+Mantém o túnel SSH `localhost:15432` para o banco do servidor e reconecta sozinho em 10 segundos se cair. Descobre o IP do banco a cada tentativa (continua valendo se o contêiner for recriado). Precisa do apelido `labflow` no `~/.ssh/config` (chave SSH, sem senha).
+Para iniciar com o Windows (uma vez por computador, num PowerShell comum):
+```
+$acao = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument '-WindowStyle Hidden -NoProfile -ExecutionPolicy Bypass -File "C:\Dev\labflow-whatsapp-automation\scripts\tunel-powerbi.ps1"'
+Register-ScheduledTask -TaskName 'LabFlow tunel Power BI' -Action $acao -Trigger (New-ScheduledTaskTrigger -AtLogOn -User $env:USERNAME) -Settings (New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -ExecutionTimeLimit ([TimeSpan]::Zero)) -Force
+Start-ScheduledTask -TaskName 'LabFlow tunel Power BI'
+```
+Parar e remover: `Unregister-ScheduledTask -TaskName 'LabFlow tunel Power BI' -Confirm:$false`. Testar: `(Test-NetConnection 127.0.0.1 -Port 15432).TcpTestSucceeded`.
 ## gerar-gif.py (GIFs do README: painel e bot)
 
 Arquivo: [`scripts/gerar-gif.py`](../scripts/gerar-gif.py)
