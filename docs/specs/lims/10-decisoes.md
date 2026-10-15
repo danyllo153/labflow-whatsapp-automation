@@ -16,6 +16,8 @@ Uma linha por decisão, mais recente no topo, com o porquê. O que está aqui n�
 
 ## Decidido
 
+- **2026-10-15** (app) **O app é o LIMS** ("cara" do sistema, como o Power BI hoje) e o bot vira **assistente de IA** dentro dele. **Gravação por funções do banco** (opção A): editar e excluir viram funções no PostgreSQL, criadas com a sessão do bot e usadas pelo app (clique, assistente, foto) e pelo bot; o app lê por views. Por quê: a regra mora num lugar só, app e bot nunca discordam, e combina com o histórico do LIMS feito no banco. Complementa a decisão de 07/10 ("mesmo pipeline"): o assistente continua usando o pipeline do bot; as telas usam as funções.
+
 - **2026-10-15** (app) **Permissões por cargo:** Operador = analista em geral (registra, corrige com motivo, entra no turno e edita o próprio horário, encerra o turno); **excluir: Admin e Operador, com motivo e confirmação** (mudado na noite de 15/10; o Coletor pede ao Admin); adicionar pessoa e trocar cargo só o Admin; Consultor só lê; cargo futuro **Coletor** só registra coletas (pedido PB2 ao bot). Por quê: o Operador é quem conhece o registro errado; o motivo e o histórico mantêm o rastreio. O atraso de entrada precisa ser registrado por quem chegou.
 
 - **2026-10-15** (app) **WhatsApp continua no ar** enquanto o piloto está em teste; o app tende a ser o canal principal e desligar o WhatsApp é decisão futura (Fase E do [rumo do app](rumo-do-app.md)). Por quê: o piloto está no ar com 5 Operadores, e o chat do app usa o mesmo pipeline, então os dois convivem sem duplicar regras.
