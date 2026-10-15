@@ -29,6 +29,7 @@ O WhatsApp continua no ar durante o piloto (decisão de 15/10); o app tende a se
 - **Gravação nas tabelas do bot só por funções do banco aprovadas** (decisão de 15/10, opção A): cada ação (criar, corrigir, excluir) é uma função no PostgreSQL, por exemplo `excluir_coleta(id, quem, motivo)` ou `corrigir_recebimento(id, campos, quem, motivo)`. O **app e o bot usam as mesmas funções**, então a regra mora num lugar só. As funções são criadas **com a sessão do bot** (pedido PB4 no rumo).
 - **Tabelas próprias do app** (turno, relatório do turno, esterilização) no schema `app`, migrations a partir da `030`.
 - **Tudo que grava mostra o que vai mudar e pede uma confirmação**, como o "sim" do bot: "antes → depois" na correção; a lista inteira na foto (**um sim** para a lista toda).
+- **Excluir não apaga** (decidido em 15/10): o registro sai das páginas e das contas, mas fica guardado como **excluído**, com quem, quando e o motivo; o Admin vê na aba Histórico e pode recuperar (é o "invalidar" do doc [04](04-revisao-e-liberacao.md); ISO 17025: o dado original não se perde).
 - **Excluir e corrigir pedem motivo** e ficam no histórico (com o LIMS, o histórico é o da [auditoria](02-audit-trail.md)).
 - Permissão conferida **no código da API** a cada chamada, pelo cargo; nunca no prompt da IA.
 - **Só online.** Primeiro só no servidor de demonstração, com dados fictícios.
@@ -234,7 +235,6 @@ Notificação no celular, modo offline, loja de aplicativos, enviar relatório p
 - [ ] **Paleta:** os códigos de cor acima servem como ponto de partida?
 - [ ] **Impressão:** só A4 retrato, ou também paisagem para tabelas largas (Embarque, Tanques)?
 - [ ] **Primeiras páginas com editar/excluir:** Coletas e Recebimento, como recomendado?
-- [ ] **Excluir:** o registro some de vez ou fica "excluído" (escondido, mas guardado para o histórico)? **Recomendo** guardar (ISO 17025: o dado original não se perde), que é o "invalidar" do doc [04](04-revisao-e-liberacao.md).
 
 ## Pronto quando
 
