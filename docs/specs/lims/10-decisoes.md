@@ -16,6 +16,8 @@ Uma linha por decisão, mais recente no topo, com o porquê. O que está aqui n�
 
 ## Decidido
 
+- **2026-10-15** (app) **Visual formal, sem emoji:** situação como etiqueta de texto com cor (Ok, Não ok, Positivo, Negativo, Pendente); textos vindos do bot aparecem sem emoji. **Impressão** do que está filtrado em A4, em pé por padrão e deitada para tabelas largas, à escolha de quem imprime. Por quê: emoji é do WhatsApp; o app e o papel impresso devem ser formais.
+
 - **2026-10-15** (app) **Excluir não apaga:** o registro fica guardado como excluído (quem, quando, motivo), some das páginas e das contas, e o Admin pode ver e recuperar. Por quê: ISO 17025 (o dado original não se perde) e recuperação de engano; é o "invalidar" do doc 04.
 
 - **2026-10-15** (app) **O app é o LIMS** ("cara" do sistema, como o Power BI hoje) e o bot vira **assistente de IA** dentro dele. **Gravação por funções do banco** (opção A): editar e excluir viram funções no PostgreSQL, criadas com a sessão do bot e usadas pelo app (clique, assistente, foto) e pelo bot; o app lê por views. Por quê: a regra mora num lugar só, app e bot nunca discordam, e combina com o histórico do LIMS feito no banco. Complementa a decisão de 07/10 ("mesmo pipeline"): o assistente continua usando o pipeline do bot; as telas usam as funções.
