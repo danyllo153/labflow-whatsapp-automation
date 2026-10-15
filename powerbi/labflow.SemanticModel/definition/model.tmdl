@@ -9,7 +9,7 @@ model Model
 
 annotation __PBI_TimeIntelligenceEnabled = 1
 
-annotation PBI_QueryOrder = ["bi coletas","bi contagens","bi desvios","bi drops","bi leituras_nfc","bi testes"]
+annotation PBI_QueryOrder = ["bi coletas","bi contagens","bi desvios","bi drops","bi leituras_nfc","bi recebimento_nfc","bi testes"]
 
 annotation PBI_ProTooling = ["DevMode","MCP-PBIModeling"]
 
@@ -33,6 +33,7 @@ ref table 'bi leituras_nfc'
 ref table LocalDateTable_a107d660-47d2-4881-bc54-c368c86f52a9
 ref table LocalDateTable_91fa9946-0c63-4394-9049-68970da5de13
 ref table LocalDateTable_287786cc-8d9b-4fa3-9533-36f62235ea1c
+ref table 'bi recebimento_nfc'
 ref table 'bi testes'
 ref table LocalDateTable_443e4ca3-374c-4672-90dd-602470b4b574
 ref table LocalDateTable_31b3a140-d057-4379-87b7-4ecc2bae1515

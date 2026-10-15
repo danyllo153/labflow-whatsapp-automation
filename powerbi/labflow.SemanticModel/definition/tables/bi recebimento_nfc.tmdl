@@ -1,0 +1,190 @@
+table 'bi recebimento_nfc'
+	lineageTag: 94689bcb-6a3e-38c6-f5e5-57a9bacffbab
+
+	measure 'NFC lotes' = COUNTROWS(SUMMARIZE('bi recebimento_nfc', 'bi recebimento_nfc'[load], 'bi recebimento_nfc'[lote], 'bi recebimento_nfc'[amostra]))
+		formatString: 0
+		lineageTag: c6eb5edc-d715-f656-e538-28e3f6ca593e
+
+	measure 'NFC lotes past' = CALCULATE([NFC lotes], 'bi recebimento_nfc'[amostra] = "Pasteurizado")
+		formatString: 0
+		lineageTag: c765e124-38a1-7a36-afac-7ce56083ffdd
+
+	measure 'NFC lotes fresh' = CALCULATE([NFC lotes], 'bi recebimento_nfc'[amostra] = "Fresh")
+		formatString: 0
+		lineageTag: ae77ab69-908d-de81-3026-3f118a709c36
+
+	measure 'NFC loads' = DISTINCTCOUNT('bi recebimento_nfc'[load])
+		formatString: 0
+		lineageTag: d51f3b21-aede-03a2-7ffd-033acc80a9b9
+
+	measure 'NFC resultados lidos' = CALCULATE(COUNTROWS('bi recebimento_nfc'), 'bi recebimento_nfc'[lido] = TRUE())
+		formatString: 0
+		lineageTag: 7b916f6c-3011-29f7-3b71-a26e4219210a
+
+	measure 'NFC leituras atrasadas' = CALCULATE(COUNTROWS('bi recebimento_nfc'), 'bi recebimento_nfc'[situacao] = "Atrasado")
+		formatString: 0
+		lineageTag: fa7f0474-9e85-09b3-387e-6e1486d1dbc4
+
+	measure 'NFC resultado final (média)' = AVERAGEX(FILTER('bi recebimento_nfc', 'bi recebimento_nfc'[lido] = TRUE() && 'bi recebimento_nfc'[sinal] = "="), 'bi recebimento_nfc'[valor_final])
+		formatString: #,0
+		lineageTag: fac50c6b-e18a-4d1f-7543-30f4910e7056
+
+	column load
+		dataType: string
+		lineageTag: 430def32-7990-ec4d-a998-b6527ce7fe30
+		summarizeBy: none
+		sourceColumn: load
+
+		annotation SummarizationSetBy = Automatic
+
+	column item
+		dataType: string
+		lineageTag: 00556476-fa41-a946-4c9b-5085bf0f9e0c
+		summarizeBy: none
+		sourceColumn: item
+
+		annotation SummarizationSetBy = Automatic
+
+	column fabrica
+		dataType: string
+		lineageTag: 6a3e45dc-ae42-dc5c-25f6-d77984d3fec1
+		summarizeBy: none
+		sourceColumn: fabrica
+
+		annotation SummarizationSetBy = Automatic
+
+	column lote
+		dataType: int64
+		formatString: 0
+		lineageTag: 185e4c99-d09f-fe90-f8ed-46aa0b587b48
+		summarizeBy: none
+		sourceColumn: lote
+
+		annotation SummarizationSetBy = Automatic
+
+	column amostra
+		dataType: string
+		lineageTag: 3a323cc5-a26f-db00-0608-eeffcb4b8b93
+		summarizeBy: none
+		sourceColumn: amostra
+
+		annotation SummarizationSetBy = Automatic
+
+	column diluicao
+		dataType: int64
+		formatString: 0
+		lineageTag: 8b300240-5a84-840f-73a0-8863a226f50c
+		summarizeBy: none
+		sourceColumn: diluicao
+
+		annotation SummarizationSetBy = Automatic
+
+	column diluicao_texto
+		dataType: string
+		lineageTag: 81b91722-95e0-b322-b6e8-939cb08db9e4
+		summarizeBy: none
+		sourceColumn: diluicao_texto
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_recebimento
+		dataType: dateTime
+		formatString: dd/MM/yyyy
+		lineageTag: b0062755-40ac-e9c5-aead-788d4679a243
+		summarizeBy: none
+		sourceColumn: data_recebimento
+
+		annotation SummarizationSetBy = Automatic
+
+	column analise
+		dataType: string
+		lineageTag: ff16247e-626e-b9a5-fd1e-b600f9ef74f6
+		summarizeBy: none
+		sourceColumn: analise
+
+		annotation SummarizationSetBy = Automatic
+
+	column prevista
+		dataType: dateTime
+		formatString: dd/MM/yyyy
+		lineageTag: 86e0675b-3e1b-d0ca-0c35-90e7169cd541
+		summarizeBy: none
+		sourceColumn: prevista
+
+		annotation SummarizationSetBy = Automatic
+
+	column lido
+		dataType: boolean
+		lineageTag: c7a8d011-3707-c2aa-f69c-7c1d6e1dad14
+		summarizeBy: none
+		sourceColumn: lido
+
+		annotation SummarizationSetBy = Automatic
+
+	column valor_lido
+		dataType: double
+		formatString: #,0.##
+		lineageTag: 0e69844c-5073-2d3e-74fd-44325b8cdb6b
+		summarizeBy: none
+		sourceColumn: valor_lido
+
+		annotation SummarizationSetBy = Automatic
+
+	column valor_final
+		dataType: double
+		formatString: #,0.##
+		lineageTag: a6a167af-2c05-b6fb-ecab-c0d4ce1e0ac3
+		summarizeBy: none
+		sourceColumn: valor_final
+
+		annotation SummarizationSetBy = Automatic
+
+	column sinal
+		dataType: string
+		lineageTag: 27334f8c-8d4a-3b72-8391-697dbae47060
+		summarizeBy: none
+		sourceColumn: sinal
+
+		annotation SummarizationSetBy = Automatic
+
+	column resultado
+		dataType: string
+		lineageTag: a1611714-530b-286c-f4a0-15c81dce7675
+		summarizeBy: none
+		sourceColumn: resultado
+
+		annotation SummarizationSetBy = Automatic
+
+	column lido_por
+		dataType: string
+		lineageTag: be4dee67-0c26-5718-0709-1a2a67710fb6
+		summarizeBy: none
+		sourceColumn: lido_por
+
+		annotation SummarizationSetBy = Automatic
+
+	column data_leitura
+		dataType: dateTime
+		formatString: dd/MM/yyyy
+		lineageTag: bfb83db7-b519-d4b2-e7a2-484b1f94432b
+		summarizeBy: none
+		sourceColumn: data_leitura
+
+		annotation SummarizationSetBy = Automatic
+
+	column situacao
+		dataType: string
+		lineageTag: 35b23f81-7547-44aa-b6ed-926cc2e23efe
+		summarizeBy: none
+		sourceColumn: situacao
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'bi recebimento_nfc' = m
+		mode: import
+		source =
+				let
+				    Fonte = PostgreSQL.Database("localhost:15432", "labflow"),
+				    bi_recebimento_nfc = Fonte{[Schema="bi",Item="recebimento_nfc"]}[Data]
+				in
+				    bi_recebimento_nfc
