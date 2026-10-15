@@ -111,3 +111,7 @@ O app não mexe nas tabelas nem no workflow do bot: o que ele precisa vira pedid
 - 15/10/2026: **todas as páginas do Power BI também no app** (Visão geral, Coletas, Tanques, Drops, Desvios, Recebimento, Embarque, TAB e Coliformes, Recebimento NFC), mais uma página por **navio** (coletado, analisado, pendente).
 - 15/10/2026: em toda página com lista, **filtrar** (load, lote, tanque, usuário, data...) e **imprimir só o que foi filtrado**, como no Excel; também exportar.
 - 15/10/2026: depois de registrar pelo assistente, o registro aparece na hora na página correspondente, com o nome de quem fez.
+- 15/10/2026: caixa de marcar **"Feito"** ao lado de cada pendência herdada do turno anterior.
+- 15/10/2026: **"Para fazer agora" = atividades fixas de cada turno** (lista a ser passada pelo Danyllo), com check de feito.
+- 15/10/2026: telas e listas mais **compactas** (a prévia ficou grande).
+- 15/10/2026: **temperatura das estufas** por turno, falada ou digitada, gravada com hora e turno (número de estufas a ser passado pelo Danyllo).
