@@ -150,7 +150,8 @@ Sem gráfico "por pessoa" (pode soar como vigilância).
 - Lista das esterilizações do turno embaixo dos botões, com corrigir e excluir (com motivo).
 
 ### 7.1 Temperatura das estufas
-- Tela **Estufas** (e um cartão no Início): para cada estufa, a pessoa **digita ou fala** a temperatura lida ("estufa 2, 35,1 graus"), e o app grava numa tabela do app (`app.leituras_estufa`): estufa, temperatura (°C, uma casa decimal), quem, **quando** (data e hora) e o **turno** (pela hora e pela entrada no turno, como os outros registros).
+- **Obrigatória em todo turno, para todos** (não é atividade fixa de um turno só). Tem **aba própria, Estufas**, e um **bloco no fim do Início** com as estufas do turno (lidas e pendentes).
+- Na aba: para cada estufa, a pessoa **digita ou fala** a temperatura lida ("estufa 2, 35,1 graus"), e o app grava numa tabela do app (`app.leituras_estufa`): estufa, temperatura (°C, uma casa decimal), quem, **quando** (data e hora) e o **turno** (pela hora e pela entrada no turno, como os outros registros).
 - Mostra a última leitura de cada estufa no turno e marca **Pendente** a estufa ainda não lida no turno atual. Aparece no relatório do turno.
 - **Falta (o Danyllo vai passar):** quantas estufas são, o nome ou número de cada uma, e se há **faixa aceitável** por estufa (se houver, o valor real fica só no banco, carregado fora do Git; no repositório, só valores fictícios, como os limites do NFC).
 - Com faixa cadastrada, temperatura fora dela vira a etiqueta **Não ok** e entra nas ocorrências do turno (sem abrir nada sozinho).
