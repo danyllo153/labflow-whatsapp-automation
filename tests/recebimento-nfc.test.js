@@ -261,3 +261,29 @@ test('foto: past fora da AQA ou diluição fora do padrão vira problema; cada l
   assert.ok(d.problemas.some((p) => /load 43741: lote 64 past: só a AQA tem pasteurizado/.test(p)));
   assert.ok(d.problemas.some((p) => /load 43671: lote 142 fresh: diluição 10\^1 fora do padrão/.test(p)));
 });
+test('diluição falada de vários jeitos vale: elevado à terceira, diluído à primeira, 10 à terceira, 10^3, ao cubo, por extenso', () => {
+  const casos = [
+    ['load 44300 fab aqa item 129 lote 10 past 10 elevado a 1', 'past', 1],
+    ['load 44300 fab aqa item 129 lote 10 past 10 elevado à primeira', 'past', 1],
+    ['load 44300 fab aqa item 129 lote 10 past 10 diluído à primeira', 'past', 1],
+    ['load 44300 fab aqa item 129 lote 10 past 10 à primeira', 'past', 1],
+    ['load 44300 fab aqa item 129 lote 10 past 10 elevado a um', 'past', 1],
+    ['load 44300 fab col item 129 lote 12 fresh 10 elevado à terceira', 'fresh', 3],
+    ['load 44300 fab col item 129 lote 12 fresh 10 diluído à terceira', 'fresh', 3],
+    ['load 44300 fab col item 129 lote 12 fresh 10 à terceira', 'fresh', 3],
+    ['load 44300 fab col item 129 lote 12 fresh 10 a 3', 'fresh', 3],
+    ['load 44300 fab col item 129 lote 12 fresh 10^3', 'fresh', 3],
+    ['load 44300 fab col item 129 lote 12 fresco diluição 10 elevado ao cubo', 'fresh', 3],
+    ['load 44300 fab col item 129 lote 12 fresh dez elevado a quatro', 'fresh', 4],
+    ['load 44300 fab col item 129 lote 12 fresh 10 elevado à segunda', 'fresh', 2],
+  ];
+  for (const [frase, tipo, dil] of casos) {
+    const r = nfc(frase);
+    assert.equal(r.tipo, 'recebimento_nfc', frase);
+    assert.deepEqual(r.itens.map((i) => [i.amostra, i.diluicao]), [[tipo, dil]], frase);
+  }
+  assert.equal(nfc('load 44300 fab col item 129 lote 12 fresh 101').tipo, 'erro_coleta', '101 colado não vale como diluição');
+  assert.match(nfc('load 44300 fab col item 129 lote 12 fresh 10 à quinta').textoResposta, /Não entendi os lotes/);
+  const prompt = workflow.nodes.find((n) => n.name === 'IA · Montar pedido').parameters.assignments.assignments[0].value;
+  assert.match(prompt, /10 elevado à terceira.*10 diluído à terceira.*10 à primeira/);
+});
