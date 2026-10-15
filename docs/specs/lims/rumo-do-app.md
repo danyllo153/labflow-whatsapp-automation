@@ -51,9 +51,22 @@ As quatro decisões que estavam em aberto foram respondidas pelo Danyllo em 15/1
   - **Só online**; primeiro só no servidor de demonstração.
   - **Sem notificação** no celular por enquanto. PWA **sem loja** (sem custo).
 
+- [x] **Permissões por cargo no app** (15/10/2026). O **Operador é o analista em geral**. Detalhe vai para o [07](07-app-pwa.md):
+
+  | Ação | Admin | Operador | Consultor | Coletor (futuro) |
+  |---|---|---|---|---|
+  | Ver painel, consultas, gráficos e relatórios | ✅ | ✅ | ✅ | Só as próprias coletas e pendências de coleta |
+  | Entrar no turno e **editar o próprio horário de entrada/saída** (atraso, saída antecipada) | ✅ | ✅ | ❌ | ✅ |
+  | Encerrar o turno | ✅ | ✅ | ❌ | ❌ |
+  | Registrar coletas | ✅ | ✅ | ❌ | ✅ |
+  | Registrar análises, resultados, desvios e esterilização | ✅ | ✅ | ❌ | ❌ |
+  | Corrigir registro (com motivo) | ✅ | ✅ | ❌ | Só a própria coleta, no mesmo dia |
+  | Excluir registro | ✅ (com motivo) | Pede ao Admin | ❌ | Pede ao Admin |
+  | Adicionar pessoa, convite, senha, trocar cargo | ✅ | ❌ | ❌ | ❌ |
+  | Editar os horários padrão dos turnos | ✅ | ❌ | ❌ | ❌ |
+
 ## Decisões em aberto (perguntar, não decidir sozinho)
 
-- [ ] **Permissões por cargo no app** (Admin, Operador, Consultor e o futuro **Coletor**, que só registra coletas): proposta em discussão em 15/10; entra no [07](07-app-pwa.md) quando aprovada.
 - [ ] Quem encerra o turno quando há duas pessoas (a última a sair? qualquer uma?) e se o Admin pode reabrir um turno encerrado.
 
 ## Pedidos para a sessão do bot
@@ -63,7 +76,7 @@ O app não mexe nas tabelas nem no workflow do bot: o que ele precisa vira pedid
 | # | Pedido | Por quê | Situação |
 |---|---|---|---|
 | PB1 | **Toda leitura, análise e registro com a hora** em que foi feito. Hoje falta em `analises`: a pré-leitura e a leitura final guardam só quem (`pre_leitura_por`, `leitura_final_por`), sem a hora. Sugestão: colunas `pre_leitura_em` e `leitura_final_em` numa migration do bot (028/029), preenchidas pelo workflow | O relatório do turno precisa saber em qual turno cada coisa foi feita (rastreio) | Pedido em 15/10/2026, autorizado pelo Danyllo |
-| PB2 | Cargo **Coletor** (só registra coletas) na tabela `usuarios` e nas permissões do bot | Novo perfil previsto; o bot e o app precisam do mesmo cargo | Aguarda a decisão das permissões |
+| PB2 | Cargo **Coletor** (só registra coletas) na tabela `usuarios` e nas permissões do bot | Novo perfil previsto; o bot e o app precisam do mesmo cargo | Cargo decidido em 15/10; pedir quando o primeiro Coletor for entrar |
 
 
 ## Regras que não mudam

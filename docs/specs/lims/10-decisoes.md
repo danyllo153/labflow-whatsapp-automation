@@ -16,6 +16,8 @@ Uma linha por decisão, mais recente no topo, com o porquê. O que está aqui n�
 
 ## Decidido
 
+- **2026-10-15** (app) **Permissões por cargo:** Operador = analista em geral (registra, corrige com motivo, entra no turno e edita o próprio horário, encerra o turno); excluir só o Admin, com motivo (o Operador pede); adicionar pessoa e trocar cargo só o Admin; Consultor só lê; cargo futuro **Coletor** só registra coletas (pedido PB2 ao bot). Por quê: excluir é o que mais quebra o rastreio, e o atraso de entrada precisa ser registrado por quem chegou.
+
 - **2026-10-15** (app) **WhatsApp continua no ar** enquanto o piloto está em teste; o app tende a ser o canal principal e desligar o WhatsApp é decisão futura (Fase E do [rumo do app](rumo-do-app.md)). Por quê: o piloto está no ar com 5 Operadores, e o chat do app usa o mesmo pipeline, então os dois convivem sem duplicar regras.
 - **2026-10-15** (app) O app **começa lendo as tabelas atuais** do bot, sempre por **views**, sem esperar as migrations 021–026. Por quê: painel, relatório do turno e gráficos já têm os dados; ler por view isola o app da mudança da 024.
 - **2026-10-15** (app) **Relatório por turno de revezamento** (Manhã 08–16, Tarde 16–00, Madrugada 00–08, 7 dias, horários editáveis pelo Admin); escala fixa do ADM não vira turno; **cada pessoa entra no turno pelo app** (horário editável) e o que ela registra fica ligado a esse turno; página do relatório compartilhada; ao **encerrar o turno**, as pendências passam para o próximo; toda leitura e registro precisa de **hora** (pedido PB1 à sessão do bot). Por quê: na troca de turno as pessoas se cruzam e o automático daria conflito.
