@@ -114,7 +114,7 @@ Cada página do Power BI vira uma página do app, **no mesmo padrão**: cartões
 | Página | O que mostra | Fonte (views) |
 |---|---|---|
 | **Visão geral** | Números do período, pendências por bloco, alertas (Não ok) | `bi.*` |
-| **Coletas** | Coletas de terra e navio, quem coletou, tanque, data | `bi.coletas` |
+| **Coletas** | Coletas de terra e navio, **quem coletou** (o "coletado por" da migration 028 do bot, ou quem registrou) e **quem digitou**, tanque, data | `bi.coletas` |
 | **Tanques** | Leituras de C.T, B.L, WORT por tanque (normal e stress), situação ok/não ok | `bi.leituras_nfc`, `vw_situacao_nfc` |
 | **Drops** | D5, D10, D15 previstos e concluídos, quem concluiu | `bi.drops` |
 | **Desvios** | Desvios de drop e de tanque, repetições, abertos × fechados | `bi.desvios` |
