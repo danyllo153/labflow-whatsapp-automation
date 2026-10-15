@@ -150,11 +150,14 @@ Sem gráfico "por pessoa" (pode soar como vigilância).
 - Lista das esterilizações do turno embaixo dos botões, com corrigir e excluir (com motivo).
 
 ### 7.1 Temperatura das estufas
-- **Obrigatória em todo turno, para todos** (não é atividade fixa de um turno só). Tem **aba própria, Estufas**, e um **bloco no fim do Início** com as estufas do turno (lidas e pendentes).
-- Na aba: para cada estufa, a pessoa **digita ou fala** a temperatura lida ("estufa 2, 35,1 graus"), e o app grava numa tabela do app (`app.leituras_estufa`): estufa, temperatura (°C, uma casa decimal), quem, **quando** (data e hora) e o **turno** (pela hora e pela entrada no turno, como os outros registros).
-- **Uma leitura por estufa no início de cada turno** (decidido em 15/10). Mostra a leitura de cada estufa no turno e marca **Pendente** a estufa ainda não lida no turno atual. Aparece no relatório do turno.
-- **Falta (o Danyllo vai passar):** quantas estufas são, o nome ou número de cada uma, e se há **faixa aceitável** por estufa (se houver, o valor real fica só no banco, carregado fora do Git; no repositório, só valores fictícios, como os limites do NFC).
-- Com faixa cadastrada, temperatura fora dela vira a etiqueta **Não ok** e entra nas ocorrências do turno (sem abrir nada sozinho).
+- **Obrigatória em todo turno, para todos** (não é atividade fixa de um turno só). Tem **aba própria, Estufas**, e um **bloco no fim do Início** com as estufas do turno (conferidas e pendentes).
+- **Uma conferência por estufa no início de cada turno** (decidido em 15/10).
+- **Dois botões por estufa: Ok e Não ok** (decidido em 15/10): a pessoa olha o termômetro e toca, que é mais fácil do que falar. **Ok** grava só a conferência. **Não ok** abre um campo para **digitar a temperatura** que a estufa está marcando (obrigatório) e uma observação opcional ("porta aberta", "avisei a manutenção").
+- Cada conferência grava estufa, **Ok/Não ok**, temperatura (só no Não ok, °C com uma casa decimal), quem, **quando** (data e hora) e o **turno**, em `app.leituras_estufa`.
+- Ao lado de cada estufa, a **temperatura que ela deve ter** (referência cadastrada pelo Admin), para a pessoa comparar. Esse valor fica só no banco; no repositório, só valores fictícios.
+- A estufa ainda não conferida no turno fica **Pendente**. Estufa **Não ok** entra nas **ocorrências do relatório do turno** com a temperatura anotada (sem abrir nada sozinho).
+- Pelo assistente também vale: "estufa 2 não ok, 38,5 graus".
+- **Falta (o Danyllo vai passar):** quantas estufas são, o nome ou número de cada uma e a temperatura de referência de cada uma.
 
 ### 8. Assistente de IA (botão flutuante)
 - **Em todas as telas**, um botão redondo no canto: toca e escolhe **escrever**, **falar** ou **foto**.
@@ -225,8 +228,8 @@ Nomes a confirmar na migration. Nenhuma altera tabela do bot (só referenciam `u
 | `app.esterilizacoes` | Tipo, ciclo, meio (opcional), quem, quando |
 | `app.atividades_fixas` | Atividades fixas de cada turno (texto, turno, dias da semana, ordem), cadastradas pelo Admin |
 | `app.atividades_feitas` | Atividade fixa ou pendência herdada marcada como feita: quem, quando, turno |
-| `app.estufas` | Cada estufa (nome/número, faixa aceitável opcional com vigência) |
-| `app.leituras_estufa` | Estufa, temperatura, quem, quando, turno |
+| `app.estufas` | Cada estufa (nome/número, temperatura de referência para mostrar ao lado) |
+| `app.leituras_estufa` | Estufa, Ok/Não ok, temperatura (só no Não ok), observação, quem, quando, turno |
 
 Login em [06](06-api-e-auth.md). As **funções do banco** para editar e excluir dados do bot não são tabelas do app: são criadas com a sessão do bot (PB4).
 
@@ -246,7 +249,7 @@ Notificação no celular, modo offline, loja de aplicativos, enviar relatório p
 ## Perguntas ainda abertas
 
 - [ ] **Atividades fixas de cada turno:** a lista (o Danyllo vai passar).
-- [ ] **Estufas:** quantas, nome/número de cada uma e se há faixa aceitável por estufa (o Danyllo vai passar).
+- [ ] **Estufas:** quantas, nome/número de cada uma e a temperatura de referência (o Danyllo vai passar).
 
 
 ## Pronto quando
