@@ -282,7 +282,26 @@ test('diluição falada de vários jeitos vale: elevado à terceira, diluído à
     assert.equal(r.tipo, 'recebimento_nfc', frase);
     assert.deepEqual(r.itens.map((i) => [i.amostra, i.diluicao]), [[tipo, dil]], frase);
   }
-  assert.equal(nfc('load 44300 fab col item 129 lote 12 fresh 101').tipo, 'erro_coleta', '101 colado não vale como diluição');
+  assert.equal(nfc('load 44300 fab col item 129 lote 12 fresh 1011').tipo, 'erro_coleta', '1011 não é diluição');
+  // o 10 colado no expoente, vírgula depois do tipo, "tipo past", fresca, 1:1000, "diluição 3", potência, expoente, menos
+  const mais = [
+    ['aqa lote 10 past 101', 'past', 1], ['aqa lote 10 past 10 1', 'past', 1], ['col lote 12 fresh 102', 'fresh', 2],
+    ['col lote 12 fresh 103', 'fresh', 3], ['col lote 12 fresh 104', 'fresh', 4], ['aqa lote 10 past, 10 elevado a 1', 'past', 1],
+    ['aqa lote 10, past, 10 elevado a 1', 'past', 1], ['aqa lote 10 do tipo past 10 elevado a 1', 'past', 1],
+    ['aqa lote 10 amostra pasteurizada 10 elevado a primeira', 'past', 1], ['col lote 12 fresca 10 elevado a 3', 'fresh', 3],
+    ['col lote 12 in natura 10 à terceira', 'fresh', 3], ['col lote 12 fresh diluição 3', 'fresh', 3],
+    ['col lote 12 fresh diluição de 10 elevado a 3', 'fresh', 3], ['col lote 12 fresh dil 3', 'fresh', 3],
+    ['col lote 12 fresh 1:1000', 'fresh', 3], ['col lote 12 fresh 1/100', 'fresh', 2], ['col lote 12 fresh 10 elevado na terceira', 'fresh', 3],
+    ['col lote 12 fresh 10 em 3', 'fresh', 3], ['col lote 12 fresh 10 potência de 3', 'fresh', 3], ['col lote 12 fresh 10 expoente 3', 'fresh', 3],
+    ['col lote 12 fresh 10 elevado ao expoente 3', 'fresh', 3], ['col lote 12 fresh 10 elevado a menos 3', 'fresh', 3],
+    ['col lote 12 fresh 10 elevada à terceira', 'fresh', 3],
+  ];
+  for (const [resto, tipo, dil] of mais) {
+    const r = nfc('load 44300 fab ' + resto);
+    assert.equal(r.tipo, 'recebimento_nfc', resto);
+    assert.deepEqual(r.itens.map((i) => [i.amostra, i.diluicao]), [[tipo, dil]], resto);
+  }
+  assert.match(nfc('load 44300 fab col lote 12 fresh 105').textoResposta, /Diluição fora do padrão/, '105 vira 10^5 e é recusado pela regra');
   assert.match(nfc('load 44300 fab col item 129 lote 12 fresh 10 à quinta').textoResposta, /Não entendi os lotes/);
   const prompt = workflow.nodes.find((n) => n.name === 'IA · Montar pedido').parameters.assignments.assignments[0].value;
   assert.match(prompt, /10 elevado à terceira.*10 diluído à terceira.*10 à primeira/);
