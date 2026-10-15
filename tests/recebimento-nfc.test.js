@@ -287,3 +287,19 @@ test('diluição falada de vários jeitos vale: elevado à terceira, diluído à
   const prompt = workflow.nodes.find((n) => n.name === 'IA · Montar pedido').parameters.assignments.assignments[0].value;
   assert.match(prompt, /10 elevado à terceira.*10 diluído à terceira.*10 à primeira/);
 });
+test('foto: o 10 colado no expoente (101, 102, 103, 104) vale como 10^1 a 10^4', () => {
+  const r = ler(LAUDO({ blocos: [
+    { load: '44300', fabrica: 'AQA', item: '129', lotes: [{ lote: 10, tipo: 'past', diluicao: '101' }] },
+    { load: '44301', fabrica: 'COL', item: '129', lotes: [{ lote: 11, tipo: 'fresh', diluicao: 103 }] },
+    { load: '44302', fabrica: 'UCH', item: '129', lotes: [{ lote: 12, tipo: 'fresh', diluicao: '10 4' }] },
+    { load: '44303', fabrica: 'CON', item: '129', lotes: [{ lote: 13, tipo: 'fresh', diluicao: '10\u00b2' }] },
+    { load: '44304', fabrica: 'ITA', item: '129', lotes: [{ lote: 14, tipo: 'fresh', diluicao: '105' }] }] }));
+  assert.deepEqual(r.comandos.map((c) => c.texto), [
+    'Recebimento NFC load 44300 fab AQA item 129 lote 10 past 10 elevado a 1 data 14/10/2026',
+    'Recebimento NFC load 44301 fab COL item 129 lote 11 fresh 10 elevado a 3 data 14/10/2026',
+    'Recebimento NFC load 44302 fab UCH item 129 lote 12 fresh 10 elevado a 4 data 14/10/2026',
+    'Recebimento NFC load 44303 fab CON item 129 lote 13 fresh 10 elevado a 2 data 14/10/2026']);
+  assert.ok(r.problemas.some((p) => /load 44304: lote 14 fresh: diluição 10\^5 fora do padrão/.test(p)), '105 colado vira 10^5 e fica fora do padrão');
+  const [{ json }] = rodar('Foto · Montar pedido', {}, { 'Foto em arquivo': { foto_b64: 'QUJD', mime: 'image/jpeg' } });
+  assert.match(json.pedido.contents[0].parts[0].text, /colados \(101, 102, 103, 104\), o expoente é o último algarismo/);
+});

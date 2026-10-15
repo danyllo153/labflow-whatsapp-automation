@@ -746,6 +746,7 @@ recebimento nfc load 44301 fab col item 129 lote 12 fresh 10 elevado a 2 data 14
 ```
 
 - O início `recebimento nfc` é opcional, o item pode ficar de fora (vale 129; outro item é recusado), `fab` ou `fábrica` valem, e a fábrica segue a regra das seis (AQA, CON, COL, UCH, ITA, TMG; nome da cidade vira a sigla).
+- **Na foto**, o `10` escrito colado no expoente vale como a diluição: `101` = 10^1, `102` = 10^2, `103` = 10^3, `104` = 10^4 (nunca o número cento e um); o expoente pequeno (`10¹`, `10³`) também. Um `105` vira 10^5 e é recusado pela regra (past = 1, fresh = 2 a 4).
 - **A diluição pode ser falada de vários jeitos** (texto ou áudio): `10 elevado a 3`, `10 elevado à terceira`, `10 diluído à terceira`, `10 à terceira`, `10 a 3`, `10^3`, `10 ao cubo`, e o mesmo para `primeira`, `segunda` e `quarta`. O bot sempre entende o expoente.
 - **Um lote por comando** (sem faixas nem vários lotes); se o mesmo lote foi analisado nos dois tipos, são dois comandos. Também vale `10^3` e `pasteurizado`/`fresco`. Sem data, vale hoje.
 - **O mesmo lote pode entrar nos dois tipos** (lote 10 `past` e lote 10 `fresh`), em comandos separados. Repetir o lote e o tipo **corrige** a diluição e a data, e o bot avisa (`corrigido: era 10^1`).
