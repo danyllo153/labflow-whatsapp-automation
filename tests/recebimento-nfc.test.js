@@ -20,19 +20,24 @@ test('os exemplos do laboratório: lote 10 past 10 elevado a 1 e lote 10 fresh 1
 });
 
 test('com o início "recebimento nfc", vários lotes, faixas, nomes por extenso e data', () => {
-  const r = nfc('Recebimento NFC load 44300 fábrica Araraquara lotes 10-12 fresh 10^3, lote 13 pasteurizado 10 elevado a 1 data 14/10/2026');
+  const r = nfc('Recebimento NFC load 44300 fábrica Araraquara lote 13 pasteurizado 10 elevado a 1 data 14/10/2026');
   assert.equal(r.tipo, 'recebimento_nfc');
   assert.equal(r.fabrica, 'AQA');
-  assert.deepEqual(r.itens.map((i) => [i.lote, i.amostra, i.diluicao]), [[10, 'fresh', 3], [11, 'fresh', 3], [12, 'fresh', 3], [13, 'past', 1]]);
+  assert.deepEqual(r.itens.map((i) => [i.lote, i.amostra, i.diluicao]), [[13, 'past', 1]]);
   assert.equal(r.dataRecebimento, '14/10/2026');
-  const s = nfc('load 44300 fab aqa lotes 10 e 11 fresh 10 elevado a 3');
-  assert.deepEqual(s.itens.map((i) => i.lote), [10, 11]);
+  assert.equal(nfc('Recebimento NFC load 44300 fábrica colina lote 12 fresh 10^3').tipo, 'recebimento_nfc');
+  const s = nfc('load 44300 fab aqa lote 11 fresh 10 elevado a 3');
+  assert.deepEqual(s.itens.map((i) => i.lote), [11]);
   assert.equal(s.item, '129', 'o item é 129 mesmo sem escrever');
 });
 
-test('o mesmo lote vale nos dois tipos, e vem em ordem de lote e tipo', () => {
-  const r = nfc('recebimento nfc load 44300 fab aqa item 129 lote 10 past 10 elevado a 1, lote 10 fresh 10 elevado a 3');
-  assert.deepEqual(r.itens, [{ lote: 10, amostra: 'fresh', diluicao: 3 }, { lote: 10, amostra: 'past', diluicao: 1 }]);
+test('um lote por comando: vários lotes, faixas ou os dois tipos na mesma mensagem são recusados', () => {
+  for (const f of ['recebimento nfc load 44300 fab aqa item 129 lote 10 past 10 elevado a 1, lote 10 fresh 10 elevado a 3',
+    'recebimento nfc load 44300 fab col lotes 10-12 fresh 10 elevado a 3', 'load 44300 fab col lotes 10 e 11 fresh 10 elevado a 3']) {
+    const r = nfc(f);
+    assert.equal(r.tipo, 'erro_coleta', f);
+    assert.match(r.textoResposta, /um lote por vez: mande um comando para cada lote/);
+  }
 });
 
 test('recusas: item diferente de 129, fábrica fora das seis, sem tipo ou diluição, duas diluições para o mesmo lote e tipo', () => {
@@ -69,11 +74,10 @@ const resposta = (frase, linha) => {
 };
 
 test('resposta: lista cada lote com tipo e diluição, e avisa correção, repetição e fábrica diferente', () => {
-  const t = resposta('load 44300 fab aqa item 129 lote 10 past 10 elevado a 1, lote 10 fresh 10 elevado a 3',
-    { gravados: [{ lote: 10, amostra: 'fresh', diluicao: 3, novo: true, era: null }, { lote: 10, amostra: 'past', diluicao: 1, novo: true, era: null }], fabrica_cadastrada: null });
+  const t = resposta('load 44300 fab aqa item 129 lote 10 fresh 10 elevado a 3',
+    { gravados: [{ lote: 10, amostra: 'fresh', diluicao: 3, novo: true, era: null }], fabrica_cadastrada: null });
   assert.match(t, /Recebimento NFC do load 44300 \(item 129, fábrica AQA\) registrado por Usuario Teste/);
   assert.match(t, /lote 10 · fresh · 10\^3/);
-  assert.match(t, /lote 10 · past · 10\^1/);
   assert.match(t, /Data: \d{2}\/\d{2}\/\d{4}/);
   const corrigido = resposta('load 44300 fab aqa item 129 lote 10 past 10 elevado a 2', { gravados: [{ lote: 10, amostra: 'past', diluicao: 2, novo: false, era: 1 }] });
   assert.match(corrigido, /lote 10 · past · 10\^2 \(corrigido: era 10\^1\)/);
@@ -130,14 +134,19 @@ const ler = (obj) => rodar('Foto · Interpretar', { content: { parts: [{ text: J
 const LAUDO = (extra = {}) => ({ formulario: 'recebimento_nfc', data: '14/10/2026', duvidas: [],
   blocos: [{ load: '44300', fabrica: 'AQA', item: '129', lotes: [{ lote: 10, tipo: 'past', diluicao: 1 }, { lote: 10, tipo: 'fresh', diluicao: 3 }, { lote: 11, tipo: 'fresh', diluicao: 3 }, { lote: 12, tipo: 'fresh', diluicao: 3 }] }], ...extra });
 
-test('foto: cada load vira um comando só, com lotes juntos por tipo e diluição, aceito pelo bot', () => {
+test('foto: cada lote vira um comando (um por linha do papel), todos aceitos pelo bot', () => {
   const r = ler(LAUDO());
   assert.equal(r.formulario, 'recebimento_nfc');
-  assert.equal(r.comandos.length, 1);
-  assert.equal(r.comandos[0].texto, 'Recebimento NFC load 44300 fab AQA item 129 lotes 10-12 fresh 10 elevado a 3, lote 10 past 10 elevado a 1 data 14/10/2026');
-  const c = interpretar(r.comandos[0].texto, { reenvio: true });
-  assert.equal(c.tipo, 'recebimento_nfc');
-  assert.deepEqual(c.itens.map((i) => [i.lote, i.amostra, i.diluicao]), [[10, 'fresh', 3], [10, 'past', 1], [11, 'fresh', 3], [12, 'fresh', 3]]);
+  assert.deepEqual(r.comandos.map((c) => c.texto), [
+    'Recebimento NFC load 44300 fab AQA item 129 lote 10 fresh 10 elevado a 3 data 14/10/2026',
+    'Recebimento NFC load 44300 fab AQA item 129 lote 10 past 10 elevado a 1 data 14/10/2026',
+    'Recebimento NFC load 44300 fab AQA item 129 lote 11 fresh 10 elevado a 3 data 14/10/2026',
+    'Recebimento NFC load 44300 fab AQA item 129 lote 12 fresh 10 elevado a 3 data 14/10/2026']);
+  for (const cmd of r.comandos) {
+    const c = interpretar(cmd.texto, { reenvio: true });
+    assert.equal(c.tipo, 'recebimento_nfc');
+    assert.equal(c.itens.length, 1);
+  }
 });
 
 test('foto: tipo por extenso, expoente com texto, fábrica torta, item errado e lote sem tipo ou diluição', () => {
@@ -146,7 +155,7 @@ test('foto: tipo por extenso, expoente com texto, fábrica torta, item errado e 
     { load: '44301', fabrica: 'CON', item: '2655', lotes: [{ lote: 1, tipo: 'fresh', diluicao: 2 }] },
     { load: '44302', fabrica: 'XYZ', item: '129', lotes: [{ lote: 1, tipo: 'fresh', diluicao: 2 }] },
   ] }));
-  assert.deepEqual(r.comandos.map((c) => c.texto), ['Recebimento NFC load 44300 fab AQA item 129 lote 10 past 10 elevado a 1, lote 13 fresh 10 elevado a 2 data 14/10/2026']);
+  assert.deepEqual(r.comandos.map((c) => c.texto), ['Recebimento NFC load 44300 fab AQA item 129 lote 10 past 10 elevado a 1 data 14/10/2026', 'Recebimento NFC load 44300 fab AQA item 129 lote 13 fresh 10 elevado a 2 data 14/10/2026']);
   assert.ok(r.duvidas.some((d) => /load 44300: li a fábrica como "AOQ" e entendi AQA/.test(d)));
   assert.ok(r.problemas.some((p) => /load 44300: não li o tipo ou a diluição de lote 11, lote 12/.test(p)));
   assert.ok(r.problemas.some((p) => /load 44301 \(item 2655\): o laudo mistura NFC \(item 129\) com concentrado; mande o concentrado em outra foto/.test(p)));
@@ -162,9 +171,9 @@ test('foto: nada legível não grava; confirmação explica o que registra e ped
   assert.equal(r.salvar, '1');
   assert.match(r.textoResposta, /Li o laudo de recebimento NFC \(data 14\/10\/2026\)/);
   assert.match(r.textoResposta, /1️⃣ Recebimento NFC load 44300 fab AQA item 129/);
-  assert.match(r.textoResposta, /Recebimento NFC — o que isso registra:\n• load 44300 \(AQA, item 129\): lotes 10-12 fresh 10\^3 · lote 10 past 10\^1/);
+  assert.match(r.textoResposta, /Recebimento NFC — o que isso registra:\n• load 44300 \(AQA, item 129\): lote 10 fresh 10\^3\n• load 44300 \(AQA, item 129\): lote 10 past 10\^1/);
   assert.match(r.textoResposta, /Responda \*sim\*/);
-  assert.equal(JSON.parse(r.payload).comandos.length, 1);
+  assert.equal(JSON.parse(r.payload).comandos.length, 4);
 });
 
 test('foto: o prompt ensina o formulário, o tipo e só o expoente da diluição', () => {
@@ -207,7 +216,7 @@ test('foto: laudo com o título "Recebimento" e item 129 é lido como NFC (tipo,
   const d = ler({ formulario: 'recebimento', data: '14/10/2026', duvidas: [], blocos: [
     { load: '44300', fabrica: 'AQA', item: '129', lotes: [{ lote: 10, tipo: 'past', diluicao: 1, ct: '14', bl72: null, bl120: null }, { lote: 10, tipo: 'fresh', diluicao: 3 }] }] });
   assert.equal(d.formulario, 'recebimento_nfc');
-  assert.deepEqual(d.comandos.map((c) => c.texto), ['Recebimento NFC load 44300 fab AQA item 129 lote 10 fresh 10 elevado a 3, lote 10 past 10 elevado a 1 data 14/10/2026']);
+  assert.deepEqual(d.comandos.map((c) => c.texto), ['Recebimento NFC load 44300 fab AQA item 129 lote 10 fresh 10 elevado a 3 data 14/10/2026', 'Recebimento NFC load 44300 fab AQA item 129 lote 10 past 10 elevado a 1 data 14/10/2026']);
   assert.equal(d.resultadosNfc.length, 1);
   assert.equal(d.comandos.some((c) => c.tipo === 'compostas'), false, 'NFC não tem compostas');
 });
