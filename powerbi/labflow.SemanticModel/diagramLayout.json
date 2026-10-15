@@ -124,6 +124,19 @@
             "width": 234
           },
           "zIndex": 0
+        },
+        {
+          "location": {
+            "x": 1392.155009921717,
+            "y": 539.95893049184747
+          },
+          "nodeIndex": "bi recebimento_nfc",
+          "nodeLineageTag": "94689bcb-6a3e-38c6-f5e5-57a9bacffbab",
+          "size": {
+            "height": 300,
+            "width": 234
+          },
+          "zIndex": 0
         }
       ],
       "name": "Todas as tabelas",

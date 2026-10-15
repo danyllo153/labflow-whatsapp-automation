@@ -2566,7 +2566,7 @@ cultureInfo pt-BR
 			          }
 			        },
 			        {
-			          "Temperaturas que confirmaram": {
+			          "Temperaturas": {
 			            "State": "Suggested",
 			            "Source": {
 			              "Type": "External",
@@ -2649,6 +2649,16 @@ cultureInfo pt-BR
 			        },
 			        {
 			          "Período": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        },
+			        {
+			          "Período do recebimento": {
 			            "State": "Suggested",
 			            "Source": {
 			              "Type": "External",
@@ -11350,19 +11360,7 @@ cultureInfo pt-BR
 			          "ConceptualProperty": "Estágio"
 			        }
 			      },
-			      "State": "Generated",
-			      "Terms": [
-			        {
-			          "Drop": {
-			            "State": "Suggested",
-			            "Source": {
-			              "Type": "External",
-			              "Agent": "PowerBI.VisualColumnRename"
-			            },
-			            "Weight": 0.9
-			          }
-			        }
-			      ]
+			      "State": "Generated"
 			    },
 			    "bi_leituras_nfc.resultado": {
 			      "Definition": {
@@ -11417,6 +11415,342 @@ cultureInfo pt-BR
 			      "Terms": [
 			        {
 			          "Desvio": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "bi_desvios.tipo": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "bi desvios",
+			          "ConceptualProperty": "tipo"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Tipo": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "bi_desvios.analise": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "bi desvios",
+			          "ConceptualProperty": "analise"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Análise": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "bi_desvios.frasco": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "bi desvios",
+			          "ConceptualProperty": "frasco"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Frasco": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "bi_desvios.contagem": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "bi desvios",
+			          "ConceptualProperty": "contagem"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Placas": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "bi_recebimento_nfc.amostra": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "bi recebimento_nfc",
+			          "ConceptualProperty": "amostra"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Tipo": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "bi_recebimento_nfc.fabrica": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "bi recebimento_nfc",
+			          "ConceptualProperty": "fabrica"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Fábrica": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "bi_recebimento_nfc.load": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "bi recebimento_nfc",
+			          "ConceptualProperty": "load"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Load": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "bi_recebimento_nfc.lote": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "bi recebimento_nfc",
+			          "ConceptualProperty": "lote"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Lote": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "bi_recebimento_nfc.diluicao_texto": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "bi recebimento_nfc",
+			          "ConceptualProperty": "diluicao_texto"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Diluição": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "bi_recebimento_nfc.data_recebimento": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "bi recebimento_nfc",
+			          "ConceptualProperty": "data_recebimento"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Recebido em": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "bi_recebimento_nfc.analise": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "bi recebimento_nfc",
+			          "ConceptualProperty": "analise"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Análise": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "bi_recebimento_nfc.prevista": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "bi recebimento_nfc",
+			          "ConceptualProperty": "prevista"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Prevista": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "bi_recebimento_nfc.valor_lido": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "bi recebimento_nfc",
+			          "ConceptualProperty": "valor_lido"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Lido na placa": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "bi_recebimento_nfc.resultado": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "bi recebimento_nfc",
+			          "ConceptualProperty": "resultado"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Resultado final": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "bi_recebimento_nfc.lido_por": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "bi recebimento_nfc",
+			          "ConceptualProperty": "lido_por"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Lido por": {
+			            "State": "Suggested",
+			            "Source": {
+			              "Type": "External",
+			              "Agent": "PowerBI.VisualColumnRename"
+			            },
+			            "Weight": 0.9
+			          }
+			        }
+			      ]
+			    },
+			    "bi_recebimento_nfc.situacao": {
+			      "Definition": {
+			        "Binding": {
+			          "ConceptualEntity": "bi recebimento_nfc",
+			          "ConceptualProperty": "situacao"
+			        }
+			      },
+			      "State": "Generated",
+			      "Terms": [
+			        {
+			          "Situação": {
 			            "State": "Suggested",
 			            "Source": {
 			              "Type": "External",

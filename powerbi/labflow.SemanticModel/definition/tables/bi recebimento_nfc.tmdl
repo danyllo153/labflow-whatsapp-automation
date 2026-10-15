@@ -57,7 +57,7 @@ table 'bi recebimento_nfc'
 		dataType: int64
 		formatString: 0
 		lineageTag: 185e4c99-d09f-fe90-f8ed-46aa0b587b48
-		summarizeBy: none
+		summarizeBy: sum
 		sourceColumn: lote
 
 		annotation SummarizationSetBy = Automatic
@@ -74,7 +74,7 @@ table 'bi recebimento_nfc'
 		dataType: int64
 		formatString: 0
 		lineageTag: 8b300240-5a84-840f-73a0-8863a226f50c
-		summarizeBy: none
+		summarizeBy: sum
 		sourceColumn: diluicao
 
 		annotation SummarizationSetBy = Automatic
@@ -96,6 +96,8 @@ table 'bi recebimento_nfc'
 
 		annotation SummarizationSetBy = Automatic
 
+		annotation UnderlyingDateTimeDataType = Date
+
 	column analise
 		dataType: string
 		lineageTag: ff16247e-626e-b9a5-fd1e-b600f9ef74f6
@@ -111,7 +113,14 @@ table 'bi recebimento_nfc'
 		summarizeBy: none
 		sourceColumn: prevista
 
+		variation Variation
+			isDefault
+			relationship: 4ffa53b5-3b5c-488e-b062-0ae2e557d259
+			defaultHierarchy: LocalDateTable_b6926631-f32e-4fc1-8fb3-5b41a408258c.'Hierarquia de datas'
+
 		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
 
 	column lido
 		dataType: boolean
@@ -125,7 +134,7 @@ table 'bi recebimento_nfc'
 		dataType: double
 		formatString: #,0.##
 		lineageTag: 0e69844c-5073-2d3e-74fd-44325b8cdb6b
-		summarizeBy: none
+		summarizeBy: sum
 		sourceColumn: valor_lido
 
 		annotation SummarizationSetBy = Automatic
@@ -134,7 +143,7 @@ table 'bi recebimento_nfc'
 		dataType: double
 		formatString: #,0.##
 		lineageTag: a6a167af-2c05-b6fb-ecab-c0d4ce1e0ac3
-		summarizeBy: none
+		summarizeBy: sum
 		sourceColumn: valor_final
 
 		annotation SummarizationSetBy = Automatic
@@ -170,7 +179,14 @@ table 'bi recebimento_nfc'
 		summarizeBy: none
 		sourceColumn: data_leitura
 
+		variation Variation
+			isDefault
+			relationship: 0c5f94d3-fa53-474b-8fe3-79ac0e9c4a46
+			defaultHierarchy: LocalDateTable_9d72b16b-5e7c-4647-b47b-60af1faedb71.'Hierarquia de datas'
+
 		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
 
 	column situacao
 		dataType: string
@@ -188,3 +204,4 @@ table 'bi recebimento_nfc'
 				    bi_recebimento_nfc = Fonte{[Schema="bi",Item="recebimento_nfc"]}[Data]
 				in
 				    bi_recebimento_nfc
+

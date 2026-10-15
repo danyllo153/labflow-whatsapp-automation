@@ -819,14 +819,18 @@ const PAGINAS = [
       [N, 'load', 'Load', 'Dropdown'], [N, 'analise', 'Análise', 'Blocos'], [CAL, 'Date', 'Período do recebimento', 'Between']]),
     // tendência do resultado final (lido x 10^diluição) pela data do recebimento: C.T 48h e B.L 120h, fresh e pasteurizado
     // em gráficos separados. O filtro Fábrica, no topo, troca entre todas as fábricas e uma só.
-    grafico('lineChart', [24, 252, 920, 330], 'Tendência · Fresh: C.T 48h e B.L 120h',
+    grafico('lineChart', [24, 252, 640, 330], 'Tendência · Fresh: C.T 48h e B.L 120h',
       { Category: col(N, 'data_recebimento', 'Recebido em'), Series: col(N, 'analise', 'Análise'), Y: med(N, 'NFC resultado final (média)') },
       { filtros: [filtroEm(N, 'amostra', [texto('Fresh')]), filtroEm(N, 'analise', [texto('C.T 48h'), texto('B.L 120h')])],
         cores: corPorValor(N, 'analise', SERIE_ANALISE_NFC), corTitulo: COR.verde, numeroInteiro: true, sort: crescente(N, 'data_recebimento') }),
-    grafico('lineChart', [976, 252, 920, 330], 'Tendência · Pasteurizado (só AQA): C.T 48h e B.L 120h',
+    grafico('lineChart', [680, 252, 640, 330], 'Tendência · Pasteurizado (AQA): C.T 48h e B.L 120h',
       { Category: col(N, 'data_recebimento', 'Recebido em'), Series: col(N, 'analise', 'Análise'), Y: med(N, 'NFC resultado final (média)') },
       { filtros: [filtroEm(N, 'amostra', [texto('Pasteurizado')]), filtroEm(N, 'analise', [texto('C.T 48h'), texto('B.L 120h')])],
         cores: corPorValor(N, 'analise', SERIE_ANALISE_NFC), corTitulo: COR.laranja, numeroInteiro: true, sort: crescente(N, 'data_recebimento') }),
+    // quantos NFCs foram analisados (lotes recebidos) por fábrica, fresh e pasteurizado lado a lado
+    grafico('clusteredColumnChart', [1336, 252, 560, 330], 'NFCs analisados por fábrica',
+      { Category: col(N, 'fabrica', 'Fábrica'), Series: col(N, 'amostra', 'Tipo'), Y: med(N, 'NFC lotes') },
+      { cores: corPorValor(N, 'amostra', SERIE_AMOSTRA), corTitulo: COR.marinho }),
     tabela(TABELA, 'Recebimento de NFC: diluição, resultado lido e resultado final',
       [col(N, 'fabrica', 'Fábrica'), col(N, 'load', 'Load'), col(N, 'lote', 'Lote'), col(N, 'amostra', 'Tipo'),
        col(N, 'diluicao_texto', 'Diluição'), col(N, 'data_recebimento', 'Recebido em'), col(N, 'analise', 'Análise'),

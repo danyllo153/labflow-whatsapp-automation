@@ -2,10 +2,10 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
   "name": "70677f5763753a4373ba",
   "position": {
-    "x": 976,
+    "x": 680,
     "y": 252,
     "z": 10000,
-    "width": 920,
+    "width": 640,
     "height": 330,
     "tabOrder": 10000
   },
@@ -320,7 +320,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Tendência · Pasteurizado (só AQA): C.T 48h e B.L 120h'"
+                  "Value": "'Tendência · Pasteurizado (AQA): C.T 48h e B.L 120h'"
                 }
               }
             },

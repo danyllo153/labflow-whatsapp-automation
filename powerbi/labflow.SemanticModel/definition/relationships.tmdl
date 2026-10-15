@@ -146,3 +146,14 @@ relationship ec4d59d5-49f9-42e9-9f86-bf2793c9a38f
 relationship 'Calendário -> Recebimento NFC'
 	fromColumn: 'bi recebimento_nfc'.data_recebimento
 	toColumn: Calendário.Date
+
+relationship 4ffa53b5-3b5c-488e-b062-0ae2e557d259
+	joinOnDateBehavior: datePartOnly
+	fromColumn: 'bi recebimento_nfc'.prevista
+	toColumn: LocalDateTable_b6926631-f32e-4fc1-8fb3-5b41a408258c.Date
+
+relationship 0c5f94d3-fa53-474b-8fe3-79ac0e9c4a46
+	joinOnDateBehavior: datePartOnly
+	fromColumn: 'bi recebimento_nfc'.data_leitura
+	toColumn: LocalDateTable_9d72b16b-5e7c-4647-b47b-60af1faedb71.Date
+
