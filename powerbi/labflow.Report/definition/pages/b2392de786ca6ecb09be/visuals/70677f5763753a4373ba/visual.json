@@ -2,10 +2,10 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
   "name": "70677f5763753a4373ba",
   "position": {
-    "x": 600,
+    "x": 976,
     "y": 252,
     "z": 10000,
-    "width": 700,
+    "width": 920,
     "height": 330,
     "tabOrder": 10000
   },
@@ -320,7 +320,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Tendência do B.L · Fresh (72h e 120h)'"
+                  "Value": "'Tendência · Pasteurizado (só AQA): C.T 48h e B.L 120h'"
                 }
               }
             },
@@ -423,7 +423,7 @@
                     [
                       {
                         "Literal": {
-                          "Value": "'Fresh'"
+                          "Value": "'Pasteurizado'"
                         }
                       }
                     ]
@@ -476,7 +476,7 @@
                     [
                       {
                         "Literal": {
-                          "Value": "'B.L 72h'"
+                          "Value": "'C.T 48h'"
                         }
                       }
                     ],

@@ -5,7 +5,7 @@
     "x": 24,
     "y": 252,
     "z": 9000,
-    "width": 560,
+    "width": 920,
     "height": 330,
     "tabOrder": 9000
   },
@@ -42,12 +42,12 @@
                       "Entity": "bi recebimento_nfc"
                     }
                   },
-                  "Property": "fabrica"
+                  "Property": "analise"
                 }
               },
-              "queryRef": "bi recebimento_nfc.fabrica",
-              "nativeQueryRef": "fabrica",
-              "displayName": "Fábrica"
+              "queryRef": "bi recebimento_nfc.analise",
+              "nativeQueryRef": "analise",
+              "displayName": "Análise"
             }
           ]
         },
@@ -97,6 +97,47 @@
                 "color": {
                   "expr": {
                     "Literal": {
+                      "Value": "'#0E8A96'"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "selector": {
+            "data": [
+              {
+                "scopeId": {
+                  "Comparison": {
+                    "ComparisonKind": 0,
+                    "Left": {
+                      "Column": {
+                        "Expression": {
+                          "SourceRef": {
+                            "Entity": "bi recebimento_nfc"
+                          }
+                        },
+                        "Property": "analise"
+                      }
+                    },
+                    "Right": {
+                      "Literal": {
+                        "Value": "'C.T 48h'"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "properties": {
+            "fill": {
+              "solid": {
+                "color": {
+                  "expr": {
+                    "Literal": {
                       "Value": "'#1D6FE8'"
                     }
                   }
@@ -117,53 +158,12 @@
                             "Entity": "bi recebimento_nfc"
                           }
                         },
-                        "Property": "fabrica"
+                        "Property": "analise"
                       }
                     },
                     "Right": {
                       "Literal": {
-                        "Value": "'AQA'"
-                      }
-                    }
-                  }
-                }
-              }
-            ]
-          }
-        },
-        {
-          "properties": {
-            "fill": {
-              "solid": {
-                "color": {
-                  "expr": {
-                    "Literal": {
-                      "Value": "'#D97706'"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "selector": {
-            "data": [
-              {
-                "scopeId": {
-                  "Comparison": {
-                    "ComparisonKind": 0,
-                    "Left": {
-                      "Column": {
-                        "Expression": {
-                          "SourceRef": {
-                            "Entity": "bi recebimento_nfc"
-                          }
-                        },
-                        "Property": "fabrica"
-                      }
-                    },
-                    "Right": {
-                      "Literal": {
-                        "Value": "'COL'"
+                        "Value": "'B.L 72h'"
                       }
                     }
                   }
@@ -199,135 +199,12 @@
                             "Entity": "bi recebimento_nfc"
                           }
                         },
-                        "Property": "fabrica"
+                        "Property": "analise"
                       }
                     },
                     "Right": {
                       "Literal": {
-                        "Value": "'UCH'"
-                      }
-                    }
-                  }
-                }
-              }
-            ]
-          }
-        },
-        {
-          "properties": {
-            "fill": {
-              "solid": {
-                "color": {
-                  "expr": {
-                    "Literal": {
-                      "Value": "'#0E8A96'"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "selector": {
-            "data": [
-              {
-                "scopeId": {
-                  "Comparison": {
-                    "ComparisonKind": 0,
-                    "Left": {
-                      "Column": {
-                        "Expression": {
-                          "SourceRef": {
-                            "Entity": "bi recebimento_nfc"
-                          }
-                        },
-                        "Property": "fabrica"
-                      }
-                    },
-                    "Right": {
-                      "Literal": {
-                        "Value": "'CON'"
-                      }
-                    }
-                  }
-                }
-              }
-            ]
-          }
-        },
-        {
-          "properties": {
-            "fill": {
-              "solid": {
-                "color": {
-                  "expr": {
-                    "Literal": {
-                      "Value": "'#DB2777'"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "selector": {
-            "data": [
-              {
-                "scopeId": {
-                  "Comparison": {
-                    "ComparisonKind": 0,
-                    "Left": {
-                      "Column": {
-                        "Expression": {
-                          "SourceRef": {
-                            "Entity": "bi recebimento_nfc"
-                          }
-                        },
-                        "Property": "fabrica"
-                      }
-                    },
-                    "Right": {
-                      "Literal": {
-                        "Value": "'ITA'"
-                      }
-                    }
-                  }
-                }
-              }
-            ]
-          }
-        },
-        {
-          "properties": {
-            "fill": {
-              "solid": {
-                "color": {
-                  "expr": {
-                    "Literal": {
-                      "Value": "'#3B5B8C'"
-                    }
-                  }
-                }
-              }
-            }
-          },
-          "selector": {
-            "data": [
-              {
-                "scopeId": {
-                  "Comparison": {
-                    "ComparisonKind": 0,
-                    "Left": {
-                      "Column": {
-                        "Expression": {
-                          "SourceRef": {
-                            "Entity": "bi recebimento_nfc"
-                          }
-                        },
-                        "Property": "fabrica"
-                      }
-                    },
-                    "Right": {
-                      "Literal": {
-                        "Value": "'TMG'"
+                        "Value": "'B.L 120h'"
                       }
                     }
                   }
@@ -443,7 +320,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Tendência do C.T 48h · Fresh (por fábrica)'"
+                  "Value": "'Tendência · Fresh: C.T 48h e B.L 120h'"
                 }
               }
             },
@@ -600,6 +477,13 @@
                       {
                         "Literal": {
                           "Value": "'C.T 48h'"
+                        }
+                      }
+                    ],
+                    [
+                      {
+                        "Literal": {
+                          "Value": "'B.L 120h'"
                         }
                       }
                     ]

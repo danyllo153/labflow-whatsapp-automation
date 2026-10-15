@@ -817,19 +817,15 @@ const PAGINAS = [
   ['Recebimento NFC', [
     ...topo('Recebimento NFC', 1200, [[N, 'fabrica', 'Fábrica', 'Dropdown'], [N, 'amostra', 'Tipo', 'Dropdown'],
       [N, 'load', 'Load', 'Dropdown'], [N, 'analise', 'Análise', 'Blocos'], [CAL, 'Date', 'Período do recebimento', 'Between']]),
-    // tendência do resultado final (lido x 10^diluição) pela data do recebimento; fresh e pasteurizado em gráficos separados.
-    // O filtro Fábrica, no topo, troca entre todas e uma só. Gráficos de linha: eles seguem o período escolhido.
-    grafico('lineChart', G[0], 'Tendência do C.T 48h · Fresh (por fábrica)',
-      { Category: col(N, 'data_recebimento', 'Recebido em'), Series: col(N, 'fabrica', 'Fábrica'), Y: med(N, 'NFC resultado final (média)') },
-      { filtros: [filtroEm(N, 'amostra', [texto('Fresh')]), filtroEm(N, 'analise', [texto('C.T 48h')])],
-        cores: corPorValor(N, 'fabrica', SERIE_FABRICA_NFC), corTitulo: COR.verde, numeroInteiro: true, sort: crescente(N, 'data_recebimento') }),
-    grafico('lineChart', G[1], 'Tendência do B.L · Fresh (72h e 120h)',
+    // tendência do resultado final (lido x 10^diluição) pela data do recebimento: C.T 48h e B.L 120h, fresh e pasteurizado
+    // em gráficos separados. O filtro Fábrica, no topo, troca entre todas as fábricas e uma só.
+    grafico('lineChart', [24, 252, 920, 330], 'Tendência · Fresh: C.T 48h e B.L 120h',
       { Category: col(N, 'data_recebimento', 'Recebido em'), Series: col(N, 'analise', 'Análise'), Y: med(N, 'NFC resultado final (média)') },
-      { filtros: [filtroEm(N, 'amostra', [texto('Fresh')]), filtroEm(N, 'analise', [texto('B.L 72h'), texto('B.L 120h')])],
-        cores: corPorValor(N, 'analise', SERIE_ANALISE_NFC), corTitulo: COR.azul, numeroInteiro: true, sort: crescente(N, 'data_recebimento') }),
-    grafico('lineChart', G[2], 'Tendência · Pasteurizado (só AQA): C.T e B.L',
+      { filtros: [filtroEm(N, 'amostra', [texto('Fresh')]), filtroEm(N, 'analise', [texto('C.T 48h'), texto('B.L 120h')])],
+        cores: corPorValor(N, 'analise', SERIE_ANALISE_NFC), corTitulo: COR.verde, numeroInteiro: true, sort: crescente(N, 'data_recebimento') }),
+    grafico('lineChart', [976, 252, 920, 330], 'Tendência · Pasteurizado (só AQA): C.T 48h e B.L 120h',
       { Category: col(N, 'data_recebimento', 'Recebido em'), Series: col(N, 'analise', 'Análise'), Y: med(N, 'NFC resultado final (média)') },
-      { filtros: [filtroEm(N, 'amostra', [texto('Pasteurizado')])],
+      { filtros: [filtroEm(N, 'amostra', [texto('Pasteurizado')]), filtroEm(N, 'analise', [texto('C.T 48h'), texto('B.L 120h')])],
         cores: corPorValor(N, 'analise', SERIE_ANALISE_NFC), corTitulo: COR.laranja, numeroInteiro: true, sort: crescente(N, 'data_recebimento') }),
     tabela(TABELA, 'Recebimento de NFC: diluição, resultado lido e resultado final',
       [col(N, 'fabrica', 'Fábrica'), col(N, 'load', 'Load'), col(N, 'lote', 'Lote'), col(N, 'amostra', 'Tipo'),
