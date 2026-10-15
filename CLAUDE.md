@@ -16,6 +16,7 @@ O Danyllo trabalha no PC, no notebook e no celular. A memória local do Claude C
 - Regra ou preferência nova do Danyllo → vai para este `CLAUDE.md` no mesmo dia (não só para a memória local).
 - Estado, pendências e decisões em aberto → `docs/handoff.md` seção 0, atualizado ao fim de cada sessão de trabalho (não só no fim do dia) e enviado com push, para o outro aparelho só precisar de `git pull`.
 - Antes de começar em qualquer aparelho: `git pull` na `main` e ler o handoff.
+- **Várias sessões ao mesmo tempo:** a pasta `C:Devabflow-whatsapp-automation` é de **uma** sessão só. Outra sessão local trabalha num worktree próprio (`git worktree add <pasta> <branch>`) e **nunca** troca de branch, faz stash ou commit na pasta principal (em 15/10 uma troca de branch acertou o commit de outra sessão).
 
 ## Comportamento do bot (preferências do Danyllo)
 - **Poucas mensagens:** se o papel mostra que tudo vai junto (ex.: 17 compostas no mesmo caldo), **um comando e uma resposta**.
