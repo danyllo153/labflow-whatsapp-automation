@@ -133,13 +133,11 @@ Cada página do Power BI vira uma página do app, **no mesmo padrão**: cartões
 **Ordem de entrega (decidida em 15/10):** primeiro **todas as páginas só em leitura** (filtros, impressão, exportação). Editar e excluir chegam **página por página**, à medida que a sessão do bot cria as funções do banco daquela área: **1) Coletas e Recebimento** (os mais usados, uma linha por registro); **2)** Drops, TAB e Coliformes, Embarque; **3)** resultados (C.T/B.L, leituras de NFC), depois da revisão e liberação da Fase 1 do LIMS.
 
 ### 6. Gráficos
-Ficam **dentro das páginas** (cada página com os seus), não numa tela separada. Os números vêm das mesmas views do Power BI, para baterem. **Recomendo** começar com:
+Ficam **dentro das páginas** (cada página com os seus), não numa tela separada. Os números vêm das mesmas views do Power BI, para baterem. **Decidido em 15/10: por enquanto só dois** (G1 "feito × pendente" e G3 "desvios por semana" saíram, por não acrescentarem; mais gráficos só quando houver necessidade):
 
 | # | Gráfico | Página | Tipo |
 |---|---|---|---|
-| G1 | **Feito × pendente por turno**, 14 dias | Visão geral | Barras empilhadas |
 | G2 | **C.T e B.L por load** ao longo do tempo, com a **linha do limite** | Recebimento | Pontos; acima do limite em vermelho, com a etiqueta "Não ok" |
-| G3 | **Desvios por semana**, abertos × fechados | Desvios | Barras |
 | G4 | **Esterilizações por tipo e turno**, semana | Esterilização | Barras agrupadas |
 
 Sem gráfico "por pessoa" (pode soar como vigilância).
@@ -196,10 +194,11 @@ O cargo **Coletor** depende do pedido PB2 à sessão do bot.
   |---|---|
   | Fundo | creme `#FBF6E9` |
   | Cartões | branco `#FFFFFF` com borda `#EADFC4` |
-  | Principal (barra, destaques) | laranja claro `#F6B04A` |
-  | Texto | marrom-escuro `#4A3418` |
+  | Menu lateral (computador), topo (celular), destaques | laranja claro `#F6B04A`, com letra preta |
+  | Item ativo do menu | `#FFF4E0` |
+  | Texto | preto `#1C1C1C` (sem marrom) |
   | Laranja suave (filtros, linha selecionada) | `#FCE7C3` |
-  | Texto secundário | `#7A6448` |
+  | Texto secundário | cinza `#5C5C5C` |
   | Botões de ação | azul `#2F7BC4` |
   | Ok · Não ok · Atenção | verde `#2E8B57` · vermelho `#C0392B` · âmbar `#E0A100` |
 
@@ -224,7 +223,7 @@ Login em [06](06-api-e-auth.md). As **funções do banco** para editar e excluir
 | Fase do rumo | O que este documento entrega |
 |---|---|
 | B | API de leitura e login |
-| C | Login, turno, Início, relatório do turno, esterilização, **todas as páginas em leitura** (filtros, imprimir, exportar), gráficos G1–G4 |
+| C | Login, turno, Início, relatório do turno, esterilização, **todas as páginas em leitura** (filtros, imprimir, exportar), gráficos G2 e G4 |
 | D | **Assistente** (texto, voz, foto) e **editar/excluir** página por página, conforme as funções do banco ficam prontas |
 | E | Decidir o futuro do WhatsApp |
 
@@ -234,7 +233,6 @@ Notificação no celular, modo offline, loja de aplicativos, enviar relatório p
 
 ## Perguntas ainda abertas
 
-- [ ] **Gráficos:** começar com G1 a G4?
 
 ## Pronto quando
 
