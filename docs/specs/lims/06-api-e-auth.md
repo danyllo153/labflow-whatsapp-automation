@@ -34,7 +34,10 @@ Uma **API própria** fica entre o app e o banco. Ela **lê** as tabelas do bot p
 - **FastAPI (Python)**, decidido em 15/10, num container novo da stack `~/labflow`. Por quê: Python é mais fácil de ler para quem está aprendendo, gera a documentação da API sozinho (`/docs`) e é forte em dados, Excel, PDF e, no futuro, RAG e laudos automáticos.
 - Senha em hash (argon2) e sessão por cookie seguro (o JavaScript da página não consegue ler).
 - Permissão conferida na API a cada chamada, pelo cargo lido de `usuarios`, igual ao bot.
-- Sem porta pública: acesso por Cloudflare Tunnel ou Tailscale.
+- **Sem porta aberta no servidor** (decidido em 15/10):
+  - **Fase de testes (só o Danyllo): Tailscale** — rede privada; nada exposto na internet.
+  - **Piloto com os operadores: Cloudflare Tunnel** — o celular só abre um endereço `https://` no navegador, sem instalar nada; opcionalmente com Cloudflare Access na frente. **Precisa de um domínio próprio** (o Danyllo ainda não tem; comprar antes do piloto do app, ex.: um `.com.br` no registro.br).
+  - Na empresa, o caminho é definido com a TI.
 - Testes automáticos da API desde o primeiro endpoint.
 
 ## Tabelas do login (schema `app`)
@@ -56,4 +59,5 @@ Uma **API própria** fica entre o app e o banco. Ela **lê** as tabelas do bot p
 - [x] ~~Como o usuário cria a senha pela primeira vez~~ **Senha provisória gerada pelo Admin** (15/10).
 - [x] ~~Recuperação de senha~~ **Nova senha provisória pelo Admin**; e-mail fica para depois (15/10).
 - [x] ~~FastAPI ou Node?~~ **FastAPI** (15/10).
-- [ ] Cloudflare Tunnel ou Tailscale?
+- [x] ~~Cloudflare Tunnel ou Tailscale?~~ **Tailscale nos testes; Cloudflare Tunnel no piloto** (15/10).
+- [ ] Domínio próprio para o piloto (o Danyllo vai comprar).
