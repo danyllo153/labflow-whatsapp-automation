@@ -43,6 +43,17 @@ Data: 20/09/2026
 Total: 2 tanques
 ```
 
+### 1.1 Coletado por outra pessoa (`coletado por`)
+Quando quem coletou **não** foi quem manda a mensagem (no piloto, o pessoal da micro e da física coleta e o laboratório registra), acrescente `coletado por <nome>`, no terra e no navio:
+```
+registrar coleta tanque terra 42 data 15/10/2026 coletado por Joyce
+Coleta navio O.SKY 123 tanques 1C,4P data 15/10/2026 coletado por Carlos
+```
+- O responsável pela coleta passa a ser **Joyce** (ou Carlos), e a resposta mostra `Coletado por: Joyce`. As consultas (`quem coletou o tanque 42 ...`) e o painel do Power BI mostram esse nome. O número de quem digitou fica guardado só como trilha de auditoria (coluna `digitado_por` no painel).
+- **Sem** `coletado por` (ou com `coletado por mim`), o responsável é quem mandou a mensagem, como sempre.
+- Em frase livre vale falar de qualquer jeito: `tanque 42 coletado por Joyce`, `coletado pela Joyce`, `a Joyce coletou os tanques 50 e 51`, `foi coletado pelo Carlos`. Já `eu coletei`, `coletei`, `coletamos` ou `foi coletado` (sem nome) valem para quem mandou. A **data da coleta continua obrigatória** (o bot pergunta se faltar).
+- O nome tem só letras (com acento), espaço, hífen, apóstrofo e ponto, até 40 caracteres; o bot escreve com maiúscula inicial (`Maria de Souza`). Outro tipo de texto é recusado e nada é gravado.
+- Exige a migration `028` (coluna `coletas.coletado_por`).
 ## 2. Registrar coleta de navio
 
 ```
