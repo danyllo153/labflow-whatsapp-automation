@@ -62,7 +62,7 @@ As quatro decisões que estavam em aberto foram respondidas pelo Danyllo em 15/1
   | Registrar coletas | ✅ | ✅ | ❌ | ✅ |
   | Registrar análises, resultados, desvios e esterilização | ✅ | ✅ | ❌ | ❌ |
   | Corrigir registro (com motivo) | ✅ | ✅ | ❌ | Só a própria coleta, no mesmo dia |
-  | Excluir registro | ✅ (com motivo) | Pede ao Admin | ❌ | Pede ao Admin |
+  | Excluir registro (com motivo e confirmação; fica no histórico) | ✅ | ✅ (mudado em 15/10, à noite) | ❌ | Pede ao Admin |
   | Adicionar pessoa, convite, senha, trocar cargo | ✅ | ❌ | ❌ | ❌ |
   | Editar os horários padrão dos turnos | ✅ | ❌ | ❌ | ❌ |
 
@@ -106,3 +106,7 @@ O app não mexe nas tabelas nem no workflow do bot: o que ele precisa vira pedid
 - 15/10/2026: modo offline (gravar sem internet e enviar depois), avaliar depois.
 - 15/10/2026: ligar as análises do dia aos ciclos de esterilização usados (ex.: "recebimento analisado com PDA do ciclo 102 e ponteiras do ciclo 103"), para rastreio.
 - 15/10/2026: com o RAG, preencher alguns laudos automaticamente, usando os ciclos registrados.
+- 15/10/2026: **o app é o LIMS e a "cara" do sistema**, como o Power BI é hoje: telas bonitas, interativas e fáceis para leigos, no estilo do LabWare e do QBench. O bot vira um **assistente de IA** dentro do app (botão para falar ou escrever "coletei tal coisa"), em vez de ser o jeito principal de registrar.
+- 15/10/2026: **todas as páginas do Power BI também no app** (Visão geral, Coletas, Tanques, Drops, Desvios, Recebimento, Embarque, TAB e Coliformes, Recebimento NFC), mais uma página por **navio** (coletado, analisado, pendente).
+- 15/10/2026: em toda página com lista, **filtrar** (load, lote, tanque, usuário, data...) e **imprimir só o que foi filtrado**, como no Excel; também exportar.
+- 15/10/2026: depois de registrar pelo assistente, o registro aparece na hora na página correspondente, com o nome de quem fez.
