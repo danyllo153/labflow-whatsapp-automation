@@ -75,7 +75,7 @@ const resposta = (frase, linha) => {
 
 test('resposta: lista cada lote com tipo e diluição, e avisa correção, repetição e fábrica diferente', () => {
   const t = resposta('load 44300 fab aqa item 129 lote 10 fresh 10 elevado a 3',
-    { gravados: [{ lote: 10, amostra: 'fresh', diluicao: 3, novo: true, era: null }], fabrica_cadastrada: null });
+    { gravados: [{ lote: 10, amostra: 'fresh', diluicao: 3, novo: true, era: null }], conflitos: null });
   assert.match(t, /Recebimento NFC do load 44300 \(item 129, fábrica AQA\) registrado por Usuario Teste/);
   assert.match(t, /lote 10 · fresh · 10\^3/);
   assert.match(t, /Data: \d{2}\/\d{2}\/\d{4}/);
@@ -83,7 +83,7 @@ test('resposta: lista cada lote com tipo e diluição, e avisa correção, repet
   assert.match(corrigido, /lote 10 · past · 10\^2 \(corrigido: era 10\^1\)/);
   const igual = resposta('load 44300 fab aqa item 129 lote 10 past 10 elevado a 1', { gravados: [{ lote: 10, amostra: 'past', diluicao: 1, novo: false, era: 1 }] });
   assert.match(igual, /\(já estava assim\)/);
-  const outra = resposta('load 44300 fab aqa item 129 lote 10 past 10 elevado a 1', { gravados: null, fabrica_cadastrada: 'CON' });
+  const outra = resposta('load 44300 fab aqa item 129 lote 10 past 10 elevado a 1', { gravados: null, conflitos: [{ load: '44300', cadastrada: 'CON' }] });
   assert.match(outra, /já está cadastrado com a fábrica CON, não AQA\. Nada foi gravado/);
   const torta = resposta('load 44300 fab aoq item 129 lote 10 past 10 elevado a 1', { gravados: [{ lote: 10, amostra: 'past', diluicao: 1, novo: true }] });
   assert.match(torta, /Li a fábrica como "aoq" e entendi AQA/);
@@ -98,9 +98,9 @@ test('workflow: roteado até a gravação e o WhatsApp, e o SQL protege o que pr
   assert.deepEqual(c['Montar resposta recebimento NFC'].main[0].map((x) => x.node), ['Zap · Recebimento']);
   const q = workflow.nodes.find((n) => n.name === 'BD · Gravar recebimento NFC').parameters;
   assert.match(q.query, /ON CONFLICT \(load_id, lote, amostra\) DO UPDATE/);
-  assert.match(q.query, /WHERE ld\.fabrica_id <> f\.id/, 'fábrica diferente da cadastrada não grava');
-  assert.match(q.query, /NOT EXISTS \(SELECT 1 FROM conflito\)/);
-  assert.match(q.options.queryReplacement, /JSON\.stringify\(\$json\.itens\)/);
+  assert.match(q.query, /\(ld\.fabrica_id <> f\.id\) AS conflito/, 'fábrica diferente da cadastrada não grava');
+  assert.match(q.query, /WHERE NOT a\.conflito/);
+  assert.match(q.options.queryReplacement, /JSON\.stringify\(\$json\.blocos\)/);
   assert.doesNotMatch(q.query, /recebimento_lotes/, 'não mistura com os lotes do concentrado');
 });
 
@@ -173,7 +173,9 @@ test('foto: nada legível não grava; confirmação explica o que registra e ped
   assert.match(r.textoResposta, /1️⃣ Recebimento NFC load 44300 fab AQA item 129/);
   assert.match(r.textoResposta, /Recebimento NFC — o que isso registra:\n• load 44300 \(AQA, item 129\): lote 10 fresh 10\^3\n• load 44300 \(AQA, item 129\): lote 10 past 10\^1/);
   assert.match(r.textoResposta, /Responda \*sim\*/);
-  assert.equal(JSON.parse(r.payload).comandos.length, 4);
+  assert.equal(JSON.parse(r.payload).comandos.length, 1, 'a foto grava tudo num comando só (uma mensagem)');
+  assert.equal(JSON.parse(r.payload).comandos[0].split(' ; ').length, 4);
+  assert.match(r.textoResposta, /Responda \*sim\* para registrar tudo ou/);
 });
 
 test('foto: o prompt ensina o formulário, o tipo e só o expoente da diluição', () => {
@@ -321,4 +323,29 @@ test('foto: o 10 colado no expoente (101, 102, 103, 104) vale como 10^1 a 10^4',
   assert.ok(r.problemas.some((p) => /load 44304: lote 14 fresh: diluição 10\^5 fora do padrão/.test(p)), '105 colado vira 10^5 e fica fora do padrão');
   const [{ json }] = rodar('Foto · Montar pedido', {}, { 'Foto em arquivo': { foto_b64: 'QUJD', mime: 'image/jpeg' } });
   assert.match(json.pedido.contents[0].parts[0].text, /colados \(101, 102, 103, 104\), o expoente é o último algarismo/);
+});
+// ---- várias linhas num comando só (a foto): uma gravação e uma mensagem ----
+const MULTI = 'Recebimento NFC load 43680 fab AQA item 129 lote 35 past 10 elevado a 1 data 06/10/2026 ; Recebimento NFC load 43704 fab COL item 129 lote 44 fresh 10 elevado a 3 data 09/10/2026 ; Recebimento NFC load 43704 fab COL item 129 lote 45 fresh 10 elevado a 2 data 09/10/2026';
+test('várias linhas separadas por ; viram um comando com um bloco por load', () => {
+  const r = nfc(MULTI);
+  assert.equal(r.tipo, 'recebimento_nfc');
+  assert.deepEqual(r.blocos.map((b) => [b.load, b.fabrica, b.itens.map((i) => [i.lote, i.amostra, i.diluicao, i.data].join('/'))]),
+    [['43680', 'AQA', ['35/past/1/06/10/2026']], ['43704', 'COL', ['44/fresh/3/09/10/2026', '45/fresh/2/09/10/2026']]]);
+  assert.equal(r.itens.length, 3);
+  // uma linha ruim derruba tudo, sem gravar nada
+  assert.match(nfc(MULTI + ' ; load 43705 fab col lote 1 past 10 elevado a 1').textoResposta, /Só a AQA/);
+  assert.match(nfc('load 43680 fab aqa lote 35 past 10 elevado a 1 ; load 43680 fab col lote 36 fresh 10 elevado a 2').textoResposta, /duas fábricas/);
+  assert.match(nfc('load 43680 fab aqa lote 35 past 10 elevado a 1 ; load 43680 fab aqa lote 35 past 10 elevado a 2').textoResposta, /Diluição fora do padrão|duas diluições/);
+});
+
+test('resposta com vários loads: uma mensagem só, com data, correção e conflito', () => {
+  const g = [{ load: '43680', lote: 35, amostra: 'past', diluicao: 1, novo: true }, { load: '43704', lote: 44, amostra: 'fresh', diluicao: 3, novo: false, era: 2 },
+    { load: '43704', lote: 45, amostra: 'fresh', diluicao: 2, novo: true }];
+  const t = resposta(MULTI, { gravados: g, recalculados: 0, conflitos: null });
+  assert.match(t, /^✅ Recebimento NFC registrado por Usuario Teste: 3 lotes em 2 loads\./);
+  assert.match(t, /load 43680 \(AQA, item 129\):\n  lote 35 · past · 10\^1 · 06\/10\/2026/);
+  assert.match(t, /load 43704 \(COL, item 129\):\n  lote 44 · fresh · 10\^3 · 09\/10\/2026 \(corrigido: era 10\^2\)\n  lote 45 · fresh · 10\^2 · 09\/10\/2026/);
+  const c = resposta(MULTI, { gravados: g.slice(1), recalculados: 0, conflitos: [{ load: '43680', cadastrada: 'CON' }] });
+  assert.match(c, /❌ load 43680 \(item 129\): já está cadastrado com a fábrica CON, não AQA\. Nada foi gravado desse load\./);
+  assert.match(c, /2 lotes em 1 load\./);
 });
