@@ -224,17 +224,17 @@ table 'bi desvios'
 
 	column analise
 		dataType: string
-		sortByColumn: analise_ordem
 		lineageTag: e76a244c-8692-73b2-8951-f8d449a4f1ca
 		summarizeBy: none
 		sourceColumn: analise
+		sortByColumn: analise_ordem
 
 		annotation SummarizationSetBy = Automatic
 
 	column analise_ordem
 		dataType: int64
-		formatString: 0
 		isHidden
+		formatString: 0
 		lineageTag: 33b4755f-8cc0-23ce-6248-a42677d7e471
 		summarizeBy: none
 		sourceColumn: analise_ordem

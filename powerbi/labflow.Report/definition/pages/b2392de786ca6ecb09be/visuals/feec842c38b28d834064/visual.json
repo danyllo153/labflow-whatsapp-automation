@@ -2,15 +2,15 @@
   "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/visualContainer/2.13.0/schema.json",
   "name": "feec842c38b28d834064",
   "position": {
-    "x": 1316,
+    "x": 1336,
     "y": 252,
     "z": 11000,
-    "width": 580,
+    "width": 560,
     "height": 330,
     "tabOrder": 11000
   },
   "visual": {
-    "visualType": "barChart",
+    "visualType": "clusteredColumnChart",
     "query": {
       "queryState": {
         "Category": {
@@ -178,7 +178,7 @@
                 "color": {
                   "expr": {
                     "Literal": {
-                      "Value": "'#FFFFFF'"
+                      "Value": "'#334155'"
                     }
                   }
                 }
@@ -222,7 +222,7 @@
             "text": {
               "expr": {
                 "Literal": {
-                  "Value": "'Lotes por fábrica e tipo'"
+                  "Value": "'NFCs analisados por fábrica'"
                 }
               }
             },

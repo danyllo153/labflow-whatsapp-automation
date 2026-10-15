@@ -627,8 +627,9 @@ const grafico = (tipo, pos, titulo, papeis, op = {}) => {
       ...(op.cores ? { dataPoint: op.cores } : {}),
       ...(op.corUnica ? { dataPoint: [{ properties: { fill: cor(op.corUnica) } }] } : {}),
       labels: [{ properties: { show: lit(op.semRotulos ? 'false' : 'true'), fontSize: lit('10D'),
-        color: cor(empilhado ? COR.branco : COR.rotuloFora) } }],
+        color: cor(empilhado ? COR.branco : COR.rotuloFora), ...(op.numeroInteiro ? { labelDisplayUnits: lit('1D') } : {}) } }],
       legend: [{ properties: { show: lit(op.semLegenda ? 'false' : 'true'), position: lit(texto(op.legenda || 'Top')) } }],
+      ...(op.numeroInteiro ? { valueAxis: [{ properties: { labelDisplayUnits: lit('1D') } }] } : {}),
       ...(tipo === 'lineChart' ? { lineStyles: [{ properties: { strokeWidth: lit('3D'), showMarker: lit('true') } }] } : {}),
     },
   });
@@ -638,6 +639,8 @@ const grafico = (tipo, pos, titulo, papeis, op = {}) => {
 // Todas seguem o padrão da página Coletas: cabeçalho, cartões e filtros no topo, 3 gráficos e UMA tabela.
 const N = 'bi recebimento_nfc';
 const SERIE_AMOSTRA = { Pasteurizado: COR.laranja, Fresh: COR.verde };
+const SERIE_FABRICA_NFC = { AQA: COR.azul, COL: COR.laranja, UCH: COR.roxo, CON: COR.teal, ITA: COR.magenta, TMG: COR.marinho };
+const SERIE_ANALISE_NFC = { 'C.T 48h': COR.teal, 'B.L 72h': COR.azul, 'B.L 120h': COR.roxo };
 const C = 'bi coletas', L = 'bi leituras_nfc', D = 'bi drops', T = 'bi testes', V = 'bi desvios';
 // tabelas de apoio criadas pelo MCP do Power BI (ligadas às tabelas do painel): um filtro nelas vale para a página inteira
 const LOADS = 'Loads', EMBARQUES = 'Embarques', CAL = 'Calendário';
@@ -812,14 +815,20 @@ const PAGINAS = [
   ], [so(K, 'Recebimento')]],
   // recebimento de NFC (item 129): só a diluição, o que foi lido na placa e o resultado já multiplicado (tabela para apresentação)
   ['Recebimento NFC', [
-    ...topo('Recebimento NFC', 1200, [[N, 'fabrica', 'Fábrica', 'Dropdown'], [N, 'amostra', 'Tipo', 'Blocos'],
+    ...topo('Recebimento NFC', 1200, [[N, 'fabrica', 'Fábrica', 'Dropdown'], [N, 'amostra', 'Tipo', 'Dropdown'],
       [N, 'load', 'Load', 'Dropdown'], [N, 'analise', 'Análise', 'Blocos'], [CAL, 'Date', 'Período do recebimento', 'Between']]),
-    grafico('clusteredColumnChart', G[0], 'Lotes recebidos por mês e tipo',
-      ...Object.values(porMes(col(N, 'amostra', 'Tipo'), med(N, 'NFC lotes'), corPorValor(N, 'amostra', SERIE_AMOSTRA)))),
-    grafico('clusteredColumnChart', G[1], 'Resultado final médio (UFC/ml) por análise e tipo',
-      { Category: col(N, 'analise', 'Análise'), Series: col(N, 'amostra', 'Tipo'), Y: med(N, 'NFC resultado final (média)') },
-      { cores: corPorValor(N, 'amostra', SERIE_AMOSTRA), corTitulo: COR.teal }),
-    grafico('barChart', G[2], 'Lotes por fábrica e tipo',
+    // tendência do resultado final (lido x 10^diluição) pela data do recebimento: C.T 48h e B.L 120h, fresh e pasteurizado
+    // em gráficos separados. O filtro Fábrica, no topo, troca entre todas as fábricas e uma só.
+    grafico('lineChart', [24, 252, 640, 330], 'Tendência · Fresh: C.T 48h e B.L 120h',
+      { Category: col(N, 'data_recebimento', 'Recebido em'), Series: col(N, 'analise', 'Análise'), Y: med(N, 'NFC resultado final (média)') },
+      { filtros: [filtroEm(N, 'amostra', [texto('Fresh')]), filtroEm(N, 'analise', [texto('C.T 48h'), texto('B.L 120h')])],
+        cores: corPorValor(N, 'analise', SERIE_ANALISE_NFC), corTitulo: COR.verde, numeroInteiro: true, sort: crescente(N, 'data_recebimento') }),
+    grafico('lineChart', [680, 252, 640, 330], 'Tendência · Pasteurizado (AQA): C.T 48h e B.L 120h',
+      { Category: col(N, 'data_recebimento', 'Recebido em'), Series: col(N, 'analise', 'Análise'), Y: med(N, 'NFC resultado final (média)') },
+      { filtros: [filtroEm(N, 'amostra', [texto('Pasteurizado')]), filtroEm(N, 'analise', [texto('C.T 48h'), texto('B.L 120h')])],
+        cores: corPorValor(N, 'analise', SERIE_ANALISE_NFC), corTitulo: COR.laranja, numeroInteiro: true, sort: crescente(N, 'data_recebimento') }),
+    // quantos NFCs foram analisados (lotes recebidos) por fábrica, fresh e pasteurizado lado a lado
+    grafico('clusteredColumnChart', [1336, 252, 560, 330], 'NFCs analisados por fábrica',
       { Category: col(N, 'fabrica', 'Fábrica'), Series: col(N, 'amostra', 'Tipo'), Y: med(N, 'NFC lotes') },
       { cores: corPorValor(N, 'amostra', SERIE_AMOSTRA), corTitulo: COR.marinho }),
     tabela(TABELA, 'Recebimento de NFC: diluição, resultado lido e resultado final',
@@ -854,6 +863,7 @@ const PAGINAS = [
 
 // ---------------------------------------------------------------- grava (recria todas as páginas)
 const PAGS = path.join(DEF, 'pages');
+const NOME_NO_MENU = { 'Recebimento NFC': 'Receb. NFC' }; // o botão do menu corta nomes longos
 for (const p of fs.readdirSync(PAGS)) {
   if (fs.statSync(path.join(PAGS, p)).isDirectory()) fs.rmSync(path.join(PAGS, p), { recursive: true, force: true });
 }
@@ -865,7 +875,7 @@ for (const [nome, visuais, filtrosDaPagina] of PAGINAS) {
   fs.mkdirSync(path.join(dir, 'visuals'), { recursive: true });
   fs.writeFileSync(path.join(dir, 'page.json'), JSON.stringify({
     $schema: 'https://developer.microsoft.com/json-schemas/fabric/item/report/definition/page/2.1.0/schema.json',
-    name: pid, displayName: nome, displayOption: 'FitToPage', height: 1080, width: 1920,
+    name: pid, displayName: NOME_NO_MENU[nome] || nome, displayOption: 'FitToPage', height: 1080, width: 1920,
     ...(filtrosDaPagina ? { filterConfig: { filters: filtrosDaPagina.map((filtro, j) =>
       ({ ...filtro, name: crypto.createHash('sha1').update(`${nome}#filtro${j}`).digest('hex').slice(0, 20) })) } } : {}),
   }, null, 2), 'utf8');
