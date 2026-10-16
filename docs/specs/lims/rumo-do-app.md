@@ -61,8 +61,8 @@ As quatro decisões que estavam em aberto foram respondidas pelo Danyllo em 15/1
   | Encerrar o turno | ✅ | ✅ | ❌ | ❌ |
   | Registrar coletas | ✅ | ✅ | ❌ | ✅ |
   | Registrar análises, resultados, desvios e esterilização | ✅ | ✅ | ❌ | ❌ |
-  | Corrigir registro (com motivo) | ✅ | ✅ | ❌ | Só a própria coleta, no mesmo dia |
-  | Excluir registro (com motivo e confirmação; fica no histórico) | ✅ | ✅ (mudado em 15/10, à noite) | ❌ | Pede ao Admin |
+  | Corrigir registro (coleta sem motivo; análise com motivo, 16/10) | ✅ | ✅ | ❌ | Só a própria coleta |
+  | Excluir registro (confirmação; coleta sem motivo, análise com motivo; fica no histórico) | ✅ | ✅ (mudado em 15/10, à noite) | ❌ | Só a própria coleta (como no bot, 029) |
   | Adicionar pessoa, convite, senha, trocar cargo | ✅ | ❌ | ❌ | ❌ |
   | Editar os horários padrão dos turnos | ✅ | ❌ | ❌ | ❌ |
 

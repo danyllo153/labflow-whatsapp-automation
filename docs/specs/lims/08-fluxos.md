@@ -59,7 +59,7 @@ Erros: o que acontece quando algo falha
 ### A3. Registrar ou corrigir pelo clique
 - **Gatilho:** a pessoa toca em "Fazer" (Início), "Editar" (detalhe de uma linha) ou num formulário.
 - **Pré-condições:** cargo com permissão ([07](07-app-pwa.md), Permissões); a função do banco daquela ação existe (pedido PB4; ordem: Coletas e Recebimento primeiro).
-- **Passos:** 1) O formulário abre já preenchido. 2) A pessoa muda o que precisa (e escreve o **motivo**, na correção). 3) "Salvar". 4) O app mostra **"antes → depois"** e pede **Confirmar**. 5) A API chama a função do banco.
+- **Passos:** 1) O formulário abre já preenchido. 2) A pessoa muda o que precisa (e escreve o **motivo** se for análise ou resultado; coleta não pede motivo, decidido em 16/10). 3) "Salvar". 4) O app mostra **"antes → depois"** e pede **Confirmar**. 5) A API chama a função do banco.
 - **Regras:** API confere login e cargo; a **função do banco** confere as regras do laboratório (as mesmas do bot) e grava quem, quando e o motivo.
 - **Resultado:** registro gravado; a página se atualiza para todos; aparece com o nome de quem fez.
 - **Erros:** a função recusa (ex.: coleta duplicada) → a mensagem da regra aparece em português simples, nada é gravado.
@@ -77,8 +77,8 @@ Erros: o que acontece quando algo falha
 - **Resultado:** leituras gravadas; a página de leituras se atualiza. A foto não é guardada.
 
 ### A6. Excluir
-- **Gatilho:** "Excluir" no detalhe de uma linha (Admin e Operador; Coletor pede ao Admin).
-- **Passos:** 1) O app mostra o que será excluído. 2) Pede o **motivo** (obrigatório). 3) Confirmar.
+- **Gatilho:** "Excluir" no detalhe de uma linha (Admin e Operador; Coletor só a própria coleta).
+- **Passos:** 1) O app mostra o que será excluído. 2) Pede o **motivo** se for análise ou resultado (coleta não pede, decidido em 16/10). 3) Confirmar.
 - **Regras:** função do banco; **não apaga**: marca como excluído com quem, quando e motivo.
 - **Resultado:** some das páginas e das contas; o Admin vê em Histórico e pode **recuperar** (função do banco, com motivo).
 
