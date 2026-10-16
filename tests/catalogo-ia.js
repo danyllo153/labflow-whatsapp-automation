@@ -73,4 +73,12 @@ module.exports = [
   ['bl120 do tanque 47 normal 0,0,2', 'placas_nfc', 'pede_sim'],
   ['wort superficie 240h do tanque 47 normal 0,0,1 coleta 01/10/2026', 'placas_nfc', 'pede_sim'],
   ['repetição do tanque 47 stress bl120', 'repeticao_nfc', 'pede_sim'],
+  // "Todos" de uma vez: lotes, amostras, NFC e tanques que saem hoje (ou na data) ainda sem resultado
+  ['bl72 load 44502 todos deu <10 exceto lote 3 deu 20', 'contagem_registrar', 'pede_sim'],
+  ['ct load 44502 item 444 todos de 14/10/2026 deu <10 exceto lote 3', 'contagem_registrar', 'pede_sim'],
+  ['bl120 navio O.SKY 189 linha 6 fase 1 todas deu <10 exceto amostra 3 deu 20', 'contagem_registrar', 'pede_sim'],
+  ['ct nfc load 44300 todos deu <10 exceto lote 10 past deu 14', 'contagem_nfc_registrar', 'pede_sim'],
+  ['bl120 todos os tanques navio O.SKY 123 deu <1', 'placas_todos', 'pede_sim'],
+  ['bl72 todos os tanques terra deu <1 exceto tanque 47 normal <1,1,0', 'placas_todos', 'pede_sim'],
+  ['wort profundidade 120h todos os tanques terra de 17/10/2026 deu <1 exceto tanque 48', 'placas_todos', 'pede_sim'],
 ];
