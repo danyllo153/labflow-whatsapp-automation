@@ -22,12 +22,12 @@ A base já está escrita nas specs do LIMS ([00](00-visao-geral.md) a [10](10-de
 
 ## Fase atual
 
-**Fase A: especificação.** Nada de código até o Danyllo aprovar.
+**Fase B: API de leitura e login.** A especificação (fase A) foi aprovada em 16/10/2026; o código começa pelas tarefas `APP-001`..., uma por PR, cada uma citando a seção da spec de origem ([guia prático](guia-pratico.md)).
 
 | Fase | O que entrega | Situação |
 |---|---|---|
-| A | Spec do app revisada (07, 06, 08 e esta nota) | ⏳ em andamento (decisões de 15/10 tomadas; falta o 07) |
-| B | API só de leitura + login | ⬜ |
+| A | Spec do app revisada (07, 06, 08 e esta nota) | ✅ concluída: 06, 07 e 08 aprovados como v1.0 em 16/10/2026 |
+| B | API só de leitura + login | ⏳ próxima (tarefas `APP-001`...) |
 | C | PWA só leitura: painel do dia, relatório do turno, gráficos | ⬜ |
 | D | Chat embutido e registro pelo app | ⬜ |
 | E | Decidir o futuro do WhatsApp | ⬜ |
