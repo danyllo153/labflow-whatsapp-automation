@@ -10,6 +10,13 @@ Documento para retomar o projeto em outro computador ou numa conversa nova do Cl
 >
 > **v1.3.0 lançada em 15/10/2026** (PR #80, tag `v1.3.0` e release no GitHub). A próxima versão fica para a Fase 1 do LIMS ou o app.
 >
+> **15/10/2026, noite — sessão do APP (web e celular), em paralelo à do bot.** Fase A do [rumo do app](specs/lims/rumo-do-app.md) = **só especificação, nada de código**. Bússola: `docs/specs/lims/rumo-do-app.md` (ler antes de qualquer tarefa do app).
+> - **PRs abertos, nenhum mesclado** (mesclar nesta ordem, só com o pedido do Danyllo): **#69** decisões, rumo e "Pedidos para a sessão do bot" · **#71** `07-app-pwa.md` v0.3 · **#77** `06-api-e-auth.md` v0.2 · **#79** `08-fluxos.md` v0.2.
+> - **Decidido em 15/10:** o app é **a cara do LIMS** (páginas do Power BI + Navios, com filtro, imprimir e exportar; assistente de IA em todas as telas); WhatsApp no ar durante o piloto; grava nas tabelas do bot **só por funções do banco** compartilhadas com o bot; excluir não apaga; relatório por turno de revezamento (Manhã 08–16, Tarde 16–00, Madrugada 00–08, 7 dias) com entrada no turno pelo app e encerramento pela última pessoa; esterilização por botões com ciclo; estufas Ok/Não ok no início de cada turno; FastAPI; senha provisória gerada pelo Admin; tela Nova pessoa na primeira versão; Tailscale nos testes e Cloudflare Tunnel no piloto; visual claro (menu laranja, letra preta, fundo creme), sem emoji; gráficos só G2 e G4. **Migrations do app a partir da 050** (027–049 são da sessão do bot).
+> - **Pedidos para a sessão do bot** (tabela no rumo): PB1 hora das leituras em `analises`; PB2 Coletor (**atendido**, 029); PB4 funções de editar/excluir (Coletas e Recebimento primeiro); PB5 cadastrar pessoa e trocar cargo (antes do lançamento do app); PB6 assistente pelo mesmo webhook com `canal: app` (Fase D).
+> - **Falta do Danyllo:** lista das atividades fixas de cada turno; estufas (quantas, nome/número, temperatura de referência); comprar um domínio antes do piloto do app.
+> - **Próximo:** mesclar os 4 PRs → aprovar 06, 07 e 08 como `v1.0` → gerar as tarefas `APP-001...` → Fase B (API de leitura e login). Prévia visual (dados fictícios, fora do repositório) foi mostrada ao Danyllo como referência de cores e telas.
+
 > **15/10/2026, fim do dia — leia isto primeiro.** Tudo está na `main` (último PR de código: **#70**) e **publicado no n8n**: workflow `MJMm3QnbqFrCafsz` com **244 nós**, migrations `001` a `020`, **`027`, `028` e `029`** aplicadas (backup do banco antes: `labflow_2026-10-15_1056.dump`). Backups do workflow: `pre56`, `pre57`, `pre58`, `pre58b` em `~/labflow/backups-n8n`.
 >
 > **O que mudou em 15/10 (PRs #56, #66, #68, #70, #73 e #74):**
