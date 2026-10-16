@@ -6,6 +6,8 @@ Documento para retomar o projeto em outro computador ou numa conversa nova do Cl
 
 ## 0. Onde paramos (leia primeiro)
 
+> **Em espera (15/10/2026, noite) — NÃO está no ar:** os PRs **#82** (PB1, migration `030`, hora das leituras por gatilho; só o banco, sem publicar o n8n) e **#84** (PB5, migration `031`, funções `cadastrar_usuario`/`trocar_cargo`/`gravar_cargo_bot`; workflow de 245 nós) estão prontos e testados, mas o Danyllo pediu para **deixar o piloto como está**. Para pôr no ar, quando ele pedir: backup do banco → `030` → `031` → mesclar → publicar o workflow e **conferir no servidor** (cópia do sqlite) que `BD · Gravar cargo` tem `gravar_cargo_bot`. Pedidos da sessão do app ainda não começados: **PB4** (corrigir/excluir por função; **coleta sem motivo, análise com motivo**; excluir marca como excluído e o UNIQUE de `coletas` precisa ignorar as excluídas) e **PB6** (canal `app` no webhook, só na Fase D). Também abertos: #69, #71 e #77 (docs do app, da outra sessão).
+>
 > **v1.3.0 lançada em 15/10/2026** (PR #80, tag `v1.3.0` e release no GitHub). A próxima versão fica para a Fase 1 do LIMS ou o app.
 >
 > **15/10/2026, fim do dia — leia isto primeiro.** Tudo está na `main` (último PR de código: **#70**) e **publicado no n8n**: workflow `MJMm3QnbqFrCafsz` com **244 nós**, migrations `001` a `020`, **`027`, `028` e `029`** aplicadas (backup do banco antes: `labflow_2026-10-15_1056.dump`). Backups do workflow: `pre56`, `pre57`, `pre58`, `pre58b` em `~/labflow/backups-n8n`.
