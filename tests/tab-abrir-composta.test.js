@@ -38,7 +38,7 @@ test('Admin: composta que não existe vira pergunta com recebimento, compostas e
   assert.equal(m.salvar, '1');
   assert.equal(m.tipoPendencia, 'IA');
   assert.deepEqual(JSON.parse(m.payload).comandos, [
-    'Recebimento load 44300 item 2703 fabrica AQA lotes 1-10 data 16/10/2026',
+    'Recebimento load 44300 item 2703 fabrica AQA lotes 1-10 data 16/10/2026 resultados <10',
     'Compostas do load 44300 item 2703 (1-5)(6-10)',
     'Tab feito do load 44300 item 2703 (1-5)(6-10) data 16/10/2026',
   ]);
@@ -50,7 +50,7 @@ test('Admin: só as compostas que faltam são criadas; o TAB vale para todas', (
   const item = interpretar(FRASE, { cargo: 'Admin' });
   const m = montar({ ...NADA, encontradas: 1, nao_achadas: '(6,7,8,9,10)' }, item);
   assert.deepEqual(JSON.parse(m.payload).comandos, [
-    'Recebimento load 44300 item 2703 fabrica AQA lotes 6-10 data 16/10/2026',
+    'Recebimento load 44300 item 2703 fabrica AQA lotes 6-10 data 16/10/2026 resultados <10',
     'Compostas do load 44300 item 2703 (6-10)',
     'Tab feito do load 44300 item 2703 (1-5)(6-10) data 16/10/2026',
   ]);
@@ -119,7 +119,7 @@ test('foto de TAB, Admin: as compostas que não existem entram na lista (recebim
   assert.equal(r.salvar, '1');
   const c = JSON.parse(r.payload).comandos;
   assert.equal(c.length, 3);
-  assert.match(c[0], /^Recebimento load 44300 item 2703 fabrica AQA lotes 1-10 data 15\/10\/2026$/);
+  assert.match(c[0], /^Recebimento load 44300 item 2703 fabrica AQA lotes 1-10 data 15\/10\/2026 resultados <10$/);
   assert.match(c[1], /^Compostas do load 44300 item 2703 \(1-5\)\(6-10\)$/);
   assert.match(c[2], /^Tab feito do load 44300 item 2703 \(1-5\)\(6-10\) data 15\/10\/2026$/);
   assert.match(r.textoResposta, /Compostas que ainda não existem \(só o Admin abre pelo TAB/);
@@ -155,4 +155,44 @@ test('prompt: "bl" sozinho vale bl120 também nas placas de tanque', () => {
   const prompt = workflow.nodes.find((n) => n.name === 'IA · Montar pedido').parameters.assignments.assignments.find((a) => a.name === 'prompt').value;
   assert.match(prompt, /"bl" ou "bolor" sem dizer 72 = bl120, em qualquer comando \(inclusive as placas de tanque/);
   assert.match(prompt, /\[fabrica <fabrica>\] \[lotes <lotes>\]/);
+});
+
+// ---- recebimento já com os resultados <10 (só Admin) ----
+test('recebimento "resultados <10": o Admin registra e o dado vai para a gravação', () => {
+  const r = interpretar('Recebimento load 44300 item 2703 fabrica AQA lotes 1-10 data 16/10/2026 resultados <10', { cargo: 'Admin' });
+  assert.equal(r.tipo, 'recebimento');
+  assert.equal(r.resultadosMenor10, '1');
+  assert.deepEqual(r.lotes, [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
+  assert.equal(r.dataRecebimento, '16/10/2026');
+  // sem o sufixo nada muda
+  assert.equal(interpretar('Recebimento load 44300 item 2703 fabrica AQA lotes 1-10 data 16/10/2026', { cargo: 'Admin' }).resultadosMenor10, '');
+});
+
+test('recebimento "resultados <10": Operador é recusado e nada é gravado', () => {
+  const r = interpretar('Recebimento load 44300 item 2703 fabrica AQA lotes 1-10 resultados <10', { cargo: 'Operador' });
+  assert.equal(r.tipo, 'erro_coleta');
+  assert.match(r.textoResposta, /Só um Admin registra o recebimento já com os resultados <10/);
+  // o recebimento normal continua liberado para o Operador
+  assert.equal(interpretar('Recebimento load 44300 item 2703 fabrica AQA lotes 1-10', { cargo: 'Operador' }).tipo, 'recebimento');
+});
+
+test('resposta do recebimento avisa dos resultados <10 gravados', () => {
+  const item = { load: '44300', item: '2703', fabrica: 'AQA', nomeContato: 'Admin', dataRecebimento: '16/10/2026', lotes: [1, 2, 3], resultadosMenor10: '1' };
+  const $ = () => ({ first: () => ({ json: item }) });
+  const montar = (r) => new Function('$', '$input', codigoDoNode('Montar resposta recebimento'))($, { first: () => ({ json: r }) })[0].json;
+  assert.match(montar({ novos: [1, 2, 3], resultados_gravados: 9 }).textoResposta, /gravados como <10 \(sem crescimento\): 9 resultados/);
+  assert.doesNotMatch(montar({ novos: [], resultados_gravados: 0 }).textoResposta, /gravados como <10/);
+});
+
+test('o SQL do recebimento só grava <10 nos lotes novos, sem sobrescrever e só com o sufixo', () => {
+  const { workflow } = require('./helpers/executar-node');
+  const no = workflow.nodes.find((n) => n.name === 'BD · Gravar recebimento');
+  const q = no.parameters.query;
+  assert.match(q, /INSERT INTO contagens \(analise, recebimento_lote_id, sinal, valor, lido_por\)/);
+  assert.match(q, /VALUES \('CT'\), \('BL72'\), \('BL120'\)/);
+  assert.match(q, /RETURNING id, lote\n\), res AS \(/);              // usa o id devolvido pela inserção (a mesma instrução não enxerga as linhas novas)
+  assert.match(q, /FROM ins\n  CROSS JOIN \(VALUES \('CT'\)/);          // só os lotes novos
+  assert.match(q, /WHERE \$7::text = '1'/);                          // só com o sufixo
+  assert.match(q, /ON CONFLICT \(analise, recebimento_lote_id\) DO NOTHING/); // não sobrescreve resultado existente
+  assert.match(no.parameters.options.queryReplacement, /\$json\.resultadosMenor10/);
 });
