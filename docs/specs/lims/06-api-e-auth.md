@@ -1,16 +1,18 @@
 ---
 title: LabFlow LIMS — API e autenticação
 tags: [labflow, lims, spec, api, auth]
-status: draft
-version: v0.2
+status: approved
+version: v1.0
 created: 2026-10-07
-updated: 2026-10-15
+updated: 2026-10-16
 ---
 
 # API e autenticação
 
 **Navegação:** [Índice](index.md) · Anterior: [Banco e migrations](05-banco-e-migrations.md) · Próximo: [App (PWA)](07-app-pwa.md) · Bússola: [Rumo do app](rumo-do-app.md)
 
+> **v1.0 aprovada pelo Danyllo em 16/10/2026.** A especificação está fechada e pode virar tarefas e código (`APP-001`...). Mudar algo daqui em diante exige motivo novo, registrado em [10](10-decisoes.md).
+>
 > v0.2 (15/10/2026): em revisão com o Danyllo, uma pergunta de cada vez. Registra o primeiro acesso, o esqueci a senha, a sessão e o cadastro de pessoas; o resto continua como proposta.
 
 ## Direção
@@ -29,7 +31,7 @@ Uma **API própria** fica entre o app e o banco. Ela **lê** as tabelas do bot p
 - A tela **Nova pessoa** sai **já na primeira versão** do app. Cadastrar e trocar cargo usam funções do banco compartilhadas com o bot (pedido **PB5** no [rumo](rumo-do-app.md)), que precisam estar prontas antes do lançamento.
 - O **telefone continua obrigatório** (o bot identifica a pessoa pelo número). Telefone opcional para quem usa só o app e recuperação de senha por **e-mail** ficam nas Ideias.
 
-## Proposta (a confirmar)
+## Arquitetura (decidida)
 
 - **FastAPI (Python)**, decidido em 15/10, num container novo da stack `~/labflow`. Por quê: Python é mais fácil de ler para quem está aprendendo, gera a documentação da API sozinho (`/docs`) e é forte em dados, Excel, PDF e, no futuro, RAG e laudos automáticos.
 - Senha em hash (argon2) e sessão por cookie seguro (o JavaScript da página não consegue ler).
@@ -48,7 +50,7 @@ Uma **API própria** fica entre o app e o banco. Ela **lê** as tabelas do bot p
 | `app.senhas_provisorias` | Hash da senha provisória, validade (24 h), usada em, gerada por |
 | `app.sessoes` | Sessões abertas (quem, quando, validade, aparelho) |
 
-## Primeiros endpoints (a revisar depois das perguntas)
+## Primeiros endpoints (detalhados nas tarefas da Fase B)
 
 - `GET /me` — quem sou e meu cargo
 - `GET /minhas-coletas`, `GET /minhas-analises`
@@ -60,4 +62,4 @@ Uma **API própria** fica entre o app e o banco. Ela **lê** as tabelas do bot p
 - [x] ~~Recuperação de senha~~ **Nova senha provisória pelo Admin**; e-mail fica para depois (15/10).
 - [x] ~~FastAPI ou Node?~~ **FastAPI** (15/10).
 - [x] ~~Cloudflare Tunnel ou Tailscale?~~ **Tailscale nos testes; Cloudflare Tunnel no piloto** (15/10).
-- [ ] Domínio próprio para o piloto (o Danyllo vai comprar).
+- [ ] Domínio próprio: **pendência do piloto do app**, não da especificação (o Danyllo vai comprar antes do piloto).

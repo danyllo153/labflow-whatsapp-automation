@@ -1,16 +1,18 @@
 ---
 title: LabFlow LIMS — App (PWA)
 tags: [labflow, lims, spec, app, pwa]
-status: draft
-version: v0.3
+status: approved
+version: v1.0
 created: 2026-10-07
-updated: 2026-10-15
+updated: 2026-10-16
 ---
 
 # App web/mobile (PWA): a cara do LIMS
 
 **Navegação:** [Índice](index.md) · Anterior: [API e autenticação](06-api-e-auth.md) · Próximo: [Fluxos](08-fluxos.md) · Bússola: [Rumo do app](rumo-do-app.md)
 
+> **v1.0 aprovada pelo Danyllo em 16/10/2026.** A especificação está fechada e pode virar tarefas e código (`APP-001`...). Mudar algo daqui em diante exige motivo novo, registrado em [10](10-decisoes.md).
+>
 > v0.3 (15/10/2026, noite): o app passa a ser **o LIMS**, a "cara" do sistema (como o Power BI é hoje), e o bot vira um **assistente de IA** dentro dele. Incorpora as decisões de 15/10 registradas no [rumo](rumo-do-app.md) e em [10](10-decisoes.md). O que está marcado **Recomendo** é sugestão para aprovar ou trocar. Nada aqui vira código antes da `v1.0`.
 
 ## Direção
@@ -274,7 +276,7 @@ Notificação no celular, modo offline, loja de aplicativos, enviar relatório p
 
 ## Perguntas ainda abertas
 
-
+Nenhuma (16/10/2026). Pendência fora da especificação: domínio próprio antes do piloto ([06](06-api-e-auth.md)).
 
 ## Pronto quando
 
