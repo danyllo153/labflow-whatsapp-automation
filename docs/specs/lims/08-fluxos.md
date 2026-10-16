@@ -84,7 +84,7 @@ Erros: o que acontece quando algo falha
 
 ### A7. Conferir as estufas
 - **Gatilho:** início do turno; aba Estufas ou bloco no fim do Início.
-- **Passos:** para cada estufa, **Ok** ou **Não ok**; no Não ok, digitar a **temperatura** (obrigatória) e uma observação opcional.
+- **Passos:** para cada estufa, nas **duas leituras** (supervisório e field chart), **Ok** ou **Não ok**; no Não ok, digitar a **temperatura** daquela leitura (obrigatória) e uma observação opcional. A estufa fica Não ok se qualquer leitura estiver Não ok; a diferença aparece quando as duas temperaturas foram digitadas (decidido em 16/10).
 - **Resultado:** `app.leituras_estufa` com quem, quando e turno; estufa não conferida fica **Pendente**; Não ok entra nas ocorrências do relatório do turno.
 
 ### A8. Esterilização
