@@ -172,13 +172,14 @@ Sem gráfico "por pessoa" (pode soar como vigilância).
 ### 7.1 Temperatura das estufas
 - **Obrigatória em todo turno, para todos** (não é atividade fixa de um turno só). Tem **aba própria, Estufas**, e um **bloco no fim do Início** com as estufas do turno (conferidas e pendentes).
 - **Uma conferência por estufa no início de cada turno** (decidido em 15/10).
-- **Dois botões por estufa: Ok e Não ok** (decidido em 15/10): a pessoa olha o termômetro e toca, que é mais fácil do que falar. **Ok** grava só a conferência. **Não ok** abre um campo para **digitar a temperatura** que a estufa está marcando (obrigatório) e uma observação opcional ("porta aberta", "avisei a manutenção").
-- Cada conferência grava estufa, **Ok/Não ok**, temperatura (só no Não ok, °C com uma casa decimal), quem, **quando** (data e hora) e o **turno**, em `app.leituras_estufa`.
-- Ao lado de cada estufa, a **temperatura que ela deve ter** (referência cadastrada pelo Admin), para a pessoa comparar. Esse valor fica só no banco; no repositório, só valores fictícios.
+- **Duas leituras por estufa, como na planilha** (decidido em 16/10): **Supervisório (painel)** e **Field chart**. Cada leitura tem os botões **Ok** e **Não ok**. Ok não pede número. **Não ok** abre o campo para **digitar a temperatura** que aquela leitura está marcando (obrigatório) e uma observação opcional. A estufa 06 (auxiliar) também tem as duas leituras, sem faixa.
+- **Status da estufa:** Ok se as duas leituras estiverem Ok; **Não ok** se qualquer uma estiver Não ok (fica em vermelho, como na planilha). A **diferença** (field chart − supervisório) só aparece quando as duas temperaturas foram digitadas.
+- Cada conferência grava estufa, leitura (supervisório ou field chart), Ok/Não ok, temperatura (só no Não ok, °C com uma casa decimal), quem, **quando** (data e hora) e o **turno**, em `app.leituras_estufa`.
+- Ao lado de cada estufa, a **faixa de trabalho** (mínimo e máximo, cadastrada pelo Admin), para a pessoa comparar. Esse valor fica só no banco; no repositório, só valores fictícios.
 - A estufa ainda não conferida no turno fica **Pendente**. Estufa **Não ok** entra nas **ocorrências do relatório do turno** com a temperatura anotada (sem abrir nada sozinho).
-- Pelo assistente também vale: "estufa 2 não ok, 38,5 graus".
+- Pelo assistente também vale: "estufa 3 ok no painel, field chart 43,8".
 - **Estufas (passadas pelo Danyllo em 16/10):** **11 estufas**: 01, 02, 03, 04, 06, 07, 08, 09, 10, 11 e 12 (não existe a 05). A **06 é auxiliar** (sem faixa de trabalho). As demais têm **faixa de trabalho** (mínimo e máximo em °C), que fica **só no banco** (carregada fora do Git); no repositório, só valores fictícios.
-- **A planilha atual** registra, para cada estufa: faixa de trabalho, leitura do **supervisório**, leitura do **field chart**, **diferença** entre as duas, status, responsável e data, numa aba por mês. Como o app deve registrar está em aberto (pergunta no fim).
+- **A planilha atual** registra, para cada estufa: faixa de trabalho, leitura do **supervisório**, leitura do **field chart**, **diferença** entre as duas, status, responsável e data, numa aba por mês. O app substitui essa planilha (decidido em 16/10).
 
 ### 8. Assistente de IA (botão flutuante)
 - **Em todas as telas**, um botão redondo no canto: toca e escolhe **escrever**, **falar** ou **foto**.
@@ -253,8 +254,8 @@ Nomes a confirmar na migration. Nenhuma altera tabela do bot (só referenciam `u
 | `app.esterilizacoes` | Tipo, ciclo, meio (opcional), quem, quando |
 | `app.atividades_fixas` | Atividades fixas de cada turno (texto, turno, dias da semana, ordem), cadastradas pelo Admin |
 | `app.atividades_feitas` | Atividade fixa ou pendência herdada marcada como feita: quem, quando, turno |
-| `app.estufas` | Cada estufa (nome/número, temperatura de referência para mostrar ao lado) |
-| `app.leituras_estufa` | Estufa, Ok/Não ok, temperatura (só no Não ok), observação, quem, quando, turno |
+| `app.estufas` | Cada estufa (número, auxiliar sim/não, faixa de trabalho mínima e máxima com vigência; valores reais só no banco) |
+| `app.leituras_estufa` | Estufa, leitura (supervisório ou field chart), Ok/Não ok, temperatura (só no Não ok), observação, quem, quando, turno |
 
 Login em [06](06-api-e-auth.md). As **funções do banco** para editar e excluir dados do bot não são tabelas do app: são criadas com a sessão do bot (PB4).
 
@@ -273,7 +274,7 @@ Notificação no celular, modo offline, loja de aplicativos, enviar relatório p
 
 ## Perguntas ainda abertas
 
-- [ ] **Estufas:** o app registra só Ok/Não ok (decidido em 15/10) ou as duas leituras da planilha (supervisório e field chart, com diferença e status automáticos)?
+- [ ] **Estufas:** a conferência é **uma por dia** (como os blocos da planilha) ou **uma por turno**?
 
 
 ## Pronto quando
