@@ -171,7 +171,7 @@ Sem gráfico "por pessoa" (pode soar como vigilância).
 
 ### 7.1 Temperatura das estufas
 - **Obrigatória em todo turno, para todos** (não é atividade fixa de um turno só). Tem **aba própria, Estufas**, e um **bloco no fim do Início** com as estufas do turno (conferidas e pendentes).
-- **Uma conferência por estufa no início de cada turno** (decidido em 15/10).
+- **Uma conferência por estufa no início de cada turno** (decidido em 15/10, confirmado em 16/10: por turno, não uma por dia como nos blocos da planilha).
 - **Duas leituras por estufa, como na planilha** (decidido em 16/10): **Supervisório (painel)** e **Field chart**. Cada leitura tem os botões **Ok** e **Não ok**. Ok não pede número. **Não ok** abre o campo para **digitar a temperatura** que aquela leitura está marcando (obrigatório) e uma observação opcional. A estufa 06 (auxiliar) também tem as duas leituras, sem faixa.
 - **Status da estufa:** Ok se as duas leituras estiverem Ok; **Não ok** se qualquer uma estiver Não ok (fica em vermelho, como na planilha). A **diferença** (field chart − supervisório) só aparece quando as duas temperaturas foram digitadas.
 - Cada conferência grava estufa, leitura (supervisório ou field chart), Ok/Não ok, temperatura (só no Não ok, °C com uma casa decimal), quem, **quando** (data e hora) e o **turno**, em `app.leituras_estufa`.
@@ -274,7 +274,6 @@ Notificação no celular, modo offline, loja de aplicativos, enviar relatório p
 
 ## Perguntas ainda abertas
 
-- [ ] **Estufas:** a conferência é **uma por dia** (como os blocos da planilha) ou **uma por turno**?
 
 
 ## Pronto quando
