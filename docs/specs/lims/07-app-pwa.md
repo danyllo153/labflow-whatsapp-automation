@@ -80,6 +80,25 @@ Usuário e senha. Primeiro acesso e recuperação de senha em [06](06-api-e-auth
 - **Tamanho:** cartões e listas **compactos** (o celular precisa mostrar a lista do turno sem rolar muito); números grandes só nos quatro cartões do topo.
 - **"Meus registros de hoje"**: o que eu fiz, com atalho para corrigir.
 
+#### Atividades fixas de cada turno (lista inicial, passada pelo Danyllo em 16/10)
+É a mesma lista de verificação da planilha "Relatório de turno" do laboratório; o Admin pode mudar depois. Na planilha, cada item é marcado com "x" (feito) ou "0" (não feito); no app, cada item tem **Feito** e **Não feito**, e o não feito passa como pendência para o próximo turno.
+
+| Manhã | Tarde | Madrugada |
+|---|---|---|
+| Leitura de placa | Análise de TAB / Enriquecimento SP | Análise recebimento / embarque |
+| Planilhas | Registro diário | Coliformes Colina |
+| Materiais | Análise NFC recebimento | Coliformes demais fábricas (**só às sextas**) |
+| Meios de cultura | Monitoramento ambiental | Análise pH PDA e Meio BAT |
+| Drops | Análise sanitizante + TK 30 (água) | Água do processo |
+| Análise dos TQs | Arquivo microrganismo (C4) | Plaquear (WORT, PCA, MB, YEGCA, Cr.ES) |
+| Howard | Day Tank | 5S / Limpeza e organização |
+| 5S / Limpeza e organização | 5S / Limpeza e organização | |
+| Reagentes | | |
+| Calibração | | |
+| Conservação bicicletas | | |
+
+Item com dia certo (ex.: "só às sextas") aparece só nesse dia.
+
 ### 4. Relatório do turno (página compartilhada)
 **Uma página por turno e por dia**, a mesma para todos do turno, atualizada ao vivo.
 
@@ -158,7 +177,8 @@ Sem gráfico "por pessoa" (pode soar como vigilância).
 - Ao lado de cada estufa, a **temperatura que ela deve ter** (referência cadastrada pelo Admin), para a pessoa comparar. Esse valor fica só no banco; no repositório, só valores fictícios.
 - A estufa ainda não conferida no turno fica **Pendente**. Estufa **Não ok** entra nas **ocorrências do relatório do turno** com a temperatura anotada (sem abrir nada sozinho).
 - Pelo assistente também vale: "estufa 2 não ok, 38,5 graus".
-- **Falta (o Danyllo vai passar):** quantas estufas são, o nome ou número de cada uma e a temperatura de referência de cada uma.
+- **Estufas (passadas pelo Danyllo em 16/10):** **11 estufas**: 01, 02, 03, 04, 06, 07, 08, 09, 10, 11 e 12 (não existe a 05). A **06 é auxiliar** (sem faixa de trabalho). As demais têm **faixa de trabalho** (mínimo e máximo em °C), que fica **só no banco** (carregada fora do Git); no repositório, só valores fictícios.
+- **A planilha atual** registra, para cada estufa: faixa de trabalho, leitura do **supervisório**, leitura do **field chart**, **diferença** entre as duas, status, responsável e data, numa aba por mês. Como o app deve registrar está em aberto (pergunta no fim).
 
 ### 8. Assistente de IA (botão flutuante)
 - **Em todas as telas**, um botão redondo no canto: toca e escolhe **escrever**, **falar** ou **foto**.
@@ -253,8 +273,7 @@ Notificação no celular, modo offline, loja de aplicativos, enviar relatório p
 
 ## Perguntas ainda abertas
 
-- [ ] **Atividades fixas de cada turno:** a lista (o Danyllo vai passar).
-- [ ] **Estufas:** quantas, nome/número de cada uma e a temperatura de referência (o Danyllo vai passar).
+- [ ] **Estufas:** o app registra só Ok/Não ok (decidido em 15/10) ou as duas leituras da planilha (supervisório e field chart, com diferença e status automáticos)?
 
 
 ## Pronto quando
