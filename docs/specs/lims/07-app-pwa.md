@@ -30,7 +30,7 @@ O WhatsApp continua no ar durante o piloto (decisão de 15/10); o app tende a se
 - **Tabelas próprias do app** (turno, relatório do turno, esterilização) no schema `app`, migrations a partir da `050` (027–049 são da sessão do bot).
 - **Tudo que grava mostra o que vai mudar e pede uma confirmação**, como o "sim" do bot: "antes → depois" na correção; a lista inteira na foto (**um sim** para a lista toda).
 - **Excluir não apaga** (decidido em 15/10): o registro sai das páginas e das contas, mas fica guardado como **excluído**, com quem, quando e o motivo; o Admin vê na aba Histórico e pode recuperar (é o "invalidar" do doc [04](04-revisao-e-liberacao.md); ISO 17025: o dado original não se perde).
-- **Excluir e corrigir pedem motivo** e ficam no histórico (com o LIMS, o histórico é o da [auditoria](02-audit-trail.md)).
+- **Motivo** (decidido em 16/10): corrigir ou excluir **coleta não pede motivo**; corrigir ou excluir **análise e resultado pede motivo**. Tudo fica no histórico (com o LIMS, o histórico é o da [auditoria](02-audit-trail.md)).
 - Permissão conferida **no código da API** a cada chamada, pelo cargo; nunca no prompt da IA.
 - **Só online.** Primeiro só no servidor de demonstração, com dados fictícios.
 - Termos do bot: **drop**, **desvio**, **repetição** (nunca "reanálise"); TAB e Coliformes no masculino.
@@ -191,8 +191,8 @@ O **Operador é o analista em geral**.
 | Encerrar o turno | Sim | Sim | Não | Não |
 | Registrar coletas | Sim | Sim | Não | Sim |
 | Registrar análises, resultados, desvios e esterilização | Sim | Sim | Não | Não |
-| Corrigir registro (com motivo) | Sim | Sim | Não | Só a própria coleta, no mesmo dia |
-| Excluir registro (com motivo e confirmação; fica no histórico) | Sim | Sim | Não | Pede ao Admin |
+| Corrigir registro (coleta sem motivo; análise com motivo) | Sim | Sim | Não | Só a própria coleta |
+| Excluir registro (com confirmação; coleta sem motivo, análise com motivo; fica no histórico) | Sim | Sim | Não | Só a própria coleta (como no bot, migration 029) |
 | Usar o assistente | Sim | Sim | Só consultas | Só coletas |
 | Adicionar pessoa, gerar senha provisória, trocar cargo | Sim | Não | Não | Não |
 | Horários padrão dos turnos, reabrir turno | Sim | Não | Não | Não |

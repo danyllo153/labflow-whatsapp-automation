@@ -16,6 +16,8 @@ Uma linha por decisão, mais recente no topo, com o porquê. O que está aqui n�
 
 ## Decidido
 
+- **2026-10-16** (app e bot) **Motivo:** corrigir ou excluir **coleta não pede motivo**; corrigir ou excluir **análise e resultado pede motivo**. Vale para as funções do PB4, no app e no bot. Por quê: coleta errada (tanque trocado) é comum e simples; resultado mexe em rastreio e laudo.
+
 - **2026-10-15** (app) **Numeração das migrations:** 021–026 LIMS; 027–049 sessão do bot (já usou 027, 028, 029 e começou a 030); **app a partir da 050**. Por quê: o bot precisou de números antes do app começar.
 
 - **2026-10-15** (app) **Assistente pelo mesmo workflow do bot:** a API manda as mensagens do app ao mesmo webhook do n8n com `canal: app`, e a resposta volta para a API (pedido PB6 à sessão do bot). Confirmação pendente e limite diário de IA são compartilhados entre app e WhatsApp. Por quê: nenhuma regra duplicada; app e bot respondem igual.

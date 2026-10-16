@@ -405,6 +405,7 @@ Os dois aceitam o **número `#`** ou o **formato por extenso** (load + lotes; `(
 - `data dd/mm/aaaa` no "feito" (`tab feito das compostas #7 data 28/09/2026`) faz o prazo contar dessa data, útil para registrar retroativo.
 - O que não foi feito no dia previsto continua aparecendo, com a **data prevista**: `⚠️ Atrasados — previsto 03/10/2026`.
 - Por extenso: `Tab da composta load 77001, lotes 6-10, item 444, em confirmação`; `composta load 77001, lote 7 item 444, da confirmação deu positivo`.
+- **Só o Admin abre a composta pelo próprio TAB** (quando o recebimento daquele load não foi registrado antes). `tab feito do load 44300 item 2703 fabrica AQA (1-5)(6-10)` (ou `coliformes feitos ...`, ou a foto do laudo, que traz a fábrica): se alguma composta não existe, o bot pergunta *"Essas compostas ainda não estão abertas... Responda sim ou não"*. Com **sim**, ele faz, nesta ordem: (1) registra o recebimento dos lotes que faltam (a data é a do TAB; lote que já existe fica como está), (2) cria as compostas que faltam e (3) registra o TAB no caldo de todas. Os Coliformes dessas compostas já funcionam depois, sem passar pelo recebimento. Faltando o item ou a fábrica (AQA, CON, COL, UCH, ITA, TMG), o bot explica o que falta e não grava nada. Os outros cargos continuam recebendo "não achei composta" (precisam do recebimento antes).
 
 ## 13. Embarque (concentrado)
 
