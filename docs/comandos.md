@@ -797,7 +797,7 @@ bl72 nfc load 44300 lote 10 past deu 22, lote 11 fresh deu <10
 bl120 nfc load 44300 lotes 10-12 fresh deu 7
 ```
 
-- O bot mostra a conta antes de gravar (`lote 10 · past · 10^1: 14 × 10^1 = 140`) e pede **sim**, como no concentrado. `nfc` pode ser trocado por `item 129`. O tipo (`past` ou `fresh`) é obrigatório, porque o mesmo lote pode ter os dois.
+- **O chat mostra o número como no laudo** (`lote 10 · past: 14`), na confirmação, na foto, no "era ..." da correção e nas consultas; a conta da diluição (14 × 10^1 = 140) fica só no banco e no Power BI (decisão de 16/10/2026). O bot pede **sim**, como no concentrado. `nfc` pode ser trocado por `item 129`. O tipo (`past` ou `fresh`) é obrigatório, porque o mesmo lote pode ter os dois.
 - `<10` com 10^1 vira `<100` (o sinal fica); vale decimal (`1,5`). **Sem alarme:** o NFC recebido não usa os limites do concentrado, então não aparece 🚨 nem aviso de limite, e **fica fora do relatório do dia** (decisão de 14/10/2026).
 - Resultado repetido **corrige** o anterior (o bot avisa `era 90`). Se a diluição do lote for **corrigida** no recebimento, os resultados já gravados são **recalculados** a partir do número lido (`14 × 10^2 = 1400`).
 - **Consultas:** `quais ct tenho para ler hoje?`, `quais bl72 foram lidos hoje?` e `quanto está o CT do load 44300 até agora` agora incluem o NFC (`NFC load 44300 · past 10^1: 10-11`).
