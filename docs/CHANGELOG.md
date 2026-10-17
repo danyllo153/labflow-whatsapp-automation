@@ -12,6 +12,11 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 
 ## [Não lançado]
 
+### Adicionado
+- **"Todos" de uma vez** (seção 18 do `docs/comandos.md`): `bl72 load 44502 todos deu <10 exceto lote 3 deu 20` grava o resultado em todos os lotes (recebimento), amostras (embarque) ou lotes do NFC que saem hoje, ou na data dita, e ainda não têm resultado; o "exceto" dá outro valor a um lote ou o deixa de fora. Um só sim.
+- **Todos os tanques sem crescimento:** `bl todos os tanques navio O.SKY 123 deu <1 exceto tanque 1C normal <1,1,0` grava <1 nas 3 placas de cada leitura que sai na data (terra ou navio, normal e stress); a exceção com placas grava o que deu e o não ok volta com o comando de desvio pronto (não abre desvio sozinho). Nodes `BD · Leituras do todos` e `Montar pergunta placas todos`, pelo mesmo caminho da foto de NFC (`placas_lote`). Sem migration.
+- **Leitura antecipada nos tanques:** sem nada vencendo, o comando de placas pega a próxima leitura ainda sem placas e avisa "⏩ Leitura antecipada". No concentrado e no NFC o prazo já não travava.
+- `recebimento` antes do load passa a valer nos comandos de C.T/B.L (`bl72 recebimento load ...`). Formatos 37 e 38 no prompt da IA. 29 testes novos em `tests/resultados-todos.test.js` e no catálogo da IA.
 - **TAB de tanque de terra "completo" (só Admin):** `Tab feito dos tanques terra 44 coleta 06/10/2026 completo` registra a coleta (com drops e arquivo) e as análises normal e stress que faltarem, marca `<1,<1,<1` nas leituras e como feitos os drops já vencidos até a data do TAB (o que não chegou na data fica sem marcar ou pendente) e registra o TAB, num SQL só e sem duplicar. Se o Admin mandar o TAB de tanque sem coleta, o bot pergunta e o "sim" roda o completo.
 - Atalhos de texto `tq 44 16/10` e `tab tanque terra 47 06/10/26` (não passam mais pela IA, que os confundia com "em confirmação").
 - Foto de TAB com bloco só de tanques (`TQ 44 16/10`), sem número de load; para o Admin vira o comando `completo`.
