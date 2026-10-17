@@ -1,6 +1,6 @@
 """Páginas do laboratório, só leitura: Coletas e Recebimento.
 
-Spec: 07-app-pwa.md (v1.0), "5. Páginas do laboratório"; 08-fluxos.md A11. Tarefa: APP-008.
+Spec: 07-app-pwa.md (v1.0), "5. Páginas do laboratório"; 08-fluxos.md A11. Tarefas: APP-008 (páginas) e APP-009 (Excel).
 Leem SEMPRE pelas views do Power BI (schema bi), para os números baterem com o painel.
 """
 
@@ -8,10 +8,11 @@ from datetime import date
 from typing import Any, Literal
 
 import psycopg
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from pydantic import BaseModel
 
 from labflow_api.dependencias import PessoaLogada, obter_conexao
+from labflow_api.excel import MIME_XLSX, planilha, resposta_xlsx
 from labflow_api.permissoes import exigir
 
 roteador = APIRouter(prefix="/paginas", tags=["páginas"])
@@ -94,21 +95,41 @@ def filtro_coletas(
     return f
 
 
+class FiltrosColetas:
+    """Filtros da página Coletas, iguais na tela e no Excel (08 A11: exporta o que está filtrado)."""
+
+    def __init__(
+        self,
+        data_de: date | None = None,
+        data_ate: date | None = None,
+        origem: Literal["Terra", "Navio"] | None = None,
+        tanque: str | None = None,
+        navio: str | None = Query(default=None, description="Parte do nome, ex.: O.SKY 189"),
+        quem: str | None = Query(default=None, description="Parte do nome de quem coletou ou digitou"),
+    ) -> None:
+        self.data_de, self.data_ate, self.origem = data_de, data_ate, origem
+        self.tanque, self.navio, self.quem = tanque, navio, quem
+
+    def montar(self, pessoa: PessoaLogada) -> _Filtro:
+        return filtro_coletas(pessoa, self.data_de, self.data_ate, self.origem, self.tanque, self.navio, self.quem)
+
+    def descricao(self) -> list[tuple[str, Any]]:
+        return [("Data de", self.data_de), ("Data até", self.data_ate), ("Origem", self.origem),
+                ("Tanque", self.tanque), ("Navio", self.navio), ("Quem", self.quem)]
+
+
+ORDEM_COLETAS = "data_coleta DESC, registrado_em DESC, coleta_id DESC"
+
+
 @roteador.get("/coletas", response_model=Pagina)
 def coletas(
-    data_de: date | None = None,
-    data_ate: date | None = None,
-    origem: Literal["Terra", "Navio"] | None = None,
-    tanque: str | None = None,
-    navio: str | None = Query(default=None, description="Parte do nome, ex.: O.SKY 189"),
-    quem: str | None = Query(default=None, description="Parte do nome de quem coletou ou digitou"),
+    filtros: FiltrosColetas = Depends(),
     pagina: int = Query(default=1, ge=1),
     por_pagina: int = Query(default=50, ge=1, le=POR_PAGINA_MAX),
     pessoa: PessoaLogada = Depends(exigir("ver_paginas")),
     con: psycopg.Connection = Depends(obter_conexao),
 ) -> Pagina:
-    f = filtro_coletas(pessoa, data_de, data_ate, origem, tanque, navio, quem)
-    resultado = _paginar(con, COLETAS_BASE, f, "data_coleta DESC, registrado_em DESC, coleta_id DESC", pagina, por_pagina)
+    resultado = _paginar(con, COLETAS_BASE, filtros.montar(pessoa), ORDEM_COLETAS, pagina, por_pagina)
     for linha in resultado.linhas:
         linha.pop("digitado_por_id", None)  # o id interno não vai para a tela
     return resultado
@@ -149,22 +170,101 @@ def filtro_recebimento(
     return f
 
 
+class FiltrosRecebimento:
+    """Filtros da página Recebimento, iguais na tela e no Excel."""
+
+    def __init__(
+        self,
+        data_de: date | None = Query(default=None, description="Data prevista da leitura, a partir de"),
+        data_ate: date | None = None,
+        load: str | None = None,
+        lote: int | None = None,
+        fabrica: str | None = Query(default=None, description="Sigla, ex.: AQA"),
+        analise: Literal["C.T 48h", "B.L 72h", "B.L 120h"] | None = None,
+        situacao: Literal["Ok", "Não ok", "Atrasado", "Vence hoje", "No prazo"] | None = None,
+        quem: str | None = Query(default=None, description="Parte do nome de quem leu"),
+    ) -> None:
+        self.data_de, self.data_ate, self.load, self.lote = data_de, data_ate, load, lote
+        self.fabrica, self.analise, self.situacao, self.quem = fabrica, analise, situacao, quem
+
+    def montar(self) -> _Filtro:
+        return filtro_recebimento(
+            self.data_de, self.data_ate, self.load, self.lote, self.fabrica, self.analise, self.situacao, self.quem
+        )
+
+    def descricao(self) -> list[tuple[str, Any]]:
+        return [("Data prevista de", self.data_de), ("Data prevista até", self.data_ate), ("Load", self.load),
+                ("Lote", self.lote), ("Fábrica", self.fabrica), ("Análise", self.analise),
+                ("Situação", self.situacao), ("Quem leu", self.quem)]
+
+
+ORDEM_RECEBIMENTO = "prevista DESC, load, lote, analise"
+
+
+def _barrar_coletor(pessoa: PessoaLogada) -> None:
+    if pessoa.cargo == "Coletor":  # 07: o Coletor só vê as próprias coletas
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Seu cargo não permite esta página.")
+
+
 @roteador.get("/recebimento", response_model=Pagina)
 def recebimento(
-    data_de: date | None = Query(default=None, description="Data prevista da leitura, a partir de"),
-    data_ate: date | None = None,
-    load: str | None = None,
-    lote: int | None = None,
-    fabrica: str | None = Query(default=None, description="Sigla, ex.: AQA"),
-    analise: Literal["C.T 48h", "B.L 72h", "B.L 120h"] | None = None,
-    situacao: Literal["Ok", "Não ok", "Atrasado", "Vence hoje", "No prazo"] | None = None,
-    quem: str | None = Query(default=None, description="Parte do nome de quem leu"),
+    filtros: FiltrosRecebimento = Depends(),
     pagina: int = Query(default=1, ge=1),
     por_pagina: int = Query(default=50, ge=1, le=POR_PAGINA_MAX),
     pessoa: PessoaLogada = Depends(exigir("ver_paginas")),
     con: psycopg.Connection = Depends(obter_conexao),
 ) -> Pagina:
-    if pessoa.cargo == "Coletor":  # 07: o Coletor só vê as próprias coletas
-        raise HTTPException(status.HTTP_403_FORBIDDEN, "Seu cargo não permite esta página.")
-    f = filtro_recebimento(data_de, data_ate, load, lote, fabrica, analise, situacao, quem)
-    return _paginar(con, RECEBIMENTO_BASE, f, "prevista DESC, load, lote, analise", pagina, por_pagina)
+    _barrar_coletor(pessoa)
+    return _paginar(con, RECEBIMENTO_BASE, filtros.montar(), ORDEM_RECEBIMENTO, pagina, por_pagina)
+
+
+# ---------------------------------------------------------------- Exportar para Excel (APP-009)
+# Mesmos filtros da tela, sem paginação. Livre para todos os cargos que veem a página, sem registro (decisão de 15/10).
+LINHAS_MAX_EXCEL = 50_000
+
+COLUNAS_COLETAS = [
+    ("data_coleta", "Data da coleta"), ("origem", "Origem"), ("tanque", "Tanque"), ("navio", "Navio"),
+    ("coletado_por", "Coletado por"), ("digitado_por", "Digitado por"), ("registrado_em", "Registrado em"),
+]
+COLUNAS_RECEBIMENTO = [
+    ("load", "Load"), ("item", "Item"), ("fabrica", "Fábrica"), ("lote", "Lote"), ("analise", "Análise"),
+    ("prevista", "Leitura prevista"), ("resultado", "Resultado"), ("situacao", "Situação"),
+    ("lido_por", "Lido por"), ("data_leitura", "Data da leitura"),
+]
+
+
+def _linhas_para_excel(con, base: str, filtro: _Filtro, ordem: str) -> list[dict[str, Any]]:
+    cur = con.execute(
+        f"SELECT * FROM ({base}) t{filtro.sql()} ORDER BY {ordem} LIMIT %s", [*filtro.valores, LINHAS_MAX_EXCEL + 1]
+    )
+    nomes = [d.name for d in cur.description]
+    linhas = [dict(zip(nomes, l)) for l in cur.fetchall()]
+    if len(linhas) > LINHAS_MAX_EXCEL:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            f"Mais de {LINHAS_MAX_EXCEL} linhas: use um filtro menor (por exemplo, um período mais curto).",
+        )
+    return linhas
+
+
+@roteador.get("/coletas/excel", response_class=Response, responses={200: {"content": {MIME_XLSX: {}}}})
+def coletas_excel(
+    filtros: FiltrosColetas = Depends(),
+    pessoa: PessoaLogada = Depends(exigir("imprimir_exportar")),
+    con: psycopg.Connection = Depends(obter_conexao),
+) -> Response:
+    linhas = _linhas_para_excel(con, COLETAS_BASE, filtros.montar(pessoa), ORDEM_COLETAS)
+    arquivo = planilha("Coletas", COLUNAS_COLETAS, linhas, filtros.descricao())
+    return resposta_xlsx(arquivo, "coletas")
+
+
+@roteador.get("/recebimento/excel", response_class=Response, responses={200: {"content": {MIME_XLSX: {}}}})
+def recebimento_excel(
+    filtros: FiltrosRecebimento = Depends(),
+    pessoa: PessoaLogada = Depends(exigir("imprimir_exportar")),
+    con: psycopg.Connection = Depends(obter_conexao),
+) -> Response:
+    _barrar_coletor(pessoa)
+    linhas = _linhas_para_excel(con, RECEBIMENTO_BASE, filtros.montar(), ORDEM_RECEBIMENTO)
+    arquivo = planilha("Recebimento", COLUNAS_RECEBIMENTO, linhas, filtros.descricao())
+    return resposta_xlsx(arquivo, "recebimento")
