@@ -1,16 +1,18 @@
 ---
 title: LabFlow LIMS — Fluxos
 tags: [labflow, lims, spec, fluxos]
-status: draft
-version: v0.2
+status: approved
+version: v1.0
 created: 2026-10-07
-updated: 2026-10-15
+updated: 2026-10-16
 ---
 
 # Fluxos
 
 **Navegação:** [Índice](index.md) · Anterior: [App (PWA)](07-app-pwa.md) · Próximo: [Pontos de atenção](09-pontos-de-atencao.md) · Bússola: [Rumo do app](rumo-do-app.md)
 
+> **v1.0 aprovada pelo Danyllo em 16/10/2026.** A especificação está fechada e pode virar tarefas e código (`APP-001`...). Mudar algo daqui em diante exige motivo novo, registrado em [10](10-decisoes.md).
+>
 > v0.2 (15/10/2026): escreve os fluxos do app a partir das decisões de 15/10 ([07](07-app-pwa.md), [06](06-api-e-auth.md), [rumo](rumo-do-app.md)). O fluxo do **assistente** (seção A4) tem uma pergunta aberta. Os fluxos de revisão e liberação e de especificação continuam com a Fase 1 do LIMS ([03](03-especificacoes.md), [04](04-revisao-e-liberacao.md)).
 
 ## Direção
@@ -84,7 +86,7 @@ Erros: o que acontece quando algo falha
 
 ### A7. Conferir as estufas
 - **Gatilho:** início do turno; aba Estufas ou bloco no fim do Início.
-- **Passos:** para cada estufa, **Ok** ou **Não ok**; no Não ok, digitar a **temperatura** (obrigatória) e uma observação opcional.
+- **Passos:** para cada estufa, nas **duas leituras** (supervisório e field chart), **Ok** ou **Não ok**; no Não ok, digitar a **temperatura** daquela leitura (obrigatória) e uma observação opcional. A estufa fica Não ok se qualquer leitura estiver Não ok; a diferença aparece quando as duas temperaturas foram digitadas (decidido em 16/10).
 - **Resultado:** `app.leituras_estufa` com quem, quando e turno; estufa não conferida fica **Pendente**; Não ok entra nas ocorrências do relatório do turno.
 
 ### A8. Esterilização

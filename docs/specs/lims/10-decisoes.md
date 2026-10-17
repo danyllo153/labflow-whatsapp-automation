@@ -16,6 +16,10 @@ Uma linha por decisão, mais recente no topo, com o porquê. O que está aqui n�
 
 ## Decidido
 
+- **2026-10-17** (app) **Tarefas APP-001 a APP-011 da Fase B aprovadas**; código do app no **mesmo repositório, pasta `app/`**, com CI próprio. Por quê: spec, banco, bot e app num lugar só; nada do bot é tocado.
+
+- **2026-10-16** (app) **Especificação do app aprovada como v1.0:** [06](06-api-e-auth.md), [07](07-app-pwa.md) e [08](08-fluxos.md). Fase A concluída; próximo: tarefas `APP-001`... da Fase B (API de leitura e login). Domínio próprio fica como pendência do piloto.
+
 - **2026-10-16** (app e bot) **Motivo:** corrigir ou excluir **coleta não pede motivo**; corrigir ou excluir **análise e resultado pede motivo**. Vale para as funções do PB4, no app e no bot. Por quê: coleta errada (tanque trocado) é comum e simples; resultado mexe em rastreio e laudo.
 
 - **2026-10-15** (app) **Numeração das migrations:** 021–026 LIMS; 027–049 sessão do bot (já usou 027, 028, 029 e começou a 030); **app a partir da 050**. Por quê: o bot precisou de números antes do app começar.

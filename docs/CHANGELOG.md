@@ -17,6 +17,10 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 - **Todos os tanques sem crescimento:** `bl todos os tanques navio O.SKY 123 deu <1 exceto tanque 1C normal <1,1,0` grava <1 nas 3 placas de cada leitura que sai na data (terra ou navio, normal e stress); a exceção com placas grava o que deu e o não ok volta com o comando de desvio pronto (não abre desvio sozinho). Nodes `BD · Leituras do todos` e `Montar pergunta placas todos`, pelo mesmo caminho da foto de NFC (`placas_lote`). Sem migration.
 - **Leitura antecipada nos tanques:** sem nada vencendo, o comando de placas pega a próxima leitura ainda sem placas e avisa "⏩ Leitura antecipada". No concentrado e no NFC o prazo já não travava.
 - `recebimento` antes do load passa a valer nos comandos de C.T/B.L (`bl72 recebimento load ...`). Formatos 37 e 38 no prompt da IA. 29 testes novos em `tests/resultados-todos.test.js` e no catálogo da IA.
+
+- O recebimento aberto pelo TAB / Coliformes (Admin) já grava **C.T, B.L 72h e B.L 120h = `<10`** nos lotes novos; resultado existente não é sobrescrito. Sufixo `resultados <10` no comando de recebimento (só Admin).
+
+### Adicionado
 - **Admin abre a composta pelo TAB / Coliformes** (comando e foto): quando a composta não existe, o bot pergunta e, com "sim", registra o recebimento dos lotes que faltam, cria as compostas e registra o teste. Outros cargos seguem barrados. `fabrica` aceita no comando; testes em `tests/tab-abrir-composta.test.js`.
 
 ### Corrigido

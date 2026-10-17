@@ -22,12 +22,12 @@ A base já está escrita nas specs do LIMS ([00](00-visao-geral.md) a [10](10-de
 
 ## Fase atual
 
-**Fase A: especificação.** Nada de código até o Danyllo aprovar.
+**Fase B: API de leitura e login.** A especificação (fase A) foi aprovada em 16/10/2026; o código começa pelas tarefas `APP-001`..., uma por PR, cada uma citando a seção da spec de origem ([guia prático](guia-pratico.md)).
 
 | Fase | O que entrega | Situação |
 |---|---|---|
-| A | Spec do app revisada (07, 06, 08 e esta nota) | ⏳ em andamento (decisões de 15/10 tomadas; falta o 07) |
-| B | API só de leitura + login | ⬜ |
+| A | Spec do app revisada (07, 06, 08 e esta nota) | ✅ concluída: 06, 07 e 08 aprovados como v1.0 em 16/10/2026 |
+| B | API só de leitura + login | ⏳ próxima (tarefas `APP-001`...) |
 | C | PWA só leitura: painel do dia, relatório do turno, gráficos | ⬜ |
 | D | Chat embutido e registro pelo app | ⬜ |
 | E | Decidir o futuro do WhatsApp | ⬜ |
@@ -65,6 +65,26 @@ As quatro decisões que estavam em aberto foram respondidas pelo Danyllo em 15/1
   | Excluir registro (confirmação; coleta sem motivo, análise com motivo; fica no histórico) | ✅ | ✅ (mudado em 15/10, à noite) | ❌ | Só a própria coleta (como no bot, 029) |
   | Adicionar pessoa, convite, senha, trocar cargo | ✅ | ❌ | ❌ | ❌ |
   | Editar os horários padrão dos turnos | ✅ | ❌ | ❌ | ❌ |
+
+## Tarefas da Fase B (aprovadas em 17/10/2026)
+
+Código do app no **mesmo repositório, na pasta `app/`** (`app/api/` e, na Fase C, `app/web/`), com CI próprio que só roda quando `app/` muda (decidido em 17/10). Geradas só a partir dos documentos `v1.0` ([06](06-api-e-auth.md), [07](07-app-pwa.md), [08](08-fluxos.md)), no modelo do [guia prático](guia-pratico.md). **Uma tarefa = uma branch = um PR**, com testes. Nenhuma mexe em tabela, workflow ou migration do bot. Dados sempre fictícios (`db/seeds/demo.sql`).
+
+| # | Tarefa | Origem | O quê | Pronto quando | Depende de |
+|---|---|---|---|---|---|
+| APP-001 | Esqueleto da API | 06 §Arquitetura | Projeto FastAPI em `app/api/`, rota `GET /saude`, testes com `pytest`, workflow próprio no GitHub Actions (só roda quando `app/` muda) | `pytest` verde no CI; `GET /saude` responde `ok` | — |
+| APP-002 | Banco de teste no CI | 06 §Arquitetura (testes desde o primeiro endpoint) | No CI, um PostgreSQL de teste recebe as migrations `001`–`029` e o `demo.sql`; a API conecta por variável de ambiente (nunca senha no repositório) | Um teste lê `usuarios` do banco de teste e passa | APP-001 |
+| APP-003 | Migration `050_app_login` | 06 §Tabelas do login; rumo §Regras | Schema `app` com `credenciais`, `senhas_provisorias`, `sessoes`; usuário de banco `labflow_app_web` (lê as views e tabelas do bot, escreve só no schema `app`); arquivo `050_desfazer.sql` | Aplica, desfaz e reaplica no banco de teste; teste prova que `labflow_app_web` **não** consegue gravar em tabela do bot | APP-002 |
+| APP-004 | Login e sessão | 06 §Primeiro acesso; 08 A1 | `POST /login` (usuário curto + senha, argon2), cookie seguro, `POST /sair`, `GET /me` (nome e cargo); sessão até "Sair" ou 30 dias sem uso; bloqueio de 15 min após 5 erros | Testes: login certo, errado, bloqueio, sessão vencida, sair | APP-003 |
+| APP-005 | Permissão por cargo | 06 §Arquitetura; 07 §Permissões | Uma checagem única que lê o cargo em `usuarios` **a cada chamada** (Admin, Operador, Consultor, Coletor) | Teste com os 4 cargos; trocar o cargo no banco vale na chamada seguinte | APP-004 |
+| APP-006 | Senha provisória | 06 §Primeiro acesso; 08 A1 | Admin gera senha provisória (24 h, uso único) para uma pessoa já cadastrada; no primeiro login a troca é obrigatória; senha igual ao usuário é recusada | Testes do fluxo A1 inteiro, inclusive provisória vencida e já usada | APP-005 |
+| APP-007 | Pessoas (leitura) | 07 §10 Admin | `GET /admin/pessoas`: nome, usuário curto, cargo, situação (ativo, senha provisória pendente, bloqueado); Admin define o usuário curto de quem já existe | Só Admin acessa (teste com os outros cargos) | APP-006 |
+| APP-008 | Páginas Coletas e Recebimento (leitura) | 07 §5; 08 A11 | Rotas de leitura **por views**, com filtros (período, tanque, navio, load, lote, fábrica, quem fez, situação) e paginação; Coletas mostra quem coletou e quem digitou | Os números batem com as views `bi.*` no banco de teste | APP-005 |
+| APP-009 | Exportar para Excel | 07 §5; 08 A11 | `.xlsx` do que está filtrado nas duas páginas, para todos os cargos que veem a página | Teste abre o arquivo gerado e confere as linhas | APP-008 |
+| APP-010 | Pendências de hoje | 07 §3; 06 §Primeiros endpoints | `GET /pendencias-hoje` (vence hoje e atrasados), lendo as views de previstas | Bate com o que o `relatório do dia` do bot mostraria no banco de teste | APP-005 |
+| APP-011 | Container e acesso por Tailscale | 06 §Arquitetura | Container `labflow-api` na stack do servidor de demonstração, sem porta pública; passo a passo para o Danyllo acessar `/docs` pelo Tailscale | O Danyllo abre `/docs` no navegador e faz login com um usuário fictício | APP-004 |
+
+**Fica para depois da Fase B:** cadastrar pessoa e trocar cargo pelo app (dependem do PB5 publicado, PR #84 do bot); as outras páginas; turno, estufas, esterilização e relatório do turno (Fase C); editar e excluir (dependem do PB4); assistente (Fase D, PB6).
 
 ## Decisões em aberto (perguntar, não decidir sozinho)
 
