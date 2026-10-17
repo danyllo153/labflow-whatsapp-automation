@@ -84,6 +84,8 @@ Código do app no **mesmo repositório, na pasta `app/`** (`app/api/` e, na Fase
 | APP-010 | Pendências de hoje | 07 §3; 06 §Primeiros endpoints | `GET /pendencias-hoje` (vence hoje e atrasados), lendo as views de previstas | Bate com o que o `relatório do dia` do bot mostraria no banco de teste | APP-005 |
 | APP-011 | Container e acesso por Tailscale | 06 §Arquitetura | Container `labflow-api` na stack do servidor de demonstração, sem porta pública; passo a passo para o Danyllo acessar `/docs` pelo Tailscale | O Danyllo abre `/docs` no navegador e faz login com um usuário fictício | APP-004 |
 
+**Andamento (17/10/2026):** APP-001 a APP-008 mescladas (#95, #97, #98, #100, #104, #106, #109, #113); APP-009 no PR #115; **próxima: APP-010**, depois APP-011.
+
 **Fica para depois da Fase B:** cadastrar pessoa e trocar cargo pelo app (dependem do PB5 publicado, PR #84 do bot); as outras páginas; turno, estufas, esterilização e relatório do turno (Fase C); editar e excluir (dependem do PB4); assistente (Fase D, PB6).
 
 ## Decisões em aberto (perguntar, não decidir sozinho)
