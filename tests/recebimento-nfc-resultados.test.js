@@ -196,42 +196,78 @@ test('foto: lê C.T, B.L 72h e B.L 120h por lote e tipo, sem multiplicar (a mult
   assert.equal(d.buscasNfc.filter((x) => x.analise === null).length, 2);
 });
 
-test('foto: com os lotes já registrados, um sim grava tudo, multiplicado pela diluição do banco', () => {
+// A foto do recebimento NFC pergunta só o que é NOVO (16/10/2026): lote não registrado registra e grava os resultados
+// da linha no mesmo sim; lote registrado só entra com resultado que falta ou mudou; o que já está igual não aparece.
+const cmdDaFoto = (r) => JSON.parse(r.payload).comandos;
+
+test('foto: lote já registrado com resultados novos: um comando só repete a diluição do sistema e grava os resultados', () => {
   const d = lerFoto(LAUDO([{ lote: 10, tipo: 'past', diluicao: 1, ct: '14', bl72: '22', bl120: '74' }]));
-  const r = respFoto(d, noBanco(d));
+  const r = respFoto(d, noBanco(d, () => 1, () => ({ data_coleta: '13/10/2026' })));
   assert.equal(r.salvar, '1');
-  assert.equal(r.tipoPendencia, 'TAB');
-  assert.match(r.textoResposta, /Li os resultados do laudo de recebimento NFC/);
-  assert.match(r.textoResposta, /load 44300:\n   lote 10 · past: CT 14 · BL72 22 · BL120 74\n/);
-  assert.match(r.textoResposta, /3 resultados de C\.T\/B\.L\.\n/);
-  assert.doesNotMatch(r.textoResposta, /→|10\^1|multiplicado/, 'a conta da diluição fica só no banco');
-  assert.match(r.textoResposta, /Valor riscado no papel não foi lido\. Responda \*sim\*/);
-  assert.doesNotMatch(r.textoResposta, /🚨|Acima do limite/);
-  const payload = JSON.parse(r.payload);
-  assert.equal(payload.acao, 'contagem_nfc');
-  assert.deepEqual(payload.itens.map((i) => [i.analise, i.valor, i.lido, i.id]), [['CT', 140, 14, 510], ['BL72', 220, 22, 510], ['BL120', 740, 74, 510]]);
+  assert.equal(r.tipoPendencia, undefined, 'vai pela lista de comandos (um sim)');
+  assert.match(r.textoResposta, /Li o laudo de recebimento NFC\. O que é novo:/);
+  assert.match(r.textoResposta, /➕ Resultados novos:\n• load 44300 lote 10 · past: CT 14 · BL72 22 · BL120 74/);
+  assert.doesNotMatch(r.textoResposta, /→|10\^1|multiplicado|🆕/, 'sem a conta da diluição e sem registro novo');
+  assert.deepEqual(cmdDaFoto(r), ['Recebimento NFC load 44300 fab AQA item 129 lote 10 past 10 elevado a 1 data 13/10/2026 resultados ct 14 bl72 22 bl120 74']);
+  const c = interpretar(cmdDaFoto(r)[0]);
+  assert.equal(c.tipo, 'recebimento_nfc');
+  assert.deepEqual(c.blocos[0].itens[0].resultados, [{ analise: 'CT', sinal: '=', valor: 14 }, { analise: 'BL72', sinal: '=', valor: 22 }, { analise: 'BL120', sinal: '=', valor: 74 }]);
+  assert.equal(c.blocos[0].itens[0].data, '13/10/2026', 'a data do sistema fica');
+});
+
+test('foto: o que já está igual no banco não aparece; só o que mudou, com o valor antigo', () => {
+  const d = lerFoto(LAUDO([{ lote: 10, tipo: 'past', diluicao: 1, ct: '14', bl72: '22', bl120: '<10' }]));
+  const atual = { CT: '14', BL72: '20', BL120: '<10' };
+  const r = respFoto(d, noBanco(d, () => 1, (x) => (x.analise ? { atual: atual[x.analise] } : {})));
+  assert.match(r.textoResposta, /➕ Resultados novos ou corrigidos:\n• load 44300 lote 10 · past: BL72 22 \(era 20\)\n/);
+  assert.doesNotMatch(r.textoResposta, /CT 14|BL120/, 'CT e BL120 já estão iguais');
+  assert.match(cmdDaFoto(r)[0], / resultados bl72 22$/);
+  const igual = respFoto(d, noBanco(d, () => 1, (x) => (x.analise ? { atual: { CT: '14', BL72: '22', BL120: '<10' }[x.analise] } : {})));
+  assert.equal(igual.salvar, '0');
+  assert.match(igual.textoResposta, /tudo o que está na foto já está no sistema\. Nada a gravar\./);
+  const riscado = lerFoto(LAUDO([{ lote: 10, tipo: 'past', diluicao: 1, ct: null, bl72: null, bl120: null }]));
+  assert.equal(respFoto(riscado, noBanco(riscado)).salvar, '0', 'lote registrado sem resultado novo: nada a gravar');
+});
+
+test('foto: lote novo registra e grava os resultados no mesmo sim (sem mandar a foto de novo), junto com o resto', () => {
+  const d = lerFoto({ formulario: 'recebimento_nfc', data: '14/10/2026', duvidas: [], blocos: [
+    { load: '44300', fabrica: 'AQA', item: '129', lotes: [{ lote: 10, tipo: 'past', diluicao: 1, ct: '14' }] },
+    { load: '44301', fabrica: 'COL', item: '129', data: '15/10/2026', lotes: [{ lote: 3, tipo: 'fresh', diluicao: 2, ct: '5', bl72: '<10' }] }] });
+  const linhas = d.buscasNfc.map((x) => (x.load === '44300'
+    ? { kind: 'nfc', idx: x.idx, alvo_id: 510, load_num: '44300', atual: null, diluicao: 1, data_coleta: '14/10/2026' }
+    : { kind: 'nfc', idx: x.idx, alvo_id: null, load_num: null, atual: null, diluicao: null }));
+  const r = respFoto(d, linhas);
+  assert.match(r.textoResposta, /🆕 Registrar \(recebimento e resultados\):\n• load 44301 \(COL\) lote 3 · fresh · 10\^2 · 15\/10\/2026: CT 5 · BL72 <10/);
+  assert.match(r.textoResposta, /➕ Resultados novos:\n• load 44300 lote 10 · past: CT 14/);
+  assert.doesNotMatch(r.textoResposta, /mande a foto de novo/);
+  const cmds = cmdDaFoto(r);
+  assert.equal(cmds.length, 1, 'um comando só (uma resposta)');
+  assert.deepEqual(cmds[0].split(' ; '), [
+    'Recebimento NFC load 44300 fab AQA item 129 lote 10 past 10 elevado a 1 data 14/10/2026 resultados ct 14',
+    'Recebimento NFC load 44301 fab COL item 129 lote 3 fresh 10 elevado a 2 data 15/10/2026 resultados ct 5 bl72 <10']);
+  const c = interpretar(cmds[0]);
+  assert.equal(c.tipo, 'recebimento_nfc');
+  assert.deepEqual(c.blocos.map((b) => b.itens[0].resultados.map((x) => x.analise + x.sinal + x.valor)), [['CT=14'], ['CT=5', 'BL72<10']]);
 });
 
 test('foto: a diluição do sistema manda; se o papel disser outra, o bot avisa', () => {
-  const d = lerFoto(LAUDO([{ lote: 10, tipo: 'past', diluicao: 1, ct: '14' }]));
+  const d = lerFoto(LAUDO([{ lote: 10, tipo: 'fresh', diluicao: 2, ct: '14' }]));
   const r = respFoto(d, noBanco(d, () => 3));
-  assert.deepEqual(JSON.parse(r.payload).itens.map((i) => i.valor), [14000]);
-  assert.match(r.textoResposta, /o papel diz 10\^1 e o sistema tem 10\^3; usei a do sistema/);
+  assert.match(cmdDaFoto(r)[0], /lote 10 fresh 10 elevado a 3 resultados ct 14$/);
+  assert.match(r.textoResposta, /o papel diz 10\^2 e o sistema tem 10\^3; usei a do sistema/);
 });
 
-test('foto: tudo riscado grava nada; lote não registrado vira registro primeiro; correção é avisada', () => {
-  const vazio = lerFoto(LAUDO([{ lote: 10, tipo: 'past', diluicao: 1, ct: null, bl72: null, bl120: null }]));
-  const r1 = respFoto(vazio, noBanco(vazio));
-  assert.equal(r1.salvar, '0');
-  assert.match(r1.textoResposta, /os lotes já estão registrados e não achei resultado válido de C\.T\/B\.L \(tudo riscado ou em branco\)\. Nada foi gravado/);
-  const d = lerFoto(LAUDO([{ lote: 10, tipo: 'past', diluicao: 1, ct: '14' }]));
-  const novo = respFoto(d, d.buscasNfc.map((x) => ({ kind: 'nfc', idx: x.idx, alvo_id: null, load_num: null, atual: null, diluicao: null })));
-  assert.equal(novo.salvar, '1');
-  assert.equal(novo.tipoPendencia, undefined, 'segue a lista de comandos de recebimento');
-  assert.match(novo.textoResposta, /Recebimento NFC load 44300 fab AQA item 129 lote 10 past 10 elevado a 1/);
-  assert.match(novo.textoResposta, /li 1 resultado\(s\) de C\.T\/B\.L, mas os lotes ainda não estão registrados: registre agora \(sim\) e mande a foto de novo/);
-  const corr = respFoto(d, noBanco(d, () => 1, () => ({ atual: '90' })));
-  assert.match(corr.textoResposta, /Corrige resultado anterior: lote 10 past CT \(era 90\)/);
+test('comando: recebimento NFC com "resultados" no fim grava junto (o SQL insere em contagens_nfc com o lido e o final)', () => {
+  const c = interpretar('recebimento nfc load 44302 fab col item 129 lote 13 fresh 10 elevado a 2 resultados ct 14, bl72 <10 e bl 5');
+  assert.deepEqual(c.blocos[0].itens[0].resultados.map((x) => [x.analise, x.sinal, x.valor]), [['CT', '=', 14], ['BL72', '<', 10], ['BL120', '=', 5]]);
+  assert.equal(interpretar('recebimento nfc load 44302 fab col item 129 lote 13 fresh 10 elevado a 2 resultados ct 14 ct 15').tipo, 'erro_coleta');
+  assert.equal(interpretar('recebimento nfc load 44302 fab col item 129 lote 13 fresh 10 elevado a 2').blocos[0].itens[0].resultados, undefined);
+  const q = workflow.nodes.find((n) => n.name === 'BD · Gravar recebimento NFC').parameters.query;
+  assert.match(q, /INSERT INTO contagens_nfc \(analise, recebimento_nfc_id, sinal, valor, valor_lido, diluicao, lido_por\)/);
+  assert.match(q, /p\.lido \* power\(10, p\.diluicao\), p\.lido/);
+  const resp = rodar('Montar resposta recebimento NFC', [{ gravados: [{ load: '44302', lote: 13, amostra: 'fresh', diluicao: 2, novo: true, era: null }], recalculados: 0, resultados_gravados: 3, conflitos: null }],
+    { item: { ...c, nomeContato: 'Ana' } })[0].json.textoResposta;
+  assert.match(resp, /lote 13 · fresh · 10\^2 — CT 14 · BL72 <10 · BL120 5/);
 });
 
 test('foto: texto que não é número fica de fora com aviso; "<" não alarma; o prompt ensina a não multiplicar', () => {
