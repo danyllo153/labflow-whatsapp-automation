@@ -58,6 +58,8 @@ Depois abra `http://127.0.0.1:8000/docs` no navegador: é a documentação autom
 | `POST /login` | Entra com usuário curto e senha; abre a sessão num cookie seguro (30 dias sem uso); 5 senhas erradas seguidas bloqueiam por 15 min | APP-004 |
 | `GET /me` | Quem sou eu: usuário, nome, cargo (lido de `usuarios` a cada chamada) e a lista `pode` com as ações que o cargo permite | APP-004, APP-005 |
 | `POST /sair` | Encerra a sessão | APP-004 |
+| `GET /admin/pessoas` | Só Admin: lista as pessoas cadastradas no bot com nome, cargo, usuário curto e situação (sem usuário no app, senha provisória pendente, ativo, bloqueado). Não mostra telefone | APP-007 |
+| `PUT /admin/pessoas/{id}/usuario` | Só Admin: define ou troca o usuário curto (ex.: `ana.souza`) de quem já está cadastrado; depois, gerar a senha provisória | APP-007 |
 | `POST /admin/pessoas/{id}/senha-provisoria` | Só Admin: gera uma senha provisória (ex.: `K7m4-Tq2p`, 24 h, uso único), derruba a senha antiga e as sessões abertas da pessoa | APP-006 |
 | `POST /trocar-senha` | Troca a senha. Depois de entrar com a provisória a troca é obrigatória (as outras rotas respondem "Troque sua senha antes de continuar"); na troca voluntária pede a senha atual. Mínimo de 8 caracteres; senha igual ao usuário é recusada | APP-006 |
 
