@@ -111,8 +111,8 @@ test('ajuda e IA conhecem o recebimento NFC', () => {
   const topico = interpretar('comandos recebimento nfc').textoResposta;
   assert.match(topico, /Recebimento de NFC \(item 129\)/);
   const exemplos = topico.split('\n').filter((l) => l.startsWith('• ')).map((l) => l.slice(2).trim());
-  assert.equal(exemplos.length, 6);
-  assert.deepEqual(exemplos.map((e) => interpretar(e).tipo), ['recebimento_nfc', 'recebimento_nfc', 'recebimento_nfc', 'contagem_nfc_registrar', 'contagem_nfc_registrar', 'contagem_nfc_registrar']);
+  assert.equal(exemplos.length, 7);
+  assert.deepEqual(exemplos.map((e) => interpretar(e).tipo), ['recebimento_nfc', 'recebimento_nfc', 'recebimento_nfc', 'contagem_nfc_registrar', 'contagem_nfc_registrar', 'contagem_nfc_registrar', 'contagem_nfc_registrar']);
   const prompt = workflow.nodes.find((n) => n.name === 'IA · Montar pedido').parameters.assignments.assignments[0].value;
   assert.match(prompt, /33\. recebimento nfc load <load> fab <sigla> item 129 lote <n> <past\|fresh> 10 elevado a <n>/);
   const validar = codigoDoNode('Validar resposta da IA');
