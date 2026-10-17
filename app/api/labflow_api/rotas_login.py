@@ -17,6 +17,7 @@ from labflow_api.dependencias import (
     obter_conexao,
     pessoa_logada,
 )
+from labflow_api.permissoes import acoes_do_cargo
 from labflow_api.seguranca import hash_token, novo_token, senha_confere
 
 roteador = APIRouter(tags=["login"])
@@ -35,10 +36,13 @@ class QuemSou(BaseModel):
     nome: str | None
     cargo: str
     trocar_senha: bool
+    pode: list[str]  # ações que o cargo permite (o app usa para mostrar ou esconder botões)
 
 
 def _quem_sou(p: PessoaLogada) -> QuemSou:
-    return QuemSou(usuario=p.usuario, nome=p.nome, cargo=p.cargo, trocar_senha=p.trocar_senha)
+    return QuemSou(
+        usuario=p.usuario, nome=p.nome, cargo=p.cargo, trocar_senha=p.trocar_senha, pode=acoes_do_cargo(p.cargo)
+    )
 
 
 @roteador.post("/login", response_model=QuemSou)
@@ -102,7 +106,9 @@ def entrar(
         secure=cookie_seguro(),
         samesite="lax",
     )
-    return QuemSou(usuario=usuario, nome=nome, cargo=cargo, trocar_senha=trocar_senha)
+    return QuemSou(
+        usuario=usuario, nome=nome, cargo=cargo, trocar_senha=trocar_senha, pode=acoes_do_cargo(cargo)
+    )
 
 
 @roteador.get("/me", response_model=QuemSou)
