@@ -56,6 +56,7 @@ Desde 15/10 uma sessão cuida do **app** (web e celular) e outra do **bot**. Par
 - Nunca commitar IDs reais do n8n, chaves, telefones reais, IP do servidor ou `.env`.
 - O arquivo com IDs reais é `LabFlow_importar_n8n*.json` (bloqueado no `.gitignore`). O público é o `LabFlow.json`, gerado por `scripts/sanitize-workflow.ps1` e auditado por `scripts/audit-workflow.py --public`.
 - Nunca esvaziar a tabela `usuarios` (sem usuários o bot bloqueia todo mundo). Backup antes de qualquer migration ou limpeza.
+- **Testar migration "numa transação desfeita":** os arquivos de `db/migrations/` têm o **próprio `BEGIN`/`COMMIT`**. Incluir o arquivo (`\i`) dentro do seu `BEGIN` faz o `COMMIT` dele fechar a sua transação e **grava tudo**. Monte o teste tirando o `BEGIN`/`COMMIT` do arquivo (ou colando o corpo), termine com `ROLLBACK;` e **confira depois com um `SELECT`** que nada ficou. Nunca teste `INSERT` "que deveria falhar" fora de uma transação confirmada. Backup antes, sempre (em 16/10 um teste da 031 sem isso deixou 3 pessoas de teste e as funções no banco do piloto; foram removidas, com backup).
 - Nunca apagar dados sem o pedido do Danyllo e sem listar o alvo antes (transação com trava de contagem).
 
 ## Termos do domínio
