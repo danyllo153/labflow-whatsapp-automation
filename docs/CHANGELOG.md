@@ -32,6 +32,15 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 - **NFC recebido: o chat mostra o número do laudo** (decisão de 16/10): a foto, a confirmação do comando, o "era ..." da correção e as consultas mostram o valor lido (`CT 4368`), sem a conta da diluição. O banco continua gravando também o valor multiplicado (`contagens_nfc.valor`), que é o que o Power BI mostra.
 - IA: "bl" sozinho vale bl120 também nas placas de tanque (a regressão de 16/10 achou bl72; 59 de 60 antes da correção).
 
+### App (Fase B: API de leitura e login, em `app/api/`)
+- API em **FastAPI** com testes automáticos no GitHub Actions sobre um PostgreSQL de teste (todas as migrations e os dados fictícios de `db/seeds`); `/saude` e documentação em `/docs` (APP-001, APP-002).
+- Migration **050** do app: schema `app` (credenciais, senhas provisórias, sessões) e papel `labflow_app_web`, que lê as tabelas do bot e grava só no schema `app` (APP-003). Não aplicada no servidor.
+- Login com usuário curto e senha (argon2), sessão em cookie seguro por até 30 dias sem uso, bloqueio de 15 min após 5 senhas erradas, sair e "quem sou eu" com o cargo lido a cada chamada (APP-004).
+- Permissões por cargo (Admin, Operador, Consultor, Coletor) num lugar só (APP-005).
+- Senha provisória gerada pelo Admin (24 h, uso único), troca obrigatória no primeiro login, mínimo de 8 caracteres, senha igual ao usuário recusada (APP-006).
+- Admin → Pessoas: lista com situação (sem telefone) e usuário curto (APP-007).
+- Páginas **Coletas** e **Recebimento** só leitura, pelas views do Power BI, com filtros e paginação (APP-008).
+
 ## [1.3.0] - 2026-10-15
 
 Primeira versão em **piloto de 1 mês no laboratório** (desde 13/10/2026: 5 operadores e 1 admin, dados reais autorizados pelo gestor). Em destaque: **comando por áudio**, **IA resiliente** (Gemini → Groq, com limite diário), **leitura de laudo por foto** (recebimento, TAB, Coliformes, NFC, embarque e Recebimento NFC), **Recebimento de NFC** com diluição e página própria no Power BI, **`coletado por`** e o cargo **Coletor**, fábricas travadas e consultas de resultado. Banco até a migration `029`; workflow de 244 nós; 474 testes.
