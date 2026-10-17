@@ -41,6 +41,8 @@ def exigir(acao: str):
         raise ValueError(f"Ação desconhecida: {acao}")
 
     def _checar(pessoa: PessoaLogada = Depends(pessoa_logada)) -> PessoaLogada:
+        if pessoa.trocar_senha:  # 06: troca obrigatória antes de continuar (APP-006)
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "Troque sua senha antes de continuar.")
         if not pode(pessoa.cargo, acao):
             raise HTTPException(status.HTTP_403_FORBIDDEN, "Seu cargo não permite esta ação.")
         return pessoa
