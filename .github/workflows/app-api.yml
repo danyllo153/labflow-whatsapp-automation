@@ -48,5 +48,9 @@ jobs:
         run: pip install -r requirements-dev.txt
       - name: Montar o banco de teste (migrations do bot + dados fictícios)
         run: bash scripts/preparar_banco_teste.sh
+      - name: Desfazer e reaplicar a migration 050 do app (prova que as duas funcionam)
+        run: |
+          psql "$LABFLOW_DB_URL" -v ON_ERROR_STOP=1 -q -f ../../db/migrations/050_app_login_desfazer.sql
+          psql "$LABFLOW_DB_URL" -v ON_ERROR_STOP=1 -q -f ../../db/migrations/050_app_login.sql
       - name: Rodar os testes (pytest)
         run: python -m pytest -q
