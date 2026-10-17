@@ -18,3 +18,4 @@ def conexao():
         pytest.skip("Sem banco de teste (defina LABFLOW_DB_URL).")
     with banco.conectar() as con:
         yield con
+        con.rollback()  # cada teste desfaz o que gravou: o banco de teste fica igual para o próximo

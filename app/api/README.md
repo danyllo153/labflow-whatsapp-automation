@@ -57,3 +57,7 @@ Depois abra `http://127.0.0.1:8000/docs` no navegador: é a documentação autom
 | `GET /saude` | Diz se a API está no ar (não toca no banco) | APP-001 |
 
 O endereço do banco vem da variável de ambiente `LABFLOW_DB_URL` (APP-002). Nunca escreva senha no código nem no repositório.
+
+## Banco do app (APP-003)
+
+A migration `db/migrations/050_app_login.sql` cria o schema `app` (credenciais, senhas provisórias e sessões) e o usuário de banco **`labflow_app_web`**, que **lê** as tabelas e views do bot e **grava só no schema `app`** (um teste prova que ele não consegue gravar nas tabelas do bot). Para desfazer: `050_app_login_desfazer.sql`. No servidor, ela só será aplicada quando a API for publicada (APP-011), com backup antes.
