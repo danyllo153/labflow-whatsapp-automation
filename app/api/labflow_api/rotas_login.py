@@ -1,7 +1,7 @@
 """Entrar, sair e "quem sou eu".
 
 Spec: 06-api-e-auth.md (v1.0), "Primeiro acesso..." e "Arquitetura"; 08-fluxos.md A1.
-Tarefa: APP-004. A senha provisória e a troca obrigatória chegam na APP-006.
+Tarefas: APP-004 (entrar, sair, quem sou eu) e APP-006 (entrar com a senha provisória e trocar a senha).
 """
 
 import psycopg
@@ -18,12 +18,13 @@ from labflow_api.dependencias import (
     pessoa_logada,
 )
 from labflow_api.permissoes import acoes_do_cargo
-from labflow_api.seguranca import hash_token, novo_token, senha_confere
+from labflow_api.seguranca import gerar_hash_senha, hash_token, novo_token, senha_confere
 
 roteador = APIRouter(tags=["login"])
 
 ERROS_PARA_BLOQUEAR = 5  # 06: 5 senhas erradas seguidas
 MINUTOS_BLOQUEADO = 15
+TAMANHO_MINIMO_SENHA = 8  # decidido pelo Danyllo em 17/10 (sem exigir número ou símbolo)
 
 
 class PedidoLogin(BaseModel):
@@ -72,7 +73,19 @@ def entrar(
         raise HTTPException(
             status.HTTP_423_LOCKED, f"Muitas senhas erradas. Tente de novo depois das {ate}."
         )
+    entrou_com_provisoria = False
     if not senha_confere(senha_hash, pedido.senha):
+        provisoria = con.execute(
+            """
+            SELECT id, senha_hash FROM app.senhas_provisorias
+            WHERE usuario_id = %s AND usada_em IS NULL AND cancelada_em IS NULL AND valida_ate > now()
+            """,
+            (usuario_id,),
+        ).fetchone()
+        if provisoria and senha_confere(provisoria[1], pedido.senha):
+            con.execute("UPDATE app.senhas_provisorias SET usada_em = now() WHERE id = %s", (provisoria[0],))
+            entrou_com_provisoria = True
+    if not entrou_com_provisoria and not senha_confere(senha_hash, pedido.senha):
         con.execute(
             """
             UPDATE app.credenciais
@@ -106,6 +119,7 @@ def entrar(
         secure=cookie_seguro(),
         samesite="lax",
     )
+    trocar_senha = trocar_senha or entrou_com_provisoria  # 06: no primeiro login com a provisória, troca obrigatória
     return QuemSou(
         usuario=usuario, nome=nome, cargo=cargo, trocar_senha=trocar_senha, pode=acoes_do_cargo(cargo)
     )
@@ -124,3 +138,34 @@ def sair(
 ) -> None:
     con.execute("UPDATE app.sessoes SET encerrada_em = now() WHERE id = %s", (pessoa.sessao_id,))
     response.delete_cookie(NOME_COOKIE, httponly=True, secure=cookie_seguro(), samesite="lax")
+
+
+class PedidoTrocaSenha(BaseModel):
+    nova_senha: str
+    senha_atual: str | None = None  # obrigatória só na troca voluntária (sem senha provisória pendente)
+
+
+@roteador.post("/trocar-senha", status_code=status.HTTP_204_NO_CONTENT)
+def trocar_senha(
+    pedido: PedidoTrocaSenha,
+    pessoa: PessoaLogada = Depends(pessoa_logada),
+    con: psycopg.Connection = Depends(obter_conexao),
+) -> None:
+    nova = pedido.nova_senha
+    if len(nova) < TAMANHO_MINIMO_SENHA:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_ENTITY, f"A senha precisa ter pelo menos {TAMANHO_MINIMO_SENHA} caracteres."
+        )
+    if nova.strip().lower() == pessoa.usuario.lower():
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "A senha não pode ser igual ao seu usuário.")
+    if not pessoa.trocar_senha:
+        senha_hash = con.execute(
+            "SELECT senha_hash FROM app.credenciais WHERE usuario_id = %s", (pessoa.usuario_id,)
+        ).fetchone()[0]
+        if not senha_confere(senha_hash, pedido.senha_atual or ""):
+            raise HTTPException(status.HTTP_403_FORBIDDEN, "A senha atual não confere.")
+    con.execute(
+        "UPDATE app.credenciais SET senha_hash = %s, trocar_senha = false, atualizado_em = now() "
+        "WHERE usuario_id = %s",
+        (gerar_hash_senha(nova), pessoa.usuario_id),
+    )
