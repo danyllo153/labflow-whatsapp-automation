@@ -89,5 +89,7 @@ Desde 15/10 uma sessão cuida do **app** (web e celular) e outra do **bot**. Par
 - Vault do Obsidian (`OneDrive\Valts\PROJETO- LABFLOW`): a sintaxe dos comandos mora só em `Comandos-Disponiveis`; o "próximo" só no `backlog`; o histórico no `decisoes-log`; comandos de servidor e banco em `00-Servidores` e `Postgres-Migracao`. Notas de domínio só explicam regras.
 - Comando novo: atualizar `docs/comandos.md`, a cheatsheet do vault, o CHANGELOG e o backlog.
 
-## Ao encerrar o dia
-Usar a skill `/fechar-dia` (`.claude/skills/fechar-dia`): atualiza `docs/handoff.md`, o `decisoes-log` e o `backlog`, commita e passa ao Danyllo o roteiro de push, PR e merge, para ele continuar em outro computador só com `git pull`.
+## Ao começar e ao encerrar o dia
+Quando ele cumprimentar ("bom dia", "boa tarde", "boa noite") ou perguntar onde paramos: skill `/bom-dia` (`.claude/skills/bom-dia`), só leitura, com o que foi feito por último em qualquer aparelho e os próximos passos.
+
+Ao encerrar: usar a skill `/fechar-dia` (`.claude/skills/fechar-dia`): atualiza `docs/handoff.md`, o `decisoes-log` e o `backlog`, commita e passa ao Danyllo o roteiro de push, PR e merge, para ele continuar em outro computador só com `git pull`.
