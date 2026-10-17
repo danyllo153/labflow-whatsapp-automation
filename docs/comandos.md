@@ -779,7 +779,15 @@ Regras: ponto, barra ou traço depois do número do lote fecha a composta, e o �
 
 **Resultados do embarque (C.T, B.L 72h e B.L 120h por amostra).** Com o embarque **já registrado**, a mesma foto também lê os resultados de cada amostra (A1, A2...) e mostra uma linha por amostra (`A1: CT <10 · BL72 60 🚨 · BL120 <10`), com 🚨 nos acima do limite (C.T ≥ 200, B.L ≥ 50), o aviso de quando o resultado **corrige um anterior**, e pede **um só sim** que grava tudo. **Valor riscado não vale**: se há outro valor escrito ao lado para a mesma amostra e coluna, vale esse; se não, a célula fica sem leitura. Se o papel inteiro estiver riscado ou em branco, o bot avisa e não grava nada. Se o embarque ainda **não** estiver registrado, o primeiro sim registra o embarque e o bot avisa para mandar a foto de novo para gravar os resultados. Se uma amostra estiver em outro load no sistema, o bot avisa.
 
-Ainda não lê: os resultados de C.T/B.L do recebimento, o "+" da confirmação e o TAB/Coliformes de embarque. Esses pedem o comando. Spec: `docs/specs/foto-laudo.md`.
+**Folha de Coliformes em suco (17/10/2026).** A folha é **cumulativa**: cada grupo de linhas tem a sua data (Data/Hora) e cada linha da coluna Amostra é **uma composta** (load + lotes no recebimento; navio + linha/fase ou load + amostras `A1-A3` no embarque; a Observação traz fábrica e item, ou o navio e a linha/fase). A foto mostra **só o que é novo**, numa mensagem e um sim:
+- **Só entram linhas com data a partir de 13/10/2026** (início do piloto); as mais antigas são contadas e ignoradas.
+- Composta sem Coliformes → **🧪 no caldo** com a data da linha. **"—"** → **✅ lido, negativo**. **"+"** → **🚨 positivo**: depois do sim o bot pergunta *"Abrir a composta lote a lote para a confirmação?"*; com sim, abre como no comando `coliformes #5 em confirmação` (cada lote no caldo hoje, estria amanhã; a composta volta para "em confirmação" e o resultado final sai dos lotes).
+- O que já está **igual** no sistema não aparece (composta já no caldo sem resultado no papel; resultado já gravado igual; composta já aberta lote a lote).
+- **E.coli "+"** só gera aviso (o sistema guarda Coliformes Totais).
+- Composta de recebimento que não existe: **só o Admin abre** pela foto, como no TAB (recebimento com C.T e B.L = `<10` e compostas, com a data da linha). Composta de **embarque** a foto não cria: avisa com o comando.
+- Por baixo, depois do sim roda o comando interno `Coliformes da foto: #12 data 16/10/2026 negativo ; ...` (só aceito pelo reenvio do próprio bot; digitado, o bot explica que é da foto).
+
+Ainda não lê: os resultados de C.T/B.L do recebimento, o "+" da confirmação do TAB e o TAB de embarque. Esses pedem o comando. Spec: `docs/specs/foto-laudo.md`.
 
 ## 17. Recebimento de NFC (item 129)
 
