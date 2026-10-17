@@ -40,6 +40,8 @@ pip install -r requirements-dev.txt
 python -m pytest -q
 ```
 
+No seu computador, os testes que precisam do banco aparecem como **pulados** (`skipped`), porque não há banco de teste nele. No GitHub Actions eles **sempre rodam**: o CI sobe um PostgreSQL de teste, aplica todas as migrations de `db/migrations` e os dados fictícios de `db/seeds` (script `scripts/preparar_banco_teste.sh`). A API nunca aponta para o banco do servidor nos testes.
+
 6. Ligar a API no seu computador:
 
 ```
@@ -53,3 +55,5 @@ Depois abra `http://127.0.0.1:8000/docs` no navegador: é a documentação autom
 | Rota | O que faz | Tarefa |
 |---|---|---|
 | `GET /saude` | Diz se a API está no ar (não toca no banco) | APP-001 |
+
+O endereço do banco vem da variável de ambiente `LABFLOW_DB_URL` (APP-002). Nunca escreva senha no código nem no repositório.
