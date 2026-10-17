@@ -111,8 +111,8 @@ test('ajuda e IA conhecem o recebimento NFC', () => {
   const topico = interpretar('comandos recebimento nfc').textoResposta;
   assert.match(topico, /Recebimento de NFC \(item 129\)/);
   const exemplos = topico.split('\n').filter((l) => l.startsWith('• ')).map((l) => l.slice(2).trim());
-  assert.equal(exemplos.length, 7);
-  assert.deepEqual(exemplos.map((e) => interpretar(e).tipo), ['recebimento_nfc', 'recebimento_nfc', 'recebimento_nfc', 'contagem_nfc_registrar', 'contagem_nfc_registrar', 'contagem_nfc_registrar', 'contagem_nfc_registrar']);
+  assert.equal(exemplos.length, 8);
+  assert.deepEqual(exemplos.map((e) => interpretar(e).tipo), ['recebimento_nfc', 'recebimento_nfc', 'recebimento_nfc', 'recebimento_nfc', 'contagem_nfc_registrar', 'contagem_nfc_registrar', 'contagem_nfc_registrar', 'contagem_nfc_registrar']);
   const prompt = workflow.nodes.find((n) => n.name === 'IA · Montar pedido').parameters.assignments.assignments[0].value;
   assert.match(prompt, /33\. recebimento nfc load <load> fab <sigla> item 129 lote <n> <past\|fresh> 10 elevado a <n>/);
   const validar = codigoDoNode('Validar resposta da IA');
@@ -169,13 +169,12 @@ test('foto: nada legível não grava; confirmação explica o que registra e ped
   const d = ler(LAUDO());
   const r = rodar('Foto · Montar resposta', [{}], { 'Foto · Interpretar': d })[0].json;
   assert.equal(r.salvar, '1');
-  assert.match(r.textoResposta, /Li o laudo de recebimento NFC \(data 14\/10\/2026\)/);
-  assert.match(r.textoResposta, /1️⃣ Recebimento NFC load 44300 fab AQA item 129/);
-  assert.match(r.textoResposta, /Recebimento NFC — o que isso registra:\n• load 44300 \(AQA, item 129\): lote 10 fresh 10\^3\n• load 44300 \(AQA, item 129\): lote 10 past 10\^1/);
-  assert.match(r.textoResposta, /Responda \*sim\*/);
+  assert.match(r.textoResposta, /Li o laudo de recebimento NFC\. O que é novo:/);
+  assert.match(r.textoResposta, /🆕 Registrar \(recebimento\):\n• load 44300 \(AQA\) lote 10 · fresh · 10\^3 · 14\/10\/2026\n• load 44300 \(AQA\) lote 10 · past · 10\^1 · 14\/10\/2026/);
   assert.equal(JSON.parse(r.payload).comandos.length, 1, 'a foto grava tudo num comando só (uma mensagem)');
   assert.equal(JSON.parse(r.payload).comandos[0].split(' ; ').length, 4);
-  assert.match(r.textoResposta, /Responda \*sim\* para registrar tudo ou/);
+  assert.match(JSON.parse(r.payload).comandos[0], /^Recebimento NFC load 44300 fab AQA item 129/);
+  assert.match(r.textoResposta, /Responda \*sim\* para gravar ou/);
 });
 
 test('foto: o prompt ensina o formulário, o tipo e só o expoente da diluição', () => {
