@@ -70,7 +70,7 @@ test('Admin: tanque sem coleta vira pergunta; o "sim" roda o comando completo co
   const hoje = item.dataFeito;
   assert.deepEqual(JSON.parse(m.payload).comandos, [`Tab feito dos tanques terra 44,45,46 coleta 16/10/2026 data ${hoje} completo`]);
   assert.match(m.textoResposta, /Não achei a coleta do\(s\) tanque\(s\) 44, 45 em 16\/10\/2026/);
-  assert.match(m.textoResposta, /marco <1,<1,<1 nas leituras que já venceram/);
+  assert.match(m.textoResposta, /marco <1,<1,<1 nas leituras e como feitos os drops que já venceram/);
   // o comando que o "sim" reenvia é aceito pelo bot e vale o completo
   const re = interpretar(JSON.parse(m.payload).comandos[0], { cargo: 'Admin' });
   assert.equal(re.tipo, 'tab_feito_nfc');
@@ -87,20 +87,24 @@ test('Operador: tanque sem coleta continua sendo recusado, com a dica de pedir a
 
 test('resposta do completo conta o que foi feito e o que ficou sem marcar', () => {
   const item = interpretar('Tab feito dos tanques terra 44 coleta 06/10/2026 data 16/10/2026 completo', { cargo: 'Admin' });
-  const ok = montar({ sem_coleta: null, ja_tinham: null, criados: ['44'], espalhar_em: '21/10/2026', coletas_criadas: '44', frascos_novos: 2, placas_gravadas: 42 }, item);
+  const ok = montar({ sem_coleta: null, ja_tinham: null, criados: ['44'], espalhar_em: '21/10/2026', coletas_criadas: '44', frascos_novos: 2, placas_gravadas: 42, drops_marcados: 2 }, item);
   assert.equal(ok.salvar, '0');
   assert.match(ok.textoResposta, /TAB de NFC no caldo \(1 tanque\)/);
   assert.match(ok.textoResposta, /Coleta registrada \(com os drops D5, D10, D15 e o arquivo\): tanque 44, 06\/10\/2026/);
   assert.match(ok.textoResposta, /Análises registradas \(C\.T, B\.L e WORT\) em 2 frasco\(s\)/);
   assert.match(ok.textoResposta, /Placas <1,<1,<1 marcadas em 14 leituras que já venceram até 16\/10\/2026/);
-  const nada = montar({ sem_coleta: null, ja_tinham: null, criados: ['44'], espalhar_em: '21/10/2026', coletas_criadas: null, frascos_novos: 0, placas_gravadas: 0 }, item);
+  assert.match(ok.textoResposta, /2 drops \(D5, D10, D15\) já vencidos até 16\/10\/2026 marcados como feitos; os que ainda não chegaram na data seguem pendentes/);
+  const nada = montar({ sem_coleta: null, ja_tinham: null, criados: ['44'], espalhar_em: '21/10/2026', coletas_criadas: null, frascos_novos: 0, placas_gravadas: 0, drops_marcados: 0 }, item);
   assert.match(nada.textoResposta, /Nenhuma leitura tinha vencido até 16\/10\/2026/);
+  assert.doesNotMatch(nada.textoResposta, /drop/);
 });
 
 test('o SQL do completo: coleta com drops e arquivo, análises, placas <1 só do que venceu e sem duplicar', () => {
   const q = workflow.nodes.find((n) => n.name === 'BD · TAB feito NFC').parameters.query;
   assert.match(q, /INSERT INTO coletas \(origem, tanque, data_coleta, registrado_por\)/);
   assert.match(q, /VALUES \(5\), \(10\), \(15\)/);                                  // drops
+  assert.match(q, /CASE WHEN n\.data_coleta \+ x\.dia <= \(SELECT feito FROM dia\) THEN 'Concluído' ELSE 'Pendente' END/); // drop vencido nasce feito
+  assert.match(q, /AND d\.data_prevista <= \(SELECT feito FROM dia\)/);               // coleta existente: só marca o vencido
   assert.match(q, /INSERT INTO arquivo_amostras/);
   assert.match(q, /WHERE \$5::text = '1' AND NOT EXISTS \(SELECT 1 FROM existentes/); // só com o "completo"
   assert.match(q, /\('CT',   'Profundidade', NULL::int, 2\)/);                       // prazos do comando de análise

@@ -12,7 +12,7 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 
 ## [Não lançado]
 
-- **TAB de tanque de terra "completo" (só Admin):** `Tab feito dos tanques terra 44 coleta 06/10/2026 completo` registra a coleta (com drops e arquivo) e as análises normal e stress que faltarem, marca `<1,<1,<1` nas leituras já vencidas até a data do TAB (o que não chegou na data fica sem marcar) e registra o TAB, num SQL só e sem duplicar. Se o Admin mandar o TAB de tanque sem coleta, o bot pergunta e o "sim" roda o completo.
+- **TAB de tanque de terra "completo" (só Admin):** `Tab feito dos tanques terra 44 coleta 06/10/2026 completo` registra a coleta (com drops e arquivo) e as análises normal e stress que faltarem, marca `<1,<1,<1` nas leituras e como feitos os drops já vencidos até a data do TAB (o que não chegou na data fica sem marcar ou pendente) e registra o TAB, num SQL só e sem duplicar. Se o Admin mandar o TAB de tanque sem coleta, o bot pergunta e o "sim" roda o completo.
 - Atalhos de texto `tq 44 16/10` e `tab tanque terra 47 06/10/26` (não passam mais pela IA, que os confundia com "em confirmação").
 - Foto de TAB com bloco só de tanques (`TQ 44 16/10`), sem número de load; para o Admin vira o comando `completo`.
 - Foto: composta com lote repetido é recusada antes do "sim" (antes gravava o recebimento e falhava nas compostas).
