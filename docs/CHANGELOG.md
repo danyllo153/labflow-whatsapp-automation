@@ -24,6 +24,8 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 - **Admin abre a composta pelo TAB / Coliformes** (comando e foto): quando a composta não existe, o bot pergunta e, com "sim", registra o recebimento dos lotes que faltam, cria as compostas e registra o teste. Outros cargos seguem barrados. `fabrica` aceita no comando; testes em `tests/tab-abrir-composta.test.js`.
 
 ### Corrigido
+- **Resposta repetida da foto (16/10):** a foto do laudo leva mais de 1 minuto na IA e a Evolution reentregava a mesma mensagem a cada ~65 s; cada reentrega rodava o fluxo e o bot respondia 3 vezes. Agora o id da mensagem é gravado (migration `032_mensagens_recebidas`, só o id e a hora) e a reentrega é descartada no `Interpretar comando`. Os reenvios internos do bot não têm id e seguem normais.
+- **NFC recebido: o chat mostra o número do laudo** (decisão de 16/10): a foto, a confirmação do comando, o "era ..." da correção e as consultas mostram o valor lido (`CT 4368`), sem a conta da diluição. O banco continua gravando também o valor multiplicado (`contagens_nfc.valor`), que é o que o Power BI mostra.
 - IA: "bl" sozinho vale bl120 também nas placas de tanque (a regressão de 16/10 achou bl72; 59 de 60 antes da correção).
 
 ## [1.3.0] - 2026-10-15

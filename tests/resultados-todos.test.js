@@ -98,13 +98,14 @@ test('NFC: comando "todos" com exceção por tipo e o lote de fora nos dois tipo
   assert.match(interpretar('ct nfc load 44300 todos deu <10 exceto lote 10 deu 14').textoResposta, /diga o tipo do lote 10 \(past ou fresh\)/);
 });
 
-test('NFC: a confirmação multiplica pela diluição de cada lote do "todos"', () => {
+test('NFC: o "todos" mostra o número do laudo e o banco recebe o valor multiplicado pela diluição de cada lote', () => {
   const lin = (lote, amostra, dil, extra = {}) => ({ loads_encontrados: 1, lote, amostra, via_todos: true, alvo_id: 700 + lote, diluicao: dil, atual: null, ...extra });
   const r = rodar('Montar pergunta contagens NFC', [lin(10, 'past', 1), lin(12, 'fresh', 3), lin(11, 'past', 1, { via_todos: false })],
     interpretar('bl72 nfc load 44300 todos deu 2 exceto lote 11 past deu 5'));
-  assert.match(r.textoResposta, /lote 10 · past · 10\^1: 2 × 10\^1 = 20/);
-  assert.match(r.textoResposta, /lote 12 · fresh · 10\^3: 2 × 10\^3 = 2000/);
-  assert.match(r.textoResposta, /lote 11 · past · 10\^1: 5 × 10\^1 = 50/);
+  assert.match(r.textoResposta, /lote 10 · past: 2\n/);
+  assert.match(r.textoResposta, /lote 12 · fresh: 2\n/);
+  assert.match(r.textoResposta, /lote 11 · past: 5\n/);
+  assert.doesNotMatch(r.textoResposta, /10\^|×|2000/, 'a conta da diluição fica só no banco');
   assert.match(r.textoResposta, /Todos de \d{2}\/\d{2}\/\d{4} sem resultado: 2 lotes/);
   assert.deepEqual(JSON.parse(r.payload).itens.map((i) => i.valor), [20, 2000, 50]);
   const vazio = rodar('Montar pergunta contagens NFC', [{ loads_encontrados: 1, lote: null }], interpretar('ct nfc load 44300 todos deu <10'));
