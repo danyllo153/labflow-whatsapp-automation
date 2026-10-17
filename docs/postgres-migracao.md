@@ -48,6 +48,7 @@ descrito em [`concentrado.md`](concentrado.md).
 | [`019_bi_desvios_gerais.sql`](../db/migrations/019_bi_desvios_gerais.sql) | painel: desvios de drop e de tanque juntos |
 | [`020_uso_ia.sql`](../db/migrations/020_uso_ia.sql) | contador diário de uso da IA (limite por pessoa e no total) |
 | [`027_recebimento_nfc.sql`](../db/migrations/027_recebimento_nfc.sql) | recebimento de NFC (item 129): lote, tipo `fresh`/`past`, diluição e resultados de C.T/B.L (valor lido x 10^diluição); as `021` a `026` ficam reservadas à Fase 1 do LIMS |
+| [`032_mensagens_recebidas.sql`](../db/migrations/032_mensagens_recebidas.sql) | id das mensagens do WhatsApp já recebidas (só o id e a hora, 2 dias): a reentrega da Evolution não roda o fluxo de novo. **Aplicar antes** de publicar o workflow que lê essa tabela |
 | [`011_leitura_finalizada.sql`](../db/migrations/011_leitura_finalizada.sql) | tabela `leituras_finalizadas` (quem finalizou a leitura de cada dia) e pendência `DIA` |
 | [`012_desvio_drop.sql`](../db/migrations/012_desvio_drop.sql) | tabela `desvios_drop`, view `vw_desvios_drop` (desvio de drop em 7, 13 e 25 °C) e pendência `DESVIO` |
 | [`013_views_bi.sql`](../db/migrations/013_views_bi.sql) | schema `bi` com 6 views para o Power BI (`coletas`, `leituras_nfc`, `drops`, `desvios`, `contagens`, `testes`), com a coluna `situacao` (Lido, Atrasado, Vence hoje, No prazo) e sem telefone; leitura pelo `labflow_leitura` |
