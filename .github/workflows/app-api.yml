@@ -1,0 +1,28 @@
+name: Testes da API do app
+
+on:
+  push:
+    paths:
+      - "app/api/**"
+      - ".github/workflows/app-api.yml"
+  pull_request:
+    paths:
+      - "app/api/**"
+      - ".github/workflows/app-api.yml"
+  workflow_dispatch:
+
+jobs:
+  testar:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app/api
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Instalar dependências
+        run: pip install -r requirements-dev.txt
+      - name: Rodar os testes (pytest)
+        run: python -m pytest -q
