@@ -27,6 +27,13 @@ Mais de uma sessão mexe no bot ao mesmo tempo (em 16/10 o notebook publicou o #
 5. **Antes de publicar no n8n:** `git pull` na `main`; conferir no servidor que o workflow no ar é igual à `main` (número de nós e nodes da mudança; cópia do sqlite, só leitura) e qual foi o último backup em `~/labflow/backups-n8n` (outra sessão pode ter acabado de publicar). Se o que está no ar não bate com a `main`, parar e avisar.
 6. **Depois de publicar:** atualizar o handoff (seção 0) com o que foi para o ar e o nome do backup, no mesmo dia.
 
+### Sessão do app × sessão do bot (quem mexe em quê)
+Desde 15/10 uma sessão cuida do **app** (web e celular) e outra do **bot**. Para os PRs não entrarem em conflito nem usarem o mesmo número:
+- **Cada uma mexe só no que é seu.** Bot: `LabFlow*.json`, `tests/`, `docs/comandos.md`, migrations **027 a 049**. App: `app/`, `.github/workflows/app-api.yml`, migrations **050 a 099**, `docs/specs/lims/06`, `07`, `08` e `rumo-do-app.md` (a coluna "Situação" dos pedidos PB é atualizada pela sessão do bot). Precisou mexer no que é da outra? Vira **pedido** escrito (tabela "Pedidos para a sessão do bot" no rumo) e avisar o Danyllo.
+- **Número de migration:** o maior da faixa **na `main` e nos PRs abertos** (`gh pr list --state open` e os arquivos de cada um), mais um. Nunca reaproveitar número de PR fechado sem conferir. Se uma faixa acabar, combinar outra com o Danyllo antes.
+- **Arquivos dos dois** (`docs/handoff.md`, `docs/specs/lims/10-decisoes.md`, `CLAUDE.md`): cada sessão edita **só o próprio bloco** (no handoff, o bloco do app começa com "sessão do APP"); decisão nova entra **no topo** da lista do 10; PR pequeno, só com esse arquivo, mesclado logo para o outro lado pegar no `git pull`.
+- **Antes de abrir e antes de mesclar um PR:** `git fetch`, conferir se algum PR aberto mexe nos mesmos arquivos; se sim, juntar a `main` na branch (`git merge origin/main`) e rodar os testes de novo. O CI do app também roda quando uma migration do bot muda, para pegar cedo uma migration que quebre o app.
+
 ## Comportamento do bot (preferências do Danyllo)
 - **Poucas mensagens:** se o papel mostra que tudo vai junto (ex.: 17 compostas no mesmo caldo), **um comando e uma resposta**.
 - **Um só "sim"** para a lista inteira; a confirmação explica **o que será criado**, em linguagem simples, por load/composta.
