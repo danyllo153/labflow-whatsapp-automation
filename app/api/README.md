@@ -56,8 +56,10 @@ Depois abra `http://127.0.0.1:8000/docs` no navegador: é a documentação autom
 |---|---|---|
 | `GET /saude` | Diz se a API está no ar (não toca no banco) | APP-001 |
 | `POST /login` | Entra com usuário curto e senha; abre a sessão num cookie seguro (30 dias sem uso); 5 senhas erradas seguidas bloqueiam por 15 min | APP-004 |
-| `GET /me` | Quem sou eu: usuário, nome, cargo (lido de `usuarios` a cada chamada) | APP-004 |
+| `GET /me` | Quem sou eu: usuário, nome, cargo (lido de `usuarios` a cada chamada) e a lista `pode` com as ações que o cargo permite | APP-004, APP-005 |
 | `POST /sair` | Encerra a sessão | APP-004 |
+
+As permissões por cargo (tabela do `07-app-pwa.md`) ficam num lugar só, `labflow_api/permissoes.py`; cada rota pede a ação com `Depends(exigir("..."))` (APP-005).
 
 Para testar o login no seu PC sem HTTPS, ligue a API com `LABFLOW_COOKIE_SEGURO=0` (no servidor, o cookie só anda por HTTPS).
 
