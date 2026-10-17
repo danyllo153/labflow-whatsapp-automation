@@ -55,6 +55,11 @@ Depois abra `http://127.0.0.1:8000/docs` no navegador: é a documentação autom
 | Rota | O que faz | Tarefa |
 |---|---|---|
 | `GET /saude` | Diz se a API está no ar (não toca no banco) | APP-001 |
+| `POST /login` | Entra com usuário curto e senha; abre a sessão num cookie seguro (30 dias sem uso); 5 senhas erradas seguidas bloqueiam por 15 min | APP-004 |
+| `GET /me` | Quem sou eu: usuário, nome, cargo (lido de `usuarios` a cada chamada) | APP-004 |
+| `POST /sair` | Encerra a sessão | APP-004 |
+
+Para testar o login no seu PC sem HTTPS, ligue a API com `LABFLOW_COOKIE_SEGURO=0` (no servidor, o cookie só anda por HTTPS).
 
 O endereço do banco vem da variável de ambiente `LABFLOW_DB_URL` (APP-002). Nunca escreva senha no código nem no repositório.
 
