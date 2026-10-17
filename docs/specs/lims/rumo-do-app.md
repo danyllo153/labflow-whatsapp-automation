@@ -66,9 +66,9 @@ As quatro decisões que estavam em aberto foram respondidas pelo Danyllo em 15/1
   | Adicionar pessoa, convite, senha, trocar cargo | ✅ | ❌ | ❌ | ❌ |
   | Editar os horários padrão dos turnos | ✅ | ❌ | ❌ | ❌ |
 
-## Tarefas da Fase B (propostas em 17/10/2026, aguardando aprovação)
+## Tarefas da Fase B (aprovadas em 17/10/2026)
 
-Geradas só a partir dos documentos `v1.0` ([06](06-api-e-auth.md), [07](07-app-pwa.md), [08](08-fluxos.md)), no modelo do [guia prático](guia-pratico.md). **Uma tarefa = uma branch = um PR**, com testes. Nenhuma mexe em tabela, workflow ou migration do bot. Dados sempre fictícios (`db/seeds/demo.sql`).
+Código do app no **mesmo repositório, na pasta `app/`** (`app/api/` e, na Fase C, `app/web/`), com CI próprio que só roda quando `app/` muda (decidido em 17/10). Geradas só a partir dos documentos `v1.0` ([06](06-api-e-auth.md), [07](07-app-pwa.md), [08](08-fluxos.md)), no modelo do [guia prático](guia-pratico.md). **Uma tarefa = uma branch = um PR**, com testes. Nenhuma mexe em tabela, workflow ou migration do bot. Dados sempre fictícios (`db/seeds/demo.sql`).
 
 | # | Tarefa | Origem | O quê | Pronto quando | Depende de |
 |---|---|---|---|---|---|
