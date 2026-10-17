@@ -164,3 +164,12 @@ def test_erros_com_a_provisoria_tambem_contam_para_o_bloqueio(cenario):
     for _ in range(5):
         _entrar(pessoa_cli, "ana.teste", "errada")
     assert _entrar(pessoa_cli, "ana.teste", provisoria).status_code == 423
+
+
+@pytest.mark.parametrize("nova, aceita", [("", False), ("1234567", False), ("12345678", True), ("abcdefgh", True)])
+def test_senha_com_pelo_menos_8_caracteres(cenario, nova, aceita):
+    admin_cli, pessoa_cli, pid = cenario
+    provisoria = _admin_gera(admin_cli, pid).json()["senha_provisoria"]
+    _entrar(pessoa_cli, "ana.teste", provisoria)
+    r = pessoa_cli.post("/trocar-senha", json={"nova_senha": nova})
+    assert r.status_code == (204 if aceita else 422)

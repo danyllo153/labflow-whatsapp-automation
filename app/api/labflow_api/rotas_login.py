@@ -24,6 +24,7 @@ roteador = APIRouter(tags=["login"])
 
 ERROS_PARA_BLOQUEAR = 5  # 06: 5 senhas erradas seguidas
 MINUTOS_BLOQUEADO = 15
+TAMANHO_MINIMO_SENHA = 8  # decidido pelo Danyllo em 17/10 (sem exigir número ou símbolo)
 
 
 class PedidoLogin(BaseModel):
@@ -151,8 +152,10 @@ def trocar_senha(
     con: psycopg.Connection = Depends(obter_conexao),
 ) -> None:
     nova = pedido.nova_senha
-    if not nova.strip():
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Digite a nova senha.")
+    if len(nova) < TAMANHO_MINIMO_SENHA:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_ENTITY, f"A senha precisa ter pelo menos {TAMANHO_MINIMO_SENHA} caracteres."
+        )
     if nova.strip().lower() == pessoa.usuario.lower():
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "A senha não pode ser igual ao seu usuário.")
     if not pessoa.trocar_senha:

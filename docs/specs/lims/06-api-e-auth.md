@@ -24,6 +24,7 @@ Uma **API própria** fica entre o app e o banco. Ela **lê** as tabelas do bot p
 - **Senha provisória gerada pelo Admin** (ideia do Danyllo, no lugar do "convite"): na tela **Admin → Pessoas**, o Admin cadastra a pessoa (**"Nova pessoa"**: nome, telefone, cargo e **usuário curto**, ex.: `ana.souza`) e toca em **"Cadastrar e gerar senha provisória"**. O app mostra uma **senha aleatória** (ex.: `K7m4-Tq2p`), válida por **24 horas**, que o Admin entrega à pessoa.
 - No primeiro login com a senha provisória, o app **obriga a trocar** por uma senha da própria pessoa antes de continuar.
 - **Esqueci a senha:** o mesmo caminho. O Admin toca em **"Gerar senha provisória"** na pessoa; a senha antiga para de valer na hora.
+- **Senha com pelo menos 8 caracteres**, sem exigir número ou símbolo (decidido em 17/10, na APP-006).
 - **Senha igual ao usuário não é aceita** (quem soubesse o usuário entraria antes da pessoa e registraria no nome dela).
 - O login é pelo **usuário curto**, não pelo telefone (dado pessoal e ruim de digitar).
 - **Bloqueio:** depois de **5 senhas erradas seguidas**, o login da pessoa fica bloqueado por 15 minutos.
