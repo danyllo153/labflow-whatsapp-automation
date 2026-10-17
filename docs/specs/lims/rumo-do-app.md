@@ -105,6 +105,7 @@ O app não mexe nas tabelas nem no workflow do bot: o que ele precisa vira pedid
 
 ## Regras que não mudam
 
+- Quem mexe em quê entre a sessão do app e a do bot, e como escolher o número da migration: `CLAUDE.md`, "Sessão do app × sessão do bot".
 - O app **lê** as tabelas do bot **por views** e **grava nelas só por funções do banco aprovadas** (ex.: `excluir_coleta(id, quem, motivo)`), as mesmas que o bot passa a usar: a regra mora num lugar só (decisão de 15/10). Tabelas novas são só dele. Migrations do app **a partir da 050** (mudado em 15/10: 021–026 são do LIMS; 027, 028, 029 e de 030 a 049 ficam com a sessão do bot, que já começou pela 030).
 - Não mexer em `LabFlow.json`, `LabFlow_Alerta_Erro.json`, migrations existentes nem `docs/comandos.md`: isso é da sessão do bot.
 - Permissão validada no código (Operador/Admin), nunca no prompt da IA.
