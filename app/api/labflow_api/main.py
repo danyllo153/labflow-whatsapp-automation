@@ -1,10 +1,12 @@
 """Ponto de entrada da API do LabFlow.
 
 Spec: docs/specs/lims/06-api-e-auth.md (v1.0), seção "Arquitetura".
-Tarefa: APP-001 (esqueleto). As rotas de login e de leitura chegam nas tarefas seguintes.
+Tarefas: APP-001 (esqueleto), APP-004 (login e sessão).
 """
 
 from fastapi import FastAPI
+
+from labflow_api.rotas_login import roteador as roteador_login
 
 app = FastAPI(
     title="LabFlow API",
@@ -17,3 +19,6 @@ app = FastAPI(
 def saude() -> dict[str, str]:
     """Responde se a API está no ar. Não toca no banco."""
     return {"status": "ok"}
+
+
+app.include_router(roteador_login)
