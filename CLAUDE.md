@@ -18,6 +18,15 @@ O Danyllo trabalha no PC, no notebook e no celular. A memória local do Claude C
 - Antes de começar em qualquer aparelho: `git pull` na `main` e ler o handoff.
 - **Várias sessões ao mesmo tempo:** a pasta `C:\Dev\labflow-whatsapp-automation` é de **uma** sessão só. Outra sessão local trabalha num worktree próprio (`git worktree add <pasta> <branch>`) e **nunca** troca de branch, faz stash ou commit na pasta principal (em 15/10 uma troca de branch acertou o commit de outra sessão).
 
+## Antes de mexer no bot e antes de publicar (várias sessões: PC, notebook, nuvem)
+Mais de uma sessão mexe no bot ao mesmo tempo (em 16/10 o notebook publicou o #86 e o #90 enquanto o PC fazia o #88, que ficou em conflito duas vezes). Uma sessão não enxerga a outra: **o GitHub e o servidor são o ponto de encontro**. Sempre, em qualquer aparelho:
+1. **Ao começar uma mudança no bot** (`LabFlow.json`, migration, `tests/`): `git fetch` e `gh pr list --state open` com os arquivos de cada PR. Se outro PR aberto mexe nos **mesmos nodes**, avisar o Danyllo antes de começar e combinar a ordem.
+2. **Avisar cedo:** abrir o PR como rascunho (`gh pr create --draft`) logo no primeiro commit, para a outra sessão ver que aquilo está em andamento.
+3. **Migration:** antes de criar, ver o maior número na `main` **e nos PRs abertos** e usar o seguinte (030 e 031 estão no #82 e no #84; 032 no #94). O app usa a partir da 050.
+4. **`LabFlow.json` em conflito:** nunca resolver à mão. Gerar de novo sobre a `main` atual (o patch da mudança aplicado no arquivo da `main`), juntando o código de um node mexido pelos dois lados em três vias (`git merge-file`), e rodar os testes.
+5. **Antes de publicar no n8n:** `git pull` na `main`; conferir no servidor que o workflow no ar é igual à `main` (número de nós e nodes da mudança; cópia do sqlite, só leitura) e qual foi o último backup em `~/labflow/backups-n8n` (outra sessão pode ter acabado de publicar). Se o que está no ar não bate com a `main`, parar e avisar.
+6. **Depois de publicar:** atualizar o handoff (seção 0) com o que foi para o ar e o nome do backup, no mesmo dia.
+
 ## Comportamento do bot (preferências do Danyllo)
 - **Poucas mensagens:** se o papel mostra que tudo vai junto (ex.: 17 compostas no mesmo caldo), **um comando e uma resposta**.
 - **Um só "sim"** para a lista inteira; a confirmação explica **o que será criado**, em linguagem simples, por load/composta.
