@@ -103,6 +103,13 @@ O app não mexe nas tabelas nem no workflow do bot: o que ele precisa vira pedid
 | PB6 | **Assistente do app pelo mesmo workflow do bot:** aceitar no webhook `labflow-registro` mensagens com `canal: app` (mesmo formato da Evolution, telefone da pessoa logada, segredo no cabeçalho); quando o canal for `app`, os nodes de resposta (hoje `Zap · ...`, que chamam `sendText` da Evolution) e o download de mídia (`getBase64...`) passam a usar a **API do app** em vez da Evolution. O WhatsApp continua idêntico. Acrescentar casos em `tests/` | O assistente usa o mesmo cérebro do bot, sem duplicar regras ([08](08-fluxos.md), A4) | Pedido em 15/10/2026, autorizado pelo Danyllo; necessário só na Fase D |
 
 
+**Alinhamento com a sessão do bot (17/10/2026):**
+- Ordem de publicação combinada: **PB5 → PB1 → PB4 → PB6** (quem decide quando é o Danyllo; PB5 e PB1 estão prontos e em espera).
+- **PB4 fica com a sessão do bot**, migration **033**; o app só chama as funções.
+- As funções chamadas pelo app (PB5 e PB4) são **`SECURITY DEFINER`**, com dono `labflow_app`, `SET search_path = public, pg_temp` e conferência da permissão pelo `p_quem` dentro da função (o `labflow_app_web` não grava nas tabelas do bot).
+- O `GRANT EXECUTE` dessas funções para o `labflow_app_web` fica na migration **051 do app**, depois que a 050 for aplicada no servidor.
+- As leituras gravadas adiantadas pelo Admin têm origem `automatico` no banco (ver 07, "Registros adiantados pelo Admin").
+
 ## Regras que não mudam
 
 - Quem mexe em quê entre a sessão do app e a do bot, e como escolher o número da migration: `CLAUDE.md`, "Sessão do app × sessão do bot".
