@@ -484,6 +484,21 @@ tab tanque terra 42 coleta 28/09/2026 em confirmação
 confirmação do tab tanque terra 42 coleta 28/09/2026 positivo
 ```
 O resultado pede "sim" antes de gravar, como no TAB de composta.
+
+**Atalhos de escrita** (a data é a da coleta; sem ano vale o ano de hoje): `tq 44 16/10`, `tq 44 e 45 16/10`, `tab tanque terra 47 06/10/26`, `tab feito tanque terra 42, data 16/10`. Valem o mesmo que `Tab feito dos tanques terra 44 coleta 16/10/2026` e não passam pela IA.
+
+**Só o Admin: TAB do tanque que ainda não tem coleta (modo `completo`).** Para adiantar os dados do piloto sem digitar tudo:
+
+```
+Tab feito dos tanques terra 44,45 coleta 06/10/2026 completo
+Tab feito dos tanques terra 44 coleta 06/10/2026 data 16/10/2026 completo
+```
+
+- Se o Admin mandar o TAB (comando, atalho ou foto) de um tanque **sem coleta**, o bot pergunta *"Não achei a coleta... Responda sim ou não"*. Com **sim**, ele faz, de uma vez: (1) registra a **coleta** que faltar, com os drops D5, D10, D15 e o arquivo; (2) registra as **análises normal e stress** (C.T, B.L e WORT) que faltarem, com os prazos do comando de análise (a análise começa na data da coleta); (3) marca **`<1,<1,<1`** em todas as leituras que **já venceram** até a data do TAB (C.T 48h, B.L 72h e 120h, WORT 120h e 240h): o que ainda não chegou na data **fica sem marcar**; (4) registra o TAB no caldo.
+- Se a coleta e as análises já existem, o `completo` só marca as placas `<1` das leituras vencidas e registra o TAB; **não duplica nada** e não sobrescreve placa já digitada. As leituras marcadas ficam como lidas, com a origem `automatico`.
+- Só Admin: outro cargo recebe a recusa de sempre ("não há coleta") ou, ao digitar `completo`, a mensagem de que só o Admin faz isso. Os **drops** da coleta criada ficam pendentes (D5, D10 e D15 não são marcados).
+- **Foto do TAB com tanques:** no papel o tanque de terra vem como `TQ 44 16/10` (número do tanque e data da coleta). O bloco de tanques **não precisa de load**. Para o Admin, a foto já monta o comando com `completo`.
+- **Composta com lote repetido na foto** (ex.: o lote 8 em duas compostas) é recusada antes do "sim", com o aviso de qual lote repete; nada de recebimento gravado pela metade.
 ## 14. C.T e B.L por lote e por amostra (concentrado)
 
 **Em teste (04/10/2026).** Desenho em [`concentrado.md`](concentrado.md), seção 10.2. Prazos contados da data do recebimento (lote) ou do embarque (amostra): **C.T 48h** (+2 dias), **B.L 72h** (+3) e **B.L 120h** (+5).
