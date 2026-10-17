@@ -407,6 +407,8 @@ Os dois aceitam o **número `#`** ou o **formato por extenso** (load + lotes; `(
 - `data dd/mm/aaaa` no "feito" (`tab feito das compostas #7 data 28/09/2026`) faz o prazo contar dessa data, útil para registrar retroativo.
 - O que não foi feito no dia previsto continua aparecendo, com a **data prevista**: `⚠️ Atrasados — previsto 03/10/2026`.
 - Por extenso: `Tab da composta load 77001, lotes 6-10, item 444, em confirmação`; `composta load 77001, lote 7 item 444, da confirmação deu positivo`.
+- **Só o Admin abre a composta pelo próprio TAB** (quando o recebimento daquele load não foi registrado antes). `tab feito do load 44300 item 2703 fabrica AQA (1-5)(6-10)` (ou `coliformes feitos ...`, ou a foto do laudo, que traz a fábrica): se alguma composta não existe, o bot pergunta *"Essas compostas ainda não estão abertas... Responda sim ou não"*. Com **sim**, ele faz, nesta ordem: (1) registra o recebimento dos lotes que faltam (a data é a do TAB; lote que já existe fica como está), (2) cria as compostas que faltam e (3) registra o TAB no caldo de todas. Os Coliformes dessas compostas já funcionam depois, sem passar pelo recebimento. Faltando o item ou a fábrica (AQA, CON, COL, UCH, ITA, TMG), o bot explica o que falta e não grava nada. Os outros cargos continuam recebendo "não achei composta" (precisam do recebimento antes).
+- **Resultados já preenchidos:** o recebimento criado assim vem com **C.T, B.L 72h e B.L 120h = `<10`** (sem crescimento) nos lotes novos, para não precisar revisar o recebimento nem mandar vários comandos nesta fase. O que já tinha resultado digitado **não é sobrescrito**. Por baixo, o recebimento ganhou o sufixo `resultados <10` (só Admin): `recebimento load 44300 item 2703 fabrica AQA lotes 1-10 data 16/10/2026 resultados <10`.
 
 ## 13. Embarque (concentrado)
 
@@ -484,6 +486,21 @@ tab tanque terra 42 coleta 28/09/2026 em confirmação
 confirmação do tab tanque terra 42 coleta 28/09/2026 positivo
 ```
 O resultado pede "sim" antes de gravar, como no TAB de composta.
+
+**Atalhos de escrita** (a data é a da coleta; sem ano vale o ano de hoje): `tq 44 16/10`, `tq 44 e 45 16/10`, `tab tanque terra 47 06/10/26`, `tab feito tanque terra 42, data 16/10`. Valem o mesmo que `Tab feito dos tanques terra 44 coleta 16/10/2026` e não passam pela IA.
+
+**Só o Admin: TAB do tanque que ainda não tem coleta (modo `completo`).** Para adiantar os dados do piloto sem digitar tudo:
+
+```
+Tab feito dos tanques terra 44,45 coleta 06/10/2026 completo
+Tab feito dos tanques terra 44 coleta 06/10/2026 data 16/10/2026 completo
+```
+
+- Se o Admin mandar o TAB (comando, atalho ou foto) de um tanque **sem coleta**, o bot pergunta *"Não achei a coleta... Responda sim ou não"*. Com **sim**, ele faz, de uma vez: (1) registra a **coleta** que faltar, com os drops D5, D10, D15 e o arquivo; (2) registra as **análises normal e stress** (C.T, B.L e WORT) que faltarem, com os prazos do comando de análise (a análise começa na data da coleta); (3) marca **`<1,<1,<1`** em todas as leituras que **já venceram** até a data do TAB (C.T 48h, B.L 72h e 120h, WORT 120h e 240h) e marca como **feitos os drops** D5, D10 e D15 que já venceram: o que ainda não chegou na data **fica sem marcar** (leitura) ou **pendente** (drop); (4) registra o TAB no caldo. A **data do TAB** é a do documento (o dia em que foi analisado e colocado no caldo; no comando, `data dd/mm/aaaa`, ou hoje se omitida); a data escrita ao lado do tanque (`TQ 44 16/10`) é a **data da coleta**.
+- Se a coleta e as análises já existem, o `completo` só marca as placas `<1` das leituras vencidas e registra o TAB; **não duplica nada** e não sobrescreve placa já digitada. As leituras marcadas ficam como lidas, com a origem `automatico`.
+- Só Admin: outro cargo recebe a recusa de sempre ("não há coleta") ou, ao digitar `completo`, a mensagem de que só o Admin faz isso. Em coleta que já existia, o `completo` também marca como feitos os drops pendentes que já venceram.
+- **Foto do TAB com tanques:** no papel o tanque de terra vem como `TQ 44 16/10` (número do tanque e data da coleta). O bloco de tanques **não precisa de load**. Para o Admin, a foto já monta o comando com `completo`.
+- **Composta com lote repetido na foto** (ex.: o lote 8 em duas compostas) é recusada antes do "sim", com o aviso de qual lote repete; nada de recebimento gravado pela metade.
 ## 14. C.T e B.L por lote e por amostra (concentrado)
 
 **Em teste (04/10/2026).** Desenho em [`concentrado.md`](concentrado.md), seção 10.2. Prazos contados da data do recebimento (lote) ou do embarque (amostra): **C.T 48h** (+2 dias), **B.L 72h** (+3) e **B.L 120h** (+5).
@@ -503,6 +520,7 @@ ct navio O.SKY 133 linha 2 fase 2 amostras 1-5 deu <10, amostra 6 deu 30
 - `bl72` e `bl120` (também `bl 72`, `bl 120`) funcionam igual ao `ct`, no recebimento e no embarque. **`bl` sozinho vale `bl120`** (no registro e nas consultas, também `bls`). No embarque, `A1-A5` e `1-5` valem.
 - O bot mostra o que entendeu e só grava com **sim**. Load, embarque, lote ou amostra que não existe cancela **tudo**. O mesmo número em dois grupos é recusado.
 - Um resultado repetido **corrige** o anterior, e o bot avisa o valor antigo antes de gravar.
+- `recebimento` antes do load é opcional (`bl72 recebimento load 77001 lotes 1-14 deu <10`). **O prazo não trava:** dá para lançar o B.L 72h com 2 dias. Para lançar **todos de uma vez**, com exceções: seção 18.
 - Se o número do load existir com dois itens, informe `item 444`.
 - Só Admin e Operador registram.
 
@@ -610,7 +628,8 @@ Especificação: [`docs/specs/nfc-resultados-placas.md`](specs/nfc-resultados-pl
 | `wort superficie 120h` / `240h` | WORT Superfície | `wort superficie 120h do tanque 47 stress 1,0,0` |
 
 - **Sempre as 3 placas**, na ordem da bancada. `0` ou `<1` = sem colônia; `>300` = incontável. Separador: vírgula ou "e" ("30, 12 e 8").
-- A leitura é a **prevista para hoje** daquele tanque e frasco (ou a mais recente atrasada). Para outra coleta, acrescente `coleta dd/mm/aaaa`.
+- A leitura é a **prevista para hoje** daquele tanque e frasco (ou a mais recente atrasada). Para outra coleta, acrescente `coleta dd/mm/aaaa`. **Sem nada vencendo**, vale a próxima leitura ainda sem placas, antes do prazo, e o bot avisa `⏩ Leitura antecipada: prevista para 17/10/2026` (seção 18.3).
+- Todos os tanques sem crescimento de uma vez (`bl todos os tanques navio O.SKY 123 deu <1 exceto tanque 1C normal <1,1,0`): seção 18.2.
 - **Mais de uma coleta aberta:** se o mesmo tanque tem, por exemplo, duas coletas (de 3 em 3 dias) ainda sem placas para aquela leitura e você **não** mandou a data, o bot **não escolhe**: responde `⚠️ O tanque 47 tem 2 coletas com C.T 48h (Normal) para ler: 04/10/2026 (atrasada, prevista 06/10/2026); 11/10/2026 (vence hoje). De qual é? Mande de novo acrescentando coleta dd/mm/aaaa no fim. Nada foi gravado.` Mande o mesmo comando com `coleta dd/mm/aaaa`. Com uma só coleta aberta, ou com a data no comando, não pergunta.
 - O bot mostra o resultado e pede **sim**: ✅ **ok** (nenhuma placa acima do limite) ou 🚨 **não ok** (alguma acima). A pré-leitura (B.L 72h, WORT 120h) acima do limite **já é não ok**. Gravar as placas marca a leitura como feita, com quem leu. Mandar de novo substitui os valores.
 - Os **limites** ficam na tabela `limites_nfc` (migration `016`), com vigência. O repositório só tem valores **fictícios** (`db/seeds/limites_nfc_exemplo.sql`); os reais são carregados por um arquivo fora do Git.
@@ -782,7 +801,8 @@ recebimento nfc load 44301 fab col item 129 lote 12 fresh 10 elevado a 2 data 14
   Várias linhas podem ir juntas no mesmo comando, separadas por `;` (é assim que a foto manda): cada linha segue a regra de um lote, e tudo é gravado de uma vez, com **uma mensagem só** de resposta. Se uma linha estiver errada, nada é gravado; se um load já estiver cadastrado com outra fábrica, só aquele load é recusado e os outros entram.
 - **O mesmo lote pode entrar nos dois tipos** (lote 10 `past` e lote 10 `fresh`), em comandos separados. Repetir o lote e o tipo **corrige** a diluição e a data, e o bot avisa (`corrigido: era 10^1`).
 - Grava direto (como o recebimento do concentrado); Consultor não registra. O load reaproveita a tabela `loads` (item 129); os lotes ficam em `recebimento_nfc` (migration `027`), **sem misturar** com os lotes do concentrado, as compostas e os prazos de C.T/B.L.
-- **Por foto:** o formulário "Recebimento NFC" é lido pela foto do laudo (`comandos foto`): um comando por lote (uma linha do papel), com o resumo "o que isso registra" antes do sim.
+- **Por foto:** o formulário "Recebimento NFC" é lido pela foto do laudo (`comandos foto`): um comando por lote (uma linha do papel), tudo num sim só. Ver 17.1.
+- **Resultados na mesma linha:** `recebimento nfc load 44302 fab col item 129 lote 13 fresh 10 elevado a 2 resultados ct 14 bl72 22` registra o lote e grava os resultados juntos (como saíram na placa; o banco multiplica pela diluição). Lote que já existe com a mesma diluição e data fica igual e só os resultados entram (ou são corrigidos). É assim que a foto manda.
 
 
 **Regras do laboratório (15/10):** o laudo de recebimento do NFC tem o mesmo título do concentrado (`Recebimento`); o que o identifica é o **item 129**, na foto e no comando (`recebimento load N item 129 ...` sem tipo e diluição é recusado, com o exemplo certo). Um laudo que mistura item 129 com concentrado lê só o NFC e pede o concentrado em outra foto. A análise é por lote, sem compostas, e a diluição é seriada de 1 a 4: **`past` só existe na AQA e é sempre 10 elevado a 1; `fresh` vai de 10 elevado a 2 a 10 elevado a 4** (qualquer fábrica, inclusive a AQA). Na foto, cada linha do papel traz a sua própria data da análise. Os dados servem para acompanhar o comportamento do recebimento de suco fresco e pasteurizado (tabelas para apresentação).
@@ -797,9 +817,56 @@ bl72 nfc load 44300 lote 10 past deu 22, lote 11 fresh deu <10
 bl120 nfc load 44300 lotes 10-12 fresh deu 7
 ```
 
-- O bot mostra a conta antes de gravar (`lote 10 · past · 10^1: 14 × 10^1 = 140`) e pede **sim**, como no concentrado. `nfc` pode ser trocado por `item 129`. O tipo (`past` ou `fresh`) é obrigatório, porque o mesmo lote pode ter os dois.
+- **O chat mostra o número como no laudo** (`lote 10 · past: 14`), na confirmação, na foto, no "era ..." da correção e nas consultas; a conta da diluição (14 × 10^1 = 140) fica só no banco e no Power BI (decisão de 16/10/2026). O bot pede **sim**, como no concentrado. `nfc` pode ser trocado por `item 129`. O tipo (`past` ou `fresh`) é obrigatório, porque o mesmo lote pode ter os dois.
 - `<10` com 10^1 vira `<100` (o sinal fica); vale decimal (`1,5`). **Sem alarme:** o NFC recebido não usa os limites do concentrado, então não aparece 🚨 nem aviso de limite, e **fica fora do relatório do dia** (decisão de 14/10/2026).
 - Resultado repetido **corrige** o anterior (o bot avisa `era 90`). Se a diluição do lote for **corrigida** no recebimento, os resultados já gravados são **recalculados** a partir do número lido (`14 × 10^2 = 1400`).
 - **Consultas:** `quais ct tenho para ler hoje?`, `quais bl72 foram lidos hoje?` e `quanto está o CT do load 44300 até agora` agora incluem o NFC (`NFC load 44300 · past 10^1: 10-11`).
-- **Por foto:** quando o laudo traz os resultados e os lotes **já estão registrados**, a foto mostra uma linha por lote e tipo (`CT 14 → 140 · BL72 22 → 220`) e grava tudo com um sim (valor riscado não vale; vale a diluição do sistema e o bot avisa se o papel diz outra). Se os lotes ainda não existem, o primeiro sim registra o recebimento e o bot pede a foto de novo para os resultados.
+- **Por foto, só o que é novo** (decisão de 16/10/2026; no NFC cada linha do papel tem a sua data e o laudo vai sendo completado ao longo dos dias): a confirmação mostra só **🆕 lote que ainda não está registrado** (registra e já grava os resultados da linha) e **➕ resultado que falta ou mudou** num lote registrado (`BL72 22 (era 20)`). O que já está **igual** no sistema não aparece. Tudo num comando só e **um sim**, sem mandar a foto de novo. Se nada é novo: `tudo o que está na foto já está no sistema. Nada a gravar.` Valor riscado não vale; num lote já registrado vale a diluição e a data do sistema (o bot avisa se o papel diz outra diluição).
 - Tabela `contagens_nfc` (valor lido, diluição e valor final) e views `vw_contagens_nfc` e `vw_contagens_nfc_previstas` (migration `027`). O painel do Power BI terá **uma página própria** para esses resultados (visão `bi.recebimento_nfc`, já na migration `027`; a página ainda será criada).
+- **Todos de uma vez** (`ct nfc load 44300 todos deu <10 exceto lote 10 past deu 14`): seção 18.1.
+
+## 18. Todos de uma vez e leitura antecipada
+
+Para não lançar lote por lote quando quase tudo deu igual. **"Todos"** = o que **sai hoje** (ou na data que você disser, `todos de 14/10`) e **ainda não tem resultado** daquela análise; o que já tem valor fica como está (para corrigir, mande o lote ou o tanque pelo comando normal). Tudo pede **um só sim**, com a lista do que vai ser gravado. Só Admin e Operador; também vale por áudio e por frase livre (formatos 37 e 38 da IA).
+
+### 18.1 Lotes, amostras e NFC recebido
+
+```
+bl72 load 44502 todos deu <10 exceto lote 3 deu 20
+bl72 recebimento load 44502 todos os lotes que saem hoje deram menor que 10, exceto lote 3
+ct load 44502 item 444 todos de 14/10/2026 deu <10 exceto lote 3 deu 20, lotes 5-6 deu 30
+bl120 navio O.SKY 189 linha 6 fase 1 todas deu <10 exceto amostra 3 deu 20
+ct nfc load 44300 todos deu <10 exceto lote 10 past deu 14, lote 11
+```
+
+- **Exceto com valor:** aquele lote recebe o valor dito (mesmo que não saia na data, ou que já tenha resultado: aí corrige e o bot avisa `era ...`). **Exceto sem valor:** o lote fica de fora. No NFC, a exceção com valor precisa do tipo (`past`/`fresh`); sem tipo e sem valor, ficam de fora os dois tipos do lote.
+- O NFC continua multiplicando pela diluição de cada lote (`2 × 10^3 = 2000`), sem alarme. No concentrado, o 🚨 de C.T ≥ 200 e B.L ≥ 50 aparece como sempre.
+- Se nada sai na data sem resultado, o bot avisa `ℹ️ Nenhum lote de load 44502 com B.L 72h para 16/10/2026 sem resultado. Nada foi gravado.`
+
+```
+Você:    bl72 load 44502 todos deu <10 exceto lote 3 deu 20
+LabFlow: ❓ Gravar B.L 72h — load 44502?
+         lotes 1-2,4-14 = <10 (todos de 16/10/2026 sem resultado)
+         lote 3 = 20
+         Responda *sim* ou *não*.
+```
+
+### 18.2 Todos os tanques sem crescimento
+
+```
+bl todos os tanques navio O.SKY 123 deu <1
+bl72 todos os tanques terra deu <1 exceto tanque 47 normal <1,1,0
+ct todos os tanques terra de 17/10 deu <1 exceto tanque 48, tanque 49 stress
+wort profundidade 120h todos os tanques do navio O.SKY 123 deu <1
+```
+
+- Grava **<1 nas 3 placas** de cada leitura daquela análise (e etapa: `bl72` é a pré-leitura, `bl`/`bl120` a final) que sai na data, de **terra** (sem `navio`) ou do navio, nos frascos **normal e stress**. O "todos" dos tanques só vale para sem crescimento (`<1`, `0`, `sem crescimento`).
+- **Exceto com frasco e 3 placas** (`tanque 47 normal <1,1,0`): grava o que deu naquele tanque e frasco, com ✅ ok ou 🚨 não ok. **Exceto só com o tanque** (ou tanque e frasco): fica de fora, para mandar depois pelo comando de placas.
+- **Não abre desvio sozinho** (como a foto do laudo): o não ok volta na resposta com o comando pronto (`para abrir o desvio, mande: bl72 do tanque 47 normal <1,30,2 coleta 13/10/2026`), que grava de novo as placas e pergunta o desvio.
+- Leitura que já tem placas fica como está (`ℹ️ Já tinham placas`). A repetição de um desvio que sai na data entra também, e a placa fecha o desvio como sempre.
+- Grava pelo mesmo caminho da foto de NFC (pendência `PLACAS`, `acao: placas_lote`): marca cada leitura como feita, com quem leu. Sem migration.
+
+### 18.3 Leitura antes do prazo
+
+- **Concentrado, embarque e NFC recebido:** o prazo nunca travou: `bl72 load 44502 lotes 1-5 deu <10` grava com 2 dias.
+- **Tanques:** sem a data da coleta, o comando de placas pega a leitura de hoje ou a atrasada; **se não houver nenhuma**, pega a próxima ainda sem placas e avisa `⏩ Leitura antecipada`. No "todos os tanques", a data futura (`todos de 18/10`) lança antes do prazo.

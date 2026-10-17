@@ -69,3 +69,19 @@ test('o comando do bot continua só para Admin e com o cargo Coletor válido', (
   assert.equal(interpretar('adicionar cargo Operador para o número 5511987654321', { cargo: 'Operador' }).autorizado, false);
   assert.match(interpretar('adicionar cargo Gerente para o número 5511987654321', { cargo: 'Admin' }).textoResposta, /Cargo inválido/);
 });
+// ---- pedido de segurança da sessão do app (17/10/2026) ----
+test('migration 031: as funções que o app chama são SECURITY DEFINER com search_path fixo', () => {
+  const corpo = (nome) => { const i = SQL.indexOf('FUNCTION ' + nome); const j = SQL.indexOf('$$ LANGUAGE', SQL.indexOf('AS $$', i) + 5); return SQL.slice(j, SQL.indexOf(';', j)); };
+  for (const f of ['cadastrar_usuario(', 'trocar_cargo(']) {
+    assert.match(corpo(f), /SECURITY DEFINER SET search_path = public, pg_temp/, f);
+  }
+  // o auxiliar roda dentro delas: search_path fixo, sem DEFINER (ninguém do app o chama direto)
+  assert.match(corpo('usuario_exigir_admin('), /SET search_path = public, pg_temp/);
+  assert.doesNotMatch(corpo('usuario_exigir_admin('), /SECURITY DEFINER/);
+  // a função do bot não precisa de DEFINER
+  assert.doesNotMatch(corpo('gravar_cargo_bot('), /SECURITY DEFINER/);
+  // a permissão continua conferida dentro da função, por quem está fazendo
+  assert.equal((SQL.match(/PERFORM usuario_exigir_admin\(p_quem\)/g) || []).length, 2);
+  // o GRANT do papel do app NÃO fica nesta migration (é da 051 do app)
+  assert.doesNotMatch(SQL, /GRANT[^;]*labflow_app_web/);
+});

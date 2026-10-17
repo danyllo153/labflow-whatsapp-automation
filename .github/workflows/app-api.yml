@@ -1,0 +1,56 @@
+name: Testes da API do app
+
+on:
+  push:
+    paths:
+      - "app/api/**"
+      - "db/migrations/**"
+      - "db/seeds/**"
+      - ".github/workflows/app-api.yml"
+  pull_request:
+    paths:
+      - "app/api/**"
+      - "db/migrations/**"
+      - "db/seeds/**"
+      - ".github/workflows/app-api.yml"
+  workflow_dispatch:
+
+jobs:
+  testar:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: teste
+          POSTGRES_PASSWORD: teste
+          POSTGRES_DB: labflow_teste
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U teste"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      # Banco de TESTE, só existe dentro do GitHub Actions; senha fictícia.
+      LABFLOW_DB_URL: postgresql://teste:teste@localhost:5432/labflow_teste
+      LABFLOW_EXIGIR_BANCO: "1"
+    defaults:
+      run:
+        working-directory: app/api
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - name: Instalar dependências
+        run: pip install -r requirements-dev.txt
+      - name: Montar o banco de teste (migrations do bot + dados fictícios)
+        run: bash scripts/preparar_banco_teste.sh
+      - name: Desfazer e reaplicar a migration 050 do app (prova que as duas funcionam)
+        run: |
+          psql "$LABFLOW_DB_URL" -v ON_ERROR_STOP=1 -q -f ../../db/migrations/050_app_login_desfazer.sql
+          psql "$LABFLOW_DB_URL" -v ON_ERROR_STOP=1 -q -f ../../db/migrations/050_app_login.sql
+      - name: Rodar os testes (pytest)
+        run: python -m pytest -q

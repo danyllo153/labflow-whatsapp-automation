@@ -36,3 +36,7 @@ LabFlow_importar_n8n*.json
 # Limites reais de NFC (confidenciais): o repositorio so tem o exemplo ficticio
 db/seeds/limites_nfc.sql
 *limites*real*.sql
+
+# Ambiente do Python da API do app
+.venv/
+.pytest_cache/

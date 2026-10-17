@@ -18,6 +18,22 @@ O Danyllo trabalha no PC, no notebook e no celular. A memória local do Claude C
 - Antes de começar em qualquer aparelho: `git pull` na `main` e ler o handoff.
 - **Várias sessões ao mesmo tempo:** a pasta `C:\Dev\labflow-whatsapp-automation` é de **uma** sessão só. Outra sessão local trabalha num worktree próprio (`git worktree add <pasta> <branch>`) e **nunca** troca de branch, faz stash ou commit na pasta principal (em 15/10 uma troca de branch acertou o commit de outra sessão).
 
+## Antes de mexer no bot e antes de publicar (várias sessões: PC, notebook, nuvem)
+Mais de uma sessão mexe no bot ao mesmo tempo (em 16/10 o notebook publicou o #86 e o #90 enquanto o PC fazia o #88, que ficou em conflito duas vezes). Uma sessão não enxerga a outra: **o GitHub e o servidor são o ponto de encontro**. Sempre, em qualquer aparelho:
+1. **Ao começar uma mudança no bot** (`LabFlow.json`, migration, `tests/`): `git fetch` e `gh pr list --state open` com os arquivos de cada PR. Se outro PR aberto mexe nos **mesmos nodes**, avisar o Danyllo antes de começar e combinar a ordem.
+2. **Avisar cedo:** abrir o PR como rascunho (`gh pr create --draft`) logo no primeiro commit, para a outra sessão ver que aquilo está em andamento.
+3. **Migration:** antes de criar, ver o maior número na `main` **e nos PRs abertos** e usar o seguinte (030 e 031 estão no #82 e no #84; 032 no #94). O app usa a partir da 050.
+4. **`LabFlow.json` em conflito:** nunca resolver à mão. Gerar de novo sobre a `main` atual (o patch da mudança aplicado no arquivo da `main`), juntando o código de um node mexido pelos dois lados em três vias (`git merge-file`), e rodar os testes.
+5. **Antes de publicar no n8n:** `git pull` na `main`; conferir no servidor que o workflow no ar é igual à `main` (número de nós e nodes da mudança; cópia do sqlite, só leitura) e qual foi o último backup em `~/labflow/backups-n8n` (outra sessão pode ter acabado de publicar). Se o que está no ar não bate com a `main`, parar e avisar.
+6. **Depois de publicar:** atualizar o handoff (seção 0) com o que foi para o ar e o nome do backup, no mesmo dia.
+
+### Sessão do app × sessão do bot (quem mexe em quê)
+Desde 15/10 uma sessão cuida do **app** (web e celular) e outra do **bot**. Para os PRs não entrarem em conflito nem usarem o mesmo número:
+- **Cada uma mexe só no que é seu.** Bot: `LabFlow*.json`, `tests/`, `docs/comandos.md`, migrations **027 a 049**. App: `app/`, `.github/workflows/app-api.yml`, migrations **050 a 099**, `docs/specs/lims/06`, `07`, `08` e `rumo-do-app.md` (a coluna "Situação" dos pedidos PB é atualizada pela sessão do bot). Precisou mexer no que é da outra? Vira **pedido** escrito (tabela "Pedidos para a sessão do bot" no rumo) e avisar o Danyllo.
+- **Número de migration:** o maior da faixa **na `main` e nos PRs abertos** (`gh pr list --state open` e os arquivos de cada um), mais um. Nunca reaproveitar número de PR fechado sem conferir. Se uma faixa acabar, combinar outra com o Danyllo antes.
+- **Arquivos dos dois** (`docs/handoff.md`, `docs/specs/lims/10-decisoes.md`, `CLAUDE.md`): cada sessão edita **só o próprio bloco** (no handoff, o bloco do app começa com "sessão do APP"); decisão nova entra **no topo** da lista do 10; PR pequeno, só com esse arquivo, mesclado logo para o outro lado pegar no `git pull`.
+- **Antes de abrir e antes de mesclar um PR:** `git fetch`, conferir se algum PR aberto mexe nos mesmos arquivos; se sim, juntar a `main` na branch (`git merge origin/main`) e rodar os testes de novo. O CI do app também roda quando uma migration do bot muda, para pegar cedo uma migration que quebre o app.
+
 ## Comportamento do bot (preferências do Danyllo)
 - **Poucas mensagens:** se o papel mostra que tudo vai junto (ex.: 17 compostas no mesmo caldo), **um comando e uma resposta**.
 - **Um só "sim"** para a lista inteira; a confirmação explica **o que será criado**, em linguagem simples, por load/composta.
@@ -40,6 +56,7 @@ O Danyllo trabalha no PC, no notebook e no celular. A memória local do Claude C
 - Nunca commitar IDs reais do n8n, chaves, telefones reais, IP do servidor ou `.env`.
 - O arquivo com IDs reais é `LabFlow_importar_n8n*.json` (bloqueado no `.gitignore`). O público é o `LabFlow.json`, gerado por `scripts/sanitize-workflow.ps1` e auditado por `scripts/audit-workflow.py --public`.
 - Nunca esvaziar a tabela `usuarios` (sem usuários o bot bloqueia todo mundo). Backup antes de qualquer migration ou limpeza.
+- **Testar migration "numa transação desfeita":** os arquivos de `db/migrations/` têm o **próprio `BEGIN`/`COMMIT`**. Incluir o arquivo (`\i`) dentro do seu `BEGIN` faz o `COMMIT` dele fechar a sua transação e **grava tudo**. Monte o teste tirando o `BEGIN`/`COMMIT` do arquivo (ou colando o corpo), termine com `ROLLBACK;` e **confira depois com um `SELECT`** que nada ficou. Nunca teste `INSERT` "que deveria falhar" fora de uma transação confirmada. Backup antes, sempre (em 16/10 um teste da 031 sem isso deixou 3 pessoas de teste e as funções no banco do piloto; foram removidas, com backup).
 - Nunca apagar dados sem o pedido do Danyllo e sem listar o alvo antes (transação com trava de contagem).
 
 ## Termos do domínio

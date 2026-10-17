@@ -13,6 +13,13 @@
 --   * telefone já cadastrado não cria de novo (use trocar_cargo); o banco nunca fica sem Admin;
 --   * "quem" é o id de quem está fazendo (o app passa a pessoa logada; o bot, quem mandou a mensagem).
 -- Só labflow_app executa (o usuário de leitura do painel não).
+--
+-- Pedido da sessão do app (17/10/2026): o app conecta com um papel que NÃO tem INSERT/UPDATE nas tabelas do bot. Por isso
+-- cadastrar_usuario e trocar_cargo (as que o app chama) são SECURITY DEFINER: rodam com o dono (labflow_app, o papel que
+-- cria as tabelas, rodando esta migration), com SET search_path = public, pg_temp (padrão de segurança do SECURITY DEFINER,
+-- que impede objeto falso num schema do chamador). A permissão continua conferida DENTRO da função, por p_quem
+-- (usuario_exigir_admin). O GRANT EXECUTE para o papel do app fica numa migration do app (051), não aqui.
+-- Rodar como labflow_app: o dono da função precisa ser quem tem permissão nas tabelas.
 
 BEGIN;
 
@@ -22,7 +29,7 @@ BEGIN
         RAISE EXCEPTION 'Só administradores podem cadastrar pessoas ou trocar cargos.';
     END IF;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = public, pg_temp;
 
 CREATE OR REPLACE FUNCTION cadastrar_usuario(p_nome text, p_telefone text, p_cargo text, p_quem bigint) RETURNS usuarios AS $$
 DECLARE
@@ -46,7 +53,7 @@ BEGIN
     INSERT INTO usuarios (telefone, nome, cargo) VALUES (v_tel, v_nome, p_cargo) RETURNING * INTO v;
     RETURN v;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
 
 CREATE OR REPLACE FUNCTION trocar_cargo(p_usuario_id bigint, p_cargo text, p_quem bigint) RETURNS usuarios AS $$
 DECLARE
@@ -67,7 +74,7 @@ BEGIN
     UPDATE usuarios SET cargo = p_cargo WHERE id = p_usuario_id RETURNING * INTO v;
     RETURN v;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
 
 CREATE OR REPLACE FUNCTION gravar_cargo_bot(p_telefone text, p_nome text, p_cargo text, p_quem_telefone text) RETURNS text AS $$
 DECLARE
