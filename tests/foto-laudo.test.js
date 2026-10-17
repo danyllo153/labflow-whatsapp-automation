@@ -131,8 +131,9 @@ test('TAB e Coliformes: uma composta por linha, achada pelo load e pelos lotes',
   const tab = ler({ formulario: 'tab', data: '14/10/2026', blocos: [{ load: '43598', item: '2703', compostas: ['1-5', '6-10'] }] });
   assert.deepEqual(tab.comandos.map((c) => c.texto), ['Tab feito do load 43598 item 2703 lotes 1-5', 'Tab feito do load 43598 item 2703 lotes 6-10']);
   assert.deepEqual(tab.buscas.map((b) => [b.idx, b.load, b.item, b.lotes.length]), [[0, '43598', '2703', 5], [1, '43598', '2703', 5]]);
-  const col = ler({ formulario: 'coliformes', blocos: [{ load: '43598', item: '2703', compostas: ['1-5', '6,7'] }] });
-  assert.deepEqual(col.comandos.map((c) => c.texto), ['Coliformes feitos do load 43598 item 2703 lotes 1-5', 'Coliformes feitos do load 43598 item 2703 lotes 6-7']);
+  // Coliformes: cada linha é uma composta com a sua data (a folha é cumulativa); vira linha a conferir no banco
+  const col = ler({ formulario: 'coliformes', blocos: [{ data: '14/10/2026', load: '43598', item: '2703', compostas: ['1-5', '6,7'] }] });
+  assert.deepEqual(col.linhasColi.map((x) => [x.kind, x.load, x.lotes.join(','), x.data]), [['receb', '43598', '1,2,3,4,5', '14/10/2026'], ['receb', '43598', '6,7', '14/10/2026']]);
 });
 
 test('TAB: tanques de NFC com data da coleta (ano de hoje; data que cairia no futuro usa o ano anterior)', () => {
@@ -142,13 +143,12 @@ test('TAB: tanques de NFC com data da coleta (ano de hoje; data que cairia no fu
   assert.deepEqual(tanques, ['Tab feito dos tanques terra 42,43 coleta 17/08/2026', 'Tab feito dos tanques terra 44 coleta 20/12/2025']);
 });
 
-test('TAB: composta ou tanque ilegível vira aviso; laudo de embarque ainda não é lido', () => {
+test('TAB: composta ou tanque ilegível vira aviso; Coliformes de embarque acha o navio, a linha, a fase e as amostras', () => {
   const r = ler({ formulario: 'tab', blocos: [{ load: '43598', item: '2703', compostas: ['1-5', 'abc'] }] });
   assert.equal(r.comandos.length, 1);
   assert.ok(r.problemas.some((p) => /não entendi a composta "abc"/.test(p)));
-  const emb = ler({ formulario: 'coliformes', blocos: [{ load: '43598', item: '2703', navio: 'O.SKY 123', linha: 2, fase: 1, compostas: ['A1-A3'] }] });
-  assert.equal(emb.falha, true);
-  assert.match(emb.textoResposta, /embarque ainda não leio/);
+  const emb = ler({ formulario: 'coliformes', blocos: [{ data: '14/10/2026', load: '43598', item: '2703', navio: 'O.Sky 123', linha: 'L2', fase: 'F1', amostras: [1, 2, 3] }] });
+  assert.deepEqual(emb.linhasColi.map((x) => [x.kind, x.navio, x.linha, x.fase, x.amostras.join(',')]), [['emb', 'O.SKY 123', 2, 1, '1,2,3']]);
 });
 
 // ---- falhas da IA ----
@@ -198,11 +198,11 @@ test('confirmação: TAB mostra o #N da composta achada; a que não existe fica 
 });
 
 test('confirmação: se nenhuma composta existe, nada é guardado', () => {
-  const d = ler({ formulario: 'coliformes', blocos: [{ load: '43598', item: '2703', compostas: ['1-5'] }] });
-  const r = resposta(d, [{ kind: 'composta', idx: 0, composta_id: null }]);
+  const d = ler({ formulario: 'coliformes', blocos: [{ data: '14/10/2026', load: '43598', item: '2703', compostas: ['1-5'] }] });
+  const r = resposta(d, [{ kind: 'coli', idx: 0, composta_id: null }]);
   assert.equal(r.salvar, '0');
-  assert.match(r.textoResposta, /nenhum comando ficou pronto/);
-  assert.match(r.textoResposta, /Nada foi gravado/);
+  assert.match(r.textoResposta, /nenhuma linha ficou pronta para gravar. Nada foi gravado/);
+  assert.match(r.textoResposta, /load 43598 \(1-5\): não achei essa composta \(só um Admin abre/);
 });
 
 test('confirmação: falha da leitura segue sem pendência', () => {
@@ -335,11 +335,11 @@ test('TAB e Coliformes: várias compostas e loads viram UM comando com faixas, a
   const c = interpretar(payload.comandos[0], { reenvio: true });
   assert.equal(c.tipo, 'tab_feito');
   assert.deepEqual(c.compostaIds, [18, 19, 20, 27, 28, 31]);
-  // coliformes usa o mesmo desenho
-  const col = ler({ formulario: 'coliformes', blocos: [{ load: '43598', item: '2703', compostas: ['1-5', '6-10'] }] });
-  const rc = resposta(col, [{ kind: 'composta', idx: 0, composta_id: 18 }, { kind: 'composta', idx: 1, composta_id: 19 }]);
-  assert.deepEqual(JSON.parse(rc.payload).comandos, ['Coliformes feitos das compostas #18, #19']);
-  assert.equal(interpretar('Coliformes feitos das compostas #18, #19', { reenvio: true }).teste, 'COLIFORMES');
+  // coliformes: as compostas achadas vão juntas num comando só ("Coliformes da foto"), com a data de cada linha
+  const col = ler({ formulario: 'coliformes', blocos: [{ data: '14/10/2026', load: '43598', item: '2703', compostas: ['1-5', '6-10'] }] });
+  const rc = resposta(col, [{ kind: 'coli', idx: 0, composta_id: 18 }, { kind: 'coli', idx: 1, composta_id: 19 }]);
+  assert.deepEqual(JSON.parse(rc.payload).comandos, ['Coliformes da foto: #18 data 14/10/2026 feito ; #19 data 14/10/2026 feito']);
+  assert.equal(interpretar('Coliformes da foto: #18 data 14/10/2026 feito ; #19 data 14/10/2026 feito', { reenvio: true }).tipo, 'coliformes_foto');
 });
 
 test('TAB: uma composta só e tanques de NFC continuam em comandos próprios', () => {
