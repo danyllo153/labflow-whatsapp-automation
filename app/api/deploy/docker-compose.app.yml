@@ -1,0 +1,54 @@
+# Stack do app LabFlow no servidor de demonstração (APP-011). Spec: 06-api-e-auth.md (v1.0), "Arquitetura".
+#
+# Fica SEPARADA da stack do bot (~/labflow/docker-compose.yml): subir, parar ou apagar esta não mexe no
+# Postgres, no n8n nem no Evolution. Usa só a rede da stack do bot para alcançar o labflow-postgres.
+#
+# Nenhuma porta publicada no servidor: o único caminho até a API é o Tailscale (rede privada; o HTTPS é
+# entregue pelo próprio Tailscale em https://<TS_HOSTNAME>.<tailnet>.ts.net).
+#
+# Rodar a partir da pasta app/api/deploy do repositório clonado no servidor (passo a passo no README.md):
+#   docker compose -p labflow-app --env-file ~/labflow/.env -f docker-compose.app.yml up -d --build
+#
+# Variáveis lidas do ~/labflow/.env (nunca no repositório):
+#   LABFLOW_APP_WEB_PASSWORD  senha do usuário de banco labflow_app_web
+#   TS_AUTHKEY                chave de autenticação do Tailscale (só no primeiro "up"; depois fica no volume)
+#   LABFLOW_REDE              (opcional) nome real da rede da stack do bot, se não for "labflow-net"
+
+services:
+  labflow-api:
+    build: ..
+    image: labflow-api:local
+    container_name: labflow-api
+    restart: unless-stopped
+    environment:
+      LABFLOW_DB_URL: postgresql://labflow_app_web:${LABFLOW_APP_WEB_PASSWORD:?defina no .env}@labflow-postgres:5432/labflow
+      TZ: America/Sao_Paulo
+    networks: [labflow-net]
+    mem_limit: 256m
+    # sem "ports": de fora do Docker ninguém alcança a 8000
+
+  labflow-tailscale:
+    image: tailscale/tailscale:v1.80.3
+    container_name: labflow-tailscale
+    hostname: labflow-app
+    restart: unless-stopped
+    environment:
+      TS_AUTHKEY: ${TS_AUTHKEY:-}
+      TS_HOSTNAME: labflow-app
+      TS_STATE_DIR: /var/lib/tailscale
+      TS_USERSPACE: "true"          # sem /dev/net/tun e sem privilégios no servidor
+      TS_SERVE_CONFIG: /config/serve.json
+    volumes:
+      - tailscale-estado:/var/lib/tailscale
+      - ./tailscale-serve.json:/config/serve.json:ro
+    networks: [labflow-net]
+    depends_on: [labflow-api]
+    mem_limit: 128m
+
+volumes:
+  tailscale-estado:
+
+networks:
+  labflow-net:
+    external: true
+    name: ${LABFLOW_REDE:-labflow-net}

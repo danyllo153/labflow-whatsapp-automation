@@ -42,6 +42,9 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 - Senha provisória gerada pelo Admin (24 h, uso único), troca obrigatória no primeiro login, mínimo de 8 caracteres, senha igual ao usuário recusada (APP-006).
 - Admin → Pessoas: lista com situação (sem telefone) e usuário curto (APP-007).
 - Páginas **Coletas** e **Recebimento** só leitura, pelas views do Power BI, com filtros e paginação (APP-008).
+- Exportar para **Excel** as páginas Coletas e Recebimento, com os filtros aplicados (APP-009).
+- **Pendências de hoje** (vence hoje e atrasados) por bloco, lendo as views do Power BI (APP-010).
+- **Container** da API (`app/api/Dockerfile`) e stack separada com acesso só pelo **Tailscale** (`app/api/deploy/`), sem porta pública; comando `primeiro_admin` para o primeiro login do Admin; a migration 050 passa a dar o `CONNECT` no banco ao `labflow_app_web` (o banco do servidor não deixa o `PUBLIC` conectar); CI no Postgres 15, igual ao servidor, e conferindo que a imagem sobe (APP-011).
 
 ## [1.3.0] - 2026-10-15
 
