@@ -74,13 +74,13 @@ test('confirmação: só o que é novo; o que já está igual no banco não apar
   }));
   assert.equal(r.salvar, '1');
   assert.deepEqual(JSON.parse(r.payload).comandos, ['Coliformes da foto: #14 data 16/10/2026 negativo ; #15 data 16/10/2026 positivo ; #16 data 16/10/2026 feito']);
-  assert.match(r.textoResposta, /🧪 No caldo:\n• 16\/10\/2026: #16 load 43750 \(1-2\)/);
-  assert.match(r.textoResposta, /✅ Lidos, negativos \(—\):\n• 16\/10\/2026: #14 load 43716 \(1-3\)/);
-  assert.match(r.textoResposta, /🚨 Positivos \(\+\):\n• 16\/10\/2026: #15 load 43747 \(1-3\)\nDepois do sim, pergunto se abre a composta lote a lote/);
+  assert.match(r.textoResposta, /🧪 Vão para o caldo \(sem resultado\):\n• 16\/10\/2026: #16 load 43750 \(1-2\)/);
+  assert.match(r.textoResposta, /✅ Resultado NEGATIVO \(traço no papel\):\n• 16\/10\/2026: #14 load 43716 \(1-3\)/);
+  assert.match(r.textoResposta, /🚨 Resultado POSITIVO \(\+\):\n• 16\/10\/2026: #15 load 43747 \(1-3\)\nDepois do sim, pergunto se abre a composta lote a lote/);
   assert.doesNotMatch(r.textoResposta, /#12|#13/, 'o que já está igual não aparece');
   const tudoIgual = resposta(d, banco(d, Object.fromEntries([0, 1, 2, 3, 4].map((i) => [i, { composta_id: 20 + i, analise_id: 80 + i, atual: ['No caldo|', 'Concluída|Negativo', 'Concluída|Negativo', 'Concluída|Positivo', 'No caldo|'][i] }]))));
   assert.equal(tudoIgual.salvar, '0');
-  assert.match(tudoIgual.textoResposta, /tudo o que está na foto já está no sistema\. Nada a gravar\./);
+  assert.match(tudoIgual.textoResposta, /Coliformes: nada novo para gravar\./);
 });
 
 test('confirmação: composta que falta: o Admin abre (recebimento + compostas, como no TAB); embarque nunca é criado', () => {
@@ -93,6 +93,7 @@ test('confirmação: composta que falta: o Admin abre (recebimento + compostas, 
     'Recebimento load 43750 item 1233 fabrica AQA lotes 1-2 data 16/10/2026 resultados <10',
     'Compostas do load 43750 item 1233 (1-2)',
     'Coliformes da foto: load 43750 item 1233 (1-2) data 16/10/2026 negativo']);
+  assert.doesNotMatch(r.textoResposta, /início do piloto|já tinham|repetid/, 'não fala do que foi ignorado');
   assert.match(r.textoResposta, /O\.SKY 188 load 43478 \(A1-A3\): não achei a composta do embarque/);
   const op = resposta({ ...d, nivel: 'Operador' }, banco(d));
   assert.match(op.textoResposta, /load 43750 \(1-2\): não achei essa composta \(só um Admin abre/);
@@ -139,4 +140,48 @@ test('banco: o "abrir" aceita a composta que a foto fechou positiva; o comando i
   const p = codigoDoNode('Foto · Montar pedido');
   assert.match(p, /A folha é CUMULATIVA/);
   assert.match(p, /O\.SEA6 - L6F2/);
+});
+
+// ---------- 19/10: célula em branco, grupo que junta compostas, item diferente, resposta objetiva ----------
+test('prompt: célula em branco é null (nunca "-"); o exemplo do prompt não ensina "-"', () => {
+  const p = workflow.nodes.find((n) => n.name === 'Foto · Montar pedido').parameters.jsCode;
+  assert.match(p, /"coliformes": null, "ecoli": null/);
+  assert.match(p, /escreva "-" SÓ se houver um traço DESENHADO/);
+  assert.match(p, /célula EM BRANCO = null \(nunca "-"\)/);
+});
+
+test('o grupo do papel que junta compostas ((1-3)+(4-6) = 1-6) grava em cada uma; o texto mostra os dois #', () => {
+  const d = ler({ blocos: [{ data: '16/10/2026', load: '43669', compostas: ['1-6'], item: '2549', fabrica: 'UCH', coliformes: null }] }, 'Admin');
+  const r = rodar('Foto · Montar resposta', [
+    { kind: 'coli', idx: 0, composta_id: 40, analise_id: null, atual: null },
+    { kind: 'coli', idx: 0, composta_id: 41, analise_id: null, atual: null }], { 'Foto · Interpretar': { ...d, nivel: 'Admin' } })[0].json;
+  assert.deepEqual(JSON.parse(r.payload).comandos, ['Coliformes da foto: #40 data 16/10/2026 feito ; #41 data 16/10/2026 feito']);
+  assert.match(r.textoResposta, /🧪 Vão para o caldo \(sem resultado\):\n• 16\/10\/2026: #40 \+ #41 load 43669 \(1-6\)/);
+  assert.doesNotMatch(r.textoResposta, /Abrir antes/);
+});
+
+test('item do papel diferente do sistema: usa a composta que já existe e avisa (não cria duplicada)', () => {
+  const d = ler({ blocos: [{ data: '16/10/2026', load: '43667', compostas: ['1-5'], item: '2589', fabrica: 'UCH', coliformes: null }] }, 'Admin');
+  const r = rodar('Foto · Montar resposta', [{ kind: 'coli', idx: 0, composta_id: 42, analise_id: null, atual: null, load_num: '2549' }], { 'Foto · Interpretar': { ...d, nivel: 'Admin' } })[0].json;
+  assert.deepEqual(JSON.parse(r.payload).comandos, ['Coliformes da foto: #42 data 16/10/2026 feito']);
+  assert.match(r.textoResposta, /load 43667: o papel diz item 2589 e o sistema tem 2549; usei a composta que já existe/);
+  assert.doesNotMatch(r.textoResposta, /Abrir antes/);
+});
+
+test('resposta objetiva: só o que vai para o caldo, o que recebe resultado e o que abre antes', () => {
+  const d = ler({ blocos: [
+    { data: '16/10/2026', load: '43683', compostas: ['1-4'], item: '1233', fabrica: 'AQA', coliformes: '-' },
+    { data: '16/10/2026', load: '43800', compostas: ['1-3'], item: '1233', fabrica: 'CON', coliformes: null },
+  ] }, 'Admin');
+  const r = rodar('Foto · Montar resposta', [{ kind: 'coli', idx: 0, composta_id: 52, analise_id: null, atual: null }, { kind: 'coli', idx: 1, composta_id: null }], { 'Foto · Interpretar': { ...d, nivel: 'Admin' } })[0].json;
+  assert.equal(r.textoResposta.split('\n')[0], '📷 Coliformes:');
+  assert.match(r.textoResposta, /✅ Resultado NEGATIVO \(traço no papel\):\n• 16\/10\/2026: #52 load 43683 \(1-4\)/);
+  assert.match(r.textoResposta, /🆕 Abrir antes \(só o Admin\):\n• load 43800 item 1233 \(CON\)/);
+});
+
+test('banco: o SQL das compostas da foto acha várias compostas por linha e o item do sistema', () => {
+  const q = workflow.nodes.find((n) => n.name === 'BD · Compostas da foto').parameters.query;
+  assert.match(q, /coli_ids AS/);
+  assert.match(q, /v\.lotes <@ r\.rq/);
+  assert.match(q, /AS load_num/);
 });

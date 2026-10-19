@@ -151,7 +151,7 @@ test('foto de Coliformes, Admin: mesmo caminho, com o comando de Coliformes', ()
     'Recebimento load 44300 item 2703 fabrica AQA lotes 1-10 data 15/10/2026 resultados <10',
     'Compostas do load 44300 item 2703 (1-5)(6-10)',
     'Coliformes da foto: load 44300 item 2703 (1-5) data 15/10/2026 feito ; load 44300 item 2703 (6-10) data 15/10/2026 feito']);
-  assert.match(r.textoResposta, /Compostas que ainda não existem \(só o Admin abre pelo Coliformes/);
+  assert.match(r.textoResposta, /Abrir antes \(só o Admin\)/);
 });
 
 test('prompt: "bl" sozinho vale bl120 também nas placas de tanque', () => {
