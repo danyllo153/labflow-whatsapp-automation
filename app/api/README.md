@@ -63,6 +63,7 @@ Depois abra `http://127.0.0.1:8000/docs` no navegador: é a documentação autom
 | `POST /admin/pessoas/{id}/senha-provisoria` | Só Admin: gera uma senha provisória (ex.: `K7m4-Tq2p`, 24 h, uso único), derruba a senha antiga e as sessões abertas da pessoa | APP-006 |
 | `GET /paginas/coletas` | Página Coletas (lê `bi.coletas`): filtros por período, origem, tanque, navio e quem coletou/digitou; paginação (até 200 por página). O Coletor vê só as próprias coletas | APP-008 |
 | `GET /paginas/recebimento` | Página Recebimento (lê `bi.contagens`): filtros por período previsto, load, lote, fábrica, análise, situação (Ok, Não ok, Atrasado, Vence hoje, No prazo) e quem leu. O Coletor não vê | APP-008 |
+| `GET /paginas/coletas/excel` e `GET /paginas/recebimento/excel` | Excel (`.xlsx`) do que está filtrado, com os mesmos filtros da página, sem paginação (até 50.000 linhas). Aba com os dados (cabeçalho laranja, filtro do Excel ligado) e aba "Filtros" com o que foi usado e a hora da exportação. Livre para todos que veem a página, sem registro | APP-009 |
 | `POST /trocar-senha` | Troca a senha. Depois de entrar com a provisória a troca é obrigatória (as outras rotas respondem "Troque sua senha antes de continuar"); na troca voluntária pede a senha atual. Mínimo de 8 caracteres; senha igual ao usuário é recusada | APP-006 |
 
 As permissões por cargo (tabela do `07-app-pwa.md`) ficam num lugar só, `labflow_api/permissoes.py`; cada rota pede a ação com `Depends(exigir("..."))` (APP-005).
