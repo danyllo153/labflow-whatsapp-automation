@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: postgres:16
+        image: postgres:15-alpine   # mesma versão do servidor (labflow-postgres)
         env:
           POSTGRES_USER: teste
           POSTGRES_PASSWORD: teste
@@ -54,3 +54,9 @@ jobs:
           psql "$LABFLOW_DB_URL" -v ON_ERROR_STOP=1 -q -f ../../db/migrations/050_app_login.sql
       - name: Rodar os testes (pytest)
         run: python -m pytest -q
+      - name: Construir a imagem da API e conferir que ela sobe (APP-011)
+        run: |
+          docker build -q -t labflow-api:ci .
+          docker run -d --name labflow-api-ci --network host -e LABFLOW_DB_URL="$LABFLOW_DB_URL" labflow-api:ci
+          for i in $(seq 1 20); do curl -fsS http://127.0.0.1:8000/saude && exit 0; sleep 1; done
+          docker logs labflow-api-ci; exit 1

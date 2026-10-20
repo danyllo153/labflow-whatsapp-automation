@@ -91,3 +91,15 @@ def test_nova_provisoria_depois_de_cancelar_a_anterior(conexao):
     assert conexao.execute(
         "SELECT count(*) FROM app.senhas_provisorias WHERE usuario_id = %s", (uid,)
     ).fetchone()[0] == 2
+
+
+def test_app_web_pode_conectar_mesmo_sem_connect_do_public(conexao):
+    # No servidor o banco tem REVOKE ALL ... FROM PUBLIC; a 050 dá o CONNECT ao app explicitamente.
+    publico, app_web = conexao.execute(
+        """
+        SELECT has_database_privilege('public', current_database(), 'CONNECT'),
+               has_database_privilege('labflow_app_web', current_database(), 'CONNECT')
+        """
+    ).fetchone()
+    assert publico is False  # o banco de teste imita o servidor (preparar_banco_teste.sh)
+    assert app_web is True

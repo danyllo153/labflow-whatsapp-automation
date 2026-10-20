@@ -71,6 +71,11 @@ CREATE TABLE app.sessoes (
 CREATE INDEX sessoes_por_usuario ON app.sessoes (usuario_id) WHERE encerrada_em IS NULL;
 
 -- Permissões do labflow_app_web ----------------------------------------------------------------------------
+-- No servidor o banco foi criado com REVOKE ALL ... FROM PUBLIC: sem este GRANT o app nem conecta.
+DO $$
+BEGIN
+  EXECUTE format('GRANT CONNECT ON DATABASE %I TO labflow_app_web', current_database());
+END $$;
 GRANT USAGE ON SCHEMA public, bi TO labflow_app_web;
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO labflow_app_web;
 GRANT SELECT ON ALL TABLES IN SCHEMA bi TO labflow_app_web;
