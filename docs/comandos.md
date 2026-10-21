@@ -128,6 +128,8 @@ Os cargos válidos são **Admin**, **Operador**, **Consultor** ou **Coletor** (v
 
 Também funciona por frase livre (seção 11), por exemplo `muda o cargo do 11 99999-1234 para operador`. Nesse caso o bot mostra o comando entendido e só executa depois do "sim". O cargo precisa estar escrito na mensagem como Admin (ou administrador), Operador ou Consultor. Uma palavra parecida, como "gerente", é recusada com `Cargo inválido`.
 
+> **Nos bastidores:** o cadastro e a troca de cargo passam pelas funções do banco `cadastrar_usuario` e `trocar_cargo` (migration `031`), as mesmas da tela "Nova pessoa" do app. Por isso o banco também recusa, com o motivo no WhatsApp: telefone inválido, cargo inválido, quem não é Admin e **tirar o cargo do único Admin**.
+
 ### 6.1 Cargo Coletor
 Para quem só coleta (pessoal da micro e da física no piloto). O Admin cadastra com `adicionar cargo Coletor para o número 5511987654321 nome Joyce`. O Coletor **só pode**:
 - registrar a **própria** coleta (terra e navio; não vale `coletado por <outro nome>`);
