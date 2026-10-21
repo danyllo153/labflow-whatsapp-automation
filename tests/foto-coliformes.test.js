@@ -185,3 +185,9 @@ test('banco: o SQL das compostas da foto acha várias compostas por linha e o it
   assert.match(q, /v\.lotes <@ r\.rq/);
   assert.match(q, /AS load_num/);
 });
+
+test('leitura: dúvidas da IA sobre resultado em branco e data assumida não aparecem; as outras continuam', () => {
+  const d = ler({ duvidas: ['data 16.10.22 assumida como 16/10/2026', 'colunas Coliformes Totais e E.coli em branco', 'load da 3ª linha ilegível'],
+    blocos: [{ data: '16/10/2026', load: '43669', compostas: ['1-6'], item: '2549', fabrica: 'UCH', coliformes: null, ecoli: null }] });
+  assert.deepEqual(d.duvidas, ['load da 3ª linha ilegível']);
+});
