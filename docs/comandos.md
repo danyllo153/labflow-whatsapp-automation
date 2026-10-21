@@ -498,6 +498,8 @@ Tab feito dos tanques terra 44 coleta 06/10/2026 data 16/10/2026 completo
 - Se a coleta e as análises já existem, o `completo` só marca as placas `<1` das leituras vencidas e registra o TAB; **não duplica nada** e não sobrescreve placa já digitada. As leituras marcadas ficam como lidas, com a origem `automatico`.
 - Só Admin: outro cargo recebe a recusa de sempre ("não há coleta") ou, ao digitar `completo`, a mensagem de que só o Admin faz isso. Em coleta que já existia, o `completo` também marca como feitos os drops pendentes que já venceram.
 - **Foto do TAB com tanques:** no papel o tanque de terra vem como `TQ 44 16/10` (número do tanque e data da coleta). O bloco de tanques **não precisa de load**. Para o Admin, a foto já monta o comando com `completo`.
+- **Foto do TAB com tanques mostra só o que é novo (21/10/2026):** o bot confere no banco cada tanque + data da coleta; o que **já tem TAB** fica de fora ("ℹ️ Já têm TAB"), e se tudo já está no sistema a resposta é "Nada a gravar", sem pedir sim. Para o Admin, o tanque sem coleta aparece em "🆕 Sem coleta no sistema"; para os outros cargos ele fica de fora, com o aviso para registrar a coleta antes.
+- **Vários grupos de coleta num comando só** (a foto manda assim e o sim responde **uma mensagem**): `Tab feito dos tanques terra 39,46 coleta 17/10/2026 ; 43 coleta 18/10/2026 ; 44,45,47 coleta 19/10/2026 data 19/10/2026 completo`. Até 24 tanques; na resposta cada tanque vem com a data da coleta (`39 (coleta 17/10)`).
 - **Composta com lote repetido na foto** (ex.: o lote 8 em duas compostas) é recusada antes do "sim", com o aviso de qual lote repete; nada de recebimento gravado pela metade.
 ## 14. C.T e B.L por lote e por amostra (concentrado)
 
