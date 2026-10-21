@@ -500,6 +500,8 @@ Tab feito dos tanques terra 44 coleta 06/10/2026 data 16/10/2026 completo
 - Se a coleta e as análises já existem, o `completo` só marca as placas `<1` das leituras vencidas e registra o TAB; **não duplica nada** e não sobrescreve placa já digitada. As leituras marcadas ficam como lidas, com a origem `automatico`.
 - Só Admin: outro cargo recebe a recusa de sempre ("não há coleta") ou, ao digitar `completo`, a mensagem de que só o Admin faz isso. Em coleta que já existia, o `completo` também marca como feitos os drops pendentes que já venceram.
 - **Foto do TAB com tanques:** no papel o tanque de terra vem como `TQ 44 16/10` (número do tanque e data da coleta). O bloco de tanques **não precisa de load**. Para o Admin, a foto já monta o comando com `completo`.
+- **Foto do TAB com tanques mostra só o que é novo (21/10/2026):** o bot confere no banco cada tanque + data da coleta; o que **já tem TAB** fica de fora ("ℹ️ Já têm TAB"), e se tudo já está no sistema a resposta é "Nada a gravar", sem pedir sim. Para o Admin, o tanque sem coleta aparece em "🆕 Sem coleta no sistema"; para os outros cargos ele fica de fora, com o aviso para registrar a coleta antes.
+- **Vários grupos de coleta num comando só** (a foto manda assim e o sim responde **uma mensagem**): `Tab feito dos tanques terra 39,46 coleta 17/10/2026 ; 43 coleta 18/10/2026 ; 44,45,47 coleta 19/10/2026 data 19/10/2026 completo`. Até 24 tanques; na resposta cada tanque vem com a data da coleta (`39 (coleta 17/10)`).
 - **Composta com lote repetido na foto** (ex.: o lote 8 em duas compostas) é recusada antes do "sim", com o aviso de qual lote repete; nada de recebimento gravado pela metade.
 ## 14. C.T e B.L por lote e por amostra (concentrado)
 
@@ -781,7 +783,15 @@ Regras: ponto, barra ou traço depois do número do lote fecha a composta, e o �
 
 **Resultados do embarque (C.T, B.L 72h e B.L 120h por amostra).** Com o embarque **já registrado**, a mesma foto também lê os resultados de cada amostra (A1, A2...) e mostra uma linha por amostra (`A1: CT <10 · BL72 60 🚨 · BL120 <10`), com 🚨 nos acima do limite (C.T ≥ 200, B.L ≥ 50), o aviso de quando o resultado **corrige um anterior**, e pede **um só sim** que grava tudo. **Valor riscado não vale**: se há outro valor escrito ao lado para a mesma amostra e coluna, vale esse; se não, a célula fica sem leitura. Se o papel inteiro estiver riscado ou em branco, o bot avisa e não grava nada. Se o embarque ainda **não** estiver registrado, o primeiro sim registra o embarque e o bot avisa para mandar a foto de novo para gravar os resultados. Se uma amostra estiver em outro load no sistema, o bot avisa.
 
-Ainda não lê: os resultados de C.T/B.L do recebimento, o "+" da confirmação e o TAB/Coliformes de embarque. Esses pedem o comando. Spec: `docs/specs/foto-laudo.md`.
+**Folha de Coliformes em suco (17/10/2026).** A folha é **cumulativa**: cada grupo de linhas tem a sua data (Data/Hora) e cada linha da coluna Amostra é **uma composta** (load + lotes no recebimento; navio + linha/fase ou load + amostras `A1-A3` no embarque; a Observação traz fábrica e item, ou o navio e a linha/fase). A foto mostra **só o que é novo**, numa mensagem e um sim:
+- **Só entram linhas com data a partir de 13/10/2026** (início do piloto); as mais antigas são contadas e ignoradas.
+- Composta sem Coliformes → **🧪 no caldo** com a data da linha. **"—"** → **✅ lido, negativo**. **"+"** → **🚨 positivo**: depois do sim o bot pergunta *"Abrir a composta lote a lote para a confirmação?"*; com sim, abre como no comando `coliformes #5 em confirmação` (cada lote no caldo hoje, estria amanhã; a composta volta para "em confirmação" e o resultado final sai dos lotes).
+- O que já está **igual** no sistema não aparece (composta já no caldo sem resultado no papel; resultado já gravado igual; composta já aberta lote a lote).
+- **E.coli "+"** só gera aviso (o sistema guarda Coliformes Totais).
+- Composta de recebimento que não existe: **só o Admin abre** pela foto, como no TAB (recebimento com C.T e B.L = `<10` e compostas, com a data da linha). Composta de **embarque** a foto não cria: avisa com o comando.
+- Por baixo, depois do sim roda o comando interno `Coliformes da foto: #12 data 16/10/2026 negativo ; ...` (só aceito pelo reenvio do próprio bot; digitado, o bot explica que é da foto).
+
+Ainda não lê: os resultados de C.T/B.L do recebimento, o "+" da confirmação do TAB e o TAB de embarque. Esses pedem o comando. Spec: `docs/specs/foto-laudo.md`.
 
 ## 17. Recebimento de NFC (item 129)
 

@@ -14,6 +14,7 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 
 ### Adicionado
 - **Funções do banco para cadastrar pessoa e trocar cargo (pedido PB5 da sessão do app):** `cadastrar_usuario(nome, telefone, cargo, quem)`, `trocar_cargo(usuario_id, cargo, quem)` e `gravar_cargo_bot(...)` (migration `031`). Só Admin; telefone obrigatório (12 ou 13 dígitos); cargos Admin, Operador, Consultor e Coletor; o banco nunca fica sem Admin. O comando `adicionar cargo ...` do bot passa a usar essas funções (um nó novo, `Montar resposta cargo`, mostra a recusa no WhatsApp). Só o `labflow_app` executa. As funções que o app chama são `SECURITY DEFINER` com `search_path` fixo (o app conecta com um papel sem INSERT/UPDATE nas tabelas do bot).
+- **Folha de Coliformes pela foto** (17/10): folha cumulativa com a data de cada grupo de linhas; só linhas a partir de 13/10/2026; só o que é novo; "—" grava lido negativo; "+" grava positivo e pergunta se abre a composta lote a lote; E.coli "+" só avisa; linhas de navio acham a composta de embarque. Comando interno `Coliformes da foto` (nodes `BD · Coliformes da foto` e `Montar resposta coliformes da foto`); o "abrir" lote a lote passa a aceitar a composta concluída positiva. Sem migration.
 - **Foto do recebimento NFC só com o que é novo** (16/10): lote que ainda não existe registra e grava os resultados da linha no mesmo sim (sem mandar a foto de novo); lote registrado só entra com resultado que falta ou mudou; o que já está igual no sistema não aparece. O comando de recebimento NFC aceita `resultados ct 14 bl72 22` no fim da linha (`BD · Gravar recebimento NFC` grava em `contagens_nfc` o lido e o final). Sem migration.
 - **"Todos" de uma vez** (seção 18 do `docs/comandos.md`): `bl72 load 44502 todos deu <10 exceto lote 3 deu 20` grava o resultado em todos os lotes (recebimento), amostras (embarque) ou lotes do NFC que saem hoje, ou na data dita, e ainda não têm resultado; o "exceto" dá outro valor a um lote ou o deixa de fora. Um só sim.
 - **Todos os tanques sem crescimento:** `bl todos os tanques navio O.SKY 123 deu <1 exceto tanque 1C normal <1,1,0` grava <1 nas 3 placas de cada leitura que sai na data (terra ou navio, normal e stress); a exceção com placas grava o que deu e o não ok volta com o comando de desvio pronto (não abre desvio sozinho). Nodes `BD · Leituras do todos` e `Montar pergunta placas todos`, pelo mesmo caminho da foto de NFC (`placas_lote`). Sem migration.
@@ -29,9 +30,22 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 - **Admin abre a composta pelo TAB / Coliformes** (comando e foto): quando a composta não existe, o bot pergunta e, com "sim", registra o recebimento dos lotes que faltam, cria as compostas e registra o teste. Outros cargos seguem barrados. `fabrica` aceita no comando; testes em `tests/tab-abrir-composta.test.js`.
 
 ### Corrigido
+- **Coliformes pela foto, resultado em branco** (19/10): folha sem nada nas colunas de resultado vira "vai para o caldo" (antes o prompt ensinava `-` e o bot lia negativo); o grupo do papel que junta compostas (`1-6` = `(1-3)` + `(4-6)`) grava em cada uma, e item diferente do sistema usa a composta que já existe e avisa, em vez de abrir outra. A resposta ficou objetiva: o que vai para o caldo, o que recebe resultado (negativo/positivo) e o que o Admin abre antes; não fala mais de linhas antigas nem do que já está gravado.
 - **Resposta repetida da foto (16/10):** a foto do laudo leva mais de 1 minuto na IA e a Evolution reentregava a mesma mensagem a cada ~65 s; cada reentrega rodava o fluxo e o bot respondia 3 vezes. Agora o id da mensagem é gravado (migration `032_mensagens_recebidas`, só o id e a hora) e a reentrega é descartada no `Interpretar comando`. Os reenvios internos do bot não têm id e seguem normais.
 - **NFC recebido: o chat mostra o número do laudo** (decisão de 16/10): a foto, a confirmação do comando, o "era ..." da correção e as consultas mostram o valor lido (`CT 4368`), sem a conta da diluição. O banco continua gravando também o valor multiplicado (`contagens_nfc.valor`), que é o que o Power BI mostra.
 - IA: "bl" sozinho vale bl120 também nas placas de tanque (a regressão de 16/10 achou bl72; 59 de 60 antes da correção).
+
+### App (Fase B: API de leitura e login, em `app/api/`)
+- API em **FastAPI** com testes automáticos no GitHub Actions sobre um PostgreSQL de teste (todas as migrations e os dados fictícios de `db/seeds`); `/saude` e documentação em `/docs` (APP-001, APP-002).
+- Migration **050** do app: schema `app` (credenciais, senhas provisórias, sessões) e papel `labflow_app_web`, que lê as tabelas do bot e grava só no schema `app` (APP-003). Não aplicada no servidor.
+- Login com usuário curto e senha (argon2), sessão em cookie seguro por até 30 dias sem uso, bloqueio de 15 min após 5 senhas erradas, sair e "quem sou eu" com o cargo lido a cada chamada (APP-004).
+- Permissões por cargo (Admin, Operador, Consultor, Coletor) num lugar só (APP-005).
+- Senha provisória gerada pelo Admin (24 h, uso único), troca obrigatória no primeiro login, mínimo de 8 caracteres, senha igual ao usuário recusada (APP-006).
+- Admin → Pessoas: lista com situação (sem telefone) e usuário curto (APP-007).
+- Páginas **Coletas** e **Recebimento** só leitura, pelas views do Power BI, com filtros e paginação (APP-008).
+- Exportar para **Excel** as páginas Coletas e Recebimento, com os filtros aplicados (APP-009).
+- **Pendências de hoje** (vence hoje e atrasados) por bloco, lendo as views do Power BI (APP-010).
+- **Container** da API (`app/api/Dockerfile`) e stack separada com acesso só pelo **Tailscale** (`app/api/deploy/`), sem porta pública; comando `primeiro_admin` para o primeiro login do Admin; a migration 050 passa a dar o `CONNECT` no banco ao `labflow_app_web` (o banco do servidor não deixa o `PUBLIC` conectar); CI no Postgres 15, igual ao servidor, e conferindo que a imagem sobe (APP-011).
 
 ## [1.3.0] - 2026-10-15
 

@@ -61,6 +61,10 @@ Depois abra `http://127.0.0.1:8000/docs` no navegador: é a documentação autom
 | `GET /admin/pessoas` | Só Admin: lista as pessoas cadastradas no bot com nome, cargo, usuário curto e situação (sem usuário no app, senha provisória pendente, ativo, bloqueado). Não mostra telefone | APP-007 |
 | `PUT /admin/pessoas/{id}/usuario` | Só Admin: define ou troca o usuário curto (ex.: `ana.souza`) de quem já está cadastrado; depois, gerar a senha provisória | APP-007 |
 | `POST /admin/pessoas/{id}/senha-provisoria` | Só Admin: gera uma senha provisória (ex.: `K7m4-Tq2p`, 24 h, uso único), derruba a senha antiga e as sessões abertas da pessoa | APP-006 |
+| `GET /paginas/coletas` | Página Coletas (lê `bi.coletas`): filtros por período, origem, tanque, navio e quem coletou/digitou; paginação (até 200 por página). O Coletor vê só as próprias coletas | APP-008 |
+| `GET /paginas/recebimento` | Página Recebimento (lê `bi.contagens`): filtros por período previsto, load, lote, fábrica, análise, situação (Ok, Não ok, Atrasado, Vence hoje, No prazo) e quem leu. O Coletor não vê | APP-008 |
+| `GET /paginas/coletas/excel` e `GET /paginas/recebimento/excel` | Excel (`.xlsx`) do que está filtrado, com os mesmos filtros da página, sem paginação (até 50.000 linhas). Aba com os dados (cabeçalho laranja, filtro do Excel ligado) e aba "Filtros" com o que foi usado e a hora da exportação. Livre para todos que veem a página, sem registro | APP-009 |
+| `GET /pendencias-hoje` | O que **vence hoje** e o que está **atrasado** (C.T/B.L, TAB, Coliformes, Howard, drops, leituras de NFC, recebimento NFC, desvios), nos blocos do relatório do dia, com os totais para os cartões do Início. Lê as views `bi.*`. Filtros: bloco e situação | APP-010 |
 | `POST /trocar-senha` | Troca a senha. Depois de entrar com a provisória a troca é obrigatória (as outras rotas respondem "Troque sua senha antes de continuar"); na troca voluntária pede a senha atual. Mínimo de 8 caracteres; senha igual ao usuário é recusada | APP-006 |
 
 As permissões por cargo (tabela do `07-app-pwa.md`) ficam num lugar só, `labflow_api/permissoes.py`; cada rota pede a ação com `Depends(exigir("..."))` (APP-005).
@@ -71,4 +75,11 @@ O endereço do banco vem da variável de ambiente `LABFLOW_DB_URL` (APP-002). Nu
 
 ## Banco do app (APP-003)
 
-A migration `db/migrations/050_app_login.sql` cria o schema `app` (credenciais, senhas provisórias e sessões) e o usuário de banco **`labflow_app_web`**, que **lê** as tabelas e views do bot e **grava só no schema `app`** (um teste prova que ele não consegue gravar nas tabelas do bot). Para desfazer: `050_app_login_desfazer.sql`. No servidor, ela só será aplicada quando a API for publicada (APP-011), com backup antes.
+A migration `db/migrations/050_app_login.sql` cria o schema `app` (credenciais, senhas provisórias e sessões) e o usuário de banco **`labflow_app_web`**, que **lê** as tabelas e views do bot e **grava só no schema `app`** (um teste prova que ele não consegue gravar nas tabelas do bot). Para desfazer: `050_app_login_desfazer.sql`. No servidor, ela é aplicada junto com a publicação da API (APP-011), com backup antes.
+
+## Container e servidor (APP-011)
+
+- `Dockerfile`: imagem da API (Python 3.12, usuário sem privilégios, healthcheck em `/saude`).
+- `deploy/docker-compose.app.yml`: stack **separada** da do bot (`labflow-api` + `labflow-tailscale`), sem porta publicada; o acesso é só pelo Tailscale, em HTTPS.
+- `deploy/README.md`: passo a passo no servidor, um comando por vez (backup, migration 050, senha do `labflow_app_web`, subir a stack e o primeiro login).
+- Primeiro Admin (uma vez, dentro do container): `python -m labflow_api.primeiro_admin` lista os Admin do bot; `python -m labflow_api.primeiro_admin <id> <usuario.curto>` mostra a senha provisória.

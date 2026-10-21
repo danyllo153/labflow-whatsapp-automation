@@ -84,6 +84,8 @@ Código do app no **mesmo repositório, na pasta `app/`** (`app/api/` e, na Fase
 | APP-010 | Pendências de hoje | 07 §3; 06 §Primeiros endpoints | `GET /pendencias-hoje` (vence hoje e atrasados), lendo as views de previstas | Bate com o que o `relatório do dia` do bot mostraria no banco de teste | APP-005 |
 | APP-011 | Container e acesso por Tailscale | 06 §Arquitetura | Container `labflow-api` na stack do servidor de demonstração, sem porta pública; passo a passo para o Danyllo acessar `/docs` pelo Tailscale | O Danyllo abre `/docs` no navegador e faz login com um usuário fictício | APP-004 |
 
+**Andamento (19/10/2026):** **Fase B concluída**: APP-001 a APP-011 mescladas (#95, #97, #98, #100, #104, #106, #109, #113, #115, #124, #126) e a API **no ar** no servidor de demonstração, só pelo Tailscale (passo a passo em `app/api/deploy/README.md`). Próximo: 051 + Nova pessoa e trocar cargo (quando o PB5 for publicado) e a Fase C.
+
 **Fica para depois da Fase B:** cadastrar pessoa e trocar cargo pelo app (dependem do PB5 publicado, PR #84 do bot); as outras páginas; turno, estufas, esterilização e relatório do turno (Fase C); editar e excluir (dependem do PB4); assistente (Fase D, PB6).
 
 ## Decisões em aberto (perguntar, não decidir sozinho)
@@ -102,6 +104,13 @@ O app não mexe nas tabelas nem no workflow do bot: o que ele precisa vira pedid
 | PB5 | **Funções do banco para cadastrar pessoa e trocar cargo** (`cadastrar_usuario(nome, telefone, cargo, quem)`, `trocar_cargo(...)`), usadas pelo app (tela "Nova pessoa") e pelo bot (`adicionar cargo de ...`) | O app sai com a tela de adicionar pessoa já na primeira versão (decisão de 15/10) | Pedido em 15/10/2026; **precisa estar pronto antes do lançamento do app** |
 | PB6 | **Assistente do app pelo mesmo workflow do bot:** aceitar no webhook `labflow-registro` mensagens com `canal: app` (mesmo formato da Evolution, telefone da pessoa logada, segredo no cabeçalho); quando o canal for `app`, os nodes de resposta (hoje `Zap · ...`, que chamam `sendText` da Evolution) e o download de mídia (`getBase64...`) passam a usar a **API do app** em vez da Evolution. O WhatsApp continua idêntico. Acrescentar casos em `tests/` | O assistente usa o mesmo cérebro do bot, sem duplicar regras ([08](08-fluxos.md), A4) | Pedido em 15/10/2026, autorizado pelo Danyllo; necessário só na Fase D |
 
+
+**Alinhamento com a sessão do bot (17/10/2026):**
+- Ordem de publicação combinada: **PB5 → PB1 → PB4 → PB6** (quem decide quando é o Danyllo; PB5 e PB1 estão prontos e em espera).
+- **PB4 fica com a sessão do bot**, migration **033**; o app só chama as funções.
+- As funções chamadas pelo app (PB5 e PB4) são **`SECURITY DEFINER`**, com dono `labflow_app`, `SET search_path = public, pg_temp` e conferência da permissão pelo `p_quem` dentro da função (o `labflow_app_web` não grava nas tabelas do bot).
+- O `GRANT EXECUTE` dessas funções para o `labflow_app_web` fica na migration **051 do app**, depois que a 050 for aplicada no servidor.
+- As leituras gravadas adiantadas pelo Admin têm origem `automatico` no banco (ver 07, "Registros adiantados pelo Admin").
 
 ## Regras que não mudam
 

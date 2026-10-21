@@ -4,7 +4,8 @@
 #
 # Uso: LABFLOW_DB_URL=postgresql://usuario:senha@host:5432/banco bash app/api/scripts/preparar_banco_teste.sh
 #
-# 1. Cria os papéis que as migrations do bot esperam (labflow_app e labflow_leitura), sem login.
+# 1. Cria os papéis que as migrations do bot esperam (labflow_app e labflow_leitura), sem login, e tira o
+#    CONNECT do PUBLIC, como no servidor.
 # 2. Aplica TODAS as migrations de db/migrations, em ordem, parando no primeiro erro.
 # 3. Carrega os dados fictícios de db/seeds (limites de exemplo, demo e placas demo).
 set -euo pipefail
@@ -18,6 +19,8 @@ DO $$
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'labflow_app') THEN CREATE ROLE labflow_app; END IF;
   IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'labflow_leitura') THEN CREATE ROLE labflow_leitura; END IF;
+  -- Igual ao servidor (docs/postgres-migracao.md): ninguém conecta no banco sem GRANT CONNECT próprio
+  EXECUTE format('REVOKE ALL ON DATABASE %I FROM PUBLIC', current_database());
 END $$;
 SQL
 

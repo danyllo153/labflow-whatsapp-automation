@@ -56,7 +56,7 @@ Desde 15/10 uma sessão cuida do **app** (web e celular) e outra do **bot**. Par
 - Nunca commitar IDs reais do n8n, chaves, telefones reais, IP do servidor ou `.env`.
 - O arquivo com IDs reais é `LabFlow_importar_n8n*.json` (bloqueado no `.gitignore`). O público é o `LabFlow.json`, gerado por `scripts/sanitize-workflow.ps1` e auditado por `scripts/audit-workflow.py --public`.
 - Nunca esvaziar a tabela `usuarios` (sem usuários o bot bloqueia todo mundo). Backup antes de qualquer migration ou limpeza.
-- **Testar migration "numa transação desfeita":** os arquivos de `db/migrations/` têm o **próprio `BEGIN`/`COMMIT`**. Incluir o arquivo (`\i`) dentro do seu `BEGIN` faz o `COMMIT` dele fechar a sua transação e **grava tudo**. Monte o teste tirando o `BEGIN`/`COMMIT` do arquivo (ou colando o corpo), termine com `ROLLBACK;` e **confira depois com um `SELECT`** que nada ficou. Nunca teste `INSERT` "que deveria falhar" fora de uma transação confirmada. Backup antes, sempre (em 16/10 um teste da 031 sem isso deixou 3 pessoas de teste e as funções no banco do piloto; foram removidas, com backup).
+- **Testar migration "numa transação desfeita":** os arquivos de `db/migrations/` têm o **próprio `BEGIN`/`COMMIT`**. Incluir o arquivo (`\i`) dentro do seu `BEGIN` faz o `COMMIT` dele fechar a sua transação e **grava tudo**. Monte o teste tirando o `BEGIN`/`COMMIT` do arquivo (ou colando o corpo), termine com `ROLLBACK;` e **confira depois com um `SELECT`** que nada ficou. Nunca teste um `INSERT` "que deveria falhar" fora de uma transação confirmada. Backup antes, sempre (em 16/10 um teste da 031 sem isso deixou 3 pessoas de teste e as funções no banco do piloto; foram removidas, com backup).
 - Nunca apagar dados sem o pedido do Danyllo e sem listar o alvo antes (transação com trava de contagem).
 
 ## Termos do domínio
@@ -90,5 +90,7 @@ Desde 15/10 uma sessão cuida do **app** (web e celular) e outra do **bot**. Par
 - Vault do Obsidian (`OneDrive\Valts\PROJETO- LABFLOW`): a sintaxe dos comandos mora só em `Comandos-Disponiveis`; o "próximo" só no `backlog`; o histórico no `decisoes-log`; comandos de servidor e banco em `00-Servidores` e `Postgres-Migracao`. Notas de domínio só explicam regras.
 - Comando novo: atualizar `docs/comandos.md`, a cheatsheet do vault, o CHANGELOG e o backlog.
 
-## Ao encerrar o dia
-Usar a skill `/fechar-dia` (`.claude/skills/fechar-dia`): atualiza `docs/handoff.md`, o `decisoes-log` e o `backlog`, commita e passa ao Danyllo o roteiro de push, PR e merge, para ele continuar em outro computador só com `git pull`.
+## Ao começar e ao encerrar o dia
+Quando ele cumprimentar ("bom dia", "boa tarde", "boa noite") ou perguntar onde paramos: skill `/bom-dia` (`.claude/skills/bom-dia`), só leitura, com o que foi feito por último em qualquer aparelho e os próximos passos.
+
+Ao encerrar: usar a skill `/fechar-dia` (`.claude/skills/fechar-dia`): atualiza `docs/handoff.md`, o `decisoes-log` e o `backlog`, commita e passa ao Danyllo o roteiro de push, PR e merge, para ele continuar em outro computador só com `git pull`.

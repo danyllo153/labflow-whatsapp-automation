@@ -117,6 +117,8 @@ Item com dia certo (ex.: "só às sextas") aparece só nesse dia.
 
 **Como um registro cai no turno:** pela hora em que foi gravado e por quem gravou (a entrada no turno dessa pessoa). A tela mostra o turno, nunca a hora.
 
+**Registros adiantados pelo Admin** (decidido em 17/10): os comandos do Admin que gravam resultados de uma vez (placas `<1` com origem `automatico`, C.T/B.L `<10`, drops concluídos pelo TAB de tanque completo) ficam com a hora da **digitação**, não da leitura na bancada. No relatório do turno eles aparecem numa linha separada, **"Adiantado pelo Admin"**, com a **data prevista** de cada um, e **não entram** em "Análises feitas" do turno em que foram digitados. Nas páginas, a etiqueta **Adiantado** aparece ao lado da hora.
+
 **Limitação até o pedido PB1:** a pré-leitura e a leitura final do NFC (`analises`) não guardam a hora; até a sessão do bot acrescentá-la, essas leituras aparecem no relatório do dia como "turno não identificado".
 
 **Encerramento:**
