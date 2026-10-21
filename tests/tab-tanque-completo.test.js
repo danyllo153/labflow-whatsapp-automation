@@ -148,15 +148,19 @@ test('foto de TAB só com tanques (TQ 44 16/10): não exige load e agrupa por da
   ]);
 });
 
-test('foto de tanques, Admin: os comandos saem com "completo"; Operador fica com o comando simples', () => {
+test('foto de tanques, Admin: um comando só com todos os grupos e "completo"; Operador fica com o comando simples', () => {
   const adm = rodarFoto('Foto · Montar resposta', [{}], { 'Foto · Interpretar': lerFoto(FOTO_TQ, 'Admin') })[0].json;
   assert.equal(adm.salvar, '1');
   const c = JSON.parse(adm.payload).comandos;
-  assert.deepEqual(c, ['Tab feito dos tanques terra 44,45 coleta 16/10/2026 completo', 'Tab feito dos tanques terra 47 coleta 06/10/2026 completo']);
-  c.forEach((x) => assert.equal(interpretar(x, { cargo: 'Admin' }).completo, '1', x));
+  assert.deepEqual(c, ['Tab feito dos tanques terra 44,45 coleta 16/10/2026 ; 47 coleta 06/10/2026 completo']);
+  const re = interpretar(c[0], { cargo: 'Admin' });
+  assert.equal(re.tipo, 'tab_feito_nfc');
+  assert.equal(re.completo, '1');
+  assert.deepEqual(re.grupos, [{ tanque: '44', coleta: '16/10/2026' }, { tanque: '45', coleta: '16/10/2026' }, { tanque: '47', coleta: '06/10/2026' }]);
   assert.match(adm.textoResposta, /Tanques de terra \(só o Admin faz isso pelo TAB\)/);
   const op = rodarFoto('Foto · Montar resposta', [{}], { 'Foto · Interpretar': lerFoto(FOTO_TQ, 'Operador') })[0].json;
-  assert.deepEqual(JSON.parse(op.payload).comandos, ['Tab feito dos tanques terra 44,45 coleta 16/10/2026', 'Tab feito dos tanques terra 47 coleta 06/10/2026']);
+  assert.deepEqual(JSON.parse(op.payload).comandos, ['Tab feito dos tanques terra 44,45 coleta 16/10/2026 ; 47 coleta 06/10/2026']);
+  assert.equal(interpretar(JSON.parse(op.payload).comandos[0], { cargo: 'Operador' }).completo, '');
 });
 
 test('foto de TAB com load e tanques: os dois seguem; load sem número e sem tanque continua sendo problema', () => {
@@ -184,4 +188,56 @@ test('prompts: a IA e a leitura da foto conhecem "TQ 44 16/10"', () => {
   assert.match(foto, /NÃO tem load/);
   const ia = workflow.nodes.find((n) => n.name === 'IA · Montar pedido').parameters.assignments.assignments.find((a) => a.name === 'prompt').value;
   assert.match(ia, /"TQ 44 16\/10" e "tab tanque terra 44 16\/10" valem o mesmo/);
+});
+
+// situação de cada tanque no banco (BD · Compostas da foto, kind 'tanque')
+const sit = (d, porTanque) => d.buscasTanques.map((b) => ({ kind: 'tanque', idx: b.idx, load_num: b.tanque, data_coleta: b.coleta, atual: porTanque[b.tanque] }));
+
+test('foto de tanques: o que já tem TAB fica de fora; se tudo já está no sistema, nada a gravar', () => {
+  const d = lerFoto(FOTO_TQ, 'Admin');
+  assert.deepEqual(d.buscasTanques, [{ idx: 0, tanque: '44', coleta: '16/10/2026' }, { idx: 0, tanque: '45', coleta: '16/10/2026' }, { idx: 1, tanque: '47', coleta: '06/10/2026' }]);
+  const tudo = rodarFoto('Foto · Montar resposta', sit(d, { 44: 'tab', 45: 'tab', 47: 'tab' }), { 'Foto · Interpretar': d })[0].json;
+  assert.equal(tudo.salvar, '0');
+  assert.match(tudo.textoResposta, /tudo o que está na foto já está no sistema \(tanque 44 \(coleta 16\/10\), 45 \(coleta 16\/10\), 47 \(coleta 06\/10\) já tem TAB\)\. Nada a gravar/);
+  const parte = rodarFoto('Foto · Montar resposta', sit(d, { 44: 'tab', 45: 'coleta', 47: 'sem' }), { 'Foto · Interpretar': d })[0].json;
+  assert.deepEqual(JSON.parse(parte.payload).comandos, ['Tab feito dos tanques terra 45 coleta 16/10/2026 ; 47 coleta 06/10/2026 completo']);
+  assert.match(parte.textoResposta, /Já têm TAB \(ficam de fora\): tanque 44 \(coleta 16\/10\)/);
+  assert.match(parte.textoResposta, /Sem coleta no sistema \(registro a coleta\): tanque 47 \(coleta 06\/10\)/);
+  // Operador: o tanque sem coleta fica de fora (só o Admin registra a coleta pelo TAB)
+  const dOp = lerFoto(FOTO_TQ, 'Operador');
+  const op = rodarFoto('Foto · Montar resposta', sit(dOp, { 44: 'coleta', 45: 'tab', 47: 'sem' }), { 'Foto · Interpretar': dOp })[0].json;
+  assert.deepEqual(JSON.parse(op.payload).comandos, ['Tab feito dos tanques terra 44 coleta 16/10/2026']);
+  assert.match(op.textoResposta, /tanque 47 \(coleta 06\/10\): não achei a coleta; registre a coleta antes ou peça a um Admin \(ficou de fora\)/);
+});
+
+test('comando com vários grupos de coleta: pares tanque + coleta, data do TAB e limite de 24 tanques', () => {
+  const a = interpretar('Tab feito dos tanques terra 39,46 coleta 17/10/2026 ; 43 coleta 18/10/2026 ; 44,45,47 coleta 19/10/2026 data 19/10/2026 completo', { cargo: 'Admin' });
+  assert.equal(a.tipo, 'tab_feito_nfc');
+  assert.equal(a.dataFeito, '19/10/2026');
+  assert.equal(a.completo, '1');
+  assert.deepEqual(a.tanques, ['39', '46', '43', '44', '45', '47']);
+  assert.equal(a.grupos.length, 6);
+  assert.deepEqual(a.grupos[2], { tanque: '43', coleta: '18/10/2026' });
+  assert.equal(a.gruposTxt, '39,46 coleta 17/10/2026 ; 43 coleta 18/10/2026 ; 44,45,47 coleta 19/10/2026');
+  // um grupo só continua no formato antigo (sem pares)
+  assert.equal(interpretar('Tab feito dos tanques terra 44 coleta 16/10/2026', { cargo: 'Admin' }).grupos, null);
+  const muitos = Array.from({ length: 25 }, (_, i) => String(i + 1));
+  const m = interpretar(`Tab feito dos tanques terra ${muitos.slice(0, 13).join(',')} coleta 17/10/2026 ; ${muitos.slice(13).join(',')} coleta 18/10/2026`, { cargo: 'Admin' });
+  assert.match(m.textoResposta, /Máximo de 24 tanques/);
+  const bd = workflow.nodes.find((n) => n.name === 'BD · TAB feito NFC');
+  assert.match(bd.parameters.options.queryReplacement, /\$json\.grupos \|\| \$json\.tanques/);
+});
+
+test('resposta com vários grupos: uma mensagem só, cada tanque com a data da coleta', () => {
+  const item = interpretar('Tab feito dos tanques terra 39,46 coleta 17/10/2026 ; 43 coleta 18/10/2026 data 19/10/2026 completo', { cargo: 'Admin' });
+  const ja = montar({ sem_coleta: null, ja_tinham: '39 (coleta 17/10), 46 (coleta 17/10), 43 (coleta 18/10)', criados: null, espalhar_em: '24/10/2026', placas_gravadas: 0, drops_marcados: 0 }, item);
+  assert.match(ja.textoResposta, /^ℹ️ Tanque\(s\) 39 \(coleta 17\/10\), 46 \(coleta 17\/10\), 43 \(coleta 18\/10\) já tinha\(m\) TAB\. Nada novo foi gravado\./);
+  const novo = montar({ sem_coleta: null, ja_tinham: '39 (coleta 17/10)', criados: ['46 (coleta 17/10)', '43 (coleta 18/10)'], espalhar_em: '24/10/2026', coletas_criadas: '43 (coleta 18/10)', frascos_novos: 2, placas_gravadas: 6, drops_marcados: 0 }, item);
+  assert.match(novo.textoResposta, /TAB de NFC no caldo \(2 tanques\)[\s\S]*tanque 46 \(coleta 17\/10\)\ntanque 43 \(coleta 18\/10\)/);
+  assert.match(novo.textoResposta, /Coleta registrada \(com os drops D5, D10, D15 e o arquivo\): tanque 43 \(coleta 18\/10\)\./);
+  // Admin sem "completo": a pergunta reenvia os mesmos grupos com "completo"
+  const sem = interpretar('Tab feito dos tanques terra 39 coleta 17/10/2026 ; 48 coleta 10/10/2026 data 19/10/2026', { cargo: 'Admin' });
+  const p = montar({ sem_coleta: '48 (coleta 10/10)', ja_tinham: null, criados: null, espalhar_em: '24/10/2026' }, sem);
+  assert.deepEqual(JSON.parse(p.payload).comandos, ['Tab feito dos tanques terra 39 coleta 17/10/2026 ; 48 coleta 10/10/2026 data 19/10/2026 completo']);
+  assert.match(p.textoResposta, /Não achei a coleta do\(s\) tanque\(s\) 48 \(coleta 10\/10\)\./);
 });
