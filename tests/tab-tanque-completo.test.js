@@ -254,7 +254,7 @@ test('foto de TAB, Admin: só o que vai para o caldo e o que se abre; sem regras
   const r = rodarFoto('Foto · Montar resposta', [...linhas, ...sit(d, { 38: 'sem', 40: 'sem' })], { 'Foto · Interpretar': d })[0].json;
   assert.equal(r.salvar, '1');
   const t = r.textoResposta;
-  assert.match(t, /^📷 TAB de 21\/10\/2026:\n\n🆕 Compostas novas, já no caldo \(só o Admin abre\):\n• load 43669 \(item 2549, UCH\): lotes 23-32,35-36,38-42, compostas \(23-27\)\(28-32\)/);
+  assert.match(t, /^📷 TAB de 21\/10\/2026:\n\n🆕 Compostas novas, já no caldo:\n• load 43669 \(item 2549, UCH\): lotes 23-32,35-36,38-42, compostas \(23-27\)\(28-32\)/);
   assert.match(t, /• load 43670 \(item 2549, UCH\): lotes 1-12, compostas \(1-6\)\(7-12\)/);
   assert.match(t, /🛢️ Tanques de terra no caldo:\n• tanque 38, 40 \(coleta 21\/10\) — coleta nova\n[\s\S]*Responda \*sim\* para registrar ou \*não\* para cancelar\.$/);
   assert.doesNotMatch(t, /1️⃣|só o Admin faz isso|C\.T, B\.L|os lotes recebem|marco <1|ficam de fora|Li o laudo/, 'nada de regras nem lista de comandos');
