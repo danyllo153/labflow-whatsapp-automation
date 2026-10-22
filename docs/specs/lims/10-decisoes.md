@@ -16,6 +16,8 @@ Uma linha por decisão, mais recente no topo, com o porquê. O que está aqui n�
 
 ## Decidido
 
+- **2026-10-22** (app) **Telas do app em React + TypeScript (Vite)**, na pasta `app/web/`, **servidas pela própria API** (um container só, mesmo endereço). Por quê: páginas interativas no estilo do Power BI (filtros, gráficos, tabelas), PWA instalável, muito material de estudo e valor no portfólio; servir pela API mantém o cookie de login simples e não muda nada no servidor além da imagem.
+
 - **2026-10-17** (app) **Registros adiantados pelo Admin** (placas `<1` automáticas, `<10`, drops concluídos pelo TAB completo) aparecem no relatório do turno como **"Adiantado pelo Admin"**, com a data prevista, e não contam como trabalho do turno em que foram digitados. Por quê: a hora gravada é a da digitação, não a da leitura na bancada.
 
 - **2026-10-17** (app) **Senha do app com pelo menos 8 caracteres**, sem exigir número ou símbolo (APP-006). Por quê: impede senhas como "123" sem levar a pessoa a anotar a senha num papel.
