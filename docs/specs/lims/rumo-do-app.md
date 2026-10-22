@@ -34,13 +34,13 @@ A base já está escrita nas specs do LIMS ([00](00-visao-geral.md) a [10](10-de
 
 ## Fase atual
 
-**Fase C: as telas (PWA).** A Fase B terminou em 19/10/2026, com a API no ar no servidor de demonstração (só pelo Tailscale). Antes de virar tarefas (`APP-012`...), falta uma decisão (ver "Decisões em aberto").
+**Fase C: as telas (PWA).** A Fase B terminou em 19/10/2026, com a API no ar no servidor de demonstração (só pelo Tailscale). Telas em **React + TypeScript** (decidido em 22/10); tarefas `APP-012` a `APP-028` abaixo, **esperando a aprovação do Danyllo**.
 
 | Fase | O que entrega | Situação |
 |---|---|---|
 | A | Spec do app revisada (07, 06, 08 e esta nota) | ✅ concluída: 06, 07 e 08 aprovados como v1.0 em 16/10/2026 |
 | B | API só de leitura + login | ✅ concluída em 19/10/2026 (APP-001 a APP-011; API no ar pelo Tailscale) |
-| C | PWA só leitura: painel do dia, relatório do turno, gráficos | ⏳ próxima (falta decidir a tecnologia das telas) |
+| C | PWA só leitura: painel do dia, relatório do turno, gráficos | ⏳ próxima (tarefas `APP-012`... propostas em 22/10) |
 | D | Chat embutido e registro pelo app | ⬜ |
 | E | Decidir o futuro do WhatsApp | ⬜ |
 
@@ -100,9 +100,53 @@ Código do app no **mesmo repositório, na pasta `app/`** (`app/api/` e, na Fase
 
 **Fica para depois da Fase B:** cadastrar pessoa e trocar cargo pelo app (dependem do PB5 publicado, PR #84 do bot); as outras páginas; turno, estufas, esterilização e relatório do turno (Fase C); editar e excluir (dependem do PB4); assistente (Fase D, PB6).
 
+## Tarefas da Fase C (propostas em 22/10/2026, esperando aprovação)
+
+Telas em **React + TypeScript (Vite)** na pasta `app/web/`, **servidas pela própria API** (um container só, o mesmo endereço do Tailscale, o cookie de login funciona sem configuração extra). Geradas a partir do [07](07-app-pwa.md) e do [08](08-fluxos.md) v1.0. **Uma tarefa = uma branch = um PR**, com testes (Vitest nas telas; pytest na API) e o CI do app construindo tudo. Dados sempre fictícios.
+
+**Como cada tela se comporta** (vale para todas): paleta e visual do [07 §Visual](07-app-pwa.md); menu lateral no computador e barra embaixo no celular; tabelas viram cartões no celular; **sem emoji**; **nada de dado guardado no aparelho** (o app instalado guarda só os arquivos das telas, nunca os dados: é a base da "segurança no celular"); faixa **"Dados de demonstração"** no topo enquanto o servidor for de demonstração; as páginas **se atualizam sozinhas a cada minuto** (o "ao vivo" instantâneo fica para a Fase D, junto com o assistente).
+
+**Marco 1: usar o app no celular, só leitura** (o que a API já tem)
+
+| # | Tarefa | Origem | O quê | Pronto quando | Depende de |
+|---|---|---|---|---|---|
+| APP-012 | Esqueleto das telas e PWA | 07 §Direção, §Visual | Projeto em `app/web/`; paleta e layout (menu lateral / barra embaixo); app **instalável** (ícone na tela inicial) guardando só os arquivos das telas; a API entrega as telas no mesmo endereço; o CI testa e monta tudo; o container passa a levar as telas | Abre pelo Tailscale no celular e no computador; "Adicionar à tela inicial" funciona; CI verde | — |
+| APP-013 | Login, troca de senha e sair | 07 §1; 06 §Primeiro acesso | Tela de login (botão **Entrar travado** enquanto espera a resposta), troca obrigatória da senha provisória, mensagens de bloqueio, "Sair" | Testes: login certo, errado, bloqueado, senha provisória até a troca | APP-012 |
+| APP-014 | Início em leitura | 07 §3 | Cartões **Para hoje**, **Atrasados** e **Desvios abertos**; pendências de hoje por bloco, compactas | Os números batem com `GET /pendencias-hoje` no banco de teste | APP-013 |
+| APP-015 | Coletas e Recebimento na tela | 07 §5; 08 A11 | Filtros com etiquetas removíveis, tabela (cartões no celular), paginação, **Exportar Excel** e **Imprimir só o filtrado** (A4 em pé ou deitado, título, filtros e "página 1 de N") | Mesmas linhas da API; impressão legível em preto e branco | APP-013 |
+| APP-016 | Admin → Pessoas na tela | 07 §10 | Lista com situação, definir o usuário curto e **gerar senha provisória** (o que a API já faz); "Nova pessoa" e "trocar cargo" só depois do PB5 | Só o Admin vê; os outros cargos não veem o menu nem a rota | APP-013 |
+
+**Marco 2: todas as páginas do Power BI em leitura**
+
+| # | Tarefa | Origem | O quê | Pronto quando | Depende de |
+|---|---|---|---|---|---|
+| APP-017 | API: Tanques, Drops e Desvios | 07 §5 | Leitura pelas views `bi.*`, filtros, paginação e Excel, como em Coletas | Números batem com as views no banco de teste | — |
+| APP-018 | API: Embarque, TAB e Coliformes, Recebimento NFC, Navios e Visão geral | 07 §5 | O mesmo para as outras páginas; **Navios** (nova) por navio e viagem: coletados, analisados, pendentes, desvios | Idem | — |
+| APP-019 | Telas das páginas do APP-017 e APP-018 | 07 §5 | O mesmo padrão do APP-015 em todas | Cada página filtra, imprime e exporta | APP-015, APP-017, APP-018 |
+| APP-020 | Gráfico G2 | 07 §6 | C.T e B.L por load ao longo do tempo, com a **linha do limite** (lida da tabela de limites; no repositório, só os fictícios); acima do limite em vermelho com "Não ok"; tocar num ponto filtra a tabela | Responde ao filtro da página; não ok nunca só pela cor | APP-015 |
+
+**Marco 3: o turno**
+
+| # | Tarefa | Origem | O quê | Pronto quando | Depende de |
+|---|---|---|---|---|---|
+| APP-021 | Migration do turno | 07 §Tabelas do app | `app.turnos`, `app.entradas_turno`, `app.relatorios_turno`, `app.atividades_fixas`, `app.atividades_feitas` (próximo número livre da faixa 050–099), com o arquivo de desfazer e a lista de atividades fixas do 07 | Testada numa transação desfeita (regra do `CLAUDE.md`); CI desfaz e reaplica | — |
+| APP-022 | Entrar e sair do turno | 07 §2; 08 | Escolher Manhã, Tarde ou Madrugada (sugestão pelo horário), editar o próprio horário, "Sair do turno"; cartão **Feito no turno** no Início | Testes de permissão (Consultor não entra) e da Madrugada contando no dia em que começou | APP-021, APP-014 |
+| APP-023 | Atividades fixas no Início | 07 §3 | Lista do turno com **Feito** e **Não feito** (grava quem e quando); item com dia certo ("só às sextas") só nesse dia | Não feito vira pendência do próximo turno | APP-022 |
+| APP-024 | Relatório do turno | 07 §4 | Página compartilhada: analistas, análises feitas e pendentes (automático), **Adiantado pelo Admin**, campos escritos à mão, ocorrências, imprimir | Um registro cai no turno certo pela hora e por quem gravou | APP-022 |
+| APP-025 | Encerrar o turno | 07 §4 | "Encerrar turno" pela última pessoa (mostra o que passa adiante), pendências herdadas no próximo turno, encerramento automático e **reabrir com motivo** (Admin) | Encerrado fica só leitura | APP-024 |
+
+**Marco 4: esterilização, estufas e Admin**
+
+| # | Tarefa | Origem | O quê | Pronto quando | Depende de |
+|---|---|---|---|---|---|
+| APP-026 | Esterilização | 07 §7, §6 | Tabela `app.esterilizacoes`, botões **Ponteira, Meio, Frasco, Descarte, Outro**, número do ciclo, lista do turno e o **gráfico G4** | Aparece no relatório do turno | APP-024 |
+| APP-027 | Estufas | 07 §7.1 | Tabelas `app.estufas` e `app.leituras_estufa`; as 11 estufas com **Supervisório** e **Field chart** (Ok / Não ok, temperatura só no Não ok), bloco no Início e aba própria; faixas **fictícias** no repositório | Estufa Não ok entra nas ocorrências do relatório do turno | APP-024 |
+| APP-028 | Admin: turnos, atividades e estufas | 07 §10 | Horários padrão dos turnos, atividades fixas de cada turno, estufas e faixas (as reais só no banco) | Só o Admin acessa | APP-023, APP-027 |
+
+**Fica fora da Fase C:** relatório do dia igual ao do bot (depende do PB6, Fase D); assistente (Fase D); editar e excluir (dependem do PB4); "Nova pessoa" e "trocar cargo" (dependem do PB5, migration 051 do app); barreiras de segurança no celular (versão depois do piloto do app).
+
 ## Decisões em aberto (perguntar, não decidir sozinho)
 
-- **Tecnologia das telas (Fase C):** proposta de 21/10 = **React + TypeScript (Vite)** em `app/web/`, servido pela própria API (um container só, mesmo endereço, cookie de login sem configuração extra). Alternativa: HTML gerado pelo Python (mais simples, menos interativo). **Esperando o Danyllo.**
 - **Quando ligar as barreiras de segurança no celular** (localização, horário, aparelho autorizado) e quem da gestão aprova o uso da localização (LGPD).
 
 ## Pedidos para a sessão do bot
