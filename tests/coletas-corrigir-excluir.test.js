@@ -71,3 +71,13 @@ test('migration 033: SECURITY DEFINER com search_path fixo; só o labflow_app ex
   assert.match(SQL, /GRANT EXECUTE ON FUNCTION[\s\S]*TO labflow_app;/);
   assert.doesNotMatch(SQL, /GRANT[^;]*labflow_app_web/, 'o GRANT do app fica na migration do app');
 });
+
+test('migration 034: excluir_coleta recusa também coleta com desvio de drop (pedido do app, revisão do #140)', () => {
+  const S34 = fs.readFileSync(path.join(__dirname, '..', 'db', 'migrations', '034_excluir_coleta_desvio_drop.sql'), 'utf8');
+  assert.match(S34, /CREATE OR REPLACE FUNCTION excluir_coleta\(p_id bigint, p_quem bigint, p_motivo text DEFAULT NULL\)/);
+  assert.match(S34, /FROM desvios_drop dd JOIN drops d ON d\.id = dd\.drop_id WHERE d\.coleta_id = p_id/);
+  assert.match(S34, /A coleta tem desvio de drop: não dá para excluir\./);
+  assert.match(S34, /SECURITY DEFINER SET search_path = public, pg_temp/);
+  assert.match(S34, /INSERT INTO registros_excluidos/, 'o resto do arquivamento é o da 033');
+  assert.match(S34, /GRANT EXECUTE ON FUNCTION excluir_coleta\(bigint, bigint, text\) TO labflow_app/);
+});
