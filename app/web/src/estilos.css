@@ -168,6 +168,123 @@ a {
   padding: 24px;
 }
 
+/* ---------- Início: cartões com números e pendências compactas (07 §3) ---------- */
+.saudacao {
+  margin: -6px 0 12px;
+}
+
+.cartoes-numeros {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.cartao-numero {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 10px 12px;
+  min-height: 72px;
+  background: var(--cartao);
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  font: inherit;
+  color: var(--texto);
+  text-align: left;
+  cursor: pointer;
+}
+
+.cartao-numero .numero {
+  font-size: 1.8rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.cartao-numero .rotulo {
+  font-size: 0.8rem;
+  color: var(--texto-secundario);
+}
+
+.cartao-numero.alerta .numero {
+  color: var(--nao-ok);
+}
+
+.cartao-numero.ativo {
+  background: var(--laranja-suave);
+  border-color: var(--laranja);
+}
+
+.filtro-ativo {
+  margin: 0 0 10px;
+  font-size: 0.9rem;
+}
+
+.link-botao {
+  background: none;
+  border: none;
+  padding: 6px 0;
+  font: inherit;
+  color: var(--acao);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.bloco-pendencias h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.contador {
+  font-size: 0.8rem;
+  font-weight: 600;
+  background: var(--fundo);
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  padding: 0 8px;
+}
+
+.lista-pendencias {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.lista-pendencias li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 0;
+  border-top: 1px solid #f1ead8;
+}
+
+.lista-pendencias li:first-child {
+  border-top: none;
+}
+
+.pendencia-texto {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pendencia-ref {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.pendencia-situacao {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+  font-size: 0.85rem;
+}
+
 /* ---------- Entrar e criar a senha ---------- */
 .tela-entrar {
   min-height: 100vh;
@@ -365,6 +482,10 @@ a {
   .conteudo {
     padding: 24px 32px;
   }
+
+  .cartoes-numeros {
+    grid-template-columns: repeat(3, minmax(0, 220px));
+  }
 }
 
 /* ---------- Impressão: só o conteúdo, legível em preto e branco ---------- */
@@ -384,7 +505,8 @@ a {
     padding: 0;
   }
 
-  .cartao {
+  .cartao,
+  .cartao-numero {
     border-color: #999;
   }
 }

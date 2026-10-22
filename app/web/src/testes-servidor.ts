@@ -8,7 +8,11 @@ export const ANA = { usuario: "ana.souza", nome: "Ana Souza", cargo: "Operador",
 
 export function servidorFalso(rotas: Record<string, Rota>) {
   const chamadas: { rota: string; corpo: any }[] = [];
-  const todas: Record<string, Rota> = { "GET /ambiente": () => ({ status: 200, corpo: { demonstracao: true } }), ...rotas };
+  const todas: Record<string, Rota> = {
+    "GET /ambiente": () => ({ status: 200, corpo: { demonstracao: true } }),
+    "GET /pendencias-hoje": () => ({ status: 200, corpo: { vence_hoje: 0, atrasados: 0, desvios_abertos: 0, itens: [] } }),
+    ...rotas,
+  };
   const falso = vi.fn(async (url: string, init?: RequestInit) => {
     const rota = `${init?.method ?? "GET"} ${url}`;
     const corpo = init?.body ? JSON.parse(String(init.body)) : undefined;

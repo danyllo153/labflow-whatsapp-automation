@@ -52,6 +52,7 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 - **API no ar** no servidor de demonstração em 19/10/2026, só pelo Tailscale, com o primeiro Admin logado (APP-011).
 - **Telas do app (Fase C)** em React + TypeScript (`app/web/`), entregues pela própria API em `/app/`: menu lateral no computador e barra embaixo no celular, paleta aprovada, faixa "Dados de demonstração", app **instalável** que guarda só os arquivos das telas (nenhum dado no aparelho); imagem em dois estágios e CI testando e montando as telas (APP-012).
 - **Entrar, criar a senha e sair** pelas telas do app: botão Entrar travado enquanto espera (dois cliques mandam um login só), mensagens de senha errada, login bloqueado e sem internet em português, troca obrigatória depois da senha provisória (confere tamanho, senha igual ao usuário e repetição antes de mandar), troca voluntária pedindo a senha atual, Sair no menu e volta automática para a tela de entrar quando a sessão acaba (APP-013).
+- **Início com as pendências de hoje:** cartões **Para hoje**, **Atrasados** e **Desvios abertos** (tocar filtra a lista), pendências por bloco do relatório do dia com a situação em texto e a data, bloco grande recolhido em 8 com "Mostrar todos", atualização sozinha a cada minuto. A API passa a dar o total de desvios abertos e a referência de TAB e Coliformes com a composta e o lote ("Load 90009 · Composta #18, lote 8"), que antes saía repetida (APP-014).
 
 ## [1.3.0] - 2026-10-15
 

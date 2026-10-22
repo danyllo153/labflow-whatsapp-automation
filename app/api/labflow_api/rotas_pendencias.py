@@ -1,7 +1,7 @@
 """Pendências de hoje: o que vence hoje e o que está atrasado.
 
 Spec: 07-app-pwa.md (v1.0), "3. Início" (cartões Para hoje e Atrasados, lista "Para fazer agora" nos blocos do
-relatório do dia); 06-api-e-auth.md, "Primeiros endpoints". Tarefa: APP-010.
+relatório do dia); 06-api-e-auth.md, "Primeiros endpoints". Tarefas: APP-010 e APP-014 (número de desvios abertos).
 Lê SEMPRE as views do Power BI (schema bi), que já calculam a situação ("Vence hoje", "Atrasado") com o "hoje"
 do banco; assim o app, o painel e o relatório do bot contam igual.
 """
@@ -34,7 +34,10 @@ SELECT * FROM (
     SELECT CASE origem WHEN 'Recebimento' THEN 'FCOJ Recebimento' WHEN 'Embarque' THEN 'FCOJ Embarque'
                 ELSE 'NFC Tank farm' END,
            teste,
-           coalesce(nullif(load_ou_tanque, ''), alvo),
+           -- "Load 90009 · Composta #18, lote 8": sem o alvo, várias linhas do mesmo load ficavam iguais (APP-014)
+           CASE WHEN origem IN ('Recebimento', 'Embarque') AND nullif(load_ou_tanque, '') IS NOT NULL
+                THEN 'Load ' || load_ou_tanque || coalesce(' · ' || nullif(alvo, ''), '')
+                ELSE coalesce(nullif(alvo, ''), load_ou_tanque) END,
            teste,
            proxima_etapa,
            situacao
@@ -78,6 +81,7 @@ class Pendencia(BaseModel):
 class Pendencias(BaseModel):
     vence_hoje: int
     atrasados: int
+    desvios_abertos: int  # todos os desvios ainda não concluídos (cartão "Desvios abertos" do Início, APP-014)
     itens: list[Pendencia]
 
 
@@ -90,7 +94,7 @@ def pendencias_hoje(
 ) -> Pendencias:
     if pessoa.cargo == "Coletor":
         # 07: o Coletor vê só as pendências de coleta; coleta não tem prazo nestas views, então não há o que mostrar.
-        return Pendencias(vence_hoje=0, atrasados=0, itens=[])
+        return Pendencias(vence_hoje=0, atrasados=0, desvios_abertos=0, itens=[])
     sql, valores = PENDENCIAS_SQL, []
     if bloco:
         sql += " AND bloco = %s"
@@ -103,8 +107,10 @@ def pendencias_hoje(
     linhas = con.execute(sql, valores).fetchall()
     itens = [Pendencia(bloco=b, tipo=t, referencia=r or "", analise=a or "", prevista=p, situacao=s)
              for b, t, r, a, p, s in linhas]
+    abertos = con.execute("SELECT count(*) FROM bi.desvios WHERE status <> 'Concluído'").fetchone()[0]
     return Pendencias(
         vence_hoje=sum(i.situacao == "Vence hoje" for i in itens),
         atrasados=sum(i.situacao == "Atrasado" for i in itens),
+        desvios_abertos=abertos,
         itens=itens,
     )

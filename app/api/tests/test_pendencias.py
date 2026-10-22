@@ -33,6 +33,26 @@ def test_totais_batem_com_as_views_do_power_bi(cliente, logado, conexao):
     assert {i["situacao"] for i in corpo["itens"]} == {"Vence hoje", "Atrasado"}
 
 
+def test_desvios_abertos_contam_todos_os_nao_concluidos(cliente, logado, conexao):
+    # APP-014: o cartão "Desvios abertos" conta também o desvio ainda no prazo (não só vence hoje e atrasado)
+    logado()
+    abertos = conexao.execute("SELECT count(*) FROM bi.desvios WHERE status <> 'Concluído'").fetchone()[0]
+    no_prazo = conexao.execute("SELECT count(*) FROM bi.desvios WHERE situacao = 'No prazo'").fetchone()[0]
+    corpo = cliente.get("/pendencias-hoje", params={"bloco": "Desvios"}).json()
+    assert corpo["desvios_abertos"] == abertos > 0
+    assert corpo["desvios_abertos"] == len(corpo["itens"]) + no_prazo
+
+
+def test_testes_do_mesmo_load_tem_referencias_diferentes(cliente, logado):
+    # APP-014: "90009 · Coliformes" aparecia 4 vezes igual; agora vem "Load 90009 · Composta #18, lote 8"
+    logado()
+    itens = [i for i in cliente.get("/pendencias-hoje").json()["itens"] if i["tipo"] in ("TAB", "Coliformes")]
+    recebimento = [i for i in itens if i["bloco"] == "FCOJ Recebimento"]
+    assert recebimento and all(i["referencia"].startswith("Load ") and "Composta #" in i["referencia"] for i in recebimento)
+    chaves = [(i["referencia"], i["analise"]) for i in itens]
+    assert len(chaves) == len(set(chaves))
+
+
 def test_cada_item_tem_referencia_e_data(cliente, logado):
     logado()
     for item in cliente.get("/pendencias-hoje").json()["itens"]:
@@ -79,7 +99,7 @@ def test_outros_cargos_tambem_veem(cliente, logado, cargo):
 
 def test_coletor_nao_ve_pendencias_de_analise(cliente, logado):
     logado("Coletor")
-    assert cliente.get("/pendencias-hoje").json() == {"vence_hoje": 0, "atrasados": 0, "itens": []}
+    assert cliente.get("/pendencias-hoje").json() == {"vence_hoje": 0, "atrasados": 0, "desvios_abertos": 0, "itens": []}
 
 
 def test_sem_login_da_401(cliente):
