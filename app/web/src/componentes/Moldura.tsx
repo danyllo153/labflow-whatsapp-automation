@@ -8,13 +8,14 @@ import FaixaDemonstracao from "./FaixaDemonstracao";
 export default function Moldura() {
   const { pessoa, sair } = useSessao();
   const nome = pessoa?.nome || pessoa?.usuario;
+  const menu = MENU.filter((item) => !item.pode || pessoa?.pode.includes(item.pode));
 
   return (
     <div className="moldura">
       <aside className="menu-lateral" aria-label="Menu">
         <div className="marca">LabFlow</div>
         <nav>
-          {MENU.map((item) => (
+          {menu.map((item) => (
             <NavLink key={item.caminho} to={item.caminho} end={item.caminho === "/"} className="item-menu">
               {item.rotulo}
               {!item.pronto && <span className="etiqueta-breve">Em breve</span>}
@@ -36,7 +37,7 @@ export default function Moldura() {
       <header className="topo-celular">
         <span className="marca">LabFlow</span>
         <span className="topo-conta">
-          <Link to="/conta/senha" className="conta-link" aria-label="Trocar senha">
+          <Link to="/conta" className="conta-link" aria-label="Minha conta">
             {nome}
           </Link>
           <button type="button" className="botao-topo" onClick={() => void sair()}>
@@ -51,7 +52,7 @@ export default function Moldura() {
       </main>
 
       <nav className="barra-baixo" aria-label="Menu do celular">
-        {MENU.map((item) => (
+        {menu.filter((item) => !item.soNoMenuLateral).map((item) => (
           <NavLink key={item.caminho} to={item.caminho} end={item.caminho === "/"} className="item-barra">
             {item.rotulo}
           </NavLink>

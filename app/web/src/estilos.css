@@ -499,6 +499,77 @@ a.cartao-pagina:hover {
   }
 }
 
+/* ---------- Admin → Pessoas e Minha conta ---------- */
+.lista-pessoas,
+.lista-links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.lista-links li {
+  padding: 8px 0;
+  border-bottom: 1px solid #f1ead8;
+}
+
+.lista-links {
+  margin-bottom: 12px;
+}
+
+.pessoa-cabeca {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.gerenciar {
+  border-top: 1px solid #f1ead8;
+  margin-top: 8px;
+  padding-top: 10px;
+}
+
+.linha-acao {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.linha-acao .campo {
+  flex: 1;
+  min-width: 160px;
+}
+
+.linha-acao .botao-secundario {
+  margin-bottom: 12px;
+}
+
+.botoes-acao {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.confirmar {
+  background: var(--laranja-suave);
+  border: 1px solid var(--laranja);
+  border-radius: 8px;
+  padding: 10px 12px;
+}
+
+.senha-entregar {
+  border: 2px solid var(--laranja);
+}
+
+.senha-grande {
+  font-family: "DejaVu Sans Mono", Consolas, monospace;
+  font-size: 1.8rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  margin: 6px 0 10px;
+}
+
 /* ---------- Entrar e criar a senha ---------- */
 .tela-entrar {
   min-height: 100vh;

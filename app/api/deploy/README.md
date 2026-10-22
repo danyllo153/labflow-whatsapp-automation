@@ -170,6 +170,20 @@ cd ~/labflow/app-src/app/api/deploy
 docker compose -p labflow-app --env-file ~/labflow/.env -f docker-compose.app.yml up -d --build labflow-api
 ```
 
+### Quando o PR traz migration nova do app (ex.: 051)
+
+O PR avisa na descrição. **Antes** do `docker compose ... up`, com o `.env` carregado (`set -a; source ~/labflow/.env; set +a`):
+
+```
+~/labflow/backup-db.sh
+```
+
+```
+docker exec -i labflow-postgres psql -U "$POSTGRES_USER" -d labflow -v ON_ERROR_STOP=1 < ~/labflow/app-src/db/migrations/051_app_funcoes_pessoas.sql
+```
+
+(Troque o nome do arquivo pela migration do PR. Cada uma tem o seu `_desfazer.sql` ao lado.)
+
 ## Parar ou desfazer
 
 Parar o app (o bot continua igual):

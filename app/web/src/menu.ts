@@ -4,6 +4,8 @@ export interface ItemDoMenu {
   rotulo: string;
   pronto: boolean; // false = a tela ainda não existe ("Em breve")
   tarefa?: string; // tarefa da Fase C que entrega a tela
+  pode?: string; // só aparece para quem tem esta permissão (GET /me → pode)
+  soNoMenuLateral?: boolean; // no celular a barra de baixo tem só os 5 fixos; o resto fica em "Minha conta"
 }
 
 export const MENU: ItemDoMenu[] = [
@@ -12,4 +14,5 @@ export const MENU: ItemDoMenu[] = [
   { caminho: "/paginas", rotulo: "Páginas", pronto: true },
   { caminho: "/esterilizacao", rotulo: "Esterilização", pronto: false, tarefa: "APP-026" },
   { caminho: "/assistente", rotulo: "Assistente", pronto: false, tarefa: "Fase D" },
+  { caminho: "/admin/pessoas", rotulo: "Pessoas", pronto: true, pode: "gerenciar_pessoas", soNoMenuLateral: true },
 ];

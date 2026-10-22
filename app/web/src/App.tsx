@@ -2,6 +2,8 @@ import { Route, Routes } from "react-router-dom";
 
 import Moldura from "./componentes/Moldura";
 import { MENU } from "./menu";
+import Pessoas from "./paginas/admin/Pessoas";
+import Conta from "./paginas/Conta";
 import EmBreve from "./paginas/EmBreve";
 import Entrar from "./paginas/Entrar";
 import Inicio from "./paginas/Inicio";
@@ -26,7 +28,9 @@ export default function App() {
         {MENU.filter((item) => !item.pronto).map((item) => (
           <Route key={item.caminho} path={item.caminho} element={<EmBreve item={item} />} />
         ))}
+        <Route path="/conta" element={<Conta />} />
         <Route path="/conta/senha" element={<TrocarSenha />} />
+        <Route path="/admin/pessoas" element={<Pessoas />} />
         <Route path="*" element={<NaoEncontrada />} />
       </Route>
     </Routes>

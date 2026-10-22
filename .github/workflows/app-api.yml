@@ -48,10 +48,14 @@ jobs:
         run: pip install -r requirements-dev.txt
       - name: Montar o banco de teste (migrations do bot + dados fictícios)
         run: bash scripts/preparar_banco_teste.sh
-      - name: Desfazer e reaplicar a migration 050 do app (prova que as duas funcionam)
+      - name: Desfazer e reaplicar as migrations do app (prova que cada par funciona)
         run: |
-          psql "$LABFLOW_DB_URL" -v ON_ERROR_STOP=1 -q -f ../../db/migrations/050_app_login_desfazer.sql
-          psql "$LABFLOW_DB_URL" -v ON_ERROR_STOP=1 -q -f ../../db/migrations/050_app_login.sql
+          for desfazer in $(ls -r ../../db/migrations/0[5-9][0-9]_*_desfazer.sql); do
+            echo "desfazer: $(basename "$desfazer")"; psql "$LABFLOW_DB_URL" -v ON_ERROR_STOP=1 -q -f "$desfazer"
+          done
+          for m in $(ls ../../db/migrations/0[5-9][0-9]_*.sql | grep -v _desfazer); do
+            echo "aplicar: $(basename "$m")"; psql "$LABFLOW_DB_URL" -v ON_ERROR_STOP=1 -q -f "$m"
+          done
       - name: Rodar os testes (pytest)
         run: python -m pytest -q
       - name: Construir a imagem (API + telas) e conferir que ela sobe (APP-011, APP-012)
