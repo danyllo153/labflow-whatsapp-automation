@@ -1,0 +1,310 @@
+{
+  "paleta": {
+    "fundo": "EEF3FB",
+    "texto": "0F2547",
+    "texto2": "5B6B85",
+    "borda": "D6E0F0",
+    "series": [
+      "1D6FE8",
+      "0E8A96",
+      "D97706",
+      "7C3AED",
+      "16A34A",
+      "DC2626"
+    ]
+  },
+  "painel": {
+    "titulo": "LabFlow — Painel do laboratório",
+    "descricao": "Resumo do que está no banco. Para atualizar: Dados > Atualizar Tudo (o túnel do banco precisa estar aberto).",
+    "cartoes": [
+      {
+        "rotulo": "Coletas nos últimos 7 dias",
+        "formula": "=COUNTIFS(tbColetas[Data da coleta],\">=\"&TODAY()-7)",
+        "cor": "1D6FE8"
+      },
+      {
+        "rotulo": "Drops atrasados",
+        "formula": "=COUNTIFS(tbDrops[Situação],\"Atrasado\")",
+        "cor": "DC2626"
+      },
+      {
+        "rotulo": "Drops que vencem hoje",
+        "formula": "=COUNTIFS(tbDrops[Situação],\"Vence hoje\")",
+        "cor": "D97706"
+      },
+      {
+        "rotulo": "TAB atrasados",
+        "formula": "=COUNTIFS(tbTAB[Situação],\"Atrasado\")",
+        "cor": "DC2626"
+      },
+      {
+        "rotulo": "Coliformes atrasados",
+        "formula": "=COUNTIFS(tbColiformes[Situação],\"Atrasado\")",
+        "cor": "DC2626"
+      },
+      {
+        "rotulo": "C.T e B.L atrasados",
+        "formula": "=COUNTIFS(tbContagens[Situação],\"Atrasado\")",
+        "cor": "DC2626"
+      },
+      {
+        "rotulo": "Placas NFC atrasadas",
+        "formula": "=COUNTIFS(tbPlacasNFC[Situação],\"Atrasado\")",
+        "cor": "DC2626"
+      },
+      {
+        "rotulo": "Desvios em aberto",
+        "formula": "=COUNTIFS(tbDesvios[ID],\">0\")-COUNTIFS(tbDesvios[Status],\"Concluído\")",
+        "cor": "7C3AED"
+      }
+    ],
+    "graficoTitulo": "Pendências atrasadas por análise",
+    "atrasados": {
+      "cabecalho": [
+        "Análise",
+        "Atrasados"
+      ],
+      "linhas": [
+        [
+          "Drops",
+          "=COUNTIFS(tbDrops[Situação],\"Atrasado\")"
+        ],
+        [
+          "TAB",
+          "=COUNTIFS(tbTAB[Situação],\"Atrasado\")"
+        ],
+        [
+          "Coliformes",
+          "=COUNTIFS(tbColiformes[Situação],\"Atrasado\")"
+        ],
+        [
+          "C.T e B.L",
+          "=COUNTIFS(tbContagens[Situação],\"Atrasado\")"
+        ],
+        [
+          "Placas NFC",
+          "=COUNTIFS(tbPlacasNFC[Situação],\"Atrasado\")"
+        ]
+      ]
+    }
+  },
+  "abas": [
+    {
+      "nome": "Coletas",
+      "tabela": "tbColetas",
+      "cor": "1D6FE8",
+      "titulo": "Coletas",
+      "descricao": "Tanques de terra e de navio coletados. A mais recente aparece primeiro.",
+      "sql": "SELECT data_coleta AS \"Data da coleta\", origem AS \"Origem\", tanque AS \"Tanque\", navio AS \"Navio\", registrado_por AS \"Coletado por\", digitado_por AS \"Digitado por\", registrado_em AS \"Registrado em\", coleta_id AS \"ID\" FROM bi.coletas ORDER BY data_coleta DESC, registrado_em DESC",
+      "colunas": {
+        "Data da coleta": "data",
+        "Registrado em": "datahora"
+      },
+      "graficos": [
+        {
+          "titulo": "Coletas por dia (60 dias)",
+          "tipo": "colunas",
+          "sql": "WITH d AS (SELECT generate_series(current_date - 59, current_date, interval '1 day')::date AS dia) SELECT d.dia AS \"Dia\", count(c.coleta_id) AS \"Coletas\" FROM d LEFT JOIN bi.coletas c ON c.data_coleta = d.dia GROUP BY 1 ORDER BY 1"
+        },
+        {
+          "titulo": "Terra x Navio por dia",
+          "tipo": "empilhadas",
+          "sql": "WITH d AS (SELECT generate_series(current_date - 59, current_date, interval '1 day')::date AS dia) SELECT d.dia AS \"Dia\", count(c.coleta_id) FILTER (WHERE c.origem = 'Terra') AS \"Terra\", count(c.coleta_id) FILTER (WHERE c.origem = 'Navio') AS \"Navio\" FROM d LEFT JOIN bi.coletas c ON c.data_coleta = d.dia GROUP BY 1 ORDER BY 1"
+        }
+      ]
+    },
+    {
+      "nome": "Drops",
+      "tabela": "tbDrops",
+      "cor": "0E8A96",
+      "titulo": "Drops (D5, D10 e D15)",
+      "descricao": "Análises de drop de cada coleta e a situação delas.",
+      "sql": "SELECT data_coleta AS \"Data da coleta\", origem AS \"Origem\", tanque AS \"Tanque\", navio AS \"Navio\", drop AS \"Drop\", prevista AS \"Previsto para\", situacao AS \"Situação\", CASE WHEN concluido THEN 'Sim' ELSE 'Não' END AS \"Concluído\", concluido_por AS \"Concluído por\", concluido_em AS \"Concluído em\", CASE WHEN desvio THEN 'Sim' ELSE 'Não' END AS \"Desvio\", desvio_resultado AS \"Resultado do desvio\", drop_id AS \"ID\" FROM bi.drops ORDER BY data_coleta DESC, drop",
+      "colunas": {
+        "Data da coleta": "data",
+        "Previsto para": "data",
+        "Concluído em": "datahora"
+      },
+      "graficos": [
+        {
+          "titulo": "Drops por data prevista",
+          "tipo": "empilhadas",
+          "sql": "WITH d AS (SELECT generate_series(current_date - 30, current_date + 30, interval '1 day')::date AS dia) SELECT d.dia AS \"Dia\", count(p.drop_id) FILTER (WHERE p.concluido) AS \"Concluídos\", count(p.drop_id) FILTER (WHERE NOT p.concluido) AS \"Pendentes\" FROM d LEFT JOIN bi.drops p ON p.prevista = d.dia GROUP BY 1 ORDER BY 1"
+        },
+        {
+          "titulo": "Situação dos drops",
+          "tipo": "colunas",
+          "sql": "SELECT situacao AS \"Situação\", count(*) AS \"Drops\" FROM bi.drops GROUP BY 1 ORDER BY 1"
+        }
+      ]
+    },
+    {
+      "nome": "Desvios",
+      "tabela": "tbDesvios",
+      "cor": "7C3AED",
+      "titulo": "Desvios",
+      "descricao": "Desvios de drop e de tanque: o que abriu, o prazo e o resultado.",
+      "sql": "SELECT data_abertura AS \"Abertura\", tipo AS \"Tipo\", origem AS \"Origem\", tanque AS \"Tanque\", navio AS \"Navio\", data_coleta AS \"Data da coleta\", drop AS \"Drop\", analise AS \"Análise\", frasco AS \"Frasco\", contagem AS \"Contagem\", prazo AS \"Prazo\", status AS \"Status\", situacao AS \"Situação\", resultado AS \"Resultado\", temperaturas AS \"Temperaturas\", aberto_por AS \"Aberto por\", resultado_por AS \"Resultado por\", data_resultado AS \"Data do resultado\", desvio_id AS \"ID\" FROM bi.desvios ORDER BY data_abertura DESC",
+      "colunas": {
+        "Abertura": "data",
+        "Data da coleta": "data",
+        "Prazo": "data",
+        "Data do resultado": "data"
+      },
+      "graficos": [
+        {
+          "titulo": "Desvios abertos por dia",
+          "tipo": "colunas",
+          "sql": "WITH d AS (SELECT generate_series(current_date - 89, current_date, interval '1 day')::date AS dia) SELECT d.dia AS \"Dia\", count(v.desvio_id) AS \"Desvios\" FROM d LEFT JOIN bi.desvios v ON v.data_abertura = d.dia GROUP BY 1 ORDER BY 1"
+        },
+        {
+          "titulo": "Desvios por situação",
+          "tipo": "colunas",
+          "sql": "SELECT situacao AS \"Situação\", count(*) AS \"Desvios\" FROM bi.desvios GROUP BY 1 ORDER BY 1"
+        }
+      ]
+    },
+    {
+      "nome": "TAB",
+      "tabela": "tbTAB",
+      "cor": "D97706",
+      "titulo": "TAB",
+      "descricao": "Compostas e tanques no caldo: quando foi feito, quando espalhar e o resultado.",
+      "sql": "SELECT data_feito AS \"Data do TAB\", load_ou_tanque AS \"Load / Tanque\", composta AS \"Composta\", item AS \"Item\", fabrica AS \"Fábrica\", lotes AS \"Lotes\", status AS \"Status\", situacao AS \"Situação\", resultado AS \"Resultado\", espalhar_prevista AS \"Espalhar até\", leitura_prevista AS \"Leitura prevista\", confirmacao_prevista AS \"Confirmação prevista\", proxima_etapa AS \"Próxima etapa\", feito_por AS \"Feito por\", resultado_por AS \"Resultado por\", data_resultado AS \"Data do resultado\", teste_id AS \"ID\" FROM bi.testes WHERE teste = 'TAB' ORDER BY data_feito DESC, teste_id DESC",
+      "colunas": {
+        "Data do TAB": "data",
+        "Espalhar até": "data",
+        "Leitura prevista": "data",
+        "Confirmação prevista": "data",
+        "Próxima etapa": "data",
+        "Data do resultado": "data"
+      },
+      "graficos": [
+        {
+          "titulo": "TABs por dia, por status",
+          "tipo": "empilhadas",
+          "sql": "WITH d AS (SELECT generate_series(current_date - 59, current_date, interval '1 day')::date AS dia) SELECT d.dia AS \"Dia\", count(t.teste_id) FILTER (WHERE t.status = 'No caldo') AS \"No caldo\", count(t.teste_id) FILTER (WHERE t.status = 'Incubado') AS \"Incubado\", count(t.teste_id) FILTER (WHERE t.status = 'Concluído') AS \"Concluído\" FROM d LEFT JOIN bi.testes t ON t.data_feito = d.dia AND t.teste = 'TAB' GROUP BY 1 ORDER BY 1"
+        },
+        {
+          "titulo": "TABs por situação do prazo",
+          "tipo": "colunas",
+          "sql": "SELECT situacao AS \"Situação\", count(*) AS \"TABs\" FROM bi.testes WHERE teste = 'TAB' GROUP BY 1 ORDER BY 1"
+        }
+      ]
+    },
+    {
+      "nome": "Coliformes",
+      "tabela": "tbColiformes",
+      "cor": "16A34A",
+      "titulo": "Coliformes",
+      "descricao": "Coliformes das compostas: quando foi feito, a leitura e o resultado.",
+      "sql": "SELECT data_feito AS \"Data do teste\", load_ou_tanque AS \"Load / Navio\", composta AS \"Composta\", item AS \"Item\", fabrica AS \"Fábrica\", lotes AS \"Lotes\", status AS \"Status\", situacao AS \"Situação\", resultado AS \"Resultado\", espalhar_prevista AS \"Espalhar até\", leitura_prevista AS \"Leitura prevista\", confirmacao_prevista AS \"Confirmação prevista\", proxima_etapa AS \"Próxima etapa\", feito_por AS \"Feito por\", resultado_por AS \"Resultado por\", data_resultado AS \"Data do resultado\", teste_id AS \"ID\" FROM bi.testes WHERE teste = 'Coliformes' ORDER BY data_feito DESC, teste_id DESC",
+      "colunas": {
+        "Data do teste": "data",
+        "Espalhar até": "data",
+        "Leitura prevista": "data",
+        "Confirmação prevista": "data",
+        "Próxima etapa": "data",
+        "Data do resultado": "data"
+      },
+      "graficos": [
+        {
+          "titulo": "Coliformes por dia, por status",
+          "tipo": "empilhadas",
+          "sql": "WITH d AS (SELECT generate_series(current_date - 59, current_date, interval '1 day')::date AS dia) SELECT d.dia AS \"Dia\", count(t.teste_id) FILTER (WHERE t.status = 'No caldo') AS \"No caldo\", count(t.teste_id) FILTER (WHERE t.status = 'Incubado') AS \"Incubado\", count(t.teste_id) FILTER (WHERE t.status = 'Concluído') AS \"Concluído\" FROM d LEFT JOIN bi.testes t ON t.data_feito = d.dia AND t.teste = 'Coliformes' GROUP BY 1 ORDER BY 1"
+        },
+        {
+          "titulo": "Coliformes por situação do prazo",
+          "tipo": "colunas",
+          "sql": "SELECT situacao AS \"Situação\", count(*) AS \"Coliformes\" FROM bi.testes WHERE teste = 'Coliformes' GROUP BY 1 ORDER BY 1"
+        }
+      ]
+    },
+    {
+      "nome": "C.T e B.L",
+      "tabela": "tbContagens",
+      "cor": "DC2626",
+      "titulo": "C.T e B.L (recebimento e embarque)",
+      "descricao": "Resultados de C.T 48h, B.L 72h e B.L 120h por lote ou amostra.",
+      "sql": "SELECT COALESCE(data_leitura, prevista) AS \"Data\", analise AS \"Análise\", origem AS \"Origem\", load AS \"Load\", item AS \"Item\", fabrica AS \"Fábrica\", navio AS \"Navio\", linha AS \"Linha\", fase AS \"Fase\", lote_amostra AS \"Lote / Amostra\", numero AS \"Nº\", prevista AS \"Previsto para\", situacao AS \"Situação\", resultado AS \"Resultado\", valor AS \"Valor\", CASE WHEN alarme THEN 'Sim' ELSE 'Não' END AS \"Alarme\", lido_por AS \"Lido por\", data_leitura AS \"Data da leitura\" FROM bi.contagens ORDER BY COALESCE(data_leitura, prevista) DESC, load, numero",
+      "colunas": {
+        "Data": "data",
+        "Previsto para": "data",
+        "Data da leitura": "data"
+      },
+      "graficos": [
+        {
+          "titulo": "Leituras por dia, por análise",
+          "tipo": "empilhadas",
+          "sql": "WITH d AS (SELECT generate_series(current_date - 59, current_date, interval '1 day')::date AS dia) SELECT d.dia AS \"Dia\", count(c.analise) FILTER (WHERE c.analise = 'C.T 48h') AS \"C.T 48h\", count(c.analise) FILTER (WHERE c.analise = 'B.L 72h') AS \"B.L 72h\", count(c.analise) FILTER (WHERE c.analise = 'B.L 120h') AS \"B.L 120h\" FROM d LEFT JOIN bi.contagens c ON c.data_leitura = d.dia GROUP BY 1 ORDER BY 1"
+        },
+        {
+          "titulo": "Alarmes por dia",
+          "tipo": "colunas",
+          "sql": "WITH d AS (SELECT generate_series(current_date - 59, current_date, interval '1 day')::date AS dia) SELECT d.dia AS \"Dia\", count(c.analise) FILTER (WHERE c.alarme) AS \"Alarmes\" FROM d LEFT JOIN bi.contagens c ON c.data_leitura = d.dia GROUP BY 1 ORDER BY 1"
+        }
+      ]
+    },
+    {
+      "nome": "Placas NFC",
+      "tabela": "tbPlacasNFC",
+      "cor": "0E8A96",
+      "titulo": "Placas dos tanques (NFC)",
+      "descricao": "C.T, B.L e Psicrotróficos dos tanques: as 3 placas, a maior contagem e o resultado.",
+      "sql": "SELECT data_coleta AS \"Data da coleta\", origem AS \"Origem\", tanque AS \"Tanque\", navio AS \"Navio\", frasco AS \"Frasco\", analise AS \"Análise\", metodo AS \"Método\", etapa AS \"Etapa\", prevista AS \"Previsto para\", situacao AS \"Situação\", placa_1 AS \"Placa 1\", placa_2 AS \"Placa 2\", placa_3 AS \"Placa 3\", contagem AS \"Contagem\", maior AS \"Maior\", resultado AS \"Resultado\", desvio AS \"Desvio\", CASE WHEN repeticao THEN 'Sim' ELSE 'Não' END AS \"Repetição\", lida_por AS \"Lida por\", lida_em AS \"Lida em\" FROM bi.leituras_nfc ORDER BY data_coleta DESC, tanque, analise",
+      "colunas": {
+        "Data da coleta": "data",
+        "Previsto para": "data",
+        "Lida em": "datahora"
+      },
+      "graficos": [
+        {
+          "titulo": "Leituras feitas por dia",
+          "tipo": "colunas",
+          "sql": "WITH d AS (SELECT generate_series(current_date - 59, current_date, interval '1 day')::date AS dia) SELECT d.dia AS \"Dia\", count(l.analise_id) AS \"Leituras\" FROM d LEFT JOIN bi.leituras_nfc l ON (l.lida_em AT TIME ZONE 'America/Sao_Paulo')::date = d.dia GROUP BY 1 ORDER BY 1"
+        },
+        {
+          "titulo": "Maior contagem média por coleta",
+          "tipo": "linhas",
+          "sql": "WITH d AS (SELECT generate_series(current_date - 59, current_date, interval '1 day')::date AS dia) SELECT d.dia AS \"Dia\", round(avg(l.maior) FILTER (WHERE l.analise = 'C.T'), 1) AS \"C.T\", round(avg(l.maior) FILTER (WHERE l.analise = 'B.L'), 1) AS \"B.L\", round(avg(l.maior) FILTER (WHERE l.analise = 'Psicrotróficos'), 1) AS \"Psicrotróficos\" FROM d LEFT JOIN bi.leituras_nfc l ON l.data_coleta = d.dia AND l.lida GROUP BY 1 ORDER BY 1"
+        }
+      ]
+    },
+    {
+      "nome": "Recebimento NFC",
+      "tabela": "tbRecebimentoNFC",
+      "cor": "D97706",
+      "titulo": "Recebimento NFC",
+      "descricao": "Lotes de NFC recebidos, a diluição, o valor lido e o resultado final.",
+      "sql": "SELECT data_recebimento AS \"Data do recebimento\", load AS \"Load\", item AS \"Item\", fabrica AS \"Fábrica\", lote AS \"Lote\", amostra AS \"Amostra\", diluicao_texto AS \"Diluição\", analise AS \"Análise\", prevista AS \"Previsto para\", situacao AS \"Situação\", data_leitura AS \"Data da leitura\", valor_lido AS \"Valor lido\", sinal AS \"Sinal\", valor_final AS \"Valor final\", resultado AS \"Resultado\", lido_por AS \"Lido por\" FROM bi.recebimento_nfc ORDER BY data_recebimento DESC, load, lote",
+      "colunas": {
+        "Data do recebimento": "data",
+        "Previsto para": "data",
+        "Data da leitura": "data"
+      },
+      "graficos": [
+        {
+          "titulo": "Lotes recebidos por dia",
+          "tipo": "colunas",
+          "sql": "WITH d AS (SELECT generate_series(current_date - 59, current_date, interval '1 day')::date AS dia) SELECT d.dia AS \"Dia\", count(DISTINCT r.load || '/' || r.lote || '/' || r.amostra) AS \"Lotes\" FROM d LEFT JOIN bi.recebimento_nfc r ON r.data_recebimento = d.dia GROUP BY 1 ORDER BY 1"
+        },
+        {
+          "titulo": "Valor final médio por dia",
+          "tipo": "linhas",
+          "sql": "WITH d AS (SELECT generate_series(current_date - 59, current_date, interval '1 day')::date AS dia) SELECT d.dia AS \"Dia\", round(avg(r.valor_final) FILTER (WHERE r.analise = 'C.T 48h')) AS \"C.T 48h\", round(avg(r.valor_final) FILTER (WHERE r.analise = 'B.L 72h')) AS \"B.L 72h\", round(avg(r.valor_final) FILTER (WHERE r.analise = 'B.L 120h')) AS \"B.L 120h\" FROM d LEFT JOIN bi.recebimento_nfc r ON r.data_leitura = d.dia GROUP BY 1 ORDER BY 1"
+        }
+      ]
+    }
+  ],
+  "ajuda": [
+    "LabFlow — dados em Excel (somente leitura)",
+    "",
+    "Cada aba é uma análise do LabFlow, lida do banco (esquema bi), a mesma fonte do painel do Power BI.",
+    "Em cada aba: gráficos de tendência no topo e, embaixo, a tabela com o registro mais recente na primeira linha.",
+    "Atualizar tudo: Dados > Atualizar Tudo. Precisa do túnel do banco aberto (localhost:15432).",
+    "Filtrar e ordenar: botões do cabeçalho de cada tabela. Imprimir: Arquivo > Imprimir.",
+    "Este arquivo só lê. Para corrigir um dado use o app, o bot do WhatsApp ou peça a um Admin.",
+    "A senha do usuário labflow_leitura não fica no arquivo: o Excel pergunta na primeira vez.",
+    "Dados do servidor de demonstração (fictícios). Não envie este arquivo para fora com dados reais."
+  ]
+}

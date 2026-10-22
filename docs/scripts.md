@@ -104,6 +104,20 @@ Register-ScheduledTask -TaskName 'LabFlow tunel Power BI' -Action $acao -Trigger
 Start-ScheduledTask -TaskName 'LabFlow tunel Power BI'
 ```
 Parar e remover: `Unregister-ScheduledTask -TaskName 'LabFlow tunel Power BI' -Confirm:$false`. Testar: `(Test-NetConnection 127.0.0.1 -Port 15432).TcpTestSucceeded`.
+## gerar-excel-labflow.ps1 (Excel só de leitura sobre o banco)
+
+Arquivos: [`scripts/gerar-excel-labflow.ps1`](../scripts/gerar-excel-labflow.ps1) e [`scripts/excel-labflow.config.json`](../scripts/excel-labflow.config.json) (as abas, os SQL, os rótulos e os gráficos, em UTF-8 com acento).
+
+Gera o `LabFlow-Excel.xlsx` (em `OneDrive\Valts\estudos-labflow\excel`, fora do Git): uma aba **Painel** (cartões e gráfico de pendências atrasadas), uma aba por análise (Coletas, Drops, Desvios, TAB, Coliformes, C.T e B.L, Placas NFC e Recebimento NFC), cada uma com **gráficos de tendência no topo** e, embaixo, a tabela com **o registro mais recente na primeira linha**, mais as abas Tendencias (dados) e Ajuda. Tudo lê as views `bi.*` pelo usuário `labflow_leitura`; o arquivo **só lê** (corrigir dado é pelo app, pelo bot ou por um Admin).
+
+Pré-requisitos (uma vez por computador): driver **psqlODBC x64** (`psqlodbc_x64.msi`, do site do PostgreSQL), o túnel do banco aberto em `localhost:15432` (`tunel-powerbi.ps1`) e o **Excel fechado**.
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File scripts\gerar-excel-labflow.ps1
+```
+
+A **senha do `labflow_leitura` não vai para o arquivo nem para o script**: na primeira vez o Excel pergunta (Dados > Atualizar Tudo, aba Banco de Dados) e guarda no Windows; depois é só Atualizar Tudo. Para refazer o visual, edite o JSON e rode de novo. `-Pdf caminho.pdf` também exporta um PDF.
+
 ## gerar-gif.py (GIFs do README: painel e bot)
 
 Arquivo: [`scripts/gerar-gif.py`](../scripts/gerar-gif.py)
