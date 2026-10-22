@@ -1,0 +1,10 @@
+# Contexto do build da imagem = pasta app/ (APP-012: a imagem leva a API e as telas)
+**/.venv
+**/__pycache__
+**/.pytest_cache
+**/node_modules
+web/dist
+api/tests
+api/scripts
+api/deploy
+**/*.md

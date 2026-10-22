@@ -77,9 +77,13 @@ O endereço do banco vem da variável de ambiente `LABFLOW_DB_URL` (APP-002). Nu
 
 A migration `db/migrations/050_app_login.sql` cria o schema `app` (credenciais, senhas provisórias e sessões) e o usuário de banco **`labflow_app_web`**, que **lê** as tabelas e views do bot e **grava só no schema `app`** (um teste prova que ele não consegue gravar nas tabelas do bot). Para desfazer: `050_app_login_desfazer.sql`. No servidor, ela é aplicada junto com a publicação da API (APP-011), com backup antes.
 
+## Telas (APP-012)
+
+A API entrega as telas do app (React, pasta `app/web`) em **`/app/`**; a raiz `/` leva para lá. A pasta das telas vem de `LABFLOW_WEB_DIR` (no container, `/app/web`). `GET /ambiente` diz às telas se o servidor é de demonstração (`LABFLOW_DEMONSTRACAO=0` desliga a faixa).
+
 ## Container e servidor (APP-011)
 
-- `Dockerfile`: imagem da API (Python 3.12, usuário sem privilégios, healthcheck em `/saude`).
+- `Dockerfile`: imagem do app em dois estágios (Node monta as telas; Python 3.12 roda a API e entrega as telas), usuário sem privilégios, healthcheck em `/saude`. O contexto do build é a pasta `app/`.
 - `deploy/docker-compose.app.yml`: stack **separada** da do bot (`labflow-api` + `labflow-tailscale`), sem porta publicada; o acesso é só pelo Tailscale, em HTTPS.
 - `deploy/README.md`: passo a passo no servidor, um comando por vez (backup, migration 050, senha do `labflow_app_web`, subir a stack e o primeiro login).
 - Primeiro Admin (uma vez, dentro do container): `python -m labflow_api.primeiro_admin` lista os Admin do bot; `python -m labflow_api.primeiro_admin <id> <usuario.curto>` mostra a senha provisória.

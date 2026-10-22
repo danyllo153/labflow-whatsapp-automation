@@ -1,0 +1,232 @@
+/* Visual do LabFlow (07 §Visual, paleta aprovada em 15/10/2026). Sem emoji; situação sempre com texto. */
+:root {
+  --fundo: #fbf6e9;
+  --cartao: #ffffff;
+  --borda: #eadfc4;
+  --laranja: #f6b04a;
+  --menu-ativo: #fff4e0;
+  --laranja-suave: #fce7c3;
+  --texto: #1c1c1c;
+  --texto-secundario: #5c5c5c;
+  --acao: #2f7bc4;
+  --ok: #2e8b57;
+  --nao-ok: #c0392b;
+  --atencao: #e0a100;
+
+  --largura-menu: 220px;
+  --altura-barra: 60px;
+  font-family: "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.45;
+  color: var(--texto);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--fundo);
+  color: var(--texto);
+}
+
+h1 {
+  font-size: 1.4rem;
+  margin: 0 0 12px;
+}
+
+h2 {
+  font-size: 1.1rem;
+  margin: 0 0 8px;
+}
+
+a {
+  color: var(--acao);
+}
+
+.texto-secundario {
+  color: var(--texto-secundario);
+  font-size: 0.9rem;
+}
+
+.cartao {
+  background: var(--cartao);
+  border: 1px solid var(--borda);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+}
+
+.cartao p {
+  margin: 0 0 8px;
+}
+
+.etiqueta {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border: 1px solid currentColor;
+}
+
+.etiqueta-ok {
+  color: var(--ok);
+}
+
+.etiqueta-nao-ok {
+  color: var(--nao-ok);
+}
+
+.etiqueta-pendente {
+  color: #8a6400; /* âmbar escurecido para ler bem no branco */
+}
+
+.faixa-demonstracao {
+  background: var(--laranja-suave);
+  border: 1px solid var(--laranja);
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin-bottom: 14px;
+  font-size: 0.9rem;
+}
+
+/* ---------- Moldura: celular (padrão) ---------- */
+.moldura {
+  min-height: 100vh;
+}
+
+.marca {
+  font-weight: 700;
+  font-size: 1.15rem;
+  letter-spacing: 0.02em;
+}
+
+.menu-lateral {
+  display: none;
+}
+
+.topo-celular {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--laranja);
+  color: var(--texto);
+  padding: 12px 16px;
+}
+
+.conteudo {
+  padding: 16px 16px calc(var(--altura-barra) + 24px);
+  max-width: 1200px;
+}
+
+.barra-baixo {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  height: calc(var(--altura-barra) + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  background: var(--cartao);
+  border-top: 1px solid var(--borda);
+}
+
+.item-barra {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--texto);
+  text-decoration: none;
+  padding: 4px 2px;
+  min-height: 44px; /* botão grande o bastante para o dedo */
+}
+
+.item-barra.active {
+  background: var(--menu-ativo);
+  font-weight: 700;
+  border-top: 3px solid var(--laranja);
+}
+
+/* ---------- Computador e tablet ---------- */
+@media (min-width: 900px) {
+  .moldura {
+    display: grid;
+    grid-template-columns: var(--largura-menu) 1fr;
+  }
+
+  .topo-celular,
+  .barra-baixo {
+    display: none;
+  }
+
+  .menu-lateral {
+    display: block;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    background: var(--laranja);
+    padding: 18px 12px;
+  }
+
+  .menu-lateral .marca {
+    padding: 0 8px 16px;
+  }
+
+  .item-menu {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    margin-bottom: 4px;
+    border-radius: 8px;
+    color: var(--texto);
+    text-decoration: none;
+  }
+
+  .item-menu:hover {
+    background: rgba(255, 255, 255, 0.35);
+  }
+
+  .item-menu.active {
+    background: var(--menu-ativo);
+    font-weight: 700;
+  }
+
+  .etiqueta-breve {
+    font-size: 0.7rem;
+    color: var(--texto-secundario);
+  }
+
+  .conteudo {
+    padding: 24px 32px;
+  }
+}
+
+/* ---------- Impressão: só o conteúdo, legível em preto e branco ---------- */
+@media print {
+  .menu-lateral,
+  .topo-celular,
+  .barra-baixo,
+  .faixa-demonstracao {
+    display: none !important;
+  }
+
+  body {
+    background: #fff;
+  }
+
+  .conteudo {
+    padding: 0;
+  }
+
+  .cartao {
+    border-color: #999;
+  }
+}

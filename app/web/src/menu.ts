@@ -1,0 +1,15 @@
+/** Itens do menu (07 §Visual): no celular é a barra de baixo, no computador o menu lateral. */
+export interface ItemDoMenu {
+  caminho: string;
+  rotulo: string;
+  pronto: boolean; // false = a tela ainda não existe ("Em breve")
+  tarefa?: string; // tarefa da Fase C que entrega a tela
+}
+
+export const MENU: ItemDoMenu[] = [
+  { caminho: "/", rotulo: "Início", pronto: true },
+  { caminho: "/turno", rotulo: "Turno", pronto: false, tarefa: "APP-022" },
+  { caminho: "/paginas", rotulo: "Páginas", pronto: false, tarefa: "APP-015" },
+  { caminho: "/esterilizacao", rotulo: "Esterilização", pronto: false, tarefa: "APP-026" },
+  { caminho: "/assistente", rotulo: "Assistente", pronto: false, tarefa: "Fase D" },
+];
