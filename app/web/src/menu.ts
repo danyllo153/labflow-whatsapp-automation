@@ -9,7 +9,7 @@ export interface ItemDoMenu {
 export const MENU: ItemDoMenu[] = [
   { caminho: "/", rotulo: "Início", pronto: true },
   { caminho: "/turno", rotulo: "Turno", pronto: false, tarefa: "APP-022" },
-  { caminho: "/paginas", rotulo: "Páginas", pronto: false, tarefa: "APP-015" },
+  { caminho: "/paginas", rotulo: "Páginas", pronto: true },
   { caminho: "/esterilizacao", rotulo: "Esterilização", pronto: false, tarefa: "APP-026" },
   { caminho: "/assistente", rotulo: "Assistente", pronto: false, tarefa: "Fase D" },
 ];

@@ -285,6 +285,220 @@ a {
   font-size: 0.85rem;
 }
 
+/* ---------- Páginas do laboratório (07 §5) ---------- */
+.grade-paginas {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.cartao-pagina {
+  display: block;
+  margin: 0;
+  color: var(--texto);
+  text-decoration: none;
+}
+
+a.cartao-pagina:hover {
+  border-color: var(--laranja);
+}
+
+.cartao-pagina.em-breve {
+  opacity: 0.65;
+}
+
+.etiqueta-neutra {
+  color: var(--texto-secundario);
+}
+
+.trilha {
+  margin: 0 0 4px;
+  font-size: 0.85rem;
+}
+
+.barra-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.botao-secundario {
+  display: inline-flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--acao);
+  background: #fff;
+  color: var(--acao);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.botao-secundario:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.orientacao {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+}
+
+.orientacao select,
+.campo select {
+  font: inherit;
+  min-height: 40px;
+  padding: 6px 8px;
+  border: 1px solid #c9bb98;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.campo select {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  font-weight: 400;
+  min-height: 44px;
+}
+
+.grade-filtros {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 0 12px;
+}
+
+.botoes-lado {
+  display: flex;
+  gap: 8px;
+}
+
+.botoes-lado .botao {
+  width: auto;
+  flex: 1;
+}
+
+.etiquetas-filtro {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 0;
+  margin: 0 0 10px;
+}
+
+.etiquetas-filtro li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--laranja-suave);
+  border: 1px solid var(--laranja);
+  border-radius: 999px;
+  padding: 2px 4px 2px 10px;
+  font-size: 0.85rem;
+}
+
+.etiquetas-filtro button {
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-weight: 700;
+  min-width: 28px;
+  min-height: 28px;
+  cursor: pointer;
+}
+
+.tabela-dados {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--cartao);
+  font-size: 0.9rem;
+}
+
+.tabela-dados th,
+.tabela-dados td {
+  text-align: left;
+  padding: 7px 8px;
+  border-bottom: 1px solid #f1ead8;
+  vertical-align: top;
+}
+
+.tabela-dados th {
+  background: var(--laranja-suave);
+  font-weight: 700;
+  position: sticky;
+  top: 0;
+}
+
+.paginacao {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 12px 0;
+}
+
+.so-impressao {
+  display: none;
+}
+
+/* No celular a tabela vira um cartão por linha */
+@media (max-width: 899px) {
+  .so-tela .tabela-dados thead {
+    display: none;
+  }
+
+  .so-tela .tabela-dados,
+  .so-tela .tabela-dados tbody,
+  .so-tela .tabela-dados tr,
+  .so-tela .tabela-dados td {
+    display: block;
+    width: 100%;
+  }
+
+  .so-tela .tabela-dados {
+    background: transparent;
+  }
+
+  .so-tela .tabela-dados tr {
+    background: var(--cartao);
+    border: 1px solid var(--borda);
+    border-radius: 10px;
+    padding: 8px 12px;
+    margin-bottom: 8px;
+  }
+
+  .so-tela .tabela-dados td {
+    border: none;
+    padding: 2px 0;
+    display: flex;
+    gap: 8px;
+  }
+
+  .so-tela .tabela-dados td::before {
+    content: attr(data-rotulo);
+    color: var(--texto-secundario);
+    min-width: 120px;
+    font-size: 0.8rem;
+  }
+
+  .so-tela .tabela-dados td.principal {
+    font-weight: 700;
+    font-size: 1rem;
+  }
+
+  .so-tela .tabela-dados td:empty {
+    display: none;
+  }
+}
+
 /* ---------- Entrar e criar a senha ---------- */
 .tela-entrar {
   min-height: 100vh;
@@ -489,7 +703,49 @@ a {
 }
 
 /* ---------- Impressão: só o conteúdo, legível em preto e branco ---------- */
+@page {
+  margin: 12mm;
+
+  @bottom-right {
+    content: "Página " counter(page) " de " counter(pages);
+    font-size: 9pt;
+  }
+}
+
 @media print {
+  .so-tela {
+    display: none !important;
+  }
+
+  .so-impressao {
+    display: block !important;
+    font-size: 9pt;
+  }
+
+  .so-impressao h1 {
+    font-size: 13pt;
+    margin: 0 0 4px;
+  }
+
+  .so-impressao .tabela-dados {
+    font-size: 8.5pt;
+  }
+
+  .so-impressao .tabela-dados th {
+    background: #eee !important;
+    position: static;
+  }
+
+  .so-impressao .tabela-dados th,
+  .so-impressao .tabela-dados td {
+    border-bottom: 1px solid #999;
+    padding: 3px 4px;
+  }
+
+  .so-impressao tr {
+    break-inside: avoid;
+  }
+
   .menu-lateral,
   .topo-celular,
   .barra-baixo,
