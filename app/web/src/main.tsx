@@ -3,12 +3,15 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 
 import App from "./App";
+import { ProvedorDeSessao } from "./sessao";
 import "./estilos.css";
 
 createRoot(document.getElementById("raiz")!).render(
   <StrictMode>
     <BrowserRouter basename="/app" future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-      <App />
+      <ProvedorDeSessao>
+        <App />
+      </ProvedorDeSessao>
     </BrowserRouter>
   </StrictMode>,
 );
