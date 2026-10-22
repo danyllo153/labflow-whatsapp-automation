@@ -1,10 +1,14 @@
-import { NavLink, Outlet } from "react-router-dom";
+import { Link, NavLink, Outlet } from "react-router-dom";
 
 import { MENU } from "../menu";
+import { useSessao } from "../sessao";
 import FaixaDemonstracao from "./FaixaDemonstracao";
 
 /** Moldura de todas as telas: menu lateral (computador e tablet) ou topo + barra embaixo (celular). */
 export default function Moldura() {
+  const { pessoa, sair } = useSessao();
+  const nome = pessoa?.nome || pessoa?.usuario;
+
   return (
     <div className="moldura">
       <aside className="menu-lateral" aria-label="Menu">
@@ -17,10 +21,28 @@ export default function Moldura() {
             </NavLink>
           ))}
         </nav>
+        <div className="conta">
+          <div className="conta-nome">{nome}</div>
+          <div className="texto-secundario">{pessoa?.cargo}</div>
+          <Link to="/conta/senha" className="conta-link">
+            Trocar senha
+          </Link>
+          <button type="button" className="botao botao-simples" onClick={() => void sair()}>
+            Sair
+          </button>
+        </div>
       </aside>
 
       <header className="topo-celular">
         <span className="marca">LabFlow</span>
+        <span className="topo-conta">
+          <Link to="/conta/senha" className="conta-link" aria-label="Trocar senha">
+            {nome}
+          </Link>
+          <button type="button" className="botao-topo" onClick={() => void sair()}>
+            Sair
+          </button>
+        </span>
       </header>
 
       <main className="conteudo">
