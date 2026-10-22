@@ -144,8 +144,8 @@ Arquivo: [`scripts/backup-db.sh`](../scripts/backup-db.sh)
 
 Backup diário do banco `labflow`. Roda **no servidor**, em `~/labflow/backup-db.sh`, chamado pelo `cron` todo dia às 3h (o servidor está no fuso de Brasília).
 
-- `pg_dump -Fc` (formato compactado, restaurado com `pg_restore`) para `~/labflow/backups/labflow_AAAA-MM-DD_HHMM.dump`
-- arquivo vazio conta como falha: o script apaga o arquivo e sai com erro
+- `pg_dump -Fc` (formato compactado, restaurado com `pg_restore`) para `~/labflow/backups/labflow_AAAA-MM-DD_HHMM.dump`, feito pelo **administrador do banco** (`evolution`, o `POSTGRES_USER` do conteiner): desde a migration `050` o app tem o schema `app`, que o `labflow_app` nao le (com ele o dump falhava e saia arquivo vazio, 20 e 21/10/2026)
+- falha, arquivo vazio ou arquivo sem a lista de tabelas contam como erro: o script apaga o arquivo, escreve `ERRO: backup falhou` no log e sai com codigo 1 (nunca deixa arquivo vazio parecendo backup bom)
 - apaga backups com mais de 14 dias
 - `umask 077`: o arquivo só pode ser lido pelo dono (o backup tem todos os dados do bot); a pasta `backups` também é `700`
 
