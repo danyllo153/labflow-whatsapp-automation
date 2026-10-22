@@ -81,8 +81,8 @@ Erros: o que acontece quando algo falha
 ### A6. Excluir
 - **Gatilho:** "Excluir" no detalhe de uma linha (Admin e Operador; Coletor só a própria coleta).
 - **Passos:** 1) O app mostra o que será excluído. 2) Pede o **motivo** se for análise ou resultado (coleta não pede, decidido em 16/10). 3) Confirmar.
-- **Regras:** função do banco; **não apaga**: marca como excluído com quem, quando e motivo.
-- **Resultado:** some das páginas e das contas; o Admin vê em Histórico e pode **recuperar** (função do banco, com motivo).
+- **Regras:** função do banco; **não apaga**: **arquiva** o registro completo (com análises, drops e testes) em `registros_excluidos`, com quem, quando e motivo, e o tira das tabelas do dia a dia (decidido em 22/10). **Coleta com análise não pode ser excluída**: a função recusa ("exclua primeiro as análises, com motivo").
+- **Resultado:** some das páginas e das contas; o Admin vê em Histórico e pode **recuperar** (função do banco, com motivo), que devolve o registro com os mesmos ids.
 
 ### A7. Conferir as estufas
 - **Gatilho:** início do turno; aba Estufas ou bloco no fim do Início.
