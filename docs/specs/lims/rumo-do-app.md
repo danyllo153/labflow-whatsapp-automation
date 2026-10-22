@@ -18,7 +18,7 @@ Um app **web + celular** (PWA, instalável sem loja) sobre o **mesmo banco** do 
 2. **gráficos** e um **relatório do turno**: o que foi feito e o que fica pendente para o próximo turno;
 3. um **chat embutido** que usa o mesmo caminho do bot (regex → IA → "sim").
 
-**Dois compromissos do Danyllo (22/10/2026), que valem para todas as fases:**
+**Dois compromissos do Danyllo (21/10/2026), que valem para todas as fases:**
 - **Segurança em primeiro lugar.** O medo da gestão é o dado **vazar**, **sumir** ou **se perder**. O app precisa ser seguro **no celular**, que é o aparelho de quem não tem Wi-Fi na fábrica: nada guardado no aparelho, acesso só de quem pode, na hora e no lugar certos (ver "Segurança no celular" abaixo), banco num servidor com backup fora da máquina, e nada apagado de verdade (excluir guarda o registro).
 - **Automatizar os dois lados.** Não só quem **lê** os dados (páginas, gráficos, relatórios), mas principalmente quem **gera** os dados, os **analistas**: menos texto repetitivo, nada de preencher planilha ou tabela à mão; o registro sai de um toque, de uma frase, de uma foto ou de uma leitura automática, e os relatórios se montam sozinhos a partir dele.
 
@@ -34,13 +34,13 @@ A base já está escrita nas specs do LIMS ([00](00-visao-geral.md) a [10](10-de
 
 ## Fase atual
 
-**Fase C: as telas (PWA).** A Fase B terminou em 19/10/2026, com a API no ar no servidor de demonstração (só pelo Tailscale). Telas em **React + TypeScript** (decidido em 22/10); tarefas `APP-012` a `APP-028` abaixo, **aprovadas em 22/10/2026**.
+**Fase C: as telas (PWA).** A Fase B terminou em 19/10/2026, com a API no ar no servidor de demonstração (só pelo Tailscale). Telas em **React + TypeScript** (decidido em 21/10); tarefas `APP-012` a `APP-028` abaixo, **aprovadas em 21/10/2026**.
 
 | Fase | O que entrega | Situação |
 |---|---|---|
 | A | Spec do app revisada (07, 06, 08 e esta nota) | ✅ concluída: 06, 07 e 08 aprovados como v1.0 em 16/10/2026 |
 | B | API só de leitura + login | ✅ concluída em 19/10/2026 (APP-001 a APP-011; API no ar pelo Tailscale) |
-| C | PWA só leitura: painel do dia, relatório do turno, gráficos | ⏳ em andamento (tarefas `APP-012`... aprovadas em 22/10) |
+| C | PWA só leitura: painel do dia, relatório do turno, gráficos | ⏳ em andamento (tarefas `APP-012`... aprovadas em 21/10) |
 | D | Chat embutido e registro pelo app | ⬜ |
 | E | Decidir o futuro do WhatsApp | ⬜ |
 
@@ -100,7 +100,7 @@ Código do app no **mesmo repositório, na pasta `app/`** (`app/api/` e, na Fase
 
 **Fica para depois da Fase B:** cadastrar pessoa e trocar cargo pelo app (dependem do PB5 publicado, PR #84 do bot); as outras páginas; turno, estufas, esterilização e relatório do turno (Fase C); editar e excluir (dependem do PB4); assistente (Fase D, PB6).
 
-## Tarefas da Fase C (aprovadas em 22/10/2026)
+## Tarefas da Fase C (aprovadas em 21/10/2026)
 
 Telas em **React + TypeScript (Vite)** na pasta `app/web/`, **servidas pela própria API** (um container só, o mesmo endereço do Tailscale, o cookie de login funciona sem configuração extra). Geradas a partir do [07](07-app-pwa.md) e do [08](08-fluxos.md) v1.0. **Uma tarefa = uma branch = um PR**, com testes (Vitest nas telas; pytest na API) e o CI do app construindo tudo. Dados sempre fictícios.
 
@@ -143,7 +143,7 @@ Telas em **React + TypeScript (Vite)** na pasta `app/web/`, **servidas pela pró
 | APP-027 | Estufas | 07 §7.1 | Tabelas `app.estufas` e `app.leituras_estufa`; as 11 estufas com **Supervisório** e **Field chart** (Ok / Não ok, temperatura só no Não ok), bloco no Início e aba própria; faixas **fictícias** no repositório | Estufa Não ok entra nas ocorrências do relatório do turno | APP-024 |
 | APP-028 | Admin: turnos, atividades e estufas | 07 §10 | Horários padrão dos turnos, atividades fixas de cada turno, estufas e faixas (as reais só no banco) | Só o Admin acessa | APP-023, APP-027 |
 
-**Andamento (22/10/2026):** APP-012 e APP-013 mescladas (#147, #148) e no ar no servidor de demonstração; APP-014 e APP-015 mescladas (#150, #151); APP-016 em PR (migration 051): com ela, **o Marco 1 termina**.
+**Andamento (21/10/2026):** APP-012 e APP-013 mescladas (#147, #148) e no ar no servidor de demonstração; APP-014 e APP-015 mescladas (#150, #151); APP-016 em PR (migration 051): com ela, **o Marco 1 termina**.
 
 **Fica fora da Fase C:** relatório do dia igual ao do bot (depende do PB6, Fase D); assistente (Fase D); editar e excluir (dependem do PB4); barreiras de segurança no celular (versão depois do piloto do app).
 
@@ -210,7 +210,7 @@ O app não mexe nas tabelas nem no workflow do bot: o que ele precisa vira pedid
 - 15/10/2026: senha provisória mandada pelo próprio bot (`acesso ao app`), quando houver mais gente.
 - 15/10/2026: recuperação de senha por e-mail (exige cadastrar o e-mail de cada pessoa e um serviço de envio), avaliar depois do piloto.
 - 21/10/2026: **app usado no celular ou no tablet com barreiras de segurança**: localização da fábrica, horário do turno e aparelho autorizado (detalhe em "Segurança no celular", no topo).
-- 22/10/2026: ideias tiradas de um **sistema de monitoramento ambiental feito internamente** (tour em vídeo, visto em 22/10; nada dele vai para o repositório). O que vale trazer para o LabFlow:
+- 21/10/2026: ideias tiradas de um **sistema de monitoramento ambiental feito internamente** (tour em vídeo, visto em 21/10; nada dele vai para o repositório). O que vale trazer para o LabFlow:
   - **aviso de valor fora do histórico** antes de gravar (ex.: C.T muito acima do normal do tanque): "confira a digitação ou a diluição";
   - **senha como assinatura** ao gravar resultado e **código de integridade** (hash) em cada resultado, para detectar alteração (combina com a [auditoria](02-audit-trail.md) e a ISO 17025);
   - **laudo do período com assinatura eletrônica**, bloqueado depois de assinado e conferível por um código de validação;
@@ -224,4 +224,4 @@ O app não mexe nas tabelas nem no workflow do bot: o que ele precisa vira pedid
   - **importar o histórico das planilhas de Excel**;
   - **faixa "Dados de demonstração"** no topo enquanto o servidor tiver dados fictícios;
   - **eventos e mudanças** (obra, equipamento novo, troca de sanitizante) marcados nos gráficos de tendência.
-- 22/10/2026: **monitoramento ambiental como módulo do LabFlow**, no mesmo servidor e no mesmo banco PostgreSQL: o sistema interno já é web por dentro, então dá para levar as telas e as regras para um banco central (várias pessoas gravando ao mesmo tempo sem risco, celular e tablet, backup fora da pasta) e mostrar as coletas atrasadas do ambiental no "Início" do analista. Lição para o LabFlow: **banco em arquivo dentro de pasta de rede não aguenta várias pessoas gravando** e quem acessa a pasta leva tudo; por isso o LabFlow fica em servidor com banco de verdade.
+- 21/10/2026: **monitoramento ambiental como módulo do LabFlow**, no mesmo servidor e no mesmo banco PostgreSQL: o sistema interno já é web por dentro, então dá para levar as telas e as regras para um banco central (várias pessoas gravando ao mesmo tempo sem risco, celular e tablet, backup fora da pasta) e mostrar as coletas atrasadas do ambiental no "Início" do analista. Lição para o LabFlow: **banco em arquivo dentro de pasta de rede não aguenta várias pessoas gravando** e quem acessa a pasta leva tudo; por isso o LabFlow fica em servidor com banco de verdade.
