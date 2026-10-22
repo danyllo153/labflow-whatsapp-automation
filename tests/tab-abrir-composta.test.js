@@ -122,7 +122,7 @@ test('foto de TAB, Admin: as compostas que não existem entram na lista (recebim
   assert.match(c[0], /^Recebimento load 44300 item 2703 fabrica AQA lotes 1-10 data 15\/10\/2026 resultados <10$/);
   assert.match(c[1], /^Compostas do load 44300 item 2703 \(1-5\)\(6-10\)$/);
   assert.match(c[2], /^Tab feito do load 44300 item 2703 \(1-5\)\(6-10\) data 15\/10\/2026$/);
-  assert.match(r.textoResposta, /Compostas que ainda não existem \(só o Admin abre pelo TAB/);
+  assert.match(r.textoResposta, /🆕 Compostas novas, já no caldo:\n• load 44300 \(item 2703, AQA\): lotes 1-10, compostas \(1-5\)\(6-10\)/);
   // todo comando montado é aceito pelo bot (o "sim" reenvia um por vez)
   c.forEach((x) => assert.notEqual(interpretar(x).tipo, 'interpretar_ia', x));
 });
@@ -151,7 +151,7 @@ test('foto de Coliformes, Admin: mesmo caminho, com o comando de Coliformes', ()
     'Recebimento load 44300 item 2703 fabrica AQA lotes 1-10 data 15/10/2026 resultados <10',
     'Compostas do load 44300 item 2703 (1-5)(6-10)',
     'Coliformes da foto: load 44300 item 2703 (1-5) data 15/10/2026 feito ; load 44300 item 2703 (6-10) data 15/10/2026 feito']);
-  assert.match(r.textoResposta, /Abrir antes \(só o Admin\)/);
+  assert.match(r.textoResposta, /Abrir antes:/);
 });
 
 test('prompt: "bl" sozinho vale bl120 também nas placas de tanque', () => {
