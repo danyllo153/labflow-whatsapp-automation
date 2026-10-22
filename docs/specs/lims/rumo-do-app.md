@@ -143,7 +143,7 @@ Telas em **React + TypeScript (Vite)** na pasta `app/web/`, **servidas pela pró
 | APP-027 | Estufas | 07 §7.1 | Tabelas `app.estufas` e `app.leituras_estufa`; as 11 estufas com **Supervisório** e **Field chart** (Ok / Não ok, temperatura só no Não ok), bloco no Início e aba própria; faixas **fictícias** no repositório | Estufa Não ok entra nas ocorrências do relatório do turno | APP-024 |
 | APP-028 | Admin: turnos, atividades e estufas | 07 §10 | Horários padrão dos turnos, atividades fixas de cada turno, estufas e faixas (as reais só no banco) | Só o Admin acessa | APP-023, APP-027 |
 
-**Andamento (22/10/2026):** APP-012 e APP-013 mescladas (#147, #148) e no ar no servidor de demonstração; APP-014 mesclada (#150); APP-015 em PR.
+**Andamento (22/10/2026):** APP-012 e APP-013 mescladas (#147, #148) e no ar no servidor de demonstração; APP-014 e APP-015 mescladas (#150, #151); APP-016 em PR (migration 051): com ela, **o Marco 1 termina**.
 
 **Fica fora da Fase C:** relatório do dia igual ao do bot (depende do PB6, Fase D); assistente (Fase D); editar e excluir (dependem do PB4); barreiras de segurança no celular (versão depois do piloto do app).
 

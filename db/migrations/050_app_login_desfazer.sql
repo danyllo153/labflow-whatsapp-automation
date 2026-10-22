@@ -14,6 +14,7 @@ BEGIN
     REVOKE ALL ON ALL TABLES IN SCHEMA public FROM labflow_app_web;
     REVOKE ALL ON ALL TABLES IN SCHEMA bi FROM labflow_app_web;
     REVOKE ALL ON SCHEMA public, bi FROM labflow_app_web;
+    REVOKE ALL ON ALL FUNCTIONS IN SCHEMA public FROM labflow_app_web;  -- se a 051 (ou outra do app) deu EXECUTE
     EXECUTE format('REVOKE ALL ON DATABASE %I FROM labflow_app_web', current_database());
     DROP ROLE labflow_app_web;
   END IF;
