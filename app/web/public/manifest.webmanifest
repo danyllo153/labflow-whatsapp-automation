@@ -1,0 +1,16 @@
+{
+  "name": "LabFlow",
+  "short_name": "LabFlow",
+  "description": "Laboratório de microbiologia: pendências, páginas e relatórios.",
+  "lang": "pt-BR",
+  "start_url": "/app/",
+  "scope": "/app/",
+  "display": "standalone",
+  "background_color": "#FBF6E9",
+  "theme_color": "#F6B04A",
+  "icons": [
+    { "src": "/app/icone-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/app/icone-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/app/icone-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

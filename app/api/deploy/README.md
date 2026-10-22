@@ -149,12 +149,14 @@ sed -i '/^TS_AUTHKEY=/d' ~/labflow/.env
 
 ## No PC: abrir e entrar
 
-1. Com o Tailscale ligado, abrir `https://labflow-app.<sua-tailnet>.ts.net/docs` (o nome completo aparece no painel do Tailscale, em **Machines**).
+1. Com o Tailscale ligado, abrir `https://labflow-app.<sua-tailnet>.ts.net/app/` (as telas) ou `.../docs` (a API) (o nome completo aparece no painel do Tailscale, em **Machines**).
 2. `POST /login` → **Try it out** → usuário e senha provisória → **Execute**.
 3. `POST /trocar-senha` → a senha nova (mínimo de 8 caracteres).
 4. `GET /me` → deve mostrar seu nome, cargo `Admin` e `trocar_senha: false`.
 
 ## Atualizar depois de um PR novo do app
+
+O mesmo comando monta a API e as telas (desde a APP-012 a imagem leva as duas; a primeira vez demora uns minutos a mais).
 
 ```
 git -C ~/labflow/app-src pull

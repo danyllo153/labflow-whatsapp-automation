@@ -1,15 +1,15 @@
-name: Testes da API do app
+name: Testes do app (API e telas)
 
 on:
   push:
     paths:
-      - "app/api/**"
+      - "app/**"
       - "db/migrations/**"
       - "db/seeds/**"
       - ".github/workflows/app-api.yml"
   pull_request:
     paths:
-      - "app/api/**"
+      - "app/**"
       - "db/migrations/**"
       - "db/seeds/**"
       - ".github/workflows/app-api.yml"
@@ -54,9 +54,31 @@ jobs:
           psql "$LABFLOW_DB_URL" -v ON_ERROR_STOP=1 -q -f ../../db/migrations/050_app_login.sql
       - name: Rodar os testes (pytest)
         run: python -m pytest -q
-      - name: Construir a imagem da API e conferir que ela sobe (APP-011)
+      - name: Construir a imagem (API + telas) e conferir que ela sobe (APP-011, APP-012)
+        working-directory: app
         run: |
-          docker build -q -t labflow-api:ci .
+          docker build -q -t labflow-api:ci -f api/Dockerfile .
           docker run -d --name labflow-api-ci --network host -e LABFLOW_DB_URL="$LABFLOW_DB_URL" labflow-api:ci
-          for i in $(seq 1 20); do curl -fsS http://127.0.0.1:8000/saude && exit 0; sleep 1; done
-          docker logs labflow-api-ci; exit 1
+          for i in $(seq 1 20); do curl -fsS http://127.0.0.1:8000/saude && break; sleep 1; done
+          curl -fsS http://127.0.0.1:8000/saude || { docker logs labflow-api-ci; exit 1; }
+          curl -fsS http://127.0.0.1:8000/app/ | grep -q '<div id="raiz">' || { echo "telas não vieram em /app/"; exit 1; }
+          curl -fsS http://127.0.0.1:8000/app/manifest.webmanifest | grep -q '"start_url": "/app/"'
+
+  telas:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app/web
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: app/web/package-lock.json
+      - name: Instalar dependências
+        run: npm ci --no-audit --no-fund
+      - name: Testes das telas (Vitest)
+        run: npm test
+      - name: Montar as telas (TypeScript + Vite)
+        run: npm run build

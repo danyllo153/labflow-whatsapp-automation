@@ -50,6 +50,7 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 - **Pendências de hoje** (vence hoje e atrasados) por bloco, lendo as views do Power BI (APP-010).
 - **Container** da API (`app/api/Dockerfile`) e stack separada com acesso só pelo **Tailscale** (`app/api/deploy/`), sem porta pública; comando `primeiro_admin` para o primeiro login do Admin; a migration 050 passa a dar o `CONNECT` no banco ao `labflow_app_web` (o banco do servidor não deixa o `PUBLIC` conectar); CI no Postgres 15, igual ao servidor, e conferindo que a imagem sobe (APP-011).
 - **API no ar** no servidor de demonstração em 19/10/2026, só pelo Tailscale, com o primeiro Admin logado (APP-011).
+- **Telas do app (Fase C)** em React + TypeScript (`app/web/`), entregues pela própria API em `/app/`: menu lateral no computador e barra embaixo no celular, paleta aprovada, faixa "Dados de demonstração", app **instalável** que guarda só os arquivos das telas (nenhum dado no aparelho); imagem em dois estágios e CI testando e montando as telas (APP-012).
 
 ## [1.3.0] - 2026-10-15
 

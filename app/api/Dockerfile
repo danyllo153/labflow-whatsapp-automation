@@ -1,14 +1,26 @@
-# Imagem da API do app LabFlow (APP-011). Spec: 06-api-e-auth.md (v1.0), "Arquitetura".
-# Roda como usuário sem privilégios; a porta 8000 só é alcançada pela rede interna da stack (labflow-net).
+# Imagem do app LabFlow: API (FastAPI) + telas (React). Tarefas APP-011 e APP-012. Spec: 06 §Arquitetura, 07 §Direção.
+# Contexto do build = pasta app/ (docker build -f api/Dockerfile app). Roda como usuário sem privilégios;
+# a porta 8000 só é alcançada pela rede interna da stack (labflow-net).
+
+# 1) Monta as telas (só neste estágio existe Node; a imagem final não leva node_modules)
+FROM node:20.18.1-alpine AS telas
+WORKDIR /web
+COPY web/package.json web/package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY web/ ./
+RUN npm run build
+
+# 2) API, que também entrega as telas em /app/
 FROM python:3.12-slim
 
-ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 LABFLOW_WEB_DIR=/app/web
 WORKDIR /app
 
-COPY requirements.txt .
+COPY api/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY labflow_api ./labflow_api
+COPY api/labflow_api ./labflow_api
+COPY --from=telas /web/dist ./web
 
 RUN useradd --create-home --uid 10001 labflow
 USER labflow

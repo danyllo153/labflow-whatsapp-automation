@@ -34,13 +34,13 @@ A base já está escrita nas specs do LIMS ([00](00-visao-geral.md) a [10](10-de
 
 ## Fase atual
 
-**Fase C: as telas (PWA).** A Fase B terminou em 19/10/2026, com a API no ar no servidor de demonstração (só pelo Tailscale). Telas em **React + TypeScript** (decidido em 22/10); tarefas `APP-012` a `APP-028` abaixo, **esperando a aprovação do Danyllo**.
+**Fase C: as telas (PWA).** A Fase B terminou em 19/10/2026, com a API no ar no servidor de demonstração (só pelo Tailscale). Telas em **React + TypeScript** (decidido em 22/10); tarefas `APP-012` a `APP-028` abaixo, **aprovadas em 22/10/2026**.
 
 | Fase | O que entrega | Situação |
 |---|---|---|
 | A | Spec do app revisada (07, 06, 08 e esta nota) | ✅ concluída: 06, 07 e 08 aprovados como v1.0 em 16/10/2026 |
 | B | API só de leitura + login | ✅ concluída em 19/10/2026 (APP-001 a APP-011; API no ar pelo Tailscale) |
-| C | PWA só leitura: painel do dia, relatório do turno, gráficos | ⏳ próxima (tarefas `APP-012`... propostas em 22/10) |
+| C | PWA só leitura: painel do dia, relatório do turno, gráficos | ⏳ em andamento (tarefas `APP-012`... aprovadas em 22/10) |
 | D | Chat embutido e registro pelo app | ⬜ |
 | E | Decidir o futuro do WhatsApp | ⬜ |
 
@@ -100,7 +100,7 @@ Código do app no **mesmo repositório, na pasta `app/`** (`app/api/` e, na Fase
 
 **Fica para depois da Fase B:** cadastrar pessoa e trocar cargo pelo app (dependem do PB5 publicado, PR #84 do bot); as outras páginas; turno, estufas, esterilização e relatório do turno (Fase C); editar e excluir (dependem do PB4); assistente (Fase D, PB6).
 
-## Tarefas da Fase C (propostas em 22/10/2026, esperando aprovação)
+## Tarefas da Fase C (aprovadas em 22/10/2026)
 
 Telas em **React + TypeScript (Vite)** na pasta `app/web/`, **servidas pela própria API** (um container só, o mesmo endereço do Tailscale, o cookie de login funciona sem configuração extra). Geradas a partir do [07](07-app-pwa.md) e do [08](08-fluxos.md) v1.0. **Uma tarefa = uma branch = um PR**, com testes (Vitest nas telas; pytest na API) e o CI do app construindo tudo. Dados sempre fictícios.
 

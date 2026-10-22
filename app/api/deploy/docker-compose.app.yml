@@ -16,7 +16,9 @@
 
 services:
   labflow-api:
-    build: ..
+    build:
+      context: ../..          # pasta app/: a imagem leva a API e as telas (APP-012)
+      dockerfile: api/Dockerfile
     image: labflow-api:local
     container_name: labflow-api
     restart: unless-stopped

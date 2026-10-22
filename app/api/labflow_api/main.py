@@ -1,8 +1,10 @@
 """Ponto de entrada da API do LabFlow.
 
 Spec: docs/specs/lims/06-api-e-auth.md (v1.0), seção "Arquitetura".
-Tarefas: APP-001 (esqueleto), APP-004 (login e sessão), APP-005 (permissões), APP-006 (senha provisória), APP-007 (pessoas), APP-008 (páginas Coletas e Recebimento), APP-009 (Excel), APP-010 (pendências de hoje).
+Tarefas: APP-001 (esqueleto), APP-004 (login e sessão), APP-005 (permissões), APP-006 (senha provisória), APP-007 (pessoas), APP-008 (páginas Coletas e Recebimento), APP-009 (Excel), APP-010 (pendências de hoje), APP-012 (telas em /app/).
 """
+
+import os
 
 from fastapi import FastAPI
 
@@ -10,6 +12,7 @@ from labflow_api.rotas_admin import roteador as roteador_admin
 from labflow_api.rotas_login import roteador as roteador_login
 from labflow_api.rotas_paginas import roteador as roteador_paginas
 from labflow_api.rotas_pendencias import roteador as roteador_pendencias
+from labflow_api.telas import roteador as roteador_telas
 
 app = FastAPI(
     title="LabFlow API",
@@ -24,7 +27,17 @@ def saude() -> dict[str, str]:
     return {"status": "ok"}
 
 
+@app.get("/ambiente", tags=["sistema"])
+def ambiente() -> dict[str, bool]:
+    """Diz às telas se o servidor é de demonstração (mostra a faixa "Dados de demonstração").
+
+    Liga por padrão; só desliga com LABFLOW_DEMONSTRACAO=0 (servidor do laboratório, no futuro).
+    """
+    return {"demonstracao": os.environ.get("LABFLOW_DEMONSTRACAO", "1") != "0"}
+
+
 app.include_router(roteador_login)
 app.include_router(roteador_admin)
 app.include_router(roteador_paginas)
 app.include_router(roteador_pendencias)
+app.include_router(roteador_telas)  # por último: /app/... e o redirecionamento da raiz
