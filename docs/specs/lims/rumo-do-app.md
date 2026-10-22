@@ -18,17 +18,29 @@ Um app **web + celular** (PWA, instalável sem loja) sobre o **mesmo banco** do 
 2. **gráficos** e um **relatório do turno**: o que foi feito e o que fica pendente para o próximo turno;
 3. um **chat embutido** que usa o mesmo caminho do bot (regex → IA → "sim").
 
+**Dois compromissos do Danyllo (22/10/2026), que valem para todas as fases:**
+- **Segurança em primeiro lugar.** O medo da gestão é o dado **vazar**, **sumir** ou **se perder**. O app precisa ser seguro **no celular**, que é o aparelho de quem não tem Wi-Fi na fábrica: nada guardado no aparelho, acesso só de quem pode, na hora e no lugar certos (ver "Segurança no celular" abaixo), banco num servidor com backup fora da máquina, e nada apagado de verdade (excluir guarda o registro).
+- **Automatizar os dois lados.** Não só quem **lê** os dados (páginas, gráficos, relatórios), mas principalmente quem **gera** os dados, os **analistas**: menos texto repetitivo, nada de preencher planilha ou tabela à mão; o registro sai de um toque, de uma frase, de uma foto ou de uma leitura automática, e os relatórios se montam sozinhos a partir dele.
+
+### Segurança no celular (direção de 21/10/2026, para uma versão depois do piloto do app)
+Na fábrica **não há Wi-Fi**: o celular usa dados móveis, então travar pela rede da empresa não funciona. As barreiras ficam na pessoa e no aparelho, **sempre conferidas na API** (nunca só no aparelho):
+1. **Localização na hora do uso:** ao entrar e a cada registro, o servidor confere se o aparelho está dentro da área da fábrica (cadastrada pelo Admin). Fora dela, não mostra dados nem grava. Não rastreia: só confere no momento do uso.
+2. **Horário do turno:** só funciona dentro do turno em que a pessoa entrou (com folga curta); fora dele, a sessão encerra.
+3. **Aparelho autorizado:** celular novo só entra depois que o Admin aprova (compensa o GPS falsificado e o login emprestado).
+4. **Nada guardado no aparelho:** só online, sem cópia local dos dados; ao sair ou no fim do turno não sobra nada para ver.
+- **LGPD:** a localização do funcionário é dado pessoal. Antes de ligar, combinar com a gestão (e o RH, se preciso) e avisar a equipe do porquê e de que não há rastreamento.
+
 A base já está escrita nas specs do LIMS ([00](00-visao-geral.md) a [10](10-decisoes.md)): **evoluir esses documentos, não começar outro**.
 
 ## Fase atual
 
-**Fase B: API de leitura e login.** A especificação (fase A) foi aprovada em 16/10/2026; o código começa pelas tarefas `APP-001`..., uma por PR, cada uma citando a seção da spec de origem ([guia prático](guia-pratico.md)).
+**Fase C: as telas (PWA).** A Fase B terminou em 19/10/2026, com a API no ar no servidor de demonstração (só pelo Tailscale). Antes de virar tarefas (`APP-012`...), falta uma decisão (ver "Decisões em aberto").
 
 | Fase | O que entrega | Situação |
 |---|---|---|
 | A | Spec do app revisada (07, 06, 08 e esta nota) | ✅ concluída: 06, 07 e 08 aprovados como v1.0 em 16/10/2026 |
-| B | API só de leitura + login | ⏳ próxima (tarefas `APP-001`...) |
-| C | PWA só leitura: painel do dia, relatório do turno, gráficos | ⬜ |
+| B | API só de leitura + login | ✅ concluída em 19/10/2026 (APP-001 a APP-011; API no ar pelo Tailscale) |
+| C | PWA só leitura: painel do dia, relatório do turno, gráficos | ⏳ próxima (falta decidir a tecnologia das telas) |
 | D | Chat embutido e registro pelo app | ⬜ |
 | E | Decidir o futuro do WhatsApp | ⬜ |
 
@@ -90,7 +102,8 @@ Código do app no **mesmo repositório, na pasta `app/`** (`app/api/` e, na Fase
 
 ## Decisões em aberto (perguntar, não decidir sozinho)
 
-_(nenhuma no momento; as novas dúvidas da revisão do 07 ficam no próprio 07)_
+- **Tecnologia das telas (Fase C):** proposta de 21/10 = **React + TypeScript (Vite)** em `app/web/`, servido pela própria API (um container só, mesmo endereço, cookie de login sem configuração extra). Alternativa: HTML gerado pelo Python (mais simples, menos interativo). **Esperando o Danyllo.**
+- **Quando ligar as barreiras de segurança no celular** (localização, horário, aparelho autorizado) e quem da gestão aprova o uso da localização (LGPD).
 
 ## Pedidos para a sessão do bot
 
@@ -150,3 +163,19 @@ O app não mexe nas tabelas nem no workflow do bot: o que ele precisa vira pedid
 - 15/10/2026: telefone opcional para quem usa só o app (hoje `usuarios` exige telefone), avaliar na Fase E.
 - 15/10/2026: senha provisória mandada pelo próprio bot (`acesso ao app`), quando houver mais gente.
 - 15/10/2026: recuperação de senha por e-mail (exige cadastrar o e-mail de cada pessoa e um serviço de envio), avaliar depois do piloto.
+- 21/10/2026: **app usado no celular ou no tablet com barreiras de segurança**: localização da fábrica, horário do turno e aparelho autorizado (detalhe em "Segurança no celular", no topo).
+- 22/10/2026: ideias tiradas de um **sistema de monitoramento ambiental feito internamente** (tour em vídeo, visto em 22/10; nada dele vai para o repositório). O que vale trazer para o LabFlow:
+  - **aviso de valor fora do histórico** antes de gravar (ex.: C.T muito acima do normal do tanque): "confira a digitação ou a diluição";
+  - **senha como assinatura** ao gravar resultado e **código de integridade** (hash) em cada resultado, para detectar alteração (combina com a [auditoria](02-audit-trail.md) e a ISO 17025);
+  - **laudo do período com assinatura eletrônica**, bloqueado depois de assinado e conferível por um código de validação;
+  - **ações corretivas** com área, responsável, prazo, andamento, causa raiz, **eficácia** e reteste ligado à ação, com prazo vencido em vermelho;
+  - **gráfico de controle** por ponto ou tanque (cada resultado, linha de alerta e de ação) e **alertas preditivos** (piora gradual antes de passar do limite; pontos recorrentes);
+  - **efeito de turno, equipe, produto e safra** destacado quando uma categoria tem o dobro da média;
+  - **limites calculados pelo histórico** (alerta = percentil 95, ação = percentil 98, com mínimo de resultados), aplicados só com confirmação;
+  - **agenda gerada sozinha** pela frequência, com rodízio entre pontos do mesmo grupo, e **etiquetas com QR code** para as amostras;
+  - **relatório semanal e mensal** montado sozinho e enviado por e-mail para as áreas;
+  - **visão de gestor com várias unidades** e comparativo entre elas;
+  - **importar o histórico das planilhas de Excel**;
+  - **faixa "Dados de demonstração"** no topo enquanto o servidor tiver dados fictícios;
+  - **eventos e mudanças** (obra, equipamento novo, troca de sanitizante) marcados nos gráficos de tendência.
+- 22/10/2026: **monitoramento ambiental como módulo do LabFlow**, no mesmo servidor e no mesmo banco PostgreSQL: o sistema interno já é web por dentro, então dá para levar as telas e as regras para um banco central (várias pessoas gravando ao mesmo tempo sem risco, celular e tablet, backup fora da pasta) e mostrar as coletas atrasadas do ambiental no "Início" do analista. Lição para o LabFlow: **banco em arquivo dentro de pasta de rede não aguenta várias pessoas gravando** e quem acessa a pasta leva tudo; por isso o LabFlow fica em servidor com banco de verdade.
