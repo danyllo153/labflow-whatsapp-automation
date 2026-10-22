@@ -176,9 +176,8 @@ test('confirmação: lista os comandos em ordem, avisa as dúvidas e guarda a li
   const d = ler(RECEBIMENTO({ blocos: [{ load: '43598', item: '2703', fabrica: 'AOQ', lotes: lotes([1, 5, true], [6, 10, true]) }] }));
   const r = resposta(d, [{}]);
   assert.equal(r.salvar, '1');
-  assert.match(r.textoResposta, /Li o laudo de recebimento \(data 14\/10\/2026\)/);
-  assert.match(r.textoResposta, /1️⃣ Recebimento load 43598/);
-  assert.match(r.textoResposta, /2️⃣ Compostas do load 43598/);
+  assert.match(r.textoResposta, /^📷 Recebimento de 14\/10\/2026:/);
+  assert.doesNotMatch(r.textoResposta, /1️⃣|2️⃣|Compostas do load 43598/, 'a lista de comandos não aparece');
   assert.match(r.textoResposta, /⚠️ Confira:\n• load 43598: li a fábrica como "AOQ" e entendi AQA/);
   assert.match(r.textoResposta, /Responda \*sim\* para registrar tudo, na ordem, ou \*não\* para cancelar/);
   const payload = JSON.parse(r.payload);
@@ -190,9 +189,9 @@ test('confirmação: TAB mostra o #N da composta achada; a que não existe fica 
   const d = ler({ formulario: 'tab', blocos: [{ load: '43598', item: '2703', compostas: ['1-5', '6-10', '11-12'] }] });
   const r = resposta(d, [{ kind: 'composta', idx: 0, composta_id: 41 }, { kind: 'composta', idx: 1, composta_id: 42 }, { kind: 'composta', idx: 2, composta_id: null }]);
   // as compostas achadas viram UM comando só (uma mensagem só), e o #N de cada uma aparece por load
-  assert.match(r.textoResposta, /1️⃣ Tab feito das compostas #41, #42\n/);
-  assert.doesNotMatch(r.textoResposta, /2️⃣/);
-  assert.match(r.textoResposta, /TAB no caldo, as 2 compostas juntas:\n• load 43598 \(item 2703\): #41 \(1-5\) · #42 \(6-10\)/);
+  assert.deepEqual(JSON.parse(r.payload).comandos, ['Tab feito das compostas #41, #42']);
+  assert.doesNotMatch(r.textoResposta, /1️⃣|Tab feito das compostas/, 'a lista de comandos não aparece');
+  assert.match(r.textoResposta, /🧪 TAB no caldo:\n• load 43598 \(item 2703\): #41 \(1-5\) · #42 \(6-10\)/);
   assert.match(r.textoResposta, /load 43598 lotes 11-12: não achei essa composta \(ficou de fora\)/);
   assert.deepEqual(JSON.parse(r.payload).comandos, ['Tab feito das compostas #41, #42']);
 });
@@ -301,12 +300,12 @@ test('confirmação do recebimento explica em linguagem simples o que será cria
     { load: '43603', item: '2748', fabrica: 'COL', lotes: [{ n: 1 }, { n: 2 }, { n: 3, fecha: true }, { n: 4 }, { n: 5, fecha: true }] },
   ] }));
   const r = resposta(d, [{}]);
-  assert.match(r.textoResposta, /🧪 O que isso cria:/);
+  assert.match(r.textoResposta, /🧪 Registrar:/);
   assert.match(r.textoResposta, /• load 43601: recebimento dos lotes 1-4 \(nenhuma composta: sem marca na foto\)/);
   assert.match(r.textoResposta, /• load 43602: recebimento dos lotes 27-28,34-36 e 5 compostas:\n     1ª composta = lote 27\n     2ª composta = lote 28\n     3ª composta = lote 34/);
   assert.match(r.textoResposta, /5ª composta = lote 36/);
   assert.match(r.textoResposta, /• load 43603: recebimento dos lotes 1-5 e 2 compostas:\n     1ª composta = lotes 1-3\n     2ª composta = lotes 4-5/);
-  assert.match(r.textoResposta, /o número # de cada composta aparece depois que criar/);
+  assert.doesNotMatch(r.textoResposta, /o número # de cada composta/, 'sem regras no texto');
   // o resumo vem antes das dúvidas e o pedido de sim continua no fim
   assert.ok(r.textoResposta.indexOf('O que isso cria') < r.textoResposta.indexOf('Confira'));
   assert.match(r.textoResposta, /Responda \*sim\* para registrar tudo/);

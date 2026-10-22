@@ -176,7 +176,7 @@ test('resposta objetiva: só o que vai para o caldo, o que recebe resultado e o 
   const r = rodar('Foto · Montar resposta', [{ kind: 'coli', idx: 0, composta_id: 52, analise_id: null, atual: null }, { kind: 'coli', idx: 1, composta_id: null }], { 'Foto · Interpretar': { ...d, nivel: 'Admin' } })[0].json;
   assert.equal(r.textoResposta.split('\n')[0], '📷 Coliformes:');
   assert.match(r.textoResposta, /✅ Resultado NEGATIVO \(traço no papel\):\n• 16\/10\/2026: #52 load 43683 \(1-4\)/);
-  assert.match(r.textoResposta, /🆕 Abrir antes \(só o Admin\):\n• load 43800 item 1233 \(CON\)/);
+  assert.match(r.textoResposta, /🆕 Abrir antes:\n• load 43800 item 1233 \(CON\)/);
 });
 
 test('banco: o SQL das compostas da foto acha várias compostas por linha e o item do sistema', () => {

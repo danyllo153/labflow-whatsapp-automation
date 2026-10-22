@@ -169,7 +169,7 @@ test('foto: nada legível não grava; confirmação explica o que registra e ped
   const d = ler(LAUDO());
   const r = rodar('Foto · Montar resposta', [{}], { 'Foto · Interpretar': d })[0].json;
   assert.equal(r.salvar, '1');
-  assert.match(r.textoResposta, /Li o laudo de recebimento NFC\. O que é novo:/);
+  assert.match(r.textoResposta, /📷 Recebimento NFC:/);
   assert.match(r.textoResposta, /🆕 Registrar \(recebimento\):\n• load 44300 \(AQA\) lote 10 · fresh · 10\^3 · 14\/10\/2026\n• load 44300 \(AQA\) lote 10 · past · 10\^1 · 14\/10\/2026/);
   assert.equal(JSON.parse(r.payload).comandos.length, 1, 'a foto grava tudo num comando só (uma mensagem)');
   assert.equal(JSON.parse(r.payload).comandos[0].split(' ; ').length, 4);

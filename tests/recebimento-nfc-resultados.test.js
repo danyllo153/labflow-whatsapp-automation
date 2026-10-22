@@ -205,7 +205,7 @@ test('foto: lote já registrado com resultados novos: um comando só repete a di
   const r = respFoto(d, noBanco(d, () => 1, () => ({ data_coleta: '13/10/2026' })));
   assert.equal(r.salvar, '1');
   assert.equal(r.tipoPendencia, undefined, 'vai pela lista de comandos (um sim)');
-  assert.match(r.textoResposta, /Li o laudo de recebimento NFC\. O que é novo:/);
+  assert.match(r.textoResposta, /📷 Recebimento NFC:/);
   assert.match(r.textoResposta, /➕ Resultados novos:\n• load 44300 lote 10 · past: CT 14 · BL72 22 · BL120 74/);
   assert.doesNotMatch(r.textoResposta, /→|10\^1|multiplicado|🆕/, 'sem a conta da diluição e sem registro novo');
   assert.deepEqual(cmdDaFoto(r), ['Recebimento NFC load 44300 fab AQA item 129 lote 10 past 10 elevado a 1 data 13/10/2026 resultados ct 14 bl72 22 bl120 74']);
@@ -224,7 +224,7 @@ test('foto: o que já está igual no banco não aparece; só o que mudou, com o 
   assert.match(cmdDaFoto(r)[0], / resultados bl72 22$/);
   const igual = respFoto(d, noBanco(d, () => 1, (x) => (x.analise ? { atual: { CT: '14', BL72: '22', BL120: '<10' }[x.analise] } : {})));
   assert.equal(igual.salvar, '0');
-  assert.match(igual.textoResposta, /tudo o que está na foto já está no sistema\. Nada a gravar\./);
+  assert.match(igual.textoResposta, /Recebimento NFC: nada novo para registrar\./);
   const riscado = lerFoto(LAUDO([{ lote: 10, tipo: 'past', diluicao: 1, ct: null, bl72: null, bl120: null }]));
   assert.equal(respFoto(riscado, noBanco(riscado)).salvar, '0', 'lote registrado sem resultado novo: nada a gravar');
 });

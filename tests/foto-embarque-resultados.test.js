@@ -62,7 +62,7 @@ test('confirmação dos resultados: tudo registrado, vira uma lista só com alar
   const r = resposta(d, noBanco(d, (x) => (x.analise === 'CT' && x.numero === 3 ? { atual: '8' } : {})));
   assert.equal(r.salvar, '1');
   assert.equal(r.tipoPendencia, 'TAB');
-  assert.match(r.textoResposta, /Li os resultados do laudo de embarque O\.STAR 112/);
+  assert.match(r.textoResposta, /📷 Embarque O\.STAR 112 — resultados:/);
   assert.match(r.textoResposta, /linha 7 fase 1 · load 43412:/);
   assert.match(r.textoResposta, /A1: CT <10 · BL72 60 🚨 · BL120 <10/);
   assert.match(r.textoResposta, /A2: CT 250 🚨 · BL120 5/);
@@ -70,7 +70,8 @@ test('confirmação dos resultados: tudo registrado, vira uma lista só com alar
   assert.match(r.textoResposta, /6 resultados de C\.T\/B\.L/);
   assert.match(r.textoResposta, /🚨 Acima do limite \(C\.T ≥ 200, B\.L ≥ 50\): A1 BL72 = 60, A2 CT = 250/);
   assert.match(r.textoResposta, /Corrige resultado anterior: A3 CT \(era 8\)/);
-  assert.match(r.textoResposta, /Valor riscado no papel não foi lido\. Responda \*sim\*/);
+  assert.match(r.textoResposta, /Responda \*sim\* para gravar tudo/);
+  assert.doesNotMatch(r.textoResposta, /Valor riscado/, 'sem regras no texto');
   const payload = JSON.parse(r.payload);
   assert.equal(payload.acao, 'contagem_lote');
   assert.equal(payload.itens.length, 6);
@@ -90,7 +91,7 @@ test('tudo riscado com o embarque já registrado: nada é gravado e o bot explic
   const d = ler(LAUDO(BLOCO({ resultados: { A1: { ct: null, bl72: null, bl120: null }, A2: { ct: null }, A3: { ct: null } } })));
   const r = resposta(d, noBanco(d));
   assert.equal(r.salvar, '0');
-  assert.match(r.textoResposta, /o embarque já está registrado e não achei resultado válido de C\.T\/B\.L \(tudo riscado ou em branco\)\. Nada foi gravado/);
+  assert.match(r.textoResposta, /Embarque O\.STAR 112: nada novo para registrar\./);
 });
 
 test('embarque ainda não registrado: registra primeiro e avisa que os resultados vêm na foto seguinte', () => {
@@ -98,7 +99,7 @@ test('embarque ainda não registrado: registra primeiro e avisa que os resultado
   const r = resposta(d, d.buscasAmostras.map((x) => ({ kind: 'amostra', idx: x.idx, alvo_id: null, load_num: null, atual: null })));
   assert.equal(r.salvar, '1');
   assert.equal(r.tipoPendencia, undefined, 'continua a lista de comandos de embarque');
-  assert.match(r.textoResposta, /1️⃣ Embarque navio O\.STAR 112 linha 7 fase 1 load 43412 item 2648 amostras 1-3/);
+  assert.match(r.textoResposta, /🚢 O\.STAR 112:\n• linha 7 fase 1: load 43412 \(item 2648\), amostras A1-A3/);
   assert.match(r.textoResposta, /li 9 resultado\(s\) de C\.T\/B\.L, mas o embarque ainda não está registrado: registre agora \(sim\) e mande a foto de novo/);
   assert.equal(JSON.parse(r.payload).comandos.length, 1);
 });

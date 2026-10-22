@@ -78,12 +78,12 @@ test('embarque: sem data na linha usa a data do papel; sem nenhuma, vale a de ho
 test('embarque: a confirmação explica linha por linha e lembra que a foto não cria composta', () => {
   const r = resposta(ler({ ...FOTO2, blocos: [FOTO2.blocos[0], FOTO2.blocos[1]] }));
   assert.equal(r.salvar, '1');
-  assert.match(r.textoResposta, /Li o laudo de embarque \(data 28\/08\/2026\)|Li o laudo de embarque:/);
-  assert.match(r.textoResposta, /1️⃣ Embarque navio O\.STAR 112 linha 4 fase 1 load 43339 item 2540 amostras 1-3/);
-  assert.match(r.textoResposta, /🚢 Embarque O\.STAR 112 — o que isso cria:/);
+  assert.match(r.textoResposta, /^📷 Embarque( de 28\/08\/2026)?:/);
+  assert.doesNotMatch(r.textoResposta, /1️⃣|Embarque navio O\.STAR/, 'a lista de comandos não aparece');
+  assert.match(r.textoResposta, /🚢 O\.STAR 112:/);
   assert.match(r.textoResposta, /• linha 4 fase 1: load 43339 \(item 2540\), amostras A1-A3/);
   assert.match(r.textoResposta, /• linha 4 fase 2: load 43340 \(item 2540\), amostras A1-A3/);
-  assert.match(r.textoResposta, /as compostas do embarque a foto não cria/);
+  assert.doesNotMatch(r.textoResposta, /a foto não cria/, 'sem regras no texto');
   assert.match(r.textoResposta, /Responda \*sim\* para registrar tudo, na ordem/);
   assert.equal(JSON.parse(r.payload).comandos.length, 2);
 });

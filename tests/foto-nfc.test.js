@@ -98,11 +98,11 @@ test('NFC: confirmação compacta com ok / não ok e um sim para tudo; guarda as
   const r = resposta(d, linhas);
   assert.equal(r.salvar, '1');
   assert.equal(r.tipoPendencia, 'PLACAS');
-  assert.match(r.textoResposta, /Li o laudo de NFC — navio O\.STAR 112, coleta 30\/08\/2026/);
+  assert.match(r.textoResposta, /📷 NFC — navio O\.STAR 112, coleta 30\/08\/2026/);
   assert.match(r.textoResposta, /2P normal: CT 3,3,3 · BL120 80,1,1 🚨 · WP240 <1,<1,<1 · WS240 <1,<1,<1/);
   assert.match(r.textoResposta, /2P stress: CT/);
   assert.match(r.textoResposta, /8 leituras \(24 placas\): 7 ok · 1 🚨 não ok/);
-  assert.match(r.textoResposta, /Não abro desvio sozinho/);
+  assert.doesNotMatch(r.textoResposta, /Não abro desvio sozinho|CT = C\.T 48h/, 'sem regras nem legenda no texto');
   assert.match(r.textoResposta, /Responda \*sim\* para gravar tudo/);
   const payload = JSON.parse(r.payload);
   assert.equal(payload.acao, 'placas_lote');
