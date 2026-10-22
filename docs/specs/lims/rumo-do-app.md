@@ -114,7 +114,7 @@ Telas em **React + TypeScript (Vite)** na pasta `app/web/`, **servidas pela pró
 | APP-013 | Login, troca de senha e sair | 07 §1; 06 §Primeiro acesso | Tela de login (botão **Entrar travado** enquanto espera a resposta), troca obrigatória da senha provisória, mensagens de bloqueio, "Sair" | Testes: login certo, errado, bloqueado, senha provisória até a troca | APP-012 |
 | APP-014 | Início em leitura | 07 §3 | Cartões **Para hoje**, **Atrasados** e **Desvios abertos**; pendências de hoje por bloco, compactas | Os números batem com `GET /pendencias-hoje` no banco de teste | APP-013 |
 | APP-015 | Coletas e Recebimento na tela | 07 §5; 08 A11 | Filtros com etiquetas removíveis, tabela (cartões no celular), paginação, **Exportar Excel** e **Imprimir só o filtrado** (A4 em pé ou deitado, título, filtros e "página 1 de N") | Mesmas linhas da API; impressão legível em preto e branco | APP-013 |
-| APP-016 | Admin → Pessoas na tela | 07 §10 | Lista com situação, definir o usuário curto e **gerar senha provisória** (o que a API já faz); "Nova pessoa" e "trocar cargo" só depois do PB5 | Só o Admin vê; os outros cargos não veem o menu nem a rota | APP-013 |
+| APP-016 | Admin → Pessoas completo | 07 §10; 06 §Primeiro acesso | Migration **051** (`GRANT EXECUTE` das funções do PB5 ao `labflow_app_web`, com desfazer); rotas **Nova pessoa** (cadastrar + usuário curto + senha provisória numa confirmação só) e **trocar cargo**, pelas funções `cadastrar_usuario` e `trocar_cargo` do bot; tela com a lista, situação, usuário curto, gerar senha provisória, Nova pessoa e trocar cargo | Quem é cadastrado pelo app é reconhecido no bot; só o Admin vê o menu e a rota; testes no banco de teste | APP-013 |
 
 **Marco 2: todas as páginas do Power BI em leitura**
 
@@ -143,7 +143,7 @@ Telas em **React + TypeScript (Vite)** na pasta `app/web/`, **servidas pela pró
 | APP-027 | Estufas | 07 §7.1 | Tabelas `app.estufas` e `app.leituras_estufa`; as 11 estufas com **Supervisório** e **Field chart** (Ok / Não ok, temperatura só no Não ok), bloco no Início e aba própria; faixas **fictícias** no repositório | Estufa Não ok entra nas ocorrências do relatório do turno | APP-024 |
 | APP-028 | Admin: turnos, atividades e estufas | 07 §10 | Horários padrão dos turnos, atividades fixas de cada turno, estufas e faixas (as reais só no banco) | Só o Admin acessa | APP-023, APP-027 |
 
-**Fica fora da Fase C:** relatório do dia igual ao do bot (depende do PB6, Fase D); assistente (Fase D); editar e excluir (dependem do PB4); "Nova pessoa" e "trocar cargo" (dependem do PB5, migration 051 do app); barreiras de segurança no celular (versão depois do piloto do app).
+**Fica fora da Fase C:** relatório do dia igual ao do bot (depende do PB6, Fase D); assistente (Fase D); editar e excluir (dependem do PB4); barreiras de segurança no celular (versão depois do piloto do app).
 
 ## Decisões em aberto (perguntar, não decidir sozinho)
 
