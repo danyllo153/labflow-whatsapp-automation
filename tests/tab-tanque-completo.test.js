@@ -157,7 +157,7 @@ test('foto de tanques, Admin: um comando só com todos os grupos e "completo"; O
   assert.equal(re.tipo, 'tab_feito_nfc');
   assert.equal(re.completo, '1');
   assert.deepEqual(re.grupos, [{ tanque: '44', coleta: '16/10/2026' }, { tanque: '45', coleta: '16/10/2026' }, { tanque: '47', coleta: '06/10/2026' }]);
-  assert.match(adm.textoResposta, /Tanques de terra \(só o Admin faz isso pelo TAB\)/);
+  assert.match(adm.textoResposta, /🛢️ Tanques de terra no caldo:\n• tanque 44, 45 \(coleta 16\/10\)\n• tanque 47 \(coleta 06\/10\)/);
   const op = rodarFoto('Foto · Montar resposta', [{}], { 'Foto · Interpretar': lerFoto(FOTO_TQ, 'Operador') })[0].json;
   assert.deepEqual(JSON.parse(op.payload).comandos, ['Tab feito dos tanques terra 44,45 coleta 16/10/2026 ; 47 coleta 06/10/2026']);
   assert.equal(interpretar(JSON.parse(op.payload).comandos[0], { cargo: 'Operador' }).completo, '');
@@ -198,11 +198,11 @@ test('foto de tanques: o que já tem TAB fica de fora; se tudo já está no sist
   assert.deepEqual(d.buscasTanques, [{ idx: 0, tanque: '44', coleta: '16/10/2026' }, { idx: 0, tanque: '45', coleta: '16/10/2026' }, { idx: 1, tanque: '47', coleta: '06/10/2026' }]);
   const tudo = rodarFoto('Foto · Montar resposta', sit(d, { 44: 'tab', 45: 'tab', 47: 'tab' }), { 'Foto · Interpretar': d })[0].json;
   assert.equal(tudo.salvar, '0');
-  assert.match(tudo.textoResposta, /tudo o que está na foto já está no sistema \(tanque 44 \(coleta 16\/10\), 45 \(coleta 16\/10\), 47 \(coleta 06\/10\) já tem TAB\)\. Nada a gravar/);
+  assert.match(tudo.textoResposta, /^📷 TAB: nada novo para registrar\.$/);
   const parte = rodarFoto('Foto · Montar resposta', sit(d, { 44: 'tab', 45: 'coleta', 47: 'sem' }), { 'Foto · Interpretar': d })[0].json;
   assert.deepEqual(JSON.parse(parte.payload).comandos, ['Tab feito dos tanques terra 45 coleta 16/10/2026 ; 47 coleta 06/10/2026 completo']);
-  assert.match(parte.textoResposta, /Já têm TAB \(ficam de fora\): tanque 44 \(coleta 16\/10\)/);
-  assert.match(parte.textoResposta, /Sem coleta no sistema \(registro a coleta\): tanque 47 \(coleta 06\/10\)/);
+  assert.doesNotMatch(parte.textoResposta, /Já têm TAB|44/, 'o que já está no sistema não é citado');
+  assert.match(parte.textoResposta, /• tanque 45 \(coleta 16\/10\)\n• tanque 47 \(coleta 06\/10\) — coleta nova/);
   // Operador: o tanque sem coleta fica de fora (só o Admin registra a coleta pelo TAB)
   const dOp = lerFoto(FOTO_TQ, 'Operador');
   const op = rodarFoto('Foto · Montar resposta', sit(dOp, { 44: 'coleta', 45: 'tab', 47: 'sem' }), { 'Foto · Interpretar': dOp })[0].json;
@@ -240,4 +240,23 @@ test('resposta com vários grupos: uma mensagem só, cada tanque com a data da c
   const p = montar({ sem_coleta: '48 (coleta 10/10)', ja_tinham: null, criados: null, espalhar_em: '24/10/2026' }, sem);
   assert.deepEqual(JSON.parse(p.payload).comandos, ['Tab feito dos tanques terra 39 coleta 17/10/2026 ; 48 coleta 10/10/2026 data 19/10/2026 completo']);
   assert.match(p.textoResposta, /Não achei a coleta do\(s\) tanque\(s\) 48 \(coleta 10\/10\)\./);
+});
+
+// ---- 21/10: a foto de TAB que o Danyllo mandou (2 loads novos + 2 tanques sem coleta): resposta objetiva ----
+test('foto de TAB, Admin: só o que vai para o caldo e o que se abre; sem regras nem lista de comandos', () => {
+  const d = lerFoto({ formulario: 'tab', data: '21/10/2026', blocos: [
+    { load: '43669', item: '2549', fabrica: 'UCH', compostas: ['23-27', '28-32', '35-36,39-40', '38,41-42'] },
+    { load: '43670', item: '2549', fabrica: 'UCH', compostas: ['1-6', '7-12'] },
+    { load: null, tanques: [{ tanque: '38', data: '21/10' }, { tanque: '40', data: '21/10' }] },
+  ] }, 'Admin');
+  const linhas = [{ kind: 'composta', idx: 0, composta_id: null }, { kind: 'composta', idx: 1, composta_id: null }, { kind: 'composta', idx: 2, composta_id: null },
+    { kind: 'composta', idx: 3, composta_id: null }, { kind: 'composta', idx: 4, composta_id: null }, { kind: 'composta', idx: 5, composta_id: null }];
+  const r = rodarFoto('Foto · Montar resposta', [...linhas, ...sit(d, { 38: 'sem', 40: 'sem' })], { 'Foto · Interpretar': d })[0].json;
+  assert.equal(r.salvar, '1');
+  const t = r.textoResposta;
+  assert.match(t, /^📷 TAB de 21\/10\/2026:\n\n🆕 Compostas novas, já no caldo \(só o Admin abre\):\n• load 43669 \(item 2549, UCH\): lotes 23-32,35-36,38-42, compostas \(23-27\)\(28-32\)/);
+  assert.match(t, /• load 43670 \(item 2549, UCH\): lotes 1-12, compostas \(1-6\)\(7-12\)/);
+  assert.match(t, /🛢️ Tanques de terra no caldo:\n• tanque 38, 40 \(coleta 21\/10\) — coleta nova\n[\s\S]*Responda \*sim\* para registrar ou \*não\* para cancelar\.$/);
+  assert.doesNotMatch(t, /1️⃣|só o Admin faz isso|C\.T, B\.L|os lotes recebem|marco <1|ficam de fora|Li o laudo/, 'nada de regras nem lista de comandos');
+  assert.ok(JSON.parse(r.payload).comandos.length >= 3, 'o que grava continua igual');
 });

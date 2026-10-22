@@ -122,7 +122,7 @@ test('foto de TAB, Admin: as compostas que não existem entram na lista (recebim
   assert.match(c[0], /^Recebimento load 44300 item 2703 fabrica AQA lotes 1-10 data 15\/10\/2026 resultados <10$/);
   assert.match(c[1], /^Compostas do load 44300 item 2703 \(1-5\)\(6-10\)$/);
   assert.match(c[2], /^Tab feito do load 44300 item 2703 \(1-5\)\(6-10\) data 15\/10\/2026$/);
-  assert.match(r.textoResposta, /Compostas que ainda não existem \(só o Admin abre pelo TAB/);
+  assert.match(r.textoResposta, /🆕 Compostas novas, já no caldo \(só o Admin abre\):\n• load 44300 \(item 2703, AQA\): lotes 1-10, compostas \(1-5\)\(6-10\)/);
   // todo comando montado é aceito pelo bot (o "sim" reenvia um por vez)
   c.forEach((x) => assert.notEqual(interpretar(x).tipo, 'interpretar_ia', x));
 });
