@@ -6,6 +6,7 @@ import EmBreve from "./paginas/EmBreve";
 import Entrar from "./paginas/Entrar";
 import Inicio from "./paginas/Inicio";
 import NaoEncontrada from "./paginas/NaoEncontrada";
+import { ListaDePaginas, PaginaEscolhida } from "./paginas/Paginas";
 import TrocarSenha from "./paginas/TrocarSenha";
 import { useSessao } from "./sessao";
 
@@ -20,6 +21,8 @@ export default function App() {
     <Routes>
       <Route element={<Moldura />}>
         <Route index element={<Inicio />} />
+        <Route path="/paginas" element={<ListaDePaginas />} />
+        <Route path="/paginas/:pagina" element={<PaginaEscolhida />} />
         {MENU.filter((item) => !item.pronto).map((item) => (
           <Route key={item.caminho} path={item.caminho} element={<EmBreve item={item} />} />
         ))}
