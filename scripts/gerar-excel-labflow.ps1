@@ -35,6 +35,7 @@ function Nova-Tabela($wb, $ws, [string]$nomeQuery, [string]$sql, $destino, [stri
     $lo = $ws.ListObjects.Add(0, $conn, $true, 1, $destino)
     $lo.Name = $nomeTabela
     $lo.TableStyle = $estilo
+    if ($estilo -eq 'TableStyleMedium2') { $lo.ShowTableStyleRowStripes = $false }
     $qt = $lo.QueryTable
     $qt.CommandType = 2
     $qt.CommandText = 'SELECT * FROM [' + $nomeQuery + ']'
@@ -54,6 +55,45 @@ function Formatar-Colunas($ws, $lo, $tipos) {
             if ($t.Value -eq 'data') { $col.DataBodyRange.NumberFormatLocal = $fmtData; $col.DataBodyRange.HorizontalAlignment = -4108 }
             if ($t.Value -eq 'datahora') { $col.DataBodyRange.NumberFormatLocal = $fmtDataHora; $col.DataBodyRange.HorizontalAlignment = -4108 }
         }
+    }
+}
+
+# Alinhamento, linhas de separacao e cores por valor (fabrica, situacao, resultado...) nas tabelas de analise.
+function Tinte([string]$hex, [double]$f) {
+    $r = [Convert]::ToInt32($hex.Substring(0, 2), 16); $g = [Convert]::ToInt32($hex.Substring(2, 2), 16); $b = [Convert]::ToInt32($hex.Substring(4, 2), 16)
+    $r = [int](255 - (255 - $r) * $f); $g = [int](255 - (255 - $g) * $f); $b = [int](255 - (255 - $b) * $f)
+    return [int]($r + 256 * $g + 65536 * $b)
+}
+function Estilizar-Tabela($ws, $lo) {
+    $corLinha = Rgb 'C3CFE3'
+    $corte = Rgb 'FFFFFF'
+    if ($lo.ListRows.Count -gt 0) {
+        $corpo = $lo.DataBodyRange
+        $corpo.HorizontalAlignment = -4108
+        $corpo.VerticalAlignment = -4108
+        $corpo.RowHeight = 21
+        foreach ($b in 7..12) { $corpo.Borders.Item($b).LineStyle = 1; $corpo.Borders.Item($b).Weight = 2; $corpo.Borders.Item($b).Color = $corLinha }
+        foreach ($c in 1..$lo.ListColumns.Count) {
+            $col = $lo.ListColumns.Item($c)
+            if ($cfg.esquerda -contains $col.Name) { $col.DataBodyRange.HorizontalAlignment = -4131; $col.DataBodyRange.IndentLevel = 1 }
+            $regra = $cfg.regras.PSObject.Properties[$col.Name]
+            if ($regra) {
+                foreach ($v in $regra.Value.PSObject.Properties) {
+                    $fc = $col.DataBodyRange.FormatConditions.Add(1, 3, '="' + $v.Name + '"')
+                    $fc.Interior.Color = Tinte $v.Value 0.16
+                    $fc.Font.Color = Rgb $v.Value
+                    $fc.Font.Bold = $true
+                }
+            }
+        }
+    }
+    $cab = $lo.HeaderRowRange
+    foreach ($b in 7, 10, 11) { $cab.Borders.Item($b).LineStyle = 1; $cab.Borders.Item($b).Weight = 2; $cab.Borders.Item($b).Color = (Rgb '5B86C9') }
+    foreach ($c in 1..$lo.ListColumns.Count) {
+        $w = [double]($ws.Columns.Item($c).ColumnWidth) + 3
+        if ($w -lt 14) { $w = 14 }
+        if ($w -gt 38) { $w = 38 }
+        $ws.Columns.Item($c).ColumnWidth = [double]$w
     }
 }
 
@@ -117,11 +157,7 @@ try {
         $lo.HeaderRowRange.VerticalAlignment = -4108
         $ws.Rows.Item($linhaTabela).RowHeight = 32
         $lo.Range.Columns.AutoFit() | Out-Null
-        foreach ($c in 1..$ncol) {
-            $w = $ws.Columns.Item($c).ColumnWidth
-            if ($w -lt 13) { $ws.Columns.Item($c).ColumnWidth = 13 }
-            if ($w -gt 34) { $ws.Columns.Item($c).ColumnWidth = 34 }
-        }
+        Estilizar-Tabela $ws $lo
         # faixa do topo (titulo, descricao e area dos graficos)
         $faixa = $ws.Range($ws.Cells.Item(1, 1), $ws.Cells.Item($linhaTabela - 2, $ncol))
         $faixa.Interior.Color = Rgb $P.fundo
@@ -241,6 +277,7 @@ try {
 
     # abas de dados e ajuda no fim, a do painel primeiro
     $dadosWs.Tab.Color = Rgb 'CBD5E1'
+    $dadosWs.Visible = 0
     foreach ($c in 1..$colunaDados) { $dadosWs.Columns.Item($c).ColumnWidth = 14 }
     $painel.Activate()
 

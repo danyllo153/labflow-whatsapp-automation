@@ -306,5 +306,88 @@
     "Este arquivo só lê. Para corrigir um dado use o app, o bot do WhatsApp ou peça a um Admin.",
     "A senha do usuário labflow_leitura não fica no arquivo: o Excel pergunta na primeira vez.",
     "Dados do servidor de demonstração (fictícios). Não envie este arquivo para fora com dados reais."
+  ],
+  "regras": {
+    "Fábrica": {
+      "AQA": "1D6FE8",
+      "COL": "D97706",
+      "UCH": "7C3AED",
+      "CON": "0E8A96",
+      "ITA": "DB2777",
+      "TMG": "3B5B8C"
+    },
+    "Situação": {
+      "Atrasado": "DC2626",
+      "Vence hoje": "D97706",
+      "No prazo": "1D6FE8",
+      "Lido": "16A34A",
+      "Concluído": "16A34A"
+    },
+    "Status": {
+      "No caldo": "1D6FE8",
+      "Incubado": "D97706",
+      "Em confirmação": "7C3AED",
+      "Concluído": "16A34A"
+    },
+    "Resultado": {
+      "Negativo": "16A34A",
+      "Positivo": "DC2626",
+      "Confirmado": "DC2626",
+      "Não confirmado": "16A34A"
+    },
+    "Origem": {
+      "Terra": "0E8A96",
+      "Navio": "1D6FE8",
+      "Recebimento": "7C3AED",
+      "Embarque": "1D6FE8"
+    },
+    "Análise": {
+      "C.T 48h": "0E8A96",
+      "B.L 72h": "1D6FE8",
+      "B.L 120h": "7C3AED",
+      "C.T": "0E8A96",
+      "B.L": "1D6FE8",
+      "Psicrotróficos": "D97706"
+    },
+    "Drop": {
+      "D5": "0E8A96",
+      "D10": "1D6FE8",
+      "D15": "7C3AED"
+    },
+    "Frasco": {
+      "Normal": "1D6FE8",
+      "Stress": "D97706"
+    },
+    "Alarme": {
+      "Sim": "DC2626"
+    },
+    "Concluído": {
+      "Sim": "16A34A"
+    },
+    "Desvio": {
+      "Sim": "D97706"
+    },
+    "Repetição": {
+      "Sim": "D97706"
+    }
+  },
+  "esquerda": [
+    "Navio",
+    "Coletado por",
+    "Digitado por",
+    "Concluído por",
+    "Feito por",
+    "Resultado por",
+    "Lido por",
+    "Lida por",
+    "Aberto por",
+    "Lotes",
+    "Load / Tanque",
+    "Load / Navio",
+    "Contagem",
+    "Temperaturas",
+    "Resultado do desvio",
+    "Frasco",
+    "Tipo"
   ]
 }
