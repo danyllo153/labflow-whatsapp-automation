@@ -1280,3 +1280,449 @@ a.cartao-pagina:hover {
 .dados-coleta dd {
   margin: 0;
 }
+
+/* ======================================================================================================
+   Acabamento visual (APP-030): mesma paleta aprovada em 15/10 (07 §Visual), só mais cuidado nos detalhes:
+   profundidade leve, hierarquia de títulos, etiquetas legíveis, botões com estados, tabela com ritmo, menu com ícones.
+   Ok e Não ok continuam sempre com texto; nada depende só da cor.
+   ====================================================================================================== */
+:root {
+  --sombra-1: 0 1px 2px rgba(80, 55, 10, 0.06), 0 2px 8px rgba(80, 55, 10, 0.05);
+  --sombra-2: 0 2px 4px rgba(80, 55, 10, 0.08), 0 6px 18px rgba(80, 55, 10, 0.08);
+  --raio: 12px;
+  --acao-escura: #245f99;
+  --acao-fundo: #eaf2fb;
+  --ok-fundo: #e5f3ea;
+  --ok-texto: #1d6a3d;
+  --nao-ok-fundo: #fbe7e4;
+  --nao-ok-texto: #a02d20;
+  --pendente-fundo: #fff0c9;
+  --pendente-texto: #7a5800;
+  --neutra-fundo: #efe9d8;
+  --anel: 0 0 0 3px rgba(47, 123, 196, 0.35);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  font-feature-settings: "tnum" 1; /* números alinhados nas tabelas e nos cartões */
+  -webkit-font-smoothing: antialiased;
+}
+
+/* títulos: um ponto de apoio claro em cada tela */
+h1 {
+  font-size: 1.55rem;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  font-weight: 700;
+  margin: 0 0 14px;
+}
+
+h2 {
+  font-size: 1.08rem;
+  font-weight: 700;
+  letter-spacing: -0.005em;
+}
+
+h3 {
+  font-size: 0.98rem;
+  margin: 12px 0 4px;
+}
+
+.trilha {
+  font-size: 0.85rem;
+  color: var(--texto-secundario);
+  margin: 0 0 4px;
+}
+
+/* cartões com profundidade leve */
+.cartao,
+.cartao-numero {
+  border-radius: var(--raio);
+  box-shadow: var(--sombra-1);
+}
+
+.cartao {
+  padding: 16px 18px;
+  margin-bottom: 14px;
+}
+
+.cartao h2 {
+  margin-bottom: 10px;
+}
+
+.cartao-numero {
+  transition: box-shadow 0.15s ease, transform 0.15s ease, border-color 0.15s ease;
+}
+
+.cartao-numero:hover {
+  box-shadow: var(--sombra-2);
+  border-color: var(--laranja);
+}
+
+.cartao-numero:active {
+  transform: translateY(1px);
+}
+
+.cartao-numero .numero {
+  font-size: 2rem;
+  line-height: 1.1;
+  font-weight: 700;
+}
+
+.cartao-numero .rotulo {
+  font-size: 0.82rem;
+  color: var(--texto-secundario);
+}
+
+.cartao-numero.alerta {
+  border-left: 4px solid var(--nao-ok);
+}
+
+.cartao-numero.ativo {
+  border-color: var(--laranja);
+  background: var(--menu-ativo);
+}
+
+.contador {
+  background: var(--laranja-suave);
+  border: 1px solid var(--laranja);
+  border-radius: 999px;
+  padding: 1px 9px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  vertical-align: middle;
+}
+
+/* etiquetas: fundo suave e texto escuro (contraste), sem quebrar em duas linhas */
+.etiqueta {
+  white-space: nowrap;
+  padding: 2px 10px;
+  border: 0;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.etiqueta-ok {
+  background: var(--ok-fundo);
+  color: var(--ok-texto);
+}
+
+.etiqueta-nao-ok {
+  background: var(--nao-ok-fundo);
+  color: var(--nao-ok-texto);
+}
+
+.etiqueta-pendente {
+  background: var(--pendente-fundo);
+  color: var(--pendente-texto);
+}
+
+.etiqueta-neutra {
+  background: var(--neutra-fundo);
+  color: var(--texto-secundario);
+}
+
+/* botões: hierarquia (principal azul cheio, secundário contornado, simples discreto) e estados */
+.botao,
+.botao-secundario,
+.botao-topo,
+.link-botao {
+  transition: background-color 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease, color 0.12s ease;
+}
+
+.botao-principal {
+  box-shadow: 0 1px 2px rgba(36, 95, 153, 0.35);
+}
+
+.botao-principal:hover:not(:disabled) {
+  background: var(--acao-escura);
+}
+
+.botao-principal:active:not(:disabled) {
+  box-shadow: none;
+  transform: translateY(1px);
+}
+
+.botao-simples:hover {
+  background: rgba(246, 176, 74, 0.18);
+}
+
+.botao-secundario:hover:not(:disabled) {
+  background: var(--acao-fundo);
+}
+
+.botao-secundario[aria-pressed="true"] {
+  background: var(--laranja-suave);
+  border-color: var(--laranja);
+  color: var(--texto);
+}
+
+.botao:focus-visible,
+.botao-secundario:focus-visible,
+.botao-topo:focus-visible,
+.link-botao:focus-visible,
+.item-menu:focus-visible,
+.item-barra:focus-visible,
+a:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+input:focus-visible {
+  outline: none;
+  box-shadow: var(--anel);
+}
+
+.link-botao {
+  border-radius: 4px;
+}
+
+/* campos de formulário */
+.campo input,
+.campo select,
+.campo textarea {
+  border: 1px solid #c9bb98;
+  border-radius: 8px;
+  background: #fff;
+  transition: border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.campo input:hover,
+.campo select:hover,
+.campo textarea:hover {
+  border-color: #a8987a;
+}
+
+.campo input:focus,
+.campo select:focus,
+.campo textarea:focus {
+  border-color: var(--acao);
+  box-shadow: var(--anel);
+  outline: none;
+}
+
+.campo label,
+label.campo {
+  color: var(--texto);
+}
+
+/* avisos e confirmações */
+.faixa-demonstracao {
+  border-radius: 10px;
+  padding: 7px 12px;
+  font-size: 0.85rem;
+}
+
+.aviso-turno,
+.aviso-checkin {
+  border-radius: var(--raio);
+  border-left: 4px solid var(--laranja);
+}
+
+.confirmacao {
+  background: #fffdf6;
+  border-top: 0;
+  border-left: 4px solid var(--laranja);
+  border-radius: 8px;
+  padding: 12px 14px;
+}
+
+.herdadas {
+  border-left: 4px solid var(--laranja);
+  border-radius: 8px;
+}
+
+/* listas de linhas (atividades, turnos, esterilizações, estufas) */
+.lista-simples li,
+.lista-turnos li {
+  border-bottom: 1px solid #f1ead8;
+}
+
+.lista-simples li:last-child {
+  border-bottom: 0;
+}
+
+.atividade {
+  border-bottom-color: #f1ead8;
+}
+
+.atividade.feito .atividade-texto > span:first-child {
+  color: var(--ok-texto);
+}
+
+/* estufas: rótulo e situação lado a lado, com respiro */
+.leitura-estufa {
+  padding: 8px 0 6px;
+  border-top: 1px solid #f1ead8;
+}
+
+.leitura-linha {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 2px;
+}
+
+.estufa h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.estufa h2 .etiqueta {
+  margin-left: auto;
+}
+
+/* menu: ícones, estado ativo com barra lateral, rótulo em linha */
+.icone {
+  flex: none;
+}
+
+.item-rotulo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.marca {
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.topo-celular {
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08), 0 4px 12px rgba(80, 55, 10, 0.12);
+}
+
+.barra-baixo {
+  box-shadow: 0 -2px 12px rgba(80, 55, 10, 0.1);
+}
+
+.item-barra {
+  flex-direction: column;
+  gap: 2px;
+  font-size: 0.7rem;
+  color: var(--texto-secundario);
+}
+
+.item-barra.active {
+  color: var(--texto);
+  border-top: 3px solid var(--laranja);
+}
+
+.item-barra.active .icone {
+  color: var(--acao);
+}
+
+@media (min-width: 900px) {
+  .menu-lateral {
+    box-shadow: 2px 0 12px rgba(80, 55, 10, 0.12);
+  }
+
+  .menu-lateral .marca {
+    font-size: 1.3rem;
+    padding: 2px 8px 18px;
+  }
+
+  .item-menu {
+    position: relative;
+    transition: background-color 0.12s ease;
+  }
+
+  .item-menu.active::before {
+    content: "";
+    position: absolute;
+    left: -12px;
+    top: 8px;
+    bottom: 8px;
+    width: 4px;
+    border-radius: 0 4px 4px 0;
+    background: var(--texto);
+  }
+
+  .item-menu.active .icone {
+    color: var(--acao);
+  }
+
+  .conteudo {
+    padding: 28px 36px;
+  }
+
+  /* tabelas: cabeçalho fixo, linhas com ritmo e destaque ao passar o mouse */
+  .so-tela .tabela-dados {
+    border-radius: var(--raio);
+    overflow: hidden;
+    box-shadow: var(--sombra-1);
+    border: 1px solid var(--borda);
+  }
+
+  .so-tela .tabela-dados th {
+    font-size: 0.78rem;
+    text-transform: none;
+    letter-spacing: 0.01em;
+    color: var(--texto);
+    border-bottom: 2px solid var(--laranja);
+  }
+
+  .so-tela .tabela-dados tbody tr:nth-child(even) {
+    background: #fffcf4;
+  }
+
+  .so-tela .tabela-dados tbody tr:hover {
+    background: var(--menu-ativo);
+  }
+
+  .so-tela .tabela-dados td.principal {
+    font-weight: 600;
+  }
+}
+
+/* chips de filtro, paginação e barra de ações */
+.etiquetas-filtro li {
+  background: var(--laranja-suave);
+  border-radius: 999px;
+}
+
+.barra-acoes {
+  gap: 8px;
+}
+
+/* gráficos: grade mais leve e fundo do painel */
+.painel-g2,
+.cartao.grafico-g4 {
+  background: #fffefb;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* computador: botão com largura natural, não esticado no cartão inteiro (no celular continua largo, para o dedo) */
+@media (min-width: 900px) {
+  .cartao .botao,
+  .conteudo form > .botao {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    min-width: 200px;
+    padding: 10px 24px;
+    margin-right: 8px;
+  }
+
+  .botoes-lado {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .botoes-lado .botao {
+    margin: 0;
+  }
+}
