@@ -175,7 +175,7 @@ a {
 
 .cartoes-numeros {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr); /* celular: 2 x 2 */
   gap: 8px;
   margin-bottom: 12px;
 }
@@ -925,7 +925,7 @@ a.cartao-pagina:hover {
   }
 
   .cartoes-numeros {
-    grid-template-columns: repeat(3, minmax(0, 220px));
+    grid-template-columns: repeat(4, minmax(0, 220px));
   }
 }
 
@@ -992,4 +992,71 @@ a.cartao-pagina:hover {
   .cartao-numero {
     border-color: #999;
   }
+}
+
+/* Turno (APP-022) */
+.escolha-turno {
+  border: 0;
+  margin: 0 0 12px;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.escolha-turno legend {
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.opcao-turno {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.opcao-turno.escolhida {
+  background: var(--laranja-suave);
+  border-color: var(--laranja);
+}
+.opcao-turno input {
+  width: 20px;
+  height: 20px;
+}
+.campo-hora input {
+  max-width: 9em;
+}
+.linha-formulario {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: flex-end;
+  margin: 8px 0;
+}
+.confirmacao {
+  border-top: 1px solid var(--borda);
+  margin-top: 12px;
+  padding-top: 12px;
+}
+.lista-turnos,
+.lista-feito {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.lista-turnos li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--borda);
+}
+.lista-feito {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 18px;
+}
+.aviso-turno {
+  background: var(--laranja-suave);
 }
