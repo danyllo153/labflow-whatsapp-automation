@@ -279,4 +279,11 @@ describe("sair, trocar a senha por vontade própria e sessão expirada (APP-013)
     expect(document.documentElement.hasAttribute("data-tema")).toBe(false);
     expect(window.localStorage.getItem("labflow:tema")).toBeNull();
   });
+
+  it("no computador o menu lateral leva à Aparência (Minha conta)", async () => {
+    servidorFalso({ "GET /me": logada });
+    abrir("/");
+    const lateral = await screen.findByRole("complementary", { name: "Menu" });
+    expect(within(lateral).getByRole("link", { name: "Aparência (claro e escuro)" })).toHaveAttribute("href", "/conta");
+  });
 });

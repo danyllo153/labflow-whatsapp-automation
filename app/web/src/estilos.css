@@ -887,7 +887,11 @@ a.cartao-pagina:hover {
   .conta .conta-link {
     display: block;
     color: var(--texto);
-    margin: 6px 0 10px;
+    margin: 6px 0 6px;
+  }
+
+  .conta .botao-simples {
+    margin-top: 6px;
   }
 
   .conta .botao-simples {
