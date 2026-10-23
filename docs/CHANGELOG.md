@@ -12,6 +12,9 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 
 ## [Não lançado]
 
+### Adicionado
+- **Corrigir, excluir e recuperar recebimento por funções do banco** (PB4, parte 2; migration `036`): `corrigir_recebimento` (número e data do lote), `corrigir_load` (número do load, item e fábrica, para todos os lotes dele), `excluir_recebimento` (**arquiva** o lote, um Admin recupera) e `recuperar_recebimento`, para o app e, depois, o bot. Decisões do Danyllo (23/10): só Admin e Analista; **sem motivo obrigatório** (como a coleta; o motivo opcional vai para o histórico); lote com C.T/B.L lido, numa composta ou com teste não pode ser excluído; a data só muda sem resultado nem teste; o item 129 (NFC) não troca com outro item.
+
 ## [1.4.0] - 2026-10-23
 
 Segunda versão do piloto no laboratório. Em destaque: **fotos que mostram só o que é novo** (folha de Coliformes, recebimento NFC e TAB com tanques), **"todos" de uma vez** e **TAB de tanque "completo"** para o Admin, **resposta única** (a reentrega da Evolution não repete a resposta), **funções do banco** para cadastrar pessoa, trocar cargo e corrigir/excluir coleta (excluir **arquiva**, com histórico), a hora de cada leitura, o cargo **Operador renomeado para Analista**, o **Excel só de leitura com a cara do Power BI** e o **app (web e celular)**: login, todas as páginas do Power BI em leitura, Admin → Pessoas, entrar e sair do turno com check-in. Banco até a migration `035` do bot e a `053` do app; workflow de 251 nós; 578 testes do bot, 265 da API e 93 das telas.
