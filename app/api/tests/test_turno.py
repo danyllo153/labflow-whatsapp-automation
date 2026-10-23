@@ -41,7 +41,11 @@ def test_sugestao_pelo_horario(agora, turno, dia):
 
 def test_dia_do_turno_escolhido_fora_do_horario():
     assert dia_do_turno(MADRUGADA, em(22, 23, 30)) == date(2026, 10, 23)  # entra um pouco antes da meia-noite
-    assert dia_do_turno(TARDE, em(23, 0, 30)) == date(2026, 10, 22)  # entra na Tarde que acabou de terminar
+    # a Tarde de 22/10 já acabou à meia-noite: às 00:30 ou 02:00 a Tarde escolhida é a de 23/10 (nunca uma que já terminou)
+    assert dia_do_turno(TARDE, em(23, 0, 30)) == date(2026, 10, 23)
+    assert dia_do_turno(TARDE, em(23, 2)) == date(2026, 10, 23)
+    assert dia_do_turno(TARDE, em(22, 23, 59)) == date(2026, 10, 22)
+    assert dia_do_turno(MANHA, em(22, 16)) == date(2026, 10, 23)
     assert dia_do_turno(MANHA, em(22, 7, 40)) == date(2026, 10, 22)
 
 
@@ -116,6 +120,15 @@ def test_madrugada_conta_no_dia_em_que_comecou(cliente, logado, agora, conexao):
     assert (r["dia"], r["entrada"]) == ("2026-10-23", "23:40")
     entrada = conexao.execute("SELECT entrada FROM app.entradas_turno WHERE usuario_id = %s", (uid,)).fetchone()[0]
     assert entrada == em(22, 23, 40)
+
+
+def test_entrar_de_madrugada_na_tarde_fica_no_turno(cliente, logado, agora):
+    # 23/10, ~02:00, no servidor: a Tarde com entrada 15:00 caía na Tarde de 22/10, que já tinha acabado, e fechava na hora
+    agora(em(23, 2))
+    logado()
+    e = cliente.post("/turno/entrar", json={"turno_id": 2, "entrada": "15:00"}).json()
+    assert (e["dia"], e["entrada"], e["saida"]) == ("2026-10-23", "15:00", None)
+    assert cliente.get("/turno").json()["no_turno"]["id"] == e["id"]
 
 
 def test_um_turno_aberto_por_pessoa(cliente, logado, agora):

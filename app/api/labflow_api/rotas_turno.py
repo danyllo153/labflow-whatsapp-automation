@@ -56,16 +56,14 @@ def turno_agora(turnos: list[Turno], agora: datetime) -> tuple[Turno, date]:
 
 
 def dia_do_turno(turno: Turno, agora: datetime) -> date:
-    """Dia do turno escolhido: o de agora ou, se a pessoa entra antes ou depois do horário, o mais próximo."""
+    """Dia do turno escolhido: o que está em andamento ou, se ainda não começou, o próximo.
+
+    Nunca um turno que já terminou: entrar nele faria a entrada fechar sozinha na hora (a Tarde escolhida às 02:00
+    é a Tarde de hoje, às 16:00; a Madrugada escolhida às 23:30 é a que começa à meia-noite).
+    """
     hoje = agora.astimezone(FUSO).date()
-
-    def distancia(dia: date) -> timedelta:
-        comeco, fim = janela(turno, dia)
-        if comeco <= agora < fim:
-            return timedelta(0)
-        return comeco - agora if agora < comeco else agora - fim
-
-    return min((hoje - timedelta(days=1), hoje, hoje + timedelta(days=1)), key=distancia)
+    dias = [hoje - timedelta(days=1), hoje, hoje + timedelta(days=1)]
+    return min((d for d in dias if janela(turno, d)[1] > agora), key=lambda d: janela(turno, d)[0])
 
 
 def horario_no_turno(turno: Turno, dia: date, hhmm: str) -> datetime:
