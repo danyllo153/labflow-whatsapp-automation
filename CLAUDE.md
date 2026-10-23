@@ -83,6 +83,7 @@ Desde 15/10 uma sessão cuida do **app** (web e celular) e outra do **bot**. Par
 - Depois de gerar arquivo por script, procurar `Ã`, `Â`, `�`.
 - `>` e `>>` gravam UTF-16: usar `cmd /c "... > arquivo"` ou `Add-Content`.
 - Enviar SQL ao servidor: `cmd /c "type arquivo.sql | ssh -o ClearAllForwardings=yes labflow docker exec -i labflow-postgres psql ..."`.
+- Comando remoto em `ssh labflow '...'`: sempre aspas **simples** por fora e **nenhuma aspa dupla dentro** (o PowerShell 5.1 tira as aspas duplas do texto e o bash do servidor recebe o comando quebrado; em 23/10 um `psql -c "SELECT ..."` deu `syntax error near unexpected token '('`). SQL curto: `echo SELECT count\(\*\) FROM ... | docker exec -i labflow-postgres psql ... -At`; SQL longo: arquivo pelo `cmd /c "type ..."`.
 - Sem `&&`: usar `;` ou `if ($?)`.
 
 ## Documentação (cada instrução em um lugar só)
