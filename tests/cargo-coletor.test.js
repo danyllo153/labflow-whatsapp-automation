@@ -136,7 +136,12 @@ test('workflow: roteado até o banco, a resposta e o WhatsApp; o SQL protege o q
   assert.match(q.query, /FROM analises x WHERE x\.coleta_id = a\.id/);
   assert.match(q.query, /d\.status = 'Concluído'/);
   assert.match(q.query, /FROM testes t WHERE t\.coleta_id = a\.id/);
-  assert.match(q.query, /WHERE permitido AND NOT tem_analise AND NOT tem_drop AND NOT tem_teste AND NOT duplicada/);
+  assert.match(q.query, /FROM desvios_drop dd JOIN drops d ON d\.id = dd\.drop_id WHERE d\.coleta_id = a\.id/);
+  assert.match(q.query, /WHERE permitido AND NOT tem_analise AND NOT tem_drop AND NOT tem_teste AND NOT tem_desvio AND NOT duplicada/);
+  // grava pelas funções do banco (033/034), as mesmas do app: histórico e apagar = arquivar
+  assert.match(q.query, /corrigir_coleta\(l\.id, jsonb_build_object\('tanque', upper\(trim\(\$4::text\)\)\), \(SELECT id FROM u\)\)/);
+  assert.match(q.query, /excluir_coleta\(l\.id, \(SELECT id FROM u\), 'apagada pelo WhatsApp'\)/);
+  assert.doesNotMatch(q.query, /DELETE FROM coletas|UPDATE coletas/, 'nada de apagar ou trocar direto na tabela');
   assert.match(q.query, /c\.data_coleta >= CURRENT_DATE - 7/, 'sem data: últimos 7 dias');
   assert.match(q.options.queryReplacement, /\$json\._numeroRemetenteLimpo, \$json\.ehGestor/);
 });
@@ -156,6 +161,8 @@ test('resposta: explica o que foi feito ou por que não pôde', () => {
   assert.match(resposta(t, { estado: { ...ok, tem_analise: true } }), /já tem análise registrado\(a\), então não dá para trocar a coleta/);
   assert.match(resposta({ ...t, modo: 'apagar' }, { estado: { ...ok, tem_drop: true } }), /já tem drop concluído registrado\(a\), então não dá para apagar a coleta/);
   assert.match(resposta(t, { estado: { ...ok, duplicada: true } }), /O tanque 43 já está registrado nessa mesma data/);
+  assert.match(resposta({ ...t, modo: 'apagar' }, { estado: { ...ok, tem_desvio: true } }), /já tem desvio de drop registrado\(a\), então não dá para apagar a coleta/);
+  assert.match(resposta({ ...t, modo: 'apagar', novoTanque: '' }, { estado: ok, apagados: 1 }), /fica tudo guardado e um Admin pode recuperar/);
   const navio = { modo: 'corrigir', origem: 'navio', navio: 'O.SKY 123', tanque: '1C', novoTanque: '2C', dataColeta: '15/10/2026' };
   assert.match(resposta(navio, { estado: ok, atualizados: 1 }), /tanque 1C → 2C \(navio O\.SKY 123, 15\/10\/2026\)/);
 });
