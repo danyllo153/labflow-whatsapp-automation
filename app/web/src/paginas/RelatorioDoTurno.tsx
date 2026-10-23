@@ -2,6 +2,8 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
 import { enviarJson, lerJson } from "../api";
+import { useSessao } from "../sessao";
+import { TURNO_MUDOU } from "./Turno";
 
 /**
  * Relatório do turno (07 §4; APP-024): uma página por turno e dia, a mesma para todos. O automático vem das views do
@@ -45,8 +47,20 @@ export interface Relatorio {
   do_dia: { contagens_lidas: number; testes_com_resultado: number };
   escritos: { pendencias_escritas: string | null; esterilizacoes_pendentes: string | null; ocorrencias: string | null };
   encerramento: { encerrado: boolean; por: string | null; quando: string | null; automatico: boolean };
+  adiante: {
+    turno: string;
+    dia: string;
+    atividades_nao_feitas: number;
+    vence_hoje: number;
+    atrasados: number;
+    desvios_abertos: number;
+    recados: number;
+  };
+  reaberto: string | null;
   atualizado_por: string | null;
   pode_editar: boolean;
+  pode_encerrar: boolean;
+  pode_reabrir: boolean;
 }
 
 function dm(data: string): string {
@@ -216,6 +230,9 @@ export default function RelatorioDoTurno() {
       </div>
 
       <Escritos relatorio={r} aoGravar={setDados} />
+      {r.reaberto && <p className="texto-secundario">{r.reaberto}</p>}
+      {r.pode_encerrar && <EncerrarTurno relatorio={r} aoMudar={setDados} />}
+      {r.pode_reabrir && <ReabrirTurno relatorio={r} aoMudar={setDados} />}
     </section>
   );
 }
@@ -281,6 +298,107 @@ function Escritos({ relatorio: r, aoGravar }: { relatorio: Relatorio; aoGravar: 
         </p>
       )}
       {r.atualizado_por && <p className="texto-secundario">Última alteração: {r.atualizado_por}.</p>}
+    </form>
+  );
+}
+
+function EncerrarTurno({ relatorio: r, aoMudar }: { relatorio: Relatorio; aoMudar: (r: Relatorio) => void }) {
+  const { pessoa } = useSessao();
+  const admin = pessoa?.cargo === "Admin";
+  const [aberto, setAberto] = useState(false);
+  const [forcar, setForcar] = useState(false);
+  const [enviando, setEnviando] = useState(false);
+  const [erro, setErro] = useState("");
+  const a = r.adiante;
+
+  async function encerrar(evento: FormEvent) {
+    evento.preventDefault();
+    setEnviando(true);
+    setErro("");
+    try {
+      aoMudar(await enviarJson<Relatorio>("/turno/relatorio/encerrar", { turno_id: r.turno_id, dia: r.dia, forcar }));
+      window.dispatchEvent(new Event(TURNO_MUDOU)); // a saída foi registrada: o check-in confere de novo
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Não foi possível encerrar o turno.");
+    } finally {
+      setEnviando(false);
+    }
+  }
+
+  if (!aberto)
+    return (
+      <div className="nao-imprime">
+        <button type="button" className="botao botao-principal" onClick={() => setAberto(true)}>
+          Encerrar turno
+        </button>
+      </div>
+    );
+
+  return (
+    <form className="cartao confirmacao nao-imprime" aria-label="Encerrar o turno" onSubmit={encerrar}>
+      <h2>
+        Encerrar o turno {r.turno} de {dm(r.dia)}?
+      </h2>
+      <p>
+        Ficam para a {a.turno}: <strong>{a.atividades_nao_feitas}</strong> atividades sem Feito, <strong>{a.vence_hoje}</strong> análises que
+        vencem hoje, <strong>{a.atrasados}</strong> atrasadas, <strong>{a.desvios_abertos}</strong> desvios abertos e{" "}
+        <strong>{a.recados}</strong> recados escritos.
+      </p>
+      <p className="texto-secundario">
+        O relatório passa a ser só leitura (só o Admin reabre, com motivo) e a sua saída do turno é registrada agora.
+      </p>
+      {admin && (
+        <label className="marcar-feito">
+          <input type="checkbox" checked={forcar} onChange={(e) => setForcar(e.target.checked)} />
+          <span>Fazer sair também quem ainda está no turno</span>
+        </label>
+      )}
+      {erro && (
+        <p className="mensagem-erro" role="alert">
+          {erro}
+        </p>
+      )}
+      <div className="botoes-lado">
+        <button type="submit" className="botao botao-principal" disabled={enviando}>
+          Confirmar e encerrar
+        </button>
+        <button type="button" className="botao botao-simples" onClick={() => setAberto(false)}>
+          Voltar
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function ReabrirTurno({ relatorio: r, aoMudar }: { relatorio: Relatorio; aoMudar: (r: Relatorio) => void }) {
+  const [motivo, setMotivo] = useState("");
+  const [erro, setErro] = useState("");
+
+  async function reabrir(evento: FormEvent) {
+    evento.preventDefault();
+    setErro("");
+    try {
+      aoMudar(await enviarJson<Relatorio>("/turno/relatorio/reabrir", { turno_id: r.turno_id, dia: r.dia, motivo }));
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Não foi possível reabrir.");
+    }
+  }
+
+  return (
+    <form className="cartao nao-imprime" aria-label="Reabrir o turno" onSubmit={reabrir}>
+      <h2>Reabrir o turno (Admin)</h2>
+      <label className="campo">
+        Motivo da reabertura
+        <textarea rows={2} maxLength={300} value={motivo} onChange={(e) => setMotivo(e.target.value)} />
+      </label>
+      {erro && (
+        <p className="mensagem-erro" role="alert">
+          {erro}
+        </p>
+      )}
+      <button type="submit" className="botao-secundario">
+        Reabrir turno
+      </button>
     </form>
   );
 }

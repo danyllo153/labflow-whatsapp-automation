@@ -11,7 +11,7 @@ Regras:
   marcar a atividade como feita ou passarem 3 dias.
 """
 
-from datetime import date
+from datetime import date, timedelta
 from typing import Literal
 
 import psycopg
@@ -44,6 +44,15 @@ class Herdada(BaseModel):
     quem: str | None
 
 
+class Recado(BaseModel):
+    """Pendência escrita à mão no relatório do turno anterior (uma linha do campo "Pendências")."""
+
+    texto: str
+    turno: str
+    dia: date
+    por: str | None  # quem encerrou o turno anterior (ou, sem encerramento, quem escreveu por último)
+
+
 class AtividadesDoTurno(BaseModel):
     turno_id: int
     turno: str
@@ -53,6 +62,7 @@ class AtividadesDoTurno(BaseModel):
     feitas: int
     atividades: list[Atividade]
     herdadas: list[Herdada]
+    recados: list[Recado]
 
 
 LISTA_SQL = """
@@ -118,12 +128,39 @@ def _herdadas(con: psycopg.Connection, turno: Turno) -> list[Herdada]:
     ]
 
 
+RECADOS_SQL = """
+SELECT r.pendencias_escritas, t.nome, r.dia, coalesce(ue.nome, ce.usuario, ua.nome, ca.usuario)
+FROM app.relatorios_turno r JOIN app.turnos t ON t.id = r.turno_id
+LEFT JOIN usuarios ue ON ue.id = r.encerrado_por LEFT JOIN app.credenciais ce ON ce.usuario_id = r.encerrado_por
+LEFT JOIN usuarios ua ON ua.id = r.atualizado_por LEFT JOIN app.credenciais ca ON ca.usuario_id = r.atualizado_por
+WHERE r.turno_id = %s AND r.dia = %s AND r.pendencias_escritas IS NOT NULL
+"""
+
+
+def _recados(con: psycopg.Connection, turno: Turno, dia: date) -> list[Recado]:
+    """As linhas escritas à mão no relatório do turno anterior que ainda ninguém marcou como Feito neste turno."""
+    turnos = rotas_turno._turnos(con)
+    ant, dia_ant = rotas_turno.turno_agora(turnos, rotas_turno.janela(turno, dia)[0] - timedelta(minutes=1))
+    linha = con.execute(RECADOS_SQL, (ant.id, dia_ant)).fetchone()
+    if linha is None:
+        return []
+    texto, nome, dia_do_relatorio, por = linha
+    feitos = {
+        t for (t,) in con.execute(
+            "SELECT pendencia_texto FROM app.atividades_feitas WHERE turno_id = %s AND dia = %s AND pendencia_texto IS NOT NULL AND feito",
+            (turno.id, dia),
+        )
+    }
+    linhas = [l.strip()[:300] for l in texto.splitlines() if l.strip()]
+    return [Recado(texto=l, turno=nome, dia=dia_do_relatorio, por=por) for l in linhas if l not in feitos]
+
+
 def _resposta(con: psycopg.Connection, pessoa: PessoaLogada, turno: Turno, dia: date) -> AtividadesDoTurno:
     atividades = _lista(con, turno, dia)
     return AtividadesDoTurno(
         turno_id=turno.id, turno=turno.nome, dia=dia, pode_marcar=pode(pessoa.cargo, "registrar_analise"),
         total=len(atividades), feitas=sum(a.estado == "feito" for a in atividades),
-        atividades=atividades, herdadas=_herdadas(con, turno),
+        atividades=atividades, herdadas=_herdadas(con, turno), recados=_recados(con, turno, dia),
     )
 
 
@@ -168,4 +205,28 @@ def marcar(
             """,
             (atividade_id, turno.id, dia, marcacao.feito, pessoa.usuario_id),
         )
+    return _resposta(con, pessoa, turno, dia)
+
+
+class MarcacaoRecado(BaseModel):
+    texto: str
+
+
+@roteador.put("/recados/feito", response_model=AtividadesDoTurno)
+def marcar_recado(
+    marcacao: MarcacaoRecado,
+    pessoa: PessoaLogada = Depends(exigir("registrar_analise")),
+    con: psycopg.Connection = Depends(obter_conexao),
+) -> AtividadesDoTurno:
+    """Marca como Feito uma pendência escrita à mão no turno anterior (grava quem e quando)."""
+    turno, dia = _turno_da_pessoa(con, pessoa)
+    if marcacao.texto not in {r.texto for r in _recados(con, turno, dia)}:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Esse recado não está nas pendências herdadas do seu turno.")
+    con.execute(
+        """
+        INSERT INTO app.atividades_feitas (pendencia_texto, turno_id, dia, feito, marcado_por, marcado_em)
+        VALUES (%s, %s, %s, true, %s, clock_timestamp())
+        """,
+        (marcacao.texto, turno.id, dia, pessoa.usuario_id),
+    )
     return _resposta(con, pessoa, turno, dia)

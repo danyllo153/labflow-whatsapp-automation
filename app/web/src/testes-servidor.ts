@@ -31,6 +31,7 @@ export const ATIVIDADES_VAZIAS = {
   feitas: 0,
   atividades: [],
   herdadas: [],
+  recados: [],
 };
 
 export function servidorFalso(rotas: Record<string, Rota>) {
