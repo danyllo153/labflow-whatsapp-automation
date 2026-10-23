@@ -13,6 +13,7 @@ export const MENU: ItemDoMenu[] = [
   { caminho: "/turno", rotulo: "Turno", pronto: true },
   { caminho: "/paginas", rotulo: "Páginas", pronto: true },
   { caminho: "/esterilizacao", rotulo: "Esterilização", pronto: true },
+  { caminho: "/estufas", rotulo: "Estufas", pronto: true, soNoMenuLateral: true },
   { caminho: "/assistente", rotulo: "Assistente", pronto: false, tarefa: "Fase D" },
   { caminho: "/admin/pessoas", rotulo: "Pessoas", pronto: true, pode: "gerenciar_pessoas", soNoMenuLateral: true },
 ];

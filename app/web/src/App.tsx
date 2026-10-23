@@ -10,6 +10,7 @@ import Conta from "./paginas/Conta";
 import EmBreve from "./paginas/EmBreve";
 import Entrar from "./paginas/Entrar";
 import Esterilizacao from "./paginas/Esterilizacao";
+import Estufas from "./paginas/Estufas";
 import Inicio from "./paginas/Inicio";
 import NaoEncontrada from "./paginas/NaoEncontrada";
 import { DetalheNavio, DetalheTanque } from "./paginas/dados/Detalhes";
@@ -70,6 +71,7 @@ export default function App() {
         <Route index element={<Inicio />} />
         <Route path="/turno" element={<Turno />} />
         <Route path="/esterilizacao" element={<Esterilizacao />} />
+        <Route path="/estufas" element={<Estufas />} />
         <Route path="/turno/relatorio" element={<RelatorioDoTurno />} />
         <Route path="/paginas" element={<ListaDePaginas />} />
         <Route path="/paginas/tanques-terra/:id" element={<DetalheTanque />} />

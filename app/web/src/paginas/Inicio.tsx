@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { lerJson } from "../api";
 import { useSessao } from "../sessao";
 import AtividadesDoTurno from "./AtividadesDoTurno";
+import type { DadosEstufas } from "./Estufas";
 import type { EstadoDoTurno } from "./Turno";
 
 /**
@@ -50,6 +51,7 @@ export default function Inicio() {
   const [filtro, setFiltro] = useState<Filtro>("todos");
   const [abertos, setAbertos] = useState<Record<string, boolean>>({});
   const [turno, setTurno] = useState<EstadoDoTurno | null>(null);
+  const [estufas, setEstufas] = useState<DadosEstufas | null>(null);
   const navegar = useNavigate();
 
   const carregar = useCallback(async () => {
@@ -62,6 +64,7 @@ export default function Inicio() {
     }
     // o turno é um extra: se falhar, o Início continua com as pendências
     lerJson<EstadoDoTurno>("/turno").then(setTurno, () => setTurno(null));
+    lerJson<DadosEstufas>("/estufas").then(setEstufas, () => setEstufas(null));
   }, []);
 
   useEffect(() => {
@@ -179,6 +182,27 @@ export default function Inicio() {
             })
           )}
         </>
+      )}
+
+      {estufas && (
+        <div className="cartao" aria-label="Estufas do turno">
+          <h2>
+            Estufas do turno{" "}
+            <span className="contador">
+              {estufas.resumo.conferidas} de {estufas.resumo.total}
+            </span>
+          </h2>
+          <p>
+            <strong>{estufas.resumo.conferidas}</strong> conferidas · <strong>{estufas.resumo.pendentes}</strong> pendentes
+            {estufas.resumo.nao_ok > 0 && (
+              <>
+                {" "}
+                · <strong>{estufas.resumo.nao_ok}</strong> Não ok
+              </>
+            )}
+          </p>
+          <Link to="/estufas">{estufas.resumo.pendentes > 0 ? "Conferir as estufas" : "Ver as estufas"}</Link>
+        </div>
       )}
     </section>
   );
