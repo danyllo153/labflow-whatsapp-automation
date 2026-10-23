@@ -5,6 +5,15 @@ import pytest
 from labflow_api import banco
 
 
+@pytest.fixture(autouse=True)
+def _sem_trava_de_checkin(request, monkeypatch):
+    """A trava do check-in fica desligada nos testes das outras telas; os testes com @pytest.mark.checkin a ligam."""
+    if request.node.get_closest_marker("checkin") is None:
+        from labflow_api import permissoes
+
+        monkeypatch.setattr(permissoes, "CHECKIN_OBRIGATORIO", frozenset())
+
+
 @pytest.fixture
 def conexao():
     """Conexão com o banco de TESTE (montado por scripts/preparar_banco_teste.sh).

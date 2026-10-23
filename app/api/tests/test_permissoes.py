@@ -12,13 +12,13 @@ SENHA = "Senha-de-teste-1"
 
 # Tabela de permissões do 07 (v1.0), escrita de novo aqui de propósito: se alguém mudar o código, o teste pega.
 ESPERADO = {
-    "Admin": {"ver_paginas", "imprimir_exportar", "entrar_no_turno", "encerrar_turno", "registrar_coleta",
+    "Admin": {"ver_paginas", "ver_turno", "imprimir_exportar", "entrar_no_turno", "encerrar_turno", "registrar_coleta",
               "registrar_analise", "corrigir_registro", "excluir_registro", "usar_assistente",
               "gerenciar_pessoas", "configurar_turnos"},
-    "Operador": {"ver_paginas", "imprimir_exportar", "entrar_no_turno", "encerrar_turno", "registrar_coleta",
+    "Operador": {"ver_paginas", "ver_turno", "imprimir_exportar", "entrar_no_turno", "encerrar_turno", "registrar_coleta",
                  "registrar_analise", "corrigir_registro", "excluir_registro", "usar_assistente"},
-    "Consultor": {"ver_paginas", "imprimir_exportar", "usar_assistente"},
-    "Coletor": {"ver_paginas", "imprimir_exportar", "entrar_no_turno", "registrar_coleta", "corrigir_registro",
+    "Consultor": {"ver_paginas", "ver_turno", "imprimir_exportar", "usar_assistente"},
+    "Coletor": {"ver_paginas", "ver_turno", "imprimir_exportar", "entrar_no_turno", "registrar_coleta", "corrigir_registro",
                 "excluir_registro", "usar_assistente"},
 }
 

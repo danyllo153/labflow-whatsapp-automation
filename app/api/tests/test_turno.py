@@ -90,44 +90,46 @@ def test_consultor_ve_mas_nao_entra_no_turno(cliente, logado, agora):
     assert cliente.post("/turno/sair", json={}).status_code == 403
 
 
-def test_entrar_com_o_horario_padrao_e_sair(cliente, logado, agora, conexao):
-    agora(em(23, 1))
+def test_entrada_e_saida_sao_a_hora_do_clique(cliente, logado, agora, conexao):
+    # check-in (decidido em 23/10): entrou às 00:47 fica 00:47, não o horário padrão do turno
+    agora(em(23, 0, 47))
     uid = logado()
     corpo = cliente.get("/turno").json()
     assert corpo["pode_entrar"] is True and corpo["no_turno"] is None
     assert corpo["sugestao"] == {"turno_id": 3, "dia": "2026-10-23"}
 
-    r = cliente.post("/turno/entrar", json={"turno_id": 3})
+    r = cliente.post("/turno/entrar", json={"turno_id": 3, "entrada": "00:00"})  # horário mandado é ignorado
     assert r.status_code == 200, r.text
-    assert r.json() | {"id": 0} == {"id": 0, "turno_id": 3, "turno": "Madrugada", "dia": "2026-10-23", "entrada": "00:00", "saida": None}
+    assert r.json() | {"id": 0} == {
+        "id": 0, "turno_id": 3, "turno": "Madrugada", "dia": "2026-10-23", "entrada": "00:47", "saida": None,
+        "entrada_registrada": "00:47", "saida_registrada": None, "motivo_correcao": None,
+    }
     assert cliente.get("/turno").json()["no_turno"]["turno"] == "Madrugada"
     # tocar duas vezes não cria outra entrada
     assert cliente.post("/turno/entrar", json={"turno_id": 3}).json()["id"] == r.json()["id"]
 
     agora(em(23, 7, 50))
-    saiu = cliente.post("/turno/sair", json={})
-    assert saiu.status_code == 200 and saiu.json()["saida"] == "07:50"
+    saiu = cliente.post("/turno/sair", json={"saida": "06:00"})  # idem: vale o clique
+    assert saiu.status_code == 200 and (saiu.json()["saida"], saiu.json()["saida_registrada"]) == ("07:50", "07:50")
     assert cliente.get("/turno").json()["no_turno"] is None
     assert cliente.post("/turno/sair", json={}).status_code == 404
     gravado = conexao.execute("SELECT count(*) FROM app.entradas_turno WHERE usuario_id = %s", (uid,)).fetchone()[0]
     assert gravado == 1
 
-
 def test_madrugada_conta_no_dia_em_que_comecou(cliente, logado, agora, conexao):
     agora(em(22, 23, 40))  # chegou antes da meia-noite para a Madrugada
     uid = logado()
-    r = cliente.post("/turno/entrar", json={"turno_id": 3, "entrada": "23:40"}).json()
+    r = cliente.post("/turno/entrar", json={"turno_id": 3}).json()
     assert (r["dia"], r["entrada"]) == ("2026-10-23", "23:40")
     entrada = conexao.execute("SELECT entrada FROM app.entradas_turno WHERE usuario_id = %s", (uid,)).fetchone()[0]
     assert entrada == em(22, 23, 40)
-
 
 def test_nao_entra_em_turno_que_comeca_daqui_a_mais_de_2_horas(cliente, logado, agora, conexao):
     # 23/10, ~02:00, no servidor: dava para entrar na Tarde (16:00) e na Manhã (08:00) de madrugada
     agora(em(23, 2))
     uid = logado()
     for turno_id, texto in ((2, "A Tarde começa às 16:00"), (1, "A Manhã começa às 08:00")):
-        r = cliente.post("/turno/entrar", json={"turno_id": turno_id, "entrada": "15:00"})
+        r = cliente.post("/turno/entrar", json={"turno_id": turno_id})
         assert r.status_code == 422
         assert r.json()["detail"].startswith(texto) and "escolha a Madrugada" in r.json()["detail"]
     assert conexao.execute("SELECT count(*) FROM app.entradas_turno WHERE usuario_id = %s", (uid,)).fetchone()[0] == 0
@@ -136,7 +138,7 @@ def test_nao_entra_em_turno_que_comeca_daqui_a_mais_de_2_horas(cliente, logado, 
 def test_chega_ate_2_horas_antes_e_entra_no_proximo(cliente, logado, agora):
     agora(em(22, 22, 0))  # Tarde em andamento; a Madrugada de 23/10 começa daqui a 2 h
     logado()
-    e = cliente.post("/turno/entrar", json={"turno_id": 3, "entrada": "22:00"}).json()
+    e = cliente.post("/turno/entrar", json={"turno_id": 3}).json()
     assert (e["dia"], e["entrada"], e["saida"]) == ("2026-10-23", "22:00", None)
     assert cliente.get("/turno").json()["no_turno"]["id"] == e["id"]
 
@@ -162,40 +164,48 @@ def test_esqueceu_de_sair_fecha_no_fim_do_turno(cliente, logado, agora, conexao)
 
 
 def test_saiu_sem_querer_e_entra_de_novo(cliente, logado, agora):
-    agora(em(22, 10))
+    agora(em(22, 8, 10))
     logado()
     primeira = cliente.post("/turno/entrar", json={"turno_id": 1}).json()
+    agora(em(22, 10))
     cliente.post("/turno/sair", json={})
-    de_novo = cliente.post("/turno/entrar", json={"turno_id": 1, "entrada": "08:15"}).json()
+    agora(em(22, 10, 2))
+    de_novo = cliente.post("/turno/entrar", json={"turno_id": 1}).json()
     assert de_novo["id"] == primeira["id"]
-    assert (de_novo["entrada"], de_novo["saida"]) == ("08:15", None)
+    assert (de_novo["entrada"], de_novo["saida"], de_novo["saida_registrada"]) == ("08:10", None, None)
 
-
-def test_editar_o_proprio_horario(cliente, logado, agora):
-    agora(em(22, 23))
-    logado()
-    e = cliente.post("/turno/entrar", json={"turno_id": 2, "entrada": "15:00"}).json()  # escala 15h–00h
-    assert e["entrada"] == "15:00"
-    assert cliente.put(f"/turno/entradas/{e['id']}", json={"entrada": "15:30"}).json()["entrada"] == "15:30"
+def test_corrigir_o_proprio_horario_pede_motivo_e_guarda_o_clique(cliente, logado, agora, conexao):
+    agora(em(22, 16, 40))
+    uid = logado()
+    e = cliente.post("/turno/entrar", json={"turno_id": 2}).json()
+    assert e["entrada"] == "16:40"
+    url = f"/turno/entradas/{e['id']}"
+    assert cliente.put(url, json={"entrada": "16:00"}).status_code == 422  # sem motivo
+    assert cliente.put(url, json={"entrada": "16:00", "motivo": "  "}).status_code == 422
+    corrigida = cliente.put(url, json={"entrada": "16:00", "motivo": "Cheguei às 16h e esqueci de marcar"})
+    assert corrigida.status_code == 200, corrigida.text
+    c = corrigida.json()
+    assert (c["entrada"], c["entrada_registrada"], c["motivo_correcao"]) == ("16:00", "16:40", "Cheguei às 16h e esqueci de marcar")
+    assert conexao.execute("SELECT corrigida_por FROM app.entradas_turno WHERE id = %s", (e["id"],)).fetchone()[0] == uid
     # a saída de quem ainda está no turno é pelo Sair do turno
-    assert cliente.put(f"/turno/entradas/{e['id']}", json={"entrada": "15:30", "saida": "23:00"}).status_code == 422
+    assert cliente.put(url, json={"entrada": "16:00", "saida": "23:00", "motivo": "teste de saída"}).status_code == 422
 
-    saiu = cliente.post("/turno/sair", json={"saida": "00:00"}).json()
-    assert saiu["saida"] == "00:00"
-    editado = cliente.put(f"/turno/entradas/{e['id']}", json={"entrada": "15:00", "saida": "23:45"})
-    assert editado.status_code == 200 and editado.json()["saida"] == "23:45"
-    errado = cliente.put(f"/turno/entradas/{e['id']}", json={"entrada": "15:00", "saida": "14:00"})
+    agora(em(22, 23, 55))
+    assert cliente.post("/turno/sair", json={}).json()["saida"] == "23:55"
+    editado = cliente.put(url, json={"entrada": "16:00", "saida": "23:45", "motivo": "Saí às 23h45, marquei depois"})
+    assert editado.status_code == 200
+    assert (editado.json()["saida"], editado.json()["saida_registrada"]) == ("23:45", "23:55")
+    errado = cliente.put(url, json={"entrada": "16:00", "saida": "14:00", "motivo": "teste de erro"})
     assert errado.status_code == 422 and "depois da entrada" in errado.json()["detail"]
-    assert cliente.put(f"/turno/entradas/{e['id']}", json={"entrada": "25:00"}).status_code == 422
+    assert cliente.put(url, json={"entrada": "25:00", "saida": "23:45", "motivo": "hora errada"}).status_code == 422
     assert [r["id"] for r in cliente.get("/turno").json()["recentes"]] == [e["id"]]
-
 
 def test_nao_edita_o_horario_de_outra_pessoa(cliente, logado, agora):
     agora(em(22, 10))
     logado(usuario="ana.teste")
     e = cliente.post("/turno/entrar", json={"turno_id": 1}).json()
     logado(usuario="bia.teste")
-    assert cliente.put(f"/turno/entradas/{e['id']}", json={"entrada": "09:00"}).status_code == 404
+    assert cliente.put(f"/turno/entradas/{e['id']}", json={"entrada": "09:00", "motivo": "não é minha"}).status_code == 404
     assert cliente.get("/turno").json()["recentes"] == []
 
 

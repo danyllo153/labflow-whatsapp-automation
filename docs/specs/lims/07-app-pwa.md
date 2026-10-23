@@ -71,7 +71,9 @@ Usuário e senha. Primeiro acesso e recuperação de senha em [06](06-api-e-auth
 
 ### 2. Entrar no turno
 - A pessoa escolhe **Manhã, Tarde ou Madrugada** (o app sugere pelo horário).
-- O **horário de entrada e de saída** vem com o padrão do turno e **a própria pessoa edita** (atraso, saída mais cedo, escala do ADM como 15h–00h).
+- **Check-in** (decidido em 23/10): a entrada vale **a hora do toque** em "Entrar no turno", e a saída a hora do toque em "Sair do turno". Dá para entrar no turno em andamento ou no próximo, se ele começa em até 2 horas.
+- **Operador e Coletor só usam o resto do app depois de marcar a entrada** (Início, páginas, relatório do turno); antes disso, qualquer tela mostra o Turno. Admin e Consultor ficam livres. A API confere a cada chamada.
+- **Corrigir o próprio horário** (esqueceu de marcar, escala do ADM como 15h–00h) **pede motivo**; o horário marcado no app fica guardado ao lado da correção (migration 053).
 - Tudo o que ela registrar **enquanto estiver no turno** (app ou WhatsApp, mesmo usuário) fica ligado a esse turno. Sem entrada no turno, vale o horário padrão.
 - **"Sair do turno"** registra a saída dela.
 

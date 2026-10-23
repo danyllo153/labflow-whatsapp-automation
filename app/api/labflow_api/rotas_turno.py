@@ -19,6 +19,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
 from labflow_api.dependencias import PessoaLogada, obter_conexao
+from labflow_api import permissoes
 from labflow_api.permissoes import exigir, pode
 
 roteador = APIRouter(prefix="/turno", tags=["turno"])
@@ -104,8 +105,11 @@ class Entrada(BaseModel):
     turno_id: int
     turno: str
     dia: date
-    entrada: str  # HH:MM
+    entrada: str  # HH:MM (a corrigida, se houve correção)
     saida: str | None  # nulo: ainda no turno
+    entrada_registrada: str  # hora do clique em Entrar no turno (053: nunca muda)
+    saida_registrada: str | None
+    motivo_correcao: str | None  # preenchido quando a pessoa corrigiu o horário
 
 
 class Sugestao(BaseModel):
@@ -127,20 +131,24 @@ class EstadoDoTurno(BaseModel):
     turnos: list[TurnoPadrao]
     sugestao: Sugestao
     pode_entrar: bool
+    checkin_obrigatorio: bool  # Operador e Coletor: o resto do app só abre depois de entrar no turno
     no_turno: Entrada | None
     recentes: list[Entrada]  # as últimas entradas da pessoa, para editar o horário
     feito_no_turno: FeitoNoTurno
 
 
 ENTRADA_SQL = """
-SELECT e.id, e.turno_id, t.nome, e.dia, e.entrada, e.saida
+SELECT e.id, e.turno_id, t.nome, e.dia, e.entrada, e.saida, e.entrada_registrada, e.saida_registrada, e.motivo_correcao
 FROM app.entradas_turno e JOIN app.turnos t ON t.id = e.turno_id
 """
 
 
 def _entrada(linha) -> Entrada:
-    id_, turno_id, nome, dia, entrada, saida = linha
-    return Entrada(id=id_, turno_id=turno_id, turno=nome, dia=dia, entrada=_hhmm(entrada), saida=_hhmm(saida))
+    id_, turno_id, nome, dia, entrada, saida, entrada_registrada, saida_registrada, motivo = linha
+    return Entrada(
+        id=id_, turno_id=turno_id, turno=nome, dia=dia, entrada=_hhmm(entrada), saida=_hhmm(saida),
+        entrada_registrada=_hhmm(entrada_registrada), saida_registrada=_hhmm(saida_registrada), motivo_correcao=motivo,
+    )
 
 
 def _fechar_esquecida(con: psycopg.Connection, usuario_id: int, turnos: list[Turno], agora: datetime) -> Entrada | None:
@@ -153,7 +161,7 @@ def _fechar_esquecida(con: psycopg.Connection, usuario_id: int, turnos: list[Tur
     if agora < fim:
         return _entrada(linha)
     saida = max(fim, linha[4] + timedelta(minutes=1))
-    con.execute("UPDATE app.entradas_turno SET saida = %s WHERE id = %s", (saida, linha[0]))
+    con.execute("UPDATE app.entradas_turno SET saida = %s, saida_registrada = %s WHERE id = %s", (saida, saida, linha[0]))
     return None
 
 
@@ -181,7 +189,7 @@ def _feito_no_turno(con: psycopg.Connection, turno: Turno, dia: date) -> FeitoNo
 
 @roteador.get("", response_model=EstadoDoTurno)
 def estado_do_turno(
-    pessoa: PessoaLogada = Depends(exigir("ver_paginas")), con: psycopg.Connection = Depends(obter_conexao)
+    pessoa: PessoaLogada = Depends(exigir("ver_turno")), con: psycopg.Connection = Depends(obter_conexao)
 ) -> EstadoDoTurno:
     turnos = _turnos(con)
     agora = _agora(con)
@@ -196,6 +204,7 @@ def estado_do_turno(
         turnos=[TurnoPadrao(id=t.id, nome=t.nome, inicio=_hhmm(t.inicio), fim=_hhmm(t.fim)) for t in turnos],
         sugestao=Sugestao(turno_id=sugerido.id, dia=dia),
         pode_entrar=pode(pessoa.cargo, "entrar_no_turno"),
+        checkin_obrigatorio=pessoa.cargo in permissoes.CHECKIN_OBRIGATORIO,
         no_turno=no_turno,
         recentes=recentes,
         feito_no_turno=_feito_no_turno(con, turno_do_cartao, no_turno.dia if no_turno else dia),
@@ -203,8 +212,7 @@ def estado_do_turno(
 
 
 class PedidoEntrar(BaseModel):
-    turno_id: int
-    entrada: str | None = Field(default=None, pattern=HORARIO)  # vazio: o horário padrão do turno
+    turno_id: int  # a entrada é a hora do clique (check-in, decidido em 23/10)
 
 
 @roteador.post("/entrar", response_model=Entrada)
@@ -234,22 +242,16 @@ def entrar(
             status.HTTP_409_CONFLICT,
             f"Você ainda está no turno {aberta.turno} de {aberta.dia:%d/%m}. Toque em Sair do turno antes.",
         )
-    entrada = horario_no_turno(turno, dia, pedido.entrada) if pedido.entrada else janela(turno, dia)[0]
-    # Já tinha saído desse mesmo turno (saiu sem querer): volta a ficar no turno, com o horário escolhido agora.
+    # Já tinha saído desse mesmo turno (saiu sem querer): volta a ficar no turno, com a entrada de antes.
     linha = con.execute(
         """
-        INSERT INTO app.entradas_turno (usuario_id, turno_id, dia, entrada) VALUES (%s, %s, %s, %s)
-        ON CONFLICT (usuario_id, turno_id, dia)
-        DO UPDATE SET entrada = EXCLUDED.entrada, saida = NULL, editada_em = now()
+        INSERT INTO app.entradas_turno (usuario_id, turno_id, dia, entrada, entrada_registrada) VALUES (%s, %s, %s, %s, %s)
+        ON CONFLICT (usuario_id, turno_id, dia) DO UPDATE SET saida = NULL, saida_registrada = NULL
         RETURNING id
         """,
-        (pessoa.usuario_id, turno.id, dia, entrada),
+        (pessoa.usuario_id, turno.id, dia, agora, agora),
     ).fetchone()
     return _entrada(con.execute(ENTRADA_SQL + " WHERE e.id = %s", linha).fetchone())
-
-
-class PedidoSair(BaseModel):
-    saida: str | None = Field(default=None, pattern=HORARIO)  # vazio: agora
 
 
 def _conferir_horarios(entrada: datetime, saida: datetime | None) -> None:
@@ -263,7 +265,6 @@ def _conferir_horarios(entrada: datetime, saida: datetime | None) -> None:
 
 @roteador.post("/sair", response_model=Entrada)
 def sair(
-    pedido: PedidoSair,
     pessoa: PessoaLogada = Depends(exigir("entrar_no_turno")),
     con: psycopg.Connection = Depends(obter_conexao),
 ) -> Entrada:
@@ -272,17 +273,16 @@ def sair(
     aberta = _fechar_esquecida(con, pessoa.usuario_id, turnos, agora)
     if aberta is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Você não está em nenhum turno.")
-    turno = next(t for t in turnos if t.id == aberta.turno_id)
     entrada = con.execute("SELECT entrada FROM app.entradas_turno WHERE id = %s", (aberta.id,)).fetchone()[0]
-    saida = horario_no_turno(turno, aberta.dia, pedido.saida) if pedido.saida else agora
-    _conferir_horarios(entrada, saida)
-    con.execute("UPDATE app.entradas_turno SET saida = %s WHERE id = %s", (saida, aberta.id))
+    saida = max(agora, entrada + timedelta(minutes=1))  # a hora do clique (check-out)
+    con.execute("UPDATE app.entradas_turno SET saida = %s, saida_registrada = %s WHERE id = %s", (saida, agora, aberta.id))
     return _entrada(con.execute(ENTRADA_SQL + " WHERE e.id = %s", (aberta.id,)).fetchone())
 
 
 class PedidoHorario(BaseModel):
     entrada: str = Field(pattern=HORARIO)
     saida: str | None = Field(default=None, pattern=HORARIO)  # só para quem já saiu
+    motivo: str = Field(min_length=5, max_length=300)  # corrigir pede motivo (decidido em 23/10)
 
 
 @roteador.put("/entradas/{entrada_id}", response_model=Entrada)
@@ -292,7 +292,10 @@ def editar_horario(
     pessoa: PessoaLogada = Depends(exigir("entrar_no_turno")),
     con: psycopg.Connection = Depends(obter_conexao),
 ) -> Entrada:
-    """07 §2: a própria pessoa edita a entrada e a saída (atraso, saída mais cedo, escala diferente)."""
+    """07 §2: a própria pessoa corrige a entrada e a saída (esqueceu de marcar na hora), sempre com motivo.
+
+    O horário do clique fica guardado em entrada_registrada e saida_registrada (053).
+    """
     linha = con.execute(ENTRADA_SQL + " WHERE e.id = %s AND e.usuario_id = %s", (entrada_id, pessoa.usuario_id)).fetchone()
     if linha is None:  # de outra pessoa ou não existe: a mesma resposta
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Entrada no turno não encontrada.")
@@ -301,12 +304,15 @@ def editar_horario(
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Para registrar a saída, use Sair do turno.")
     if atual.saida is not None and pedido.saida is None:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Informe também a saída.")
+    if len(pedido.motivo.strip()) < 5:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Escreva o motivo da correção.")
     turno = next(t for t in _turnos(con) if t.id == atual.turno_id)
     entrada = horario_no_turno(turno, atual.dia, pedido.entrada)
     saida = horario_no_turno(turno, atual.dia, pedido.saida) if pedido.saida else None
     _conferir_horarios(entrada, saida)
     con.execute(
-        "UPDATE app.entradas_turno SET entrada = %s, saida = %s, editada_em = now() WHERE id = %s",
-        (entrada, saida, entrada_id),
+        "UPDATE app.entradas_turno SET entrada = %s, saida = %s, editada_em = now(), motivo_correcao = %s, "
+        "corrigida_por = %s WHERE id = %s",
+        (entrada, saida, pedido.motivo.strip(), pessoa.usuario_id, entrada_id),
     )
     return _entrada(con.execute(ENTRADA_SQL + " WHERE e.id = %s", (entrada_id,)).fetchone())
