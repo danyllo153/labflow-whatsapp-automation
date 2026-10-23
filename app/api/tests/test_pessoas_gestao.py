@@ -153,3 +153,14 @@ def test_o_papel_do_app_so_chama_as_duas_funcoes_liberadas(conexao):
         with pytest.raises(psycopg.errors.InsufficientPrivilege):
             conexao.execute(chamada)
         conexao.execute("ROLLBACK TO SAVEPOINT s")
+
+
+# ---------------------------------------------------------------- "Analista" (nome na tela; o banco ainda grava "Operador")
+def test_analista_e_aceito_e_gravado_como_operador_ate_o_bot_trocar(admin, criar_pessoa, conexao):
+    r = admin.post("/admin/pessoas", json={**NOVA, "cargo": "Analista"})
+    assert r.status_code == 201, r.text
+    novo = r.json()["pessoa"]["id"]
+    assert conexao.execute("SELECT cargo FROM usuarios WHERE id = %s", (novo,)).fetchone()[0] == "Operador"
+    outro = criar_pessoa(usuario="caio.teste", cargo="Consultor")
+    assert admin.put(f"/admin/pessoas/{outro}/cargo", json={"cargo": "Analista"}).status_code == 200
+    assert conexao.execute("SELECT cargo FROM usuarios WHERE id = %s", (outro,)).fetchone()[0] == "Operador"

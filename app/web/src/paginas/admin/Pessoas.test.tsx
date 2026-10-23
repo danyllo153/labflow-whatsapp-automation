@@ -79,7 +79,7 @@ describe("Admin → Pessoas (APP-016)", () => {
     abrir();
     expect(await screen.findByText("Bruno Lima")).toBeInTheDocument();
     expect(within(cartaoDe("Bruno Lima")).getByText("Bloqueado por senhas erradas")).toHaveClass("etiqueta-nao-ok");
-    expect(within(cartaoDe("Carla Dias")).getByText(/Sem usuário no app · Operador/)).toBeInTheDocument();
+    expect(within(cartaoDe("Carla Dias")).getByText(/Sem usuário no app · Analista/)).toBeInTheDocument();
   });
 
   it("Nova pessoa: confere, mostra o resumo, cadastra e mostra a senha provisória uma vez", async () => {
@@ -151,7 +151,7 @@ describe("Admin → Pessoas (APP-016)", () => {
     const cartao = cartaoDe("Bruno Lima");
     await u.selectOptions(within(cartao).getByLabelText("Cargo"), "Admin");
     await u.click(within(cartao).getByRole("button", { name: "Trocar cargo" }));
-    expect(within(cartao).getByRole("dialog")).toHaveTextContent("Trocar o cargo de Bruno Lima de Operador para Admin? Vale também no WhatsApp.");
+    expect(within(cartao).getByRole("dialog")).toHaveTextContent("Trocar o cargo de Bruno Lima de Analista para Admin? Vale também no WhatsApp.");
     await u.click(within(cartao).getByRole("button", { name: "Confirmar" }));
     expect(await within(cartaoDe("Bruno Lima")).findByText(/bruno.lima · Admin/)).toBeInTheDocument();
     expect(api.chamadas.find((c) => c.rota === "PUT /admin/pessoas/7/cargo")?.corpo).toEqual({ cargo: "Admin" });
