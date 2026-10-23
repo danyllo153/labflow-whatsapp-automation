@@ -13,6 +13,7 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 ## [Não lançado]
 
 ### Adicionado
+- **Corrigir e apagar recebimento pelo WhatsApp** (Admin e Analista; migration `037`): `corrigir load 43453 para 43413`, `corrigir item do load ...`, `corrigir fabrica do load ...`, `corrigir lote 4 do load 43670 para 40`, `corrigir data do lote ... para 20/10/2026` e `apagar lote 4 do load 43670`, pelas funções da `036`; a `recebimento_pelo_bot` acha o load e o lote pelo número e devolve o erro da regra como texto (dois loads com o mesmo número: o bot pede o item). Ajuda em `comandos recebimento`.
 - **Corrigir, excluir e recuperar recebimento por funções do banco** (PB4, parte 2; migration `036`): `corrigir_recebimento` (número e data do lote), `corrigir_load` (número do load, item e fábrica, para todos os lotes dele), `excluir_recebimento` (**arquiva** o lote, um Admin recupera) e `recuperar_recebimento`, para o app e, depois, o bot. Decisões do Danyllo (23/10): só Admin e Analista; **sem motivo obrigatório** (como a coleta; o motivo opcional vai para o histórico); lote com C.T/B.L lido, numa composta ou com teste não pode ser excluído; a data só muda sem resultado nem teste; o item 129 (NFC) não troca com outro item.
 
 ## [1.4.0] - 2026-10-23

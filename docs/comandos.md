@@ -384,6 +384,22 @@ recebimento load 77001 item 444 fabrica AQA lotes 1-5,7,9-10 data 01/10/2026
 ```
 Registra os lotes do load (cada lote é uma amostra de carreta; um load recebe lotes aos poucos, em dias diferentes). Lotes repetidos são ignorados, e fábrica diferente da cadastrada para aquele load é recusada. Grava direto, sem "sim". A `data` é opcional (hoje, se omitida).
 
+### Corrigir e apagar recebimento (Admin e Analista)
+```
+corrigir load 43453 para 43413
+corrigir item do load 43453 para 2503
+corrigir fabrica do load 43453 para AQA
+corrigir lote 4 do load 43670 para 40
+corrigir data do lote 4 do load 43670 para 20/10/2026
+apagar lote 4 do load 43670
+```
+Desde 23/10/2026, pelas mesmas funções do banco que o app usa (migration `036`, com a porta de entrada do bot na `037`). Grava direto, sem "sim", como o corrigir coleta, e **tudo fica no histórico**:
+- **Load** (número, item, fábrica): vale para todos os lotes dele. O item 129 (NFC) não troca com outro item; um load + item que já exista é recusado. Fábrica pelo nome ou pela sigla (AQA, CON, COL, UCH, ITA, TMG).
+- **Lote**: o número muda mesmo com resultado (o C.T/B.L, a composta e os testes seguem o lote); a **data** só muda sem C.T/B.L lido e sem teste, porque os prazos saem dela.
+- **Apagar** arquiva o lote (um Admin recupera pelo app) e só vale para lote sem C.T/B.L lido, fora de composta e sem teste.
+- Dois loads com o mesmo número (itens diferentes)? O bot pede o item: `corrigir lote 4 do load 43670 item 2549 para 40`.
+- Consultor e Coletor não corrigem recebimento.
+
 ### Compostas
 ```
 compostas do load 77001 (1-5)(6-10)(11,12,15)
