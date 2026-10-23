@@ -142,7 +142,7 @@ apagar coleta tanque terra 42
 apagar coleta navio O.SKY 123 tanque 1C
 ```
 - Sem a data, vale a coleta **mais recente** daquele tanque (últimos 7 dias). Sinônimos: `alterar`, `trocar`, `cancelar`, `remover`, `excluir`.
-- Só altera a coleta que a pessoa **registrou** (Admin e Operador alteram qualquer uma) e **só enquanto ela não tem análise, drop concluído nem TAB**. Corrigir leva os drops e o arquivo junto; apagar remove a coleta com os drops e o arquivo dela. Se o tanque novo já existe na mesma data, o bot recusa.
+- Só altera a coleta que a pessoa **registrou** (Admin e Operador alteram qualquer uma) e **só enquanto ela não tem análise, drop concluído, TAB nem desvio de drop**. Corrigir leva os drops e o arquivo junto; **apagar arquiva** a coleta com os drops e o arquivo dela (sai das telas e consultas, fica guardada em `registros_excluidos` e um Admin pode recuperar). Desde 22/10/2026 o bot grava pelas mesmas funções do banco que o app usa (`corrigir_coleta` e `excluir_coleta`, migrations 033/034), e toda correção ou exclusão fica no histórico (`historico_alteracoes`). Se o tanque novo já existe na mesma data, o bot recusa.
 - Qualquer outro comando (consultas, análises, recebimento, relatório, cargos, foto) é recusado com a mensagem do cargo, **inclusive por frase livre ou áudio**. Admin e Operador também podem usar os comandos de correção.
 - Exige a migration `029` (o banco passa a aceitar o cargo Coletor).
 ## 7. Registrar análise de tanque
