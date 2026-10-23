@@ -116,7 +116,7 @@ O que o bot grava vira um painel de 11 páginas para o laboratório acompanhar p
 - Dado faltando vira pergunta ("Faltou o item e a fábrica do load"); nada é inventado. Números falados por extenso viram algarismos, preparando o comando por áudio
 
 **Operação e segurança**
-- Só números cadastrados usam o bot; cargos Admin, Operador e Consultor (só consulta), com a permissão conferida no código
+- Só números cadastrados usam o bot; cargos Admin, Analista e Consultor (só consulta), com a permissão conferida no código
 - Alerta de erro no WhatsApp para os Admin, sem expor o texto das mensagens e sem repetir o mesmo erro em 10 minutos
 - Backup diário do banco (14 dias), servidor sem nenhuma porta exposta (acesso só por túnel SSH)
 
@@ -160,7 +160,7 @@ n8n · PostgreSQL · Docker / Docker Compose · Evolution API · Google Gemini A
 
 - **Regex antes de IA.** Comando com formato definido é previsível e testável. A regex é sempre a primeira tentativa; o modelo só entra quando ela não reconhece a mensagem.
 - **A IA sugere, o código executa.** O Gemini nunca grava nada: ele traduz a frase num comando oficial, e esse comando volta ao mesmo webhook e passa pelas regras de sempre (cargo, duplicata, limites). Formato fora do catálogo é recusado. No pior caso, uma interpretação errada vira uma confirmação que o analista recusa.
-- **Permissão validada no código, não no prompt.** Pedir ao modelo "só aceite Admin, Operador ou Consultor" não bastou: ele trocou "gerente" por Admin (Bug 23). Para ação sensível, o modelo propõe e o código decide.
+- **Permissão validada no código, não no prompt.** Pedir ao modelo "só aceite Admin, Analista ou Consultor" não bastou: ele trocou "gerente" por Admin (Bug 23). Para ação sensível, o modelo propõe e o código decide.
 - **Regras também no banco.** Além do código do n8n, o PostgreSQL recusa duplicata (`UNIQUE`), valor fora do permitido (`CHECK`) e vínculo inexistente (chave estrangeira).
 - **Consultas sempre parametrizadas.** As 49 consultas recebem o texto da mensagem como parâmetro (`$1`, `$2`...), nunca concatenado no SQL.
 - **Mudança grande sempre reversível.** Workflow novo entra como cópia, o anterior fica desativado como plano B, e só depois dos testes pelo WhatsApp o novo vira o oficial. Foi assim na migração do Google Sheets para o PostgreSQL (1.0.0).

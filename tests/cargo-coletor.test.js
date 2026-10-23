@@ -119,7 +119,7 @@ test('IA: Coletor só passa coleta e correção; o resto é barrado', () => {
   const p = workflow.nodes.find((n) => n.name === 'IA · Montar pedido').parameters.assignments.assignments[0].value;
   assert.match(p, /35\. corrigir coleta tanque terra/);
   assert.match(p, /36\. apagar coleta tanque terra/);
-  assert.match(p, /Admin, Operador, Consultor e Coletor/);
+  assert.match(p, /Admin, Analista, Consultor e Coletor/);
 });
 
 // ---- fluxo e banco ----

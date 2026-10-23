@@ -69,7 +69,7 @@ def agora(monkeypatch):
 
 @pytest.fixture
 def logado(cliente, criar_pessoa):
-    def _logar(cargo="Operador", usuario=None):
+    def _logar(cargo="Analista", usuario=None):
         usuario = usuario or f"{cargo.lower()}.teste"
         uid = criar_pessoa(usuario=usuario, cargo=cargo)
         cliente.cookies.clear()

@@ -1,4 +1,4 @@
-"""Check-in (decidido em 23/10, APP-022b): Operador e Coletor só usam o resto do app depois de entrar no turno.
+"""Check-in (decidido em 23/10, APP-022b): Analista e Coletor só usam o resto do app depois de entrar no turno.
 
 Aqui a hora é a do banco (sem fixar), porque a trava confere o turno aberto com o now() do banco.
 """
@@ -23,7 +23,7 @@ def _turno_de_agora(cliente):
     return cliente.get("/turno").json()["sugestao"]["turno_id"]
 
 
-@pytest.mark.parametrize("cargo", ["Operador", "Coletor"])
+@pytest.mark.parametrize("cargo", ["Analista", "Coletor"])
 def test_sem_entrar_no_turno_so_abre_a_tela_turno(cliente, logado, cargo):
     logado(cargo)
     estado = cliente.get("/turno")
@@ -51,7 +51,7 @@ def test_admin_e_consultor_nao_precisam_de_checkin(cliente, logado, cargo):
 
 def test_turno_esquecido_aberto_nao_libera(cliente, logado, conexao):
     # entrada aberta de um turno que já terminou (esqueceu de sair ontem) não conta como check-in
-    logado("Operador")
+    logado("Analista")
     conexao.execute(
         "INSERT INTO app.entradas_turno (usuario_id, turno_id, dia, entrada, entrada_registrada) "
         "SELECT usuario_id, 1, CURRENT_DATE - 2, now() - interval '2 days', now() - interval '2 days' "

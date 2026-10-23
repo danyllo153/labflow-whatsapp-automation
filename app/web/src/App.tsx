@@ -18,7 +18,7 @@ import Turno, { TURNO_MUDOU, type EstadoDoTurno } from "./paginas/Turno";
 import { useSessao } from "./sessao";
 
 /**
- * Check-in (APP-022b, decidido em 23/10): Operador e Coletor só usam o resto do app depois de entrar no turno.
+ * Check-in (APP-022b, decidido em 23/10): Analista e Coletor só usam o resto do app depois de entrar no turno.
  * A API confere de novo em cada chamada; aqui só escolhe o que mostrar. Se GET /turno falhar, não trava a tela.
  */
 function usePrecisaDeCheckin(ativo: boolean): boolean | null {

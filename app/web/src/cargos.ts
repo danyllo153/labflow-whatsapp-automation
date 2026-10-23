@@ -1,6 +1,6 @@
 /**
- * Nome do cargo nas telas (decidido em 23/10): o "Operador" do banco e do bot aparece como "Analista".
- * O banco continua com "Operador" até a sessão do bot trocar o nome (pedido PB7 no rumo); a API aceita os dois.
+ * Nome do cargo nas telas (decidido em 23/10): "Operador" passou a se chamar "Analista" (no banco pela migration 035,
+ * pedido PB7). Um "Operador" que ainda aparecer (registro antigo, cache) é mostrado como "Analista".
  */
 const NA_TELA: Record<string, string> = { Operador: "Analista" };
 

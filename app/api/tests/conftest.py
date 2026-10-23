@@ -62,7 +62,7 @@ def criar_pessoa(conexao):
 
     contador = iter(range(10, 100))
 
-    def _criar(usuario="ana.teste", senha="Senha-de-teste-1", cargo="Operador", trocar_senha=False, ativo=True):
+    def _criar(usuario="ana.teste", senha="Senha-de-teste-1", cargo="Analista", trocar_senha=False, ativo=True):
         telefone = f"55000000008{next(contador)}"
         uid = conexao.execute(
             "INSERT INTO usuarios (telefone, nome, cargo) VALUES (%s, %s, %s) RETURNING id",

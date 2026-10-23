@@ -14,8 +14,8 @@ let LISTA: Pessoa[] = [];
 function lista(): Pessoa[] {
   return [
     { id: 4, nome: "Danyllo G.", cargo: "Admin", usuario: "danyllo", situacao: "Ativo" },
-    { id: 7, nome: "Bruno Lima", cargo: "Operador", usuario: "bruno.lima", situacao: "Bloqueado por senhas erradas" },
-    { id: 9, nome: "Carla Dias", cargo: "Operador", usuario: null, situacao: "Sem usuário no app" },
+    { id: 7, nome: "Bruno Lima", cargo: "Analista", usuario: "bruno.lima", situacao: "Bloqueado por senhas erradas" },
+    { id: 9, nome: "Carla Dias", cargo: "Analista", usuario: null, situacao: "Sem usuário no app" },
   ];
 }
 
