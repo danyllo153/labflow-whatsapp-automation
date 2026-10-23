@@ -499,6 +499,100 @@ a.cartao-pagina:hover {
   }
 }
 
+/* ---------- Gráfico G2 (Recebimento) ---------- */
+.paineis-g2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+}
+
+.painel-g2 {
+  margin: 0;
+}
+
+.painel-g2 figcaption {
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+}
+
+.svg-g2 {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.g2-grade {
+  stroke: #ece4d2;
+  stroke-width: 1;
+}
+
+.g2-eixo {
+  font-size: 10px;
+  fill: var(--texto-secundario);
+}
+
+.g2-limite {
+  stroke: var(--texto-secundario);
+  stroke-width: 1.5;
+  stroke-dasharray: 5 4;
+}
+
+.g2-limite-texto {
+  font-size: 10px;
+  font-weight: 600;
+  fill: var(--texto);
+}
+
+.g2-ok {
+  fill: var(--acao);
+  stroke: #fff;
+  stroke-width: 1.5;
+}
+
+.g2-ok.g2-menor {
+  fill: #fff;
+  stroke: var(--acao);
+  stroke-width: 2;
+}
+
+.g2-nao-ok {
+  fill: var(--nao-ok);
+  stroke: #fff;
+  stroke-width: 1.5;
+}
+
+.g2-alvo {
+  fill: transparent;
+  cursor: pointer;
+}
+
+.g2-ponto:hover .g2-ok,
+.g2-ponto:hover .g2-nao-ok {
+  stroke: var(--texto);
+}
+
+.g2-detalhe {
+  min-height: 1.4em;
+  margin: 2px 0 0;
+  font-size: 0.85rem;
+}
+
+.g2-chave {
+  margin: 8px 0 0;
+}
+
+.g2-chave-ok {
+  color: var(--acao);
+}
+
+.g2-chave-nao-ok {
+  color: var(--nao-ok);
+}
+
+.sem-pontos {
+  margin: 12px 0;
+}
+
 /* ---------- Visão geral ---------- */
 .periodo {
   display: flex;
