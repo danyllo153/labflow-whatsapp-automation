@@ -28,6 +28,9 @@ export interface DefinicaoDePagina {
   impressao: "em pé" | "deitado"; // 07: em pé para listas estreitas, deitado para tabelas largas
   semColetor?: boolean; // 07: o Coletor não vê esta página
   grafico?: "g2"; // 07 §6: gráfico da página (G2 no Recebimento)
+  grupo: "Geral" | "NFC" | "FCOJ"; // como a lista de páginas agrupa (pedido de 23/10)
+  oculta?: boolean; // não aparece na lista, mas o endereço continua abrindo (links antigos)
+  linkDaLinha?: (linha: Record<string, unknown>) => string; // tocar na linha abre a página do item
 }
 
 export const FABRICAS = ["AQA", "CON", "COL", "UCH", "ITA", "TMG"]; // fábricas travadas (decisão de 14/10)
@@ -35,6 +38,7 @@ export const FABRICAS = ["AQA", "CON", "COL", "UCH", "ITA", "TMG"]; // fábricas
 export const PAGINAS: DefinicaoDePagina[] = [
   {
     caminho: "coletas",
+    grupo: "Geral",
     titulo: "Coletas",
     descricao: "Coletas de tanques de terra e de navio, com quem coletou e quem digitou.",
     api: "/paginas/coletas",
@@ -59,8 +63,9 @@ export const PAGINAS: DefinicaoDePagina[] = [
   },
   {
     caminho: "recebimento",
-    titulo: "Recebimento",
-    descricao: "C.T e B.L por load e lote, com a situação Ok / Não ok.",
+    grupo: "FCOJ",
+    titulo: "Recebimento FCOJ",
+    descricao: "Concentrado recebido: C.T e B.L por load e lote, com a situação Ok / Não ok e o gráfico.",
     api: "/paginas/recebimento",
     impressao: "deitado",
     semColetor: true,
@@ -90,6 +95,8 @@ export const PAGINAS: DefinicaoDePagina[] = [
   },
   {
     caminho: "tanques",
+    grupo: "NFC",
+    oculta: true, // substituída por Tanques terra e pela página de cada navio (23/10)
     titulo: "Tanques",
     descricao: "Leituras de C.T, B.L e Psicrotróficos por tanque (normal e stress), com o resultado Ok / Não ok.",
     api: "/paginas/tanques",
@@ -125,6 +132,7 @@ export const PAGINAS: DefinicaoDePagina[] = [
   },
   {
     caminho: "drops",
+    grupo: "NFC",
     titulo: "Drops",
     descricao: "D5, D10 e D15 previstos e concluídos, com quem concluiu e o desvio, se houve.",
     api: "/paginas/drops",
@@ -154,6 +162,7 @@ export const PAGINAS: DefinicaoDePagina[] = [
   },
   {
     caminho: "desvios",
+    grupo: "NFC",
     titulo: "Desvios",
     descricao: "Desvios de drop e de tanque, e as repetições; os abertos primeiro.",
     api: "/paginas/desvios",
@@ -188,8 +197,9 @@ export const PAGINAS: DefinicaoDePagina[] = [
   },
   {
     caminho: "embarque",
-    titulo: "Embarque",
-    descricao: "C.T e B.L das amostras de embarque por navio, linha e fase.",
+    grupo: "FCOJ",
+    titulo: "Embarque FCOJ",
+    descricao: "Concentrado embarcado: C.T e B.L das amostras por navio, linha e fase.",
     api: "/paginas/embarque",
     impressao: "deitado",
     semColetor: true,
@@ -219,6 +229,7 @@ export const PAGINAS: DefinicaoDePagina[] = [
   },
   {
     caminho: "testes",
+    grupo: "FCOJ",
     titulo: "TAB e Coliformes",
     descricao: "TAB, Coliformes e Howard por composta, lote e tanque: status, resultado e próxima etapa.",
     api: "/paginas/testes",
@@ -251,6 +262,7 @@ export const PAGINAS: DefinicaoDePagina[] = [
   },
   {
     caminho: "recebimento-nfc",
+    grupo: "NFC",
     titulo: "Recebimento NFC",
     descricao: "Lotes de NFC recebidos: fresh e pasteurizado, diluição e C.T/B.L já multiplicados.",
     api: "/paginas/recebimento-nfc",
@@ -281,31 +293,62 @@ export const PAGINAS: DefinicaoDePagina[] = [
     ],
   },
   {
-    caminho: "navios",
-    titulo: "Navios",
-    descricao: "Por navio e viagem: tanques coletados, leituras feitas e pendentes, Não ok e desvios.",
-    api: "/paginas/navios",
+    caminho: "tanques-terra",
+    grupo: "NFC",
+    titulo: "Tanques terra",
+    descricao: "Um tanque por coleta, com o que já foi lido, o que falta e o status. Toque no tanque para ver tudo dele.",
+    api: "/paginas/tanques-terra",
     impressao: "deitado",
     semColetor: true,
+    linkDaLinha: (l) => `/paginas/tanques-terra/${l.coleta_id}`,
     colunas: [
-      { chave: "navio", rotulo: "Navio e viagem", principal: true },
-      { chave: "primeira_coleta", rotulo: "Primeira coleta", formato: "data" },
-      { chave: "ultima_coleta", rotulo: "Última coleta", formato: "data" },
-      { chave: "tanques", rotulo: "Tanques" },
+      { chave: "tanque", rotulo: "Tanque", principal: true },
+      { chave: "data_coleta", rotulo: "Data da coleta", formato: "data" },
+      { chave: "status", rotulo: "Status", formato: "situacao" },
       { chave: "leituras", rotulo: "Leituras" },
       { chave: "lidas", rotulo: "Lidas" },
       { chave: "pendentes", rotulo: "Pendentes" },
       { chave: "atrasadas", rotulo: "Atrasadas" },
       { chave: "nao_ok", rotulo: "Não ok" },
+      { chave: "drops_pendentes", rotulo: "Drops pendentes" },
       { chave: "desvios_abertos", rotulo: "Desvios abertos" },
+      { chave: "testes_abertos", rotulo: "TAB aberto" },
     ],
     filtros: [
-      { chave: "data_de", rotulo: "Última coleta de", tipo: "data" },
-      { chave: "data_ate", rotulo: "Última coleta até", tipo: "data" },
+      { chave: "data_de", rotulo: "Coleta de", tipo: "data" },
+      { chave: "data_ate", rotulo: "Coleta até", tipo: "data" },
+      { chave: "tanque", rotulo: "Tanque", tipo: "texto" },
+      { chave: "status", rotulo: "Status", tipo: "opcoes", opcoes: ["Em andamento", "Atrasado", "Concluído"] },
+    ],
+  },
+  {
+    caminho: "navios",
+    grupo: "NFC",
+    titulo: "Navios",
+    descricao: "Todos os navios, de NFC e de concentrado (FCOJ), com o status. Toque no navio para ver os tanques e o concentrado dele.",
+    api: "/paginas/navios",
+    impressao: "deitado",
+    semColetor: true,
+    linkDaLinha: (l) => `/paginas/navios/${encodeURIComponent(String(l.navio))}`,
+    colunas: [
+      { chave: "navio", rotulo: "Navio e viagem", principal: true },
+      { chave: "produto", rotulo: "Produto" },
+      { chave: "status", rotulo: "Status", formato: "situacao" },
+      { chave: "tanques_nfc", rotulo: "Tanques NFC" },
+      { chave: "pendentes_nfc", rotulo: "Pendentes NFC" },
+      { chave: "embarques_fcoj", rotulo: "Embarques FCOJ" },
+      { chave: "pendentes_fcoj", rotulo: "Pendentes FCOJ" },
+      { chave: "nao_ok", rotulo: "Não ok" },
+      { chave: "desvios_abertos", rotulo: "Desvios abertos" },
+      { chave: "testes_abertos", rotulo: "TAB/Coliformes/Howard abertos" },
+      { chave: "ultima_data", rotulo: "Última data", formato: "data" },
+    ],
+    filtros: [
       { chave: "navio", rotulo: "Navio", tipo: "texto", dica: "parte do nome" },
-      { chave: "com_pendencia", rotulo: "Só com pendência", tipo: "opcoes", opcoes: ["true"], rotulos: { true: "Sim" } },
+      { chave: "produto", rotulo: "Produto", tipo: "opcoes", opcoes: ["NFC", "FCOJ"] },
+      { chave: "status", rotulo: "Status", tipo: "opcoes", opcoes: ["Em andamento", "Atrasado", "Concluído"] },
+      { chave: "data_de", rotulo: "Última data de", tipo: "data" },
+      { chave: "data_ate", rotulo: "Última data até", tipo: "data" },
     ],
   },
 ];
-/** Páginas do Power BI que ainda não chegaram ao app. */
-export const PAGINAS_EM_BREVE: string[] = [];

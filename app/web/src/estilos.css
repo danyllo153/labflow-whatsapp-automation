@@ -499,6 +499,22 @@ a.cartao-pagina:hover {
   }
 }
 
+/* ---------- Lista de páginas agrupada (Geral, NFC, FCOJ) ---------- */
+.grupo-paginas {
+  margin-bottom: 16px;
+}
+
+.grupo-paginas > h2 {
+  font-size: 1rem;
+  color: var(--texto-secundario);
+  margin: 4px 0 8px;
+}
+
+.cartao-pagina h3 {
+  font-size: 1.05rem;
+  margin: 0 0 6px;
+}
+
 /* ---------- Gráfico G2 (Recebimento) ---------- */
 .paineis-g2 {
   display: grid;

@@ -61,18 +61,20 @@ const VISAO = {
     { bloco: "FCOJ Recebimento", vence_hoje: 2, atrasados: 23 },
     { bloco: "Desvios", vence_hoje: 0, atrasados: 0 },
   ],
-  alertas: [{ pagina: "tanques", referencia: "Tanque 92", analise: "B.L Normal · Leitura final", resultado: "<1, 3, 12", data: "2026-10-20" }],
+  alertas: [{ pagina: "tanques", caminho: "/paginas/tanques-terra/5", referencia: "Tanque 92", analise: "B.L Normal · Leitura final", resultado: "<1, 3, 12", data: "2026-10-20" }],
 };
 
 describe("todas as páginas do Power BI no app (APP-019)", () => {
-  it("a lista tem a Visão geral e as nove páginas, nenhuma Em breve", async () => {
+  it("a lista agrupa em Geral, NFC e FCOJ, sem a página antiga de Tanques", async () => {
     abrir("/paginas");
     const principal = (await screen.findByRole("heading", { level: 1, name: "Páginas" })).closest("section") as HTMLElement;
-    const links = within(principal).getAllByRole("link");
-    expect(links.map((l) => l.getAttribute("href"))).toEqual([
-      "/paginas/visao-geral",
-      ...PAGINAS.map((p) => `/paginas/${p.caminho}`),
-    ]);
+    expect(within(principal).getAllByRole("heading", { level: 2 }).map((h) => h.textContent)).toEqual(["Geral", "NFC", "FCOJ (concentrado)"]);
+    const grupo = (nome: string) => within(within(principal).getByRole("heading", { level: 2, name: nome }).parentElement as HTMLElement);
+    const hrefs = (nome: string) => grupo(nome).getAllByRole("link").map((l) => l.getAttribute("href"));
+    expect(hrefs("Geral")).toEqual(["/paginas/visao-geral", "/paginas/coletas"]);
+    expect(hrefs("NFC")).toEqual(expect.arrayContaining(["/paginas/tanques-terra", "/paginas/navios", "/paginas/drops", "/paginas/desvios", "/paginas/recebimento-nfc"]));
+    expect(hrefs("FCOJ (concentrado)")).toEqual(["/paginas/recebimento", "/paginas/embarque", "/paginas/testes"]);
+    expect(within(principal).queryByRole("link", { name: /^Tanques Leituras/ })).toBeNull();
     expect(within(principal).queryByText("Em breve")).toBeNull();
   });
 
@@ -91,16 +93,16 @@ describe("todas as páginas do Power BI no app (APP-019)", () => {
     expect(screen.getByRole("link", { name: "Exportar Excel" })).toHaveAttribute("href", `${def.api}/excel?`);
   });
 
-  it("Navios: 'Só com pendência' manda true e a etiqueta mostra Sim", async () => {
+  it("Navios: filtrar só FCOJ e tocar no navio abre a página dele", async () => {
     const urls = abrir("/paginas/navios");
     const u = userEvent.setup();
     await screen.findByText(/^1 registro/);
     await u.click(screen.getByRole("button", { name: "Filtros" }));
-    await u.selectOptions(screen.getByLabelText("Só com pendência"), "true");
+    await u.selectOptions(screen.getByLabelText("Produto"), "FCOJ");
     await u.click(screen.getByRole("button", { name: "Filtrar" }));
-    expect(endereco).toBe("/paginas/navios?com_pendencia=true");
-    expect(urls[urls.length - 1]).toContain("com_pendencia=true");
-    expect(within(screen.getByRole("list", { name: "Filtros usados" })).getByText("Sim")).toBeInTheDocument();
+    expect(endereco).toBe("/paginas/navios?produto=FCOJ");
+    expect(urls[urls.length - 1]).toContain("produto=FCOJ");
+    expect(screen.getByRole("link", { name: "Navio e viagem X" })).toHaveAttribute("href", "/paginas/navios/Navio%20e%20viagem%20X");
   });
 
   it("resultado Positivo e Confirmado aparecem como alerta; Negativo como ok", async () => {
@@ -128,7 +130,7 @@ describe("Visão geral (APP-019)", () => {
     expect(screen.getByText("12").closest(".cartao-numero")).toHaveClass("alerta");
     expect(screen.getByText("0", { selector: ".numero" }).closest(".cartao-numero")).not.toHaveClass("alerta");
     expect(screen.getByRole("row", { name: "FCOJ Recebimento 2 23" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Tanque 92" })).toHaveAttribute("href", "/paginas/tanques");
+    expect(screen.getByRole("link", { name: "Tanque 92" })).toHaveAttribute("href", "/paginas/tanques-terra/5");
   });
 
   it("escolher o período põe no endereço e manda para a API", async () => {
