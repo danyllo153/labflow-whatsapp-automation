@@ -290,13 +290,7 @@ function Linha({ item, podeMexer, aoMudar }: { item: ItemEsterilizacao; podeMexe
   );
 }
 
-const CORES: Record<string, string> = {
-  Ponteira: "#2f7bc4",
-  Meio: "#f6b04a",
-  Frasco: "#5c5c5c",
-  Descarte: "#8e6bbf",
-  Outro: "#1c1c1c",
-};
+const TIPOS_G4 = ["Ponteira", "Meio", "Frasco", "Descarte", "Outro"]; // a cor de cada um vem do CSS (.g4-0 a .g4-4), claro e escuro
 const L = 320;
 const A = 170;
 const M = { esq: 28, dir: 8, cima: 14, baixo: 26 };
@@ -336,7 +330,14 @@ function GraficoG4({ versao }: { versao: number }) {
         <p>Nenhuma esterilização nesta semana.</p>
       ) : (
         <svg viewBox={`0 0 ${L} ${A}`} role="img" aria-hidden="true" className="svg-g4">
-          <line x1={M.esq} x2={L - M.dir} y1={y(0)} y2={y(0)} className="g2-grade" />
+          {[0, Math.round(maximo / 2), maximo].map((m) => (
+            <g key={m}>
+              <line x1={M.esq} x2={L - M.dir} y1={y(m)} y2={y(m)} className="g2-grade" />
+              <text x={M.esq - 5} y={y(m) + 3} textAnchor="end" className="g2-eixo">
+                {m}
+              </text>
+            </g>
+          ))}
           {turnos.map((t, ti) => (
             <g key={t}>
               {tipos.map((tipo, i) => {
@@ -344,7 +345,7 @@ function GraficoG4({ versao }: { versao: number }) {
                 const x = M.esq + ti * largura + 6 + i * barra;
                 return (
                   <g key={tipo}>
-                    <rect x={x} y={y(total)} width={barra - 2} height={y(0) - y(total)} fill={CORES[tipo]} />
+                    <rect x={x} y={y(total)} width={barra - 2} height={y(0) - y(total)} rx={2} className={`g4-barra g4-${Math.max(0, TIPOS_G4.indexOf(tipo))}`} />
                     {total > 0 && (
                       <text x={x + (barra - 2) / 2} y={y(total) - 3} textAnchor="middle" className="g2-eixo">
                         {total}
@@ -363,7 +364,7 @@ function GraficoG4({ versao }: { versao: number }) {
       <ul className="legenda-g4">
         {tipos.map((t) => (
           <li key={t}>
-            <span className="amostra" style={{ background: CORES[t] }} aria-hidden="true" /> {t}
+            <span className={`amostra g4-${Math.max(0, TIPOS_G4.indexOf(t))}`} aria-hidden="true" /> {t}
           </li>
         ))}
       </ul>

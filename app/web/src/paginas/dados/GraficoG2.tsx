@@ -83,6 +83,7 @@ function Painel(props: {
           <text x={L - M.dir} y={A - 6} className="g2-eixo" textAnchor="end">
             {diaMes(props.ultimaData)}
           </text>
+          <rect x={M.esq} y={M.cima} width={L - M.esq - M.dir} height={Math.max(0, y(limite) - M.cima)} className="g2-zona" />
           <line x1={M.esq} x2={L - M.dir} y1={y(limite)} y2={y(limite)} className="g2-limite" />
           <text x={L - M.dir} y={y(limite) - 4} className="g2-limite-texto" textAnchor="end">
             Limite {limite}
