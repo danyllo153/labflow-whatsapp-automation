@@ -10,7 +10,7 @@ Objetivo: em poucas linhas, o Danyllo sabe **o que foi feito por último** (por 
 **Esta skill só lê.** Não troca de branch, não faz pull, stash nem commit na pasta principal (`C:\Dev\labflow-whatsapp-automation` pode estar em uso por outra sessão), não mescla nem publica nada.
 
 ## 1. Saudação
-Pela hora de `America/Sao_Paulo`: até 11:59 "Bom dia", até 17:59 "Boa tarde", depois "Boa noite" (se ele cumprimentou de outro jeito, responda no mesmo tom).
+Pela hora de Brasília (`TZ=UTC+3 date "+%H:%M %d/%m"`; no Git Bash do Windows `TZ=America/Sao_Paulo` é ignorado e mostra a hora UTC, 3 h adiantada): até 11:59 "Bom dia", até 17:59 "Boa tarde", depois "Boa noite" (se ele cumprimentou de outro jeito, responda no mesmo tom).
 
 ## 2. Levantar (só leitura)
 1. `git fetch -q --prune` e ler da `main` remota, sem mexer na pasta: `MSYS_NO_PATHCONV=1 git show origin/main:docs/handoff.md` (no Git Bash do Windows o `MSYS_NO_PATHCONV=1` evita que o caminho seja estragado). A **seção 0** é a fonte principal: os blocos do topo são os mais recentes; o bloco do app começa com "sessão do APP".
