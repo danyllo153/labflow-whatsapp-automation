@@ -16,5 +16,6 @@ export const MENU: ItemDoMenu[] = [
   { caminho: "/estufas", rotulo: "Estufas", pronto: true, soNoMenuLateral: true },
   { caminho: "/assistente", rotulo: "Assistente", pronto: false, tarefa: "Fase D" },
   { caminho: "/admin/turnos", rotulo: "Turnos e estufas", pronto: true, pode: "configurar_turnos", soNoMenuLateral: true },
+  { caminho: "/admin/coletas-excluidas", rotulo: "Coletas excluídas", pronto: true, pode: "configurar_turnos", soNoMenuLateral: true },
   { caminho: "/admin/pessoas", rotulo: "Pessoas", pronto: true, pode: "gerenciar_pessoas", soNoMenuLateral: true },
 ];

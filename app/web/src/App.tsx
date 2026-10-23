@@ -5,6 +5,7 @@ import { lerJson } from "./api";
 
 import Moldura from "./componentes/Moldura";
 import { MENU } from "./menu";
+import ColetasExcluidas from "./paginas/admin/ColetasExcluidas";
 import Pessoas from "./paginas/admin/Pessoas";
 import TurnosEstufas from "./paginas/admin/TurnosEstufas";
 import Conta from "./paginas/Conta";
@@ -14,6 +15,7 @@ import Esterilizacao from "./paginas/Esterilizacao";
 import Estufas from "./paginas/Estufas";
 import Inicio from "./paginas/Inicio";
 import NaoEncontrada from "./paginas/NaoEncontrada";
+import DetalheColeta from "./paginas/dados/DetalheColeta";
 import { DetalheNavio, DetalheTanque } from "./paginas/dados/Detalhes";
 import { ListaDePaginas, PaginaEscolhida } from "./paginas/Paginas";
 import TrocarSenha from "./paginas/TrocarSenha";
@@ -75,6 +77,7 @@ export default function App() {
         <Route path="/estufas" element={<Estufas />} />
         <Route path="/turno/relatorio" element={<RelatorioDoTurno />} />
         <Route path="/paginas" element={<ListaDePaginas />} />
+        <Route path="/paginas/coletas/:id" element={<DetalheColeta />} />
         <Route path="/paginas/tanques-terra/:id" element={<DetalheTanque />} />
         <Route path="/paginas/navios/:navio" element={<DetalheNavio />} />
         <Route path="/paginas/:pagina" element={<PaginaEscolhida />} />
@@ -85,6 +88,7 @@ export default function App() {
         <Route path="/conta/senha" element={<TrocarSenha />} />
         <Route path="/admin/pessoas" element={<Pessoas />} />
         <Route path="/admin/turnos" element={<TurnosEstufas />} />
+        <Route path="/admin/coletas-excluidas" element={<ColetasExcluidas />} />
         <Route path="*" element={<NaoEncontrada />} />
       </Route>
     </Routes>
