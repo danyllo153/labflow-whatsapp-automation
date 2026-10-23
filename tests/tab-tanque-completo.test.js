@@ -69,8 +69,10 @@ test('Admin: tanque sem coleta vira pergunta; o "sim" roda o comando completo co
   assert.equal(m.tipoPendencia, 'IA');
   const hoje = item.dataFeito;
   assert.deepEqual(JSON.parse(m.payload).comandos, [`Tab feito dos tanques terra 44,45,46 coleta 16/10/2026 data ${hoje} completo`]);
-  assert.match(m.textoResposta, /Não achei a coleta do\(s\) tanque\(s\) 44, 45 em 16\/10\/2026/);
-  assert.match(m.textoResposta, /marco <1,<1,<1 nas leituras e como feitos os drops que já venceram/);
+  // pergunta objetiva (21/10/2026): sem a lista de regras
+  assert.equal(m.textoResposta, '❓ Tanques 44, 45 (coleta 16/10/2026): não há coleta no sistema.\nRegistrar as coletas e o TAB dos tanques 44, 45, 46? Responda *sim* ou *não*.');
+  const um = montar({ ...SEM, sem_coleta: '44' }, interpretar('tq 44 16/10/2026', { cargo: 'Admin' }));
+  assert.equal(um.textoResposta, '❓ Tanque 44 (coleta 16/10/2026): não há coleta no sistema.\nRegistrar a coleta e o TAB? Responda *sim* ou *não*.');
   // o comando que o "sim" reenvia é aceito pelo bot e vale o completo
   const re = interpretar(JSON.parse(m.payload).comandos[0], { cargo: 'Admin' });
   assert.equal(re.tipo, 'tab_feito_nfc');
@@ -239,7 +241,7 @@ test('resposta com vários grupos: uma mensagem só, cada tanque com a data da c
   const sem = interpretar('Tab feito dos tanques terra 39 coleta 17/10/2026 ; 48 coleta 10/10/2026 data 19/10/2026', { cargo: 'Admin' });
   const p = montar({ sem_coleta: '48 (coleta 10/10)', ja_tinham: null, criados: null, espalhar_em: '24/10/2026' }, sem);
   assert.deepEqual(JSON.parse(p.payload).comandos, ['Tab feito dos tanques terra 39 coleta 17/10/2026 ; 48 coleta 10/10/2026 data 19/10/2026 completo']);
-  assert.match(p.textoResposta, /Não achei a coleta do\(s\) tanque\(s\) 48 \(coleta 10\/10\)\./);
+  assert.equal(p.textoResposta, '❓ Tanque 48 (coleta 10/10): não há coleta no sistema.\nRegistrar a coleta e o TAB dos tanques 39, 48? Responda *sim* ou *não*.');
 });
 
 // ---- 21/10: a foto de TAB que o Danyllo mandou (2 loads novos + 2 tanques sem coleta): resposta objetiva ----
