@@ -9,7 +9,16 @@ Projeto pessoal que une biomedicina e automação: o problema vem da rotina real
 
 ## Onde o projeto está
 
-**Versão publicada: [v1.3.0](docs/CHANGELOG.md)**, em **piloto de 1 mês no laboratório** desde 13/10/2026 (5 operadores e 1 admin). O que entrou nela (a v1.2.0, abaixo, segue valendo):
+**Versão publicada: [v1.4.0](docs/CHANGELOG.md)** (23/10/2026), em **piloto de 1 mês no laboratório** desde 13/10/2026 (analistas e 1 admin). O que entrou nela (a v1.3.0 e a v1.2.0, abaixo, seguem valendo):
+
+- **Fotos que mostram só o que é novo:** a folha de **Coliformes** (cada grupo de linhas com a sua data, "—" negativo, "+" positivo e a pergunta de abrir a composta lote a lote), o **recebimento NFC** (lote novo registra e grava os resultados no mesmo sim) e o **TAB com tanques** (o que já tem TAB fica de fora; tudo no sistema = "nada a gravar"), sempre com uma resposta só.
+- **"Todos" de uma vez:** `bl72 load 44502 todos deu <10 exceto lote 3 deu 20` e `bl todos os tanques navio O.SKY 123 deu <1 exceto tanque 1C normal <1,1,0`; leitura antecipada nos tanques.
+- **TAB de tanque "completo" (Admin):** `tq 44 16/10` registra a coleta, as análises, as placas <1 já vencidas e o TAB, com uma pergunta curta antes do sim.
+- **Regras no banco, as mesmas do app:** cadastrar pessoa, trocar cargo e corrigir/excluir coleta por funções do banco; **excluir arquiva** (um Admin recupera) e tudo vai para o histórico; a hora de cada leitura é gravada por gatilho. O cargo **Operador agora se chama Analista**.
+- **A mesma mensagem só roda uma vez:** a reentrega do WhatsApp não faz o bot responder de novo.
+- **Excel só de leitura com a cara do Power BI** (botões entre as abas, cartões, gráficos no tema claro) e **o app do laboratório** (web e celular, pelo Tailscale): login, todas as páginas do Power BI em leitura, Admin → Pessoas, entrar e sair do turno com check-in.
+
+Na v1.3.0:
 
 - **Leitura de laudo por foto:** a foto do laudo de recebimento, TAB, Coliformes, NFC (placas), embarque e Recebimento NFC vira uma lista de comandos oficiais com **um só sim**; a IA de visão só lê, o código valida, valor riscado não vale e nunca abre desvio sozinho.
 - **Comando por áudio** e **IA resiliente:** o Gemini transcreve e interpreta, com reserva automática no Groq, tempo máximo por chamada e limite diário por pessoa; a IA sempre pede um sim antes de gravar.
@@ -28,12 +37,12 @@ Projeto pessoal que une biomedicina e automação: o problema vem da rotina real
 
 | Em números | |
 |---|---|
-| Nodes no workflow do n8n | 244, em blocos por assunto |
-| Tipos de comando | 49 |
-| Consultas ao banco | 53, todas parametrizadas |
-| Banco | 23 migrations versionadas, 26 tabelas, 17 views (relatório e painel) |
+| Nodes no workflow do n8n | 251, em blocos por assunto |
+| Tipos de comando | 51 |
+| Consultas ao banco | 57, todas parametrizadas |
+| Banco | 33 migrations versionadas (29 do bot e 4 do app), 29 tabelas, 18 views (relatório e painel) |
 | Painel | Power BI com 11 páginas, gerado por código |
-| Testes automáticos | 474 (`npm test`), rodando a cada alteração numa GitHub Action |
+| Testes automáticos | 936: 578 do bot (`npm test`), 265 da API e 93 das telas do app, rodando a cada alteração em GitHub Actions |
 | Bugs reais documentados | 33, com causa raiz e lição ([troubleshooting](docs/troubleshooting.md)) |
 
 ## O problema
