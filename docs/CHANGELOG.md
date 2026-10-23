@@ -12,6 +12,10 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 
 ## [Não lançado]
 
+## [1.4.0] - 2026-10-23
+
+Segunda versão do piloto no laboratório. Em destaque: **fotos que mostram só o que é novo** (folha de Coliformes, recebimento NFC e TAB com tanques), **"todos" de uma vez** e **TAB de tanque "completo"** para o Admin, **resposta única** (a reentrega da Evolution não repete a resposta), **funções do banco** para cadastrar pessoa, trocar cargo e corrigir/excluir coleta (excluir **arquiva**, com histórico), a hora de cada leitura, o cargo **Operador renomeado para Analista**, o **Excel só de leitura com a cara do Power BI** e o **app (web e celular)**: login, todas as páginas do Power BI em leitura, Admin → Pessoas, entrar e sair do turno com check-in. Banco até a migration `035` do bot e a `053` do app; workflow de 251 nós; 578 testes do bot, 265 da API e 93 das telas.
+
 ### Adicionado
 - **O cargo "Operador" passa a se chamar "Analista"** (pedido PB7, decidido em 23/10/2026; migration `035`): os dados (`UPDATE` de quem era Operador), a trava `usuarios_cargo_check`, as funções `cadastrar_usuario`, `trocar_cargo` e `coleta_exigir_permissao`, o bot (comando `adicionar cargo Analista ...`, ajuda, IA e mensagens) e o app (permissões e a API passam a gravar "Analista"). "Operador" continua aceito por um tempo como nome antigo: o gatilho `usuarios_cargo_apelido` grava "Analista". Desfazer: `035_cargo_analista_desfazer.sql`.
 - **Excel só de leitura sobre o banco** (`scripts/gerar-excel-labflow.ps1` + `excel-labflow.config.json`): painel com cartões e uma aba por análise, com gráficos de tendência e a tabela com o registro mais recente primeiro, atualizando com Dados > Atualizar Tudo. A senha do `labflow_leitura` fica só no Windows. Detalhe em `docs/scripts.md`.
