@@ -15,6 +15,7 @@ export const ESTADO_TURNO = {
   ],
   sugestao: { turno_id: 2, dia: "2026-10-22" },
   pode_entrar: true,
+  checkin_obrigatorio: false, // nos testes das outras telas a trava fica desligada; Turno.test.tsx liga
   no_turno: null,
   recentes: [],
   feito_no_turno: { turno: "Tarde", dia: "2026-10-22", total: 7, coletas: 3, leituras: 4, drops: 0, atividades: 0 },

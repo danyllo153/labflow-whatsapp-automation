@@ -65,6 +65,7 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 - **Entrar e sair do turno:** tela **Turno** (na barra de baixo): escolher Manhã, Tarde ou Madrugada (o app sugere pelo horário), ajustar a própria entrada, **Sair do turno** com confirmação e a hora (dá para mudar) e corrigir o horário dos últimos turnos; uma entrada aberta por pessoa; a Madrugada conta no dia em que começa; quem esqueceu de sair sai sozinho no fim do turno; Consultor não entra. No Início, o cartão **Feito no turno** (coletas, leituras de NFC, drops concluídos e atividades do turno no horário do turno) e o aviso para entrar no turno (APP-022).
 - **Correção:** entrar num turno escolhe sempre o turno em andamento ou o próximo, nunca um que já terminou (às 02:00, a Tarde com entrada 15:00 caía na Tarde da véspera e a entrada fechava na hora, sem o app avisar) (APP-022).
 - **Entrar no turno só na hora:** dá para entrar no turno em andamento ou no próximo, se ele começa em até 2 horas (quem chega mais cedo); antes disso o app avisa ("A Tarde começa às 16:00. Entre quando chegar ou escolha a Madrugada.") (APP-022).
+- **Check-in no turno:** Operador e Coletor só usam o resto do app (Início, páginas e, depois, o relatório do turno) depois de marcar a entrada; antes disso, qualquer tela mostra o Turno, e a API recusa ("Entre no turno antes de continuar."). Entrada e saída valem a **hora do toque**; corrigir o próprio horário pede **motivo**, e o horário marcado no app fica guardado (migration **053**). Admin e Consultor ficam livres (APP-022b).
 
 ## [1.3.0] - 2026-10-15
 

@@ -7,7 +7,17 @@ import App from "../App";
 import { ProvedorDeSessao } from "../sessao";
 import { ANA, ESTADO_TURNO, servidorFalso } from "../testes-servidor";
 
-const NA_TARDE = { id: 41, turno_id: 2, turno: "Tarde", dia: "2026-10-22", entrada: "16:00", saida: null };
+const NA_TARDE = {
+  id: 41,
+  turno_id: 2,
+  turno: "Tarde",
+  dia: "2026-10-22",
+  entrada: "16:00",
+  saida: null,
+  entrada_registrada: "16:00",
+  saida_registrada: null,
+  motivo_correcao: null,
+};
 
 function abrir(caminho: string, rotas: Parameters<typeof servidorFalso>[0] = {}, me: unknown = ANA) {
   const api = servidorFalso({ "GET /me": () => ({ status: 200, corpo: me }), ...rotas });
@@ -24,64 +34,76 @@ function abrir(caminho: string, rotas: Parameters<typeof servidorFalso>[0] = {},
 afterEach(() => vi.unstubAllGlobals());
 
 describe("Turno: entrar e sair (APP-022)", () => {
-  it("sugere o turno pelo horário e entra com o horário padrão", async () => {
+  it("sugere o turno pelo horário e entra com a hora do clique (sem digitar)", async () => {
     let estado: any = ESTADO_TURNO;
     const api = abrir("/turno", {
       "GET /turno": () => ({ status: 200, corpo: estado }),
-      "POST /turno/entrar": (corpo) => {
-        estado = { ...ESTADO_TURNO, no_turno: { ...NA_TARDE, entrada: corpo.entrada } };
+      "POST /turno/entrar": () => {
+        estado = { ...ESTADO_TURNO, no_turno: { ...NA_TARDE, entrada: "16:07", entrada_registrada: "16:07" } };
         return { status: 200, corpo: estado.no_turno };
       },
     });
-    const tarde = await screen.findByRole("radio", { name: /Tarde.*sugerido pelo horário/ });
-    expect(tarde).toBeChecked();
-    expect(screen.getByLabelText("Sua entrada")).toHaveValue("16:00");
+    expect(await screen.findByRole("radio", { name: /Tarde.*sugerido pelo horário/ })).toBeChecked();
+    expect(screen.queryByLabelText("Sua entrada")).not.toBeInTheDocument();
+    expect(screen.getByText(/hora do toque no botão/)).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("radio", { name: /Madrugada/ }));
-    expect(screen.getByLabelText("Sua entrada")).toHaveValue("00:00");
     await userEvent.click(screen.getByRole("radio", { name: /Tarde/ }));
     await userEvent.click(screen.getByRole("button", { name: "Entrar no turno Tarde" }));
 
-    expect(api.chamadas.find((c) => c.rota === "POST /turno/entrar")?.corpo).toEqual({ turno_id: 2, entrada: "16:00" });
+    expect(api.chamadas.find((c) => c.rota === "POST /turno/entrar")?.corpo).toEqual({ turno_id: 2 });
     expect(await screen.findByRole("heading", { name: "Você está no turno Tarde de 22/10" })).toBeInTheDocument();
+    expect(screen.getByText("16:07")).toBeInTheDocument();
   });
 
-  it("Sair do turno pede confirmação com a hora, que dá para mudar", async () => {
+  it("Sair do turno pede confirmação e registra a hora do clique", async () => {
     let estado: any = { ...ESTADO_TURNO, no_turno: NA_TARDE };
     const api = abrir("/turno", {
       "GET /turno": () => ({ status: 200, corpo: estado }),
-      "POST /turno/sair": (corpo) => {
-        estado = { ...ESTADO_TURNO, recentes: [{ ...NA_TARDE, saida: corpo.saida }] };
+      "POST /turno/sair": () => {
+        estado = { ...ESTADO_TURNO, recentes: [{ ...NA_TARDE, saida: "23:30", saida_registrada: "23:30" }] };
         return { status: 200, corpo: estado.recentes[0] };
       },
     });
     await userEvent.click(await screen.findByRole("button", { name: "Sair do turno" }));
     const confirmar = screen.getByRole("form", { name: "Confirmar a saída" });
+    expect(confirmar).toHaveTextContent(/agora, às \d\d:\d\d/);
+    expect(within(confirmar).queryByLabelText("Saída")).not.toBeInTheDocument();
     expect(api.vezes("POST /turno/sair")).toBe(0);
-    const saida = within(confirmar).getByLabelText("Saída");
-    await userEvent.clear(saida);
-    await userEvent.type(saida, "23:30");
     await userEvent.click(within(confirmar).getByRole("button", { name: "Confirmar saída" }));
 
-    expect(api.chamadas.find((c) => c.rota === "POST /turno/sair")?.corpo).toEqual({ saida: "23:30" });
+    expect(api.chamadas.find((c) => c.rota === "POST /turno/sair")?.corpo).toEqual({});
     expect(await screen.findByText("Tarde de 22/10")).toBeInTheDocument();
     expect(screen.getByText(/16:00 às 23:30/)).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Entrar no turno/ })).toBeInTheDocument();
   });
 
-  it("corrige o horário de um turno passado", async () => {
-    const passado = { ...NA_TARDE, saida: "00:00" };
+  it("corrigir o horário pede motivo e mostra o que foi marcado no app", async () => {
+    const passado = { ...NA_TARDE, saida: "00:00", saida_registrada: "00:00" };
+    let recentes: any[] = [passado];
     const api = abrir("/turno", {
-      "GET /turno": () => ({ status: 200, corpo: { ...ESTADO_TURNO, recentes: [passado] } }),
-      "PUT /turno/entradas/41": () => ({ status: 200, corpo: { ...passado, entrada: "15:00" } }),
+      "GET /turno": () => ({ status: 200, corpo: { ...ESTADO_TURNO, recentes } }),
+      "PUT /turno/entradas/41": (corpo) => {
+        recentes = [{ ...passado, entrada: corpo.entrada, motivo_correcao: corpo.motivo }];
+        return { status: 200, corpo: recentes[0] };
+      },
     });
     await userEvent.click(await screen.findByRole("button", { name: "Corrigir o horário de Tarde de 22/10" }));
     const form = screen.getByRole("form", { name: "Corrigir Tarde de 22/10" });
     const entrada = within(form).getByLabelText("Entrada");
     await userEvent.clear(entrada);
     await userEvent.type(entrada, "15:00");
-    await userEvent.click(within(form).getByRole("button", { name: "Salvar" }));
-    expect(api.chamadas.find((c) => c.rota === "PUT /turno/entradas/41")?.corpo).toEqual({ entrada: "15:00", saida: "00:00" });
+    await userEvent.click(within(form).getByRole("button", { name: "Salvar correção" }));
+    expect(within(form).getByRole("alert")).toHaveTextContent("Escreva o motivo");
+    expect(api.vezes("PUT /turno/entradas/41")).toBe(0);
+
+    await userEvent.type(within(form).getByLabelText("Motivo da correção"), "Escala das 15h, esqueci de marcar");
+    await userEvent.click(within(form).getByRole("button", { name: "Salvar correção" }));
+    expect(api.chamadas.find((c) => c.rota === "PUT /turno/entradas/41")?.corpo).toEqual({
+      entrada: "15:00",
+      saida: "00:00",
+      motivo: "Escala das 15h, esqueci de marcar",
+    });
+    expect(await screen.findByText(/Corrigido \(marcado no app: 16:00 às 00:00\)\. Motivo: Escala das 15h/)).toBeInTheDocument();
   });
 
   it("mostra o erro da API (já está em outro turno)", async () => {
@@ -124,5 +146,39 @@ describe("Início com o turno (APP-022)", () => {
     abrir("/", { "GET /turno": () => ({ status: 500, corpo: { detail: "erro" } }) });
     expect(await screen.findByRole("button", { name: /Para hoje/ })).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Feito no turno/ })).not.toBeInTheDocument();
+  });
+});
+
+describe("Check-in: o resto do app só abre depois da entrada (APP-022b)", () => {
+  const TRAVADO = { ...ESTADO_TURNO, checkin_obrigatorio: true };
+
+  it("sem entrada, qualquer tela mostra o Turno com o aviso", async () => {
+    abrir("/paginas", { "GET /turno": () => ({ status: 200, corpo: TRAVADO }) });
+    expect(await screen.findByRole("heading", { level: 1, name: "Turno" })).toBeInTheDocument();
+    expect(screen.getByText("Marque a sua entrada no turno para abrir o resto do app.")).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Páginas" })).not.toBeInTheDocument();
+  });
+
+  it("depois de entrar, abre o app", async () => {
+    let estado: any = TRAVADO;
+    abrir("/", {
+      "GET /turno": () => ({ status: 200, corpo: estado }),
+      "POST /turno/entrar": () => {
+        estado = { ...TRAVADO, no_turno: NA_TARDE };
+        return { status: 200, corpo: NA_TARDE };
+      },
+    });
+    await userEvent.click(await screen.findByRole("button", { name: "Entrar no turno Tarde" }));
+    expect(await screen.findByRole("heading", { level: 1, name: "Início" })).toBeInTheDocument();
+  });
+
+  it("Minha conta continua aberta (para sair ou trocar a senha)", async () => {
+    abrir("/conta", { "GET /turno": () => ({ status: 200, corpo: TRAVADO }) });
+    expect(await screen.findByRole("heading", { level: 1, name: /conta/i })).toBeInTheDocument();
+  });
+
+  it("quem não precisa de check-in usa o app direto", async () => {
+    abrir("/paginas");
+    expect(await screen.findByRole("heading", { level: 1, name: "Páginas" })).toBeInTheDocument();
   });
 });
