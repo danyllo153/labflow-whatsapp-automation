@@ -2661,3 +2661,104 @@ button.barra-linha:hover,
     gap: 6px;
   }
 }
+
+/* Turno como central (APP-033): equipe, chip no topo, linha do tempo e blocos recolhíveis */
+.chip-equipe {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  margin-right: 10px;
+  padding: 3px 10px;
+  border: 1px solid currentColor;
+  border-radius: 999px;
+  color: inherit;
+  font-size: 0.85rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.ponto-online {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ok);
+  flex: none;
+}
+
+.ponto-online.apagado {
+  background: var(--texto-secundario);
+  opacity: 0.6;
+}
+
+.lista-equipe {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.lista-equipe li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.recolhivel {
+  margin-bottom: 12px;
+}
+
+.recolhivel > summary {
+  cursor: pointer;
+  padding: 6px 2px;
+  font-weight: 600;
+}
+
+.linha-registro {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: flex-end;
+  margin-bottom: 10px;
+}
+
+.linha-registro .campo {
+  flex: 1 1 14em;
+  min-width: 0;
+}
+
+.linha-registro .campo input {
+  width: 100%;
+}
+
+.linha-do-tempo {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 6px;
+}
+
+.linha-do-tempo li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--borda);
+}
+
+.linha-do-tempo .hora-registro {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  min-width: 3.2em;
+}
+
+.linha-do-tempo .texto-registro {
+  flex: 1 1 12em;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}

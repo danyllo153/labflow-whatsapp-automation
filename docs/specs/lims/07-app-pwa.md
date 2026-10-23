@@ -76,6 +76,7 @@ Usuário e senha. Primeiro acesso e recuperação de senha em [06](06-api-e-auth
 - **Corrigir o próprio horário** (esqueceu de marcar, escala do ADM como 15h–00h) **pede motivo**; o horário marcado no app fica guardado ao lado da correção (migration 053).
 - Tudo o que ela registrar **enquanto estiver no turno** (app ou WhatsApp, mesmo usuário) fica ligado a esse turno. Sem entrada no turno, vale o horário padrão.
 - **"Sair do turno"** registra a saída dela.
+- **Central do turno** (APP-033, 23/10): vários analistas dividem o turno. A tela Turno mostra a **equipe** (quem está e quem já saiu, com a hora de entrada; atualiza sozinha), as atividades fixas e pendências herdadas, as **estufas**, as **análises a fazer hoje**, a **linha do tempo** (quem fez o quê e a que horas) e **"Atividades realizadas"** (linhas livres do relatório em Excel, com autor e hora; entram no relatório do turno). Um chip no topo de todas as telas ("Tarde · 2") mostra quantas pessoas estão no turno. Antes da entrada só a equipe aparece. Coletor não vê a linha do tempo (só as próprias coletas).
 
 ### 3. Início (a minha lista do dia)
 - **Cartões no topo** (números grandes): `Para hoje` · `Atrasados` · `Desvios abertos` · `Feito no turno`. Tocar num cartão abre a lista por trás dele.
@@ -261,6 +262,7 @@ Nomes a confirmar na migration. Nenhuma altera tabela do bot (só referenciam `u
 | `app.esterilizacoes` | Tipo, ciclo, meio (opcional), quem, quando |
 | `app.atividades_fixas` | Atividades fixas de cada turno (texto, turno, dias da semana, ordem), cadastradas pelo Admin |
 | `app.atividades_feitas` | Atividade fixa ou pendência herdada marcada como feita: quem, quando, turno |
+| `app.registros_turno` | "Atividades realizadas" escritas à mão no turno (texto até 200, quem, quando; excluir arquiva, com quem e quando) |
 | `app.estufas` | Cada estufa (número, auxiliar sim/não, faixa de trabalho mínima e máxima com vigência; valores reais só no banco) |
 | `app.leituras_estufa` | Estufa, leitura (supervisório ou field chart), Ok/Não ok, temperatura (só no Não ok), observação, quem, quando, turno |
 

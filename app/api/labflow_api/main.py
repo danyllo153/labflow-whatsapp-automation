@@ -13,6 +13,7 @@ from labflow_api.rotas_admin_turnos import roteador as roteador_admin_turnos
 from labflow_api.rotas_atividades import roteador as roteador_atividades
 from labflow_api.rotas_estufas import roteador as roteador_estufas
 from labflow_api.rotas_coletas import roteador as roteador_coletas
+from labflow_api.rotas_equipe import roteador as roteador_equipe
 from labflow_api.rotas_esterilizacao import roteador as roteador_esterilizacao
 from labflow_api.rotas_login import roteador as roteador_login
 from labflow_api.rotas_paginas import roteador as roteador_paginas
@@ -59,5 +60,6 @@ app.include_router(roteador_estufas)
 app.include_router(roteador_esterilizacao)
 app.include_router(roteador_relatorio_turno)  # antes do turno: /turno/relatorio
 app.include_router(roteador_atividades)  # antes do turno: /turno/atividades
+app.include_router(roteador_equipe)  # antes do turno: /turno/equipe e /turno/registros
 app.include_router(roteador_turno)
 app.include_router(roteador_telas)  # por último: /app/... e o redirecionamento da raiz
