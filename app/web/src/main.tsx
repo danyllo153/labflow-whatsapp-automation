@@ -5,6 +5,9 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import { ProvedorDeSessao } from "./sessao";
 import "./estilos.css";
+import { aplicarTema } from "./tema";
+
+aplicarTema(); // antes de desenhar a tela, para não piscar claro e depois escuro
 
 createRoot(document.getElementById("raiz")!).render(
   <StrictMode>
