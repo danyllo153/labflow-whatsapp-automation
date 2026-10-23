@@ -21,12 +21,25 @@ export const ESTADO_TURNO = {
   feito_no_turno: { turno: "Tarde", dia: "2026-10-22", total: 7, coletas: 3, leituras: 4, drops: 0, atividades: 0 },
 };
 
+/** GET /turno/atividades sem nada marcado e sem atividades (os testes das outras telas não dependem delas). */
+export const ATIVIDADES_VAZIAS = {
+  turno_id: 2,
+  turno: "Tarde",
+  dia: "2026-10-22",
+  pode_marcar: true,
+  total: 0,
+  feitas: 0,
+  atividades: [],
+  herdadas: [],
+};
+
 export function servidorFalso(rotas: Record<string, Rota>) {
   const chamadas: { rota: string; corpo: any }[] = [];
   const todas: Record<string, Rota> = {
     "GET /ambiente": () => ({ status: 200, corpo: { demonstracao: true } }),
     "GET /pendencias-hoje": () => ({ status: 200, corpo: { vence_hoje: 0, atrasados: 0, desvios_abertos: 0, itens: [] } }),
     "GET /turno": () => ({ status: 200, corpo: ESTADO_TURNO }),
+    "GET /turno/atividades": () => ({ status: 200, corpo: ATIVIDADES_VAZIAS }),
     ...rotas,
   };
   const falso = vi.fn(async (url: string, init?: RequestInit) => {

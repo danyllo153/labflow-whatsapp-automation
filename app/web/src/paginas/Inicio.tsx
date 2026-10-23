@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 import { lerJson } from "../api";
 import { useSessao } from "../sessao";
+import AtividadesDoTurno from "./AtividadesDoTurno";
 import type { EstadoDoTurno } from "./Turno";
 
 /**
@@ -123,6 +124,8 @@ export default function Inicio() {
               />
             )}
           </div>
+
+          {turno && <AtividadesDoTurno />}
 
           {filtro !== "todos" && (
             <p className="filtro-ativo">
