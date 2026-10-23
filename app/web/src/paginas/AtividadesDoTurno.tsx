@@ -23,6 +23,13 @@ export interface Herdada {
   quem: string | null;
 }
 
+export interface Recado {
+  texto: string;
+  turno: string;
+  dia: string;
+  por: string | null;
+}
+
 export interface DadosAtividades {
   turno_id: number;
   turno: string;
@@ -32,6 +39,7 @@ export interface DadosAtividades {
   feitas: number;
   atividades: AtividadeDoTurno[];
   herdadas: Herdada[];
+  recados: Recado[];
 }
 
 function diaMes(data: string): string {
@@ -56,6 +64,18 @@ export default function AtividadesDoTurno() {
   useEffect(() => {
     void carregar();
   }, [carregar]);
+
+  async function marcarRecado(texto: string) {
+    setGravando(-1);
+    setErro("");
+    try {
+      setDados(await enviarJson<DadosAtividades>("/turno/atividades/recados/feito", { texto }, "PUT"));
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Não foi possível gravar.");
+    } finally {
+      setGravando(null);
+    }
+  }
 
   async function marcar(id: number, feito: boolean | null) {
     setGravando(id);
@@ -85,10 +105,30 @@ export default function AtividadesDoTurno() {
         </p>
       )}
 
-      {dados.herdadas.length > 0 && (
+      {(dados.herdadas.length > 0 || dados.recados.length > 0) && (
         <div className="herdadas" role="group" aria-label="Pendências herdadas">
           <h3>Pendências herdadas</h3>
           <ul className="lista-atividades">
+            {dados.recados.map((r) => (
+              <li key={r.texto}>
+                <label className="marcar-feito">
+                  <input
+                    type="checkbox"
+                    checked={false}
+                    disabled={!dados.pode_marcar || gravando === -1}
+                    onChange={() => void marcarRecado(r.texto)}
+                  />
+                  <span>
+                    {r.texto}
+                    <span className="texto-secundario">
+                      {" "}
+                      · recado do turno {r.turno} de {diaMes(r.dia)}
+                      {r.por && ` (${r.por})`}
+                    </span>
+                  </span>
+                </label>
+              </li>
+            ))}
             {dados.herdadas.map((h) => (
               <li key={h.atividade_id}>
                 <label className="marcar-feito">

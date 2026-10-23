@@ -39,8 +39,12 @@ const BASE: Relatorio = {
   do_dia: { contagens_lidas: 12, testes_com_resultado: 5 },
   escritos: { pendencias_escritas: "Refazer meio X", esterilizacoes_pendentes: null, ocorrencias: null },
   encerramento: { encerrado: false, por: null, quando: null, automatico: false },
+  adiante: { turno: "Tarde", dia: "2026-10-22", atividades_nao_feitas: 2, vence_hoje: 4, atrasados: 2, desvios_abertos: 3, recados: 1 },
+  reaberto: null,
   atualizado_por: null,
   pode_editar: true,
+  pode_encerrar: false,
+  pode_reabrir: false,
 };
 
 function abrir(rel: Relatorio = BASE, caminho = "/turno/relatorio", rotas: Parameters<typeof servidorFalso>[0] = {}) {
@@ -145,5 +149,67 @@ describe("Relatório do turno (APP-024)", () => {
   it("a tela Turno tem o link para o relatório", async () => {
     abrir(BASE, "/turno");
     expect(await screen.findByRole("link", { name: "Ver o relatório do turno" })).toHaveAttribute("href", "/turno/relatorio");
+  });
+
+  it("Encerrar turno mostra o que passa adiante e só grava depois de confirmar", async () => {
+    const encerrado: Relatorio = {
+      ...BASE,
+      pode_editar: false,
+      pode_encerrar: false,
+      encerramento: { encerrado: true, por: "Ana Souza", quando: "15:58", automatico: false },
+    };
+    const api = abrir({ ...BASE, pode_encerrar: true }, "/turno/relatorio", {
+      "POST /turno/relatorio/encerrar": () => ({ status: 200, corpo: encerrado }),
+    });
+    await userEvent.click(await screen.findByRole("button", { name: "Encerrar turno" }));
+    const form = screen.getByRole("form", { name: "Encerrar o turno" });
+    expect(form).toHaveTextContent("Ficam para a Tarde: 2 atividades sem Feito, 4 análises que vencem hoje, 2 atrasadas, 3 desvios abertos e 1 recados escritos.");
+    expect(form).toHaveTextContent("sua saída do turno é registrada agora");
+    expect(api.vezes("POST /turno/relatorio/encerrar")).toBe(0);
+    await userEvent.click(within(form).getByRole("button", { name: "Confirmar e encerrar" }));
+    expect(api.chamadas.find((c) => c.rota === "POST /turno/relatorio/encerrar")?.corpo).toEqual({ turno_id: 1, dia: "2026-10-22", forcar: false });
+    expect(await screen.findByText(/encerrado por Ana Souza às 15:58/)).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Encerrar turno" })).not.toBeInTheDocument();
+  });
+
+  it("mostra o erro quando ainda tem gente no turno", async () => {
+    abrir({ ...BASE, pode_encerrar: true }, "/turno/relatorio", {
+      "POST /turno/relatorio/encerrar": () => ({
+        status: 409,
+        corpo: { detail: "Ainda estão no turno: Bruno Lima. Elas precisam tocar em Sair do turno antes de encerrar." },
+      }),
+    });
+    await userEvent.click(await screen.findByRole("button", { name: "Encerrar turno" }));
+    await userEvent.click(screen.getByRole("button", { name: "Confirmar e encerrar" }));
+    expect(await screen.findByRole("alert")).toHaveTextContent("Ainda estão no turno: Bruno Lima");
+  });
+
+  it("Admin vê a opção de fazer sair os outros e a de reabrir com motivo", async () => {
+    const encerrado: Relatorio = {
+      ...BASE,
+      pode_editar: false,
+      pode_reabrir: true,
+      encerramento: { encerrado: true, por: null, quando: "16:00", automatico: true },
+    };
+    const api = abrir(encerrado, "/turno/relatorio", {
+      "GET /me": () => ({ status: 200, corpo: { ...ANA, cargo: "Admin" } }),
+      "POST /turno/relatorio/reabrir": () => ({ status: 200, corpo: { ...BASE, reaberto: "Reaberto por Danyllo: Faltou uma ocorrência" } }),
+    });
+    expect(await screen.findByText(/encerrado automaticamente às 16:00/)).toBeInTheDocument();
+    const form = screen.getByRole("form", { name: "Reabrir o turno" });
+    await userEvent.type(within(form).getByLabelText("Motivo da reabertura"), "Faltou uma ocorrência");
+    await userEvent.click(within(form).getByRole("button", { name: "Reabrir turno" }));
+    expect(api.chamadas.find((c) => c.rota === "POST /turno/relatorio/reabrir")?.corpo).toEqual({
+      turno_id: 1,
+      dia: "2026-10-22",
+      motivo: "Faltou uma ocorrência",
+    });
+    expect(await screen.findByText("Reaberto por Danyllo: Faltou uma ocorrência")).toBeInTheDocument();
+  });
+
+  it("só o Admin vê a caixa de fazer sair quem ainda está no turno", async () => {
+    abrir({ ...BASE, pode_encerrar: true }, "/turno/relatorio", { "GET /me": () => ({ status: 200, corpo: { ...ANA, cargo: "Admin" } }) });
+    await userEvent.click(await screen.findByRole("button", { name: "Encerrar turno" }));
+    expect(screen.getByRole("checkbox", { name: /fazer sair também quem ainda está no turno/i })).toBeInTheDocument();
   });
 });
