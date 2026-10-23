@@ -39,7 +39,8 @@ function consulta(valores: Record<string, string>, extra: Record<string, string 
 }
 
 function valorDoFiltro(filtro: Filtro, valor: string): string {
-  return filtro.tipo === "data" ? formatar(valor, "data") : valor;
+  if (filtro.tipo === "data") return formatar(valor, "data");
+  return filtro.rotulos?.[valor] ?? valor;
 }
 
 function Celula({ coluna, linha }: { coluna: Coluna; linha: Record<string, unknown> }) {
@@ -176,7 +177,7 @@ export default function PaginaDeDados({ def }: { def: DefinicaoDePagina }) {
                       <option value="">Todos</option>
                       {f.opcoes?.map((o) => (
                         <option key={o} value={o}>
-                          {o}
+                          {f.rotulos?.[o] ?? o}
                         </option>
                       ))}
                     </select>

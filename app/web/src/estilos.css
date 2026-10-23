@@ -499,6 +499,52 @@ a.cartao-pagina:hover {
   }
 }
 
+/* ---------- Visão geral ---------- */
+.periodo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px 12px;
+  margin-bottom: 8px;
+}
+
+.periodo .campo {
+  min-width: 150px;
+}
+
+.periodo .botao-secundario {
+  margin-bottom: 12px;
+}
+
+.grade-numeros {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.cartao-numero.estatico {
+  cursor: default;
+}
+
+.tabela-simples {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 8px;
+}
+
+.tabela-simples th,
+.tabela-simples td {
+  text-align: left;
+  padding: 6px 4px;
+  border-bottom: 1px solid #f1ead8;
+}
+
+.texto-nao-ok {
+  color: var(--nao-ok);
+  font-weight: 700;
+}
+
 /* ---------- Admin → Pessoas e Minha conta ---------- */
 .lista-pessoas,
 .lista-links {
