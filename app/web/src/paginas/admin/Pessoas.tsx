@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from
 
 import { enviarJson, lerJson } from "../../api";
 import { useSessao } from "../../sessao";
+import { nomeDoCargo } from "../../cargos";
 
 /**
  * Admin → Pessoas (07 §10; APP-016). Tudo o que grava pede confirmação, dizendo o que vai acontecer.
@@ -130,7 +131,7 @@ function Gerenciar({ p, souEu, aoMudar, aoProvisoria }: { p: Pessoa; souEu: bool
 
   const texto: Record<Acao["tipo"], string> = {
     provisoria: `Gerar uma senha provisória para ${nome}? A senha atual dela deixa de valer e ela sai do app nos aparelhos onde estiver.`,
-    cargo: `Trocar o cargo de ${nome} de ${p.cargo} para ${cargo}? Vale também no WhatsApp.`,
+    cargo: `Trocar o cargo de ${nome} de ${nomeDoCargo(p.cargo)} para ${nomeDoCargo(cargo)}? Vale também no WhatsApp.`,
     desbloquear: `Desbloquear ${nome}? A senha continua a mesma; só zera as senhas erradas.`,
     acesso: p.situacao === "Bloqueado pelo Admin" ? `Liberar o acesso de ${nome} ao app?` : `Bloquear o acesso de ${nome} ao app? Ela sai do app na hora. O WhatsApp não muda.`,
     usuario: `Dar o usuário "${usuario.trim().toLowerCase()}" para ${nome}?`,
@@ -171,7 +172,9 @@ function Gerenciar({ p, souEu, aoMudar, aoProvisoria }: { p: Pessoa; souEu: bool
               Cargo
               <select value={cargo} onChange={(e) => setCargo(e.target.value)}>
                 {CARGOS.map((c) => (
-                  <option key={c}>{c}</option>
+                  <option key={c} value={c}>
+                    {nomeDoCargo(c)}
+                  </option>
                 ))}
               </select>
             </label>
@@ -259,7 +262,7 @@ function NovaPessoa({ aoTerminar, aoProvisoria }: { aoTerminar: () => void; aoPr
       <h2>Nova pessoa</h2>
       {conferindo ? (
         <Confirmar ocupado={ocupado} rotulo="Cadastrar e gerar senha provisória" onSim={() => void cadastrar()} onNao={() => setConferindo(false)}>
-          Vai cadastrar <strong>{nome.trim()}</strong> como <strong>{cargo}</strong>, telefone <strong>{tel}</strong>, usuário no app{" "}
+          Vai cadastrar <strong>{nome.trim()}</strong> como <strong>{nomeDoCargo(cargo)}</strong>, telefone <strong>{tel}</strong>, usuário no app{" "}
           <strong>{usuarioFinal}</strong>, e gerar uma senha provisória de 24 horas. A pessoa também passa a ser reconhecida no WhatsApp.
         </Confirmar>
       ) : (
@@ -276,7 +279,9 @@ function NovaPessoa({ aoTerminar, aoProvisoria }: { aoTerminar: () => void; aoPr
             Cargo
             <select value={cargo} onChange={(e) => setCargo(e.target.value)}>
               {CARGOS.map((c) => (
-                <option key={c}>{c}</option>
+                <option key={c} value={c}>
+                    {nomeDoCargo(c)}
+                  </option>
               ))}
             </select>
           </label>
@@ -376,7 +381,7 @@ export default function Pessoas() {
               <div>
                 <strong>{p.nome || "(sem nome)"}</strong>
                 <div className="texto-secundario">
-                  {p.usuario ? `Usuário ${p.usuario}` : "Sem usuário no app"} · {p.cargo}
+                  {p.usuario ? `Usuário ${p.usuario}` : "Sem usuário no app"} · {nomeDoCargo(p.cargo)}
                 </div>
               </div>
               <span className={classeDaSituacao(p.situacao)}>{p.situacao}</span>

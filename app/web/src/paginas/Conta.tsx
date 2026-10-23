@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 
 import { useSessao } from "../sessao";
+import { nomeDoCargo } from "../cargos";
 
 /** Minha conta: no celular é por aqui que se chega a Trocar senha, Pessoas (Admin) e Sair. */
 export default function Conta() {
@@ -11,7 +12,7 @@ export default function Conta() {
       <div className="cartao">
         <h2>{pessoa?.nome || pessoa?.usuario}</h2>
         <p className="texto-secundario">
-          Usuário {pessoa?.usuario} · {pessoa?.cargo}
+          Usuário {pessoa?.usuario} · {nomeDoCargo(pessoa?.cargo)}
         </p>
         <ul className="lista-links">
           <li>

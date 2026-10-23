@@ -161,12 +161,20 @@ def definir_usuario(
 
 
 # ---------------------------------------------------------------- APP-016: Nova pessoa, cargo, desbloquear, acesso
-Cargo = Literal["Admin", "Operador", "Consultor", "Coletor"]
+Cargo = Literal["Admin", "Analista", "Operador", "Consultor", "Coletor"]
+
+# O app mostra "Analista" (decidido em 23/10); o banco e o bot ainda gravam "Operador" até a sessão do bot trocar
+# o nome (pedido PB7 no rumo). Por isso a API aceita os dois e grava "Operador".
+NO_BANCO = {"Analista": "Operador"}
+
+
+def _cargo_no_banco(cargo: str) -> str:
+    return NO_BANCO.get(cargo, cargo)
 
 
 def _recusa_do_banco(erro: psycopg.errors.RaiseException) -> HTTPException:
     """As funções do bot recusam com uma mensagem pronta em português (RAISE EXCEPTION): ela vai como está."""
-    mensagem = erro.diag.message_primary or "O banco recusou o pedido."
+    mensagem = (erro.diag.message_primary or "O banco recusou o pedido.").replace("Operador", "Analista")
     codigo = status.HTTP_404_NOT_FOUND if "não encontrada" in mensagem else status.HTTP_422_UNPROCESSABLE_ENTITY
     return HTTPException(codigo, mensagem)
 
@@ -198,7 +206,7 @@ def nova_pessoa(
         with con.transaction():  # ponto de volta: se o usuário curto for inválido, a pessoa também não fica cadastrada
             novo_id = con.execute(
                 "SELECT id FROM cadastrar_usuario(%s, %s, %s, %s)",
-                (pedido.nome, pedido.telefone, pedido.cargo, admin.usuario_id),
+                (pedido.nome, pedido.telefone, _cargo_no_banco(pedido.cargo), admin.usuario_id),
             ).fetchone()[0]
             con.execute("INSERT INTO app.credenciais (usuario_id, usuario) VALUES (%s, %s)", (novo_id, usuario))
             senha, valida_ate = _nova_provisoria(con, novo_id, admin.usuario_id)
@@ -225,7 +233,7 @@ def trocar_cargo(
     """Troca o cargo pela função do bot (ela não deixa o sistema sem Admin). Vale na chamada seguinte da pessoa (APP-005)."""
     try:
         with con.transaction():
-            con.execute("SELECT trocar_cargo(%s, %s, %s)", (usuario_id, pedido.cargo, admin.usuario_id))
+            con.execute("SELECT trocar_cargo(%s, %s, %s)", (usuario_id, _cargo_no_banco(pedido.cargo), admin.usuario_id))
     except psycopg.errors.RaiseException as erro:
         raise _recusa_do_banco(erro) from None
     return _uma_pessoa(con, usuario_id)

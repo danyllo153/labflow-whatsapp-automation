@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet } from "react-router-dom";
 import { MENU } from "../menu";
 import { useSessao } from "../sessao";
 import FaixaDemonstracao from "./FaixaDemonstracao";
+import { nomeDoCargo } from "../cargos";
 
 /** Moldura de todas as telas: menu lateral (computador e tablet) ou topo + barra embaixo (celular). */
 export default function Moldura() {
@@ -24,7 +25,7 @@ export default function Moldura() {
         </nav>
         <div className="conta">
           <div className="conta-nome">{nome}</div>
-          <div className="texto-secundario">{pessoa?.cargo}</div>
+          <div className="texto-secundario">{nomeDoCargo(pessoa?.cargo)}</div>
           <Link to="/conta/senha" className="conta-link">
             Trocar senha
           </Link>
