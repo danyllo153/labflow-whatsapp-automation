@@ -15,7 +15,7 @@ ESPERADO = {
     "Admin": {"ver_paginas", "ver_turno", "imprimir_exportar", "entrar_no_turno", "encerrar_turno", "registrar_coleta",
               "registrar_analise", "corrigir_registro", "excluir_registro", "usar_assistente",
               "gerenciar_pessoas", "configurar_turnos"},
-    "Operador": {"ver_paginas", "ver_turno", "imprimir_exportar", "entrar_no_turno", "encerrar_turno", "registrar_coleta",
+    "Analista": {"ver_paginas", "ver_turno", "imprimir_exportar", "entrar_no_turno", "encerrar_turno", "registrar_coleta",
                  "registrar_analise", "corrigir_registro", "excluir_registro", "usar_assistente"},
     "Consultor": {"ver_paginas", "ver_turno", "imprimir_exportar", "usar_assistente"},
     "Coletor": {"ver_paginas", "ver_turno", "imprimir_exportar", "entrar_no_turno", "registrar_coleta", "corrigir_registro",
@@ -67,7 +67,7 @@ def cliente_com_rotas(conexao):
 
 @pytest.mark.parametrize(
     "cargo, admin, analise",
-    [("Admin", 200, 200), ("Operador", 403, 200), ("Consultor", 403, 403), ("Coletor", 403, 403)],
+    [("Admin", 200, 200), ("Analista", 403, 200), ("Consultor", 403, 403), ("Coletor", 403, 403)],
 )
 def test_rotas_protegidas_por_cargo(cliente_com_rotas, criar_pessoa, cargo, admin, analise):
     criar_pessoa(cargo=cargo)
@@ -84,6 +84,6 @@ def test_trocar_cargo_vale_na_chamada_seguinte(cliente_com_rotas, criar_pessoa, 
     uid = criar_pessoa(cargo="Admin")
     cliente_com_rotas.post("/login", json={"usuario": "ana.teste", "senha": SENHA})
     assert cliente_com_rotas.get("/so-admin").status_code == 200
-    conexao.execute("UPDATE usuarios SET cargo = 'Operador' WHERE id = %s", (uid,))
+    conexao.execute("UPDATE usuarios SET cargo = 'Analista' WHERE id = %s", (uid,))
     assert cliente_com_rotas.get("/so-admin").status_code == 403
-    assert set(cliente_com_rotas.get("/me").json()["pode"]) == ESPERADO["Operador"]
+    assert set(cliente_com_rotas.get("/me").json()["pode"]) == ESPERADO["Analista"]

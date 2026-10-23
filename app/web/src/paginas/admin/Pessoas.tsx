@@ -23,7 +23,7 @@ interface Provisoria {
   valida_ate: string;
 }
 
-export const CARGOS = ["Admin", "Operador", "Consultor", "Coletor"];
+export const CARGOS = ["Admin", "Analista", "Consultor", "Coletor"];
 
 /** "Ana Souza" → "ana.souza" (sem acento; o Admin pode trocar). */
 export function sugerirUsuario(nome: string): string {
@@ -218,7 +218,7 @@ function Gerenciar({ p, souEu, aoMudar, aoProvisoria }: { p: Pessoa; souEu: bool
 function NovaPessoa({ aoTerminar, aoProvisoria }: { aoTerminar: () => void; aoProvisoria: (d: Provisoria) => void }) {
   const [nome, setNome] = useState("");
   const [telefone, setTelefone] = useState("");
-  const [cargo, setCargo] = useState("Operador");
+  const [cargo, setCargo] = useState("Analista");
   const [usuario, setUsuario] = useState("");
   const [usuarioMexido, setUsuarioMexido] = useState(false);
   const [conferindo, setConferindo] = useState(false);

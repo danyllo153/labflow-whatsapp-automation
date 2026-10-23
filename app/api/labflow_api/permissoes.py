@@ -10,28 +10,28 @@ from fastapi import Depends, HTTPException, status
 
 from labflow_api.dependencias import PessoaLogada, obter_conexao, pessoa_logada
 
-CARGOS = ("Admin", "Operador", "Consultor", "Coletor")
+CARGOS = ("Admin", "Analista", "Consultor", "Coletor")
 
 # Ação -> cargos que podem. Detalhes "só a própria coleta" e "só consultas" são conferidos na rota da ação.
 ACOES: dict[str, frozenset[str]] = {
-    "ver_paginas": frozenset({"Admin", "Operador", "Consultor", "Coletor"}),  # Coletor: só as próprias coletas
-    "imprimir_exportar": frozenset({"Admin", "Operador", "Consultor", "Coletor"}),  # Coletor: só as próprias coletas
-    "ver_turno": frozenset({"Admin", "Operador", "Consultor", "Coletor"}),  # tela Turno (o check-in)
-    "entrar_no_turno": frozenset({"Admin", "Operador", "Coletor"}),
-    "encerrar_turno": frozenset({"Admin", "Operador"}),
-    "registrar_coleta": frozenset({"Admin", "Operador", "Coletor"}),
-    "registrar_analise": frozenset({"Admin", "Operador"}),  # análises, resultados, desvios, estufas, esterilização
-    "corrigir_registro": frozenset({"Admin", "Operador", "Coletor"}),  # Coletor: só a própria coleta
-    "excluir_registro": frozenset({"Admin", "Operador", "Coletor"}),  # Coletor: só a própria coleta
-    "usar_assistente": frozenset({"Admin", "Operador", "Consultor", "Coletor"}),  # Consultor: consultas; Coletor: coletas
+    "ver_paginas": frozenset({"Admin", "Analista", "Consultor", "Coletor"}),  # Coletor: só as próprias coletas
+    "imprimir_exportar": frozenset({"Admin", "Analista", "Consultor", "Coletor"}),  # Coletor: só as próprias coletas
+    "ver_turno": frozenset({"Admin", "Analista", "Consultor", "Coletor"}),  # tela Turno (o check-in)
+    "entrar_no_turno": frozenset({"Admin", "Analista", "Coletor"}),
+    "encerrar_turno": frozenset({"Admin", "Analista"}),
+    "registrar_coleta": frozenset({"Admin", "Analista", "Coletor"}),
+    "registrar_analise": frozenset({"Admin", "Analista"}),  # análises, resultados, desvios, estufas, esterilização
+    "corrigir_registro": frozenset({"Admin", "Analista", "Coletor"}),  # Coletor: só a própria coleta
+    "excluir_registro": frozenset({"Admin", "Analista", "Coletor"}),  # Coletor: só a própria coleta
+    "usar_assistente": frozenset({"Admin", "Analista", "Consultor", "Coletor"}),  # Consultor: consultas; Coletor: coletas
     "gerenciar_pessoas": frozenset({"Admin"}),  # nova pessoa, senha provisória, cargo, bloquear acesso
     "configurar_turnos": frozenset({"Admin"}),  # horários padrão, atividades fixas, estufas, reabrir turno
 }
 
 
-# Check-in (decidido em 23/10): Operador e Coletor só usam o resto do app depois de entrar no turno.
+# Check-in (decidido em 23/10): Analista e Coletor só usam o resto do app depois de entrar no turno.
 # Admin e Consultor ficam livres (o Admin entra no turno quando estiver nele).
-CHECKIN_OBRIGATORIO = frozenset({"Operador", "Coletor"})
+CHECKIN_OBRIGATORIO = frozenset({"Analista", "Coletor"})
 SEM_CHECKIN = frozenset({"ver_turno", "entrar_no_turno"})  # o que se faz antes do check-in
 
 # Turno aberto e que ainda não terminou (o fim padrão do turno; a Tarde termina às 00:00 do dia seguinte).

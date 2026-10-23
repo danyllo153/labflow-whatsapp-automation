@@ -131,7 +131,7 @@ class EstadoDoTurno(BaseModel):
     turnos: list[TurnoPadrao]
     sugestao: Sugestao
     pode_entrar: bool
-    checkin_obrigatorio: bool  # Operador e Coletor: o resto do app só abre depois de entrar no turno
+    checkin_obrigatorio: bool  # Analista e Coletor: o resto do app só abre depois de entrar no turno
     no_turno: Entrada | None
     recentes: list[Entrada]  # as últimas entradas da pessoa, para editar o horário
     feito_no_turno: FeitoNoTurno

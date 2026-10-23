@@ -15,7 +15,7 @@ Lista dos comandos reconhecidos pelo bot do WhatsApp, com o formato esperado e u
 | Cargo | Registrar (coleta, análise, concluir drops e leituras) | Consultar | Gerenciar cargos |
 |---|---|---|---|
 | **Admin** | ✅ | ✅ | ✅ |
-| **Operador** | ✅ | ✅ | ❌ |
+| **Analista** (antes "Operador", renomeado em 23/10/2026; "operador" ainda é aceito nos comandos) | ✅ | ✅ | ❌ |
 | **Consultor** | ❌ | ✅ | ❌ |
 | **Coletor** | só a própria coleta (e corrigi-la) | ❌ | ❌ |
 
@@ -121,12 +121,12 @@ mudar cargo <cargo> para o número <número> nome <nome>
 
 **Exemplo:**
 ```
-adicionar cargo de Operador para o número 5511999999999 nome João
+adicionar cargo de Analista para o número 5511999999999 nome João
 ```
 
-Os cargos válidos são **Admin**, **Operador**, **Consultor** ou **Coletor** (veja 6.1). O nome é opcional; se omitido, o sistema tenta usar o nome já cadastrado (ou o nome de contato do WhatsApp, se o alvo for quem está enviando a mensagem).
+Os cargos válidos são **Admin**, **Analista**, **Consultor** ou **Coletor** (veja 6.1). O nome é opcional; se omitido, o sistema tenta usar o nome já cadastrado (ou o nome de contato do WhatsApp, se o alvo for quem está enviando a mensagem).
 
-Também funciona por frase livre (seção 11), por exemplo `muda o cargo do 11 99999-1234 para operador`. Nesse caso o bot mostra o comando entendido e só executa depois do "sim". O cargo precisa estar escrito na mensagem como Admin (ou administrador), Operador ou Consultor. Uma palavra parecida, como "gerente", é recusada com `Cargo inválido`.
+Também funciona por frase livre (seção 11), por exemplo `muda o cargo do 11 99999-1234 para analista`. Nesse caso o bot mostra o comando entendido e só executa depois do "sim". O cargo precisa estar escrito na mensagem como Admin (ou administrador), Analista ou Consultor. Uma palavra parecida, como "gerente", é recusada com `Cargo inválido`.
 
 > **Nos bastidores:** o cadastro e a troca de cargo passam pelas funções do banco `cadastrar_usuario` e `trocar_cargo` (migration `031`), as mesmas da tela "Nova pessoa" do app. Por isso o banco também recusa, com o motivo no WhatsApp: telefone inválido, cargo inválido, quem não é Admin e **tirar o cargo do único Admin**.
 
@@ -142,8 +142,8 @@ apagar coleta tanque terra 42
 apagar coleta navio O.SKY 123 tanque 1C
 ```
 - Sem a data, vale a coleta **mais recente** daquele tanque (últimos 7 dias). Sinônimos: `alterar`, `trocar`, `cancelar`, `remover`, `excluir`.
-- Só altera a coleta que a pessoa **registrou** (Admin e Operador alteram qualquer uma) e **só enquanto ela não tem análise, drop concluído, TAB nem desvio de drop**. Corrigir leva os drops e o arquivo junto; **apagar arquiva** a coleta com os drops e o arquivo dela (sai das telas e consultas, fica guardada em `registros_excluidos` e um Admin pode recuperar). Desde 22/10/2026 o bot grava pelas mesmas funções do banco que o app usa (`corrigir_coleta` e `excluir_coleta`, migrations 033/034), e toda correção ou exclusão fica no histórico (`historico_alteracoes`). Se o tanque novo já existe na mesma data, o bot recusa.
-- Qualquer outro comando (consultas, análises, recebimento, relatório, cargos, foto) é recusado com a mensagem do cargo, **inclusive por frase livre ou áudio**. Admin e Operador também podem usar os comandos de correção.
+- Só altera a coleta que a pessoa **registrou** (Admin e Analista alteram qualquer uma) e **só enquanto ela não tem análise, drop concluído, TAB nem desvio de drop**. Corrigir leva os drops e o arquivo junto; **apagar arquiva** a coleta com os drops e o arquivo dela (sai das telas e consultas, fica guardada em `registros_excluidos` e um Admin pode recuperar). Desde 22/10/2026 o bot grava pelas mesmas funções do banco que o app usa (`corrigir_coleta` e `excluir_coleta`, migrations 033/034), e toda correção ou exclusão fica no histórico (`historico_alteracoes`). Se o tanque novo já existe na mesma data, o bot recusa.
+- Qualquer outro comando (consultas, análises, recebimento, relatório, cargos, foto) é recusado com a mensagem do cargo, **inclusive por frase livre ou áudio**. Admin e Analista também podem usar os comandos de correção.
 - Exige a migration `029` (o banco passa a aceitar o cargo Coletor).
 ## 7. Registrar análise de tanque
 
@@ -306,7 +306,7 @@ Quando a mensagem não bate em nenhum comando acima, ela é enviada ao Gemini, q
 | Coleta de navio | `coletei 1C e 4P do O.SKY 123 hoje` | `Coleta navio O.SKY 123 tanques 1C,4P data 29/09/2026` | "sim" |
 | Registro de análise | `fiz a análise normal dos tanques 44 e 45 hoje` | `Analise normal tanques 44,45 data 29/09/2026` | "sim" |
 | Concluir drops | `fiz os drops D5 de terra` | `Concluir drops D5 terra` | "sim" |
-| Troca de cargo | `muda o cargo do 11 99999-1234 para operador` | `trocar cargo de Operador para o número 5511999991234` | "sim" |
+| Troca de cargo | `muda o cargo do 11 99999-1234 para analista` | `trocar cargo de Analista para o número 5511999991234` | "sim" |
 | Concluir leitura | `li o CT final normal de terra` | `Concluir final leitura CT normal terra` | o fluxo da seção 10 |
 | Consultas | `quais drops tenho hoje?` | `drops para hoje` | nenhuma (só lê) |
 | **Todos os comandos novos** (concentrado, TAB, Coliformes, Howard, C.T/B.L, relatório, leitura do dia, desvio) | `chegaram os lotes 1 a 14 do load 77001 item 444 da fábrica AQA` · `apareceu colônia no TAB 11` · `relatório diário` · `terminei a leitura de hoje` · `o drop D5 do tanque 45 da coleta de 30/09/2026 deu ruim` | o formato oficial do comando (seções 12.1 a 15.2) | consulta: nenhuma; gravação direta (recebimento, compostas, embarque, TAB/Coliformes feito, TAB em confirmação): "sim" da IA; comando que já pergunta (Howard, C.T/B.L, etapas do dia, resultados, finalizada, desvio): o "sim" do próprio comando |
@@ -375,7 +375,7 @@ consultar relatório
 
 ## 12.1 Recebimento, compostas, TAB e Coliformes (concentrado)
 
-Módulo de suco concentrado (FCOJ). Desenho completo em [`concentrado.md`](concentrado.md). Regras gerais: **a ordem é recebimento → compostas → testes**, o bot recusa teste de lote que não existe, e gravações que pedem "sim" expiram em 10 minutos. Só Admin e Operador gravam; o Consultor só consulta.
+Módulo de suco concentrado (FCOJ). Desenho completo em [`concentrado.md`](concentrado.md). Regras gerais: **a ordem é recebimento → compostas → testes**, o bot recusa teste de lote que não existe, e gravações que pedem "sim" expiram em 10 minutos. Só Admin e Analista gravam; o Consultor só consulta.
 
 ### Recebimento
 ```
@@ -424,7 +424,7 @@ embarque navio O.SKY 133 linha 2 fase 2 load 77011 item 444 amostras 11-20 data 
 - Uma linha+fase pode ter mais de um load: um comando por load. A numeração das amostras não repete dentro da linha+fase.
 - **O load não precisa existir.** Se for um load antigo, o bot o cadastra na hora (número e item, sem fábrica) e avisa. Se o recebimento for registrado depois, a fábrica é preenchida.
 - Amostras já registradas são ignoradas, e a resposta diz a qual load pertencem. Se o mesmo número de load já existir com outro item, o bot avisa para conferir a digitação.
-- Grava direto, sem "sim", como o recebimento. Só Admin e Operador.
+- Grava direto, sem "sim", como o recebimento. Só Admin e Analista.
 
 ### Criar compostas do embarque
 ```
@@ -461,7 +461,7 @@ Responda *sim* ou *não*.
 
 - Como são 50 campos, a porcentagem é sempre **par** (0%, 2%, 4%...); um valor ímpar ou com casas decimais, como 3% ou 2,5%, é recusado.
 - Composta do recebimento é recusada ("Howard só vale para composta de embarque"). Se a composta já tem Howard, o bot avisa e o novo valor substitui o anterior.
-- Só Admin e Operador registram.
+- Só Admin e Analista registram.
 
 Consultas:
 ```
@@ -524,7 +524,7 @@ ct navio O.SKY 133 linha 2 fase 2 amostras 1-5 deu <10, amostra 6 deu 30
 - Um resultado repetido **corrige** o anterior, e o bot avisa o valor antigo antes de gravar.
 - `recebimento` antes do load é opcional (`bl72 recebimento load 77001 lotes 1-14 deu <10`). **O prazo não trava:** dá para lançar o B.L 72h com 2 dias. Para lançar **todos de uma vez**, com exceções: seção 18.
 - Se o número do load existir com dois itens, informe `item 444`.
-- Só Admin e Operador registram.
+- Só Admin e Analista registram.
 
 ### Alarme
 **B.L (72h e 120h) a partir de 50** e **C.T a partir de 200** mostram 🚨 na própria confirmação e nas consultas. `<10` nunca alarma; `>N` alarma se N já estiver no limite ou acima. O mesmo alarme vai para o relatório diário do concentrado (etapa seguinte).
@@ -569,7 +569,7 @@ relatório do dia tanques terra           só NFC (também: tanques navio, tanqu
 
 ## 15.1 Leitura do dia finalizada
 
-Uma pessoa lê por dia. Em vez de fechar por partes (`concluir drops`, `concluir leitura`, `tabs de hoje lidos`...), ela pode fechar **tudo o que sai hoje de uma vez**. Os comandos por partes continuam valendo; o "finalizada" fecha só o que ainda estiver pendente. Só Admin e Operador.
+Uma pessoa lê por dia. Em vez de fechar por partes (`concluir drops`, `concluir leitura`, `tabs de hoje lidos`...), ela pode fechar **tudo o que sai hoje de uma vez**. Os comandos por partes continuam valendo; o "finalizada" fecha só o que ainda estiver pendente. Só Admin e Analista.
 
 ```
 leitura do dia finalizada               (também: leitura de hoje finalizada, leitura finalizada, finalizar leitura do dia)
@@ -597,7 +597,7 @@ O dia fica registrado na tabela `leituras_finalizadas` (migration `011`). Se der
 
 ## 15.2 Desvio de drop
 
-Drop **não ok** abre um **desvio**: o drop de arquivo é repetido em **3 temperaturas (7, 13 e 25 °C)** por **até 5 dias**. O drop é rastreado pela **coleta** (a data do comando é a da coleta). Só Admin e Operador abrem e fecham; consultar, todos.
+Drop **não ok** abre um **desvio**: o drop de arquivo é repetido em **3 temperaturas (7, 13 e 25 °C)** por **até 5 dias**. O drop é rastreado pela **coleta** (a data do comando é a da coleta). Só Admin e Analista abrem e fecham; consultar, todos.
 
 ```
 drop d5 do tanque 45 data 30/09/2026 não ok                    abrir (pergunta antes; os 5 dias contam do "sim")
@@ -755,7 +755,7 @@ Qualquer cargo (inclusive Consultor) pode perguntar. Não gravam nada; sem "sim"
 
 ### 16.5 Foto do laudo (recebimento, TAB e Coliformes)
 
-Mande a **foto do laudo preenchido** no WhatsApp (Operador e Admin; Consultor não registra). A legenda é opcional.
+Mande a **foto do laudo preenchido** no WhatsApp (Analista e Admin; Consultor não registra). A legenda é opcional.
 
 1. O bot baixa a foto, conta 1 no limite diário de IA (tipo `foto`) e pede a leitura ao Gemini com visão (`gemini-3-flash-preview`, com reserva em `gemini-3.5-flash-lite`; cada um tenta até 3 vezes). Os modelos da foto foram escolhidos testando imagem direto no Google: `gemini-3.1-flash-lite` e `gemini-3.8-flash` davam 503 com imagem. O Groq não lê imagem: se os dois Gemini falharem, o bot avisa e pede o comando.
 2. A IA só devolve dados (formulário, load, item, fábrica, lotes, marcas). O **código valida** e monta os **comandos oficiais**.
@@ -837,7 +837,7 @@ bl120 nfc load 44300 lotes 10-12 fresh deu 7
 
 ## 18. Todos de uma vez e leitura antecipada
 
-Para não lançar lote por lote quando quase tudo deu igual. **"Todos"** = o que **sai hoje** (ou na data que você disser, `todos de 14/10`) e **ainda não tem resultado** daquela análise; o que já tem valor fica como está (para corrigir, mande o lote ou o tanque pelo comando normal). Tudo pede **um só sim**, com a lista do que vai ser gravado. Só Admin e Operador; também vale por áudio e por frase livre (formatos 37 e 38 da IA).
+Para não lançar lote por lote quando quase tudo deu igual. **"Todos"** = o que **sai hoje** (ou na data que você disser, `todos de 14/10`) e **ainda não tem resultado** daquela análise; o que já tem valor fica como está (para corrigir, mande o lote ou o tanque pelo comando normal). Tudo pede **um só sim**, com a lista do que vai ser gravado. Só Admin e Analista; também vale por áudio e por frase livre (formatos 37 e 38 da IA).
 
 ### 18.1 Lotes, amostras e NFC recebido
 

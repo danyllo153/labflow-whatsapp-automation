@@ -39,7 +39,7 @@ O que os testes cobrem (321 casos; 10 das fábricas, navios e tanques, em `tests
 - **Campos extraídos:** lotes, compostas, navio/linha/fase, grupos de C.T/B.L com o sinal (`<` nunca vira igual), data da coleta do TAB de NFC.
 - **Prazos de negócio:** D5/D10/D15, descarte em 365 dias, CT 48h, BL 72/120h, WORT 120/240h.
 - **Recusas:** 9 tanques (limite 8), Howard com porcentagem ímpar.
-- **Permissões:** não cadastrado, Consultor, Operador e Admin (a permissão é do código, nunca do prompt: Bug 23).
+- **Permissões:** não cadastrado, Consultor, Analista e Admin (a permissão é do código, nunca do prompt: Bug 23).
 - **IA:** frase livre vai para o Gemini, a mensagem reenviada não entra em loop, mensagem do próprio bot é ignorada.
 - **Alerta de erro:** formato da mensagem, máscara de números longos, corte em 300 caracteres, um aviso por Admin, nenhum aviso sem Admin e a janela de 10 minutos contra repetição.
 - **IA (node `Validar resposta da IA`):** com respostas simuladas do Gemini: cada formato do catálogo da IA ([`tests/catalogo-ia.js`](../tests/catalogo-ia.js), um exemplo de cada comando novo) é reconhecido pela regex e recebe a classe certa (consulta direto, "sim" da IA ou "sim" do próprio comando); Consultor só consulta; formato fora do catálogo é recusado; dado faltando vira pergunta; intenções antigas sem mudança. Validado com defeito injetado (recebimento sem "sim": 3 testes falharam).

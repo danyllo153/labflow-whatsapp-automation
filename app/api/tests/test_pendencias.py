@@ -11,7 +11,7 @@ VIEWS = ["bi.contagens", "bi.testes", "bi.drops", "bi.leituras_nfc", "bi.recebim
 
 @pytest.fixture
 def logado(cliente, criar_pessoa):
-    def _logar(cargo="Operador"):
+    def _logar(cargo="Analista"):
         criar_pessoa(usuario=f"{cargo.lower()}.teste", cargo=cargo)
         assert cliente.post("/login", json={"usuario": f"{cargo.lower()}.teste", "senha": SENHA}).status_code == 200
 

@@ -4,7 +4,7 @@ import { vi } from "vitest";
 type Resposta = { status: number; corpo?: unknown } | Promise<{ status: number; corpo?: unknown }>;
 type Rota = (corpo: any) => Resposta;
 
-export const ANA = { usuario: "ana.souza", nome: "Ana Souza", cargo: "Operador", trocar_senha: false, pode: ["ver_paginas"] };
+export const ANA = { usuario: "ana.souza", nome: "Ana Souza", cargo: "Analista", trocar_senha: false, pode: ["ver_paginas"] };
 
 /** GET /turno de quem ainda não entrou (APP-022): Tarde de 22/10 sugerida pelo horário. */
 export const ESTADO_TURNO = {

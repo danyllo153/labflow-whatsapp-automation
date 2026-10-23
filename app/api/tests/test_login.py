@@ -8,10 +8,10 @@ def _entrar(cliente, usuario="ana.teste", senha=SENHA):
 
 
 def test_login_certo_abre_sessao_e_me_responde(cliente, criar_pessoa):
-    criar_pessoa(cargo="Operador")
+    criar_pessoa(cargo="Analista")
     r = _entrar(cliente)
     assert r.status_code == 200
-    assert r.json()["cargo"] == "Operador"
+    assert r.json()["cargo"] == "Analista"
     cookie = r.headers["set-cookie"].lower()
     assert "httponly" in cookie and "secure" in cookie and "max-age=2592000" in cookie
     me = cliente.get("/me")
@@ -88,7 +88,7 @@ def test_acesso_bloqueado_pelo_admin(cliente, criar_pessoa):
 
 
 def test_cargo_vem_de_usuarios_a_cada_chamada(cliente, criar_pessoa, conexao):
-    uid = criar_pessoa(cargo="Operador")
+    uid = criar_pessoa(cargo="Analista")
     _entrar(cliente)
     conexao.execute("UPDATE usuarios SET cargo = 'Consultor' WHERE id = %s", (uid,))
     assert cliente.get("/me").json()["cargo"] == "Consultor"

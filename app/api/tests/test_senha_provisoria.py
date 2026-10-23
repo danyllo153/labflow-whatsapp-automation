@@ -43,7 +43,7 @@ def _admin_gera(admin_cli, pessoa_id):
 def cenario(dois_clientes, criar_pessoa):
     admin_cli, pessoa_cli = dois_clientes
     criar_pessoa(usuario="chefe.teste", cargo="Admin")
-    pessoa_id = criar_pessoa(usuario="ana.teste", cargo="Operador")
+    pessoa_id = criar_pessoa(usuario="ana.teste", cargo="Analista")
     assert _entrar(admin_cli, "chefe.teste", SENHA).status_code == 200
     return admin_cli, pessoa_cli, pessoa_id
 
@@ -96,7 +96,7 @@ def test_provisoria_vencida_nao_entra(cenario, conexao):
 
 def test_so_admin_gera_provisoria(dois_clientes, criar_pessoa):
     _, operador_cli = dois_clientes
-    criar_pessoa(usuario="op.teste", cargo="Operador")
+    criar_pessoa(usuario="op.teste", cargo="Analista")
     alvo = criar_pessoa(usuario="ana.teste")
     _entrar(operador_cli, "op.teste", SENHA)
     assert _admin_gera(operador_cli, alvo).status_code == 403
@@ -105,7 +105,7 @@ def test_so_admin_gera_provisoria(dois_clientes, criar_pessoa):
 def test_pessoa_sem_usuario_no_app_da_404(cenario, conexao):
     admin_cli, _, _ = cenario
     sem_credencial = conexao.execute(
-        "INSERT INTO usuarios (telefone, nome, cargo) VALUES ('5500000000899', 'Sem app', 'Operador') RETURNING id"
+        "INSERT INTO usuarios (telefone, nome, cargo) VALUES ('5500000000899', 'Sem app', 'Analista') RETURNING id"
     ).fetchone()[0]
     assert _admin_gera(admin_cli, sem_credencial).status_code == 404
 

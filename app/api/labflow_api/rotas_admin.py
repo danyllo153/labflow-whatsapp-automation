@@ -163,9 +163,9 @@ def definir_usuario(
 # ---------------------------------------------------------------- APP-016: Nova pessoa, cargo, desbloquear, acesso
 Cargo = Literal["Admin", "Analista", "Operador", "Consultor", "Coletor"]
 
-# O app mostra "Analista" (decidido em 23/10); o banco e o bot ainda gravam "Operador" até a sessão do bot trocar
-# o nome (pedido PB7 no rumo). Por isso a API aceita os dois e grava "Operador".
-NO_BANCO = {"Analista": "Operador"}
+# O cargo "Operador" passou a se chamar "Analista" (decidido em 23/10; no banco pela migration 035 do bot, pedido PB7).
+# "Operador" ainda é aceito como nome antigo e grava "Analista".
+NO_BANCO = {"Operador": "Analista"}
 
 
 def _cargo_no_banco(cargo: str) -> str:

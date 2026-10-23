@@ -5,7 +5,7 @@ import { enviarJson, lerJson } from "../api";
 /**
  * Turno (07 §2; 08 A2; APP-022 e APP-022b): escolher Manhã, Tarde ou Madrugada (o app sugere pelo horário) e marcar
  * a entrada, como um check-in: vale a hora do clique, e a saída também. Corrigir o próprio horário pede motivo.
- * Para Operador e Coletor o resto do app só abre depois da entrada (PortaoDoTurno). Horários de Brasília.
+ * Para Analista e Coletor o resto do app só abre depois da entrada (PortaoDoTurno). Horários de Brasília.
  */
 
 /** Aviso para o portão do check-in conferir de novo o turno (depois de entrar ou sair). */

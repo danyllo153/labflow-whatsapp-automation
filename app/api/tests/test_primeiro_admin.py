@@ -41,7 +41,7 @@ def test_rodar_de_novo_cancela_a_provisoria_anterior(cliente, conexao):
 
 
 def test_nao_serve_para_quem_nao_e_admin(conexao, criar_pessoa):
-    uid = criar_pessoa(usuario="op.teste", cargo="Operador")
+    uid = criar_pessoa(usuario="op.teste", cargo="Analista")
     with pytest.raises(SystemExit, match="não é Admin"):
         preparar_admin(conexao, uid, "op.teste")
 

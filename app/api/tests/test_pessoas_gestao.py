@@ -9,7 +9,7 @@ import psycopg
 import pytest
 
 SENHA = "Senha-de-teste-1"
-NOVA = {"nome": "Bia Teste", "telefone": "+55 (11) 90000-0101", "cargo": "Operador", "usuario": "bia.teste"}
+NOVA = {"nome": "Bia Teste", "telefone": "+55 (11) 90000-0101", "cargo": "Analista", "usuario": "bia.teste"}
 
 
 @pytest.fixture
@@ -29,13 +29,13 @@ def test_nova_pessoa_cadastra_da_usuario_e_senha_provisoria(admin, conexao):
     assert r.status_code == 201, r.text
     corpo = r.json()
     assert corpo["pessoa"]["usuario"] == "bia.teste"
-    assert corpo["pessoa"]["cargo"] == "Operador"
+    assert corpo["pessoa"]["cargo"] == "Analista"
     assert corpo["pessoa"]["situacao"] == "Senha provisória pendente"
     assert re.fullmatch(r"[A-Za-z0-9]{4}-[A-Za-z0-9]{4}", corpo["senha_provisoria"])
     # o bot reconhece a pessoa pelo número (só dígitos, gravado pela função do bot)
     assert conexao.execute("SELECT nome, cargo FROM usuarios WHERE telefone = '5511900000101'").fetchone() == (
         "Bia Teste",
-        "Operador",
+        "Analista",
     )
     assert "telefone" not in corpo["pessoa"]
 
@@ -74,7 +74,7 @@ def test_cargo_invalido_da_422(admin):
 
 # ---------------------------------------------------------------- Trocar cargo
 def test_trocar_cargo_pela_funcao_do_bot(admin, criar_pessoa, conexao):
-    pid = criar_pessoa(usuario="op.teste", cargo="Operador")
+    pid = criar_pessoa(usuario="op.teste", cargo="Analista")
     r = admin.put(f"/admin/pessoas/{pid}/cargo", json={"cargo": "Consultor"})
     assert r.status_code == 200 and r.json()["cargo"] == "Consultor"
     assert conexao.execute("SELECT cargo FROM usuarios WHERE id = %s", (pid,)).fetchone()[0] == "Consultor"
@@ -83,17 +83,17 @@ def test_trocar_cargo_pela_funcao_do_bot(admin, criar_pessoa, conexao):
 def test_nao_deixa_o_sistema_sem_admin(admin, conexao):
     meu_id = conexao.execute("SELECT usuario_id FROM app.credenciais WHERE usuario = 'chefe.teste'").fetchone()[0]
     assert conexao.execute("SELECT count(*) FROM usuarios WHERE cargo = 'Admin'").fetchone()[0] == 1
-    r = admin.put(f"/admin/pessoas/{meu_id}/cargo", json={"cargo": "Operador"})
+    r = admin.put(f"/admin/pessoas/{meu_id}/cargo", json={"cargo": "Analista"})
     assert r.status_code == 422 and "único Admin" in r.json()["detail"]
 
 
 def test_trocar_cargo_de_quem_nao_existe_da_404(admin):
-    assert admin.put("/admin/pessoas/999999/cargo", json={"cargo": "Operador"}).status_code == 404
+    assert admin.put("/admin/pessoas/999999/cargo", json={"cargo": "Analista"}).status_code == 404
 
 
 # ---------------------------------------------------------------- Desbloquear e bloquear acesso
 def test_desbloquear_zera_as_senhas_erradas_e_mantem_a_senha(admin, criar_pessoa, conexao, cliente):
-    pid = criar_pessoa(usuario="erro.teste", cargo="Operador")
+    pid = criar_pessoa(usuario="erro.teste", cargo="Analista")
     hash_antes = conexao.execute("SELECT senha_hash FROM app.credenciais WHERE usuario_id = %s", (pid,)).fetchone()[0]
     conexao.execute(
         "UPDATE app.credenciais SET tentativas_erradas = 0, bloqueado_ate = now() + interval '15 minutes' WHERE usuario_id = %s",
@@ -109,7 +109,7 @@ def test_desbloquear_zera_as_senhas_erradas_e_mantem_a_senha(admin, criar_pessoa
 
 
 def test_bloquear_acesso_derruba_a_sessao_e_liberar_devolve(admin, criar_pessoa, conexao):
-    pid = criar_pessoa(usuario="saindo.teste", cargo="Operador")
+    pid = criar_pessoa(usuario="saindo.teste", cargo="Analista")
     conexao.execute("INSERT INTO app.sessoes (token_hash, usuario_id) VALUES ('x-teste-hash', %s)", (pid,))
     r = admin.put(f"/admin/pessoas/{pid}/acesso", json={"ativo": False})
     assert r.status_code == 200 and r.json()["situacao"] == "Bloqueado pelo Admin"
@@ -135,9 +135,9 @@ def test_desbloquear_quem_nao_tem_usuario_da_404(admin, conexao):
 
 
 # ---------------------------------------------------------------- Permissões
-@pytest.mark.parametrize("cargo", ["Operador", "Consultor", "Coletor"])
+@pytest.mark.parametrize("cargo", ["Analista", "Consultor", "Coletor"])
 def test_so_admin_cadastra_troca_desbloqueia_e_bloqueia(cliente, criar_pessoa, cargo):
-    alvo = criar_pessoa(usuario="alvo.teste", cargo="Operador")
+    alvo = criar_pessoa(usuario="alvo.teste", cargo="Analista")
     criar_pessoa(usuario="outro.teste", cargo=cargo)
     assert cliente.post("/login", json={"usuario": "outro.teste", "senha": SENHA}).status_code == 200
     assert cliente.post("/admin/pessoas", json=NOVA).status_code == 403
@@ -155,12 +155,12 @@ def test_o_papel_do_app_so_chama_as_duas_funcoes_liberadas(conexao):
         conexao.execute("ROLLBACK TO SAVEPOINT s")
 
 
-# ---------------------------------------------------------------- "Analista" (nome na tela; o banco ainda grava "Operador")
-def test_analista_e_aceito_e_gravado_como_operador_ate_o_bot_trocar(admin, criar_pessoa, conexao):
-    r = admin.post("/admin/pessoas", json={**NOVA, "cargo": "Analista"})
+# ---------------------------------------------------------------- "Operador" é o nome antigo de "Analista" (migration 035)
+def test_operador_e_aceito_como_nome_antigo_e_gravado_como_analista(admin, criar_pessoa, conexao):
+    r = admin.post("/admin/pessoas", json={**NOVA, "cargo": "Operador"})
     assert r.status_code == 201, r.text
     novo = r.json()["pessoa"]["id"]
-    assert conexao.execute("SELECT cargo FROM usuarios WHERE id = %s", (novo,)).fetchone()[0] == "Operador"
+    assert conexao.execute("SELECT cargo FROM usuarios WHERE id = %s", (novo,)).fetchone()[0] == "Analista"
     outro = criar_pessoa(usuario="caio.teste", cargo="Consultor")
-    assert admin.put(f"/admin/pessoas/{outro}/cargo", json={"cargo": "Analista"}).status_code == 200
-    assert conexao.execute("SELECT cargo FROM usuarios WHERE id = %s", (outro,)).fetchone()[0] == "Operador"
+    assert admin.put(f"/admin/pessoas/{outro}/cargo", json={"cargo": "Operador"}).status_code == 200
+    assert conexao.execute("SELECT cargo FROM usuarios WHERE id = %s", (outro,)).fetchone()[0] == "Analista"

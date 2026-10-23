@@ -24,7 +24,7 @@ def test_lista_mostra_todos_com_situacao_e_sem_telefone(admin, criar_pessoa, con
         "UPDATE app.credenciais SET bloqueado_ate = now() + interval '10 minutes' WHERE usuario = 'ana.teste'"
     )
     sem_app = conexao.execute(
-        "INSERT INTO usuarios (telefone, nome, cargo) VALUES ('5500000000898', 'Davi (teste)', 'Operador') RETURNING id"
+        "INSERT INTO usuarios (telefone, nome, cargo) VALUES ('5500000000898', 'Davi (teste)', 'Analista') RETURNING id"
     ).fetchone()[0]
     r = admin.get("/admin/pessoas")
     assert r.status_code == 200
@@ -34,7 +34,7 @@ def test_lista_mostra_todos_com_situacao_e_sem_telefone(admin, criar_pessoa, con
     assert _pessoa(lista, pendente)["situacao"] == "Senha provisória pendente"
     assert _pessoa(lista, bloqueada)["situacao"] == "Bloqueado pelo Admin"
     assert _pessoa(lista, sem_app) | {"id": 0} == {
-        "id": 0, "nome": "Davi (teste)", "cargo": "Operador", "usuario": None, "situacao": "Sem usuário no app"
+        "id": 0, "nome": "Davi (teste)", "cargo": "Analista", "usuario": None, "situacao": "Sem usuário no app"
     }
     # os usuários fictícios do demo.sql também aparecem
     assert any(p["nome"] == "Ana (demo)" for p in lista)
@@ -42,7 +42,7 @@ def test_lista_mostra_todos_com_situacao_e_sem_telefone(admin, criar_pessoa, con
 
 def test_admin_define_usuario_e_depois_gera_a_provisoria(admin, conexao):
     pid = conexao.execute(
-        "INSERT INTO usuarios (telefone, nome, cargo) VALUES ('5500000000897', 'Eva (teste)', 'Operador') RETURNING id"
+        "INSERT INTO usuarios (telefone, nome, cargo) VALUES ('5500000000897', 'Eva (teste)', 'Analista') RETURNING id"
     ).fetchone()[0]
     r = admin.put(f"/admin/pessoas/{pid}/usuario", json={"usuario": " Eva.Teste "})
     assert r.status_code == 200
@@ -76,7 +76,7 @@ def test_pessoa_inexistente_da_404(admin):
     assert admin.put("/admin/pessoas/999999999/usuario", json={"usuario": "ninguem.aqui"}).status_code == 404
 
 
-@pytest.mark.parametrize("cargo", ["Operador", "Consultor", "Coletor"])
+@pytest.mark.parametrize("cargo", ["Analista", "Consultor", "Coletor"])
 def test_so_admin_ve_e_mexe_em_pessoas(cliente, criar_pessoa, cargo):
     pid = criar_pessoa(usuario="nao.admin", cargo=cargo)
     cliente.post("/login", json={"usuario": "nao.admin", "senha": SENHA})
