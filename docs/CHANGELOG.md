@@ -66,6 +66,7 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 - **Correção:** entrar num turno escolhe sempre o turno em andamento ou o próximo, nunca um que já terminou (às 02:00, a Tarde com entrada 15:00 caía na Tarde da véspera e a entrada fechava na hora, sem o app avisar) (APP-022).
 - **"Analista" no lugar de "Operador" nas telas:** menu, Minha conta e Admin → Pessoas mostram "Analista"; a API aceita "Analista" ao cadastrar e trocar cargo e grava "Operador" até a sessão do bot trocar o nome no banco e no WhatsApp (pedido PB7).
 - **Entrar no turno só na hora:** dá para entrar no turno em andamento ou no próximo, se ele começa em até 2 horas (quem chega mais cedo); antes disso o app avisa ("A Tarde começa às 16:00. Entre quando chegar ou escolha a Madrugada.") (APP-022).
+- **Check-in no turno:** Operador e Coletor só usam o resto do app (Início, páginas e, depois, o relatório do turno) depois de marcar a entrada; antes disso, qualquer tela mostra o Turno, e a API recusa ("Entre no turno antes de continuar."). Entrada e saída valem a **hora do toque**; corrigir o próprio horário pede **motivo**, e o horário marcado no app fica guardado (migration **053**). Admin e Consultor ficam livres (APP-022b).
 
 ## [1.3.0] - 2026-10-15
 

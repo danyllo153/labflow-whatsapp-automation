@@ -3,9 +3,17 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { enviarJson, lerJson } from "../api";
 
 /**
- * Turno (07 §2; 08 A2; APP-022): escolher Manhã, Tarde ou Madrugada (o app sugere pelo horário), ajustar o próprio
- * horário e "Sair do turno". Os horários são sempre de Brasília; a Madrugada conta no dia em que começa.
+ * Turno (07 §2; 08 A2; APP-022 e APP-022b): escolher Manhã, Tarde ou Madrugada (o app sugere pelo horário) e marcar
+ * a entrada, como um check-in: vale a hora do clique, e a saída também. Corrigir o próprio horário pede motivo.
+ * Para Operador e Coletor o resto do app só abre depois da entrada (PortaoDoTurno). Horários de Brasília.
  */
+
+/** Aviso para o portão do check-in conferir de novo o turno (depois de entrar ou sair). */
+export const TURNO_MUDOU = "labflow:turno-mudou";
+
+function avisarQueMudou() {
+  window.dispatchEvent(new Event(TURNO_MUDOU));
+}
 
 export interface TurnoPadrao {
   id: number;
@@ -21,6 +29,9 @@ export interface Entrada {
   dia: string; // AAAA-MM-DD
   entrada: string; // HH:MM
   saida: string | null;
+  entrada_registrada: string; // a hora do clique
+  saida_registrada: string | null;
+  motivo_correcao: string | null;
 }
 
 export interface FeitoNoTurno {
@@ -37,6 +48,7 @@ export interface EstadoDoTurno {
   turnos: TurnoPadrao[];
   sugestao: { turno_id: number; dia: string };
   pode_entrar: boolean;
+  checkin_obrigatorio: boolean;
   no_turno: Entrada | null;
   recentes: Entrada[];
   feito_no_turno: FeitoNoTurno;
@@ -55,7 +67,8 @@ export default function Turno() {
   const [estado, setEstado] = useState<EstadoDoTurno | null>(null);
   const [erro, setErro] = useState("");
 
-  const carregar = useCallback(async () => {
+  const carregar = useCallback(async (mudou = false) => {
+    if (mudou) avisarQueMudou();
     try {
       setEstado(await lerJson<EstadoDoTurno>("/turno"));
       setErro("");
@@ -71,6 +84,9 @@ export default function Turno() {
   return (
     <section className="pagina-turno">
       <h1>Turno</h1>
+      {estado?.checkin_obrigatorio && !estado.no_turno && (
+        <p className="aviso-checkin">Marque a sua entrada no turno para abrir o resto do app.</p>
+      )}
       {erro && (
         <div className="cartao" role="alert">
           <p className="mensagem-erro">{erro}</p>
@@ -87,9 +103,9 @@ export default function Turno() {
               <p>O cargo Consultor acompanha o laboratório, mas não entra em turno.</p>
             </div>
           ) : estado.no_turno ? (
-            <NoTurno entrada={estado.no_turno} aoMudar={carregar} />
+            <NoTurno entrada={estado.no_turno} aoMudar={() => carregar(true)} />
           ) : (
-            <EntrarNoTurno estado={estado} aoEntrar={carregar} />
+            <EntrarNoTurno estado={estado} aoEntrar={() => carregar(true)} />
           )}
           <FeitoNoTurnoCartao feito={estado.feito_no_turno} />
           {estado.pode_entrar && estado.recentes.some((r) => r.saida) && (
@@ -99,7 +115,7 @@ export default function Turno() {
                 {estado.recentes
                   .filter((r) => r.saida)
                   .map((r) => (
-                    <LinhaDoTurno key={r.id} entrada={r} aoMudar={carregar} />
+                    <LinhaDoTurno key={r.id} entrada={r} aoMudar={() => carregar()} />
                   ))}
               </ul>
             </div>
@@ -113,21 +129,16 @@ export default function Turno() {
 function EntrarNoTurno({ estado, aoEntrar }: { estado: EstadoDoTurno; aoEntrar: () => Promise<void> }) {
   const [turnoId, setTurnoId] = useState(estado.sugestao.turno_id);
   const escolhido = estado.turnos.find((t) => t.id === turnoId) ?? estado.turnos[0];
-  const [entrada, setEntrada] = useState(escolhido.inicio);
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState("");
 
-  function escolher(t: TurnoPadrao) {
-    setTurnoId(t.id);
-    setEntrada(t.inicio);
-  }
 
   async function entrar(evento: FormEvent) {
     evento.preventDefault();
     setEnviando(true);
     setErro("");
     try {
-      await enviarJson("/turno/entrar", { turno_id: turnoId, entrada });
+      await enviarJson("/turno/entrar", { turno_id: turnoId });
       await aoEntrar();
     } catch (e) {
       setErro(mensagem(e, "Não foi possível entrar no turno."));
@@ -143,7 +154,7 @@ function EntrarNoTurno({ estado, aoEntrar }: { estado: EstadoDoTurno; aoEntrar: 
         <legend>Qual turno?</legend>
         {estado.turnos.map((t) => (
           <label key={t.id} className={t.id === turnoId ? "opcao-turno escolhida" : "opcao-turno"}>
-            <input type="radio" name="turno" value={t.id} checked={t.id === turnoId} onChange={() => escolher(t)} />
+            <input type="radio" name="turno" value={t.id} checked={t.id === turnoId} onChange={() => setTurnoId(t.id)} />
             <span>
               <strong>{t.nome}</strong>{" "}
               <span className="texto-secundario">
@@ -154,11 +165,7 @@ function EntrarNoTurno({ estado, aoEntrar }: { estado: EstadoDoTurno; aoEntrar: 
           </label>
         ))}
       </fieldset>
-      <label className="campo campo-hora">
-        Sua entrada
-        <input type="time" required value={entrada} onChange={(e) => setEntrada(e.target.value)} />
-      </label>
-      <p className="texto-secundario">Mude se chegou em outro horário (atraso, escala diferente).</p>
+      <p className="texto-secundario">A entrada fica registrada com a hora do toque no botão.</p>
       {erro && (
         <p className="mensagem-erro" role="alert">
           {erro}
@@ -175,24 +182,100 @@ function agoraHHMM(): string {
   return new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" });
 }
 
-function NoTurno({ entrada, aoMudar }: { entrada: Entrada; aoMudar: () => Promise<void> }) {
-  const [editando, setEditando] = useState(false);
+/** Corrigir o próprio horário: sempre com motivo; o horário do clique continua guardado (APP-022b). */
+function CorrigirHorario(props: { entrada: Entrada; titulo: string; aoTerminar: (salvou: boolean) => void }) {
+  const { entrada } = props;
   const [horaEntrada, setHoraEntrada] = useState(entrada.entrada);
-  const [saindo, setSaindo] = useState(false);
-  const [horaSaida, setHoraSaida] = useState("");
+  const [horaSaida, setHoraSaida] = useState(entrada.saida ?? "");
+  const [motivo, setMotivo] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState("");
 
-  async function enviar(acao: () => Promise<unknown>) {
+  async function salvar(evento: FormEvent) {
+    evento.preventDefault();
+    if (motivo.trim().length < 5) {
+      setErro("Escreva o motivo da correção (por exemplo: esqueci de marcar na hora).");
+      return;
+    }
     setEnviando(true);
     setErro("");
     try {
-      await acao();
-      await aoMudar();
-      setEditando(false);
-      setSaindo(false);
+      const corpo = { entrada: horaEntrada, motivo: motivo.trim(), ...(entrada.saida ? { saida: horaSaida } : {}) };
+      await enviarJson(`/turno/entradas/${entrada.id}`, corpo, "PUT");
+      props.aoTerminar(true);
     } catch (e) {
       setErro(mensagem(e, "Não foi possível gravar."));
+    } finally {
+      setEnviando(false);
+    }
+  }
+
+  return (
+    <form className="corrigir-horario" onSubmit={salvar} aria-label={`Corrigir ${props.titulo}`}>
+      <div className="linha-formulario">
+        <label className="campo campo-hora">
+          Entrada
+          <input type="time" required value={horaEntrada} onChange={(e) => setHoraEntrada(e.target.value)} />
+        </label>
+        {entrada.saida && (
+          <label className="campo campo-hora">
+            Saída
+            <input type="time" required value={horaSaida} onChange={(e) => setHoraSaida(e.target.value)} />
+          </label>
+        )}
+      </div>
+      <label className="campo">
+        Motivo da correção
+        <textarea rows={2} maxLength={300} value={motivo} onChange={(e) => setMotivo(e.target.value)} />
+      </label>
+      <p className="texto-secundario">
+        O horário marcado no app ({entrada.entrada_registrada}
+        {entrada.saida_registrada && ` às ${entrada.saida_registrada}`}) continua guardado junto com a correção.
+      </p>
+      {erro && (
+        <p className="mensagem-erro" role="alert">
+          {erro}
+        </p>
+      )}
+      <div className="botoes-lado">
+        <button type="submit" className="botao botao-principal" disabled={enviando}>
+          Salvar correção
+        </button>
+        <button type="button" className="botao botao-simples" onClick={() => props.aoTerminar(false)}>
+          Cancelar
+        </button>
+      </div>
+    </form>
+  );
+}
+
+function Corrigido({ entrada }: { entrada: Entrada }) {
+  if (!entrada.motivo_correcao) return null;
+  const marcado = entrada.saida_registrada ? `${entrada.entrada_registrada} às ${entrada.saida_registrada}` : entrada.entrada_registrada;
+  return (
+    <span className="texto-secundario corrigido">
+      Corrigido (marcado no app: {marcado}). Motivo: {entrada.motivo_correcao}
+    </span>
+  );
+}
+
+function NoTurno({ entrada, aoMudar }: { entrada: Entrada; aoMudar: () => Promise<void> }) {
+  const [corrigindo, setCorrigindo] = useState(false);
+  const [saindo, setSaindo] = useState<string | null>(null); // a hora mostrada na confirmação
+  const [enviando, setEnviando] = useState(false);
+  const [erro, setErro] = useState("");
+  const titulo = `a entrada no turno ${entrada.turno}`;
+
+  async function sair(evento: FormEvent) {
+    evento.preventDefault();
+    setEnviando(true);
+    setErro("");
+    try {
+      await enviarJson("/turno/sair", {});
+      setSaindo(null);
+      await aoMudar();
+    } catch (e) {
+      setErro(mensagem(e, "Não foi possível registrar a saída."));
     } finally {
       setEnviando(false);
     }
@@ -205,69 +288,42 @@ function NoTurno({ entrada, aoMudar }: { entrada: Entrada; aoMudar: () => Promis
       </h2>
       <p>
         Entrada às <strong>{entrada.entrada}</strong>.{" "}
-        {!editando && !saindo && (
-          <button type="button" className="link-botao" onClick={() => setEditando(true)}>
+        {!corrigindo && !saindo && (
+          <button type="button" className="link-botao" onClick={() => setCorrigindo(true)}>
             Corrigir a entrada
           </button>
         )}
       </p>
+      <Corrigido entrada={entrada} />
 
-      {editando && (
-        <form
-          className="linha-formulario"
-          onSubmit={(e) => {
-            e.preventDefault();
-            void enviar(() => enviarJson(`/turno/entradas/${entrada.id}`, { entrada: horaEntrada }, "PUT"));
+      {corrigindo && (
+        <CorrigirHorario
+          entrada={entrada}
+          titulo={titulo}
+          aoTerminar={(salvou) => {
+            setCorrigindo(false);
+            if (salvou) void aoMudar();
           }}
-        >
-          <label className="campo campo-hora">
-            Entrada
-            <input type="time" required value={horaEntrada} onChange={(e) => setHoraEntrada(e.target.value)} />
-          </label>
-          <button type="submit" className="botao botao-principal" disabled={enviando}>
-            Salvar
-          </button>
-          <button type="button" className="botao botao-simples" onClick={() => setEditando(false)}>
-            Cancelar
-          </button>
-        </form>
+        />
       )}
 
       {saindo ? (
-        <form
-          className="confirmacao"
-          aria-label="Confirmar a saída"
-          onSubmit={(e) => {
-            e.preventDefault();
-            void enviar(() => enviarJson("/turno/sair", { saida: horaSaida }));
-          }}
-        >
+        <form className="confirmacao" aria-label="Confirmar a saída" onSubmit={sair}>
           <p>
-            Registrar a sua saída do turno {entrada.turno}? A entrada foi às {entrada.entrada}.
+            Registrar a sua saída do turno {entrada.turno} agora, às <strong>{saindo}</strong>? A entrada foi às {entrada.entrada}.
           </p>
-          <label className="campo campo-hora">
-            Saída
-            <input type="time" required value={horaSaida} onChange={(e) => setHoraSaida(e.target.value)} />
-          </label>
           <div className="botoes-lado">
             <button type="submit" className="botao botao-principal" disabled={enviando}>
               Confirmar saída
             </button>
-            <button type="button" className="botao botao-simples" onClick={() => setSaindo(false)}>
+            <button type="button" className="botao botao-simples" onClick={() => setSaindo(null)}>
               Continuar no turno
             </button>
           </div>
         </form>
       ) : (
-        !editando && (
-          <button
-            type="button"
-            className="botao botao-secundario"
-            onClick={() => {
-              setHoraSaida(agoraHHMM());
-              setSaindo(true);
-            }}
-          >
+        !corrigindo && (
+          <button type="button" className="botao botao-secundario" onClick={() => setSaindo(agoraHHMM())}>
             Sair do turno
           </button>
         )
@@ -282,58 +338,30 @@ function NoTurno({ entrada, aoMudar }: { entrada: Entrada; aoMudar: () => Promis
 }
 
 function LinhaDoTurno({ entrada, aoMudar }: { entrada: Entrada; aoMudar: () => Promise<void> }) {
-  const [editando, setEditando] = useState(false);
-  const [horaEntrada, setHoraEntrada] = useState(entrada.entrada);
-  const [horaSaida, setHoraSaida] = useState(entrada.saida ?? "");
-  const [erro, setErro] = useState("");
-
-  async function salvar(evento: FormEvent) {
-    evento.preventDefault();
-    setErro("");
-    try {
-      await enviarJson(`/turno/entradas/${entrada.id}`, { entrada: horaEntrada, saida: horaSaida }, "PUT");
-      setEditando(false);
-      await aoMudar();
-    } catch (e) {
-      setErro(mensagem(e, "Não foi possível gravar."));
-    }
-  }
-
+  const [corrigindo, setCorrigindo] = useState(false);
   const titulo = `${entrada.turno} de ${diaMes(entrada.dia)}`;
   return (
     <li>
-      {editando ? (
-        <form className="linha-formulario" onSubmit={salvar} aria-label={`Corrigir ${titulo}`}>
-          <strong>{titulo}</strong>
-          <label className="campo campo-hora">
-            Entrada
-            <input type="time" required value={horaEntrada} onChange={(e) => setHoraEntrada(e.target.value)} />
-          </label>
-          <label className="campo campo-hora">
-            Saída
-            <input type="time" required value={horaSaida} onChange={(e) => setHoraSaida(e.target.value)} />
-          </label>
-          <button type="submit" className="botao botao-principal">
-            Salvar
-          </button>
-          <button type="button" className="botao botao-simples" onClick={() => setEditando(false)}>
-            Cancelar
-          </button>
-          {erro && (
-            <p className="mensagem-erro" role="alert">
-              {erro}
-            </p>
-          )}
-        </form>
-      ) : (
-        <>
-          <span>
-            <strong>{titulo}</strong> · {entrada.entrada} às {entrada.saida}
-          </span>
-          <button type="button" className="link-botao" aria-label={`Corrigir o horário de ${titulo}`} onClick={() => setEditando(true)}>
+      <div className="linha-turno">
+        <span>
+          <strong>{titulo}</strong> · {entrada.entrada} às {entrada.saida}
+        </span>
+        {!corrigindo && (
+          <button type="button" className="link-botao" aria-label={`Corrigir o horário de ${titulo}`} onClick={() => setCorrigindo(true)}>
             Corrigir
           </button>
-        </>
+        )}
+      </div>
+      <Corrigido entrada={entrada} />
+      {corrigindo && (
+        <CorrigirHorario
+          entrada={entrada}
+          titulo={titulo}
+          aoTerminar={(salvou) => {
+            setCorrigindo(false);
+            if (salvou) void aoMudar();
+          }}
+        />
       )}
     </li>
   );

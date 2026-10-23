@@ -1060,3 +1060,31 @@ a.cartao-pagina:hover {
 .aviso-turno {
   background: var(--laranja-suave);
 }
+.linha-turno {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+.lista-turnos li {
+  flex-direction: column;
+}
+.corrigido {
+  display: block;
+  font-size: 0.9em;
+}
+.corrigir-horario textarea {
+  width: 100%;
+  font: inherit;
+  padding: 8px;
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+}
+.aviso-checkin {
+  background: var(--laranja-suave);
+  border: 1px solid var(--laranja);
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-weight: 600;
+}
