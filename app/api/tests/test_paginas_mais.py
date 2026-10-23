@@ -179,3 +179,59 @@ def test_excel_tem_as_mesmas_linhas_da_pagina(cliente, logado, recebimento_nfc, 
     assert r.status_code == 200 and r.headers["content-type"] == MIME_XLSX
     folha = load_workbook(BytesIO(r.content)).worksheets[0]
     assert folha.title == aba and folha.max_row - 1 == total > 0
+
+
+# ---------------------------------------------------------------- APP-032: gráficos da Visão geral e resumo por situação
+def test_visao_geral_traz_um_ponto_por_dia_e_bate_com_as_views(cliente, conexao, criar_pessoa):
+    criar_pessoa(usuario="ana.teste", cargo="Operador")
+    cliente.post("/login", json={"usuario": "ana.teste", "senha": "Senha-de-teste-1"})
+    corpo = cliente.get("/paginas/visao-geral", params={"data_de": "2026-10-10", "data_ate": "2026-10-19"}).json()
+    serie = corpo["serie"]
+    assert [p["dia"] for p in serie] == [f"2026-10-{d}" for d in range(10, 20)]
+    dia = "2026-10-17"
+    esperado_nao_ok = (
+        conexao.execute("SELECT count(*) FROM bi.contagens WHERE lido AND alarme AND data_leitura = %s", (dia,)).fetchone()[0]
+        + conexao.execute("SELECT count(*) FROM bi.testes WHERE positivo AND data_resultado = %s", (dia,)).fetchone()[0]
+        + conexao.execute("SELECT count(*) FROM bi.desvios WHERE data_abertura = %s", (dia,)).fetchone()[0]
+    )
+    esperado_registradas = (
+        conexao.execute("SELECT count(*) FROM bi.contagens WHERE lido AND data_leitura = %s", (dia,)).fetchone()[0]
+        + conexao.execute("SELECT count(*) FROM bi.recebimento_nfc WHERE lido AND data_leitura = %s", (dia,)).fetchone()[0]
+        + conexao.execute("SELECT count(*) FROM bi.testes WHERE data_resultado = %s", (dia,)).fetchone()[0]
+        + conexao.execute(
+            "SELECT count(*) FROM bi.drops WHERE (concluido_em AT TIME ZONE 'America/Sao_Paulo')::date = %s", (dia,)
+        ).fetchone()[0]
+        + conexao.execute(
+            "SELECT count(*) FROM bi.leituras_nfc WHERE (lida_em AT TIME ZONE 'America/Sao_Paulo')::date = %s", (dia,)
+        ).fetchone()[0]
+    )
+    ponto = next(p for p in serie if p["dia"] == dia)
+    assert (ponto["registradas"], ponto["nao_ok"]) == (esperado_registradas, esperado_nao_ok)
+    assert sum(p["registradas"] for p in serie) > 0
+    assert cliente.get("/paginas/visao-geral", params={"data_de": "2025-01-01", "data_ate": "2026-10-19"}).status_code == 422
+
+
+def test_paginas_trazem_o_resumo_por_situacao_do_que_esta_filtrado(cliente, conexao, criar_pessoa):
+    criar_pessoa(usuario="ana.teste", cargo="Operador")
+    cliente.post("/login", json={"usuario": "ana.teste", "senha": "Senha-de-teste-1"})
+    corpo = cliente.get("/paginas/recebimento").json()
+    assert corpo["resumo_coluna"] == "situacao"
+    por_situacao = {r["rotulo"]: r["total"] for r in corpo["resumo"]}
+    assert sum(por_situacao.values()) == corpo["total"]
+    esperado = dict(
+        conexao.execute(
+            "SELECT CASE WHEN lido AND alarme THEN 'Não ok' WHEN lido THEN 'Ok' ELSE situacao END, count(*) "
+            "FROM bi.contagens WHERE origem = 'Recebimento' GROUP BY 1"
+        ).fetchall()
+    )
+    assert por_situacao == {k: v for k, v in esperado.items()}
+    # o resumo acompanha o filtro, não a página
+    so_atrasados = cliente.get("/paginas/recebimento", params={"situacao": "Atrasado"}).json()
+    assert [r["rotulo"] for r in so_atrasados["resumo"]] == ["Atrasado"]
+    assert so_atrasados["resumo"][0]["total"] == so_atrasados["total"]
+    # a ordem põe o que pede atenção primeiro
+    ordem = [r["rotulo"] for r in corpo["resumo"]]
+    assert ordem.index("Atrasado") < ordem.index("Ok") if {"Atrasado", "Ok"} <= set(ordem) else True
+    # páginas por status (Navios, Tanques terra) também
+    navios = cliente.get("/paginas/navios").json()
+    assert navios["resumo_coluna"] == "status" and sum(r["total"] for r in navios["resumo"]) == navios["total"]

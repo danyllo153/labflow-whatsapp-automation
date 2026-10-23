@@ -24,7 +24,7 @@ describe("Aparência (APP-031)", () => {
     guardarTema("escuro");
     expect(window.localStorage.getItem(CHAVE_TEMA)).toBe("escuro");
     expect(document.documentElement.getAttribute("data-tema")).toBe("escuro");
-    expect(document.querySelector('meta[name="theme-color"]')?.getAttribute("content")).toBe("#2B2217");
+    expect(document.querySelector('meta[name="theme-color"]')?.getAttribute("content")).toBe("#14283D");
     expect(lerTema()).toBe("escuro");
   });
 
@@ -32,7 +32,7 @@ describe("Aparência (APP-031)", () => {
     preparar(true);
     guardarTema("claro");
     expect(document.documentElement.getAttribute("data-tema")).toBe("claro");
-    expect(document.querySelector('meta[name="theme-color"]')?.getAttribute("content")).toBe("#F6B04A");
+    expect(document.querySelector('meta[name="theme-color"]')?.getAttribute("content")).toBe("#1C5A94");
   });
 
   it("Automático num aparelho escuro usa a barra escura e apaga a escolha guardada", () => {
@@ -41,7 +41,7 @@ describe("Aparência (APP-031)", () => {
     guardarTema("auto");
     expect(window.localStorage.getItem(CHAVE_TEMA)).toBeNull();
     expect(document.documentElement.hasAttribute("data-tema")).toBe(false);
-    expect(document.querySelector('meta[name="theme-color"]')?.getAttribute("content")).toBe("#2B2217");
+    expect(document.querySelector('meta[name="theme-color"]')?.getAttribute("content")).toBe("#14283D");
   });
 
   it("valor guardado estranho vira Automático", () => {

@@ -215,8 +215,8 @@ describe("sair, trocar a senha por vontade própria e sessão expirada (APP-013)
     const api = servidorFalso({ "GET /me": logada, "POST /sair": () => ({ status: 204 }) });
     abrir("/");
     const u = userEvent.setup();
-    const lateral = await screen.findByRole("complementary", { name: "Menu" });
-    await u.click(within(lateral).getByRole("button", { name: "Sair" }));
+    await u.click(await screen.findByRole("button", { name: "Conta de Ana Souza" }));
+    await u.click(within(screen.getByRole("menu", { name: "Conta" })).getByRole("menuitem", { name: "Sair" }));
     expect(await screen.findByRole("heading", { name: "Entrar" })).toBeInTheDocument();
     expect(api.vezes("POST /sair")).toBe(1);
   });
@@ -280,10 +280,35 @@ describe("sair, trocar a senha por vontade própria e sessão expirada (APP-013)
     expect(window.localStorage.getItem("labflow:tema")).toBeNull();
   });
 
-  it("no computador o menu lateral leva à Aparência (Minha conta)", async () => {
+  it("o canto direito do topo tem só dois símbolos: configurações e conta (APP-032)", async () => {
     servidorFalso({ "GET /me": logada });
     abrir("/");
-    const lateral = await screen.findByRole("complementary", { name: "Menu" });
-    expect(within(lateral).getByRole("link", { name: "Aparência (claro e escuro)" })).toHaveAttribute("href", "/conta");
+    const configuracoes = await screen.findByRole("link", { name: "Configurações" });
+    expect(configuracoes).toHaveAttribute("href", "/conta");
+    expect(screen.queryByText("Trocar senha")).not.toBeInTheDocument(); // o menu só abre ao tocar no boneco
+    const u = userEvent.setup();
+    await u.click(screen.getByRole("button", { name: "Conta de Ana Souza" }));
+    const menu = screen.getByRole("menu", { name: "Conta" });
+    expect(menu).toHaveTextContent("Ana Souza");
+    expect(menu).toHaveTextContent("ana.souza · Analista");
+    expect(within(menu).getByRole("menuitem", { name: "Minha conta" })).toHaveAttribute("href", "/conta");
+    expect(within(menu).getByRole("menuitem", { name: "Trocar senha" })).toHaveAttribute("href", "/conta/senha");
+    expect(within(menu).getByRole("menuitem", { name: "Sair" })).toBeInTheDocument();
+    await u.keyboard("{Escape}");
+    expect(screen.queryByRole("menu", { name: "Conta" })).not.toBeInTheDocument();
+  });
+
+  it("o menu da conta fecha ao tocar fora e ao mudar de tela", async () => {
+    servidorFalso({ "GET /me": logada });
+    abrir("/");
+    const u = userEvent.setup();
+    await u.click(await screen.findByRole("button", { name: "Conta de Ana Souza" }));
+    expect(screen.getByRole("menu", { name: "Conta" })).toBeInTheDocument();
+    await u.click(screen.getByRole("heading", { level: 1 }));
+    expect(screen.queryByRole("menu", { name: "Conta" })).not.toBeInTheDocument();
+    await u.click(screen.getByRole("button", { name: "Conta de Ana Souza" }));
+    await u.click(within(screen.getByRole("menu", { name: "Conta" })).getByRole("menuitem", { name: "Minha conta" }));
+    expect(await screen.findByRole("heading", { level: 1, name: "Minha conta" })).toBeInTheDocument();
+    expect(screen.queryByRole("menu", { name: "Conta" })).not.toBeInTheDocument();
   });
 });
