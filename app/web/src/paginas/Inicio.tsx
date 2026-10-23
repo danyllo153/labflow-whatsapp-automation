@@ -1,9 +1,14 @@
 import { useCallback, useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 
 import { lerJson } from "../api";
 import { useSessao } from "../sessao";
+import type { EstadoDoTurno } from "./Turno";
 
-/** Início: pendências de hoje (07 §3; APP-014). Lê GET /pendencias-hoje, que conta pelas views do Power BI. */
+/**
+ * Início: pendências de hoje (07 §3; APP-014). Lê GET /pendencias-hoje, que conta pelas views do Power BI.
+ * O cartão "Feito no turno" e o aviso para entrar no turno vêm de GET /turno (APP-022).
+ */
 
 export interface Pendencia {
   bloco: string;
@@ -43,6 +48,8 @@ export default function Inicio() {
   const [atualizadoEm, setAtualizadoEm] = useState<Date | null>(null);
   const [filtro, setFiltro] = useState<Filtro>("todos");
   const [abertos, setAbertos] = useState<Record<string, boolean>>({});
+  const [turno, setTurno] = useState<EstadoDoTurno | null>(null);
+  const navegar = useNavigate();
 
   const carregar = useCallback(async () => {
     try {
@@ -52,6 +59,8 @@ export default function Inicio() {
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não foi possível carregar as pendências.");
     }
+    // o turno é um extra: se falhar, o Início continua com as pendências
+    lerJson<EstadoDoTurno>("/turno").then(setTurno, () => setTurno(null));
   }, []);
 
   useEffect(() => {
@@ -89,6 +98,14 @@ export default function Inicio() {
         </div>
       )}
 
+      {turno?.pode_entrar && !turno.no_turno && (
+        <div className="cartao aviso-turno">
+          <p>
+            Você ainda não entrou no turno. <Link to="/turno">Entrar no turno</Link>
+          </p>
+        </div>
+      )}
+
       {!dados && !erro && <p className="carregando">Carregando as pendências...</p>}
 
       {dados && (
@@ -97,6 +114,14 @@ export default function Inicio() {
             <CartaoNumero rotulo="Para hoje" valor={dados.vence_hoje} ativo={filtro === "Vence hoje"} onClick={() => escolher("Vence hoje")} />
             <CartaoNumero rotulo="Atrasados" valor={dados.atrasados} ativo={filtro === "Atrasado"} alerta={dados.atrasados > 0} onClick={() => escolher("Atrasado")} />
             <CartaoNumero rotulo="Desvios abertos" valor={dados.desvios_abertos} ativo={filtro === "Desvios"} onClick={() => escolher("Desvios")} />
+            {turno && (
+              <CartaoNumero
+                rotulo="Feito no turno"
+                valor={turno.feito_no_turno.total}
+                ativo={false}
+                onClick={() => navegar("/turno")}
+              />
+            )}
           </div>
 
           {filtro !== "todos" && (
