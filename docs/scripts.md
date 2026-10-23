@@ -108,7 +108,7 @@ Parar e remover: `Unregister-ScheduledTask -TaskName 'LabFlow tunel Power BI' -C
 
 Arquivos: [`scripts/gerar-excel-labflow.ps1`](../scripts/gerar-excel-labflow.ps1) e [`scripts/excel-labflow.config.json`](../scripts/excel-labflow.config.json) (as abas, os SQL, os rótulos e os gráficos, em UTF-8 com acento).
 
-Gera o `LabFlow-Excel.xlsx` (em `OneDrive\Valts\estudos-labflow\excel`, fora do Git): uma aba **Painel** (cartões e gráfico de pendências atrasadas), uma aba por análise (Coletas, Drops, Desvios, TAB, Coliformes, C.T e B.L, Placas NFC e Recebimento NFC), cada uma com **gráficos de tendência no topo** e, embaixo, a tabela com **o registro mais recente na primeira linha**, mais as abas Tendencias (dados) e Ajuda. Tudo lê as views `bi.*` pelo usuário `labflow_leitura`; o arquivo **só lê** (corrigir dado é pelo app, pelo bot ou por um Admin).
+Gera o `LabFlow-Excel.xlsx` (em `OneDrive\Valts\estudos-labflow\excel`, fora do Git) **com a cara do painel do Power BI** (tema claro "LabFlow claro", desde 23/10/2026): em toda aba um cabeçalho com **botões de navegação** entre as abas, **cartões arredondados** (número grande, ícone e selo colorido) e gráficos no tema (cores de Terra, Navio, Atrasado, Lido... iguais às do Power BI). A aba **Painel** (Visão geral) tem 8 cartões, o andamento das leituras de NFC, os atrasados por área, a rosca da situação das leituras com o total no meio, as coletas por dia (terra e navio) e os testes por mês; cada aba de análise (Coletas, Drops, Desvios, TAB, Coliformes, C.T e B.L, Placas NFC e Recebimento NFC) tem 4 cartões, dois **gráficos de tendência** e, embaixo, a tabela com **o registro mais recente na primeira linha**. Abas escondidas: Tendencias (dados) e Calculos (os números dos cartões e do painel). Textos, cartões e cores ficam no JSON; o `.ps1` fica só em ASCII (o PowerShell 5.1 lê script sem BOM como ANSI). Tudo lê as views `bi.*` pelo usuário `labflow_leitura`; o arquivo **só lê** (corrigir dado é pelo app, pelo bot ou por um Admin).
 
 Pré-requisitos (uma vez por computador): driver **psqlODBC x64** (`psqlodbc_x64.msi`, do site do PostgreSQL), o túnel do banco aberto em `localhost:15432` (`tunel-powerbi.ps1`) e o **Excel fechado**.
 
@@ -116,7 +116,7 @@ Pré-requisitos (uma vez por computador): driver **psqlODBC x64** (`psqlodbc_x64
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts\gerar-excel-labflow.ps1
 ```
 
-A **senha do `labflow_leitura` não vai para o arquivo nem para o script**: na primeira vez o Excel pergunta (Dados > Atualizar Tudo, aba Banco de Dados) e guarda no Windows; depois é só Atualizar Tudo. Para refazer o visual, edite o JSON e rode de novo. `-Pdf caminho.pdf` também exporta um PDF.
+A **senha do `labflow_leitura` não vai para o arquivo nem para o script**: na primeira vez o Excel pergunta (Dados > Atualizar Tudo, aba Banco de Dados) e guarda no Windows; depois é só Atualizar Tudo. Para refazer o visual, edite o JSON e rode de novo. `-Pdf caminho.pdf` também exporta um PDF. Com o Excel aberto o script se recusa a rodar; para testar o visual sem fechar, gere em outro caminho com `-ExcelAberto -Saida C:\temp\teste.xlsx`.
 
 ## gerar-gif.py (GIFs do README: painel e bot)
 

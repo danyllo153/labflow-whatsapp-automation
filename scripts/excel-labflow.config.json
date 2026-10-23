@@ -1,90 +1,163 @@
 {
   "paleta": {
-    "fundo": "EEF3FB",
+    "fundo": "F5F8FD",
+    "cabecalho": "EEF3FB",
     "texto": "0F2547",
     "texto2": "5B6B85",
-    "borda": "D6E0F0",
+    "borda": "E2E9F4",
+    "grade": "E9EEF6",
+    "eixo": "94A3B8",
+    "azul": "1D6FE8",
     "series": [
       "1D6FE8",
       "0E8A96",
       "D97706",
       "7C3AED",
+      "DB2777",
+      "DC2626",
       "16A34A",
-      "DC2626"
+      "EAB308",
+      "3B5B8C"
     ]
   },
   "painel": {
-    "titulo": "LabFlow — Painel do laboratório",
-    "descricao": "Resumo do que está no banco. Para atualizar: Dados > Atualizar Tudo (o túnel do banco precisa estar aberto).",
+    "titulo": "Visão geral",
+    "descricao": "O que precisa de atenção hoje: NFC, concentrado e drops. Para atualizar: Dados > Atualizar Tudo (o túnel do banco precisa estar aberto).",
     "cartoes": [
       {
-        "rotulo": "Coletas nos últimos 7 dias",
-        "formula": "=COUNTIFS(tbColetas[Data da coleta],\">=\"&TODAY()-7)",
-        "cor": "1D6FE8"
+        "rotulo": "Leituras de NFC atrasadas",
+        "formula": "=COUNTIFS(tbPlacasNFC[Situação],\"Atrasado\")",
+        "cor": "DC2626",
+        "icone": "🧫",
+        "dica": "NFC: passaram da data prevista"
+      },
+      {
+        "rotulo": "Leituras de NFC para hoje",
+        "formula": "=COUNTIFS(tbPlacasNFC[Situação],\"Vence hoje\")",
+        "cor": "D97706",
+        "icone": "⏰",
+        "dica": "NFC: ler até o fim do dia"
       },
       {
         "rotulo": "Drops atrasados",
         "formula": "=COUNTIFS(tbDrops[Situação],\"Atrasado\")",
-        "cor": "DC2626"
+        "cor": "DC2626",
+        "icone": "💧",
+        "dica": "D5, D10 e D15 pendentes"
       },
       {
         "rotulo": "Drops que vencem hoje",
         "formula": "=COUNTIFS(tbDrops[Situação],\"Vence hoje\")",
-        "cor": "D97706"
-      },
-      {
-        "rotulo": "TAB atrasados",
-        "formula": "=COUNTIFS(tbTAB[Situação],\"Atrasado\")",
-        "cor": "DC2626"
-      },
-      {
-        "rotulo": "Coliformes atrasados",
-        "formula": "=COUNTIFS(tbColiformes[Situação],\"Atrasado\")",
-        "cor": "DC2626"
+        "cor": "D97706",
+        "icone": "📅",
+        "dica": "Fazer hoje"
       },
       {
         "rotulo": "C.T e B.L atrasados",
         "formula": "=COUNTIFS(tbContagens[Situação],\"Atrasado\")",
-        "cor": "DC2626"
+        "cor": "DC2626",
+        "icone": "🧪",
+        "dica": "Concentrado e embarque"
       },
       {
-        "rotulo": "Placas NFC atrasadas",
-        "formula": "=COUNTIFS(tbPlacasNFC[Situação],\"Atrasado\")",
-        "cor": "DC2626"
+        "rotulo": "C.T e B.L com alarme",
+        "formula": "=COUNTIFS(tbContagens[Alarme],\"Sim\")",
+        "cor": "0E8A96",
+        "icone": "🚨",
+        "dica": "B.L ≥ 50 ou C.T ≥ 200"
+      },
+      {
+        "rotulo": "TAB e Coliformes atrasados",
+        "formula": "=COUNTIFS(tbTAB[Situação],\"Atrasado\")+COUNTIFS(tbColiformes[Situação],\"Atrasado\")",
+        "cor": "7C3AED",
+        "icone": "🦠",
+        "dica": "Espalhar, ler ou confirmar"
       },
       {
         "rotulo": "Desvios em aberto",
         "formula": "=COUNTIFS(tbDesvios[ID],\">0\")-COUNTIFS(tbDesvios[Status],\"Concluído\")",
-        "cor": "7C3AED"
+        "cor": "D97706",
+        "icone": "🌡️",
+        "dica": "Repetição em 7, 13 e 25 °C"
       }
     ],
-    "graficoTitulo": "Pendências atrasadas por análise",
-    "atrasados": {
+    "andamento": {
+      "titulo": "Andamento das leituras de NFC",
+      "tabela": "tbPlacasNFC",
+      "colunaAnalise": "Análise",
+      "colunaSituacao": "Situação",
+      "analises": [
+        "C.T",
+        "B.L",
+        "Psicrotróficos"
+      ],
+      "situacoes": [
+        "Lido",
+        "Vence hoje",
+        "Atrasado",
+        "No prazo"
+      ]
+    },
+    "areas": {
+      "titulo": "Atrasados por área",
       "cabecalho": [
-        "Análise",
+        "Área",
         "Atrasados"
       ],
       "linhas": [
-        [
-          "Drops",
-          "=COUNTIFS(tbDrops[Situação],\"Atrasado\")"
-        ],
-        [
-          "TAB",
-          "=COUNTIFS(tbTAB[Situação],\"Atrasado\")"
-        ],
-        [
-          "Coliformes",
-          "=COUNTIFS(tbColiformes[Situação],\"Atrasado\")"
-        ],
-        [
-          "C.T e B.L",
-          "=COUNTIFS(tbContagens[Situação],\"Atrasado\")"
-        ],
-        [
-          "Placas NFC",
-          "=COUNTIFS(tbPlacasNFC[Situação],\"Atrasado\")"
-        ]
+        {
+          "nome": "Leituras de NFC",
+          "formula": "=COUNTIFS(tbPlacasNFC[Situação],\"Atrasado\")",
+          "cor": "DC2626"
+        },
+        {
+          "nome": "Drops",
+          "formula": "=COUNTIFS(tbDrops[Situação],\"Atrasado\")",
+          "cor": "D97706"
+        },
+        {
+          "nome": "C.T e B.L do concentrado",
+          "formula": "=COUNTIFS(tbContagens[Situação],\"Atrasado\")",
+          "cor": "0E8A96"
+        },
+        {
+          "nome": "TAB e Coliformes",
+          "formula": "=COUNTIFS(tbTAB[Situação],\"Atrasado\")+COUNTIFS(tbColiformes[Situação],\"Atrasado\")",
+          "cor": "7C3AED"
+        }
+      ]
+    },
+    "situacao": {
+      "titulo": "Situação das leituras de NFC",
+      "tabela": "tbPlacasNFC",
+      "coluna": "Situação",
+      "cabecalho": [
+        "Situação",
+        "Leituras"
+      ],
+      "valores": [
+        "Atrasado",
+        "Lido",
+        "No prazo",
+        "Vence hoje"
+      ]
+    },
+    "coletasPorDia": {
+      "titulo": "Coletas por dia (terra e navio)",
+      "origem": "tbColetas|2"
+    },
+    "testesPorMes": {
+      "titulo": "Testes por mês (TAB e Coliformes)",
+      "cabecalho": "Mês",
+      "series": [
+        {
+          "nome": "TAB",
+          "coluna": "tbTAB[Data do TAB]"
+        },
+        {
+          "nome": "Coliformes",
+          "coluna": "tbColiformes[Data do teste]"
+        }
       ]
     }
   },
@@ -111,6 +184,36 @@
           "tipo": "empilhadas",
           "sql": "WITH d AS (SELECT generate_series(current_date - 59, current_date, interval '1 day')::date AS dia) SELECT d.dia AS \"Dia\", count(c.coleta_id) FILTER (WHERE c.origem = 'Terra') AS \"Terra\", count(c.coleta_id) FILTER (WHERE c.origem = 'Navio') AS \"Navio\" FROM d LEFT JOIN bi.coletas c ON c.data_coleta = d.dia GROUP BY 1 ORDER BY 1"
         }
+      ],
+      "cartoes": [
+        {
+          "rotulo": "Coletas nos últimos 7 dias",
+          "formula": "=COUNTIFS(tbColetas[Data da coleta],\">=\"&TODAY()-7)",
+          "cor": "1D6FE8",
+          "icone": "🧪",
+          "dica": "Terra e navio"
+        },
+        {
+          "rotulo": "Tanques de terra",
+          "formula": "=COUNTIFS(tbColetas[Origem],\"Terra\")",
+          "cor": "0E8A96",
+          "icone": "🛢️",
+          "dica": "Tank farm"
+        },
+        {
+          "rotulo": "Tanques de navio",
+          "formula": "=COUNTIFS(tbColetas[Origem],\"Navio\")",
+          "cor": "1D6FE8",
+          "icone": "🚢",
+          "dica": "Coletas nos navios"
+        },
+        {
+          "rotulo": "Total de coletas",
+          "formula": "=COUNT(tbColetas[ID])",
+          "cor": "7C3AED",
+          "icone": "📋",
+          "dica": "Tudo o que está no banco"
+        }
       ]
     },
     {
@@ -135,6 +238,36 @@
           "titulo": "Situação dos drops",
           "tipo": "colunas",
           "sql": "SELECT situacao AS \"Situação\", count(*) AS \"Drops\" FROM bi.drops GROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "cartoes": [
+        {
+          "rotulo": "Drops atrasados",
+          "formula": "=COUNTIFS(tbDrops[Situação],\"Atrasado\")",
+          "cor": "DC2626",
+          "icone": "⚠️",
+          "dica": "Passaram da data"
+        },
+        {
+          "rotulo": "Vencem hoje",
+          "formula": "=COUNTIFS(tbDrops[Situação],\"Vence hoje\")",
+          "cor": "D97706",
+          "icone": "📅",
+          "dica": "Fazer hoje"
+        },
+        {
+          "rotulo": "No prazo",
+          "formula": "=COUNTIFS(tbDrops[Situação],\"No prazo\")",
+          "cor": "1D6FE8",
+          "icone": "💧",
+          "dica": "Ainda não venceram"
+        },
+        {
+          "rotulo": "Concluídos",
+          "formula": "=COUNTIFS(tbDrops[Situação],\"Concluído\")",
+          "cor": "16A34A",
+          "icone": "✅",
+          "dica": "Drops feitos"
         }
       ]
     },
@@ -161,6 +294,36 @@
           "titulo": "Desvios por situação",
           "tipo": "colunas",
           "sql": "SELECT situacao AS \"Situação\", count(*) AS \"Desvios\" FROM bi.desvios GROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "cartoes": [
+        {
+          "rotulo": "Desvios em aberto",
+          "formula": "=COUNTIFS(tbDesvios[ID],\">0\")-COUNTIFS(tbDesvios[Status],\"Concluído\")",
+          "cor": "D97706",
+          "icone": "🌡️",
+          "dica": "Repetição em 7, 13 e 25 °C"
+        },
+        {
+          "rotulo": "Atrasados",
+          "formula": "=COUNTIFS(tbDesvios[Situação],\"Atrasado\")",
+          "cor": "DC2626",
+          "icone": "⚠️",
+          "dica": "Passaram do prazo"
+        },
+        {
+          "rotulo": "Concluídos",
+          "formula": "=COUNTIFS(tbDesvios[Status],\"Concluído\")",
+          "cor": "16A34A",
+          "icone": "✅",
+          "dica": "Com resultado"
+        },
+        {
+          "rotulo": "Total de desvios",
+          "formula": "=COUNT(tbDesvios[ID])",
+          "cor": "7C3AED",
+          "icone": "📋",
+          "dica": "Drop e tanque"
         }
       ]
     },
@@ -190,6 +353,36 @@
           "tipo": "colunas",
           "sql": "SELECT situacao AS \"Situação\", count(*) AS \"TABs\" FROM bi.testes WHERE teste = 'TAB' GROUP BY 1 ORDER BY 1"
         }
+      ],
+      "cartoes": [
+        {
+          "rotulo": "TAB atrasados",
+          "formula": "=COUNTIFS(tbTAB[Situação],\"Atrasado\")",
+          "cor": "DC2626",
+          "icone": "⚠️",
+          "dica": "Espalhar, ler ou confirmar"
+        },
+        {
+          "rotulo": "No caldo",
+          "formula": "=COUNTIFS(tbTAB[Status],\"No caldo\")",
+          "cor": "1D6FE8",
+          "icone": "🧪",
+          "dica": "Esperando espalhar"
+        },
+        {
+          "rotulo": "Incubados",
+          "formula": "=COUNTIFS(tbTAB[Status],\"Incubado\")",
+          "cor": "D97706",
+          "icone": "🔥",
+          "dica": "Esperando a leitura"
+        },
+        {
+          "rotulo": "Positivos",
+          "formula": "=COUNTIFS(tbTAB[Resultado],\"Positivo\")",
+          "cor": "7C3AED",
+          "icone": "🦠",
+          "dica": "Precisam de atenção"
+        }
       ]
     },
     {
@@ -218,6 +411,36 @@
           "tipo": "colunas",
           "sql": "SELECT situacao AS \"Situação\", count(*) AS \"Coliformes\" FROM bi.testes WHERE teste = 'Coliformes' GROUP BY 1 ORDER BY 1"
         }
+      ],
+      "cartoes": [
+        {
+          "rotulo": "Coliformes atrasados",
+          "formula": "=COUNTIFS(tbColiformes[Situação],\"Atrasado\")",
+          "cor": "DC2626",
+          "icone": "⚠️",
+          "dica": "Estriar ou ler"
+        },
+        {
+          "rotulo": "No caldo",
+          "formula": "=COUNTIFS(tbColiformes[Status],\"No caldo\")",
+          "cor": "1D6FE8",
+          "icone": "🧪",
+          "dica": "Esperando estriar"
+        },
+        {
+          "rotulo": "Concluídos",
+          "formula": "=COUNTIFS(tbColiformes[Status],\"Concluído\")",
+          "cor": "16A34A",
+          "icone": "✅",
+          "dica": "Com resultado"
+        },
+        {
+          "rotulo": "Positivos",
+          "formula": "=COUNTIFS(tbColiformes[Resultado],\"Positivo\")",
+          "cor": "7C3AED",
+          "icone": "🦠",
+          "dica": "Abrir lote a lote"
+        }
       ]
     },
     {
@@ -242,6 +465,36 @@
           "titulo": "Alarmes por dia",
           "tipo": "colunas",
           "sql": "WITH d AS (SELECT generate_series(current_date - 59, current_date, interval '1 day')::date AS dia) SELECT d.dia AS \"Dia\", count(c.analise) FILTER (WHERE c.alarme) AS \"Alarmes\" FROM d LEFT JOIN bi.contagens c ON c.data_leitura = d.dia GROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "cartoes": [
+        {
+          "rotulo": "Leituras atrasadas",
+          "formula": "=COUNTIFS(tbContagens[Situação],\"Atrasado\")",
+          "cor": "DC2626",
+          "icone": "⚠️",
+          "dica": "Passaram da data"
+        },
+        {
+          "rotulo": "Vencem hoje",
+          "formula": "=COUNTIFS(tbContagens[Situação],\"Vence hoje\")",
+          "cor": "D97706",
+          "icone": "📅",
+          "dica": "Ler hoje"
+        },
+        {
+          "rotulo": "Com alarme",
+          "formula": "=COUNTIFS(tbContagens[Alarme],\"Sim\")",
+          "cor": "0E8A96",
+          "icone": "🚨",
+          "dica": "B.L ≥ 50 ou C.T ≥ 200"
+        },
+        {
+          "rotulo": "Lidas",
+          "formula": "=COUNTIFS(tbContagens[Situação],\"Lido\")",
+          "cor": "16A34A",
+          "icone": "✅",
+          "dica": "Recebimento e embarque"
         }
       ]
     },
@@ -268,6 +521,36 @@
           "tipo": "linhas",
           "sql": "WITH d AS (SELECT generate_series(current_date - 59, current_date, interval '1 day')::date AS dia) SELECT d.dia AS \"Dia\", round(avg(l.maior) FILTER (WHERE l.analise = 'C.T'), 1) AS \"C.T\", round(avg(l.maior) FILTER (WHERE l.analise = 'B.L'), 1) AS \"B.L\", round(avg(l.maior) FILTER (WHERE l.analise = 'Psicrotróficos'), 1) AS \"Psicrotróficos\" FROM d LEFT JOIN bi.leituras_nfc l ON l.data_coleta = d.dia AND l.lida GROUP BY 1 ORDER BY 1"
         }
+      ],
+      "cartoes": [
+        {
+          "rotulo": "Leituras atrasadas",
+          "formula": "=COUNTIFS(tbPlacasNFC[Situação],\"Atrasado\")",
+          "cor": "DC2626",
+          "icone": "⚠️",
+          "dica": "Passaram da data prevista"
+        },
+        {
+          "rotulo": "Para hoje",
+          "formula": "=COUNTIFS(tbPlacasNFC[Situação],\"Vence hoje\")",
+          "cor": "D97706",
+          "icone": "⏰",
+          "dica": "Ler até o fim do dia"
+        },
+        {
+          "rotulo": "No prazo",
+          "formula": "=COUNTIFS(tbPlacasNFC[Situação],\"No prazo\")",
+          "cor": "1D6FE8",
+          "icone": "🧫",
+          "dica": "Ainda não venceram"
+        },
+        {
+          "rotulo": "Lidas",
+          "formula": "=COUNTIFS(tbPlacasNFC[Situação],\"Lido\")",
+          "cor": "16A34A",
+          "icone": "✅",
+          "dica": "Tanques de terra e navio"
+        }
       ]
     },
     {
@@ -292,6 +575,36 @@
           "titulo": "Valor final médio por dia",
           "tipo": "linhas",
           "sql": "WITH d AS (SELECT generate_series(current_date - 59, current_date, interval '1 day')::date AS dia) SELECT d.dia AS \"Dia\", round(avg(r.valor_final) FILTER (WHERE r.analise = 'C.T 48h')) AS \"C.T 48h\", round(avg(r.valor_final) FILTER (WHERE r.analise = 'B.L 72h')) AS \"B.L 72h\", round(avg(r.valor_final) FILTER (WHERE r.analise = 'B.L 120h')) AS \"B.L 120h\" FROM d LEFT JOIN bi.recebimento_nfc r ON r.data_leitura = d.dia GROUP BY 1 ORDER BY 1"
+        }
+      ],
+      "cartoes": [
+        {
+          "rotulo": "Amostras recebidas",
+          "formula": "=COUNTIFS(tbRecebimentoNFC[Análise],\"C.T\")",
+          "cor": "1D6FE8",
+          "icone": "🚚",
+          "dica": "Fresh e pasteurizado"
+        },
+        {
+          "rotulo": "Leituras atrasadas",
+          "formula": "=COUNTIFS(tbRecebimentoNFC[Situação],\"Atrasado\")",
+          "cor": "DC2626",
+          "icone": "⚠️",
+          "dica": "Passaram da data"
+        },
+        {
+          "rotulo": "Vencem hoje",
+          "formula": "=COUNTIFS(tbRecebimentoNFC[Situação],\"Vence hoje\")",
+          "cor": "D97706",
+          "icone": "📅",
+          "dica": "Ler hoje"
+        },
+        {
+          "rotulo": "Lidas",
+          "formula": "=COUNTIFS(tbRecebimentoNFC[Situação],\"Lido\")",
+          "cor": "16A34A",
+          "icone": "✅",
+          "dica": "C.T e B.L"
         }
       ]
     }
@@ -389,5 +702,11 @@
     "Resultado do desvio",
     "Frasco",
     "Tipo"
-  ]
+  ],
+  "cabecalho": {
+    "marca": "LabFlow · Microbiologia",
+    "registros": "Registros (o mais recente primeiro)",
+    "ajudaTitulo": "Ajuda",
+    "ajudaDescricao": "Como usar e atualizar este arquivo"
+  }
 }
