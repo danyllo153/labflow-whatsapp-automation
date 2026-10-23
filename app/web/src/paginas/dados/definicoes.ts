@@ -27,6 +27,7 @@ export interface DefinicaoDePagina {
   filtros: Filtro[];
   impressao: "em pé" | "deitado"; // 07: em pé para listas estreitas, deitado para tabelas largas
   semColetor?: boolean; // 07: o Coletor não vê esta página
+  grafico?: "g2"; // 07 §6: gráfico da página (G2 no Recebimento)
 }
 
 export const FABRICAS = ["AQA", "CON", "COL", "UCH", "ITA", "TMG"]; // fábricas travadas (decisão de 14/10)
@@ -63,6 +64,7 @@ export const PAGINAS: DefinicaoDePagina[] = [
     api: "/paginas/recebimento",
     impressao: "deitado",
     semColetor: true,
+    grafico: "g2",
     colunas: [
       { chave: "load", rotulo: "Load", principal: true },
       { chave: "lote", rotulo: "Lote" },

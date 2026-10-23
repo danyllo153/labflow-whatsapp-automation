@@ -4,6 +4,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { lerJson } from "../../api";
 import type { Coluna, DefinicaoDePagina, Filtro } from "./definicoes";
 import { classeDaSituacao, formatar } from "./formatos";
+import GraficoG2 from "./GraficoG2";
 
 /**
  * Página do laboratório em leitura (07 §5; APP-015): filtros com etiquetas removíveis, tabela (cartões no celular),
@@ -226,6 +227,8 @@ export default function PaginaDeDados({ def }: { def: DefinicaoDePagina }) {
           </div>
         )}
         {!dados && !erro && <p className="carregando">Carregando...</p>}
+
+        {def.grafico === "g2" && <GraficoG2 consulta={consulta(aplicados)} aoEscolherLoad={(load) => irPara({ ...aplicados, load })} />}
 
         {dados && !erro && (
           <>

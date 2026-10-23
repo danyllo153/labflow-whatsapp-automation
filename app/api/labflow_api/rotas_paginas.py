@@ -268,3 +268,58 @@ def recebimento_excel(
     linhas = _linhas_para_excel(con, RECEBIMENTO_BASE, filtros.montar(), ORDEM_RECEBIMENTO)
     arquivo = planilha("Recebimento", COLUNAS_RECEBIMENTO, linhas, filtros.descricao())
     return resposta_xlsx(arquivo, "recebimento")
+
+
+# ---------------------------------------------------------------- Gráfico G2 do Recebimento (APP-020)
+# 07 §6: C.T e B.L por load ao longo do tempo, com a linha do limite. Mesmos filtros da página.
+# Os limites são os da view vw_contagens (migration 009 do bot: C.T >= 200, B.L >= 50; "<" nunca é Não ok);
+# um teste confere que estes números batem com o "alarme" da view.
+LIMITES_RECEBIMENTO = {"C.T 48h": 200, "B.L 72h": 50, "B.L 120h": 50}
+PONTOS_MAX_GRAFICO = 3000
+
+GRAFICO_RECEBIMENTO_BASE = """
+    SELECT load, item, fabrica, numero AS lote, analise, prevista, lido, sinal, valor, resultado, alarme,
+           lido_por, data_leitura,
+           CASE WHEN lido AND alarme THEN 'Não ok' WHEN lido THEN 'Ok' ELSE situacao END AS situacao
+    FROM bi.contagens
+    WHERE origem = 'Recebimento'
+"""
+
+
+class PontoG2(BaseModel):
+    load: str
+    lote: int | None
+    analise: str
+    data: date
+    valor: float
+    resultado: str
+    nao_ok: bool
+
+
+class GraficoG2(BaseModel):
+    limites: dict[str, float]
+    pontos: list[PontoG2]
+    cortado: bool  # mais pontos que o máximo: a tela pede um filtro menor
+
+
+@roteador.get("/recebimento/grafico", response_model=GraficoG2)
+def recebimento_grafico(
+    filtros: FiltrosRecebimento = Depends(),
+    pessoa: PessoaLogada = Depends(exigir("ver_paginas")),
+    con: psycopg.Connection = Depends(obter_conexao),
+) -> GraficoG2:
+    _barrar_coletor(pessoa)
+    filtro = filtros.montar()
+    filtro.add("lido")
+    filtro.add("data_leitura IS NOT NULL")
+    linhas = con.execute(
+        f"SELECT load, lote, analise, data_leitura, valor, resultado, alarme FROM ({GRAFICO_RECEBIMENTO_BASE}) t"
+        f"{filtro.sql()} ORDER BY data_leitura DESC, load, lote LIMIT %s",
+        [*filtro.valores, PONTOS_MAX_GRAFICO + 1],
+    ).fetchall()
+    cortado = len(linhas) > PONTOS_MAX_GRAFICO
+    pontos = [
+        PontoG2(load=l, lote=lt, analise=a, data=d, valor=float(v), resultado=r, nao_ok=bool(al))
+        for l, lt, a, d, v, r, al in reversed(linhas[:PONTOS_MAX_GRAFICO])
+    ]
+    return GraficoG2(limites=LIMITES_RECEBIMENTO, pontos=pontos, cortado=cortado)
