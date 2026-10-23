@@ -11,7 +11,7 @@ interface VisaoGeralDados {
   data_ate: string;
   numeros: { chave: string; rotulo: string; valor: number }[];
   pendencias: { bloco: string; vence_hoje: number; atrasados: number }[];
-  alertas: { pagina: string; referencia: string; analise: string; resultado: string; data: string | null }[];
+  alertas: { pagina: string; caminho: string; referencia: string; analise: string; resultado: string; data: string | null }[];
 }
 
 const ATUALIZAR_A_CADA_MS = 60_000;
@@ -133,7 +133,7 @@ export default function VisaoGeral() {
                 {dados.alertas.map((a, n) => (
                   <li key={`${a.referencia}-${a.analise}-${n}`}>
                     <div className="pendencia-texto">
-                      <Link to={`/paginas/${a.pagina}`} className="pendencia-ref">
+                      <Link to={a.caminho} className="pendencia-ref">
                         {a.referencia}
                       </Link>
                       <span className="texto-secundario">

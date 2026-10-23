@@ -8,6 +8,7 @@ import EmBreve from "./paginas/EmBreve";
 import Entrar from "./paginas/Entrar";
 import Inicio from "./paginas/Inicio";
 import NaoEncontrada from "./paginas/NaoEncontrada";
+import { DetalheNavio, DetalheTanque } from "./paginas/dados/Detalhes";
 import { ListaDePaginas, PaginaEscolhida } from "./paginas/Paginas";
 import TrocarSenha from "./paginas/TrocarSenha";
 import { useSessao } from "./sessao";
@@ -24,6 +25,8 @@ export default function App() {
       <Route element={<Moldura />}>
         <Route index element={<Inicio />} />
         <Route path="/paginas" element={<ListaDePaginas />} />
+        <Route path="/paginas/tanques-terra/:id" element={<DetalheTanque />} />
+        <Route path="/paginas/navios/:navio" element={<DetalheNavio />} />
         <Route path="/paginas/:pagina" element={<PaginaEscolhida />} />
         {MENU.filter((item) => !item.pronto).map((item) => (
           <Route key={item.caminho} path={item.caminho} element={<EmBreve item={item} />} />

@@ -30,8 +30,8 @@ export function formatar(valor: unknown, formato: Formato = "texto"): string {
 
 /** Etiqueta de situação (07: Ok/Não ok nunca só pela cor; sempre o texto). */
 export function classeDaSituacao(situacao: string): string {
-  if (["Ok", "Negativo", "Não confirmado", "Repetição ok"].includes(situacao)) return "etiqueta etiqueta-ok";
+  if (["Ok", "Negativo", "Não confirmado", "Repetição ok", "Concluído"].includes(situacao)) return "etiqueta etiqueta-ok";
   if (["Não ok", "Atrasado", "Positivo", "Confirmado", "Repetição não ok"].includes(situacao)) return "etiqueta etiqueta-nao-ok";
-  if (situacao === "Vence hoje") return "etiqueta etiqueta-pendente";
+  if (situacao === "Vence hoje" || situacao === "Em andamento") return "etiqueta etiqueta-pendente";
   return "etiqueta etiqueta-neutra";
 }

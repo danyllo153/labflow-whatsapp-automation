@@ -1,4 +1,4 @@
-"""APP-018: páginas Embarque, TAB e Coliformes, Recebimento NFC, Navios e Visão geral (07 v1.0, §5; 08 A11).
+"""APP-018: páginas Embarque, TAB e Coliformes, Recebimento NFC e Visão geral (Navios: test_navios_tanques.py) (07 v1.0, §5; 08 A11).
 
 Os números são conferidos contra as próprias views do Power BI no banco de teste.
 """
@@ -92,30 +92,6 @@ def test_recebimento_nfc_mostra_valor_lido_e_com_diluicao(cliente, logado, receb
     assert cliente.get("/paginas/recebimento-nfc", params={"situacao": "Lido"}).json()["total"] == 1
 
 
-def test_navios_somam_coletas_leituras_e_desvios(cliente, logado, conexao):
-    logado()
-    linhas = cliente.get("/paginas/navios").json()["linhas"]
-    assert linhas
-    for n in linhas:
-        assert n["coletas"] == _conta(conexao, "SELECT count(*) FROM bi.coletas WHERE origem = 'Navio' AND navio = %s", n["navio"])
-        assert n["tanques"] == _conta(conexao, "SELECT count(DISTINCT tanque) FROM bi.coletas WHERE origem = 'Navio' AND navio = %s", n["navio"])
-        assert n["leituras"] == _conta(conexao, "SELECT count(*) FROM bi.leituras_nfc WHERE origem = 'Navio' AND navio = %s", n["navio"])
-        assert n["pendentes"] == _conta(conexao, "SELECT count(*) FROM bi.leituras_nfc WHERE origem = 'Navio' AND navio = %s AND NOT lida", n["navio"])
-        assert n["desvios_abertos"] == _conta(
-            conexao, "SELECT count(*) FROM bi.desvios WHERE origem = 'Navio' AND navio = %s AND status <> 'Concluído'", n["navio"]
-        )
-        assert n["lidas"] + n["pendentes"] == n["leituras"]
-
-
-def test_navios_filtros(cliente, logado):
-    logado()
-    nome = cliente.get("/paginas/navios").json()["linhas"][0]["navio"]
-    assert cliente.get("/paginas/navios", params={"navio": nome.split()[0].lower()}).json()["total"] >= 1
-    assert cliente.get("/paginas/navios", params={"navio": "nao-existe"}).json()["total"] == 0
-    com = cliente.get("/paginas/navios", params={"com_pendencia": True}).json()["linhas"]
-    assert all(n["pendentes"] > 0 or n["desvios_abertos"] > 0 for n in com)
-
-
 # ---------------------------------------------------------------- Visão geral
 def test_visao_geral_padrao_sao_30_dias_ate_hoje(cliente, logado, conexao):
     logado()
@@ -154,6 +130,7 @@ def test_visao_geral_alertas_sao_os_nao_ok_mais_recentes(cliente, logado):
     alertas = cliente.get("/paginas/visao-geral", params={"data_de": "2026-01-01"}).json()["alertas"]
     assert 0 < len(alertas) <= 20
     assert {a["pagina"] for a in alertas} <= {"recebimento", "embarque", "tanques"}
+    assert all(a["caminho"].startswith(("/paginas/recebimento?load=", "/paginas/navios/", "/paginas/tanques-terra/")) for a in alertas)
     datas = [a["data"] for a in alertas if a["data"]]
     assert datas == sorted(datas, reverse=True)
 
@@ -164,7 +141,7 @@ def test_visao_geral_periodo_invertido_da_422(cliente, logado):
 
 
 # ---------------------------------------------------------------- Permissões, filtros e Excel
-PAGINAS = ["embarque", "testes", "recebimento-nfc", "navios"]
+PAGINAS = ["embarque", "testes", "recebimento-nfc"]
 
 
 @pytest.mark.parametrize("pagina", [*PAGINAS, "visao-geral"])
@@ -193,7 +170,6 @@ def test_filtro_fora_da_lista_da_422(cliente, logado, pagina, filtro):
         ("embarque", {"situacao": "Atrasado"}, "Embarque"),
         ("testes", {"teste": "Coliformes"}, "TAB e Coliformes"),
         ("recebimento-nfc", {}, "Recebimento NFC"),
-        ("navios", {}, "Navios"),
     ],
 )
 def test_excel_tem_as_mesmas_linhas_da_pagina(cliente, logado, recebimento_nfc, pagina, filtros, aba):

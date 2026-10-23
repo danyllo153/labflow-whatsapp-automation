@@ -70,7 +70,7 @@ describe("Páginas: Coletas e Recebimento (APP-015)", () => {
   it("a lista de páginas mostra Coletas e Recebimento", async () => {
     abrir("/paginas", {});
     expect(await screen.findByRole("link", { name: /^Coletas/ })).toHaveAttribute("href", "/paginas/coletas");
-    expect(screen.getByRole("link", { name: /^Recebimento C\.T/ })).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /^Recebimento FCOJ/ })).toBeInTheDocument();
   });
 
   it("o Coletor não vê Recebimento na lista", async () => {
