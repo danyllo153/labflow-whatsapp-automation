@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet } from "react-router-dom";
 import { MENU } from "../menu";
 import { useSessao } from "../sessao";
 import FaixaDemonstracao from "./FaixaDemonstracao";
+import Icone from "./Icone";
 import { nomeDoCargo } from "../cargos";
 
 /** Moldura de todas as telas: menu lateral (computador e tablet) ou topo + barra embaixo (celular). */
@@ -18,7 +19,10 @@ export default function Moldura() {
         <nav>
           {menu.map((item) => (
             <NavLink key={item.caminho} to={item.caminho} end={item.caminho === "/"} className="item-menu">
-              {item.rotulo}
+              <span className="item-rotulo">
+                <Icone caminho={item.caminho} />
+                {item.rotulo}
+              </span>
               {!item.pronto && <span className="etiqueta-breve">Em breve</span>}
             </NavLink>
           ))}
@@ -55,7 +59,8 @@ export default function Moldura() {
       <nav className="barra-baixo" aria-label="Menu do celular">
         {menu.filter((item) => !item.soNoMenuLateral).map((item) => (
           <NavLink key={item.caminho} to={item.caminho} end={item.caminho === "/"} className="item-barra">
-            {item.rotulo}
+            <Icone caminho={item.caminho} />
+            <span>{item.rotulo}</span>
           </NavLink>
         ))}
       </nav>
