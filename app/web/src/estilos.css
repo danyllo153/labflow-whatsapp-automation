@@ -1146,3 +1146,36 @@ a.cartao-pagina:hover {
   height: 22px;
   flex: none;
 }
+
+/* Relatório do turno (APP-024) */
+.lista-simples {
+  list-style: none;
+  margin: 0 0 8px;
+  padding: 0;
+}
+.lista-simples li {
+  padding: 3px 0;
+}
+.texto-pre {
+  white-space: pre-wrap;
+  margin: 0 0 8px;
+}
+.relatorio-turno textarea {
+  width: 100%;
+  font: inherit;
+  padding: 8px;
+  border: 1px solid var(--borda);
+  border-radius: 8px;
+}
+@media print {
+  .nao-imprime,
+  .barra-acoes {
+    display: none !important;
+  }
+  .relatorio-turno {
+    font-size: 10pt;
+  }
+  .relatorio-turno textarea {
+    border: 1px solid #999;
+  }
+}

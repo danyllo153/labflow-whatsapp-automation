@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { Link } from "react-router-dom";
 
 import { enviarJson, lerJson } from "../api";
 
@@ -84,6 +85,9 @@ export default function Turno() {
   return (
     <section className="pagina-turno">
       <h1>Turno</h1>
+      <p>
+        <Link to="/turno/relatorio">Ver o relatório do turno</Link>
+      </p>
       {estado?.checkin_obrigatorio && !estado.no_turno && (
         <p className="aviso-checkin">Marque a sua entrada no turno para abrir o resto do app.</p>
       )}
