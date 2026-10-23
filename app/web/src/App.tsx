@@ -6,6 +6,7 @@ import { lerJson } from "./api";
 import Moldura from "./componentes/Moldura";
 import { MENU } from "./menu";
 import Pessoas from "./paginas/admin/Pessoas";
+import TurnosEstufas from "./paginas/admin/TurnosEstufas";
 import Conta from "./paginas/Conta";
 import EmBreve from "./paginas/EmBreve";
 import Entrar from "./paginas/Entrar";
@@ -83,6 +84,7 @@ export default function App() {
         <Route path="/conta" element={<Conta />} />
         <Route path="/conta/senha" element={<TrocarSenha />} />
         <Route path="/admin/pessoas" element={<Pessoas />} />
+        <Route path="/admin/turnos" element={<TurnosEstufas />} />
         <Route path="*" element={<NaoEncontrada />} />
       </Route>
     </Routes>

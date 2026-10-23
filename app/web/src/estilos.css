@@ -1241,3 +1241,28 @@ a.cartao-pagina:hover {
 .tabela-g4 tbody th {
   text-align: left;
 }
+
+/* Admin: turnos, atividades e estufas (APP-028) */
+.nome-turno {
+  min-width: 6em;
+  align-self: center;
+}
+.desativada {
+  opacity: 0.6;
+}
+.dias-semana {
+  border: 0;
+  padding: 0;
+  margin: 0 0 8px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+}
+.dias-semana legend {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.estufa-admin {
+  padding: 8px 0;
+  border-bottom: 1px solid var(--borda);
+}

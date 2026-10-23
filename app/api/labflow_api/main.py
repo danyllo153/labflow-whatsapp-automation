@@ -9,6 +9,7 @@ import os
 from fastapi import FastAPI
 
 from labflow_api.rotas_admin import roteador as roteador_admin
+from labflow_api.rotas_admin_turnos import roteador as roteador_admin_turnos
 from labflow_api.rotas_atividades import roteador as roteador_atividades
 from labflow_api.rotas_estufas import roteador as roteador_estufas
 from labflow_api.rotas_esterilizacao import roteador as roteador_esterilizacao
@@ -46,6 +47,7 @@ def ambiente() -> dict[str, bool]:
 
 app.include_router(roteador_login)
 app.include_router(roteador_admin)
+app.include_router(roteador_admin_turnos)
 app.include_router(roteador_paginas)
 app.include_router(roteador_paginas_nfc)
 app.include_router(roteador_paginas_mais)
