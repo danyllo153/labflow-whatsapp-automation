@@ -51,9 +51,9 @@ describe("moldura do app (APP-012)", () => {
 
   it("tela que ainda não existe aparece como Em breve, com a etapa", async () => {
     servidorFalso({ "GET /me": logada });
-    abrir("/esterilizacao");
-    expect(await screen.findByRole("heading", { level: 1, name: "Esterilização" })).toBeInTheDocument();
-    expect(screen.getByText("Etapa: APP-026")).toBeInTheDocument();
+    abrir("/assistente");
+    expect(await screen.findByRole("heading", { level: 1, name: "Assistente" })).toBeInTheDocument();
+    expect(screen.getByText("Etapa: Fase D")).toBeInTheDocument();
   });
 
   it("endereço desconhecido mostra página não encontrada com volta ao Início", async () => {
