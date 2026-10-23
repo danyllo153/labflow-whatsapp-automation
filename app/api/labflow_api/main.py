@@ -15,6 +15,7 @@ from labflow_api.rotas_estufas import roteador as roteador_estufas
 from labflow_api.rotas_coletas import roteador as roteador_coletas
 from labflow_api.rotas_equipe import roteador as roteador_equipe
 from labflow_api.rotas_esterilizacao import roteador as roteador_esterilizacao
+from labflow_api.rotas_laudo import roteador as roteador_laudo
 from labflow_api.rotas_login import roteador as roteador_login
 from labflow_api.rotas_paginas import roteador as roteador_paginas
 from labflow_api.rotas_navios_tanques import roteador as roteador_navios_tanques
@@ -57,6 +58,7 @@ app.include_router(roteador_paginas_mais)
 app.include_router(roteador_navios_tanques)
 app.include_router(roteador_pendencias)
 app.include_router(roteador_estufas)
+app.include_router(roteador_laudo)  # antes da esterilização: /esterilizacao/laudos
 app.include_router(roteador_esterilizacao)
 app.include_router(roteador_relatorio_turno)  # antes do turno: /turno/relatorio
 app.include_router(roteador_atividades)  # antes do turno: /turno/atividades

@@ -2789,3 +2789,24 @@ button.barra-linha:hover,
     grid-template-columns: 1fr;
   }
 }
+
+/* Laudo de esterilização (APP-035) */
+.aviso-ciclo {
+  margin: 4px 0 8px;
+  padding: 6px 10px;
+  border-left: 3px solid var(--laranja, #d9822b);
+  background: var(--laranja-suave, rgba(217, 130, 43, 0.12));
+  font-size: 0.9rem;
+}
+
+.modelo-laudo {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid var(--borda);
+}
+
+.botao-arquivo {
+  display: inline-flex;
+  cursor: pointer;
+  position: relative;
+}

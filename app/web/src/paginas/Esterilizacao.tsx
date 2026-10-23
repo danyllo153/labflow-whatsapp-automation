@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 
 import { enviarJson, lerJson } from "../api";
+import LaudoEsterilizacao from "./LaudoEsterilizacao";
 
 /**
  * Esterilização (07 §7 e G4; APP-026): botões Ponteira, Meio, Frasco, Descarte e Outro, número do ciclo, lista do turno
@@ -13,6 +14,8 @@ export interface ItemEsterilizacao {
   ciclo: string;
   meio: string | null;
   descricao: string | null;
+  eficiente: boolean;
+  pagina_impressa: boolean;
   quem: string;
   quando: string;
   corrigida: boolean;
@@ -112,10 +115,11 @@ export default function Esterilizacao() {
                 ))}
               </ul>
             )}
-            <p className="texto-secundario">A anotação no Word continua sendo o rastreio oficial.</p>
+            <p className="texto-secundario">O laudo impresso (abaixo) é gerado a partir destes registros.</p>
           </div>
         </>
       )}
+      {dados?.pode_registrar && <LaudoEsterilizacao versao={versao} />}
       <GraficoG4 versao={versao} />
     </section>
   );
@@ -128,6 +132,24 @@ function Registrar({ tipos, aoRegistrar }: { tipos: string[]; aoRegistrar: (d: D
   const [descricao, setDescricao] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState("");
+  const [jaTem, setJaTem] = useState<{ tipo: string; quem: string; quando: string }[]>([]);
+  const cicloAtual = useRef("");
+  cicloAtual.current = ciclo.trim();
+
+  /** Avisa (sem bloquear) quando o ciclo digitado já tem material registrado hoje: o novo entra na mesma linha do laudo. */
+  async function avisarCiclo() {
+    const numero = ciclo.trim();
+    if (!numero) {
+      setJaTem([]);
+      return;
+    }
+    try {
+      const existentes = await lerJson<{ tipo: string; quem: string; quando: string }[]>(`/esterilizacao/ciclo?ciclo=${encodeURIComponent(numero)}`);
+      if (cicloAtual.current === numero) setJaTem(existentes); // a resposta chegou depois de limpar ou trocar o ciclo: descarta
+    } catch {
+      setJaTem([]);
+    }
+  }
 
   async function registrar(evento: FormEvent) {
     evento.preventDefault();
@@ -140,6 +162,7 @@ function Registrar({ tipos, aoRegistrar }: { tipos: string[]; aoRegistrar: (d: D
     try {
       aoRegistrar(await enviarJson<DadosEsterilizacao>("/esterilizacao", { tipo, ciclo, meio, descricao }));
       setCiclo("");
+      setJaTem([]);
       setMeio("");
       setDescricao("");
     } catch (e) {
@@ -161,8 +184,14 @@ function Registrar({ tipos, aoRegistrar }: { tipos: string[]; aoRegistrar: (d: D
       </div>
       <label className="campo campo-hora">
         Número do ciclo
-        <input inputMode="numeric" maxLength={20} value={ciclo} onChange={(e) => setCiclo(e.target.value)} />
+        <input maxLength={20} placeholder="Ex.: A1092/26" value={ciclo} onChange={(e) => setCiclo(e.target.value)} onBlur={() => void avisarCiclo()} />
       </label>
+      {jaTem.length > 0 && (
+        <p className="aviso-ciclo" role="status">
+          O ciclo {ciclo.trim()} já tem {jaTem.map((j) => `${j.tipo} (${j.quem} às ${j.quando})`).join(", ")}. Ao registrar, este material entra na
+          mesma linha do laudo.
+        </p>
+      )}
       {tipo === "Meio" && (
         <label className="campo">
           Nome do meio (opcional)
@@ -188,7 +217,7 @@ function Registrar({ tipos, aoRegistrar }: { tipos: string[]; aoRegistrar: (d: D
 }
 
 function Linha({ item, podeMexer, aoMudar }: { item: ItemEsterilizacao; podeMexer: boolean; aoMudar: (d: DadosEsterilizacao) => void }) {
-  const [modo, setModo] = useState<"corrigir" | "excluir" | null>(null);
+  const [modo, setModo] = useState<"corrigir" | "excluir" | "nao_eficiente" | null>(null);
   const [tipo, setTipo] = useState(item.tipo);
   const [ciclo, setCiclo] = useState(item.ciclo);
   const [meio, setMeio] = useState(item.meio ?? "");
@@ -204,10 +233,20 @@ function Linha({ item, podeMexer, aoMudar }: { item: ItemEsterilizacao; podeMexe
     }
     setErro("");
     try {
-      const corpo = modo === "corrigir" ? { tipo, ciclo, meio, descricao, motivo } : { motivo };
-      const url = modo === "corrigir" ? `/esterilizacao/${item.id}` : `/esterilizacao/${item.id}/excluir`;
-      aoMudar(await enviarJson<DadosEsterilizacao>(url, corpo, modo === "corrigir" ? "PUT" : "POST"));
+      const corpo = modo === "corrigir" ? { tipo, ciclo, meio, descricao, motivo } : modo === "nao_eficiente" ? { eficiente: false, motivo } : { motivo };
+      const url =
+        modo === "corrigir" ? `/esterilizacao/${item.id}` : modo === "nao_eficiente" ? `/esterilizacao/${item.id}/eficiente` : `/esterilizacao/${item.id}/excluir`;
+      aoMudar(await enviarJson<DadosEsterilizacao>(url, corpo, modo === "excluir" ? "POST" : "PUT"));
       setModo(null);
+    } catch (e) {
+      setErro(mensagem(e, "Não foi possível gravar."));
+    }
+  }
+
+  async function voltarParaSim() {
+    setErro("");
+    try {
+      aoMudar(await enviarJson<DadosEsterilizacao>(`/esterilizacao/${item.id}/eficiente`, { eficiente: true }, "PUT"));
     } catch (e) {
       setErro(mensagem(e, "Não foi possível gravar."));
     }
@@ -217,10 +256,20 @@ function Linha({ item, podeMexer, aoMudar }: { item: ItemEsterilizacao; podeMexe
     <li>
       <div className="linha-turno">
         <span>
-          <strong>{resumo(item)}</strong> · {item.quem} às {item.quando}
+          <strong>{resumo(item)}</strong> · {item.quem} às {item.quando} ·{" "}
+          <span className={item.eficiente ? "etiqueta etiqueta-ok" : "etiqueta etiqueta-nao-ok"}>{item.eficiente ? "Eficiente: Sim" : "Eficiente: Não"}</span>
         </span>
         {podeMexer && !modo && (
           <span className="acoes-linha">
+            {item.eficiente ? (
+              <button type="button" className="link-botao" aria-label={`Marcar não eficiente ${resumo(item)}`} onClick={() => setModo("nao_eficiente")}>
+                Não eficiente
+              </button>
+            ) : (
+              <button type="button" className="link-botao" aria-label={`Voltar para eficiente ${resumo(item)}`} onClick={() => void voltarParaSim()}>
+                Voltar para Sim
+              </button>
+            )}
             <button type="button" className="link-botao" aria-label={`Corrigir ${resumo(item)}`} onClick={() => setModo("corrigir")}>
               Corrigir
             </button>
@@ -230,13 +279,16 @@ function Linha({ item, podeMexer, aoMudar }: { item: ItemEsterilizacao; podeMexe
           </span>
         )}
       </div>
+      {item.pagina_impressa && item.corrigida && (
+        <span className="texto-secundario corrigido">Esta linha está numa página já impressa: reimprima o laudo.</span>
+      )}
       {item.corrigida && (
         <span className="texto-secundario corrigido">
           Corrigido (antes: {item.antes}). Motivo: {item.motivo_correcao}
         </span>
       )}
       {modo && (
-        <form className="corrigir-horario" onSubmit={enviar} aria-label={modo === "corrigir" ? "Corrigir esterilização" : "Excluir esterilização"}>
+        <form className="corrigir-horario" onSubmit={enviar} aria-label={modo === "corrigir" ? "Corrigir esterilização" : modo === "nao_eficiente" ? "Marcar não eficiente" : "Excluir esterilização"}>
           {modo === "corrigir" ? (
             <div className="linha-formulario">
               <label className="campo">
@@ -264,6 +316,8 @@ function Linha({ item, podeMexer, aoMudar }: { item: ItemEsterilizacao; podeMexe
                 </label>
               )}
             </div>
+          ) : modo === "nao_eficiente" ? (
+            <p>Marca o ciclo todo como não eficiente (a fita ou a nota da autoclave não confirmou). Escreva o motivo.</p>
           ) : (
             <p>Excluir sai da lista, mas fica guardado com o motivo.</p>
           )}
@@ -278,7 +332,7 @@ function Linha({ item, podeMexer, aoMudar }: { item: ItemEsterilizacao; podeMexe
           )}
           <div className="botoes-lado">
             <button type="submit" className="botao botao-principal">
-              {modo === "corrigir" ? "Salvar correção" : "Excluir"}
+              {modo === "corrigir" ? "Salvar correção" : modo === "nao_eficiente" ? "Marcar Não eficiente" : "Excluir"}
             </button>
             <button type="button" className="botao botao-simples" onClick={() => setModo(null)}>
               Cancelar
