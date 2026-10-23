@@ -2762,3 +2762,30 @@ button.barra-linha:hover,
   min-width: 0;
   overflow-wrap: anywhere;
 }
+
+/* Lista "Para fazer agora" (APP-034): todas as linhas iguais, texto à esquerda e os dois botões sempre à direita */
+.atividade {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 4px 10px;
+}
+
+.atividade-botoes {
+  display: grid;
+  grid-template-columns: repeat(2, 5.4rem);
+  gap: 6px;
+}
+
+.atividade-botoes .botao-secundario {
+  min-height: 34px;
+  padding: 4px 6px;
+  white-space: nowrap;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 340px) {
+  .atividade {
+    grid-template-columns: 1fr;
+  }
+}
