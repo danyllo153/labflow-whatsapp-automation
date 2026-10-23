@@ -67,16 +67,15 @@ afterEach(() => {
 });
 
 describe("Páginas: Coletas e Recebimento (APP-015)", () => {
-  it("a lista de páginas mostra Coletas e Recebimento e as que ainda vêm", async () => {
+  it("a lista de páginas mostra Coletas e Recebimento", async () => {
     abrir("/paginas", {});
-    expect(await screen.findByRole("link", { name: /Coletas/ })).toHaveAttribute("href", "/paginas/coletas");
-    expect(screen.getByRole("link", { name: /Recebimento/ })).toBeInTheDocument();
-    expect(screen.getByText("Navios")).toBeInTheDocument();
+    expect(await screen.findByRole("link", { name: /^Coletas/ })).toHaveAttribute("href", "/paginas/coletas");
+    expect(screen.getByRole("link", { name: /^Recebimento C\.T/ })).toBeInTheDocument();
   });
 
   it("o Coletor não vê Recebimento na lista", async () => {
     abrir("/paginas", {}, { ...ANA, cargo: "Coletor" });
-    await screen.findByRole("link", { name: /Coletas/ });
+    await screen.findByRole("link", { name: /^Coletas/ });
     expect(screen.queryByRole("link", { name: /Recebimento/ })).not.toBeInTheDocument();
   });
 

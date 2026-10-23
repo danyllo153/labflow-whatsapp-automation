@@ -143,7 +143,7 @@ Telas em **React + TypeScript (Vite)** na pasta `app/web/`, **servidas pela pró
 | APP-027 | Estufas | 07 §7.1 | Tabelas `app.estufas` e `app.leituras_estufa`; as 11 estufas com **Supervisório** e **Field chart** (Ok / Não ok, temperatura só no Não ok), bloco no Início e aba própria; faixas **fictícias** no repositório | Estufa Não ok entra nas ocorrências do relatório do turno | APP-024 |
 | APP-028 | Admin: turnos, atividades e estufas | 07 §10 | Horários padrão dos turnos, atividades fixas de cada turno, estufas e faixas (as reais só no banco) | Só o Admin acessa | APP-023, APP-027 |
 
-**Andamento (22/10/2026):** Marco 1 completo e no ar (APP-012 a APP-016, #147 a #153; migration 051 aplicada em 21/10). Marco 2: APP-017 mesclada (#158); APP-018 em PR.
+**Andamento (22/10/2026):** Marco 1 completo e no ar (APP-012 a APP-016, #147 a #153; migration 051 aplicada em 21/10). Marco 2: APP-017 e APP-018 mescladas (#158, #159); APP-019 em PR (todas as páginas do Power BI no app).
 
 **Fica fora da Fase C:** relatório do dia igual ao do bot (depende do PB6, Fase D); assistente (Fase D); editar e excluir (dependem do PB4); barreiras de segurança no celular (versão depois do piloto do app).
 
