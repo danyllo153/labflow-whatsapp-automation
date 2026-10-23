@@ -241,7 +241,7 @@ export default function PaginaDeDados({ def }: { def: DefinicaoDePagina }) {
                 <p>Nenhum registro com esses filtros.</p>
               </div>
             ) : (
-              <Tabela colunas={def.colunas} linhas={dados.linhas} />
+              <Tabela colunas={def.colunas} linhas={dados.linhas} link={def.linkDaLinha} />
             )}
             {totalPaginas > 1 && (
               <nav className="paginacao" aria-label="Páginas da lista">
@@ -278,7 +278,7 @@ export default function PaginaDeDados({ def }: { def: DefinicaoDePagina }) {
   );
 }
 
-function Tabela({ colunas, linhas }: { colunas: Coluna[]; linhas: Record<string, unknown>[] }) {
+function Tabela({ colunas, linhas, link }: { colunas: Coluna[]; linhas: Record<string, unknown>[]; link?: (l: Record<string, unknown>) => string }) {
   return (
     <table className="tabela-dados">
       <thead>
@@ -295,7 +295,13 @@ function Tabela({ colunas, linhas }: { colunas: Coluna[]; linhas: Record<string,
           <tr key={n}>
             {colunas.map((c) => (
               <td key={c.chave} data-rotulo={c.rotulo} className={c.principal ? "principal" : undefined}>
-                <Celula coluna={c} linha={linha} />
+                {c.principal && link ? (
+                  <Link to={link(linha)}>
+                    <Celula coluna={c} linha={linha} />
+                  </Link>
+                ) : (
+                  <Celula coluna={c} linha={linha} />
+                )}
               </td>
             ))}
           </tr>

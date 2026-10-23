@@ -1,12 +1,14 @@
-"""Páginas do laboratório, só leitura: Embarque, TAB e Coliformes, Recebimento NFC, Navios e Visão geral.
+"""Páginas do laboratório, só leitura: Embarque, TAB e Coliformes, Recebimento NFC e Visão geral.
 
-Spec: 07-app-pwa.md (v1.0), "5. Páginas do laboratório" (Navios é página nova); 08-fluxos.md A11. Tarefa: APP-018.
+Spec: 07-app-pwa.md (v1.0), "5. Páginas do laboratório"; 08-fluxos.md A11. Tarefa: APP-018 (Navios foi para rotas_navios_tanques.py
+na APP-019b).
 Mesmo padrão das outras páginas: leem SEMPRE pelas views do Power BI (schema bi), mesmos filtros na tela e no Excel.
 São páginas de análise: o Coletor não as vê (07, Permissões).
 """
 
 from datetime import date, timedelta
 from typing import Any, Literal
+from urllib.parse import quote
 
 import psycopg
 from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
@@ -179,76 +181,12 @@ COLUNAS_RECEBIMENTO_NFC = [
     ("lido_por", "Lido por"), ("data_leitura", "Data da leitura"),
 ]
 
-# ---------------------------------------------------------------- Navios (nova: uma linha por navio e viagem)
-# O nome na view já vem com a viagem ("D.SKY 123"). O período filtra as coletas; leituras e desvios seguem as coletas.
-NAVIOS_BASE = """
-    WITH c AS (
-        SELECT coleta_id, navio, tanque, data_coleta FROM bi.coletas WHERE origem = 'Navio'
-    ), por_navio AS (
-        SELECT navio, count(*) AS coletas, count(DISTINCT tanque) AS tanques,
-               min(data_coleta) AS primeira_coleta, max(data_coleta) AS ultima_coleta
-        FROM c GROUP BY navio
-    ), leituras AS (
-        SELECT l.navio, count(*) AS leituras, count(*) FILTER (WHERE l.lida) AS lidas,
-               count(*) FILTER (WHERE NOT l.lida) AS pendentes,
-               count(*) FILTER (WHERE l.situacao = 'Atrasado') AS atrasadas,
-               count(*) FILTER (WHERE l.resultado = 'Não ok') AS nao_ok
-        FROM bi.leituras_nfc l JOIN c ON c.coleta_id = l.coleta_id GROUP BY l.navio
-    ), desvios AS (
-        SELECT d.navio, count(*) AS desvios, count(*) FILTER (WHERE d.status <> 'Concluído') AS desvios_abertos
-        FROM bi.desvios d
-        WHERE d.origem = 'Navio' AND EXISTS (SELECT 1 FROM c WHERE c.navio = d.navio AND c.tanque = d.tanque
-                                                              AND c.data_coleta = d.data_coleta)
-        GROUP BY d.navio
-    )
-    SELECT p.navio, p.coletas, p.tanques, p.primeira_coleta, p.ultima_coleta,
-           coalesce(l.leituras, 0) AS leituras, coalesce(l.lidas, 0) AS lidas, coalesce(l.pendentes, 0) AS pendentes,
-           coalesce(l.atrasadas, 0) AS atrasadas, coalesce(l.nao_ok, 0) AS nao_ok,
-           coalesce(d.desvios, 0) AS desvios, coalesce(d.desvios_abertos, 0) AS desvios_abertos
-    FROM por_navio p
-    LEFT JOIN leituras l ON l.navio = p.navio
-    LEFT JOIN desvios d ON d.navio = p.navio
-"""
-ORDEM_NAVIOS = "ultima_coleta DESC, navio"
-
-
-class FiltrosNavios:
-    def __init__(
-        self,
-        data_de: date | None = Query(default=None, description="Última coleta a partir de"),
-        data_ate: date | None = None,
-        navio: str | None = Query(default=None, description="Parte do nome"),
-        com_pendencia: bool | None = Query(default=None, description="Só navios com leitura pendente ou desvio aberto"),
-    ) -> None:
-        self.data_de, self.data_ate, self.navio, self.com_pendencia = data_de, data_ate, navio, com_pendencia
-
-    def montar(self) -> _Filtro:
-        f = _Filtro()
-        _periodo(f, "ultima_coleta", self.data_de, self.data_ate)
-        f.contem("navio", self.navio)
-        if self.com_pendencia:
-            f.add("(pendentes > 0 OR desvios_abertos > 0)")
-        return f
-
-    def descricao(self) -> list[tuple[str, Any]]:
-        return [("Última coleta de", self.data_de), ("Última coleta até", self.data_ate), ("Navio", self.navio),
-                ("Só com pendência", "Sim" if self.com_pendencia else None)]
-
-
-COLUNAS_NAVIOS = [
-    ("navio", "Navio e viagem"), ("primeira_coleta", "Primeira coleta"), ("ultima_coleta", "Última coleta"),
-    ("tanques", "Tanques"), ("coletas", "Coletas"), ("leituras", "Leituras"), ("lidas", "Lidas"),
-    ("pendentes", "Pendentes"), ("atrasadas", "Atrasadas"), ("nao_ok", "Não ok"), ("desvios", "Desvios"),
-    ("desvios_abertos", "Desvios abertos"),
-]
-
 # ---------------------------------------------------------------- Rotas de lista e Excel (mesmo molde para todas)
 PAGINAS = {
     "embarque": (EMBARQUE_BASE, ORDEM_EMBARQUE, FiltrosEmbarque, "Embarque", COLUNAS_EMBARQUE),
     "testes": (TESTES_BASE, ORDEM_TESTES, FiltrosTestes, "TAB e Coliformes", COLUNAS_TESTES),
     "recebimento-nfc": (RECEBIMENTO_NFC_BASE, ORDEM_RECEBIMENTO_NFC, FiltrosRecebimentoNfc, "Recebimento NFC",
                         COLUNAS_RECEBIMENTO_NFC),
-    "navios": (NAVIOS_BASE, ORDEM_NAVIOS, FiltrosNavios, "Navios", COLUNAS_NAVIOS),
 }
 
 
@@ -299,7 +237,8 @@ class PendenciasDoBloco(BaseModel):
 
 
 class Alerta(BaseModel):
-    pagina: str  # para a tela abrir a página certa
+    pagina: str  # recebimento, embarque ou tanques
+    caminho: str  # onde a tela abre o alerta: o tanque, o navio ou a página filtrada
     referencia: str
     analise: str
     resultado: str
@@ -338,17 +277,26 @@ ALERTAS_SQL = """
         SELECT CASE origem WHEN 'Recebimento' THEN 'recebimento' ELSE 'embarque' END AS pagina,
                CASE WHEN origem = 'Recebimento' THEN 'Load ' || load || ' · lote ' || lote_amostra
                     ELSE coalesce(navio, '') || ' · load ' || load || ' · ' || lote_amostra END AS referencia,
-               analise, resultado, data_leitura AS data
+               analise, resultado, data_leitura AS data, load, navio, NULL::bigint AS coleta_id, origem
         FROM bi.contagens WHERE lido AND alarme AND prevista BETWEEN %(de)s AND %(ate)s
         UNION ALL
         SELECT 'tanques',
                CASE WHEN origem = 'Terra' THEN 'Tanque ' || tanque ELSE navio || ' · tanque ' || tanque END,
-               analise || ' ' || frasco || ' · ' || etapa, contagem, (lida_em AT TIME ZONE 'America/Sao_Paulo')::date
+               analise || ' ' || frasco || ' · ' || etapa, contagem, (lida_em AT TIME ZONE 'America/Sao_Paulo')::date,
+               NULL, navio, coleta_id, origem
         FROM bi.leituras_nfc WHERE resultado = 'Não ok' AND data_coleta BETWEEN %(de)s AND %(ate)s
     ) a
     ORDER BY data DESC NULLS LAST, referencia
     LIMIT 20
 """
+
+
+def _caminho_do_alerta(pagina: str, load: str | None, navio: str | None, coleta_id: int | None, origem: str) -> str:
+    if pagina == "tanques":
+        return f"/paginas/tanques-terra/{coleta_id}" if origem == "Terra" else f"/paginas/navios/{quote(navio or '')}"
+    if pagina == "embarque":
+        return f"/paginas/navios/{quote(navio or '')}"
+    return f"/paginas/recebimento?load={quote(load or '')}"
 
 DIAS_PADRAO = 30
 
@@ -377,6 +325,9 @@ def visao_geral(
     }
     pendencias = [PendenciasDoBloco(bloco=b, vence_hoje=por_bloco.get(b, (0, 0))[0], atrasados=por_bloco.get(b, (0, 0))[1])
                   for b in BLOCOS]
-    alertas = [Alerta(pagina=p, referencia=r or "", analise=a or "", resultado=res or "", data=d)
-               for p, r, a, res, d in con.execute(ALERTAS_SQL, periodo).fetchall()]
+    alertas = [
+        Alerta(pagina=p, caminho=_caminho_do_alerta(p, ld, nv, cid, og), referencia=r or "", analise=a or "",
+               resultado=res or "", data=d)
+        for p, r, a, res, d, ld, nv, cid, og in con.execute(ALERTAS_SQL, periodo).fetchall()
+    ]
     return VisaoGeral(data_de=de, data_ate=ate, numeros=numeros, pendencias=pendencias, alertas=alertas)

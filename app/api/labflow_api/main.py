@@ -1,7 +1,7 @@
 """Ponto de entrada da API do LabFlow.
 
 Spec: docs/specs/lims/06-api-e-auth.md (v1.0), seção "Arquitetura".
-Tarefas: APP-001 (esqueleto), APP-004 (login e sessão), APP-005 (permissões), APP-006 (senha provisória), APP-007 (pessoas), APP-008 (páginas Coletas e Recebimento), APP-009 (Excel), APP-010 (pendências de hoje), APP-012 (telas em /app/), APP-017 (Tanques, Drops e Desvios), APP-018 (Embarque, TAB e Coliformes, Recebimento NFC, Navios, Visão geral).
+Tarefas: APP-001 (esqueleto), APP-004 (login e sessão), APP-005 (permissões), APP-006 (senha provisória), APP-007 (pessoas), APP-008 (páginas Coletas e Recebimento), APP-009 (Excel), APP-010 (pendências de hoje), APP-012 (telas em /app/), APP-017 (Tanques, Drops e Desvios), APP-018 (Embarque, TAB e Coliformes, Recebimento NFC, Visão geral), APP-019b (Tanques terra e Navios com status).
 """
 
 import os
@@ -11,6 +11,7 @@ from fastapi import FastAPI
 from labflow_api.rotas_admin import roteador as roteador_admin
 from labflow_api.rotas_login import roteador as roteador_login
 from labflow_api.rotas_paginas import roteador as roteador_paginas
+from labflow_api.rotas_navios_tanques import roteador as roteador_navios_tanques
 from labflow_api.rotas_paginas_mais import roteador as roteador_paginas_mais
 from labflow_api.rotas_paginas_nfc import roteador as roteador_paginas_nfc
 from labflow_api.rotas_pendencias import roteador as roteador_pendencias
@@ -43,5 +44,6 @@ app.include_router(roteador_admin)
 app.include_router(roteador_paginas)
 app.include_router(roteador_paginas_nfc)
 app.include_router(roteador_paginas_mais)
+app.include_router(roteador_navios_tanques)
 app.include_router(roteador_pendencias)
 app.include_router(roteador_telas)  # por último: /app/... e o redirecionamento da raiz
