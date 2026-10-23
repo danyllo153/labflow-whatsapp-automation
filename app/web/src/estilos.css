@@ -1179,3 +1179,65 @@ a.cartao-pagina:hover {
     border: 1px solid #999;
   }
 }
+
+/* Esterilização (APP-026) */
+.botoes-tipo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.botao-tipo {
+  min-height: 56px;
+  font-size: 1.05em;
+}
+.botao-tipo[aria-pressed="true"] {
+  background: var(--laranja-suave);
+  border-color: var(--laranja);
+  font-weight: 700;
+}
+.acoes-linha {
+  display: flex;
+  gap: 14px;
+}
+.legenda-g4 {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  list-style: none;
+  margin: 4px 0 8px;
+  padding: 0;
+}
+.legenda-g4 .amostra {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  vertical-align: -1px;
+}
+.svg-g4 {
+  width: 100%;
+  height: auto;
+}
+.so-leitor {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+}
+.tabela-g4 {
+  width: 100%;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 0.72em;
+  text-align: center;
+}
+.tabela-g4 th,
+.tabela-g4 td {
+  padding: 4px 2px;
+  border-bottom: 1px solid var(--borda);
+}
+.tabela-g4 tbody th {
+  text-align: left;
+}

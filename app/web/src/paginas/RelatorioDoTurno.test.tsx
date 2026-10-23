@@ -29,6 +29,7 @@ const BASE: Relatorio = {
   ],
   atividades_feitas: [{ texto: "Planilhas", quem: "Ana Souza", quando: "09:12" }],
   atividades_nao_feitas: ["Materiais", "Reagentes"],
+  esterilizacoes: [{ id: 5, tipo: "Meio", ciclo: "103", meio: "PDA", descricao: null, quem: "Ana Souza", quando: "09:40" }],
   adiantados: { total: 1, itens: [{ tipo: "Drop D5", referencia: "Tanque 41 (coleta 17/10)", prevista: "2026-10-25", quem: "Danyllo" }] },
   pendentes: {
     vence_hoje: 4,
@@ -76,6 +77,7 @@ describe("Relatório do turno (APP-024)", () => {
     expect(screen.getByText(/Ana Souza 2, Bruno Lima 1/)).toBeInTheDocument();
     expect(screen.getByText(/Planilhas · Ana Souza às 09:12/)).toBeInTheDocument();
     expect(screen.getByText("Materiais · Reagentes")).toBeInTheDocument();
+    expect(screen.getByText("Meio (PDA) · ciclo 103 · Ana Souza às 09:40")).toBeInTheDocument();
     expect(screen.getByText(/12 leituras de C.T\/B.L e 5 resultados/)).toBeInTheDocument();
     expect(screen.getByText("NFC Tank farm: 4 hoje, 2 atrasadas")).toBeInTheDocument();
   });

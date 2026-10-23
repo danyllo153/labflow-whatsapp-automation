@@ -37,6 +37,7 @@ export interface Relatorio {
   feito: GrupoFeito[];
   atividades_feitas: { texto: string; quem: string | null; quando: string | null }[];
   atividades_nao_feitas: string[];
+  esterilizacoes: { id: number; tipo: string; ciclo: string; meio: string | null; descricao: string | null; quem: string; quando: string }[];
   adiantados: { total: number; itens: { tipo: string; referencia: string; prevista: string; quem: string | null }[] };
   pendentes: {
     vence_hoje: number;
@@ -181,6 +182,20 @@ export default function RelatorioDoTurno() {
               </li>
             ))}
           </ul>
+        )}
+        {r.esterilizacoes.length > 0 && (
+          <>
+            <h3>Esterilizações realizadas ({r.esterilizacoes.length})</h3>
+            <ul className="lista-simples texto-secundario">
+              {r.esterilizacoes.map((e) => (
+                <li key={e.id}>
+                  {e.tipo}
+                  {e.meio && ` (${e.meio})`}
+                  {e.descricao && ` (${e.descricao})`} · ciclo {e.ciclo} · {e.quem} às {e.quando}
+                </li>
+              ))}
+            </ul>
+          </>
         )}
         <p className="texto-secundario">
           No dia {dm(r.dia)}, sem separar por turno (só guardam a data): {r.do_dia.contagens_lidas} leituras de C.T/B.L e{" "}

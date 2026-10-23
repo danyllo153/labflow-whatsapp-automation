@@ -10,6 +10,7 @@ from fastapi import FastAPI
 
 from labflow_api.rotas_admin import roteador as roteador_admin
 from labflow_api.rotas_atividades import roteador as roteador_atividades
+from labflow_api.rotas_esterilizacao import roteador as roteador_esterilizacao
 from labflow_api.rotas_login import roteador as roteador_login
 from labflow_api.rotas_paginas import roteador as roteador_paginas
 from labflow_api.rotas_navios_tanques import roteador as roteador_navios_tanques
@@ -49,6 +50,7 @@ app.include_router(roteador_paginas_nfc)
 app.include_router(roteador_paginas_mais)
 app.include_router(roteador_navios_tanques)
 app.include_router(roteador_pendencias)
+app.include_router(roteador_esterilizacao)
 app.include_router(roteador_relatorio_turno)  # antes do turno: /turno/relatorio
 app.include_router(roteador_atividades)  # antes do turno: /turno/atividades
 app.include_router(roteador_turno)
