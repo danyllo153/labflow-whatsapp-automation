@@ -166,6 +166,21 @@ Telas em **React + TypeScript (Vite)** na pasta `app/web/`, **servidas pela pró
 | **Análise Microbiológica da Água do Processo** (FAB/028, unidade do terminal) | uma coleta (data e hora) | **análise nova** | C.T. e B.L. de 4 pontos (Manifold, Câmara 4, 5 e 6); "-" = ponto não coletado; Observação (ex.: "Esterilizando"); Analista = quem registrou; RCA à mão. O modelo recebido é uma **folha digitalizada** (imagem, tabela deitada na página): as células serão medidas na imagem e o texto escrito girado | a fazer (análise e laudo) |
 | **Limpeza de Superfícies** (LAB/001) | uma coleta: data, hora, ponto | **análises novas**: **Baias** (CIP dos mangotes do recebimento) e **Linhas** (CIP das linhas de embarque) | C.T. 48 h, B.L. 72 h e 120 h; Observação "Análise dd.mm.aa" (dia em que foi plaqueada); folhas separadas para baias e para linhas | a fazer (análises e laudo) |
 
+**Meios e tempos de leitura** (resumo das regras do método de análises microbiológicas da empresa, lido em 23/10; o documento em si não vai para o repositório). Conferido com duas folhas de "Controle de Incubação e Leitura" preenchidas à mão: bate em todas as linhas.
+
+| Meio | Análise | Onde se usa | Incubação | Coluna no laudo de incubação |
+|---|---|---|---|---|
+| **OSA** (ágar soro de laranja) | **C.T.** (contagem total de mesófilos acidúricos) | suco concentrado (recebimento, concentrado, embarque), polpa e NFC (tanque, navio, carreta) | 30 °C, 48 h | OSA/PCA 48 h (incubação + 2 dias) |
+| **PDA** (acidificado) | **B.L.** (bolores e leveduras) | as mesmas amostras do OSA e as águas | 25 °C, 120 h (pré-leitura em 72 h) | PDA 72 h (+3 dias) e 120 h (+5 dias) |
+| **PCA** | **C.T. das águas** (bactérias heterotróficas: água do processo, baias e linhas) | só nos dias com água | 35 °C, 48 h | OSA/PCA 48 h; lote "-" nos dias sem água |
+| **Wort** | fungos psicrotróficos | só **tanques de NFC** (TQ) | 7 °C, 240 h | Wort 240 h (+10 dias); "-" nos dias sem tanque |
+
+- **TAB e Coliformes** usam outros meios (YSG/BAT, UPEB/cromogênico) e **não entram** no laudo de incubação.
+- **TQ (N) e (ST):** (N) é plaqueado direto; (ST) é o **teste de stress** (o frasco fica 24 h a 30 °C antes de plaquear), então a **data de incubação do (ST) é o dia seguinte** ao do (N) do mesmo tanque.
+- **Resultado sem crescimento:** "<1" quando não há diluição (água, NFC direto); com diluição 1:10 o limite é "<10" (concentrado). "-" no laudo de água = ponto não coletado.
+- **Data da incubação** = dia em que a amostra foi plaqueada (não o da coleta, quando diferem).
+- Falta confirmar: como os **lotes dos meios** são trocados (vale até abrir outro lote?).
+
 **Ordem proposta:** (1) APP-035 no ar; (2) análises novas no app (água do processo, baias, linhas: tabelas do app, registro, leituras e resultado `<1`, pendências no Início e no Turno); (3) laudos de água do processo e de limpeza de superfícies (só dados do app); (4) lotes dos meios + laudo de incubação e leitura (junta dados do bot e do app); (5) bot e assistente registrando tudo isso por frase (pedidos PB8 e PB9).
 
 ## Pedidos para a sessão do bot
