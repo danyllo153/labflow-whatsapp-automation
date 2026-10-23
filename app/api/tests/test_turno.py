@@ -122,12 +122,22 @@ def test_madrugada_conta_no_dia_em_que_comecou(cliente, logado, agora, conexao):
     assert entrada == em(22, 23, 40)
 
 
-def test_entrar_de_madrugada_na_tarde_fica_no_turno(cliente, logado, agora):
-    # 23/10, ~02:00, no servidor: a Tarde com entrada 15:00 caía na Tarde de 22/10, que já tinha acabado, e fechava na hora
+def test_nao_entra_em_turno_que_comeca_daqui_a_mais_de_2_horas(cliente, logado, agora, conexao):
+    # 23/10, ~02:00, no servidor: dava para entrar na Tarde (16:00) e na Manhã (08:00) de madrugada
     agora(em(23, 2))
+    uid = logado()
+    for turno_id, texto in ((2, "A Tarde começa às 16:00"), (1, "A Manhã começa às 08:00")):
+        r = cliente.post("/turno/entrar", json={"turno_id": turno_id, "entrada": "15:00"})
+        assert r.status_code == 422
+        assert r.json()["detail"].startswith(texto) and "escolha a Madrugada" in r.json()["detail"]
+    assert conexao.execute("SELECT count(*) FROM app.entradas_turno WHERE usuario_id = %s", (uid,)).fetchone()[0] == 0
+
+
+def test_chega_ate_2_horas_antes_e_entra_no_proximo(cliente, logado, agora):
+    agora(em(22, 22, 0))  # Tarde em andamento; a Madrugada de 23/10 começa daqui a 2 h
     logado()
-    e = cliente.post("/turno/entrar", json={"turno_id": 2, "entrada": "15:00"}).json()
-    assert (e["dia"], e["entrada"], e["saida"]) == ("2026-10-23", "15:00", None)
+    e = cliente.post("/turno/entrar", json={"turno_id": 3, "entrada": "22:00"}).json()
+    assert (e["dia"], e["entrada"], e["saida"]) == ("2026-10-23", "22:00", None)
     assert cliente.get("/turno").json()["no_turno"]["id"] == e["id"]
 
 

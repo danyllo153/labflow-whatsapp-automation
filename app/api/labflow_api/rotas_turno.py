@@ -25,6 +25,7 @@ roteador = APIRouter(prefix="/turno", tags=["turno"])
 
 FUSO = ZoneInfo("America/Sao_Paulo")
 HORARIO = r"^([01]\d|2[0-3]):[0-5]\d$"  # HH:MM
+ANTECEDENCIA = timedelta(hours=2)  # entrar no próximo turno só quem chega até 2 h antes (decidido em 23/10)
 
 
 @dataclass(frozen=True)
@@ -218,6 +219,13 @@ def entrar(
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Escolha Manhã, Tarde ou Madrugada.")
     agora = _agora(con)
     dia = dia_do_turno(turno, agora)
+    comeco = janela(turno, dia)[0]
+    if comeco - agora > ANTECEDENCIA:
+        atual, _ = turno_agora(turnos, agora)
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            f"A {turno.nome} começa às {_hhmm(comeco)}. Entre quando chegar ou escolha a {atual.nome}.",
+        )
     aberta = _fechar_esquecida(con, pessoa.usuario_id, turnos, agora)
     if aberta and (aberta.turno_id, aberta.dia) == (turno.id, dia):
         return aberta  # já está nesse turno (tocou duas vezes)
