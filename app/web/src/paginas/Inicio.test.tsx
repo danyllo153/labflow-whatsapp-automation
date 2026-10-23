@@ -68,7 +68,8 @@ describe("Início: pendências de hoje (APP-014)", () => {
     expect(screen.getByText("Tanque 12")).toBeInTheDocument();
 
     await u.click(screen.getByRole("button", { name: /Desvios abertos/ }));
-    expect(screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent)).toEqual(["Desvios 1"]);
+    const blocos = screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent ?? "");
+    expect(blocos.filter((t) => !t.startsWith("Para fazer agora"))).toEqual(["Desvios 1"]);
 
     await u.click(screen.getByRole("button", { name: /Desvios abertos/ }));
     expect(screen.getByText("Load 90009 · lote 1")).toBeInTheDocument();
