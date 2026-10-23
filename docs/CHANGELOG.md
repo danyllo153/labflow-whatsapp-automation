@@ -48,6 +48,7 @@ Segunda versão do piloto no laboratório. Em destaque: **fotos que mostram só 
 - IA: "bl" sozinho vale bl120 também nas placas de tanque (a regressão de 16/10 achou bl72; 59 de 60 antes da correção).
 
 ### App (web e celular, em `app/`)
+- **Acabamento visual:** mesma paleta aprovada (laranja claro e creme, azul nas ações), com mais cuidado nos detalhes: **ícones no menu** (lateral e barra de baixo, sem emoji), cartões com profundidade leve, títulos com mais hierarquia, **etiquetas** com fundo suave e texto escuro (não quebram em duas linhas; Ok e Não ok sempre com texto), botões com estados (passar o mouse, apertar, teclado) e largura natural no computador, campos com foco visível, tabelas com cabeçalho marcado, linhas alternadas e destaque ao passar o mouse, item ativo do menu com marcador, e a conferência das estufas com o rótulo e a situação lado a lado (APP-030).
 - API em **FastAPI** com testes automáticos no GitHub Actions sobre um PostgreSQL de teste (todas as migrations e os dados fictícios de `db/seeds`); `/saude` e documentação em `/docs` (APP-001, APP-002).
 - Migration **050** do app: schema `app` (credenciais, senhas provisórias, sessões) e papel `labflow_app_web`, que lê as tabelas do bot e grava só no schema `app` (APP-003). Aplicada no servidor de demonstração em 19/10/2026.
 - Login com usuário curto e senha (argon2), sessão em cookie seguro por até 30 dias sem uso, bloqueio de 15 min após 5 senhas erradas, sair e "quem sou eu" com o cargo lido a cada chamada (APP-004).
