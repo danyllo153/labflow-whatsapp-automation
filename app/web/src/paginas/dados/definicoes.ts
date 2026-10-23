@@ -43,6 +43,7 @@ export const PAGINAS: DefinicaoDePagina[] = [
     descricao: "Coletas de tanques de terra e de navio, com quem coletou e quem digitou.",
     api: "/paginas/coletas",
     impressao: "em pé",
+    linkDaLinha: (l) => `/paginas/coletas/${l.coleta_id}`,
     colunas: [
       { chave: "data_coleta", rotulo: "Data da coleta", formato: "data" },
       { chave: "tanque", rotulo: "Tanque", principal: true },

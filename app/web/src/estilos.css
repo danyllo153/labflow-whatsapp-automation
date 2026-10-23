@@ -1266,3 +1266,17 @@ a.cartao-pagina:hover {
   padding: 8px 0;
   border-bottom: 1px solid var(--borda);
 }
+
+/* Coleta: ver, corrigir e excluir (APP-029) */
+.dados-coleta {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 16px;
+  margin: 0 0 8px;
+}
+.dados-coleta dt {
+  color: var(--texto-secundario);
+}
+.dados-coleta dd {
+  margin: 0;
+}
