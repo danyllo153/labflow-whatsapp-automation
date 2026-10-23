@@ -37,6 +37,7 @@ export interface Relatorio {
   feito: GrupoFeito[];
   atividades_feitas: { texto: string; quem: string | null; quando: string | null }[];
   atividades_nao_feitas: string[];
+  estufas_nao_ok: string[];
   esterilizacoes: { id: number; tipo: string; ciclo: string; meio: string | null; descricao: string | null; quem: string; quando: string }[];
   adiantados: { total: number; itens: { tipo: string; referencia: string; prevista: string; quem: string | null }[] };
   pendentes: {
@@ -243,6 +244,17 @@ export default function RelatorioDoTurno() {
           </>
         )}
       </div>
+
+      {r.estufas_nao_ok.length > 0 && (
+        <div className="cartao" role="group" aria-label="Estufas Não ok">
+          <h2>Estufas Não ok</h2>
+          <ul className="lista-simples">
+            {r.estufas_nao_ok.map((t) => (
+              <li key={t}>{t}</li>
+            ))}
+          </ul>
+        </div>
+      )}
 
       <Escritos relatorio={r} aoGravar={setDados} />
       {r.reaberto && <p className="texto-secundario">{r.reaberto}</p>}
