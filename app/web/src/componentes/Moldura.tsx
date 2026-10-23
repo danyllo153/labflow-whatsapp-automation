@@ -30,6 +30,9 @@ export default function Moldura() {
         <div className="conta">
           <div className="conta-nome">{nome}</div>
           <div className="texto-secundario">{nomeDoCargo(pessoa?.cargo)}</div>
+          <Link to="/conta" className="conta-link">
+            Aparência (claro e escuro)
+          </Link>
           <Link to="/conta/senha" className="conta-link">
             Trocar senha
           </Link>
