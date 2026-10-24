@@ -47,15 +47,34 @@ describe("Início: pendências de hoje (APP-014)", () => {
     expect(screen.getByRole("button", { name: /3\s*Desvios abertos/ })).toBeInTheDocument();
   });
 
-  it("agrupa por bloco, na ordem da API, com situação em texto e a data", async () => {
+  it("agrupa por bloco e, dentro dele, mostra o número de cada grupo; tocar abre a lista (24/10)", async () => {
     abrir();
+    const u = userEvent.setup();
     const blocos = await screen.findAllByRole("heading", { level: 2 });
     expect(blocos.map((h) => h.textContent)).toEqual(["FCOJ Recebimento 2", "NFC Tank farm 1", "Desvios 1"]);
     const recebimento = blocos[0].closest(".cartao") as HTMLElement;
+    const grupo = within(recebimento).getByRole("button", { name: /^2\s*C\.T\/B\.L · B\.L 72h/ });
+    expect(grupo).toHaveTextContent("1 atrasado");
+    expect(grupo).toHaveTextContent("1 para hoje");
+    expect(within(recebimento).queryByText("Load 90008 · lote 4")).not.toBeInTheDocument(); // fechado: só o número
+    await u.click(grupo);
+    expect(grupo).toHaveAttribute("aria-expanded", "true");
     expect(within(recebimento).getByText("Load 90008 · lote 4")).toBeInTheDocument();
-    expect(within(recebimento).getByText("Atrasado")).toBeInTheDocument();
     expect(within(recebimento).getByText("20/10")).toBeInTheDocument();
-    expect(screen.getByText("D5 · Drop")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Drop · D5/ })).toBeInTheDocument();
+  });
+
+  it("usa o grupo e o item que vêm da API (navio com os tanques dentro)", async () => {
+    const navio = (tanque: string): Pendencia => ({
+      ...item("NFC Navio", `O.SKY 189 · tanque ${tanque} (coleta 13/10)`, "Vence hoje", "Psicrotróficos Normal · Leitura final", "Leitura de NFC"),
+      grupo: "O.SKY 189 · Psicrotróficos Normal · Leitura final",
+      item: `tanque ${tanque} (coleta 13/10)`,
+    });
+    abrir({ vence_hoje: 2, atrasados: 0, desvios_abertos: 0, itens: [navio("1C"), navio("2P")] });
+    const u = userEvent.setup();
+    await u.click(await screen.findByRole("button", { name: /^2\s*O\.SKY 189 · Psicrotróficos Normal · Leitura final/ }));
+    expect(screen.getByText("tanque 1C (coleta 13/10)")).toBeInTheDocument();
+    expect(screen.getByText("tanque 2P (coleta 13/10)")).toBeInTheDocument();
   });
 
   it("tocar num cartão filtra a lista; tocar de novo volta a mostrar tudo", async () => {
@@ -63,25 +82,24 @@ describe("Início: pendências de hoje (APP-014)", () => {
     const u = userEvent.setup();
     await u.click(await screen.findByRole("button", { name: /Atrasados/ }));
     expect(screen.getByRole("button", { name: /Atrasados/ })).toHaveAttribute("aria-pressed", "true");
-    expect(screen.queryByText("Load 90009 · lote 1")).not.toBeInTheDocument();
-    expect(screen.getByText("Load 90008 · lote 4")).toBeInTheDocument();
-    expect(screen.getByText("Tanque 12")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^1\s*C\.T\/B\.L · B\.L 72h/ })).toHaveTextContent("1 atrasado");
+    expect(screen.queryByRole("button", { name: /Drop · D5/ })).not.toBeInTheDocument();
 
     await u.click(screen.getByRole("button", { name: /Desvios abertos/ }));
     const blocos = screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent ?? "");
     expect(blocos.filter((t) => !t.startsWith("Para fazer agora"))).toEqual(["Desvios 1"]);
 
     await u.click(screen.getByRole("button", { name: /Desvios abertos/ }));
-    expect(screen.getByText("Load 90009 · lote 1")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /^2\s*C\.T\/B\.L · B\.L 72h/ })).toBeInTheDocument();
   });
 
-  it("bloco grande mostra 8 e um botão para ver todos", async () => {
-    const muitos = Array.from({ length: 12 }, (_, n) => item("FCOJ Embarque", `Navio X · lote ${n + 1}`, "Atrasado"));
+  it("muitos itens iguais viram um grupo com o número", async () => {
+    const muitos = Array.from({ length: 12 }, (_, n) => item("FCOJ Embarque", `Navio X · lote ${n + 1}`, "Atrasado", "TAB · para espalhar", "TAB"));
     abrir({ vence_hoje: 0, atrasados: 12, desvios_abertos: 0, itens: muitos });
     const u = userEvent.setup();
-    await screen.findByText("Navio X · lote 8");
-    expect(screen.queryByText("Navio X · lote 9")).not.toBeInTheDocument();
-    await u.click(screen.getByRole("button", { name: "Mostrar todos (12)" }));
+    const grupo = await screen.findByRole("button", { name: /^12\s*TAB · para espalhar/ });
+    expect(screen.queryByText("Navio X · lote 1")).not.toBeInTheDocument();
+    await u.click(grupo);
     expect(screen.getByText("Navio X · lote 12")).toBeInTheDocument();
   });
 
@@ -108,13 +126,13 @@ describe("Início: pendências de hoje (APP-014)", () => {
     expect(await screen.findByText("Erro no servidor.")).toBeInTheDocument();
     falhar = false;
     await u.click(screen.getByRole("button", { name: "Tentar de novo" }));
-    expect(await screen.findByText("Load 90009 · lote 1")).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: /C\.T\/B\.L · B\.L 72h/ })).toBeInTheDocument();
   });
 
   it("atualiza sozinho a cada minuto", async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     const api = abrir();
-    await screen.findByText("Load 90008 · lote 4");
+    await screen.findByRole("button", { name: /C\.T\/B\.L · B\.L 72h/ });
     expect(api.vezes("GET /pendencias-hoje")).toBe(1);
     await act(async () => {
       await vi.advanceTimersByTimeAsync(60_000);

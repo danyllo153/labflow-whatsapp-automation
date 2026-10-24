@@ -104,3 +104,22 @@ def test_coletor_nao_ve_pendencias_de_analise(cliente, logado):
 
 def test_sem_login_da_401(cliente):
     assert cliente.get("/pendencias-hoje").status_code == 401
+
+
+@pytest.mark.parametrize(
+    "bloco, tipo, referencia, analise, grupo, item",
+    [
+        ("NFC Navio", "Leitura de NFC", "O.SKY 189 · tanque 1C (coleta 13/10)", "Psicrotróficos Normal · Leitura final",
+         "O.SKY 189 · Normal", "tanque 1C (coleta 13/10) · Psicrotróficos · Leitura final"),
+        ("NFC Navio", "Drop", "O.SKY 189 · tanque 2P (coleta 13/10)", "D5", "O.SKY 189 · Drops", "tanque 2P (coleta 13/10) · D5"),
+        ("NFC Tank farm", "Leitura de NFC", "Tanque 38 (coleta 21/10)", "B.L Stress · Pré-leitura", "B.L Stress · Pré-leitura", "Tanque 38 (coleta 21/10)"),
+        ("FCOJ Recebimento", "TAB", "Load 43669 · Composta #65", "TAB · para espalhar", "TAB · para espalhar", "Load 43669 · Composta #65"),
+        ("FCOJ Recebimento", "C.T/B.L", "Load 43661 · lote 11", "C.T 48h", "C.T 48h", "Load 43661 · lote 11"),
+        ("NFC Tank farm", "Drop", "Tanque 40 (coleta 21/10)", "D5", "Drop D5", "Tanque 40 (coleta 21/10)"),
+        ("Águas e superfícies", "Baia", "Baia 08 (coleta 22/10)", "C.T 48h", "Baia · C.T 48h", "Baia 08 (coleta 22/10)"),
+    ],
+)
+def test_agrupar_pendencias_para_o_inicio(bloco, tipo, referencia, analise, grupo, item):
+    from labflow_api.rotas_pendencias import agrupar
+
+    assert agrupar(bloco, tipo, referencia, analise) == (grupo, item)

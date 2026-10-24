@@ -13,6 +13,8 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 ## [Não lançado]
 
 ### Adicionado
+- **Início mais compacto: pendências por número** (app, 24/10): em cada bloco, o que se faz junto vira um grupo com o número e quantos estão atrasados ou são para hoje (ex.: "20 TAB · para espalhar", "10 B.L 120h"); tocar abre as compostas, lotes ou tanques. **No navio aparece só o nome com Normal, Stress ou Drops**, e os tanques ficam dentro. TAB e Coliformes mostram a próxima ação (para espalhar, para ler, para confirmar). Vale também para "Análises a fazer hoje" no Turno.
+- **TAB, Coliformes e Howard em páginas separadas** (app, 24/10): na aba Páginas, um grupo novo com uma página por análise (a antiga "TAB e Coliformes" continua abrindo pelo endereço antigo).
 - **Laudos de rastreio que não dependem do bot** (app, APP-036 a APP-046; migrations `060` a `064`), num motor comum de laudos (`/laudos/{laudo}`: páginas pendentes de imprimir, impressas e arquivo; o modelo oficial enviado pelo Admin fica no banco):
   - **Meios e lotes** (Registros diários): recebimento de cada lote de OSA, PDA, PCA e Wort, o **lote em uso** de cada meio com o período (voltar a um lote antigo é permitido), carga do histórico por CSV (Admin) e o laudo LAB/090, uma folha por meio.
   - **Branco do dia** (Registros diários): capela do fluxo laminar e controle de cada meio, `<1` por padrão e "-" em Wort e PCA nos dias sem análise que os use; laudo de 39 dias por folha.

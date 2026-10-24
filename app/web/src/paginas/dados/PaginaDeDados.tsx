@@ -71,12 +71,12 @@ export default function PaginaDeDados({ def }: { def: DefinicaoDePagina }) {
 
   const carregar = useCallback(async () => {
     try {
-      setDados(await lerJson<Pagina>(`${def.api}?${consulta(aplicados, { pagina, por_pagina: POR_PAGINA })}`));
+      setDados(await lerJson<Pagina>(`${def.api}?${consulta({ ...aplicados, ...def.fixos }, { pagina, por_pagina: POR_PAGINA })}`));
       setErro("");
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não foi possível carregar a página.");
     }
-  }, [def.api, aplicados, pagina]);
+  }, [def.api, def.fixos, aplicados, pagina]);
 
   useEffect(() => {
     void carregar();
@@ -111,7 +111,7 @@ export default function PaginaDeDados({ def }: { def: DefinicaoDePagina }) {
     try {
       const todas: Record<string, unknown>[] = [];
       for (let p = 1; ; p++) {
-        const parte = await lerJson<Pagina>(`${def.api}?${consulta(aplicados, { pagina: p, por_pagina: POR_PAGINA_IMPRESSAO })}`);
+        const parte = await lerJson<Pagina>(`${def.api}?${consulta({ ...aplicados, ...def.fixos }, { pagina: p, por_pagina: POR_PAGINA_IMPRESSAO })}`);
         todas.push(...parte.linhas);
         if (todas.length >= parte.total || parte.linhas.length === 0) break;
       }
@@ -150,7 +150,7 @@ export default function PaginaDeDados({ def }: { def: DefinicaoDePagina }) {
           <button type="button" className="botao-secundario" aria-expanded={filtrosAbertos} onClick={() => setFiltrosAbertos(!filtrosAbertos)}>
             Filtros{etiquetas.length > 0 && ` (${etiquetas.length})`}
           </button>
-          <a className="botao-secundario" href={`${def.api}/excel?${consulta(aplicados)}`} download>
+          <a className="botao-secundario" href={`${def.api}/excel?${consulta({ ...aplicados, ...def.fixos })}`} download>
             Exportar Excel
           </a>
           <button type="button" className="botao-secundario" onClick={() => void imprimir()} disabled={preparando || !dados}>

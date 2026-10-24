@@ -105,6 +105,8 @@ describe("Turno como central (APP-033)", () => {
       }),
     });
     expect(await screen.findByText("Análises a fazer hoje (1)")).toBeInTheDocument();
+    await userEvent.click(await screen.findByText("Análises a fazer hoje (1)"));
+    await userEvent.click(await screen.findByRole("button", { name: /^1\s*NFC/ }));
     expect(await screen.findByText("T-01")).toBeInTheDocument();
   });
 

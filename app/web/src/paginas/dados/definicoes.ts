@@ -28,9 +28,10 @@ export interface DefinicaoDePagina {
   impressao: "em pé" | "deitado"; // 07: em pé para listas estreitas, deitado para tabelas largas
   semColetor?: boolean; // 07: o Coletor não vê esta página
   grafico?: "g2"; // 07 §6: gráfico da página (G2 no Recebimento)
-  grupo: "Geral" | "NFC" | "FCOJ"; // como a lista de páginas agrupa (pedido de 23/10)
+  grupo: "Geral" | "NFC" | "FCOJ" | "Testes"; // como a lista de páginas agrupa (pedidos de 23 e 24/10)
   oculta?: boolean; // não aparece na lista, mas o endereço continua abrindo (links antigos)
   linkDaLinha?: (linha: Record<string, unknown>) => string; // tocar na linha abre a página do item
+  fixos?: Record<string, string>; // filtro sempre aplicado na API (ex.: uma página por teste, 24/10)
 }
 
 export const FABRICAS = ["AQA", "CON", "COL", "UCH", "ITA", "TMG"]; // fábricas travadas (decisão de 14/10)
@@ -229,8 +230,105 @@ export const PAGINAS: DefinicaoDePagina[] = [
     ],
   },
   {
+    caminho: "tab",
+    grupo: "Testes",
+    titulo: "TAB",
+    fixos: { teste: "TAB" },
+    descricao: "TAB por composta, lote e tanque: no caldo, estriado, incubado, em confirmação, resultado e próxima etapa.",
+    api: "/paginas/testes",
+    impressao: "deitado",
+    semColetor: true,
+    colunas: [
+      { chave: "referencia", rotulo: "Load ou tanque", principal: true },
+      { chave: "alvo", rotulo: "Composta / lote" },
+      { chave: "origem", rotulo: "Origem" },
+      { chave: "data_feito", rotulo: "Feito em", formato: "data" },
+      { chave: "status", rotulo: "Status" },
+      { chave: "resultado", rotulo: "Resultado", formato: "situacao" },
+      { chave: "howard_percentual", rotulo: "Howard (%)" },
+      { chave: "proxima_etapa", rotulo: "Próxima etapa", formato: "data" },
+      { chave: "situacao", rotulo: "Situação", formato: "situacao" },
+      { chave: "feito_por", rotulo: "Feito por" },
+    ],
+    filtros: [
+      { chave: "data_de", rotulo: "Feito de", tipo: "data" },
+      { chave: "data_ate", rotulo: "Feito até", tipo: "data" },
+      { chave: "origem", rotulo: "Origem", tipo: "opcoes", opcoes: ["Recebimento", "Embarque", "Tank farm"] },
+      { chave: "referencia", rotulo: "Load ou tanque", tipo: "texto" },
+      { chave: "status", rotulo: "Status", tipo: "opcoes", opcoes: ["No caldo", "Estriado", "Incubado", "Em confirmação", "Positivo, em confirmação", "Concluído"] },
+      { chave: "resultado", rotulo: "Resultado", tipo: "opcoes", opcoes: ["Positivo", "Negativo"] },
+      { chave: "situacao", rotulo: "Situação", tipo: "opcoes", opcoes: ["Atrasado", "Vence hoje", "No prazo", "Concluído"] },
+      { chave: "quem", rotulo: "Quem", tipo: "texto", dica: "quem fez ou deu o resultado" },
+    ],
+  },
+  {
+    caminho: "coliformes",
+    grupo: "Testes",
+    titulo: "Coliformes",
+    fixos: { teste: "Coliformes" },
+    descricao: "Coliformes por composta e lote: no caldo, estriado, resultado e próxima etapa.",
+    api: "/paginas/testes",
+    impressao: "deitado",
+    semColetor: true,
+    colunas: [
+      { chave: "referencia", rotulo: "Load ou tanque", principal: true },
+      { chave: "alvo", rotulo: "Composta / lote" },
+      { chave: "origem", rotulo: "Origem" },
+      { chave: "data_feito", rotulo: "Feito em", formato: "data" },
+      { chave: "status", rotulo: "Status" },
+      { chave: "resultado", rotulo: "Resultado", formato: "situacao" },
+      { chave: "howard_percentual", rotulo: "Howard (%)" },
+      { chave: "proxima_etapa", rotulo: "Próxima etapa", formato: "data" },
+      { chave: "situacao", rotulo: "Situação", formato: "situacao" },
+      { chave: "feito_por", rotulo: "Feito por" },
+    ],
+    filtros: [
+      { chave: "data_de", rotulo: "Feito de", tipo: "data" },
+      { chave: "data_ate", rotulo: "Feito até", tipo: "data" },
+      { chave: "origem", rotulo: "Origem", tipo: "opcoes", opcoes: ["Recebimento", "Embarque", "Tank farm"] },
+      { chave: "referencia", rotulo: "Load ou tanque", tipo: "texto" },
+      { chave: "status", rotulo: "Status", tipo: "opcoes", opcoes: ["No caldo", "Estriado", "Concluído"] },
+      { chave: "resultado", rotulo: "Resultado", tipo: "opcoes", opcoes: ["Positivo", "Negativo"] },
+      { chave: "situacao", rotulo: "Situação", tipo: "opcoes", opcoes: ["Atrasado", "Vence hoje", "No prazo", "Concluído"] },
+      { chave: "quem", rotulo: "Quem", tipo: "texto", dica: "quem fez ou deu o resultado" },
+    ],
+  },
+  {
+    caminho: "howard",
+    grupo: "Testes",
+    titulo: "Howard",
+    fixos: { teste: "Howard" },
+    descricao: "Howard (bolores na câmara) por composta: percentual de campos positivos e situação.",
+    api: "/paginas/testes",
+    impressao: "deitado",
+    semColetor: true,
+    colunas: [
+      { chave: "referencia", rotulo: "Load ou tanque", principal: true },
+      { chave: "alvo", rotulo: "Composta / lote" },
+      { chave: "origem", rotulo: "Origem" },
+      { chave: "data_feito", rotulo: "Feito em", formato: "data" },
+      { chave: "status", rotulo: "Status" },
+      { chave: "resultado", rotulo: "Resultado", formato: "situacao" },
+      { chave: "howard_percentual", rotulo: "Howard (%)" },
+      { chave: "proxima_etapa", rotulo: "Próxima etapa", formato: "data" },
+      { chave: "situacao", rotulo: "Situação", formato: "situacao" },
+      { chave: "feito_por", rotulo: "Feito por" },
+    ],
+    filtros: [
+      { chave: "data_de", rotulo: "Feito de", tipo: "data" },
+      { chave: "data_ate", rotulo: "Feito até", tipo: "data" },
+      { chave: "origem", rotulo: "Origem", tipo: "opcoes", opcoes: ["Recebimento", "Embarque", "Tank farm"] },
+      { chave: "referencia", rotulo: "Load ou tanque", tipo: "texto" },
+      { chave: "status", rotulo: "Status", tipo: "opcoes", opcoes: ["No caldo", "Estriado", "Incubado", "Em confirmação", "Positivo, em confirmação", "Concluído"] },
+      { chave: "resultado", rotulo: "Resultado", tipo: "opcoes", opcoes: ["Positivo", "Negativo"] },
+      { chave: "situacao", rotulo: "Situação", tipo: "opcoes", opcoes: ["Atrasado", "Vence hoje", "No prazo", "Concluído"] },
+      { chave: "quem", rotulo: "Quem", tipo: "texto", dica: "quem fez ou deu o resultado" },
+    ],
+  },
+  {
     caminho: "testes",
     grupo: "FCOJ",
+    oculta: true, // virou uma página por teste (TAB, Coliformes, Howard), pedido de 24/10
     titulo: "TAB e Coliformes",
     descricao: "TAB, Coliformes e Howard por composta, lote e tanque: status, resultado e próxima etapa.",
     api: "/paginas/testes",
