@@ -23,6 +23,8 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
   início" ajusta o começo do lote em uso quando preciso.
 
 ### Adicionado
+- **Recebimento de NFC por funções do banco** (PB16 da Fase E, migration `046`, 24/10): `registrar_recebimento_nfc` e
+  `lancar_contagem_nfc`, as mesmas para o bot e o app; o bot já usa no comando, na foto do laudo e no "sim" do C.T/B.L do NFC.
 - **Embarque por funções do banco** (PB12 da Fase E, migration `045`, 24/10): `registrar_embarque` e
   `criar_compostas_embarque`, as mesmas para o bot e o app; o bot já usa no comando e na foto do embarque.
 - **Drops e desvio de drop por funções do banco** (PB15 da Fase E, migration `044`, 24/10): `concluir_drops`,

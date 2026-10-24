@@ -19,6 +19,7 @@ test('todas: SECURITY DEFINER com search_path fixo, GRANT só ao labflow_app, de
     ['043_testes_funcoes', ['criar_compostas', 'teste_feito', 'teste_acao']],
     ['044_drops_funcoes', ['concluir_drops', 'abrir_desvio_drop', 'fechar_desvio_drop']],
     ['045_embarque_funcoes', ['registrar_embarque', 'criar_compostas_embarque']],
+    ['046_nfc_funcoes', ['registrar_recebimento_nfc', 'lancar_contagem_nfc']],
   ]) {
     const s = mig(f + '.sql');
     const d = mig(f + '_desfazer.sql');
@@ -92,11 +93,13 @@ test('workflow: os nós chamam as portas de entrada (a mesma regra do app)', () 
     'BD · Executar desvio': /desvio_drop_pelo_bot\(/,
     'BD · Gravar embarque': /embarque_registrar_pelo_bot\(/,
     'BD · Gravar compostas embarque': /compostas_embarque_criar_pelo_bot\(/,
+    'BD · Gravar recebimento NFC': /recebimento_nfc_registrar_pelo_bot\(/,
+    'BD · Gravar contagens NFC': /contagem_nfc_lancar_pelo_bot\(/,
   };
   for (const [no, re] of Object.entries(chamadas)) {
     assert.match(q(no), re, no);
     if (no === 'BD · Executar NFC') continue; // o desvio de tanque e a repetição ainda são do SQL próprio (PB17)
-    assert.doesNotMatch(q(no), /INSERT INTO (coletas|analises|leituras_placas|compostas|testes|desvios_drop|embarques|embarque_amostras)\b/, no + ' não grava por conta própria');
+    assert.doesNotMatch(q(no), /INSERT INTO (coletas|analises|leituras_placas|compostas|testes|desvios_drop|embarques|embarque_amostras|recebimento_nfc|contagens_nfc)\b/, no + ' não grava por conta própria');
   }
   const ret = workflow.nodes.find((n) => n.name === 'Retomar resposta do sim').parameters.jsCode;
   for (const k of ['contagem_erro', 'placas_erro', 'placas_lote_erro', 'teste_erro', 'desvio_erro']) assert.ok(ret.includes(k), 'o sim avisa: ' + k);

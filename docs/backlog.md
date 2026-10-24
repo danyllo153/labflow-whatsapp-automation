@@ -16,6 +16,7 @@
 - [x] **PB13, compostas, TAB, Coliformes e Howard** (24/10, migration 043), o bot já usando; falta passar as fotos de TAB/Coliformes e o TAB de tanque "completo" pelas funções
 - [x] **PB15, drops e desvio de drop** (24/10, migration 044), o bot já usando
 - [x] **PB12, embarque** (24/10, migration 045), o bot já usando
+- [x] **PB16, recebimento de NFC** (24/10, migration 046), o bot já usando
 - [ ] **Fase E, próximas funções do banco** (pedido do app, #243): PB14 tanques (042), PB13 compostas/TAB/Coliformes/Howard (043), PB15 drops (044), PB12 embarque (045), PB16 NFC recebido (046), PB17 desvios e leitura do dia (047); cada uma já com a porta de entrada do bot e o bot usando
 - [x] **TAB do load 43699 gravado à mão** (23/10): 10 compostas positivas confirmadas, feito em 13/10; criadas #87 (1-3) e #88 (4-6)
 - [x] **Corrigir resultado de C.T/B.L com um comando curto** (24/10, #240, migration 039, `pre77`): `corrigir ct do load 43755 para <1 motivo ...`; motivo obrigatório para o Analista, opcional para o Admin (#238); testado ao vivo até a prévia

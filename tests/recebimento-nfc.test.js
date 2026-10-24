@@ -96,12 +96,15 @@ test('workflow: roteado até a gravação e o WhatsApp, e o SQL protege o que pr
   assert.equal(c['Rotear comando'].main.length, rot.length);
   assert.deepEqual(c['BD · Gravar recebimento NFC'].main[0].map((x) => x.node), ['Montar resposta recebimento NFC']);
   assert.deepEqual(c['Montar resposta recebimento NFC'].main[0].map((x) => x.node), ['Zap · Recebimento']);
+  // desde a 046 grava pela registrar_recebimento_nfc (a mesma do app)
   const q = workflow.nodes.find((n) => n.name === 'BD · Gravar recebimento NFC').parameters;
-  assert.match(q.query, /ON CONFLICT \(load_id, lote, amostra\) DO UPDATE/);
-  assert.match(q.query, /\(ld\.fabrica_id <> f\.id\) AS conflito/, 'fábrica diferente da cadastrada não grava');
-  assert.match(q.query, /WHERE NOT a\.conflito/);
+  assert.match(q.query, /recebimento_nfc_registrar_pelo_bot\(\$2::text, \$1::jsonb\)/);
+  const m = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'db', 'migrations', '046_nfc_funcoes.sql'), 'utf8');
+  assert.match(m, /ON CONFLICT \(load_id, lote, amostra\) DO UPDATE/);
+  assert.match(m, /\(ld\.fabrica_id <> f\.id\) AS conflito/, 'fábrica diferente da cadastrada não grava');
+  assert.match(m, /WHERE NOT a\.conflito/);
   assert.match(q.options.queryReplacement, /JSON\.stringify\(\$json\.blocos\)/);
-  assert.doesNotMatch(q.query, /recebimento_lotes/, 'não mistura com os lotes do concentrado');
+  assert.doesNotMatch(m, /recebimento_lotes/, 'não mistura com os lotes do concentrado');
 });
 
 // ---- ajuda e IA ----
@@ -195,7 +198,7 @@ test('texto sobrando no comando é recusado e expoente negativo vale pelo númer
 });
 
 test('SQL: repetir lote e tipo corrige a diluição e a data (não ignora)', () => {
-  const q = workflow.nodes.find((n) => n.name === 'BD · Gravar recebimento NFC').parameters.query;
+  const q = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'db', 'migrations', '046_nfc_funcoes.sql'), 'utf8');
   assert.match(q, /SET diluicao = EXCLUDED\.diluicao, data_recebimento = EXCLUDED\.data_recebimento/);
 });
 
