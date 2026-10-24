@@ -24,6 +24,9 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
   início" ajusta o começo do lote em uso quando preciso.
 
 ### Adicionado
+- **O app pode chamar as funções da Fase E do bot** (app, migration 069, 24/10): tanques, compostas/TAB/Coliformes/
+  Howard, drops, embarque, NFC recebido, desvio de tanque e leitura do dia (042 a 047). Só as que recebem a pessoa; as do
+  bot pelo telefone continuam só com o bot. Prepara os próximos apps por análise (E3 em diante).
 - **Desvio de tanque, repetição e leitura do dia por funções do banco** (PB17 da Fase E, migration `047`, 24/10):
   `abrir_desvio_tanque`, `registrar_repeticao` e `finalizar_leitura_do_dia`, as mesmas para o bot e o app; o bot já usa no "sim".
 - **Recebimento de NFC por funções do banco** (PB16 da Fase E, migration `046`, 24/10): `registrar_recebimento_nfc` e
