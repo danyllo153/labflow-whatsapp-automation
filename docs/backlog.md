@@ -31,7 +31,7 @@
 - [x] **Histórico de lotes importado** pelo Danyllo (24/10; 30 lotes de meio no app)
 - [x] **Modelos em PDF dos laudos enviados** pelo Danyllo (23/10: esterilização, material asséptico, meios de cultura, fluxo laminar, limpeza de superfícies e água do processo)
 - [x] **Editar e excluir clicando no app:** coletas (APP-029) e recebimento de FCOJ (migration 064, funções 036), com histórico e recuperar pelo Admin
-- [ ] Testar o app no celular (Tailscale + Adicionar à tela inicial) (precisa do Danyllo)
+- [x] **App no celular** pelo Tailscale e na tela inicial, em uso pelo Danyllo (conferido em 24/10)
 - [x] Acabamento visual do app (APP-030 a APP-032: ícones, etiquetas, modo escuro, layout profissional)
 - [ ] Ideia para depois do piloto: importar do Excel com "antes → depois" no app (tudo pelas funções, com histórico)
 - [ ] Futuro: **barreiras de segurança no celular** (localização da fábrica, horário do turno, aparelho autorizado, nada guardado no aparelho; aviso de LGPD antes de ligar), depois do piloto do app
