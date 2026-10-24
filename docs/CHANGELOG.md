@@ -23,6 +23,9 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
   início" ajusta o começo do lote em uso quando preciso.
 
 ### Adicionado
+- **Corrigir resultado de C.T/B.L com um comando curto** (bot, migration `039`, 24/10): `corrigir ct do load 43755 para <1
+  motivo foto leu errado`. Pelo load acha se é NFC ou FCOJ, pede o lote quando há vários, mostra "era 21 → <1" e pede sim;
+  grava com o histórico (antes, depois, motivo e quem). Só Admin e Analista; o motivo é obrigatório para o Analista.
 - **Material asséptico: resultado pendente, "<1 em todos" e excluir dia** (app, APP-053, migration `066`): C.T. e B.L.
   em branco ficam pendentes (lançados depois), o botão "<1 em todos" preenche os dois, e "Excluir o dia" tira o dia do
   laudo, arquivado com quem, quando e o motivo (dia de página já impressa não se exclui).
