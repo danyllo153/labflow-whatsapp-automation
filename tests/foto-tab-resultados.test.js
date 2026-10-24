@@ -101,7 +101,7 @@ test('workflow e SQL: rota tab_foto até o WhatsApp; positivo e negativo conclue
   assert.match(q, /a\.status IN \('No caldo', 'Incubada', 'Em confirmação'\)/, 'concluído não muda');
   assert.match(q, /ON CONFLICT \(tipo, composta_id\) DO NOTHING/);
   const foto = workflow.nodes.find((n) => n.name === 'BD · Compostas da foto').parameters.query;
-  assert.match(foto, /SELECT t\.status \|\| '\|' \|\| COALESCE\(t\.resultado, ''\) FROM testes t WHERE t\.tipo = 'TAB' AND t\.composta_id = cc\.cid/);
+  assert.match(foto, /SELECT t\.status \|\| '\|' \|\| COALESCE\(t\.resultado, ''\) FROM testes t WHERE t\.tipo = 'TAB' AND t\.composta_id = COALESCE\(cc\.cid, cs\.cid\)/);
   const prompt = workflow.nodes.find((n) => n.name === 'Foto · Montar pedido').parameters.jsCode;
   assert.match(prompt, /"resultados" só no TAB: um por composta, na MESMA ordem de "compostas"/);
   assert.ok(fs.existsSync(path.join(__dirname, 'foto-tab-resultados.test.js')));
@@ -116,4 +116,28 @@ test('folha de 13/10 só com resultado (compostas já no caldo): sem o aviso "va
   assert.doesNotMatch(r.textoResposta, /vale a data de hoje/);
   assert.doesNotMatch(r.textoResposta, /Confira/);
   assert.match(r.textoResposta, /✅ TAB negativo \(—\):\n• load 43701 \(item 319\): #10 \(1-4\) · #4 \(5-8\) · #5 \(9-10,14\)/);
+});
+
+test('item lido errado (2653 no lugar de 2655): usa o item do sistema e acha as compostas, sem abrir load novo', () => {
+  // caso real de 24/10: a IA leu 2653 no 43699; o banco devolve em load_num o item do sistema (o load só tem o 2655)
+  const d = ler({ data: '13/10/2026', blocos: [
+    { load: '43699', item: '2653', fabrica: 'AQA', compostas: ['1-3', '4-6'], resultados: ['+', '+'] },
+    { load: '43701', item: '319', fabrica: 'AQA', compostas: ['1-4'], resultados: ['-'] }] });
+  const sis = [[87, 'Concluída|Positivo', '2655'], [88, 'Concluída|Positivo', '2655'], [10, 'Incubada|', null]];
+  const r = resposta(d, d.buscas.map((b, k) => ({ kind: 'composta', idx: b.idx, composta_id: sis[k][0], atual: sis[k][1], load_num: sis[k][2] })));
+  const cmds = JSON.parse(r.payload).comandos;
+  assert.ok(!cmds.some((c) => /^Recebimento load 43699/.test(c)), 'não abre o load de novo');
+  assert.equal(cmds.pop(), 'TAB da foto: #10 data 13/10/2026 negativo');
+  assert.match(r.textoResposta, /li o item 2653 no load 43699, mas no sistema ele é 2655: usei 2655/);
+  assert.match(r.textoResposta, /Já com resultado \(ficam como estão\): #87 \(1-3\) · #88 \(4-6\)/);
+  // composta que não existe, com o item trocado: o Admin abre com o item do sistema
+  const d2 = ler({ data: '13/10/2026', blocos: [{ load: '43699', item: '2653', fabrica: 'AQA', compostas: ['50-51'], resultados: ['-'] }] });
+  const r2 = resposta(d2, [{ kind: 'composta', idx: 0, composta_id: null, atual: null, load_num: '2655' }]);
+  assert.ok(JSON.parse(r2.payload).comandos.some((c) => /^Recebimento load 43699 item 2655 fabrica AQA lotes 50-51/.test(c)));
+});
+
+test('SQL: a busca da composta tenta o item do sistema quando o load só tem um item', () => {
+  const q = workflow.nodes.find((n) => n.name === 'BD · Compostas da foto').parameters.query;
+  assert.match(q, /HAVING count\(\*\) = 1 AND min\(i\.codigo\) <> b\.item/);
+  assert.match(q, /COALESCE\(cc\.cid, cs\.cid\) AS composta_id/);
 });
