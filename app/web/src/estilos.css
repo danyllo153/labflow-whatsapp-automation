@@ -3663,3 +3663,221 @@ h2 {
 .botao-perigo:hover {
   filter: brightness(0.92);
 }
+
+/* ======================================================================================================
+   Visual repaginado, parte 2 (APP-055, 24/10): conteúdo na largura toda, blocos mais suaves no modo escuro,
+   o gráfico da semana no Início e o cartão das folhas dos laudos no pé do menu lateral.
+   ====================================================================================================== */
+:root {
+  --serie-marinho: #13324f;
+}
+
+@media (min-width: 900px) {
+  .conteudo {
+    max-width: none;
+  }
+}
+
+/* modo escuro: as mesmas cores, menos saturadas e mais escuras, para não ofuscar */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema="claro"]) {
+    --bloco-azul: #2a5c99;
+    --bloco-azul-texto: #ffffff;
+    --bloco-laranja: #b98232;
+    --bloco-laranja-texto: #1c1200;
+    --bloco-verde: #3f8f6c;
+    --bloco-verde-texto: #ffffff;
+    --serie-marinho: #8aa4bf;
+  }
+}
+
+:root[data-tema="escuro"] {
+  --bloco-azul: #2a5c99;
+  --bloco-azul-texto: #ffffff;
+  --bloco-laranja: #b98232;
+  --bloco-laranja-texto: #1c1200;
+  --bloco-verde: #3f8f6c;
+  --bloco-verde-texto: #ffffff;
+  --serie-marinho: #8aa4bf;
+}
+
+.serie-azul {
+  background: var(--bloco-azul);
+}
+
+.serie-laranja {
+  background: var(--bloco-laranja);
+}
+
+.serie-verde {
+  background: var(--bloco-verde);
+}
+
+.serie-marinho {
+  background: var(--serie-marinho);
+}
+
+/* gráfico da semana: colunas empilhadas e a legenda com os totais à direita */
+.grafico-semana {
+  padding: 0;
+}
+
+.grafico-semana-corpo {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.grafico-semana-colunas {
+  flex: 999 1 420px;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  height: 200px;
+  padding: 18px 18px 12px;
+  background-image: linear-gradient(var(--linha-suave) 1px, transparent 1px);
+  background-size: 100% 40px;
+  background-position: 0 18px;
+}
+
+.coluna-dia {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.pilha {
+  flex: 1;
+  width: 60%;
+  max-width: 64px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  border-radius: 6px 6px 0 0;
+  overflow: hidden;
+}
+
+.fatia {
+  width: 100%;
+  min-height: 2px;
+}
+
+.dia-rotulo {
+  font-size: 0.78rem;
+  color: var(--texto-secundario);
+  white-space: nowrap;
+}
+
+.grafico-semana-legenda {
+  flex: 1 1 220px;
+  list-style: none;
+  margin: 0;
+  padding: 18px 20px;
+  border-left: 1px solid var(--linha-suave);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.grafico-semana-legenda li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.legenda-titulo {
+  font-size: 0.82rem;
+  color: var(--texto-secundario);
+}
+
+.ponto-legenda {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex: none;
+}
+
+.legenda-nome {
+  flex: 1;
+}
+
+.legenda-valor {
+  color: var(--texto-secundario);
+  font-variant-numeric: tabular-nums;
+}
+
+.legenda-total {
+  font-weight: 600;
+  padding-top: 8px;
+  border-top: 1px solid var(--linha-suave);
+}
+
+.legenda-total .legenda-nome {
+  padding-left: 18px;
+}
+
+.legenda-total .legenda-valor {
+  color: var(--texto);
+}
+
+@media (max-width: 640px) {
+  .grafico-semana-legenda {
+    border-left: 0;
+    border-top: 1px solid var(--linha-suave);
+  }
+}
+
+/* cartão das folhas no pé do menu lateral */
+.cartao-folhas {
+  margin: 16px 4px 0;
+  padding: 14px;
+  background: var(--cartao);
+  border: 1px solid var(--borda);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--texto);
+}
+
+.cartao-folhas-titulo {
+  font-weight: 600;
+}
+
+.cartao-folhas-texto {
+  font-size: 0.85rem;
+  color: var(--texto-secundario);
+}
+
+.cartao-folhas-barra {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.barra-trilho {
+  flex: 1;
+  height: 8px;
+  border-radius: 999px;
+  background: var(--acao-fundo);
+  overflow: hidden;
+}
+
+.barra-cheia {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--acao);
+}
+
+.cartao-folhas .cartao-folhas-botao {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 2px 0 0;
+  min-height: 40px;
+  text-decoration: none;
+}

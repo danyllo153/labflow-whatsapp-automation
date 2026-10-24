@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 
 import { lerJson } from "../api";
+import GraficoSemana from "../componentes/GraficoSemana";
 import { useSessao } from "../sessao";
 import BlocosDePendencias, { type Pendencia } from "../componentes/BlocosDePendencias";
 import AtividadesDoTurno from "./AtividadesDoTurno";
@@ -109,6 +110,8 @@ export default function Inicio() {
               />
             )}
           </div>
+
+          <GraficoSemana />
 
           {turno && <AtividadesDoTurno />}
 

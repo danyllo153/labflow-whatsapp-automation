@@ -27,7 +27,8 @@
 - [x] **APP-040, laudo de incubação e leitura** no ar (#231, migration 065), no padrão de escrita do laboratório (#233), com o lote de cada dia sozinho (#234) e a correção da data do lote em uso (#235)
 - [x] **Material asséptico:** resultado pendente, "<1 em todos" e excluir dia (#236, migration 066), no ar
 - [x] **Visual repaginado** no ar (#228, 24/10): menu claro, Inter, avatar, botões em pílula, blocos coloridos
-- [ ] Visual, se o Danyllo quiser: cores dos blocos no modo escuro, conteúdo na largura toda, e as peças do canvas que pedem dados novos (gráfico da semana, botões rápidos nos blocos, cartão da folha do laudo)
+- [x] **Visual, parte 2** (APP-055, 24/10): gráfico da semana, cartão das folhas no menu, largura toda e blocos mais suaves no escuro
+- [ ] Botões rápidos nos blocos do Início (ex.: "Espalhei todos"): gravam em lote, então pedem decisão do Danyllo sobre a confirmação antes
 - [x] **Histórico de lotes importado** pelo Danyllo (24/10; 30 lotes de meio no app)
 - [x] **Modelos em PDF dos laudos enviados** pelo Danyllo (23/10: esterilização, material asséptico, meios de cultura, fluxo laminar, limpeza de superfícies e água do processo)
 - [x] **Editar e excluir clicando no app:** coletas (APP-029) e recebimento de FCOJ (migration 064, funções 036), com histórico e recuperar pelo Admin

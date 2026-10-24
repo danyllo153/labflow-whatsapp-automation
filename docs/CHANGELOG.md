@@ -23,6 +23,10 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
   início" ajusta o começo do lote em uso quando preciso.
 
 ### Adicionado
+- **Visual repaginado, parte 2** (app, APP-055): no Início, o gráfico do que foi concluído nos últimos 7 dias (TAB,
+  Coliformes, NFC e C.T/B.L) com os totais; no pé do menu lateral, o cartão da folha de laudo mais perto de encher (ou das
+  folhas cheias para imprimir) com o atalho para o laudo; o conteúdo na largura toda; e, no modo escuro, os blocos
+  coloridos mais suaves.
 - **Material asséptico: resultado pendente, "<1 em todos" e excluir dia** (app, APP-053, migration `066`): C.T. e B.L.
   em branco ficam pendentes (lançados depois), o botão "<1 em todos" preenche os dois, e "Excluir o dia" tira o dia do
   laudo, arquivado com quem, quando e o motivo (dia de página já impressa não se exclui).
