@@ -1,0 +1,504 @@
+/* ======================================================================================================
+   Fase E (APP-057, 24/10): Páginas como tela de apps e a página de cada análise (Recebimento FCOJ primeiro).
+   Arquivo próprio para não disputar o fim do estilos.css com outros PRs abertos. Só usa as variáveis do tema,
+   então vale no claro e no escuro.
+   ====================================================================================================== */
+
+.apps-topo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.apps-topo h1 {
+  flex: 1;
+  margin: 0;
+}
+
+.busca-redonda {
+  flex: 0 1 360px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: 40px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: var(--linha-suave);
+  color: var(--texto-secundario);
+}
+
+.busca-redonda input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: var(--texto);
+  outline: none;
+}
+
+.busca-redonda:focus-within {
+  box-shadow: var(--anel);
+}
+
+.grade-apps {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 12px;
+}
+
+.app-cartao {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 14px;
+  background: var(--cartao);
+  border: 1px solid var(--borda);
+  color: var(--texto);
+  text-decoration: none;
+  transition: box-shadow 0.12s ease, transform 0.12s ease;
+}
+
+.app-cartao:hover {
+  box-shadow: var(--sombra-2);
+  transform: translateY(-1px);
+  color: var(--texto);
+}
+
+.app-icone {
+  width: 46px;
+  height: 46px;
+  flex: none;
+  border-radius: 13px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.02em;
+}
+
+.app-cor-azul { background: #2d6cc0; }
+.app-cor-verde { background: #2f9e6e; }
+.app-cor-laranja { background: #d9891d; }
+.app-cor-marinho { background: #13324f; }
+.app-cor-cinza { background: #6b7f96; }
+.app-cor-vermelho { background: #c0392b; }
+.app-cor-agua { background: #1f8fc4; }
+
+.app-textos {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.app-nome {
+  font-weight: 600;
+  font-size: 1.05em;
+}
+
+.app-estado {
+  font-size: 0.92em;
+}
+
+.app-estado-ok { color: var(--ok-texto, #1d6a3d); }
+.app-estado-hoje { color: var(--pendente-texto, #7a5800); font-weight: 600; }
+.app-estado-atrasado { color: var(--nao-ok-texto, #a02d20); font-weight: 600; }
+
+/* menu que sobe de baixo no celular (o app com página própria) */
+.folha-fundo {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  background: rgba(10, 20, 35, 0.45);
+  display: flex;
+  align-items: flex-end;
+}
+
+.folha-de-baixo {
+  width: 100%;
+  box-sizing: border-box;
+  background: var(--cartao);
+  color: var(--texto);
+  border-radius: 20px 20px 0 0;
+  padding: 10px 16px calc(16px + env(safe-area-inset-bottom));
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  animation: folha-sobe 0.18s ease-out;
+}
+
+@keyframes folha-sobe {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .folha-de-baixo { animation: none; }
+}
+
+.folha-alca {
+  align-self: center;
+  width: 40px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--borda);
+}
+
+.folha-titulo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 1.1em;
+}
+
+.folha-atalhos {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.folha-atalho {
+  min-height: 56px;
+  border-radius: 12px;
+  border: 1px solid var(--borda);
+  background: var(--linha-suave);
+  color: var(--texto);
+  font: inherit;
+  font-weight: 600;
+}
+
+/* página de uma análise */
+.app-analise-topo {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+
+.app-analise-topo h1 {
+  margin: 0;
+}
+
+.app-analise-topo p {
+  margin: 2px 0 0;
+}
+
+.abas-app {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--borda);
+  margin-bottom: 14px;
+}
+
+.abas-app button {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 14px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: transparent;
+  color: var(--texto-secundario);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.abas-app button[aria-current="page"] {
+  color: var(--acao);
+  border-bottom-color: var(--acao);
+}
+
+.abas-contador {
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  box-sizing: border-box;
+  border-radius: 9px;
+  background: var(--nao-ok);
+  color: #ffffff;
+  font-size: 11px;
+  line-height: 18px;
+  text-align: center;
+}
+
+.numeros-app {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.numero-app {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  border: 1px solid var(--borda);
+  background: var(--cartao);
+  color: var(--texto);
+  font: inherit;
+  text-align: left;
+}
+
+button.numero-app {
+  cursor: pointer;
+}
+
+.numero-app strong {
+  font-size: 1.9em;
+  line-height: 1.1;
+}
+
+.numero-atrasado strong { color: var(--nao-ok-texto, #a02d20); }
+.numero-hoje strong { color: var(--pendente-texto, #7a5800); }
+.numero-nao-ok strong { color: var(--nao-ok); }
+
+.painel-app-grade {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.lista-para-fazer {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.lista-para-fazer li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--linha-suave);
+}
+
+.lista-para-fazer li > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.lista-para-fazer p {
+  margin: 2px 0 0;
+}
+
+.para-fazer-n {
+  font-size: 1.3em;
+  font-weight: 700;
+}
+
+.barras-fabrica {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.barras-fabrica li {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.fabrica-rotulo {
+  font-weight: 600;
+}
+
+.fabrica-trilho {
+  height: 10px;
+  border-radius: 5px;
+  background: var(--linha-suave);
+  overflow: hidden;
+}
+
+.fabrica-valor {
+  display: block;
+  height: 100%;
+  border-radius: 5px;
+  background: var(--nao-ok);
+}
+
+.fabrica-numero {
+  color: var(--texto-secundario);
+  font-size: 0.92em;
+}
+
+.previa-app {
+  margin: 12px 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1px solid var(--aviso-borda, var(--borda));
+  background: var(--aviso-fundo, var(--confirma-fundo));
+}
+
+.previa-app p {
+  margin: 6px 0 10px;
+}
+
+.previa-texto {
+  white-space: pre-line;
+}
+
+.busca-com-filtro {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.busca-com-filtro .busca-redonda {
+  flex: 1 1 auto;
+}
+
+.botao-filtro {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  flex: none;
+  border-radius: 50%;
+  border: 1px solid var(--borda);
+  background: var(--cartao);
+  color: var(--texto);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.botao-filtro .abas-contador {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+}
+
+.filtros-app {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+  margin-bottom: 10px;
+}
+
+.filtros-app .campo {
+  min-width: 140px;
+}
+
+.filtros-app .campo-marcar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding-bottom: 8px;
+}
+
+.lancar-app {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 10px;
+}
+
+.lancar-app > span {
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.tabela-rolavel {
+  overflow-x: auto;
+}
+
+.entrada-resultado {
+  width: 72px;
+  padding: 4px 6px;
+  border: 1px solid var(--campo-borda);
+  border-radius: 6px;
+  background: var(--campo-fundo);
+  color: var(--texto);
+  font: inherit;
+}
+
+.valor-nao-ok {
+  color: var(--nao-ok);
+  font-weight: 700;
+}
+
+@media (max-width: 899px) {
+  .grade-apps {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+
+  .busca-redonda {
+    flex-basis: 100%;
+  }
+
+  .numeros-app {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .numero-app {
+    padding: 10px;
+  }
+
+  .numero-app strong {
+    font-size: 1.5em;
+  }
+
+  .painel-app-grade {
+    grid-template-columns: 1fr;
+  }
+}
+
+.lancar-app .botao-tipo {
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--borda);
+  background: var(--cartao);
+  color: var(--texto);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.lancar-app .botao-tipo[aria-pressed="true"] {
+  background: var(--acao);
+  border-color: var(--acao);
+  color: #ffffff;
+}
+
+.lista-para-fazer .botao {
+  width: auto;
+  flex: none;
+  min-width: 96px;
+}
+
+@media (max-width: 899px) {
+  .lista-para-fazer li {
+    flex-wrap: wrap;
+  }
+
+  .lista-para-fazer li > div {
+    flex: 1 1 calc(100% - 60px);
+  }
+
+  .lista-para-fazer .botao {
+    flex: 1 1 100%;
+    width: 100%;
+  }
+}
