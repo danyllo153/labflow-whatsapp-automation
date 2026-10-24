@@ -18,6 +18,7 @@ test('todas: SECURITY DEFINER com search_path fixo, GRANT só ao labflow_app, de
     ['042_tanques_funcoes', ['registrar_coleta', 'registrar_analise', 'concluir_leitura', 'lancar_placas']],
     ['043_testes_funcoes', ['criar_compostas', 'teste_feito', 'teste_acao']],
     ['044_drops_funcoes', ['concluir_drops', 'abrir_desvio_drop', 'fechar_desvio_drop']],
+    ['045_embarque_funcoes', ['registrar_embarque', 'criar_compostas_embarque']],
   ]) {
     const s = mig(f + '.sql');
     const d = mig(f + '_desfazer.sql');
@@ -66,6 +67,15 @@ test('044 drops: os de hoje pelo filtro do bot; desvio em 7, 13 e 25 °C com lei
   assert.match(s, /Esse drop já tem desvio/);
 });
 
+test('045 embarque: amostra repetida fica como está, load novo sem fábrica, outro item avisa', () => {
+  const s = mig('045_embarque_funcoes.sql');
+  assert.match(s, /ON CONFLICT \(embarque_id, numero\) DO NOTHING/);
+  assert.match(s, /não está cadastrado: entra agora, sem fábrica/);
+  assert.match(s, /com outro item \(/);
+  assert.match(s, /já está na composta #/);
+  assert.match(s, /Informe o navio com a viagem/);
+});
+
 test('workflow: os nós chamam as portas de entrada (a mesma regra do app)', () => {
   const chamadas = {
     'BD · Gravar coleta terra': /coleta_registrar_pelo_bot\(/,
@@ -80,11 +90,13 @@ test('workflow: os nós chamam as portas de entrada (a mesma regra do app)', () 
     'BD · Atualizar TABs': /teste_acao_pelo_bot\(/,
     'BD · Concluir drops': /drops_concluir_pelo_bot\(/,
     'BD · Executar desvio': /desvio_drop_pelo_bot\(/,
+    'BD · Gravar embarque': /embarque_registrar_pelo_bot\(/,
+    'BD · Gravar compostas embarque': /compostas_embarque_criar_pelo_bot\(/,
   };
   for (const [no, re] of Object.entries(chamadas)) {
     assert.match(q(no), re, no);
     if (no === 'BD · Executar NFC') continue; // o desvio de tanque e a repetição ainda são do SQL próprio (PB17)
-    assert.doesNotMatch(q(no), /INSERT INTO (coletas|analises|leituras_placas|compostas|testes|desvios_drop)\b/, no + ' não grava por conta própria');
+    assert.doesNotMatch(q(no), /INSERT INTO (coletas|analises|leituras_placas|compostas|testes|desvios_drop|embarques|embarque_amostras)\b/, no + ' não grava por conta própria');
   }
   const ret = workflow.nodes.find((n) => n.name === 'Retomar resposta do sim').parameters.jsCode;
   for (const k of ['contagem_erro', 'placas_erro', 'placas_lote_erro', 'teste_erro', 'desvio_erro']) assert.ok(ret.includes(k), 'o sim avisa: ' + k);
