@@ -22,14 +22,16 @@ const LAUDOS: Laudo[] = [
   {
     titulo: "Meio de cultura e fluxo laminar",
     descricao: "O branco do dia: as placas da capela e de cada meio em uso, para ver se cresceu algo.",
+    caminho: "/fluxo-laminar",
   },
   {
     titulo: "Incubação e leitura",
-    descricao: "Um dia de incubação por linha: as amostras, os lotes dos meios e as datas de leitura de cada um.",
+    descricao: "Um dia de incubação por linha: as amostras, os lotes dos meios e as datas de leitura. Depende de uma resposta da sessão do bot (PB10).",
   },
   {
     titulo: "Meios de cultura (lotes)",
     descricao: "Recebimento e aceitação de cada lote de OSA, PDA, PCA e Wort, e o lote em uso.",
+    caminho: "/meios-lotes",
   },
 ];
 

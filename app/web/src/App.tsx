@@ -14,6 +14,11 @@ import Entrar from "./paginas/Entrar";
 import Esterilizacao from "./paginas/Esterilizacao";
 import MaterialAsseptico from "./paginas/MaterialAsseptico";
 import RegistrosDiarios from "./paginas/RegistrosDiarios";
+import BrancoDoDia from "./paginas/BrancoDoDia";
+import MeiosLotes from "./paginas/MeiosLotes";
+import AguaProcesso from "./paginas/aguas/AguaProcesso";
+import SuperficiesPagina from "./paginas/aguas/Superficies";
+import CorrigirRecebimento from "./paginas/dados/CorrigirRecebimento";
 import Estufas from "./paginas/Estufas";
 import Inicio from "./paginas/Inicio";
 import NaoEncontrada from "./paginas/NaoEncontrada";
@@ -78,9 +83,15 @@ export default function App() {
         <Route path="/esterilizacao" element={<Esterilizacao />} />
         <Route path="/estufas" element={<Estufas />} />
         <Route path="/registros-diarios" element={<RegistrosDiarios />} />
+        <Route path="/fluxo-laminar" element={<BrancoDoDia />} />
+        <Route path="/meios-lotes" element={<MeiosLotes />} />
         <Route path="/material-asseptico" element={<MaterialAsseptico />} />
         <Route path="/turno/relatorio" element={<RelatorioDoTurno />} />
         <Route path="/paginas" element={<ListaDePaginas />} />
+        <Route path="/paginas/agua-processo" element={<AguaProcesso />} />
+        <Route path="/paginas/baias" element={<SuperficiesPagina key="Baia" tipo="Baia" />} />
+        <Route path="/paginas/linhas" element={<SuperficiesPagina key="Linha" tipo="Linha" />} />
+        <Route path="/paginas/recebimento/corrigir" element={<CorrigirRecebimento />} />
         <Route path="/paginas/coletas/:id" element={<DetalheColeta />} />
         <Route path="/paginas/tanques-terra/:id" element={<DetalheTanque />} />
         <Route path="/paginas/navios/:navio" element={<DetalheNavio />} />

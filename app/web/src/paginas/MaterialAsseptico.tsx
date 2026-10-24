@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 
 import { enviarJson, lerJson } from "../api";
+import SeletorDeDias, { dm } from "../componentes/SeletorDeDias";
 import LaudoEsterilizacao from "./LaudoEsterilizacao";
 
 /**
@@ -47,20 +48,6 @@ const LAUDO = {
   unidade: "dias",
 };
 
-function dm(data: string): string {
-  const [, mes, d] = data.split("-");
-  return `${d}/${mes}`;
-}
-
-function diasPossiveis(hoje: string): string[] {
-  const base = new Date(`${hoje}T12:00:00`);
-  return Array.from({ length: 8 }, (_, i) => {
-    const d = new Date(base);
-    d.setDate(base.getDate() - i);
-    return d.toISOString().slice(0, 10);
-  });
-}
-
 export default function MaterialAsseptico() {
   const [hoje, setHoje] = useState<string | null>(null);
   const [dia, setDia] = useState<string | null>(null);
@@ -101,20 +88,7 @@ export default function MaterialAsseptico() {
       {!dados && !erro && <p className="carregando">Carregando...</p>}
       {dados && hoje && (
         <>
-          <div className="dias-material" role="group" aria-label="Dia da análise">
-            {diasPossiveis(hoje).map((d) => (
-              <button
-                key={d}
-                type="button"
-                className="botao-secundario"
-                aria-pressed={d === dados.dia}
-                onClick={() => setDia(d)}
-              >
-                {d === hoje ? `Hoje (${dm(d)})` : dm(d)}
-                {dados.recentes.includes(d) ? " ✓" : ""}
-              </button>
-            ))}
-          </div>
+          <SeletorDeDias hoje={hoje} escolhido={dados.dia} preenchidos={dados.recentes} aoEscolher={setDia} />
           <Formulario key={dados.dia} dados={dados} aoSalvar={(d) => (setDados(d), setVersao((v) => v + 1))} />
         </>
       )}
