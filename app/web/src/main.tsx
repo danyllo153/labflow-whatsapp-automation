@@ -7,6 +7,7 @@ import "@fontsource-variable/inter";
 import App from "./App";
 import { ProvedorDeSessao } from "./sessao";
 import "./estilos.css";
+import "./fase-e.css";
 import { aplicarTema } from "./tema";
 
 aplicarTema(); // antes de desenhar a tela, para não piscar claro e depois escuro

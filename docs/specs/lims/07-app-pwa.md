@@ -105,6 +105,7 @@ Usuário e senha. Primeiro acesso e recuperação de senha em [06](06-api-e-auth
 
 Item com dia certo (ex.: "só às sextas") aparece só nesse dia.
 - **Visual repaginado, parte 2 (APP-055, 24/10):** abaixo dos blocos, o **gráfico da semana** com o que foi concluído em cada um dos últimos 7 dias (TAB, Coliformes, NFC = leituras de tanque e drops, C.T/B.L = leituras de recebimento, embarque e NFC recebido), com a legenda e os totais ao lado (`GET /painel/semana`). No pé do menu lateral (computador), o **cartão das folhas**: a folha de laudo mais perto de encher ("faltam N linhas", barra de progresso) ou as folhas cheias esperando impressão, com "Ver o laudo" (`GET /painel/folhas`). O conteúdo ocupa a largura toda da tela, e no modo escuro os blocos coloridos ficam mais escuros e menos saturados.
+- **Layout do canvas (APP-056, 24/10):** no topo do Início, o cartão **"Agora"**: o relógio com o turno ("Manhã · 08:00 às 16:00 · faltam 3 h 32"), o chip das estufas (OK, para conferir ou não ok), o **registro livre** ("O que você está fazendo?", vai para a linha do tempo do turno) e os **3 destaques do dia** (os grupos com mais coisa, atrasados primeiro) em blocos coloridos. **Os botões dos destaques só abrem a página certa** ("Ver os 17"); gravar em lote por eles vem depois do PB13, com a lista toda marcada e um único "Confirmar", como o "sim" do bot (decidido em 24/10). No Turno, a **equipe** (iniciais, desde quando e quantos registros cada um fez) e as **estufas** (temperatura e situação de cada uma, "não ok desde 08:10") ficam lado a lado; a linha do tempo vira **"Quem fez o quê"**, com etiqueta colorida por tipo, quem, a hora e o filtro por pessoa.
 
 ### 4. Relatório do turno (página compartilhada)
 **Uma página por turno e por dia**, a mesma para todos do turno, atualizada ao vivo.
@@ -169,6 +170,18 @@ Cada página do Power BI vira uma página do app, **no mesmo padrão**: cartões
 - **Água do processo:** uma coleta (data e hora) com os pontos coletados (Manifold, Câmaras 4, 5 e 6); C.T. (PCA, 48 h) e B.L. (PDA, 120 h) de cada ponto; ponto não coletado sai "-"; observação livre ("Esterilizando"). Laudo sobre a folha digitalizada do terminal (tabela deitada), 23 coletas por folha.
 - **Baias** (CIP dos mangotes do recebimento) e **linhas** (CIP das linhas de embarque): uma coleta por ponto, com o dia da análise (plaqueamento); C.T. 48 h, B.L. 72 h e 120 h contados desse dia. Laudo "Limpeza de Superfícies", uma folha para baias e outra para linhas, 31 por folha, com "Análise dd.mm.aa" na observação.
 - Coletor registra a coleta; Admin e Analista lançam o resultado (`<1` ou número). A leitura que falta vira pendência no Início (bloco "Águas e superfícies") na data prevista.
+
+### 5.2 Apps por análise (Fase E, APP-057, decidido em 24/10; migration 068)
+- **Páginas é uma tela de apps:** cada análise é um ícone (sigla e cor do grupo) com o estado do dia, vindo das
+  pendências do Início: "N atrasados · M para hoje" ou "Em dia". TAB, Coliformes e Howard contam no app deles, venham de
+  onde vierem. Busca pelo nome no topo. Grupos: Geral, NFC, FCOJ, TAB/Coliformes/Howard, Águas e superfícies e Rotina do
+  laboratório (esterilização, estufas, material asséptico, meios e lotes, branco do dia, incubação).
+- **App com página própria** (por enquanto só o Recebimento FCOJ, em `/analises/recebimento-fcoj`): abas Painel,
+  Registrar, Resultados, Laudo, Instrução e Vídeo. No celular, tocar no ícone abre um menu que sobe de baixo com as seis.
+- **Gravar é igual ao bot:** o app chama a mesma função do banco (Recebimento: `registrar_recebimento` e
+  `lancar_contagem`, da 040), primeiro com `previa` (o texto "o que vai ser criado" do banco) e só o Confirmar grava.
+  Só Analista e Admin gravam; o Coletor vê.
+- **Instrução** será escrita pelo Admin no próprio app (nada de documento da empresa no repositório). **Vídeo**: em breve.
 
 ### 6. Gráficos
 Ficam **dentro das páginas** (cada página com os seus), não numa tela separada. Os números vêm das mesmas views do Power BI, para baterem. **Decidido em 15/10: por enquanto só dois** (G1 "feito × pendente" e G3 "desvios por semana" saíram, por não acrescentarem; mais gráficos só quando houver necessidade):

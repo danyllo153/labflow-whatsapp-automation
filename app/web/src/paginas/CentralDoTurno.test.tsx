@@ -78,19 +78,36 @@ describe("Turno como central (APP-033)", () => {
       },
     });
     const cartao = await screen.findByRole("region", { name: "Atividades realizadas" });
-    expect(within(cartao).getByText("por Bruno Lima")).toBeInTheDocument();
+    expect(within(cartao).getByText("Bruno Lima")).toBeInTheDocument();
     expect(within(cartao).queryByRole("button", { name: /Excluir/ })).not.toBeInTheDocument();
 
     await userEvent.type(within(cartao).getByLabelText("O que foi feito"), "Limpeza da capela");
     await userEvent.click(within(cartao).getByRole("button", { name: "Anotar" }));
     expect(api.chamadas.find((c) => c.rota === "POST /turno/registros")?.corpo).toEqual({ texto: "Limpeza da capela" });
-    expect(await within(cartao).findByText("por Ana Souza")).toBeInTheDocument();
+    expect(await within(cartao).findByText("Ana Souza")).toBeInTheDocument();
     expect(within(cartao).getByText("17:05")).toBeInTheDocument();
 
     await userEvent.click(within(cartao).getByRole("button", { name: "Excluir: Limpeza da capela" }));
     expect(api.vezes("DELETE /turno/registros/9")).toBe(1);
-    expect(await within(cartao).findByText(/Nada registrado|por Bruno Lima/)).toBeInTheDocument();
+    expect(await within(cartao).findByText(/Nada registrado|Bruno Lima/)).toBeInTheDocument();
     expect(within(cartao).queryByText("Limpeza da capela")).not.toBeInTheDocument();
+  });
+
+  it("filtra quem fez o quê por pessoa", async () => {
+    const itens = [
+      { tipo: "livre", texto: "Limpeza da capela", quem: "Ana Souza", quando: "17:05", id: 9, pode_excluir: true },
+      { tipo: "esterilizacao", texto: "Esterilização ponteira · ciclo 102", quem: "Bruno Lima", quando: "16:30", id: null, pode_excluir: false },
+    ];
+    abrir("/turno", {
+      "GET /turno": () => ({ status: 200, corpo: { ...ESTADO_TURNO, no_turno: NA_TARDE } }),
+      "GET /turno/registros": () => ({ status: 200, corpo: { turno: "Tarde", dia: "2026-10-22", pode_escrever: true, itens } }),
+    });
+    const cartao = await screen.findByRole("region", { name: "Atividades realizadas" });
+    await userEvent.click(within(cartao).getByRole("button", { name: "Bruno" }));
+    expect(within(cartao).queryByText("Limpeza da capela")).not.toBeInTheDocument();
+    expect(within(cartao).getByText("Esterilização ponteira · ciclo 102")).toBeInTheDocument();
+    await userEvent.click(within(cartao).getByRole("button", { name: "Todos" }));
+    expect(within(cartao).getByText("Limpeza da capela")).toBeInTheDocument();
   });
 
   it("mostra as análises a fazer hoje na tela do Turno", async () => {

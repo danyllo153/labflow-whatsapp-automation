@@ -4,14 +4,17 @@
 > Legenda: 🤖 bot · 📱 app · 🧪 teste ao vivo · 🛠️ infra e piloto · 🎨 portfólio. "(precisa do Danyllo)" = depende de decisão, foto ou ação dele.
 
 ## ▶ Próximos passos (arrumado em 24/10/2026) — retomar daqui
-> **Estado em 24/10/2026:** **v1.4.0 lançada** (23/10). Bot no ar com **259 nós** (`pre76`), banco até a migration **038** do bot e a **064** do app; cargo **Analista** (antes Operador). App com os Marcos 1 a 4, o acabamento visual e os laudos de rastreio no ar. Piloto: por enquanto só o Danyllo testa; dados em dia em lote em 23/10. Detalhe e como publicar: `docs/handoff.md` seção 0 no repositório.
+> **Estado em 24/10/2026 (tarde):** **v1.4.0 lançada** (23/10). Bot no ar com **263 nós** (`pre79`), banco até a migration **040** do bot e a **064** do app; cargo **Analista** (antes Operador). App com os Marcos 1 a 4, o acabamento visual e os laudos de rastreio no ar. Piloto: por enquanto só o Danyllo testa; dados em dia em lote em 23/10. Detalhe e como publicar: `docs/handoff.md` seção 0 no repositório.
 
 ### 🤖 Bot
 - [x] **PB10 (dia da incubação) no ar** (24/10, #225, migration 038 aplicada; `bi.incubacao` conferida)
 - [ ] **PB8** (esterilização por frase) e **PB9** (água, baias e linhas por frase): as funções do banco do app estão no PR do APP-054 (migration 067); falta o bot usar (rumo-do-app, "Funções do app para o PB8 e o PB9")
-- [x] **Resultado do TAB pela foto** (23/10, PR #205, `pre76`, 259 nós): "+" positivo já confirmado, "—" negativo, em branco = caldo; só o novo. Testar ao vivo com a folha do 43701 em 24/10
+- [x] **Resultado do TAB pela foto** (23/10, PR #205): "+" positivo já confirmado, "—" negativo, em branco = caldo; só o novo. Testado ao vivo em 24/10 com a folha do 43701 (#10, #4, #5 negativos), com as correções do aviso de data (#246) e do item lido errado (#247, `pre79`)
+- [x] **PB11, funções do recebimento de FCOJ para o app** (24/10, #244, migration 040): `registrar_recebimento` e `lancar_contagem`, com prévia e o mesmo alarme
+- [ ] **▶ O bot chamar a 040** no recebimento (`BD · Gravar recebimento`) e no lançamento de C.T/B.L, no lugar do SQL próprio (mesma regra do app)
+- [ ] **Fase E, próximas funções do banco** (pedido do app, #243): PB14 tanques (041), PB13 compostas/TAB/Coliformes/Howard (042), PB15 drops (043), PB12 embarque (044), PB16 NFC recebido (045), PB17 desvios e leitura do dia (046)
 - [x] **TAB do load 43699 gravado à mão** (23/10): 10 compostas positivas confirmadas, feito em 13/10; criadas #87 (1-3) e #88 (4-6)
-- [ ] **Plano (23/10, pedido do Danyllo): alterar resultado de C.T/B.L com um comando curto**, só Analista e Admin: `corrigir ct do load 43755 para <1`. Pelo load o bot sabe se é NFC ou FCOJ (concentrado/embarque) e, com um lote só, qual é o lote; com vários, pede o lote. Mostra "era 21 → <1" e pede sim. **Decidido em 24/10:** motivo **obrigatório para o Analista** e **opcional para o Admin** (10-decisoes). Caso real: foto do NFC leu `<1` como 21 no CT do load 43755 lote 148 (fresh 10^3); hoje corrige com `ct nfc load 43755 lote 148 fresh deu <1`
+- [x] **Corrigir resultado de C.T/B.L com um comando curto** (24/10, #240, migration 039, `pre77`): `corrigir ct do load 43755 para <1 motivo ...`; motivo obrigatório para o Analista, opcional para o Admin (#238); testado ao vivo até a prévia
 - [x] **Recebimento pelas funções do banco e pelo WhatsApp** (23/10, PRs #197 e #198, migrations 036 e 037, `pre75`): corrigir load/item/fábrica, lote e data, apagar lote (arquiva); testado ao vivo
 - [ ] Apagar o load de teste **99902** (id 46, lote 1) e o que o teste ao vivo de 23/10 deixou no histórico e no arquivo, se quiser (precisa do Danyllo)
 - [ ] **PB6:** canal `app` no webhook (assistente do app pelo mesmo workflow), só na Fase D do app
@@ -22,13 +25,16 @@
 - [ ] Se as pendências do piloto voltarem a acumular: `C:\Dev\estudos\ia\em-dia-2026-10-23.sql` (ensaio com `-v fim=ROLLBACK`; o `COMMIT` em massa o Danyllo roda no servidor)
 
 ### 📱 App (sessão da nuvem)
+- [x] **Fase E, E1 e E2** (24/10, APP-057, migration 068): Páginas como tela de apps e o Recebimento FCOJ como app (painel, registrar e lançar pelas funções da 040). Próximo: E3 em diante, um app por análise, conforme o bot entregar PB12 a PB17
 - [x] **Marcos 3 e 4 mesclados** (23/10): turno com atividades fixas, relatório e encerrar (#181, #183, #185), esterilização com o G4 (#188), estufas (#189), Admin de turnos/atividades/estufas (#190) e **corrigir/excluir/recuperar coleta pelo app** (APP-029, #191)
 - [x] Marcos 3 e 4, acabamento visual (APP-030 a APP-034), laudo de esterilização (APP-035) e os laudos de rastreio (APP-036 a APP-043) **no ar** no servidor (23 e 24/10, migrations 054 a 064)
 - [x] **APP-040, laudo de incubação e leitura** no ar (#231, migration 065), no padrão de escrita do laboratório (#233), com o lote de cada dia sozinho (#234) e a correção da data do lote em uso (#235)
 - [x] **Material asséptico:** resultado pendente, "<1 em todos" e excluir dia (#236, migration 066), no ar
 - [x] **Visual repaginado** no ar (#228, 24/10): menu claro, Inter, avatar, botões em pílula, blocos coloridos
 - [x] **Visual, parte 2** (APP-055, 24/10): gráfico da semana, cartão das folhas no menu, largura toda e blocos mais suaves no escuro
-- [ ] Botões rápidos nos blocos do Início (ex.: "Espalhei todos"): gravam em lote, então pedem decisão do Danyllo sobre a confirmação antes
+- [x] **Início e Turno no layout do canvas** (APP-056, 24/10): cartão "Agora", destaques do dia, equipe e estufas lado a lado, "Quem fez o quê" com filtro
+- [ ] **▶ Fase E, o app faz tudo o que o bot faz** (pedido de 24/10): tela de apps com a busca e o filtro (E1 ✔) e Recebimento FCOJ completo (E2 ✔, #253); faltam tanques, testes, drops, embarque, NFC e desvios (PB12 a PB17) e a instrução/vídeo de cada análise. Plano e tabela "bot × app" no rumo-do-app, seção "Fase E"
+- [ ] Botões que gravam em lote nos destaques ("Espalhei todos", "Lançar leituras"): **decidido em 24/10**, lista toda marcada e um "Confirmar"; esperam o PB13 do bot (hoje só abrem a página)
 - [x] **Histórico de lotes importado** pelo Danyllo (24/10; 30 lotes de meio no app)
 - [x] **Modelos em PDF dos laudos enviados** pelo Danyllo (23/10: esterilização, material asséptico, meios de cultura, fluxo laminar, limpeza de superfícies e água do processo)
 - [x] **Editar e excluir clicando no app:** coletas (APP-029) e recebimento de FCOJ (migration 064, funções 036), com histórico e recuperar pelo Admin
