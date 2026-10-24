@@ -43,4 +43,4 @@ Esta pasta é a **"semente"** do LIMS (Spec-Driven Development): primeiro decidi
 
 - Rumo do projeto: [`../../handoff.md`](../../handoff.md), seção 4
 - Roadmap e comparativo com um LIMS completo: nota `Roadmap-V1-V6` do Obsidian
-- Tarefas do dia a dia: nota `backlog` do Obsidian
+- Tarefas do dia a dia: [`docs/backlog.md`](../../backlog.md)
