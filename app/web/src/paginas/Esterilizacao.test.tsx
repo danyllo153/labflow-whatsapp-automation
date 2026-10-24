@@ -15,7 +15,7 @@ const BASE: DadosEsterilizacao = {
   tipos: ["Ponteira", "Meio", "Frasco", "Descarte", "Outro"],
   pode_registrar: true,
   itens: [
-    { id: 7, tipo: "Meio", ciclo: "103", meio: "PDA", descricao: null, quem: "Ana Souza", quando: "09:40", corrigida: false, motivo_correcao: null, antes: null },
+    { id: 7, tipo: "Meio", ciclo: "103", meio: "PDA", descricao: null, eficiente: true, pagina_impressa: false, quem: "Ana Souza", quando: "09:40", corrigida: false, motivo_correcao: null, antes: null },
   ],
 };
 

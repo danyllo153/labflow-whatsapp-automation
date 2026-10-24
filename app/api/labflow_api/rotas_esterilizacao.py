@@ -12,7 +12,7 @@ import psycopg
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
-from labflow_api import rotas_atividades, rotas_turno
+from labflow_api import laudo_esterilizacao, rotas_atividades, rotas_turno
 from labflow_api.dependencias import PessoaLogada, obter_conexao
 from labflow_api.permissoes import exigir, pode
 
@@ -28,6 +28,8 @@ class Item(BaseModel):
     ciclo: str
     meio: str | None
     descricao: str | None
+    eficiente: bool  # Sim por padrão; Não se a fita ou a nota da autoclave não confirmou
+    pagina_impressa: bool  # a página do laudo em que esta linha está já foi impressa
     quem: str
     quando: str  # HH:MM
     corrigida: bool
@@ -45,9 +47,10 @@ class EsterilizacoesDoTurno(BaseModel):
 
 
 ITENS_SQL = """
-SELECT e.id, e.tipo, e.ciclo, e.meio, e.descricao, coalesce(u.nome, c.usuario), e.feita_em,
-       e.corrigida_em IS NOT NULL, e.motivo_correcao, e.antes
+SELECT e.id, e.tipo, e.ciclo, e.meio, e.descricao, e.eficiente, coalesce(l.impresso_em IS NOT NULL, false),
+       coalesce(u.nome, c.usuario), e.feita_em, e.corrigida_em IS NOT NULL, e.motivo_correcao, e.antes
 FROM app.esterilizacoes e JOIN usuarios u ON u.id = e.feita_por
+LEFT JOIN app.laudos_esterilizacao l ON l.id = e.laudo_id
 LEFT JOIN app.credenciais c ON c.usuario_id = e.feita_por
 WHERE e.turno_id = %s AND e.dia = %s AND e.excluida_em IS NULL
 ORDER BY e.feita_em DESC, e.id DESC
@@ -56,8 +59,11 @@ ORDER BY e.feita_em DESC, e.id DESC
 
 def itens_do_turno(con: psycopg.Connection, turno_id: int, dia: date) -> list[Item]:
     return [
-        Item(id=i, tipo=t, ciclo=c, meio=m, descricao=d, quem=q, quando=rotas_turno._hhmm(em), corrigida=corr, motivo_correcao=mot, antes=a)
-        for i, t, c, m, d, q, em, corr, mot, a in con.execute(ITENS_SQL, (turno_id, dia))
+        Item(
+            id=i, tipo=t, ciclo=c, meio=m, descricao=d, eficiente=ef, pagina_impressa=imp, quem=q,
+            quando=rotas_turno._hhmm(em), corrigida=corr, motivo_correcao=mot, antes=a,
+        )
+        for i, t, c, m, d, ef, imp, q, em, corr, mot, a in con.execute(ITENS_SQL, (turno_id, dia))
     ]
 
 
@@ -102,12 +108,13 @@ def registrar(
 ) -> EsterilizacoesDoTurno:
     tipo, ciclo, meio, descricao = _limpar(registro)
     turno, dia = rotas_atividades._turno_da_pessoa(con, pessoa)
+    pagina = laudo_esterilizacao.atribuir_pagina(con, dia, ciclo)
     con.execute(
         """
-        INSERT INTO app.esterilizacoes (tipo, ciclo, meio, descricao, turno_id, dia, feita_por, feita_em)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, clock_timestamp())
+        INSERT INTO app.esterilizacoes (tipo, ciclo, meio, descricao, turno_id, dia, feita_por, feita_em, laudo_id)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, clock_timestamp(), %s)
         """,
-        (tipo, ciclo, meio, descricao, turno.id, dia, pessoa.usuario_id),
+        (tipo, ciclo, meio, descricao, turno.id, dia, pessoa.usuario_id, pagina),
     )
     return _pagina(con, pessoa)
 
@@ -127,6 +134,65 @@ def _resumo(tipo: str, ciclo: str, meio: str | None, descricao: str | None) -> s
     return f"{tipo}{f' ({meio})' if meio else ''}{f' ({descricao})' if descricao else ''}, ciclo {ciclo}"
 
 
+class CicloExistente(BaseModel):
+    tipo: str
+    quem: str
+    quando: str  # HH:MM
+
+
+@roteador.get("/ciclo", response_model=list[CicloExistente])
+def ciclo_existente(
+    ciclo: str = Query(max_length=20),
+    pessoa: PessoaLogada = Depends(exigir("registrar_analise")),
+    con: psycopg.Connection = Depends(obter_conexao),
+) -> list[CicloExistente]:
+    """O que já foi registrado neste ciclo no dia do turno: a tela avisa ("adicionar junto?") sem bloquear nem sugerir número."""
+    _, dia = rotas_atividades._turno_da_pessoa(con, pessoa)
+    return [
+        CicloExistente(tipo=t, quem=q, quando=rotas_turno._hhmm(em))
+        for t, q, em in con.execute(
+            """
+            SELECT e.tipo, coalesce(u.nome, c.usuario), e.feita_em FROM app.esterilizacoes e JOIN usuarios u ON u.id = e.feita_por
+            LEFT JOIN app.credenciais c ON c.usuario_id = e.feita_por
+            WHERE e.excluida_em IS NULL AND e.dia = %s AND lower(trim(e.ciclo)) = lower(trim(%s)) ORDER BY e.feita_em
+            """,
+            (dia, ciclo),
+        )
+    ]
+
+
+class Eficiencia(BaseModel):
+    eficiente: bool
+    motivo: str | None = Field(default=None, max_length=300)  # obrigatório ao marcar Não
+
+
+@roteador.put("/{item_id}/eficiente", response_model=EsterilizacoesDoTurno)
+def eficiencia(
+    item_id: int,
+    pedido: Eficiencia,
+    pessoa: PessoaLogada = Depends(exigir("registrar_analise")),
+    con: psycopg.Connection = Depends(obter_conexao),
+) -> EsterilizacoesDoTurno:
+    """Sim ou Não do "Esterilização eficiente" (fita e nota da autoclave); vale para o ciclo todo (todos os materiais dele)."""
+    motivo = (pedido.motivo or "").strip()
+    if not pedido.eficiente and len(motivo) < 5:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Escreva o motivo de marcar Não eficiente.")
+    _, ciclo, *_ = _do_turno(con, pessoa, item_id)
+    _, dia = rotas_atividades._turno_da_pessoa(con, pessoa)
+    con.execute(
+        """
+        UPDATE app.esterilizacoes
+           SET eficiente = %s, antes = %s, corrigida_por = %s, corrigida_em = clock_timestamp(), motivo_correcao = %s
+         WHERE excluida_em IS NULL AND dia = %s AND lower(trim(ciclo)) = lower(trim(%s)) AND eficiente <> %s
+        """,
+        (
+            pedido.eficiente, f"Eficiente: {'Não' if pedido.eficiente else 'Sim'}", pessoa.usuario_id,
+            motivo or "Eficiente confirmado (Sim)", dia, ciclo, pedido.eficiente,
+        ),
+    )
+    return _pagina(con, pessoa)
+
+
 class Correcao(Registro):
     motivo: str = Field(max_length=300)
 
@@ -141,16 +207,20 @@ def corrigir(
     """Corrige tipo, ciclo, meio ou descrição; pede motivo e guarda o que estava escrito antes."""
     if len(correcao.motivo.strip()) < 5:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Escreva o motivo da correção.")
-    antes = _resumo(*_do_turno(con, pessoa, item_id))
+    atual = _do_turno(con, pessoa, item_id)
+    antes = _resumo(*atual)
     tipo, ciclo, meio, descricao = _limpar(correcao)
+    _, dia = rotas_atividades._turno_da_pessoa(con, pessoa)
+    pagina = None if ciclo.lower() == atual[1].strip().lower() else laudo_esterilizacao.atribuir_pagina(con, dia, ciclo)
     con.execute(
         """
         UPDATE app.esterilizacoes
            SET tipo = %s, ciclo = %s, meio = %s, descricao = %s, antes = %s,
-               corrigida_por = %s, corrigida_em = clock_timestamp(), motivo_correcao = %s
+               corrigida_por = %s, corrigida_em = clock_timestamp(), motivo_correcao = %s,
+               laudo_id = coalesce(%s, laudo_id)
          WHERE id = %s
         """,
-        (tipo, ciclo, meio, descricao, antes, pessoa.usuario_id, correcao.motivo.strip(), item_id),
+        (tipo, ciclo, meio, descricao, antes, pessoa.usuario_id, correcao.motivo.strip(), pagina, item_id),
     )
     return _pagina(con, pessoa)
 

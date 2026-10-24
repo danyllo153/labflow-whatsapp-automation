@@ -49,7 +49,7 @@ export function servidorFalso(rotas: Record<string, Rota>) {
   };
   const falso = vi.fn(async (url: string, init?: RequestInit) => {
     const rota = `${init?.method ?? "GET"} ${url}`;
-    const corpo = init?.body ? JSON.parse(String(init.body)) : undefined;
+    const corpo = typeof init?.body === "string" ? JSON.parse(init.body) : undefined; // arquivo (PDF) não é JSON
     chamadas.push({ rota, corpo });
     const tratar = todas[rota];
     const r = tratar ? await tratar(corpo) : { status: 404, corpo: { detail: "Not Found" } };

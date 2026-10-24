@@ -173,7 +173,9 @@ Sem gráfico "por pessoa" (pode soar como vigilância).
 ### 7. Esterilização
 - **Botões grandes:** **Ponteira, Meio, Frasco, Descarte** e **Outro** (texto livre).
 - Um passo só: **número do ciclo** (obrigatório) e, para Meio, o nome do meio (opcional, ex.: PDA). **Registrar**. Pode também pelo assistente: "esterilizei ponteira, ciclo 102".
-- Grava tipo, ciclo, quem e quando em `app.esterilizacoes`. **Sem resultado da fita** (o ok/não ok sai da nota da autoclave). A anotação no **Word continua** como rastreio oficial.
+- Grava tipo, ciclo, quem e quando em `app.esterilizacoes`. O **número do ciclo é digitado pela pessoa** (o app **não sugere**: duas pessoas podem registrar ciclos ao mesmo tempo); se o ciclo já tem material no dia, o app só **avisa** e o novo material entra na mesma linha do laudo.
+- **Eficiente: Sim por padrão** (quase sempre é); depois de olhar a fita e a nota da autoclave, "Não eficiente" (pede motivo) vale para o ciclo todo, e "Voltar para Sim" desfaz.
+- **Laudo "Controle de Ciclos de Esterilização" (APP-035, decidido em 23/10):** o app preenche o **próprio PDF da empresa** (SGI, 35 linhas por página): Data, Material esterilizado ("Meio de cultura / Frascos" quando há mais de um no ciclo), Ciclo, Sim/Não e o **nome de quem marcou** (sai do usuário logado). A assinatura (**Visto**) e o bloco do responsável ficam em branco, à mão. Página cheia vira **"pendente de imprimir"**; quem imprime marca como impressa e ela vai para o **arquivo**, com reimpressão. O PDF oficial é **confidencial: fica no banco** (Admin envia, `app.modelos_documento`), nunca no Git; sem ele o app usa uma tabela de demonstração. Pelo bot (WhatsApp) depois, como pedido à sessão do bot.
 - Lista das esterilizações do turno embaixo dos botões, com corrigir e excluir (com motivo).
 
 ### 7.1 Temperatura das estufas
@@ -262,6 +264,8 @@ Nomes a confirmar na migration. Nenhuma altera tabela do bot (só referenciam `u
 | `app.esterilizacoes` | Tipo, ciclo, meio (opcional), quem, quando |
 | `app.atividades_fixas` | Atividades fixas de cada turno (texto, turno, dias da semana, ordem), cadastradas pelo Admin |
 | `app.atividades_feitas` | Atividade fixa ou pendência herdada marcada como feita: quem, quando, turno |
+| `app.laudos_esterilizacao` | Páginas do laudo de esterilização (35 linhas): criada, impressa por/em |
+| `app.modelos_documento` | O PDF oficial da empresa (confidencial), enviado pelo Admin |
 | `app.registros_turno` | "Atividades realizadas" escritas à mão no turno (texto até 200, quem, quando; excluir arquiva, com quem e quando) |
 | `app.estufas` | Cada estufa (número, auxiliar sim/não, faixa de trabalho mínima e máxima com vigência; valores reais só no banco) |
 | `app.leituras_estufa` | Estufa, leitura (supervisório ou field chart), Ok/Não ok, temperatura (só no Não ok), observação, quem, quando, turno |

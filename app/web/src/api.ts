@@ -55,3 +55,8 @@ export function enviarJson<T>(caminho: string, corpo?: unknown, metodo: "POST" |
     caminho !== "/login",
   );
 }
+
+/** PUT com um arquivo como corpo (o modelo em PDF do laudo). */
+export function enviarArquivo<T>(caminho: string, arquivo: Blob): Promise<T> {
+  return pedir<T>(caminho, { method: "PUT", body: arquivo, headers: { "Content-Type": arquivo.type || "application/pdf" } }, true);
+}
