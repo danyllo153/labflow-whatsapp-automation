@@ -35,7 +35,7 @@ function abrir(rotas: Parameters<typeof servidorFalso>[0] = {}) {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("Material asséptico (APP-041)", () => {
-  it("traz a sugestão preenchida, com <1 no C.T. e no B.L., e salva no nome de quem gravou", async () => {
+  it("traz a sugestão preenchida, com o resultado pendente, marca <1 em todos e salva no nome de quem gravou", async () => {
     const api = abrir({
       "PUT /material-asseptico/2026-10-22": (corpo) => ({
         status: 200,
@@ -45,8 +45,10 @@ describe("Material asséptico (APP-041)", () => {
     const form = await screen.findByRole("form", { name: "Material do dia" });
     expect(within(form).getByLabelText("Ponteira / pipeta")).toHaveValue("A954, A959");
     expect(within(form).getByLabelText("Placa de Petri")).toHaveValue("P26073, G9093");
-    expect(within(form).getByLabelText("C.T. (UFC/ml)")).toHaveValue("<1");
+    expect(within(form).getByLabelText("C.T. (UFC/ml)")).toHaveValue(""); // pendente até ler as placas
     expect(within(form).getByText(/o app sugeriu o que estava em uso/)).toBeInTheDocument();
+    await userEvent.click(within(form).getByRole("button", { name: "<1 em todos" }));
+    expect(within(form).getByLabelText("B.L. (UFC/ml)")).toHaveValue("<1");
 
     const meio = within(form).getByLabelText("Meio de cultura");
     await userEvent.clear(meio);
@@ -56,6 +58,21 @@ describe("Material asséptico (APP-041)", () => {
       ponteiras: "A954, A959", agua_diluicao: "A953", placas: "P26073, G9093", meios: "A964, A969", ct: "<1", bl: "<1",
     });
     expect(await within(form).findByText(/Preenchido por Ana Souza em 22\/10 09:10/)).toBeInTheDocument();
+  });
+
+  it("exclui o dia com o motivo", async () => {
+    const PREENCHIDO = { ...VAZIO, registro: { ...VAZIO.sugestao, ct: null, bl: null, quem: "Ana Souza", quando: "22/10 09:10" } };
+    const api = abrir({
+      "GET /material-asseptico": () => ({ status: 200, corpo: PREENCHIDO }),
+      "POST /material-asseptico/2026-10-22/excluir": () => ({ status: 200, corpo: VAZIO }),
+    });
+    const form = await screen.findByRole("form", { name: "Material do dia" });
+    expect(within(form).getByText("Resultado pendente")).toBeInTheDocument();
+    await userEvent.click(within(form).getByRole("button", { name: "Excluir o dia" }));
+    const grupo = within(form).getByRole("group", { name: "Excluir o dia 22/10" });
+    await userEvent.type(within(grupo).getByLabelText("Motivo (opcional)"), "dia errado");
+    await userEvent.click(within(grupo).getByRole("button", { name: "Excluir" }));
+    expect(api.chamadas.find((c) => c.rota === "POST /material-asseptico/2026-10-22/excluir")?.corpo).toEqual({ motivo: "dia errado" });
   });
 
   it("escolher outro dia busca aquele dia", async () => {

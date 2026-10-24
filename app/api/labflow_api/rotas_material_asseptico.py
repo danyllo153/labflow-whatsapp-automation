@@ -39,8 +39,8 @@ class Uso(BaseModel):
 
 
 class Registro(Uso):
-    ct: str
-    bl: str
+    ct: str | None  # nulo = resultado pendente
+    bl: str | None
     quem: str
     quando: str  # dd/mm HH:MM
 
@@ -69,7 +69,7 @@ def _juntar(*listas: str | None) -> str | None:
 
 def _sugestao(con: psycopg.Connection, dia: date) -> Uso:
     anterior = con.execute(
-        "SELECT dia, ponteiras, agua_diluicao, placas, meios FROM app.material_asseptico WHERE dia < %s ORDER BY dia DESC LIMIT 1",
+        "SELECT dia, ponteiras, agua_diluicao, placas, meios FROM app.material_asseptico WHERE dia < %s AND excluido_em IS NULL ORDER BY dia DESC LIMIT 1",
         (dia,),
     ).fetchone()
     desde = anterior[0] if anterior else dia - timedelta(days=DIAS_SEM_REGISTRO_ANTERIOR)
@@ -98,7 +98,7 @@ def _sugestao(con: psycopg.Connection, dia: date) -> Uso:
 REGISTRO_SQL = """
 SELECT m.ponteiras, m.agua_diluicao, m.placas, m.meios, m.ct, m.bl, coalesce(u.nome, c.usuario), m.preenchido_em
 FROM app.material_asseptico m JOIN usuarios u ON u.id = m.preenchido_por LEFT JOIN app.credenciais c ON c.usuario_id = m.preenchido_por
-WHERE m.dia = %s
+WHERE m.dia = %s AND m.excluido_em IS NULL
 """
 
 
@@ -111,7 +111,7 @@ def _dia(con: psycopg.Connection, pessoa: PessoaLogada, dia: date) -> DiaDoMater
             ponteiras=p, agua_diluicao=a, placas=pl, meios=m, ct=ct, bl=bl, quem=quem,
             quando=quando.astimezone(FUSO).strftime("%d/%m %H:%M"),
         )
-    recentes = [d for (d,) in con.execute("SELECT dia FROM app.material_asseptico ORDER BY dia DESC LIMIT 10")]
+    recentes = [d for (d,) in con.execute("SELECT dia FROM app.material_asseptico WHERE excluido_em IS NULL ORDER BY dia DESC LIMIT 10")]
     return DiaDoMaterial(
         dia=dia, pode_preencher=pode(pessoa.cargo, "registrar_analise"), registro=registro,
         sugestao=_sugestao(con, dia), recentes=recentes,
@@ -137,8 +137,8 @@ class Preenchimento(BaseModel):
     agua_diluicao: str | None = Field(default=None, max_length=200)
     placas: str | None = Field(default=None, max_length=200)
     meios: str | None = Field(default=None, max_length=200)
-    ct: str = Field(default="<1", max_length=10)
-    bl: str = Field(default="<1", max_length=10)
+    ct: str | None = Field(default=None, max_length=10)  # vazio = resultado pendente (lança depois)
+    bl: str | None = Field(default=None, max_length=10)
 
 
 def _pagina_com_vaga(con: psycopg.Connection) -> int:
@@ -147,7 +147,7 @@ def _pagina_com_vaga(con: psycopg.Connection) -> int:
         """
         SELECT p.id FROM app.paginas_laudo p
         WHERE p.laudo = %s AND p.impresso_em IS NULL
-          AND (SELECT count(*) FROM app.material_asseptico m WHERE m.pagina_id = p.id) < %s
+          AND (SELECT count(*) FROM app.material_asseptico m WHERE m.pagina_id = p.id AND m.excluido_em IS NULL) < %s
         ORDER BY p.id LIMIT 1
         """,
         (laudo.NOME_DO_MODELO, laudo.DIAS_POR_PAGINA),
@@ -167,14 +167,14 @@ def preencher(
     """Grava (ou corrige) o dia; quem grava passa a ser o responsável pelo preenchimento."""
     _conferir_dia(con, dia)
     valores = {campo: _juntar(getattr(pedido, campo)) for campo in CAMPOS}
-    ct, bl = pedido.ct.strip() or "<1", pedido.bl.strip() or "<1"
-    existe = con.execute("SELECT 1 FROM app.material_asseptico WHERE dia = %s", (dia,)).fetchone()
+    ct, bl = ("".join((pedido.ct or "").split()) or None), ("".join((pedido.bl or "").split()) or None)
+    existe = con.execute("SELECT 1 FROM app.material_asseptico WHERE dia = %s AND excluido_em IS NULL", (dia,)).fetchone()
     if existe:
         con.execute(
             """
             UPDATE app.material_asseptico SET ponteiras = %(ponteiras)s, agua_diluicao = %(agua_diluicao)s, placas = %(placas)s,
                    meios = %(meios)s, ct = %(ct)s, bl = %(bl)s, preenchido_por = %(quem)s, preenchido_em = clock_timestamp()
-            WHERE dia = %(dia)s
+            WHERE dia = %(dia)s AND excluido_em IS NULL
             """,
             {**valores, "ct": ct, "bl": bl, "quem": pessoa.usuario_id, "dia": dia},
         )
@@ -186,6 +186,40 @@ def preencher(
             """,
             {**valores, "ct": ct, "bl": bl, "quem": pessoa.usuario_id, "dia": dia, "pagina": _pagina_com_vaga(con)},
         )
+    return _dia(con, pessoa, dia)
+
+
+class Exclusao(BaseModel):
+    motivo: str = Field(default="", max_length=300)
+
+
+@roteador.post("/{dia}/excluir", response_model=DiaDoMaterial)
+def excluir(
+    dia: date,
+    pedido: Exclusao,
+    pessoa: PessoaLogada = Depends(exigir("registrar_analise")),
+    con: psycopg.Connection = Depends(obter_conexao),
+) -> DiaDoMaterial:
+    """Tira o dia do laudo (lançado por engano). Arquiva com quem, quando e o motivo; o dia pode ser lançado de novo.
+    Dia de página já impressa não se exclui (a folha em papel já tem a linha)."""
+    linha = con.execute(
+        """
+        SELECT m.id, p.impresso_em FROM app.material_asseptico m JOIN app.paginas_laudo p ON p.id = m.pagina_id
+        WHERE m.dia = %s AND m.excluido_em IS NULL
+        """,
+        (dia,),
+    ).fetchone()
+    if linha is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Este dia não tem material lançado.")
+    if linha[1] is not None:
+        raise HTTPException(status.HTTP_409_CONFLICT, "A página deste dia já foi impressa: corrija o dia em vez de excluir.")
+    con.execute(
+        """
+        UPDATE app.material_asseptico SET excluido_por = %s, excluido_em = clock_timestamp(), motivo_exclusao = %s
+        WHERE id = %s
+        """,
+        (pessoa.usuario_id, pedido.motivo.strip() or None, linha[0]),
+    )
     return _dia(con, pessoa, dia)
 
 
@@ -214,9 +248,9 @@ class Laudos(BaseModel):
 
 PAGINAS_SQL = """
 SELECT p.id, row_number() OVER (ORDER BY p.id), p.impresso_em, coalesce(u.nome, c.usuario),
-       (SELECT count(*) FROM app.material_asseptico m WHERE m.pagina_id = p.id),
-       (SELECT min(dia) FROM app.material_asseptico m WHERE m.pagina_id = p.id),
-       (SELECT max(dia) FROM app.material_asseptico m WHERE m.pagina_id = p.id)
+       (SELECT count(*) FROM app.material_asseptico m WHERE m.pagina_id = p.id AND m.excluido_em IS NULL),
+       (SELECT min(dia) FROM app.material_asseptico m WHERE m.pagina_id = p.id AND m.excluido_em IS NULL),
+       (SELECT max(dia) FROM app.material_asseptico m WHERE m.pagina_id = p.id AND m.excluido_em IS NULL)
 FROM app.paginas_laudo p LEFT JOIN usuarios u ON u.id = p.impresso_por LEFT JOIN app.credenciais c ON c.usuario_id = p.impresso_por
 WHERE p.laudo = %s ORDER BY p.id
 """
@@ -283,14 +317,14 @@ def baixar_pdf(
 ) -> Response:
     _da_pagina(con, pagina_id)
     dias = [
-        {"dia": d, "ponteiras": p, "agua_diluicao": a, "placas": pl, "meios": m, "ct": ct, "bl": bl,
+        {"dia": d, "ponteiras": p, "agua_diluicao": a, "placas": pl, "meios": m, "ct": ct or "", "bl": bl or "",
          "analista": laudo_esterilizacao.primeiro_nome(quem)}
         for d, p, a, pl, m, ct, bl, quem in con.execute(
             """
             SELECT m.dia, m.ponteiras, m.agua_diluicao, m.placas, m.meios, m.ct, m.bl, coalesce(u.nome, c.usuario)
             FROM app.material_asseptico m JOIN usuarios u ON u.id = m.preenchido_por
             LEFT JOIN app.credenciais c ON c.usuario_id = m.preenchido_por
-            WHERE m.pagina_id = %s ORDER BY m.dia
+            WHERE m.pagina_id = %s AND m.excluido_em IS NULL ORDER BY m.dia
             """,
             (pagina_id,),
         )

@@ -8,10 +8,11 @@ def _uid(conexao):
     return conexao.execute("SELECT id FROM usuarios ORDER BY id LIMIT 1").fetchone()[0]
 
 
-def test_um_registro_por_dia_e_ct_bl_comecam_em_menor_que_1(conexao):
+def test_um_registro_por_dia_e_ct_bl_comecam_pendentes(conexao):
     pagina = conexao.execute("INSERT INTO app.paginas_laudo (laudo) VALUES ('material-asseptico') RETURNING id").fetchone()[0]
     conexao.execute("INSERT INTO app.material_asseptico (dia, preenchido_por, pagina_id) VALUES ('2026-10-22', %s, %s)", (_uid(conexao), pagina))
-    assert conexao.execute("SELECT ct, bl FROM app.material_asseptico").fetchone() == ("<1", "<1")
+    # a 066 tirou o "<1" padrão: sem resultado, o C.T. e o B.L. ficam pendentes (nulos)
+    assert conexao.execute("SELECT ct, bl FROM app.material_asseptico").fetchone() == (None, None)
     with pytest.raises(psycopg.errors.UniqueViolation):
         conexao.execute("INSERT INTO app.material_asseptico (dia, preenchido_por, pagina_id) VALUES ('2026-10-22', %s, %s)", (_uid(conexao), pagina))
 
