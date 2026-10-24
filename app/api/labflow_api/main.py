@@ -11,6 +11,7 @@ from fastapi import FastAPI
 from labflow_api.rotas_admin import roteador as roteador_admin
 from labflow_api.rotas_admin_turnos import roteador as roteador_admin_turnos
 from labflow_api.rotas_analise_recebimento import roteador as roteador_analise_recebimento
+from labflow_api.rotas_apps_analise import roteador as roteador_apps_analise
 from labflow_api.rotas_atividades import roteador as roteador_atividades
 from labflow_api.rotas_estufas import roteador as roteador_estufas
 from labflow_api.rotas_coletas import roteador as roteador_coletas
@@ -75,6 +76,7 @@ app.include_router(roteador_incubacao)
 app.include_router(roteador_painel)
 app.include_router(roteador_recebimento)
 app.include_router(roteador_analise_recebimento)
+app.include_router(roteador_apps_analise)
 app.include_router(roteador_material_asseptico)
 app.include_router(roteador_laudo)  # antes da esterilização: /esterilizacao/laudos
 app.include_router(roteador_esterilizacao)

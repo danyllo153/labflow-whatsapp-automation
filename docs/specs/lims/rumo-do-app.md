@@ -227,7 +227,7 @@ Telas em **React + TypeScript (Vite)** na pasta `app/web/`, **servidas pela pró
 **Ordem proposta** (o Danyllo escolhe; cada passo é um PR e só entra no ar com o pedido dele):
 1. **E1, a tela de apps** (só app, sem mudar o banco): Páginas vira a grade de apps com o número de atrasados, o menu que sobe ao tocar, e a **busca com filtro** no topo de cada página. Os apps que já existem abrem as telas de hoje.
 2. **E2, Recebimento FCOJ completo** (depende do PB11): a página com as abas Painel, Registrar, Resultados e Laudo. É o modelo para as outras.
-3. **E3 a E7**: Tanques e navios (PB14), TAB/Coliformes/compostas (PB13), Drops (PB15), Embarque (PB12), NFC recebido (PB16), Desvios (PB17), nessa ordem ou na que o Danyllo preferir.
+3. **E3 a E7**: Tanques e navios (PB14), TAB/Coliformes/compostas (PB13), Drops (PB15), Embarque (PB12), NFC recebido (PB16), Desvios (PB17), nessa ordem ou na que o Danyllo preferir. **Feitos em 24/10** (APP-061, um PR só, E3 a E8 com Desvios e a leitura do dia); E1 e E2 também (#253).
 4. **E8, Instrução e vídeo** (só app): uma tabela com o texto da instrução de cada análise, **enviado pelo Admin e guardado no banco** (o método da empresa não vai para o repositório), e o link do vídeo quando houver.
 
 ## Pedidos para a sessão do bot

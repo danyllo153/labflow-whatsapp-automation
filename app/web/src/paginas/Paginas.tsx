@@ -4,7 +4,13 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { lerJson } from "../api";
 import { useSessao } from "../sessao";
 import NaoEncontrada from "./NaoEncontrada";
+import { ABAS_DESVIOS } from "./analises/Desvios";
+import { ABAS_DROPS } from "./analises/Drops";
+import { ABAS_EMBARQUE } from "./analises/Embarque";
+import { ABAS_NFC } from "./analises/RecebimentoNfc";
 import { ATALHOS_DO_APP } from "./analises/RecebimentoFcoj";
+import { ABAS_TANQUES } from "./analises/Tanques";
+import { ABAS_TESTES } from "./analises/Testes";
 import { PAGINAS, type DefinicaoDePagina } from "./dados/definicoes";
 import PaginaDeDados from "./dados/PaginaDeDados";
 import VisaoGeral from "./dados/VisaoGeral";
@@ -19,13 +25,14 @@ type Grupo = DefinicaoDePagina["grupo"] | "Aguas" | "Rotina";
 
 interface App {
   caminho: string; // endereço que o app abre
+  chave?: string; // de onde vem a contagem do dia (a página antiga); sem ela, o próprio caminho
   titulo: string;
   sigla: string;
   cor: "azul" | "verde" | "marinho" | "laranja" | "cinza" | "agua" | "vermelho";
   grupo: Grupo;
   descricao: string;
   semColetor?: boolean;
-  atalhos?: { aba: string; rotulo: string }[]; // o app tem página própria com abas (por enquanto, o Recebimento FCOJ)
+  atalhos?: { aba: string; rotulo: string }[]; // o app tem página própria com abas (Fase E: E2 a E8)
 }
 
 const GRUPOS: { grupo: Grupo; titulo: string }[] = [
@@ -54,6 +61,20 @@ const VISUAL: Record<string, Pick<App, "sigla" | "cor">> = {
 
 const APP_DO_RECEBIMENTO = "/analises/recebimento-fcoj";
 
+/** A página que virou app (Fase E): o endereço do app e as abas do menu que sobe no celular. */
+const APPS_DA_FASE_E: Record<string, { caminho: string; atalhos: { aba: string; rotulo: string }[] }> = {
+  recebimento: { caminho: APP_DO_RECEBIMENTO, atalhos: ATALHOS_DO_APP },
+  "tanques-terra": { caminho: "/analises/tanques", atalhos: ABAS_TANQUES },
+  navios: { caminho: "/analises/tanques", atalhos: ABAS_TANQUES },
+  drops: { caminho: "/analises/drops", atalhos: ABAS_DROPS },
+  desvios: { caminho: "/analises/desvios", atalhos: ABAS_DESVIOS },
+  "recebimento-nfc": { caminho: "/analises/recebimento-nfc", atalhos: ABAS_NFC },
+  embarque: { caminho: "/analises/embarque-fcoj", atalhos: ABAS_EMBARQUE },
+  tab: { caminho: "/analises/testes", atalhos: ABAS_TESTES },
+  coliformes: { caminho: "/analises/testes", atalhos: ABAS_TESTES },
+  howard: { caminho: "/analises/testes?aba=howard", atalhos: ABAS_TESTES },
+};
+
 const APPS_FIXOS: App[] = [
   { caminho: "/paginas/visao-geral", titulo: "Visão geral", sigla: "VG", cor: "marinho", grupo: "Geral", semColetor: true,
     descricao: "Números do período, pendências por bloco e os Não ok mais recentes." },
@@ -81,12 +102,13 @@ export const APPS: App[] = [
   ...APPS_FIXOS.filter((a) => a.grupo === "Geral"),
   ...PAGINAS.filter((p) => !p.oculta).map(
     (p): App => ({
-      caminho: p.caminho === "recebimento" ? APP_DO_RECEBIMENTO : `/paginas/${p.caminho}`,
+      caminho: APPS_DA_FASE_E[p.caminho]?.caminho ?? `/paginas/${p.caminho}`,
+      chave: `/paginas/${p.caminho}`,
       titulo: p.titulo,
       grupo: p.grupo,
       descricao: p.descricao,
       semColetor: p.semColetor,
-      atalhos: p.caminho === "recebimento" ? ATALHOS_DO_APP : undefined,
+      atalhos: APPS_DA_FASE_E[p.caminho]?.atalhos,
       ...(VISUAL[p.caminho] ?? { sigla: p.titulo.slice(0, 2).toUpperCase(), cor: "cinza" }),
     }),
   ),
@@ -105,7 +127,7 @@ function appDaPendencia(p: Pendencia): string | null {
   if (teste) return teste; // TAB, Coliformes e Howard têm o app deles, venham do recebimento, do embarque ou dos tanques
   switch (p.bloco) {
     case "FCOJ Recebimento":
-      return APP_DO_RECEBIMENTO;
+      return "/paginas/recebimento";
     case "FCOJ Embarque":
       return "/paginas/embarque";
     case "NFC Tank farm":
@@ -187,10 +209,10 @@ export function ListaDePaginas() {
             <h2>{titulo}</h2>
             <div className="grade-apps">
               {doGrupo.map((a) => {
-                const estado = contagens ? estadoDoApp(contagens[a.caminho]) : null;
+                const estado = contagens ? estadoDoApp(contagens[a.chave ?? a.caminho]) : null;
                 return (
                   <Link
-                    key={a.caminho}
+                    key={a.chave ?? a.caminho}
                     to={a.caminho}
                     className="app-cartao"
                     title={a.descricao}
@@ -233,7 +255,7 @@ export function ListaDePaginas() {
             </div>
             <div className="folha-atalhos">
               {aberto.atalhos.map((t) => (
-                <button key={t.aba} type="button" className="folha-atalho" onClick={() => navegar(`${aberto.caminho}?aba=${t.aba}`)}>
+                <button key={t.aba} type="button" className="folha-atalho" onClick={() => navegar(`${aberto.caminho.split("?")[0]}?aba=${t.aba}`)}>
                   {t.rotulo}
                 </button>
               ))}

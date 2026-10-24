@@ -576,3 +576,79 @@ button.numero-app {
 .dispensar-pulo .campo {
   margin-top: 0;
 }
+
+/* apps de análise E3 a E8 (APP-061) */
+.lista-marcavel {
+  list-style: none;
+  margin: 8px 0 12px;
+  padding: 0;
+}
+
+.lista-marcavel li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 8px 0;
+  border-top: 1px solid var(--linha-suave);
+}
+
+.lista-marcavel label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.lista-marcavel input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+
+.lista-marcavel .botao {
+  width: auto;
+}
+
+.recado-feito {
+  margin: 10px 0;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--ok-fundo, #e3f2ea);
+  color: var(--ok-texto, #1d6a3d);
+  font-weight: 600;
+  white-space: pre-line;
+}
+
+.lista-links-app {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.lista-links-app li {
+  margin: 6px 0;
+}
+
+.entrada-placas {
+  width: 110px;
+}
+
+.linha-lote-nfc {
+  align-items: flex-end;
+}
+
+.grupo-leituras h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 14px 0 0;
+  font-size: 1em;
+}
+
+.grupo-leituras h3 input {
+  width: 18px;
+  height: 18px;
+}
