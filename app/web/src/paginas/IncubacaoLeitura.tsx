@@ -123,7 +123,8 @@ export default function IncubacaoLeitura() {
           </div>
           {MEIOS.some((m) => dados.meios[m] === null) && (
             <p className="texto-secundario">
-              Meio usado sem lote marcado: escolha o lote em uso em <Link to="/meios-lotes">Meios e lotes</Link>.
+              Meio usado sem lote neste dia: em <Link to="/meios-lotes">Meios e lotes</Link>, marque o lote em uso ou, se ele
+              já era usado antes de ser marcado, corrija a data de início.
             </p>
           )}
         </div>

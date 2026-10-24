@@ -99,3 +99,36 @@ def test_laudo_tem_uma_folha_por_meio_com_33_linhas(cliente, logado):
     texto = PdfReader(io.BytesIO(cliente.get(f"/laudos/meios-PCA/{pca['paginas'][0]['id']}/pdf").content)).pages[0].extract_text()
     assert "6000001" in texto and "21.01.2026" in texto and "6000002" not in texto  # o OSA vai na folha dele
     assert cliente.get("/laudos/nao-existe").status_code == 404
+
+
+def test_corrigir_desde_quando_o_lote_esta_em_uso(cliente, logado, monkeypatch):
+    """O lote marcado hoje já era usado antes (ex.: carga do histórico): a data volta, e os dias antigos ganham o lote."""
+    from labflow_api import rotas_turno
+
+    monkeypatch.setattr(rotas_turno, "_agora", lambda con: datetime(2031, 5, 20, 10, tzinfo=FUSO))
+    logado()
+    cliente.post("/meios", json={"meio": "OSA", "lote": "9000001", "recebido_em": "2026-01-02", "usar": True})
+    lotes = _meio(cliente.get("/meios").json(), "OSA")["lotes"]
+    cliente.post("/meios", json={"meio": "OSA", "lote": "9000002", "recebido_em": "2026-01-03"})
+    novo = next(l["id"] for l in _meio(cliente.get("/meios").json(), "OSA")["lotes"] if l["lote"] == "9000002")
+    cliente.post(f"/meios/{novo}/usar")
+    assert cliente.put("/meios/OSA/em-uso-desde", json={"desde": "2031-05-21"}).status_code == 422  # depois de hoje
+    r = cliente.put("/meios/OSA/em-uso-desde", json={"desde": "2031-05-10"})
+    assert r.status_code == 200, r.text
+    assert _meio(r.json(), "OSA")["em_uso"]["desde"].startswith("10/05/2031")
+    assert lotes  # o primeiro lote continua no histórico
+    # o anterior começou "agora" (hoje de verdade, antes de 2031): voltar para antes dele é recusado
+    r = cliente.put("/meios/OSA/em-uso-desde", json={"desde": "2020-01-01"})
+    assert r.status_code == 422 and "lote anterior" in r.json()["detail"]
+    assert cliente.put("/meios/PCA/em-uso-desde", json={"desde": "2031-05-10"}).status_code == 404  # sem lote em uso
+
+
+def test_lote_em_uso_do_dia_depois_da_correcao(cliente, logado, conexao, monkeypatch):
+    from labflow_api import rotas_turno
+
+    monkeypatch.setattr(rotas_turno, "_agora", lambda con: datetime(2031, 5, 20, 10, tzinfo=FUSO))
+    logado()
+    cliente.post("/meios", json={"meio": "Wort", "lote": "WRT-1", "recebido_em": "2026-01-02", "usar": True})
+    cliente.put("/meios/Wort/em-uso-desde", json={"desde": "2031-05-01"})
+    assert rotas_meios.lote_em_uso(conexao, "Wort", date(2031, 5, 3)) == "WRT-1"
+    assert rotas_meios.lote_em_uso(conexao, "Wort", date(2031, 4, 30)) is None

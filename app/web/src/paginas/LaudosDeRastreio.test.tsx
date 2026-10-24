@@ -96,6 +96,18 @@ describe("Meios e lotes (APP-036)", () => {
     await userEvent.click(within(form).getByRole("button", { name: "Cadastrar lote" }));
     expect(api.chamadas.find((c) => c.rota === "POST /meios")?.corpo).toMatchObject({ meio: "OSA", lote: "1000004", conservacao: "OK", ph: "OK", usar: true });
   });
+
+  it("corrige desde quando o lote em uso já era usado", async () => {
+    const api = abrir("/meios-lotes", {
+      "GET /meios": () => ({ status: 200, corpo: MEIOS }),
+      "PUT /meios/OSA/em-uso-desde": () => ({ status: 200, corpo: MEIOS }),
+    });
+    await userEvent.click(await screen.findByRole("button", { name: /Corrigir a data de início/ }));
+    const form = screen.getByRole("form", { name: "Corrigir desde quando o lote de OSA está em uso" });
+    await userEvent.type(within(form).getByLabelText("Em uso desde"), "2026-10-01");
+    await userEvent.click(within(form).getByRole("button", { name: "Salvar a data" }));
+    expect(api.chamadas.find((c) => c.rota === "PUT /meios/OSA/em-uso-desde")?.corpo).toEqual({ desde: "2026-10-01" });
+  });
 });
 
 const AGUA: AguaDoProcesso = {
