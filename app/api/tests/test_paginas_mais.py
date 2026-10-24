@@ -120,7 +120,7 @@ def test_visao_geral_pendencias_batem_com_o_inicio(cliente, logado):
     logado()
     pend = cliente.get("/pendencias-hoje").json()
     blocos = cliente.get("/paginas/visao-geral").json()["pendencias"]
-    assert [b["bloco"] for b in blocos][0] == "FCOJ Recebimento" and len(blocos) == 6
+    assert [b["bloco"] for b in blocos][0] == "FCOJ Recebimento" and len(blocos) == 7  # + Águas e superfícies (APP-037)
     assert sum(b["vence_hoje"] for b in blocos) == pend["vence_hoje"]
     assert sum(b["atrasados"] for b in blocos) == pend["atrasados"]
 

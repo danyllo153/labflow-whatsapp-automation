@@ -18,7 +18,12 @@ from labflow_api.rotas_esterilizacao import roteador as roteador_esterilizacao
 from labflow_api.rotas_laudo import roteador as roteador_laudo
 from labflow_api.rotas_login import roteador as roteador_login
 from labflow_api.rotas_paginas import roteador as roteador_paginas
+from labflow_api.laudos import roteador as roteador_laudos
+from labflow_api.rotas_aguas import roteador as roteador_aguas
+from labflow_api.rotas_fluxo_laminar import roteador as roteador_fluxo_laminar
+from labflow_api.rotas_meios import roteador as roteador_meios
 from labflow_api.rotas_material_asseptico import roteador as roteador_material_asseptico
+from labflow_api.rotas_recebimento import roteador as roteador_recebimento
 from labflow_api.rotas_navios_tanques import roteador as roteador_navios_tanques
 from labflow_api.rotas_paginas_mais import roteador as roteador_paginas_mais
 from labflow_api.rotas_paginas_nfc import roteador as roteador_paginas_nfc
@@ -59,6 +64,11 @@ app.include_router(roteador_paginas_mais)
 app.include_router(roteador_navios_tanques)
 app.include_router(roteador_pendencias)
 app.include_router(roteador_estufas)
+app.include_router(roteador_laudos)
+app.include_router(roteador_meios)
+app.include_router(roteador_aguas)
+app.include_router(roteador_fluxo_laminar)
+app.include_router(roteador_recebimento)
 app.include_router(roteador_material_asseptico)
 app.include_router(roteador_laudo)  # antes da esterilização: /esterilizacao/laudos
 app.include_router(roteador_esterilizacao)
