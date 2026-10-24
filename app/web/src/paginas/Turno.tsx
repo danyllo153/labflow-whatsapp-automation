@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 
 import { enviarJson, lerJson } from "../api";
 import BlocosDePendencias, { type Pendencia } from "../componentes/BlocosDePendencias";
+import ResumoEstufas from "../componentes/ResumoEstufas";
 import AtividadesDoTurno from "./AtividadesDoTurno";
 import EquipeDoTurno from "./EquipeDoTurno";
 import { AlertasEstufas, ConferenciaEstufas, type DadosEstufas } from "./Estufas";
@@ -89,10 +90,12 @@ export default function Turno() {
 
   return (
     <section className="pagina-turno">
-      <h1>Turno</h1>
-      <p>
-        <Link to="/turno/relatorio">Ver o relatório do turno</Link>
-      </p>
+      <div className="titulo-com-acao">
+        <h1>Turno</h1>
+        <Link to="/turno/relatorio" className="botao botao-simples">
+          Ver o relatório do turno
+        </Link>
+      </div>
       {estado?.checkin_obrigatorio && !estado.no_turno && (
         <p className="aviso-checkin">Marque a sua entrada no turno para abrir o resto do app.</p>
       )}
@@ -107,7 +110,10 @@ export default function Turno() {
       {!estado && !erro && <p className="carregando">Carregando...</p>}
       {estado && (
         <>
-          <EquipeDoTurno aviso={estado.no_turno?.id ?? 0} />
+          <div className="turno-topo">
+            <EquipeDoTurno aviso={estado.no_turno?.id ?? 0} contarRegistros={!estado.checkin_obrigatorio || !!estado.no_turno} />
+            <ResumoEstufas />
+          </div>
           {!estado.pode_entrar ? (
             <div className="cartao">
               <p>O cargo Consultor acompanha o laboratório, mas não entra em turno.</p>

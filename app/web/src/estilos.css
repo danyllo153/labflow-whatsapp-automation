@@ -3881,3 +3881,487 @@ h2 {
   min-height: 40px;
   text-decoration: none;
 }
+
+/* ======================================================================================================
+   Layout do canvas no Início e no Turno (APP-056, 24/10): o cartão "Agora" com o relógio do turno, o registro
+   livre e os destaques do dia; no Turno, a equipe e as estufas lado a lado e o "quem fez o quê" com filtro.
+   ====================================================================================================== */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.titulo-com-acao {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.titulo-com-acao h1,
+.titulo-com-acao h2 {
+  margin: 0;
+}
+
+.titulo-com-acao .botao {
+  width: auto;
+  margin: 0;
+}
+
+/* cartão Agora */
+.cartao-agora {
+  padding: 0;
+  overflow: hidden;
+}
+
+.agora-topo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px 20px;
+  padding: 18px 20px;
+}
+
+.agora-relogio {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1 1 280px;
+}
+
+.agora-icone {
+  width: 48px;
+  height: 48px;
+  flex: none;
+  border-radius: 50%;
+  background: var(--marinho);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.agora-icone svg {
+  width: 22px;
+  height: 22px;
+}
+
+.agora-hora {
+  font-size: 2.6rem;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.agora-estufas {
+  margin-left: auto;
+  text-decoration: none;
+  align-self: flex-start;
+}
+
+.registro-livre {
+  flex: 999 1 380px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 5px 5px 5px 8px;
+  border-radius: 999px;
+  background: var(--campo-pilula);
+}
+
+.registro-livre-rotulo {
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: var(--borda);
+  color: var(--texto-secundario);
+  font-size: 0.85rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.registro-livre input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  color: var(--texto);
+  padding: 8px 4px;
+}
+
+.registro-livre input:focus {
+  outline: none;
+}
+
+.registro-livre .botao {
+  width: auto;
+  margin: 0;
+  min-height: 38px;
+  padding: 0 18px;
+}
+
+.agora-topo > p {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+.agora-destaques {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px;
+  padding: 16px 20px 20px;
+  border-top: 1px solid var(--linha-suave);
+}
+
+.destaque {
+  border-radius: var(--raio);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.destaque.bloco-azul {
+  background: var(--bloco-azul);
+  color: var(--bloco-azul-texto);
+}
+
+.destaque.bloco-laranja {
+  background: var(--bloco-laranja);
+  color: var(--bloco-laranja-texto);
+}
+
+.destaque.bloco-verde {
+  background: var(--bloco-verde);
+  color: var(--bloco-verde-texto);
+}
+
+.destaque.bloco-marinho {
+  background: var(--marinho);
+  color: #fff;
+}
+
+.destaque-topo {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 10px;
+}
+
+.destaque-nome {
+  font-weight: 600;
+}
+
+.destaque-numero {
+  font-size: 1.9rem;
+  font-weight: 600;
+  line-height: 1;
+}
+
+.destaque-acoes {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.pilula-acao {
+  display: inline-flex;
+  align-items: center;
+  min-height: 34px;
+  padding: 0 14px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.25);
+  color: inherit;
+  font-size: 0.9rem;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.pilula-acao:hover {
+  background: rgba(255, 255, 255, 0.38);
+  color: inherit;
+}
+
+.pilula-info {
+  font-size: 0.82rem;
+  opacity: 0.9;
+}
+
+/* Turno: equipe e estufas lado a lado */
+.turno-topo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.turno-topo > .cartao {
+  margin-bottom: 0;
+}
+
+.lista-equipe {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.lista-equipe li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--linha-suave);
+}
+
+.avatar.avatar-claro {
+  background: var(--acao-fundo);
+  color: var(--acao);
+}
+
+.equipe-nome {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.equipe-desde {
+  flex-basis: 100%;
+  font-size: 0.8rem;
+}
+
+.equipe-registros {
+  white-space: nowrap;
+}
+
+.resumo-estufas h2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.grade-estufas {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 10px;
+}
+
+.estufa-mini {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 12px;
+  border: 1px solid var(--linha-suave);
+  border-radius: var(--raio);
+}
+
+.estufa-mini.estufa-nao-ok {
+  border-color: var(--nao-ok);
+  background: var(--nao-ok-fundo);
+}
+
+.estufa-temperatura {
+  font-size: 1.35rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.texto-ok {
+  color: var(--ok-texto);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.texto-nao-ok {
+  color: var(--nao-ok-texto);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.texto-pendente {
+  color: var(--pendente-texto);
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+/* Quem fez o quê */
+.filtro-pessoas {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.pilula {
+  min-height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid var(--borda);
+  background: var(--cartao);
+  color: var(--texto-menu);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.pilula[aria-pressed="true"] {
+  background: var(--marinho);
+  border-color: var(--marinho);
+  color: #fff;
+  font-weight: 600;
+}
+
+.registros-turno .linha-do-tempo {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.registros-turno .linha-do-tempo li {
+  display: grid;
+  grid-template-columns: 120px 1fr auto auto auto;
+  align-items: center;
+  gap: 14px;
+  min-height: 52px;
+  padding: 6px 2px;
+  border-bottom: 1px solid var(--linha-suave);
+}
+
+.registros-turno .linha-do-tempo .etiqueta {
+  justify-self: start;
+}
+
+.registros-turno .hora-registro {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.etiqueta-tipo-coleta,
+.etiqueta-tipo-nfc,
+.etiqueta-tipo-drop {
+  background: var(--bloco-verde);
+  color: var(--bloco-verde-texto);
+}
+
+.etiqueta-tipo-esterilizacao {
+  background: var(--acao-fundo);
+  color: var(--acao);
+}
+
+.etiqueta-tipo-estufa {
+  background: var(--nao-ok-fundo);
+  color: var(--nao-ok-texto);
+}
+
+.etiqueta-tipo-atividade {
+  background: var(--marinho);
+  color: #fff;
+}
+
+.etiqueta-tipo-livre {
+  background: var(--linha-suave);
+  color: var(--texto-menu);
+}
+
+@media (max-width: 640px) {
+  .registros-turno .linha-do-tempo li {
+    grid-template-columns: auto 1fr auto;
+    gap: 6px 10px;
+  }
+
+  .registros-turno .texto-registro {
+    grid-column: 1 / -1;
+    order: 5;
+  }
+
+  .agora-hora {
+    font-size: 2.2rem;
+  }
+
+  .agora-estufas {
+    margin-left: 0;
+  }
+}
+
+.agora-relogio > div {
+  min-width: 0;
+}
+
+.agora-relogio .texto-secundario {
+  white-space: nowrap;
+}
+
+/* com muitas estufas (o piloto tem 11), os cartões do topo do Turno ficam com a altura de cada um e as estufas compactas */
+.turno-topo {
+  align-items: start;
+}
+
+.grade-estufas {
+  grid-template-columns: repeat(auto-fill, minmax(112px, 1fr));
+  gap: 8px;
+}
+
+.estufa-mini {
+  padding: 8px 10px;
+}
+
+.estufa-mini .texto-secundario {
+  font-size: 0.76rem;
+}
+
+.estufa-temperatura {
+  font-size: 1.1rem;
+}
+
+/* celular: o relógio e o chip das estufas quebram linha, e o registro livre ocupa a largura toda */
+.registro-livre {
+  min-width: 0;
+}
+
+@media (max-width: 640px) {
+  .agora-topo {
+    padding: 16px;
+  }
+
+  .agora-relogio {
+    flex-wrap: wrap;
+    flex-basis: 100%;
+  }
+
+  .agora-relogio .texto-secundario {
+    white-space: normal;
+  }
+
+  .agora-estufas {
+    flex-basis: auto;
+  }
+
+  .registro-livre {
+    flex-basis: 100%;
+  }
+
+  .registro-livre-rotulo {
+    display: none;
+  }
+
+  .agora-destaques {
+    padding: 14px 16px 16px;
+  }
+}

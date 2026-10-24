@@ -5,13 +5,15 @@ import { lerJson } from "../api";
 import GraficoSemana from "../componentes/GraficoSemana";
 import { useSessao } from "../sessao";
 import BlocosDePendencias, { type Pendencia } from "../componentes/BlocosDePendencias";
+import CartaoAgora from "../componentes/CartaoAgora";
 import AtividadesDoTurno from "./AtividadesDoTurno";
 import { AlertasEstufas, type DadosEstufas } from "./Estufas";
 import type { EstadoDoTurno } from "./Turno";
 
 /**
  * Início: pendências de hoje (07 §3; APP-014). Lê GET /pendencias-hoje, que conta pelas views do Power BI.
- * O cartão "Feito no turno" e o aviso para entrar no turno vêm de GET /turno (APP-022).
+ * O cartão "Feito no turno" e o aviso para entrar no turno vêm de GET /turno (APP-022). Layout do canvas (APP-056): o
+ * cartão "Agora" no topo (relógio do turno, registro livre e os destaques do dia), os números, o gráfico e a lista.
  */
 
 export type { Pendencia };
@@ -96,6 +98,8 @@ export default function Inicio() {
 
       {dados && (
         <>
+          <CartaoAgora turno={turno} estufas={estufas} itens={dados.itens} />
+
           <div className="cartoes-numeros">
             <CartaoNumero cor="azul" rotulo="Para hoje" valor={dados.vence_hoje} ativo={filtro === "Vence hoje"} onClick={() => escolher("Vence hoje")} />
             <CartaoNumero cor="laranja" rotulo="Atrasados" valor={dados.atrasados} ativo={filtro === "Atrasado"} alerta={dados.atrasados > 0} onClick={() => escolher("Atrasado")} />
