@@ -13,6 +13,7 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 ## [Não lançado]
 
 ### Corrigido
+- **Cartão das folhas no menu** (app, 24/10): a folha de incubação mostra "faltam N dias", não "linhas".
 - **Lote marcado por engano no meio do período** (app, APP-052, 24/10): "Corrigir a data de início" do lote em uso agora
   pode voltar para antes de outra marcação; a marcação errada que fica no meio é anulada (o período vira vazio, nada é
   apagado) e sai do laudo de incubação e do histórico de uso. Caso do OSA: 5217877 desde 02/03/2026.
@@ -23,6 +24,13 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
   início" ajusta o começo do lote em uso quando preciso.
 
 ### Adicionado
+- **Páginas como tela de apps e o Recebimento FCOJ como app** (app, APP-057, Fase E passos E1 e E2, 24/10; migration
+  068): cada análise vira um ícone com o estado do dia ("2 atrasados · 7 para hoje", "Em dia"), com busca pelo nome e
+  um grupo novo "Rotina do laboratório". No celular, o Recebimento FCOJ abre um menu que sobe de baixo (Painel,
+  Registrar, Resultados, Laudo, Instrução, Vídeo). A página dele tem o painel (atrasados, para hoje, não ok da semana,
+  o que fazer agora por análise com os loads e lotes, e não ok por fábrica), registrar o recebimento e lançar C.T/B.L
+  com "<1 em todos os vazios", sempre com a **prévia do banco** antes do Confirmar. As gravações usam as mesmas funções
+  do bot (040, PB11), com as mesmas recusas e o mesmo alarme (C.T ≥ 200, B.L ≥ 50; "<" nunca é alarme).
 - **Funções do banco para registrar recebimento de FCOJ e lançar C.T/B.L** (PB11 da Fase E, migration `040`, 24/10):
   `registrar_recebimento` e `lancar_contagem`, com prévia ("o que vai ser criado") e o mesmo alarme do bot, para o app e o
   bot chamarem a mesma regra.
