@@ -40,6 +40,7 @@ export default function RegistrosDoTurnoCartao() {
   const [erro, setErro] = useState("");
   const [texto, setTexto] = useState("");
   const [enviando, setEnviando] = useState(false);
+  const [pessoa, setPessoa] = useState<string | null>(null); // filtro "quem fez o quê"; nulo = todos
 
   const carregar = useCallback(async () => {
     try {
@@ -79,12 +80,28 @@ export default function RegistrosDoTurnoCartao() {
   }
 
   if (!dados) return null;
+  const pessoas = [...new Set(dados.itens.map((r) => r.quem))];
+  const itens = pessoa ? dados.itens.filter((r) => r.quem === pessoa) : dados.itens;
 
   return (
     <section className="cartao registros-turno" aria-label="Atividades realizadas">
-      <h2>
-        Atividades realizadas <span className="contador">{dados.itens.length}</span>
-      </h2>
+      <div className="titulo-com-acao">
+        <h2>
+          Quem fez o quê <span className="contador">{dados.itens.length}</span>
+        </h2>
+        {pessoas.length > 1 && (
+          <div className="filtro-pessoas" role="group" aria-label="Filtrar por pessoa">
+            <button type="button" className="pilula" aria-pressed={pessoa === null} onClick={() => setPessoa(null)}>
+              Todos
+            </button>
+            {pessoas.map((p) => (
+              <button key={p} type="button" className="pilula" aria-pressed={pessoa === p} onClick={() => setPessoa(pessoa === p ? null : p)}>
+                {p.split(" ")[0]}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
       {dados.pode_escrever && (
         <form className="linha-registro" onSubmit={escrever}>
           <label className="campo">
@@ -101,16 +118,16 @@ export default function RegistrosDoTurnoCartao() {
           {erro}
         </p>
       )}
-      {dados.itens.length === 0 ? (
+      {itens.length === 0 ? (
         <p className="texto-secundario">Nada registrado neste turno ainda.</p>
       ) : (
         <ul className="linha-do-tempo">
-          {dados.itens.map((r, n) => (
+          {itens.map((r, n) => (
             <li key={`${r.tipo}-${r.id ?? n}-${r.quando}`}>
-              <span className="hora-registro">{r.quando}</span>
               <span className={`etiqueta etiqueta-tipo-${r.tipo}`}>{ROTULO[r.tipo]}</span>
               <span className="texto-registro">{r.texto}</span>
-              <span className="texto-secundario">por {r.quem}</span>
+              <span className="texto-secundario quem-registro">{r.quem}</span>
+              <span className="hora-registro">{r.quando}</span>
               {r.pode_excluir && r.id !== null && (
                 <button type="button" className="link-botao" aria-label={`Excluir: ${r.texto}`} onClick={() => void excluir(r.id as number)}>
                   Excluir
