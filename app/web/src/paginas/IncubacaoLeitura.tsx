@@ -112,7 +112,7 @@ export default function IncubacaoLeitura() {
               <tbody>
                 <tr>
                   {MEIOS.map((m) => (
-                    <td key={m}>{dados.meios[m] ?? <span className="etiqueta etiqueta-pendente">sem lote em uso</span>}</td>
+                    <td key={m}>{dados.meios[m] ?? <span className="etiqueta etiqueta-pendente">sem lote</span>}</td>
                   ))}
                   {LEITURAS.map(([chave]) => (
                     <td key={chave}>{dados.leituras[chave] ? dm(dados.leituras[chave] as string) : "-"}</td>
@@ -123,7 +123,7 @@ export default function IncubacaoLeitura() {
           </div>
           {MEIOS.some((m) => dados.meios[m] === null) && (
             <p className="texto-secundario">
-              Meio usado sem lote marcado: escolha o lote em uso em <Link to="/meios-lotes">Meios e lotes</Link>.
+              Meio usado sem nenhum lote recebido até este dia: cadastre o lote em <Link to="/meios-lotes">Meios e lotes</Link>.
             </p>
           )}
         </div>

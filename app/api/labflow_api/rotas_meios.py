@@ -20,7 +20,7 @@ import psycopg
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
 
-from labflow_api import laudos
+from labflow_api import laudos, rotas_turno
 from labflow_api.dependencias import PessoaLogada, obter_conexao
 from labflow_api.permissoes import exigir, pode
 from labflow_api.rotas_turno import FUSO
@@ -75,7 +75,9 @@ def _quando(valor: datetime, hora: bool = False) -> str:
 
 
 def lote_em_uso(con: psycopg.Connection, meio: str, dia: date) -> str | None:
-    """O lote que estava em uso no dia (o último que passou a ser usado até o fim do dia e não tinha saído antes dele)."""
+    """O lote do meio NAQUELE dia, sozinho (decidido em 24/10): o que estava marcado em uso no dia (o último que passou a
+    ser usado até o fim do dia e não tinha saído antes dele); sem marcação que cubra o dia (ex.: antes da carga do
+    histórico), o último lote recebido até o dia. Trocar o lote em uso muda o laudo a partir daquele dia."""
     comeco = datetime.combine(dia, time.min, FUSO)
     fim = comeco + timedelta(days=1)
     linha = con.execute(
@@ -86,6 +88,14 @@ def lote_em_uso(con: psycopg.Connection, meio: str, dia: date) -> str | None:
         """,
         (meio, fim, comeco),
     ).fetchone()
+    if linha is None:
+        linha = con.execute(
+            """
+            SELECT lote FROM app.lotes_meio WHERE meio = %s AND excluido_em IS NULL AND recebido_em <= %s
+            ORDER BY recebido_em DESC, id DESC LIMIT 1
+            """,
+            (meio, dia),
+        ).fetchone()
     return linha[0] if linha else None
 
 
@@ -206,6 +216,42 @@ def usar(
 
 class Exclusao(BaseModel):
     motivo: str = Field(max_length=300)
+
+
+class EmUsoDesde(BaseModel):
+    desde: date
+
+
+@roteador.put("/{meio}/em-uso-desde", response_model=MeiosELotes)
+def corrigir_em_uso_desde(
+    meio: str,
+    pedido: EmUsoDesde,
+    pessoa: PessoaLogada = Depends(exigir("registrar_analise")),
+    con: psycopg.Connection = Depends(obter_conexao),
+) -> MeiosELotes:
+    """O lote em uso já era usado antes de ser marcado no app (ex.: marcado na carga do histórico): a data de início do
+    uso volta para o dia certo, e os laudos daqueles dias (incubação) passam a mostrar este lote. O período anterior do
+    mesmo meio termina onde este começa; não pode voltar para antes do início do período anterior nem passar de hoje."""
+    atual = con.execute("SELECT id, desde FROM app.uso_lote_meio WHERE meio = %s AND ate IS NULL", (meio,)).fetchone()
+    if atual is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Nenhum lote em uso neste meio.")
+    hoje = rotas_turno._agora(con).astimezone(FUSO).date()
+    if pedido.desde > hoje:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "A data não pode ser depois de hoje.")
+    novo = datetime.combine(pedido.desde, time.min, FUSO)
+    anterior = con.execute(
+        "SELECT id, desde, ate FROM app.uso_lote_meio WHERE meio = %s AND id <> %s AND desde < %s ORDER BY desde DESC LIMIT 1",
+        (meio, atual[0], atual[1]),
+    ).fetchone()
+    if anterior and novo <= anterior[1]:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            f"O lote anterior começou a ser usado em {_quando(anterior[1])}: escolha uma data depois dessa.",
+        )
+    con.execute("UPDATE app.uso_lote_meio SET desde = %s WHERE id = %s", (novo, atual[0]))
+    if anterior and anterior[2] is not None and anterior[2] > novo:
+        con.execute("UPDATE app.uso_lote_meio SET ate = %s WHERE id = %s", (novo, anterior[0]))
+    return _tudo(con, pessoa)
 
 
 @roteador.post("/{lote_id}/excluir", response_model=MeiosELotes)

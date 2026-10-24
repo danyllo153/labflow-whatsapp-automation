@@ -114,9 +114,12 @@ export default function MeiosLotes() {
                 <h2>{atual.meio} · lote em uso</h2>
                 <p className="texto-secundario">{USO_DO_MEIO[atual.meio]}</p>
                 {atual.em_uso ? (
-                  <p>
-                    <strong>{atual.em_uso.lote}</strong> desde {atual.em_uso.desde} (marcado por {atual.em_uso.quem})
-                  </p>
+                  <>
+                    <p>
+                      <strong>{atual.em_uso.lote}</strong> desde {atual.em_uso.desde} (marcado por {atual.em_uso.quem})
+                    </p>
+                    {dados.pode_registrar && <CorrigirDesde key={`${atual.meio}-${atual.em_uso.desde}`} meio={atual.meio} aoMudar={mudou} />}
+                  </>
                 ) : (
                   <p>Nenhum lote marcado em uso. Toque em "Usar este" num lote abaixo.</p>
                 )}
@@ -352,5 +355,55 @@ function Importar({ aoImportar }: { aoImportar: () => void }) {
         <input type="file" accept=".csv,text/csv" className="so-leitor" aria-label="Arquivo CSV do histórico de lotes" onChange={enviar} />
       </label>
     </div>
+  );
+}
+
+/** O lote já era usado antes de ser marcado no app: a data de início volta para o dia certo (laudo de incubação). */
+function CorrigirDesde({ meio, aoMudar }: { meio: string; aoMudar: (d: MeiosELotes) => void }) {
+  const [aberto, setAberto] = useState(false);
+  const [desde, setDesde] = useState("");
+  const [erro, setErro] = useState("");
+
+  async function salvar(evento: FormEvent) {
+    evento.preventDefault();
+    setErro("");
+    try {
+      aoMudar(await enviarJson<MeiosELotes>(`/meios/${meio}/em-uso-desde`, { desde }, "PUT"));
+      setAberto(false);
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Não foi possível corrigir a data.");
+    }
+  }
+
+  if (!aberto) {
+    return (
+      <button type="button" className="link-botao" onClick={() => setAberto(true)}>
+        Já era usado antes? Corrigir a data de início
+      </button>
+    );
+  }
+  return (
+    <form className="corrigir-horario" onSubmit={salvar} aria-label={`Corrigir desde quando o lote de ${meio} está em uso`}>
+      <p className="texto-secundario">
+        Os dias a partir desta data passam a mostrar este lote no laudo de incubação. O lote anterior termina no dia escolhido.
+      </p>
+      <label className="campo campo-hora">
+        Em uso desde
+        <input type="date" required value={desde} onChange={(e) => setDesde(e.target.value)} />
+      </label>
+      {erro && (
+        <p className="mensagem-erro" role="alert">
+          {erro}
+        </p>
+      )}
+      <div className="botoes-lado">
+        <button type="submit" className="botao botao-principal" disabled={!desde}>
+          Salvar a data
+        </button>
+        <button type="button" className="botao botao-simples" onClick={() => setAberto(false)}>
+          Cancelar
+        </button>
+      </div>
+    </form>
   );
 }

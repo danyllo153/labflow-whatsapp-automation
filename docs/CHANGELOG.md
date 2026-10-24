@@ -12,6 +12,13 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 
 ## [Não lançado]
 
+### Corrigido
+- **Lotes dos meios em branco no laudo de incubação** (app, APP-051, 24/10): o período de uso de um lote começava no
+  momento em que ele era marcado (na carga do histórico, por exemplo), e os dias anteriores saíam sem lote. Agora o laudo
+  acha o lote de cada dia sozinho: o marcado em uso naquele dia ou, sem marcação, o último lote recebido até o dia.
+  Trocar o lote em uso muda o laudo a partir daquele dia. Em Meios e lotes, "Já era usado antes? Corrigir a data de
+  início" ajusta o começo do lote em uso quando preciso.
+
 ### Adicionado
 - **Laudo de incubação no padrão de escrita do laboratório** (app, APP-050, 24/10): a descrição de cada dia é um texto
   só, na ordem REC → embarque → tanques de navio → `TQ:` → água do processo (MN, C4, C5, C6) → baias → linhas → NFC,
