@@ -59,7 +59,7 @@ test('fábricas: o aviso de correção aparece na resposta do recebimento', () =
   const { codigoDoNode } = require('./helpers/executar-node');
   const item = interpretar('recebimento load 46699 item 2655 fabrica AOQ lotes 35-38');
   const $ = (n) => ({ first: () => ({ json: item }) });
-  const entrada = [{ json: { novos: [35, 36, 37, 38] } }];
+  const entrada = [{ json: { r: { ok: true, novos: [35, 36, 37, 38], repetidos: [] } } }];
   const saida = new Function('$', '$input', codigoDoNode('Montar resposta recebimento'))($, { first: () => entrada[0], all: () => entrada })[0].json;
   assert.match(saida.textoResposta, /fábrica AQA/);
   assert.match(saida.textoResposta, /Li a fábrica como "AOQ" e entendi AQA/);

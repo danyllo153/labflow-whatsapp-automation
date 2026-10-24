@@ -23,6 +23,9 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
   início" ajusta o começo do lote em uso quando preciso.
 
 ### Adicionado
+- **O bot grava o recebimento de FCOJ e o C.T/B.L pelas funções do banco** (migration `041`, 24/10): as mesmas do app
+  (040), pelo comando, pelo áudio e pela foto. Mesmas regras e respostas; agora um resultado lançado de novo fica no histórico
+  e, se o banco recusar, o bot diz por quê em vez de "Feito".
 - **Funções do banco para registrar recebimento de FCOJ e lançar C.T/B.L** (PB11 da Fase E, migration `040`, 24/10):
   `registrar_recebimento` e `lancar_contagem`, com prévia ("o que vai ser criado") e o mesmo alarme do bot, para o app e o
   bot chamarem a mesma regra.
