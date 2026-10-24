@@ -63,10 +63,10 @@ class Tabela:
         return Celula(texto, self.colunas[coluna], self.colunas[coluna + 1], topo, topo + self.altura, centro, tamanho)
 
 
-def _desenhar(c: canvas.Canvas, cel: Celula) -> None:
+def _desenhar(c: canvas.Canvas, cel: Celula, altura: float = ALTURA) -> None:
     tamanho = laudo_esterilizacao._caber(c, cel.texto, cel.x1 - cel.x0 - 4, cel.tamanho)
     c.setFont("Helvetica", tamanho)
-    base = ALTURA - (cel.topo + cel.base) / 2 - tamanho / 3
+    base = altura - (cel.topo + cel.base) / 2 - tamanho / 3  # altura da folha: A4 em pé ou deitado
     if cel.centro:
         c.drawCentredString((cel.x0 + cel.x1) / 2, base, cel.texto)
     else:
@@ -103,7 +103,7 @@ def preencher(modelo: bytes | None, demonstracao: Callable[[], bytes], celulas: 
         if deitada:
             _desenhar_deitada(c, cel, deitada["escala"], deitada["altura"])
         else:
-            _desenhar(c, cel)
+            _desenhar(c, cel, float(folha.mediabox.height))
     c.showPage()
     c.save()
     folha.merge_page(PdfReader(io.BytesIO(camada.getvalue())).pages[0])

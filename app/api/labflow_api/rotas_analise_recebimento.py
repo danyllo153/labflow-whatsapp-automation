@@ -5,6 +5,7 @@ bot (PB11): `registrar_recebimento` e `lancar_contagem`, as mesmas que o bot cha
 criado", mostrada antes do Confirmar), as mesmas recusas e o mesmo alarme. Permissão de chamar: migration 068.
 """
 
+import io
 import re
 from datetime import date, timedelta
 from typing import Literal
@@ -13,8 +14,10 @@ import psycopg
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from psycopg.types.json import Jsonb
 from pydantic import BaseModel, Field
+from pypdf import PdfReader
+from reportlab.pdfgen import canvas
 
-from labflow_api import rotas_turno
+from labflow_api import laudo_esterilizacao, laudos, rotas_turno
 from labflow_api.dependencias import PessoaLogada, obter_conexao
 from labflow_api.permissoes import exigir
 from labflow_api.rotas_admin import _recusa_do_banco
@@ -93,12 +96,20 @@ class FabricaNaoOk(BaseModel):
     lidos: int
 
 
+class LoadComPulo(BaseModel):
+    load: str
+    item: str
+    fabrica: str | None
+    faltam: str  # "3-4": lotes que pularam (já chegou lote depois deles), "* 3, 4" no laudo
+
+
 class Painel(BaseModel):
     atrasados: int
     para_hoje: int
     nao_ok_semana: int
     hoje: list[GrupoDeHoje]
     fabricas: list[FabricaNaoOk]
+    pulados: list[LoadComPulo]  # pedido de 24/10: avisar a amostra pulada até ela chegar
     pode_registrar: bool
 
 
@@ -151,9 +162,29 @@ def painel(pessoa: PessoaLogada = Depends(exigir("ver_paginas")), con: psycopg.C
     return Painel(
         atrasados=sum(g.n for g in hoje_lista if g.situacao == "Atrasado"),
         para_hoje=sum(g.n for g in hoje_lista if g.situacao == "Para hoje"),
-        nao_ok_semana=nao_ok_semana, hoje=hoje_lista, fabricas=fabricas,
+        nao_ok_semana=nao_ok_semana, hoje=hoje_lista, fabricas=fabricas, pulados=loads_com_pulo(con, hoje),
         pode_registrar=pessoa.cargo in ("Admin", "Analista"),
     )
+
+
+def loads_com_pulo(con: psycopg.Connection, hoje: date) -> list[LoadComPulo]:
+    """Loads dos últimos 60 dias com lote pulado: chegou o 10, mas o 3 e o 4 não. Sai da lista quando o lote chega ou
+    quando alguém dispensa o aviso (app.pulos_dispensados)."""
+    pulos = []
+    for load, item, fab, lotes, dispensados in con.execute(
+        """
+        SELECT l.numero, i.codigo, f.nome, array_agg(r.lote),
+               (SELECT array_agg(d.lote) FROM app.pulos_dispensados d WHERE d.load_id = l.id) FROM loads l JOIN itens i ON i.id = l.item_id
+        LEFT JOIN fabricas f ON f.id = l.fabrica_id JOIN recebimento_lotes r ON r.load_id = l.id
+        WHERE i.codigo <> '129' GROUP BY l.id, l.numero, i.codigo, f.nome HAVING max(r.data_recebimento) >= %s
+        ORDER BY max(r.data_recebimento) DESC, l.numero
+        """,
+        (hoje - timedelta(days=60),),
+    ):
+        faltam = [n for n in lotes_que_faltam(lotes) if n not in (dispensados or [])]
+        if faltam:
+            pulos.append(LoadComPulo(load=load, item=item, fabrica=fab, faltam=_faixas(faltam)))
+    return pulos
 
 
 # --- resultados ------------------------------------------------------------------------------------------------------
@@ -269,6 +300,7 @@ class Resposta(BaseModel):
     repetidos: list[int] = []
     gravados: int = 0
     alarmes: int = 0
+    pulados: list[int] = []  # no registrar: os lotes do load que ficam para trás, sem chegar, com este registro
 
 
 @roteador.post("/registrar", response_model=Resposta)
@@ -281,8 +313,53 @@ def registrar(
         con, "SELECT registrar_recebimento(%s, %s, %s, %s, %s, %s, false, %s)",
         (pessoa.usuario_id, pedido.load, pedido.item, pedido.fabrica, _lotes(pedido.lotes), pedido.data, pedido.previa),
     )
+    ja, dispensados = con.execute(
+        """
+        SELECT array_agg(r.lote), (SELECT array_agg(d.lote) FROM app.pulos_dispensados d WHERE d.load_id = l.id)
+        FROM recebimento_lotes r JOIN loads l ON l.id = r.load_id JOIN itens i ON i.id = l.item_id
+        WHERE l.numero = %s AND i.codigo = %s GROUP BY l.id
+        """,
+        (pedido.load.strip(), pedido.item.strip()),
+    ).fetchone() or (None, None)
     return Resposta(ok=r["ok"], previa=r["previa"], texto=r["texto"], novos=r.get("novos", []), repetidos=r.get("repetidos", []),
-                    gravados=len(r.get("novos", [])) if not r["previa"] else 0)
+                    gravados=len(r.get("novos", [])) if not r["previa"] else 0,
+                    pulados=[n for n in lotes_que_faltam([*(ja or []), *r.get("novos", [])]) if n not in (dispensados or [])])
+
+
+class Dispensa(BaseModel):
+    load: str = Field(max_length=10)
+    item: str = Field(max_length=10)
+    lotes: str = Field(max_length=200)  # "3-4"
+    motivo: str = Field(default="", max_length=200)  # opcional
+
+
+@roteador.post("/pulados/dispensar", response_model=Painel)
+def dispensar_pulo(
+    pedido: Dispensa, pessoa: PessoaLogada = Depends(exigir("registrar_analise")), con: psycopg.Connection = Depends(obter_conexao)
+) -> Painel:
+    """Tira o aviso de amostra pulada (Admin e Analista, pedido de 24/10). O "*" do laudo continua: o lote não veio."""
+    linha = con.execute(
+        """
+        SELECT l.id, array_agg(r.lote) FROM loads l JOIN itens i ON i.id = l.item_id JOIN recebimento_lotes r ON r.load_id = l.id
+        WHERE l.numero = %s AND i.codigo = %s GROUP BY l.id
+        """,
+        (pedido.load.strip(), pedido.item.strip()),
+    ).fetchone()
+    if not linha:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Load não encontrado.")
+    load_id, recebidos = linha
+    pedidos = _lotes(pedido.lotes)
+    fora = [n for n in pedidos if n not in lotes_que_faltam(recebidos)]
+    if fora:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, f"Não há aviso de amostra pulada para o lote {_faixas(fora)}.")
+    con.execute(
+        """
+        INSERT INTO app.pulos_dispensados (load_id, lote, motivo, dispensado_por)
+        SELECT %s, n, nullif(%s, ''), %s FROM unnest(%s::int[]) n ON CONFLICT DO NOTHING
+        """,
+        (load_id, pedido.motivo.strip(), pessoa.usuario_id, pedidos),
+    )
+    return painel(pessoa, con)
 
 
 class ItemLancado(BaseModel):
@@ -417,3 +494,145 @@ def criar_compostas(
     grupos = _grupos(pedido.grupos)
     r = _chamar(con, "SELECT criar_compostas(%s, %s, %s, %s, %s)", (pessoa.usuario_id, pedido.load, pedido.item, Jsonb(grupos), pedido.previa))
     return RespostaCompostas(ok=r["ok"], previa=r["previa"], texto=r["texto"], criadas=r.get("criadas", 0))
+
+
+# --- laudo (APP-059): "Laudo de Análises Microbiológicas – Recebimento", A4 deitado, uma linha por lote --------------
+# Como no papel (fotos de 24/10): Load, Fábrica e Item só na primeira linha do load na folha; a data muda quando o lote
+# chegou em outro dia; na Observação, "* 33, 34, 37, 38" = os lotes que faltam na sequência do load (saem quando chegam).
+# Analista Responsável = quem registrou os lotes da folha; o Visto é à mão. Geometria medida no PDF do modelo (LAB/001,
+# revisão 7, enviado pelo Danyllo em 24/10; o PDF fica fora do Git, no banco).
+
+NOME_DO_LAUDO = "recebimento-fcoj"
+DIAS_PARA_TRAS = 7  # na primeira vez, a folha começa com os lotes da última semana
+LARGURA_DEITADA, ALTURA_DEITADA = 841.89, 595.28
+TABELA = laudos.Tabela(
+    colunas=(21.0, 91.8, 182.2, 272.7, 347.1, 432.2, 495.9, 566.9, 644.9, 815.2), topo=179.3, base=393.8, linhas=15
+)
+CABECALHO, SUBCABECALHO = 137.3, 165.0  # topo da tabela e a linha de baixo de "C.T." e "B.L." (onde começam 48h, 72h e 120h)
+COLUNAS_DO_PAPEL = ("Load", "Fábrica", "Item", "Lote", "Data da Análise", "48h", "72h", "120h", "Observação")
+LINHA_DO_ANALISTA = (136.5, 562.6, 438.5, 451.5)  # x0, x1, topo e base do traço "Analista Responsável"
+
+
+def _demonstracao() -> bytes:
+    """Folha deitada com o título, os cabeçalhos, as 15 linhas e o rodapé, na geometria do papel (sem dado da empresa)."""
+    saida = io.BytesIO()
+    c = canvas.Canvas(saida, pagesize=(LARGURA_DEITADA, ALTURA_DEITADA))
+    y = lambda topo: ALTURA_DEITADA - topo  # noqa: E731
+    col = TABELA.colunas
+    c.setFont("Helvetica-BoldOblique", 11)
+    c.drawCentredString(LARGURA_DEITADA / 2, y(121), "Laudo de Análises Microbiológicas – Recebimento (modelo de demonstração)")
+    c.setLineWidth(0.6)
+    c.rect(col[0], y(TABELA.base), col[-1] - col[0], TABELA.base - CABECALHO)
+    c.line(col[5], y(SUBCABECALHO), col[8], y(SUBCABECALHO))
+    for x in col[1:-1]:
+        c.line(x, y(SUBCABECALHO if x == col[7] else CABECALHO), x, y(TABELA.base))
+    for i in range(TABELA.linhas):
+        c.line(col[0], y(TABELA.topo + i * TABELA.altura), col[-1], y(TABELA.topo + i * TABELA.altura))
+    c.setFont("Helvetica", 9)
+    for x0, x1, nome in zip(col, col[1:], COLUNAS_DO_PAPEL):
+        c.drawCentredString((x0 + x1) / 2, y(176 if nome in ("48h", "72h", "120h") else 150), nome)
+    c.drawCentredString((col[5] + col[6]) / 2, y(150), "C.T. (UFC/ml)")
+    c.drawCentredString((col[6] + col[8]) / 2, y(150), "B.L. (UFC/ml)")
+    c.drawString(26.6, y(419), "C.T. = Contagem Total e B.L. = Bolores e Leveduras")
+    c.drawString(26.6, y(448), "Analista Responsável:")
+    c.line(LINHA_DO_ANALISTA[0], y(450), LINHA_DO_ANALISTA[1], y(450))
+    c.drawString(565.6, y(448), "Visto:")
+    c.line(598.0, y(450), 808.2, y(450))
+    c.drawString(26.6, y(476), "Responsável pela Correta Aplicação:")
+    c.line(207.0, y(478), 807.4, y(478))
+    c.showPage()
+    c.save()
+    return saida.getvalue()
+
+
+def modelo_deitado_valido(pdf: bytes) -> None:
+    """O modelo do recebimento é uma página A4 deitada (ValueError com a mensagem para a pessoa)."""
+    if not pdf.startswith(b"%PDF"):
+        raise ValueError("Esse arquivo não é um PDF.")
+    try:
+        leitor = PdfReader(io.BytesIO(pdf))
+        paginas = len(leitor.pages)
+        largura, altura = float(leitor.pages[0].mediabox.width), float(leitor.pages[0].mediabox.height)
+    except Exception as e:  # PDF quebrado
+        raise ValueError("Não consegui abrir esse PDF.") from e
+    if paginas != 1:
+        raise ValueError("O modelo deve ter uma página só (a folha com as linhas em branco).")
+    if abs(largura - LARGURA_DEITADA) > 6 or abs(altura - ALTURA_DEITADA) > 6:
+        raise ValueError("O modelo do recebimento deve ser A4 deitado, como o laudo da empresa.")
+
+
+def lotes_que_faltam(lotes: list[int]) -> list[int]:
+    """Os buracos na sequência dos lotes recebidos do load: [23..32, 35, 36, 39, 40] -> [33, 34, 37, 38]."""
+    tem = set(lotes)
+    return [n for n in range(min(tem), max(tem) + 1) if n not in tem] if tem else []
+
+
+def distribuir_lotes(con: psycopg.Connection) -> None:
+    """Põe nas folhas, na ordem do recebimento, os lotes que ainda não têm linha. Trava para duas telas não dividirem uma vaga."""
+    con.execute("SELECT pg_advisory_xact_lock(60, hashtext(%s))", (NOME_DO_LAUDO,))
+    inicio = con.execute(
+        "SELECT min(r.data_recebimento) FROM app.recebimento_laudo x JOIN recebimento_lotes r ON r.id = x.recebimento_lote_id"
+    ).fetchone()[0] or _hoje(con) - timedelta(days=DIAS_PARA_TRAS)
+    for (lote_id,) in con.execute(
+        """
+        SELECT r.id FROM recebimento_lotes r JOIN loads l ON l.id = r.load_id JOIN itens i ON i.id = l.item_id
+        WHERE i.codigo <> '129' AND r.data_recebimento >= %s
+          AND NOT EXISTS (SELECT 1 FROM app.recebimento_laudo x WHERE x.recebimento_lote_id = r.id)
+        ORDER BY r.data_recebimento, r.id
+        """,
+        (inicio,),
+    ).fetchall():
+        con.execute(
+            "INSERT INTO app.recebimento_laudo (recebimento_lote_id, pagina_id) VALUES (%s, %s)",
+            (lote_id, laudos.pagina_com_vaga(con, NOME_DO_LAUDO)),
+        )
+
+
+def _gerar_laudo(con: psycopg.Connection, pagina_id: int, modelo: bytes | None) -> bytes:
+    linhas = con.execute(
+        """
+        SELECT l.id, l.numero, f.nome, i.codigo, r.lote, r.data_recebimento,
+               (SELECT jsonb_object_agg(c.analise, jsonb_build_object('sinal', c.sinal, 'valor', c.valor))
+                FROM contagens c WHERE c.recebimento_lote_id = r.id),
+               (SELECT array_agg(r2.lote) FROM recebimento_lotes r2 WHERE r2.load_id = l.id),
+               coalesce(u.nome, cr.usuario)
+        FROM app.recebimento_laudo x JOIN recebimento_lotes r ON r.id = x.recebimento_lote_id
+        JOIN loads l ON l.id = r.load_id JOIN itens i ON i.id = l.item_id LEFT JOIN fabricas f ON f.id = l.fabrica_id
+        LEFT JOIN usuarios u ON u.id = r.registrado_por LEFT JOIN app.credenciais cr ON cr.usuario_id = r.registrado_por
+        WHERE x.pagina_id = %s ORDER BY x.incluido_em, r.data_recebimento, l.numero, r.lote
+        """,
+        (pagina_id,),
+    ).fetchall()
+    celulas, anterior, analistas = [], (None, None), []
+    for n, (load_id, load, fab, item, lote, recebido, leituras, todos, quem) in enumerate(linhas):
+        primeira = load_id != anterior[0]
+        leituras = leituras or {}
+        faltam = lotes_que_faltam(todos or []) if primeira else []
+        textos = [
+            load if primeira else "", (fab or "") if primeira else "", item if primeira else "", str(lote),
+            recebido.strftime("%d.%m.%y") if primeira or recebido != anterior[1] else "",
+            *(_texto(leituras.get(cod)) or "" for cod in ANALISES),
+            ("* " + ", ".join(map(str, faltam))) if faltam else "",
+        ]
+        for i, texto in enumerate(textos):
+            celulas.append(TABELA.celula(texto, n, i, centro=i != 8, tamanho=8.5))
+        anterior = (load_id, recebido)
+        nome = laudo_esterilizacao.primeiro_nome(quem) if quem else ""
+        if nome and nome not in analistas:
+            analistas.append(nome)
+    if analistas:
+        x0, x1, topo, base = LINHA_DO_ANALISTA
+        celulas.append(laudos.Celula(", ".join(analistas), x0, x1, topo, base, centro=False, tamanho=10))
+    return laudos.preencher(modelo, _demonstracao, celulas)
+
+
+laudos.registrar(
+    laudos.Laudo(
+        nome=NOME_DO_LAUDO, titulo="Recebimento de FCOJ", modelo=NOME_DO_LAUDO, capacidade=TABELA.linhas,
+        contar_sql="""
+            SELECT count(*), min(r.data_recebimento), max(r.data_recebimento)
+            FROM app.recebimento_laudo x JOIN recebimento_lotes r ON r.id = x.recebimento_lote_id WHERE x.pagina_id = %s
+        """,
+        gerar=_gerar_laudo, aceitar_modelo=modelo_deitado_valido, preparar=distribuir_lotes,
+    )
+)

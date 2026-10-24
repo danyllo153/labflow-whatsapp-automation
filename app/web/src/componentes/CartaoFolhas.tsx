@@ -29,7 +29,8 @@ export default function CartaoFolhas() {
   if (!folha) return null;
   const cheias = folhas.reduce((s, f) => s + f.cheias, 0);
   const faltam = folha.capacidade - folha.linhas;
-  const unidade = folha.laudo === "incubacao" ? "dia" : "linha"; // a folha de incubação enche por dia, não por linha
+  // a folha de incubação enche por dia, e a do recebimento por lote
+  const unidade = folha.laudo === "incubacao" ? "dia" : folha.laudo === "recebimento-fcoj" ? "lote" : "linha";
   const porcento = Math.round((folha.linhas / folha.capacidade) * 100);
 
   return (
@@ -42,7 +43,7 @@ export default function CartaoFolhas() {
       </div>
       {cheias === 0 && (
         <div className="cartao-folhas-barra">
-          <div className="barra-trilho" role="progressbar" aria-valuemin={0} aria-valuemax={folha.capacidade} aria-valuenow={folha.linhas} aria-label={unidade === "dia" ? "Dias preenchidos" : "Linhas preenchidas"}>
+          <div className="barra-trilho" role="progressbar" aria-valuemin={0} aria-valuemax={folha.capacidade} aria-valuenow={folha.linhas} aria-label={unidade === "dia" ? "Dias preenchidos" : unidade === "lote" ? "Lotes preenchidos" : "Linhas preenchidas"}>
             <div className="barra-cheia" style={{ width: `${porcento}%` }} />
           </div>
           <span>

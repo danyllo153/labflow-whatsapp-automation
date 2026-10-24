@@ -5,6 +5,7 @@ import { enviarJson, lerJson } from "../../api";
 import { dm } from "../../componentes/SeletorDeDias";
 import { FABRICAS } from "../dados/definicoes";
 import { classeDaSituacao } from "../dados/formatos";
+import LaudoEsterilizacao from "../LaudoEsterilizacao";
 
 /**
  * Recebimento FCOJ como um app (Fase E, E2; APP-057): Painel, Registrar, Resultados, Laudo, Instrução e Vídeo numa
@@ -22,6 +23,15 @@ export const ATALHOS_DO_APP = [
   { aba: "video", rotulo: "Vídeo" },
 ];
 
+const LAUDO = {
+  base: "/laudos/recebimento-fcoj",
+  titulo: "Laudo do recebimento de FCOJ",
+  rotulo: "Laudo do recebimento de FCOJ",
+  explicacao:
+    "Como o papel: A4 deitado, um lote por linha, 15 por folha. O lote entra sozinho quando é registrado; os resultados aparecem conforme são lançados; na Observação, os lotes que faltam na sequência (*). O Analista Responsável é quem registrou; o Visto é à mão. Quando sair uma revisão nova do modelo, o Admin envia o PDF atualizado aqui.",
+  unidade: "lotes",
+};
+
 interface GrupoDeHoje {
   analise: string;
   situacao: "Atrasado" | "Para hoje";
@@ -35,6 +45,7 @@ interface Painel {
   nao_ok_semana: number;
   hoje: GrupoDeHoje[];
   fabricas: { fabrica: string; nao_ok: number; lidos: number }[];
+  pulados: { load: string; item: string; fabrica: string | null; faltam: string }[];
   pode_registrar: boolean;
 }
 
@@ -63,6 +74,14 @@ interface Resposta {
   texto: string;
   gravados: number;
   alarmes: number;
+  pulados?: number[];
+}
+
+/** "3, 4" -> o aviso de amostra pulada (pedido de 24/10): chegou lote depois, mas estes ainda não. */
+function avisoDePulo(lotes: number[]) {
+  const n = lotes.length;
+  const lista = n > 1 ? `${lotes.slice(0, -1).join(", ")} e ${lotes[n - 1]}` : String(lotes[0]);
+  return `${n > 1 ? "Os lotes" : "O lote"} ${lista} ${n > 1 ? "ainda não chegaram" : "ainda não chegou"} e já vieram lotes depois: ${n > 1 ? "ficam" : "fica"} com * no laudo até chegar.`;
 }
 
 const ANALISES = [
@@ -129,7 +148,7 @@ export default function RecebimentoFcoj() {
           <p className="mensagem-erro">{erro}</p>
         </div>
       )}
-      {aba === "painel" && (painel ? <PainelDoRecebimento painel={painel} irPara={irPara} /> : !erro && <p className="carregando">Carregando...</p>)}
+      {aba === "painel" && (painel ? <PainelDoRecebimento painel={painel} irPara={irPara} aoAtualizar={setPainel} /> : !erro && <p className="carregando">Carregando...</p>)}
       {aba === "registrar" && (
         <Registrar
           pode={painel?.pode_registrar ?? false}
@@ -147,11 +166,12 @@ export default function RecebimentoFcoj() {
           aoGravar={() => void carregarPainel()}
         />
       )}
+      {aba === "laudo" && painel?.pode_registrar && <LaudoEsterilizacao versao={0} config={LAUDO} />}
       {aba === "laudo" && (
         <div className="cartao">
-          <h2>Laudo</h2>
-          <p>
-            A página do Recebimento FCOJ tem a tabela pronta para imprimir e exportar para o Excel, com o gráfico por fábrica.
+          <h2>Tabela e correções</h2>
+          <p className="texto-secundario">
+            A página do Recebimento FCOJ tem a tabela para imprimir e exportar para o Excel, com o gráfico por fábrica.
           </p>
           <div className="botoes-lado">
             <Link className="botao botao-principal" to="/paginas/recebimento">
@@ -182,7 +202,15 @@ export default function RecebimentoFcoj() {
   );
 }
 
-function PainelDoRecebimento({ painel, irPara }: { painel: Painel; irPara: (aba: string, extra?: Record<string, string>) => void }) {
+function PainelDoRecebimento({
+  painel,
+  irPara,
+  aoAtualizar,
+}: {
+  painel: Painel;
+  irPara: (aba: string, extra?: Record<string, string>) => void;
+  aoAtualizar: (p: Painel) => void;
+}) {
   const maior = Math.max(1, ...painel.fabricas.map((f) => f.nao_ok));
   return (
     <>
@@ -200,6 +228,17 @@ function PainelDoRecebimento({ painel, irPara }: { painel: Painel; irPara: (aba:
           <span>Não ok na semana</span>
         </div>
       </div>
+      {painel.pulados.length > 0 && (
+        <div className="cartao aviso-pulo" role="status" aria-label="Amostras puladas">
+          <h2>Amostras puladas</h2>
+          <p className="texto-secundario">Chegaram lotes depois destes, mas eles ainda não vieram. O aviso sai quando chegarem.</p>
+          <ul>
+            {painel.pulados.map((p) => (
+              <Pulo key={`${p.load}-${p.item}`} pulo={p} pode={painel.pode_registrar} aoDispensar={aoAtualizar} />
+            ))}
+          </ul>
+        </div>
+      )}
       <div className="painel-app-grade">
         <div className="cartao">
           <h2>Para fazer agora</h2>
@@ -254,6 +293,65 @@ function PainelDoRecebimento({ painel, irPara }: { painel: Painel; irPara: (aba:
   );
 }
 
+/** Um load com amostra pulada; o Admin e o Analista podem dispensar o aviso, com o motivo se quiserem (pedido de 24/10). */
+function Pulo({ pulo, pode, aoDispensar }: { pulo: Painel["pulados"][number]; pode: boolean; aoDispensar: (p: Painel) => void }) {
+  const [abrindo, setAbrindo] = useState(false);
+  const [motivo, setMotivo] = useState("");
+  const [erro, setErro] = useState("");
+  const [enviando, setEnviando] = useState(false);
+
+  async function dispensar() {
+    setEnviando(true);
+    setErro("");
+    try {
+      aoDispensar(
+        await enviarJson<Painel>("/analises/recebimento-fcoj/pulados/dispensar", { load: pulo.load, item: pulo.item, lotes: pulo.faltam, motivo }),
+      );
+    } catch (e) {
+      setErro(mensagem(e, "Não foi possível dispensar o aviso."));
+      setEnviando(false);
+    }
+  }
+
+  return (
+    <li>
+      <strong>L {pulo.load}</strong>{" "}
+      <span className="texto-secundario">
+        · {pulo.item}
+        {pulo.fabrica ? ` · ${pulo.fabrica}` : ""}
+      </span>
+      : faltam <strong>{pulo.faltam}</strong>
+      {pode && !abrindo && (
+        <button type="button" className="botao-link" onClick={() => setAbrindo(true)}>
+          Dispensar aviso
+        </button>
+      )}
+      {abrindo && (
+        <div className="dispensar-pulo">
+          <label className="campo">
+            Motivo (opcional)
+            <input maxLength={200} value={motivo} placeholder="ex.: amostra perdida no transporte" onChange={(e) => setMotivo(e.target.value)} />
+          </label>
+          <p className="texto-secundario">O aviso sai do app; no laudo, o lote continua com * (não chegou).</p>
+          {erro && (
+            <p className="mensagem-erro" role="alert">
+              {erro}
+            </p>
+          )}
+          <div className="botoes-lado">
+            <button type="button" className="botao botao-principal" disabled={enviando} onClick={() => void dispensar()}>
+              Dispensar aviso do load {pulo.load}
+            </button>
+            <button type="button" className="botao botao-simples" onClick={() => (setAbrindo(false), setMotivo(""))}>
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+    </li>
+  );
+}
+
 function Registrar({ pode, aoGravar, aoCompor }: { pode: boolean; aoGravar: () => void; aoCompor: (load: string) => void }) {
   const [campos, setCampos] = useState({ load: "", item: "", fabrica: "", lotes: "", data: hojeEmSaoPaulo() });
   const [previa, setPrevia] = useState<Resposta | null>(null);
@@ -270,7 +368,7 @@ function Registrar({ pode, aoGravar, aoCompor }: { pode: boolean; aoGravar: () =
     try {
       const r = await enviarJson<Resposta>("/analises/recebimento-fcoj/registrar", { ...campos, previa: !confirmar });
       if (confirmar) {
-        setFeito(r.texto);
+        setFeito(r.pulados && r.pulados.length > 0 ? `${r.texto} ⚠️ ${avisoDePulo(r.pulados)}` : r.texto);
         setRegistrado(campos.load.trim());
         setPrevia(null);
         setCampos({ ...campos, load: "", lotes: "" });
@@ -339,6 +437,7 @@ function Registrar({ pode, aoGravar, aoCompor }: { pode: boolean; aoGravar: () =
         <div className="previa-app" role="status">
           <strong>O que vai ser criado</strong>
           <p>{previa.texto}</p>
+          {previa.pulados && previa.pulados.length > 0 && <p className="aviso-pulo-texto">⚠️ {avisoDePulo(previa.pulados)}</p>}
           <div className="botoes-lado">
             <button type="button" className="botao botao-principal" disabled={enviando || previa.texto.includes("nada novo")} onClick={() => void enviar(true)}>
               Confirmar

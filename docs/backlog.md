@@ -32,7 +32,9 @@
 
 ### 📱 App (sessão da nuvem)
 - [x] **Compostas no Recebimento FCOJ** (24/10, APP-058): recomendado de ~5 por composta e prévia
-- [ ] **Laudo do Recebimento FCOJ no modelo original**, preenchido com os loads registrados (precisa do Danyllo: o modelo em PDF)
+- [x] **Laudo do Recebimento FCOJ** (24/10, APP-059, migration 070): como o papel (deitado, um lote por linha, faltantes com *), envio do modelo na aba Laudo
+- [ ] **Arquivo de amostras** (bot e app): caixa de cada load ("CX: 128" na Observação do laudo), bags, potes, recebimento e embarque
+- [x] **Aviso de amostra pulada** (24/10, APP-059): na prévia do registro e no Painel do Recebimento, até o lote chegar; sem "finalizar load" (decisão de 24/10)
 - [ ] **▶ Fase E, E3 em diante:** a 069 (no ar em 24/10) dá ao app as funções da 042 a 047; próximo: um app por análise em cima delas (tanques, testes, drops, embarque, NFC, desvios)
 - [x] **Fase E, E1 e E2** (24/10, APP-057, migration 068): Páginas como tela de apps e o Recebimento FCOJ como app (painel, registrar e lançar pelas funções da 040). Próximo: E3 em diante, um app por análise, conforme o bot entregar PB12 a PB17
 - [x] **Marcos 3 e 4 mesclados** (23/10): turno com atividades fixas, relatório e encerrar (#181, #183, #185), esterilização com o G4 (#188), estufas (#189), Admin de turnos/atividades/estufas (#190) e **corrigir/excluir/recuperar coleta pelo app** (APP-029, #191)
