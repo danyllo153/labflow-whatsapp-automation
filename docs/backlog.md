@@ -13,6 +13,7 @@
 - [x] **PB11, funções do recebimento de FCOJ para o app** (24/10, #244, migration 040): `registrar_recebimento` e `lancar_contagem`, com prévia e o mesmo alarme
 - [x] **O bot chama a 040** (24/10, migration 041) no recebimento (`BD · Gravar recebimento`) e no lançamento de C.T/B.L, no lugar do SQL próprio (mesma regra do app)
 - [x] **PB14, tanques** (24/10, migration 042): coleta, análise, leituras e placas por funções do banco, o bot já usando
+- [x] **PB13, compostas, TAB, Coliformes e Howard** (24/10, migration 043), o bot já usando; falta passar as fotos de TAB/Coliformes e o TAB de tanque "completo" pelas funções
 - [ ] **Fase E, próximas funções do banco** (pedido do app, #243): PB14 tanques (042), PB13 compostas/TAB/Coliformes/Howard (043), PB15 drops (044), PB12 embarque (045), PB16 NFC recebido (046), PB17 desvios e leitura do dia (047); cada uma já com a porta de entrada do bot e o bot usando
 - [x] **TAB do load 43699 gravado à mão** (23/10): 10 compostas positivas confirmadas, feito em 13/10; criadas #87 (1-3) e #88 (4-6)
 - [x] **Corrigir resultado de C.T/B.L com um comando curto** (24/10, #240, migration 039, `pre77`): `corrigir ct do load 43755 para <1 motivo ...`; motivo obrigatório para o Analista, opcional para o Admin (#238); testado ao vivo até a prévia

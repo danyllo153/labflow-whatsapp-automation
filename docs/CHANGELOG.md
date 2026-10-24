@@ -23,6 +23,9 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
   início" ajusta o começo do lote em uso quando preciso.
 
 ### Adicionado
+- **Compostas, TAB, Coliformes e Howard por funções do banco** (PB13 da Fase E, migration `043`, 24/10): `criar_compostas`,
+  `teste_feito` e `teste_acao` (espalhar, confirmar, negativos, resultado, abrir lote a lote e Howard), as mesmas para o bot e
+  o app. O bot já usa nos comandos e no "sim"; se o banco recusar, diz por quê.
 - **Tanques por funções do banco** (PB14 da Fase E, migration `042`, 24/10): `registrar_coleta`, `registrar_analise`,
   `concluir_leitura` e `lancar_placas`, as mesmas para o bot e o app. O bot já grava coleta, análise, leituras e placas por elas.
   Novo: a mesma análise (frasco e data) na mesma coleta é recusada, em vez de duplicar.
