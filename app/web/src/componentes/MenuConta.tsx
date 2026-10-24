@@ -8,7 +8,7 @@ import Icone from "./Icone";
 
 /**
  * Canto direito da barra do topo (APP-032), como nos LIMS: só dois símbolos. A engrenagem leva às configurações
- * (aparência e senha, em Minha conta); o boneco abre um menu com quem está logada, o cargo, trocar senha e sair.
+ * (aparência e senha, em Minha conta); o avatar com as iniciais (24/10) abre um menu com quem está logada, o cargo, trocar senha e sair.
  */
 export default function MenuConta() {
   const { pessoa, sair } = useSessao();
@@ -42,14 +42,16 @@ export default function MenuConta() {
       </Link>
       <button
         type="button"
-        className="icone-topo"
+        className="icone-topo botao-avatar"
         aria-label={`Conta de ${nome}`}
         title={nome}
         aria-haspopup="menu"
         aria-expanded={aberto}
         onClick={() => setAberto(!aberto)}
       >
-        <Icone caminho="@usuario" />
+        <span className="avatar" aria-hidden="true">
+          {iniciais(nome)}
+        </span>
       </button>
       {aberto && (
         <div className="menu-conta" role="menu" aria-label="Conta">
@@ -75,4 +77,12 @@ export default function MenuConta() {
       )}
     </div>
   );
+}
+
+/** "Ana Souza" → "AS"; "ana" → "A". */
+export function iniciais(nome: string | undefined): string {
+  const partes = (nome ?? "").trim().split(/\s+/).filter(Boolean);
+  if (partes.length === 0) return "?";
+  const letras = partes.length === 1 ? partes[0][0] : partes[0][0] + partes[partes.length - 1][0];
+  return letras.toUpperCase();
 }
