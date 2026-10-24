@@ -2,6 +2,7 @@ import { NavLink, Outlet } from "react-router-dom";
 
 import { MENU } from "../menu";
 import { useSessao } from "../sessao";
+import CartaoFolhas from "./CartaoFolhas";
 import ChipEquipe from "./ChipEquipe";
 import FaixaDemonstracao from "./FaixaDemonstracao";
 import Icone from "./Icone";
@@ -31,6 +32,7 @@ export default function Moldura() {
             </NavLink>
           ))}
         </nav>
+        <CartaoFolhas />
       </aside>
 
       <div className="coluna">

@@ -104,6 +104,7 @@ Usuário e senha. Primeiro acesso e recuperação de senha em [06](06-api-e-auth
 | Conservação bicicletas | | |
 
 Item com dia certo (ex.: "só às sextas") aparece só nesse dia.
+- **Visual repaginado, parte 2 (APP-055, 24/10):** abaixo dos blocos, o **gráfico da semana** com o que foi concluído em cada um dos últimos 7 dias (TAB, Coliformes, NFC = leituras de tanque e drops, C.T/B.L = leituras de recebimento, embarque e NFC recebido), com a legenda e os totais ao lado (`GET /painel/semana`). No pé do menu lateral (computador), o **cartão das folhas**: a folha de laudo mais perto de encher ("faltam N linhas", barra de progresso) ou as folhas cheias esperando impressão, com "Ver o laudo" (`GET /painel/folhas`). O conteúdo ocupa a largura toda da tela, e no modo escuro os blocos coloridos ficam mais escuros e menos saturados.
 
 ### 4. Relatório do turno (página compartilhada)
 **Uma página por turno e por dia**, a mesma para todos do turno, atualizada ao vivo.
