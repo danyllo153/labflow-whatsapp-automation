@@ -96,12 +96,20 @@ class FabricaNaoOk(BaseModel):
     lidos: int
 
 
+class LoadComPulo(BaseModel):
+    load: str
+    item: str
+    fabrica: str | None
+    faltam: str  # "3-4": lotes que pularam (já chegou lote depois deles), "* 3, 4" no laudo
+
+
 class Painel(BaseModel):
     atrasados: int
     para_hoje: int
     nao_ok_semana: int
     hoje: list[GrupoDeHoje]
     fabricas: list[FabricaNaoOk]
+    pulados: list[LoadComPulo]  # pedido de 24/10: avisar a amostra pulada até ela chegar
     pode_registrar: bool
 
 
@@ -154,9 +162,27 @@ def painel(pessoa: PessoaLogada = Depends(exigir("ver_paginas")), con: psycopg.C
     return Painel(
         atrasados=sum(g.n for g in hoje_lista if g.situacao == "Atrasado"),
         para_hoje=sum(g.n for g in hoje_lista if g.situacao == "Para hoje"),
-        nao_ok_semana=nao_ok_semana, hoje=hoje_lista, fabricas=fabricas,
+        nao_ok_semana=nao_ok_semana, hoje=hoje_lista, fabricas=fabricas, pulados=loads_com_pulo(con, hoje),
         pode_registrar=pessoa.cargo in ("Admin", "Analista"),
     )
+
+
+def loads_com_pulo(con: psycopg.Connection, hoje: date) -> list[LoadComPulo]:
+    """Loads dos últimos 60 dias com lote pulado: chegou o 10, mas o 3 e o 4 não. Sai da lista quando o lote chega."""
+    pulos = []
+    for load, item, fab, lotes in con.execute(
+        """
+        SELECT l.numero, i.codigo, f.nome, array_agg(r.lote) FROM loads l JOIN itens i ON i.id = l.item_id
+        LEFT JOIN fabricas f ON f.id = l.fabrica_id JOIN recebimento_lotes r ON r.load_id = l.id
+        WHERE i.codigo <> '129' GROUP BY l.id, l.numero, i.codigo, f.nome HAVING max(r.data_recebimento) >= %s
+        ORDER BY max(r.data_recebimento) DESC, l.numero
+        """,
+        (hoje - timedelta(days=60),),
+    ):
+        faltam = lotes_que_faltam(lotes)
+        if faltam:
+            pulos.append(LoadComPulo(load=load, item=item, fabrica=fab, faltam=_faixas(faltam)))
+    return pulos
 
 
 # --- resultados ------------------------------------------------------------------------------------------------------
@@ -272,6 +298,7 @@ class Resposta(BaseModel):
     repetidos: list[int] = []
     gravados: int = 0
     alarmes: int = 0
+    pulados: list[int] = []  # no registrar: os lotes do load que ficam para trás, sem chegar, com este registro
 
 
 @roteador.post("/registrar", response_model=Resposta)
@@ -284,8 +311,14 @@ def registrar(
         con, "SELECT registrar_recebimento(%s, %s, %s, %s, %s, %s, false, %s)",
         (pessoa.usuario_id, pedido.load, pedido.item, pedido.fabrica, _lotes(pedido.lotes), pedido.data, pedido.previa),
     )
+    ja = con.execute(
+        "SELECT array_agg(r.lote) FROM recebimento_lotes r JOIN loads l ON l.id = r.load_id JOIN itens i ON i.id = l.item_id"
+        " WHERE l.numero = %s AND i.codigo = %s",
+        (pedido.load.strip(), pedido.item.strip()),
+    ).fetchone()[0] or []
     return Resposta(ok=r["ok"], previa=r["previa"], texto=r["texto"], novos=r.get("novos", []), repetidos=r.get("repetidos", []),
-                    gravados=len(r.get("novos", [])) if not r["previa"] else 0)
+                    gravados=len(r.get("novos", [])) if not r["previa"] else 0,
+                    pulados=lotes_que_faltam([*ja, *r.get("novos", [])]))
 
 
 class ItemLancado(BaseModel):

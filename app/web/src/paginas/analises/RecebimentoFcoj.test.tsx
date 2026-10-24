@@ -16,6 +16,7 @@ const PAINEL = {
     { analise: "B.L 72h", situacao: "Para hoje", n: 1, loads: "L 98705 (3)" },
   ],
   fabricas: [{ fabrica: "COL", nao_ok: 1, lidos: 12 }],
+  pulados: [{ load: "98709", item: "99902", fabrica: "UCH", faltam: "33-34, 37-38" }],
   pode_registrar: true,
 };
 
@@ -80,6 +81,8 @@ describe("Recebimento FCOJ como app (Fase E, E2)", () => {
     expect(await screen.findByText("L 98704 (1-2)")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /2\s*Atrasados/ })).toBeInTheDocument();
     expect(screen.getByText("1 de 12")).toBeInTheDocument();
+    const pulos = screen.getByRole("status", { name: "Amostras puladas" });
+    expect(within(pulos).getByText("33-34, 37-38")).toBeInTheDocument();
     const abas = screen.getByRole("navigation", { name: "Partes do Recebimento FCOJ" });
     expect(within(abas).getAllByRole("button").map((b) => b.textContent?.replace(/\d+$/, ""))).toEqual([
       "Painel", "Registrar", "Compostas", "Resultados", "Laudo", "Instrução", "Vídeo",
@@ -90,7 +93,7 @@ describe("Recebimento FCOJ como app (Fase E, E2)", () => {
     const api = abrir("/analises/recebimento-fcoj?aba=registrar", {
       "POST /analises/recebimento-fcoj/registrar": (corpo) => ({
         status: 200,
-        corpo: { ok: true, previa: corpo.previa, texto: "Load 98701 novo (item 99902, fábrica AQA): lotes 1-3 (3), recebidos em 24/10/2026.", gravados: corpo.previa ? 0 : 3, alarmes: 0 },
+        corpo: { ok: true, previa: corpo.previa, texto: "Load 98701 novo (item 99902, fábrica AQA): lotes 1-3 (3), recebidos em 24/10/2026.", gravados: corpo.previa ? 0 : 3, alarmes: 0, pulados: [4] },
       }),
     });
     const form = await screen.findByRole("form", { name: "Registrar recebimento" });
@@ -100,6 +103,7 @@ describe("Recebimento FCOJ como app (Fase E, E2)", () => {
     await userEvent.type(within(form).getByLabelText("Lotes"), "1-3");
     await userEvent.click(within(form).getByRole("button", { name: "Ver o que vai ser criado" }));
     expect(await within(form).findByText(/Load 98701 novo/)).toBeInTheDocument();
+    expect(within(form).getByText(/O lote 4 ainda não chegou e já vieram lotes depois/)).toBeInTheDocument();
     expect(api.chamadas.filter((c) => c.rota.startsWith("POST")).map((c) => c.corpo.previa)).toEqual([true]);
 
     await userEvent.click(within(form).getByRole("button", { name: "Confirmar" }));

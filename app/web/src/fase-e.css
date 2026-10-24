@@ -532,3 +532,20 @@ button.numero-app {
   flex: 1 1 220px;
   margin: 0;
 }
+
+/* amostras puladas (24/10): aviso até o lote chegar */
+.aviso-pulo {
+  border-color: var(--aviso-borda, var(--borda));
+  background: var(--aviso-fundo, var(--cartao));
+  margin-bottom: 14px;
+}
+
+.aviso-pulo ul {
+  margin: 6px 0 0;
+  padding-left: 18px;
+}
+
+.aviso-pulo-texto {
+  color: var(--pendente-texto, #7a5800);
+  font-weight: 600;
+}

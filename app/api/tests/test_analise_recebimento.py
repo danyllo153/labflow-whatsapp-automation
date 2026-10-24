@@ -201,3 +201,18 @@ def test_laudo_recebe_os_loads_sozinho_e_gera_o_pdf(cliente, logado, hoje):
 def test_laudo_do_recebimento_no_banco(conexao):
     assert conexao.execute("SELECT has_table_privilege('labflow_app_web', 'app.recebimento_laudo', 'INSERT')").fetchone()[0]
     assert not conexao.execute("SELECT has_table_privilege('labflow_app_web', 'app.recebimento_laudo', 'DELETE')").fetchone()[0]
+
+
+def test_amostra_pulada_avisa_no_registrar_e_no_painel(cliente, logado, hoje):
+    logado()
+    pedido = {"load": "98708", "item": "99902", "fabrica": "AQA", "lotes": "1-2, 5-10", "data": str(hoje)}
+    r = cliente.post(f"{URL}/registrar", json=pedido).json()
+    assert r["previa"] and r["pulados"] == [3, 4]  # o aviso aparece já na prévia
+    cliente.post(f"{URL}/registrar", json={**pedido, "previa": False})
+    pulo = next(p for p in cliente.get(f"{URL}/painel").json()["pulados"] if p["load"] == "98708")
+    assert pulo == {"load": "98708", "item": "99902", "fabrica": "AQA", "faltam": "3-4"}
+
+    r = cliente.post(f"{URL}/registrar", json={**pedido, "lotes": "3", "previa": False}).json()
+    assert r["pulados"] == [4]
+    cliente.post(f"{URL}/registrar", json={**pedido, "lotes": "4", "previa": False})
+    assert all(p["load"] != "98708" for p in cliente.get(f"{URL}/painel").json()["pulados"])  # chegou tudo: sai do aviso

@@ -45,6 +45,7 @@ interface Painel {
   nao_ok_semana: number;
   hoje: GrupoDeHoje[];
   fabricas: { fabrica: string; nao_ok: number; lidos: number }[];
+  pulados: { load: string; item: string; fabrica: string | null; faltam: string }[];
   pode_registrar: boolean;
 }
 
@@ -73,6 +74,14 @@ interface Resposta {
   texto: string;
   gravados: number;
   alarmes: number;
+  pulados?: number[];
+}
+
+/** "3, 4" -> o aviso de amostra pulada (pedido de 24/10): chegou lote depois, mas estes ainda não. */
+function avisoDePulo(lotes: number[]) {
+  const n = lotes.length;
+  const lista = n > 1 ? `${lotes.slice(0, -1).join(", ")} e ${lotes[n - 1]}` : String(lotes[0]);
+  return `${n > 1 ? "Os lotes" : "O lote"} ${lista} ${n > 1 ? "ainda não chegaram" : "ainda não chegou"} e já vieram lotes depois: ${n > 1 ? "ficam" : "fica"} com * no laudo até chegar.`;
 }
 
 const ANALISES = [
@@ -211,6 +220,20 @@ function PainelDoRecebimento({ painel, irPara }: { painel: Painel; irPara: (aba:
           <span>Não ok na semana</span>
         </div>
       </div>
+      {painel.pulados.length > 0 && (
+        <div className="cartao aviso-pulo" role="status" aria-label="Amostras puladas">
+          <h2>Amostras puladas</h2>
+          <p className="texto-secundario">Chegaram lotes depois destes, mas eles ainda não vieram. O aviso sai quando chegarem.</p>
+          <ul>
+            {painel.pulados.map((p) => (
+              <li key={`${p.load}-${p.item}`}>
+                <strong>L {p.load}</strong> <span className="texto-secundario">· {p.item}{p.fabrica ? ` · ${p.fabrica}` : ""}</span>: faltam{" "}
+                <strong>{p.faltam}</strong>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       <div className="painel-app-grade">
         <div className="cartao">
           <h2>Para fazer agora</h2>
@@ -281,7 +304,7 @@ function Registrar({ pode, aoGravar, aoCompor }: { pode: boolean; aoGravar: () =
     try {
       const r = await enviarJson<Resposta>("/analises/recebimento-fcoj/registrar", { ...campos, previa: !confirmar });
       if (confirmar) {
-        setFeito(r.texto);
+        setFeito(r.pulados && r.pulados.length > 0 ? `${r.texto} ⚠️ ${avisoDePulo(r.pulados)}` : r.texto);
         setRegistrado(campos.load.trim());
         setPrevia(null);
         setCampos({ ...campos, load: "", lotes: "" });
@@ -350,6 +373,7 @@ function Registrar({ pode, aoGravar, aoCompor }: { pode: boolean; aoGravar: () =
         <div className="previa-app" role="status">
           <strong>O que vai ser criado</strong>
           <p>{previa.texto}</p>
+          {previa.pulados && previa.pulados.length > 0 && <p className="aviso-pulo-texto">⚠️ {avisoDePulo(previa.pulados)}</p>}
           <div className="botoes-lado">
             <button type="button" className="botao botao-principal" disabled={enviando || previa.texto.includes("nada novo")} onClick={() => void enviar(true)}>
               Confirmar
