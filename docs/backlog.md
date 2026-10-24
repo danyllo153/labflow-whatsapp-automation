@@ -11,7 +11,7 @@
 - [ ] **PB8** (esterilização por frase) e **PB9** (água, baias e linhas por frase): esperam as funções do banco do app
 - [x] **Resultado do TAB pela foto** (23/10, PR #205, `pre76`, 259 nós): "+" positivo já confirmado, "—" negativo, em branco = caldo; só o novo. Testar ao vivo com a folha do 43701 em 24/10
 - [x] **TAB do load 43699 gravado à mão** (23/10): 10 compostas positivas confirmadas, feito em 13/10; criadas #87 (1-3) e #88 (4-6)
-- [ ] **Plano (23/10, pedido do Danyllo): alterar resultado de C.T/B.L com um comando curto**, só Analista e Admin: `corrigir ct do load 43755 para <1`. Pelo load o bot sabe se é NFC ou FCOJ (concentrado/embarque) e, com um lote só, qual é o lote; com vários, pede o lote. Mostra "era 21 → <1" e pede sim. **A decidir:** motivo obrigatório (regra de 16/10 para resultado) ou opcional. Caso real: foto do NFC leu `<1` como 21 no CT do load 43755 lote 148 (fresh 10^3); hoje corrige com `ct nfc load 43755 lote 148 fresh deu <1`
+- [ ] **Plano (23/10, pedido do Danyllo): alterar resultado de C.T/B.L com um comando curto**, só Analista e Admin: `corrigir ct do load 43755 para <1`. Pelo load o bot sabe se é NFC ou FCOJ (concentrado/embarque) e, com um lote só, qual é o lote; com vários, pede o lote. Mostra "era 21 → <1" e pede sim. **Decidido em 24/10:** motivo **obrigatório para o Analista** e **opcional para o Admin** (10-decisoes). Caso real: foto do NFC leu `<1` como 21 no CT do load 43755 lote 148 (fresh 10^3); hoje corrige com `ct nfc load 43755 lote 148 fresh deu <1`
 - [x] **Recebimento pelas funções do banco e pelo WhatsApp** (23/10, PRs #197 e #198, migrations 036 e 037, `pre75`): corrigir load/item/fábrica, lote e data, apagar lote (arquiva); testado ao vivo
 - [ ] Apagar o load de teste **99902** (id 46, lote 1) e o que o teste ao vivo de 23/10 deixou no histórico e no arquivo, se quiser (precisa do Danyllo)
 - [ ] **PB6:** canal `app` no webhook (assistente do app pelo mesmo workflow), só na Fase D do app
@@ -31,7 +31,7 @@
 - [x] **Histórico de lotes importado** pelo Danyllo (24/10; 30 lotes de meio no app)
 - [x] **Modelos em PDF dos laudos enviados** pelo Danyllo (23/10: esterilização, material asséptico, meios de cultura, fluxo laminar, limpeza de superfícies e água do processo)
 - [x] **Editar e excluir clicando no app:** coletas (APP-029) e recebimento de FCOJ (migration 064, funções 036), com histórico e recuperar pelo Admin
-- [ ] Testar o app no celular (Tailscale + Adicionar à tela inicial) (precisa do Danyllo)
+- [x] **App no celular** pelo Tailscale e na tela inicial, em uso pelo Danyllo (conferido em 24/10)
 - [x] Acabamento visual do app (APP-030 a APP-032: ícones, etiquetas, modo escuro, layout profissional)
 - [ ] Ideia para depois do piloto: importar do Excel com "antes → depois" no app (tudo pelas funções, com histórico)
 - [ ] Futuro: **barreiras de segurança no celular** (localização da fábrica, horário do turno, aparelho autorizado, nada guardado no aparelho; aviso de LGPD antes de ligar), depois do piloto do app
