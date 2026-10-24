@@ -35,17 +35,34 @@ function dm(data: string | null): string {
   return `${d}/${mes}`;
 }
 
-export default function LaudoEsterilizacao({ versao }: { versao: number }) {
+interface ConfigDoLaudo {
+  base: string; // ex.: "/esterilizacao/laudos"
+  titulo: string;
+  rotulo: string; // nome da região (leitor de tela) e do campo do modelo
+  explicacao: string;
+  unidade: string; // "linhas" ou "dias"
+}
+
+export const LAUDO_ESTERILIZACAO: ConfigDoLaudo = {
+  base: "/esterilizacao/laudos",
+  titulo: "Laudo de ciclos de esterilização",
+  rotulo: "Laudo de esterilização",
+  explicacao:
+    "As linhas se preenchem sozinhas com o que foi registrado (data, material, ciclo, eficiente e o nome de quem marcou). A assinatura (Visto) é à mão, na folha impressa.",
+  unidade: "linhas",
+};
+
+export default function LaudoEsterilizacao({ versao, config = LAUDO_ESTERILIZACAO }: { versao: number; config?: ConfigDoLaudo }) {
   const [dados, setDados] = useState<DadosLaudos | null>(null);
   const [erro, setErro] = useState("");
 
   const carregar = useCallback(async () => {
     try {
-      setDados(await lerJson<DadosLaudos>("/esterilizacao/laudos"));
+      setDados(await lerJson<DadosLaudos>(config.base));
     } catch {
       setDados(null); // sem permissão ou sem rede: o laudo é um extra da tela
     }
-  }, []);
+  }, [config.base]);
 
   useEffect(() => {
     void carregar();
@@ -54,7 +71,7 @@ export default function LaudoEsterilizacao({ versao }: { versao: number }) {
   async function marcarImpresso(id: number) {
     setErro("");
     try {
-      setDados(await enviarJson<DadosLaudos>(`/esterilizacao/laudos/${id}/impresso`, undefined));
+      setDados(await enviarJson<DadosLaudos>(`${config.base}/${id}/impresso`, undefined));
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não foi possível marcar como impressa.");
     }
@@ -65,7 +82,7 @@ export default function LaudoEsterilizacao({ versao }: { versao: number }) {
     if (!arquivo) return;
     setErro("");
     try {
-      setDados(await enviarArquivo<DadosLaudos>("/esterilizacao/laudos/modelo", arquivo));
+      setDados(await enviarArquivo<DadosLaudos>(`${config.base}/modelo`, arquivo));
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não foi possível enviar o modelo.");
     } finally {
@@ -78,14 +95,11 @@ export default function LaudoEsterilizacao({ versao }: { versao: number }) {
   const arquivo = dados.paginas.filter((p) => p.impresso);
 
   return (
-    <section className="cartao laudo-esterilizacao" aria-label="Laudo de esterilização">
+    <section className="cartao laudo-esterilizacao" aria-label={config.rotulo}>
       <h2>
-        Laudo de ciclos de esterilização <span className="contador">{pendentes.length}</span>
+        {config.titulo} <span className="contador">{pendentes.length}</span>
       </h2>
-      <p className="texto-secundario">
-        As linhas se preenchem sozinhas com o que foi registrado (data, material, ciclo, eficiente e o nome de quem marcou). A
-        assinatura (Visto) é à mão, na folha impressa.
-      </p>
+      <p className="texto-secundario">{config.explicacao}</p>
       {erro && (
         <p className="mensagem-erro" role="alert">
           {erro}
@@ -99,14 +113,14 @@ export default function LaudoEsterilizacao({ versao }: { versao: number }) {
             <li key={p.id}>
               <div className="linha-turno">
                 <span>
-                  <strong>Página {p.numero}</strong> · {p.linhas} de {p.capacidade} linhas
+                  <strong>Página {p.numero}</strong> · {p.linhas} de {p.capacidade} {config.unidade}
                   {p.de && ` · ${dm(p.de)}${p.ate && p.ate !== p.de ? ` a ${dm(p.ate)}` : ""}`}{" "}
                   <span className={p.cheia ? "etiqueta etiqueta-nao-ok" : "etiqueta etiqueta-pendente"}>
                     {p.cheia ? "Cheia: imprimir" : "Em preenchimento"}
                   </span>
                 </span>
                 <span className="acoes-linha">
-                  <a href={`/esterilizacao/laudos/${p.id}/pdf`} target="_blank" rel="noreferrer" aria-label={`Abrir o PDF da página ${p.numero}`}>
+                  <a href={`${config.base}/${p.id}/pdf`} target="_blank" rel="noreferrer" aria-label={`Abrir o PDF da página ${p.numero}`}>
                     Abrir PDF
                   </a>
                   <button type="button" className="link-botao" aria-label={`Marcar a página ${p.numero} como impressa`} onClick={() => void marcarImpresso(p.id)}>
@@ -126,9 +140,9 @@ export default function LaudoEsterilizacao({ versao }: { versao: number }) {
               <li key={p.id}>
                 <div className="linha-turno">
                   <span>
-                    Página {p.numero} · {p.linhas} linhas · impressa {p.impresso_em} por {p.impresso_por}
+                    Página {p.numero} · {p.linhas} {config.unidade} · impressa {p.impresso_em} por {p.impresso_por}
                   </span>
-                  <a href={`/esterilizacao/laudos/${p.id}/pdf`} target="_blank" rel="noreferrer" aria-label={`Reimprimir a página ${p.numero}`}>
+                  <a href={`${config.base}/${p.id}/pdf`} target="_blank" rel="noreferrer" aria-label={`Reimprimir a página ${p.numero}`}>
                     Reimprimir
                   </a>
                 </div>
@@ -146,7 +160,7 @@ export default function LaudoEsterilizacao({ versao }: { versao: number }) {
           </p>
           <label className="botao-secundario botao-arquivo">
             {dados.modelo_enviado ? "Trocar o modelo (PDF)" : "Enviar o modelo (PDF)"}
-            <input type="file" accept="application/pdf" className="so-leitor" aria-label="Arquivo PDF do modelo do laudo" onChange={enviarModelo} />
+            <input type="file" accept="application/pdf" className="so-leitor" aria-label={config === LAUDO_ESTERILIZACAO ? "Arquivo PDF do modelo do laudo" : `Arquivo PDF do modelo: ${config.rotulo}`} onChange={enviarModelo} />
           </label>
         </div>
       )}

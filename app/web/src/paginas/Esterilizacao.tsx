@@ -307,7 +307,7 @@ function Linha({ item, podeMexer, aoMudar }: { item: ItemEsterilizacao; podeMexe
               <label className="campo">
                 Tipo
                 <select value={tipo} onChange={(e) => setTipo(e.target.value)}>
-                  {["Ponteira", "Meio", "Frasco", "Descarte", "Outro"].map((t) => (
+                  {["Ponteira", "Meio", "Frasco", "Água de diluição", "Descarte", "Outro"].map((t) => (
                     <option key={t}>{t}</option>
                   ))}
                 </select>
@@ -357,7 +357,7 @@ function Linha({ item, podeMexer, aoMudar }: { item: ItemEsterilizacao; podeMexe
   );
 }
 
-const TIPOS_G4 = ["Ponteira", "Meio", "Frasco", "Descarte", "Outro"]; // a cor de cada um vem do CSS (.g4-0 a .g4-4), claro e escuro
+const TIPOS_G4 = ["Ponteira", "Meio", "Frasco", "Descarte", "Outro", "Água de diluição"]; // a cor de cada um vem do CSS (.g4-0 a .g4-5), claro e escuro
 const L = 320;
 const A = 170;
 const M = { esq: 28, dir: 8, cima: 14, baixo: 26 };

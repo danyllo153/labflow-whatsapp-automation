@@ -18,8 +18,8 @@ from labflow_api.permissoes import exigir, pode
 
 roteador = APIRouter(prefix="/esterilizacao", tags=["esterilização"])
 
-TIPOS = ("Ponteira", "Meio", "Frasco", "Descarte", "Outro")
-Tipo = Literal["Ponteira", "Meio", "Frasco", "Descarte", "Outro"]
+TIPOS = ("Ponteira", "Meio", "Frasco", "Água de diluição", "Descarte", "Outro")  # Água de diluição: migration 059
+Tipo = Literal["Ponteira", "Meio", "Frasco", "Água de diluição", "Descarte", "Outro"]
 
 
 class Item(BaseModel):

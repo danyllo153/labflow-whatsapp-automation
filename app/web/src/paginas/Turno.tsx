@@ -430,8 +430,8 @@ function CentralDoTurno() {
           <BlocosDePendencias itens={pendencias} vazio={<p>Nada vencendo hoje e nada atrasado.</p>} />
         </details>
       )}
-      <p>
-        <Link to="/esterilizacao">Registrar esterilização</Link>
+      <p className="links-do-turno">
+        <Link to="/esterilizacao">Registrar esterilização</Link> · <Link to="/material-asseptico">Material asséptico do dia</Link>
       </p>
     </>
   );

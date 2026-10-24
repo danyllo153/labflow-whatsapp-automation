@@ -18,6 +18,7 @@ from labflow_api.rotas_esterilizacao import roteador as roteador_esterilizacao
 from labflow_api.rotas_laudo import roteador as roteador_laudo
 from labflow_api.rotas_login import roteador as roteador_login
 from labflow_api.rotas_paginas import roteador as roteador_paginas
+from labflow_api.rotas_material_asseptico import roteador as roteador_material_asseptico
 from labflow_api.rotas_navios_tanques import roteador as roteador_navios_tanques
 from labflow_api.rotas_paginas_mais import roteador as roteador_paginas_mais
 from labflow_api.rotas_paginas_nfc import roteador as roteador_paginas_nfc
@@ -58,6 +59,7 @@ app.include_router(roteador_paginas_mais)
 app.include_router(roteador_navios_tanques)
 app.include_router(roteador_pendencias)
 app.include_router(roteador_estufas)
+app.include_router(roteador_material_asseptico)
 app.include_router(roteador_laudo)  # antes da esterilização: /esterilizacao/laudos
 app.include_router(roteador_esterilizacao)
 app.include_router(roteador_relatorio_turno)  # antes do turno: /turno/relatorio
