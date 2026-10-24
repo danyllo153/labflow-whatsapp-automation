@@ -47,10 +47,14 @@ test('painel e app: bi.leituras_nfc ganha lida_em no FIM da lista (não desloca 
 });
 
 test('o workflow continua gravando quem fez a leitura (o gatilho cuida da hora)', () => {
-  for (const nome of ['BD · Concluir leituras', 'BD · Finalizar leitura do dia', 'BD · Executar NFC', 'BD · Executar placas da foto']) {
-    const q = workflow.nodes.find((n) => n.name === nome).parameters.query;
+  // desde a 042, as leituras e as placas gravam pela concluir_leitura e pela lancar_placas (as mesmas do app)
+  const sql042 = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'db', 'migrations', '042_tanques_funcoes.sql'), 'utf8');
+  const textos = { 'BD · Finalizar leitura do dia': workflow.nodes.find((n) => n.name === 'BD · Finalizar leitura do dia').parameters.query, '042 (concluir_leitura e lancar_placas)': sql042 };
+  for (const [nome, q] of Object.entries(textos)) {
     assert.match(q, /pre_leitura_por/, nome);
     assert.match(q, /leitura_final_por/, nome);
     assert.doesNotMatch(q, /pre_leitura_em|leitura_final_em/, nome + ' não precisa mexer na hora: é do gatilho');
   }
+  assert.match(workflow.nodes.find((n) => n.name === 'BD · Concluir leituras').parameters.query, /leitura_concluir_pelo_bot\(\$2::text, \$1::jsonb\)/);
+  assert.match(workflow.nodes.find((n) => n.name === 'BD · Executar NFC').parameters.query, /placas_lancar_pelo_bot\(\$2::text/);
 });

@@ -23,6 +23,9 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
   início" ajusta o começo do lote em uso quando preciso.
 
 ### Adicionado
+- **Tanques por funções do banco** (PB14 da Fase E, migration `042`, 24/10): `registrar_coleta`, `registrar_analise`,
+  `concluir_leitura` e `lancar_placas`, as mesmas para o bot e o app. O bot já grava coleta, análise, leituras e placas por elas.
+  Novo: a mesma análise (frasco e data) na mesma coleta é recusada, em vez de duplicar.
 - **O bot grava o recebimento de FCOJ e o C.T/B.L pelas funções do banco** (migration `041`, 24/10): as mesmas do app
   (040), pelo comando, pelo áudio e pela foto. Mesmas regras e respostas; agora um resultado lançado de novo fica no histórico
   e, se o banco recusar, o bot diz por quê em vez de "Feito".

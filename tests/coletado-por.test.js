@@ -98,13 +98,15 @@ test('IA: o prompt ensina as variações e que "eu coletei" não leva nome', () 
 
 test('banco: grava coletado_por (vazio vira nulo) e as consultas mostram quem coletou', () => {
   const no = (nome) => workflow.nodes.find((n) => n.name === nome).parameters;
+  // desde a 042 a coleta grava pela registrar_coleta (a mesma do app); o "coletado por" vazio vira nulo lá
   const terra = no('BD · Gravar coleta terra');
-  assert.match(terra.query, /INSERT INTO coletas \(origem, tanque, data_coleta, registrado_por, coletado_por\)/);
-  assert.match(terra.query, /NULLIF\(trim\(\$4::text\), ''\)/);
+  assert.match(terra.query, /SELECT coleta_registrar_pelo_bot\(\$3::text, 'terra', '', \$1::jsonb, \$2::text, \$4::text\) AS r;/);
   assert.match(terra.options.queryReplacement, /\$json\.coletadoPor \|\| ""/);
   const navio = no('BD · Gravar coleta navio');
-  assert.match(navio.query, /registrado_por, coletado_por\)/);
-  assert.match(navio.query, /NULLIF\(trim\(\$5::text\), ''\)/);
+  assert.match(navio.query, /SELECT coleta_registrar_pelo_bot\(\$4::text, 'navio', \$3::text, \$1::jsonb, \$2::text, \$5::text\) AS r;/);
+  const sql = fs.readFileSync(path.join(__dirname, '..', 'db', 'migrations', '042_tanques_funcoes.sql'), 'utf8');
+  assert.match(sql, /INSERT INTO coletas \(origem, navio_id, tanque, data_coleta, registrado_por, coletado_por\)/);
+  assert.match(sql, /v_por     text := NULLIF\(trim\(COALESCE\(p_coletado_por, ''\)\), ''\);/);
   assert.match(navio.options.queryReplacement, /\$json\.navio, \$json\._numeroRemetenteLimpo, \$json\.coletadoPor \|\| ""/);
   for (const n of ['BD · Coleta terra já existe?', 'BD · Coleta navio já existe?']) assert.match(no(n).query, /COALESCE\(c\.coletado_por, u\.nome\) AS responsavel/, n);
   assert.match(no('BD · Quem coletou').query, /COALESCE\(c\.coletado_por, u\.nome\) AS quem/);
