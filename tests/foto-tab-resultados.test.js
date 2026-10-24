@@ -106,3 +106,14 @@ test('workflow e SQL: rota tab_foto até o WhatsApp; positivo e negativo conclue
   assert.match(prompt, /"resultados" só no TAB: um por composta, na MESMA ordem de "compostas"/);
   assert.ok(fs.existsSync(path.join(__dirname, 'foto-tab-resultados.test.js')));
 });
+
+test('folha de 13/10 só com resultado (compostas já no caldo): sem o aviso "vale a data de hoje", grava com a data do papel', () => {
+  // caso real de 24/10: 43701 (1-4)(5-8)(9,10,14) com "—", #10, #4 e #5 já incubadas desde 13/10
+  const d = ler({ data: '13/10/2026', blocos: [{ load: '43701', item: '319', fabrica: 'AQA', compostas: ['1-4', '5-8', '9,10,14'], resultados: ['-', '-', '-'] }] });
+  assert.ok(d.duvidas.some((x) => /não é de hoje nem dos últimos 3 dias/.test(x)), 'o Interpretar ainda marca (vale para o caldo)');
+  const r = resposta(d, d.buscas.map((b, k) => ({ kind: 'composta', idx: b.idx, composta_id: [10, 4, 5][k], atual: 'Incubada|' })));
+  assert.equal(JSON.parse(r.payload).comandos.pop(), 'TAB da foto: #10 data 13/10/2026 negativo ; #4 data 13/10/2026 negativo ; #5 data 13/10/2026 negativo');
+  assert.doesNotMatch(r.textoResposta, /vale a data de hoje/);
+  assert.doesNotMatch(r.textoResposta, /Confira/);
+  assert.match(r.textoResposta, /✅ TAB negativo \(—\):\n• load 43701 \(item 319\): #10 \(1-4\) · #4 \(5-8\) · #5 \(9-10,14\)/);
+});
