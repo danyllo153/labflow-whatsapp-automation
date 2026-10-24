@@ -7,6 +7,7 @@ import App from "../App";
 import { ProvedorDeSessao } from "../sessao";
 import { ANA, servidorFalso } from "../testes-servidor";
 import type { DiaDoFluxo } from "./BrancoDoDia";
+import type { DiaDeIncubacao } from "./IncubacaoLeitura";
 import type { MeiosELotes } from "./MeiosLotes";
 import type { AguaDoProcesso } from "./aguas/AguaProcesso";
 import type { Superficies } from "./aguas/Superficies";
@@ -203,5 +204,26 @@ describe("Corrigir recebimento (APP-045)", () => {
     await userEvent.click(within(form).getByRole("button", { name: "Salvar correção" }));
     expect(api.chamadas.find((c) => c.rota === "PUT /recebimento-fcoj/lotes/11")?.corpo).toEqual({ motivo: "", lote: 1 });
     expect(await within(form).findByRole("alert")).toHaveTextContent("Esse load já tem o lote 1.");
+  });
+});
+
+const INCUBACAO: DiaDeIncubacao = {
+  dia: "2026-10-22",
+  amostras: ["TQ 38 (N), 40 (ST) · Receb. FCOJ: L 98770 (1, 2)", "Baias 08, 10"],
+  meios: { OSA: "1000002", PDA: "2000001", PCA: null, Wort: "-" },
+  leituras: { "48h": "2026-10-24", "72h": "2026-10-25", "120h": "2026-10-27", "240h": null },
+  na_folha: false,
+};
+
+describe("Incubação e leitura (APP-040)", () => {
+  it("mostra as amostras do dia, os lotes, as leituras e avisa o meio sem lote", async () => {
+    abrir("/incubacao", { "GET /incubacao": () => ({ status: 200, corpo: INCUBACAO }) });
+    const cartao = await screen.findByRole("generic", { name: "Incubação de 22/10" });
+    expect(within(cartao).getByText("Baias 08, 10")).toBeInTheDocument();
+    expect(within(cartao).getByText("1000002")).toBeInTheDocument();
+    expect(within(cartao).getByText("sem lote em uso")).toBeInTheDocument();
+    expect(within(cartao).getByText("Entra na folha amanhã")).toBeInTheDocument();
+    expect(within(cartao).getByText("27/10")).toBeInTheDocument();
+    expect(within(cartao).getByRole("link", { name: "Meios e lotes" })).toHaveAttribute("href", "/meios-lotes");
   });
 });

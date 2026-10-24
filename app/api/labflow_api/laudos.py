@@ -149,6 +149,8 @@ class Laudo:
     contar_sql: str  # quantas linhas a página tem: "SELECT count(*), min(data), max(data) FROM ... WHERE pagina_id = %s"
     gerar: Callable[[psycopg.Connection, int, bytes | None], bytes]  # (conexão, página, modelo) -> PDF
     aceitar_modelo: Callable[[bytes], None] = field(default=laudo_esterilizacao.modelo_valido)
+    # laudo cujas linhas vêm de outras tabelas (ex.: incubação, que lê o bot): põe as novas nas páginas antes de mostrar
+    preparar: Callable[[psycopg.Connection], None] | None = None
 
 
 LAUDOS: dict[str, Laudo] = {}
@@ -198,6 +200,8 @@ class Laudos(BaseModel):
 
 
 def _listar(con: psycopg.Connection, pessoa: PessoaLogada, laudo: Laudo) -> Laudos:
+    if laudo.preparar:
+        laudo.preparar(con)
     paginas = []
     for n, (pagina_id, impresso_em, por) in enumerate(
         con.execute(

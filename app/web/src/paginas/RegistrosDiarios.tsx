@@ -26,7 +26,8 @@ const LAUDOS: Laudo[] = [
   },
   {
     titulo: "Incubação e leitura",
-    descricao: "Um dia de incubação por linha: as amostras, os lotes dos meios e as datas de leitura. Depende de uma resposta da sessão do bot (PB10).",
+    descricao: "Um dia de incubação por bloco: as amostras plaqueadas, os lotes dos meios em uso e as datas de leitura.",
+    caminho: "/incubacao",
   },
   {
     titulo: "Meios de cultura (lotes)",

@@ -30,9 +30,7 @@ describe("Registros diários (APP-043)", () => {
   it("lista os laudos de rastreio como a aba Páginas e abre o que já existe", async () => {
     abrir("/registros-diarios");
     expect(await screen.findByRole("heading", { level: 1, name: "Registros diários" })).toBeInTheDocument();
-    for (const titulo of ["Incubação e leitura"]) {
-      expect(screen.getByRole("heading", { name: new RegExp(titulo.replace(/[()]/g, "\\$&")) })).toHaveTextContent("Em breve");
-    }
+    expect(screen.getByRole("link", { name: /Incubação e leitura/ })).toHaveAttribute("href", "/incubacao");
     expect(screen.getByRole("link", { name: /Meio de cultura e fluxo laminar/ })).toHaveAttribute("href", "/fluxo-laminar");
     expect(screen.getByRole("link", { name: /Meios de cultura \(lotes\)/ })).toHaveAttribute("href", "/meios-lotes");
     expect(screen.queryByText(/Ciclos de Esterilização/i)).not.toBeInTheDocument();
