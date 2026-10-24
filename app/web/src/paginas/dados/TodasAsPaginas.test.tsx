@@ -77,9 +77,9 @@ describe("todas as páginas do Power BI no app (APP-019)", () => {
     const grupo = (nome: string) => within(within(principal).getByRole("heading", { level: 2, name: nome }).parentElement as HTMLElement);
     const hrefs = (nome: string) => grupo(nome).getAllByRole("link").map((l) => l.getAttribute("href"));
     expect(hrefs("Geral")).toEqual(["/paginas/visao-geral", "/paginas/coletas"]);
-    expect(hrefs("NFC")).toEqual(expect.arrayContaining(["/paginas/tanques-terra", "/paginas/navios", "/paginas/drops", "/paginas/desvios", "/paginas/recebimento-nfc"]));
-    expect(hrefs("FCOJ (concentrado)")).toEqual(["/analises/recebimento-fcoj", "/paginas/embarque"]); // o Recebimento virou app (Fase E)
-    expect(hrefs("TAB, Coliformes e Howard")).toEqual(["/paginas/tab", "/paginas/coliformes", "/paginas/howard"]); // uma página por análise (24/10)
+    expect(hrefs("NFC")).toEqual(expect.arrayContaining(["/analises/tanques", "/analises/drops", "/analises/desvios", "/analises/recebimento-nfc"])); // apps da Fase E
+    expect(hrefs("FCOJ (concentrado)")).toEqual(["/analises/recebimento-fcoj", "/analises/embarque-fcoj"]); // viraram apps (Fase E)
+    expect(hrefs("TAB, Coliformes e Howard")).toEqual(["/analises/testes", "/analises/testes", "/analises/testes?aba=howard"]); // um app só (Fase E)
     expect(within(principal).queryByRole("link", { name: /^Tanques Leituras/ })).toBeNull();
     expect(within(principal).queryByText("Em breve")).toBeNull();
     expect(hrefs("Águas e superfícies")).toEqual(["/paginas/agua-processo", "/paginas/baias", "/paginas/linhas"]); // APP-037

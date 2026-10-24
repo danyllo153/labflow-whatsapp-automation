@@ -194,6 +194,11 @@ Cada página do Power BI vira uma página do app, **no mesmo padrão**: cartões
   chegam; "CX: n" da caixa do arquivo de amostras virá com o arquivo de amostras do bot). Analista Responsável = os nomes de
   quem registrou os lotes da folha; o Visto é à mão. `app.recebimento_laudo` guarda a folha de cada lote; o resto é lido na
   hora do PDF. O Admin envia o modelo (e cada revisão nova) na aba Laudo.
+- **Apps E3 a E8** (APP-061, 24/10): Tanques (`/analises/tanques`), TAB/Coliformes/Howard (`/analises/testes`), Drops
+  (`/analises/drops`), Embarque FCOJ (`/analises/embarque-fcoj`), Recebimento NFC (`/analises/recebimento-nfc`) e Desvios
+  (`/analises/desvios`). Função com prévia (coleta, análise, placas, caldo, drops, embarque, NFC, finalizar o dia): o texto do
+  banco antes do Confirmar. Função sem prévia (concluir leitura, etapas do TAB/Coliformes, Howard, abrir/fechar desvio,
+  repetição): a tela mostra a lista marcada e pede o Confirmar. O app nunca abre desvio sozinho (regra do bot).
 - **Instrução** será escrita pelo Admin no próprio app (nada de documento da empresa no repositório). **Vídeo**: em breve.
 
 ### 6. Gráficos

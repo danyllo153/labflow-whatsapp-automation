@@ -27,6 +27,12 @@ import DetalheColeta from "./paginas/dados/DetalheColeta";
 import { DetalheNavio, DetalheTanque } from "./paginas/dados/Detalhes";
 import { ListaDePaginas, PaginaEscolhida } from "./paginas/Paginas";
 import RecebimentoFcoj from "./paginas/analises/RecebimentoFcoj";
+import Desvios from "./paginas/analises/Desvios";
+import Drops from "./paginas/analises/Drops";
+import Embarque from "./paginas/analises/Embarque";
+import RecebimentoNfc from "./paginas/analises/RecebimentoNfc";
+import Tanques from "./paginas/analises/Tanques";
+import Testes from "./paginas/analises/Testes";
 import TrocarSenha from "./paginas/TrocarSenha";
 import RelatorioDoTurno from "./paginas/RelatorioDoTurno";
 import Turno, { TURNO_MUDOU, type EstadoDoTurno } from "./paginas/Turno";
@@ -92,6 +98,12 @@ export default function App() {
         <Route path="/turno/relatorio" element={<RelatorioDoTurno />} />
         <Route path="/paginas" element={<ListaDePaginas />} />
         <Route path="/analises/recebimento-fcoj" element={<RecebimentoFcoj />} />
+        <Route path="/analises/tanques" element={<Tanques />} />
+        <Route path="/analises/testes" element={<Testes />} />
+        <Route path="/analises/drops" element={<Drops />} />
+        <Route path="/analises/embarque-fcoj" element={<Embarque />} />
+        <Route path="/analises/recebimento-nfc" element={<RecebimentoNfc />} />
+        <Route path="/analises/desvios" element={<Desvios />} />
         <Route path="/paginas/agua-processo" element={<AguaProcesso />} />
         <Route path="/paginas/baias" element={<SuperficiesPagina key="Baia" tipo="Baia" />} />
         <Route path="/paginas/linhas" element={<SuperficiesPagina key="Linha" tipo="Linha" />} />

@@ -24,6 +24,13 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
   início" ajusta o começo do lote em uso quando preciso.
 
 ### Adicionado
+- **Seis apps de análise novos: o app grava tudo o que o bot grava** (app, APP-061, Fase E passos E3 a E8, 24/10): cada um
+  com as abas, a pesquisa e a prévia do banco antes do Confirmar, chamando as **mesmas funções do bot** (042 a 047):
+  **Tanques** (leituras do dia agrupadas por navio/terra e dia, "feitas sem placas" ou as 3 placas, coleta e análise normal
+  e stress), **TAB, Coliformes e Howard** (cada etapa em lote, com a lista toda marcada e um Confirmar; caldo; Howard em
+  campos de 50), **Drops** (concluir e o desvio de drop em 7, 13 e 25 °C), **Embarque FCOJ** (amostras, compostas e C.T/B.L
+  por amostra), **Recebimento NFC** (fresh/past com a diluição; a prévia mostra o lido e o final) e **Desvios** (abrir o
+  desvio da leitura não ok, a repetição e finalizar a leitura do dia). Na grade de Páginas, esses ícones abrem os apps.
 - **Pesquisa e ícone de filtro em todas as páginas de dados** (app, APP-060, 24/10): Coletas, Recebimento, Drops, Navios,
   Tanques terra, Desvios, TAB, Coliformes, Howard e as outras ganham o campo "Pesquisar" (acha o texto em qualquer coluna,
   em **todos** os registros, não só na página da tela) e o botão redondo de filtro no lugar do "Filtros". A busca segue

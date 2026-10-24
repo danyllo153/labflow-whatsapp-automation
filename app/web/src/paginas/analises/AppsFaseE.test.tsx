@@ -1,0 +1,124 @@
+import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { MemoryRouter } from "react-router-dom";
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+import App from "../../App";
+import { ProvedorDeSessao } from "../../sessao";
+import { ANA, servidorFalso } from "../../testes-servidor";
+
+const ANALISTA = { ...ANA, pode: ["ver_paginas", "registrar_analise", "registrar_coleta"] };
+const gravacao = (texto: string, previa: boolean, dados = {}) => ({ status: 200, corpo: { ok: true, previa, texto, dados } });
+
+function abrir(caminho: string, rotas: Parameters<typeof servidorFalso>[0], pessoa: object = ANALISTA) {
+  const api = servidorFalso({ "GET /me": () => ({ status: 200, corpo: pessoa }), ...rotas });
+  render(
+    <MemoryRouter initialEntries={[caminho]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <ProvedorDeSessao>
+        <App />
+      </ProvedorDeSessao>
+    </MemoryRouter>,
+  );
+  return { api, posts: (rota: string) => api.chamadas.filter((c) => c.rota === rota).map((c) => c.corpo) };
+}
+
+afterEach(() => vi.unstubAllGlobals());
+
+const LEITURA = {
+  analise_id: 7, etapa: "final", origem: "terra", tanque: "44", navio: null, frasco: "Normal", analise: "C.T 48h",
+  prevista: "2026-10-20", situacao: "Atrasado", pode_placas: true,
+};
+
+describe("apps de análise da Fase E (E3 a E8)", () => {
+  it("Tanques: digita as 3 placas, vê a prévia do banco e confirma", async () => {
+    const { posts } = abrir("/analises/tanques", {
+      "GET /analises/tanques/leituras": () => ({ status: 200, corpo: [LEITURA] }),
+      "POST /analises/tanques/placas": (c) => gravacao(c.previa ? "Placas:\ntanque 44 normal CT = <1,<1,2" : "Placas:\ntanque 44 normal CT = <1,<1,2", c.previa),
+    });
+    await userEvent.type(await screen.findByRole("textbox", { name: "Placas de 44 C.T 48h" }), "<1, <1, 2");
+    await userEvent.click(screen.getByRole("button", { name: "Ver as placas (1)" }));
+    expect(await screen.findByRole("status", { name: "O que vai ser gravado" })).toHaveTextContent("tanque 44 normal CT = <1,<1,2");
+    await userEvent.click(screen.getByRole("button", { name: "Confirmar" }));
+    expect(posts("POST /analises/tanques/placas")).toEqual([
+      { itens: [{ analise_id: 7, etapa: "final", placas: "<1, <1, 2" }], previa: true },
+      { itens: [{ analise_id: 7, etapa: "final", placas: "<1, <1, 2" }], previa: false },
+    ]);
+  });
+
+  it("Tanques: registrar coleta de navio com a prévia", async () => {
+    const { posts } = abrir("/analises/tanques?aba=coleta", {
+      "GET /analises/tanques/leituras": () => ({ status: 200, corpo: [] }),
+      "POST /analises/tanques/coleta": (c) => gravacao("Coleta do navio O.SKY 189: 1C, 2P (2 tanques, 6 drops).", c.previa),
+    });
+    const form = await screen.findByRole("form", { name: "Registrar coleta" });
+    await userEvent.selectOptions(within(form).getByLabelText("Origem"), "navio");
+    await userEvent.type(within(form).getByLabelText("Navio e viagem"), "O.SKY 189");
+    await userEvent.type(within(form).getByLabelText("Tanques"), "1C, 2P");
+    await userEvent.click(within(form).getByRole("button", { name: "Ver o que vai ser criado" }));
+    expect(await within(form).findByText(/6 drops/)).toBeInTheDocument();
+    await userEvent.click(within(form).getByRole("button", { name: "Confirmar" }));
+    expect(posts("POST /analises/tanques/coleta").map((c) => [c.origem, c.navio, c.tanques, c.previa])).toEqual([
+      ["navio", "O.SKY 189", "1C, 2P", true],
+      ["navio", "O.SKY 189", "1C, 2P", false],
+    ]);
+  });
+
+  it("TAB: o grupo vem todo marcado e um Confirmar espalha todos", async () => {
+    const tab = (id: number, alvo: string) => ({ teste_id: id, teste: "Tab", alvo, status: "No caldo", proxima: "espalhar", prevista: "2026-10-24", situacao: "Vence hoje", lote_aberto: false });
+    const { posts } = abrir("/analises/testes", {
+      "GET /analises/testes/pendentes": () => ({ status: 200, corpo: [tab(1, "Load 43669 · #87 (1-5)"), tab(2, "Load 43669 · #88 (6-10)")] }),
+      "POST /analises/testes/acao": () => gravacao("2 testes atualizados.", false),
+    });
+    const grupo = await screen.findByRole("region", { name: "TAB para espalhar" });
+    await userEvent.click(within(grupo).getByRole("button", { name: "Espalhei (2)" }));
+    expect(within(grupo).getByRole("status", { name: "Confirma?" })).toHaveTextContent("Load 43669 · #88 (6-10)");
+    await userEvent.click(within(grupo).getByRole("button", { name: "Confirmar" }));
+    expect(posts("POST /analises/testes/acao")).toEqual([{ acao: "espalhar", tipo: "TAB", ids: [1, 2], resultado: null }]);
+    expect(await screen.findByText(/2 testes atualizados/)).toBeInTheDocument();
+  });
+
+  it("Drops: marca, vê a prévia e conclui", async () => {
+    const drop = { drop_id: 5, drop: "D10", origem: "Terra", tanque: "44", navio: null, data_coleta: "2026-10-14", prevista: "2026-10-24", situacao: "Vence hoje" };
+    const { posts } = abrir("/analises/drops", {
+      "GET /analises/drops": () => ({ status: 200, corpo: { pendentes: [drop], desvios: [] } }),
+      "POST /analises/drops/concluir": (c) => gravacao("1 drop: tanque 44 D10.", c.previa),
+    });
+    await userEvent.click(await screen.findByRole("checkbox", { name: /tanque 44 · D10/ }));
+    await userEvent.click(screen.getByRole("button", { name: "Concluir (1)" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Confirmar" }));
+    expect(posts("POST /analises/drops/concluir")).toEqual([{ ids: [5], previa: true }, { ids: [5], previa: false }]);
+  });
+
+  it("Desvios: abre o desvio de uma leitura não ok só depois do Confirmar", async () => {
+    const { posts } = abrir("/analises/desvios", {
+      "GET /analises/desvios": () => ({
+        status: 200,
+        corpo: { para_abrir: [{ ...LEITURA, resultado: ">300, 2, 2", lida_em: "2026-10-24" }], abertos: [], dia_finalizado: false },
+      }),
+      "POST /analises/desvios/abrir": () => gravacao("Desvio aberto: repetição com o frasco de arquivo.", false),
+    });
+    await userEvent.click(await screen.findByRole("button", { name: "Abrir desvio" }));
+    expect(posts("POST /analises/desvios/abrir")).toEqual([]);
+    await userEvent.click(screen.getByRole("button", { name: "Confirmar" }));
+    expect(posts("POST /analises/desvios/abrir")).toEqual([{ analise_id: 7, etapa: "final" }]);
+  });
+
+  it("NFC: lança o lido e mostra o final da prévia", async () => {
+    const pendente = { id: 9, load: "43777", fabrica: "UCH", lote: 123, amostra: "fresh", diluicao: 1, recebido_em: "2026-10-21", analise: "CT", prevista: "2026-10-23", situacao: "Atrasado" };
+    const { posts } = abrir("/analises/recebimento-nfc", {
+      "GET /analises/recebimento-nfc/pendentes": () => ({ status: 200, corpo: [pendente] }),
+      "POST /analises/recebimento-nfc/lancar": (c) => gravacao("load 43777 lote 123 fresh · C.T 48h: lido 12 → 120 (10^1)", c.previa),
+    });
+    await userEvent.type(await screen.findByRole("textbox", { name: "C.T 48h do load 43777 lote 123 fresh" }), "12");
+    await userEvent.click(screen.getByRole("button", { name: "Ver o que vai ser gravado (1)" }));
+    expect(await screen.findByText(/lido 12 → 120/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Confirmar" }));
+    expect(posts("POST /analises/recebimento-nfc/lancar").map((c) => c.previa)).toEqual([true, false]);
+  });
+
+  it("Embarque: o Consultor vê, mas não registra", async () => {
+    abrir("/analises/embarque-fcoj", { "GET /analises/embarque/amostras": () => ({ status: 200, corpo: [] }) }, { ...ANA, cargo: "Consultor" });
+    expect(await screen.findByText(/Só Analista e Admin gravam aqui/)).toBeInTheDocument();
+    expect(screen.queryByRole("form", { name: "Registrar embarque" })).toBeNull();
+  });
+});
