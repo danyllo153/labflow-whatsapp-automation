@@ -111,3 +111,25 @@ def test_excluir_coleta_pede_motivo(cliente, logado, agora):
     c = cliente.post("/aguas/processo", json={"dia": "2026-10-22", "hora": "09:30", "pontos": ["manifold"]}).json()["coletas"][0]
     assert cliente.post(f"/aguas/processo/{c['id']}/excluir", json={"motivo": "x"}).status_code == 422
     assert cliente.post(f"/aguas/processo/{c['id']}/excluir", json={"motivo": "coleta de teste"}).json()["coletas"] == []
+
+
+def test_corrigir_data_hora_e_pontos_da_agua_e_apagar_resultado(cliente, logado, agora):
+    logado()
+    c = cliente.post("/aguas/processo", json={"dia": "2026-10-22", "hora": "09:30", "pontos": ["manifold", "camara4"]}).json()["coletas"][0]
+    cliente.put(f"/aguas/processo/{c['id']}/resultados", json={"ct": {"manifold": "<1", "camara4": "<1"}})
+    r = cliente.put(f"/aguas/processo/{c['id']}", json={"dia": "2026-10-21", "hora": "18:00", "pontos": ["manifold"], "observacao": "Esterilizando"})
+    assert r.status_code == 200, r.text
+    c = r.json()["coletas"][0]
+    assert (c["dia"], c["hora"], c["observacao"]) == ("2026-10-21", "18:00", "Esterilizando")
+    assert c["pontos"]["camara4"] == {"coletado": False, "ct": None, "bl": None}  # deixou de ser coletado: sem resultado
+    c = cliente.put(f"/aguas/processo/{c['id']}/resultados", json={"ct": {"manifold": ""}}).json()["coletas"][0]
+    assert c["pontos"]["manifold"]["ct"] is None  # resultado apagado
+
+
+def test_corrigir_coleta_de_baia(cliente, logado, agora):
+    logado()
+    c = cliente.post("/aguas/superficies", json={"tipo": "Baia", "pontos": ["8"], "dia": "2026-10-22", "hora": "07:10"}).json()["coletas"][0]
+    r = cliente.put(f"/aguas/superficies/{c['id']}", json={"ponto": "9", "dia": "2026-10-21", "hora": "23:12", "analisada_em": "2026-10-22"})
+    assert r.status_code == 200, r.text
+    c = r.json()["coletas"][0]
+    assert (c["ponto"], c["dia"], c["hora"], c["analisada_em"]) == ("09", "2026-10-21", "23:12", "2026-10-22")
