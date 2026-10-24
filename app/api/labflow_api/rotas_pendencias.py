@@ -42,7 +42,10 @@ SELECT * FROM (
            CASE WHEN origem IN ('Recebimento', 'Embarque') AND nullif(load_ou_tanque, '') IS NOT NULL
                 THEN 'Load ' || load_ou_tanque || coalesce(' · ' || nullif(alvo, ''), '')
                 ELSE coalesce(nullif(alvo, ''), load_ou_tanque) END,
-           teste,
+           -- a próxima ação do teste (24/10): "TAB · para espalhar", "Coliformes · para ler"
+           teste || CASE WHEN status = 'No caldo' THEN ' · para espalhar'
+                         WHEN status IN ('Estriado', 'Incubado') THEN ' · para ler'
+                         WHEN position('confirma' in status) > 0 THEN ' · para confirmar' ELSE '' END,
            proxima_etapa,
            situacao
     FROM bi.testes
@@ -82,6 +85,30 @@ class Pendencia(BaseModel):
     analise: str
     prevista: date | None
     situacao: str  # "Vence hoje" ou "Atrasado"
+    grupo: str  # o que se faz junto (24/10): "TAB · para espalhar", "O.SKY 189 · Psicrotróficos Normal · Leitura final"
+    item: str  # o que aparece ao abrir o grupo: a composta, o lote, o tanque
+
+
+def agrupar(bloco: str, tipo: str, referencia: str, analise: str) -> tuple[str, str]:
+    """Grupo e item de uma pendência: o Início mostra o número de cada grupo e abre a lista (pedido de 24/10).
+
+    No navio, o grupo é o navio com a análise e o frasco (Normal ou Stress): os tanques ficam dentro.
+    """
+    prefixo, item = "", referencia
+    if bloco == "NFC Navio" and " · tanque " in referencia:
+        # navio: só o nome e o frasco (Normal ou Stress); a análise e o tanque ficam dentro (24/10)
+        navio, tanque = referencia.split(" · ", 1)
+        frasco = next((f for f in ("Normal", "Stress") if f" {f}" in f" {analise}"), None)
+        if frasco:
+            return f"{navio} · {frasco}", f"{tanque} · {' '.join(analise.replace(frasco, '').split())}"
+        return f"{navio} · {'Drops' if tipo == 'Drop' else tipo}", f"{tanque} · {analise}"
+    if tipo in ("C.T/B.L", "Leitura de NFC") or analise.startswith(tipo):
+        rotulo = analise or tipo
+    elif tipo == "Drop":
+        rotulo = f"Drop {analise}"
+    else:
+        rotulo = f"{tipo} · {analise}" if analise and analise != tipo else tipo
+    return prefixo + rotulo, item
 
 
 class Pendencias(BaseModel):
@@ -111,8 +138,11 @@ def pendencias_hoje(
     ordem_blocos = ", ".join(f"'{b}'" for b in BLOCOS)
     sql += f" ORDER BY array_position(ARRAY[{ordem_blocos}]::text[], bloco), situacao = 'Vence hoje', prevista, referencia"
     linhas = con.execute(sql, valores).fetchall()
-    itens = [Pendencia(bloco=b, tipo=t, referencia=r or "", analise=a or "", prevista=p, situacao=s)
-             for b, t, r, a, p, s in linhas]
+    itens = [
+        Pendencia(bloco=b, tipo=t, referencia=r or "", analise=a or "", prevista=p, situacao=s,
+                  grupo=(g := agrupar(b, t, r or "", a or ""))[0], item=g[1])
+        for b, t, r, a, p, s in linhas
+    ]
     abertos = con.execute("SELECT count(*) FROM bi.desvios WHERE status <> 'Concluído'").fetchone()[0]
     return Pendencias(
         vence_hoje=sum(i.situacao == "Vence hoje" for i in itens),

@@ -11,6 +11,7 @@ const GRUPOS: { grupo: DefinicaoDePagina["grupo"]; titulo: string }[] = [
   { grupo: "Geral", titulo: "Geral" },
   { grupo: "NFC", titulo: "NFC" },
   { grupo: "FCOJ", titulo: "FCOJ (concentrado)" },
+  { grupo: "Testes", titulo: "TAB, Coliformes e Howard" },
 ];
 
 export function ListaDePaginas() {
