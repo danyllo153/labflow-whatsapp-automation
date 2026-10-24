@@ -67,7 +67,7 @@ Login ──► Entrar no turno ──► Início (a minha lista do dia)
 ## Telas
 
 ### 1. Login
-Usuário e senha. Primeiro acesso e recuperação de senha em [06](06-api-e-auth.md). Depois de entrar, o app pede o turno (tela 2) se a pessoa ainda não entrou em nenhum.
+Usuário e senha. Primeiro acesso e recuperação de senha em [06](06-api-e-auth.md). Depois de entrar, o app pede o turno (tela 2) se a pessoa ainda não entrou em nenhum. Visual (APP-046, 24/10): fundo azul do menu e cartão branco no centro, com o título "LabFlow · Laboratório de microbiologia".
 
 ### 2. Entrar no turno
 - A pessoa escolhe **Manhã, Tarde ou Madrugada** (o app sugere pelo horário).
@@ -160,6 +160,14 @@ Cada página do Power BI vira uma página do app, **no mesmo padrão**: cartões
 
 **Ordem de entrega (decidida em 15/10):** primeiro **todas as páginas só em leitura** (filtros, impressão, exportação). Editar e excluir chegam **página por página**, à medida que a sessão do bot cria as funções do banco daquela área: **1) Coletas e Recebimento** (os mais usados, uma linha por registro); **2)** Drops, TAB e Coliformes, Embarque; **3)** resultados (C.T/B.L, leituras de NFC), depois da revisão e liberação da Fase 1 do LIMS.
 
+**Recebimento de FCOJ: corrigir e excluir pelo app (APP-045, 24/10; migration 064).** Na aba Páginas, "Corrigir ou excluir um lote do recebimento": busca o load pelo número e mostra os lotes; corrige número, item e fábrica do load ou número e data do lote, e exclui (arquiva) o lote. As regras são as das funções do banco do bot (036): só Admin e Analista, lote com leitura ou teste não muda a data nem se exclui; a recusa aparece como veio. Recuperar fica para o Admin, numa próxima tela.
+
+### 5.1 Águas e superfícies (APP-037, decidido em 24/10; migrations 061 e 062)
+- São **análises**: ficam na aba Páginas, no grupo "Águas e superfícies", com o laudo de cada uma na própria tela.
+- **Água do processo:** uma coleta (data e hora) com os pontos coletados (Manifold, Câmaras 4, 5 e 6); C.T. (PCA, 48 h) e B.L. (PDA, 120 h) de cada ponto; ponto não coletado sai "-"; observação livre ("Esterilizando"). Laudo sobre a folha digitalizada do terminal (tabela deitada), 23 coletas por folha.
+- **Baias** (CIP dos mangotes do recebimento) e **linhas** (CIP das linhas de embarque): uma coleta por ponto, com o dia da análise (plaqueamento); C.T. 48 h, B.L. 72 h e 120 h contados desse dia. Laudo "Limpeza de Superfícies", uma folha para baias e outra para linhas, 31 por folha, com "Análise dd.mm.aa" na observação.
+- Coletor registra a coleta; Admin e Analista lançam o resultado (`<1` ou número). A leitura que falta vira pendência no Início (bloco "Águas e superfícies") na data prevista.
+
 ### 6. Gráficos
 Ficam **dentro das páginas** (cada página com os seus), não numa tela separada. Os números vêm das mesmas views do Power BI, para baterem. **Decidido em 15/10: por enquanto só dois** (G1 "feito × pendente" e G3 "desvios por semana" saíram, por não acrescentarem; mais gráficos só quando houver necessidade):
 
@@ -178,8 +186,16 @@ Sem gráfico "por pessoa" (pode soar como vigilância).
 - **Laudo "Controle de Ciclos de Esterilização" (APP-035, decidido em 23/10):** o app preenche o **próprio PDF da empresa** (SGI, 35 linhas por página): Data, Material esterilizado ("Meio de cultura / Frascos" quando há mais de um no ciclo), Ciclo, Sim/Não e o **nome de quem marcou** (sai do usuário logado). A assinatura (**Visto**) e o bloco do responsável ficam em branco, à mão. Página cheia vira **"pendente de imprimir"**; quem imprime marca como impressa e ela vai para o **arquivo**, com reimpressão. O PDF oficial é **confidencial: fica no banco** (Admin envia, `app.modelos_documento`), nunca no Git; sem ele o app usa uma tabela de demonstração. Pelo bot (WhatsApp) depois, como pedido à sessão do bot.
 - Lista das esterilizações do turno embaixo dos botões, com corrigir e excluir (com motivo).
 
+### 7.5 Branco do dia: meio de cultura e fluxo laminar (APP-038, 24/10; migration 063)
+- Um dia de análise por linha (hoje ou até 7 dias antes): capela do fluxo laminar (C.T. e B.L., UFC/50 cm²/30 min) e o controle de cada meio (OSA, PDA, Wort, PCA, UFC/ml). Tudo começa em `<1`; **Wort e PCA vêm com "-"** nos dias sem análise que os use (Wort = tanques de NFC; PCA = águas, baias e linhas), e o app diz por quê. Quem salva é o responsável. Laudo de 39 dias por folha (versão de 2024 do modelo).
+
+### 7.4 Meios e lotes (APP-036, 23 e 24/10; migration 060)
+- Cadastro de cada **lote recebido** de OSA, PDA, PCA e Wort (data, lote, estado de conservação, pH, observação). Cada meio tem **um lote em uso**, escolhido com um toque ("Usar este"); trocar fecha o período do anterior. O lote em uso **não é sempre o mais novo** e um antigo pode voltar a ser usado.
+- O laudo de incubação vai usar o lote que estava em uso **naquele dia** (trocar hoje não muda o passado).
+- Laudo "Controle de Qualidade e Aceitação de Meios de Cultura" (LAB/090): **uma folha por meio**, 33 linhas; o bloco Analista / Responsável é à mão. O histórico em papel entra **uma vez por CSV** (Admin); os números reais nunca vão para o Git.
+
 ### 7.3 Registros diários (APP-043, decidido em 24/10)
-- Aba com os **laudos de rastreio** em cartões, como a aba Páginas: tocar num cartão abre o laudo para preencher. Material asséptico já funciona; meio de cultura e fluxo laminar, incubação e leitura e meios de cultura (lotes) entram nesta aba quando ficarem prontos. O laudo de ciclos de esterilização fica na Esterilização. **Água do processo e limpeza de superfícies (baias e linhas) são análises: ficam na aba Páginas**, com o laudo de cada uma lá (decidido em 24/10).
+- Aba com os **laudos de rastreio** em cartões, como a aba Páginas: tocar num cartão abre o laudo para preencher. Funcionam: material asséptico, meio de cultura e fluxo laminar e meios de cultura (lotes). Incubação e leitura entra quando a sessão do bot responder o PB10. O laudo de ciclos de esterilização fica na Esterilização. **Água do processo e limpeza de superfícies (baias e linhas) são análises: ficam na aba Páginas**, com o laudo de cada uma lá (decidido em 24/10).
 - No celular, a aba fica no menu da conta (o boneco no topo) e no Turno; no computador, no menu lateral.
 
 ### 7.2 Material asséptico (APP-041, decidido em 24/10)
@@ -277,6 +293,11 @@ Nomes a confirmar na migration. Nenhuma altera tabela do bot (só referenciam `u
 | `app.atividades_feitas` | Atividade fixa ou pendência herdada marcada como feita: quem, quando, turno |
 | `app.laudos_esterilizacao` | Páginas do laudo de esterilização (35 linhas): criada, impressa por/em |
 | `app.modelos_documento` | O PDF oficial da empresa (confidencial), enviado pelo Admin |
+| `app.lotes_meio` | Cada lote recebido de OSA, PDA, PCA e Wort: data, lote, conservação, pH, observação, quem; página do laudo LAB/090 |
+| `app.uso_lote_meio` | O lote em uso de cada meio, com o período (de/até) e quem marcou |
+| `app.coletas_agua_processo` | Coleta da água do processo: pontos coletados, C.T./B.L. de cada um, observação, quem coletou e quem lançou |
+| `app.coletas_superficie` | Coleta de baia ou linha: ponto, dia da análise, C.T. 48 h, B.L. 72 h e 120 h, quem |
+| `app.fluxo_laminar` | Branco do dia: capela C.T./B.L. e OSA, PDA, Wort, PCA, quem preencheu |
 | `app.material_asseptico` | Um dia de análise: ciclos e lotes usados, C.T./B.L., quem preencheu, página do laudo |
 | `app.paginas_laudo` | Páginas dos laudos novos (a partir do material asséptico): impressa por/em |
 | `app.registros_turno` | "Atividades realizadas" escritas à mão no turno (texto até 200, quem, quando; excluir arquiva, com quem e quando) |

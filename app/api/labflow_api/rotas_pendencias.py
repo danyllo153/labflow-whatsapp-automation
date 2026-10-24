@@ -3,7 +3,8 @@
 Spec: 07-app-pwa.md (v1.0), "3. Início" (cartões Para hoje e Atrasados, lista "Para fazer agora" nos blocos do
 relatório do dia); 06-api-e-auth.md, "Primeiros endpoints". Tarefas: APP-010 e APP-014 (número de desvios abertos).
 Lê SEMPRE as views do Power BI (schema bi), que já calculam a situação ("Vence hoje", "Atrasado") com o "hoje"
-do banco; assim o app, o painel e o relatório do bot contam igual.
+do banco; assim o app, o painel e o relatório do bot contam igual. Exceção: águas e superfícies (APP-037), que
+nasceram no app e são lidas do schema app (rotas_aguas.PENDENCIAS_AGUAS_SQL).
 """
 
 from datetime import date
@@ -15,10 +16,13 @@ from pydantic import BaseModel
 
 from labflow_api.dependencias import PessoaLogada, obter_conexao
 from labflow_api.permissoes import exigir
+from labflow_api.rotas_aguas import PENDENCIAS_AGUAS_SQL
 
 roteador = APIRouter(tags=["pendências"])
 
-BLOCOS = ("FCOJ Recebimento", "FCOJ Embarque", "NFC Tank farm", "NFC Navio", "Recebimento NFC", "Desvios")
+BLOCOS = (
+    "FCOJ Recebimento", "FCOJ Embarque", "NFC Tank farm", "NFC Navio", "Recebimento NFC", "Águas e superfícies", "Desvios",
+)
 
 # Uma linha por pendência, no mesmo formato para todas as origens. Cada SELECT lê uma view bi.*.
 PENDENCIAS_SQL = """
@@ -64,9 +68,11 @@ SELECT * FROM (
            CASE WHEN origem = 'Terra' THEN 'Tanque ' || tanque ELSE navio || ' · tanque ' || tanque END,
            coalesce(analise, drop, ''), prazo, situacao
     FROM bi.desvios
+    UNION ALL
+{AGUAS}
 ) p
 WHERE situacao IN ('Vence hoje', 'Atrasado')
-"""
+""".replace("{AGUAS}", PENDENCIAS_AGUAS_SQL)  # águas e superfícies ficam no schema app (APP-037)
 
 
 class Pendencia(BaseModel):

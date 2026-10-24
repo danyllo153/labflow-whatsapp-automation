@@ -2870,3 +2870,70 @@ button.barra-linha:hover,
     display: none;
   }
 }
+
+/* Laudos de rastreio (APP-036 a APP-045) */
+.grupo-campos {
+  border: 1px solid var(--borda);
+  border-radius: var(--raio, 4px);
+  padding: 6px 10px 2px;
+  margin: 0 0 10px;
+}
+
+.grupo-campos legend {
+  padding: 0 4px;
+  font-size: 0.85rem;
+  color: var(--texto-secundario);
+}
+
+.tabela-rolagem {
+  overflow-x: auto;
+}
+
+.entrada-celula {
+  width: 4.8em;
+  padding: 2px 4px;
+  font: inherit;
+}
+
+/* Tela de entrar no visual novo (APP-046): fundo azul do menu, cartão branco no centro, como os LIMS */
+.tela-entrar {
+  align-items: center;
+  background: var(--menu-fundo);
+}
+
+.cartao-entrar {
+  max-width: 380px;
+  padding: 0 22px 18px;
+  border: 0;
+  border-radius: var(--raio, 4px);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
+  overflow: hidden;
+}
+
+.marca-entrar {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 0 -22px 16px;
+  padding: 14px 22px;
+  border-radius: 0;
+  background: var(--painel-titulo, #1c3f66);
+  color: #fff;
+  font-size: 1.25rem;
+}
+
+.marca-subtitulo {
+  font-size: 0.8rem;
+  font-weight: 400;
+  opacity: 0.85;
+  letter-spacing: 0;
+}
+
+.cartao-entrar h1 {
+  font-size: 1.15rem;
+  margin: 4px 0 12px;
+}
+
+.cartao-entrar .botao-principal {
+  width: 100%;
+}

@@ -73,7 +73,7 @@ describe("todas as páginas do Power BI no app (APP-019)", () => {
   it("a lista agrupa em Geral, NFC e FCOJ, sem a página antiga de Tanques", async () => {
     abrir("/paginas");
     const principal = (await screen.findByRole("heading", { level: 1, name: "Páginas" })).closest("section") as HTMLElement;
-    expect(within(principal).getAllByRole("heading", { level: 2 }).map((h) => h.textContent)).toEqual(["Geral", "NFC", "FCOJ (concentrado)"]);
+    expect(within(principal).getAllByRole("heading", { level: 2 }).map((h) => h.textContent)).toEqual(["Geral", "NFC", "FCOJ (concentrado)", "Águas e superfícies"]);
     const grupo = (nome: string) => within(within(principal).getByRole("heading", { level: 2, name: nome }).parentElement as HTMLElement);
     const hrefs = (nome: string) => grupo(nome).getAllByRole("link").map((l) => l.getAttribute("href"));
     expect(hrefs("Geral")).toEqual(["/paginas/visao-geral", "/paginas/coletas"]);
@@ -81,12 +81,15 @@ describe("todas as páginas do Power BI no app (APP-019)", () => {
     expect(hrefs("FCOJ (concentrado)")).toEqual(["/paginas/recebimento", "/paginas/embarque", "/paginas/testes"]);
     expect(within(principal).queryByRole("link", { name: /^Tanques Leituras/ })).toBeNull();
     expect(within(principal).queryByText("Em breve")).toBeNull();
+    expect(hrefs("Águas e superfícies")).toEqual(["/paginas/agua-processo", "/paginas/baias", "/paginas/linhas"]); // APP-037
   });
 
-  it("o Coletor só vê Coletas", async () => {
+  it("o Coletor só vê Coletas e as águas (que ele também coleta)", async () => {
     abrir("/paginas", { ...ANA, cargo: "Coletor" });
     const principal = (await screen.findByRole("heading", { level: 1, name: "Páginas" })).closest("section") as HTMLElement;
-    expect(within(principal).getAllByRole("link").map((l) => l.getAttribute("href"))).toEqual(["/paginas/coletas"]);
+    expect(within(principal).getAllByRole("link").map((l) => l.getAttribute("href"))).toEqual([
+      "/paginas/coletas", "/paginas/agua-processo", "/paginas/baias", "/paginas/linhas",
+    ]);
   });
 
   it.each(PAGINAS.map((p) => [p.titulo, p] as const))("%s abre, chama a API certa e mostra as colunas", async (_t, def) => {

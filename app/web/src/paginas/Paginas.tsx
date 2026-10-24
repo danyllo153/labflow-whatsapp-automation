@@ -43,9 +43,32 @@ export function ListaDePaginas() {
           </div>
         );
       })}
+      <div className="grupo-paginas">
+        <h2>Águas e superfícies</h2>
+        <div className="grade-paginas">
+          {AGUAS.map((a) => (
+            <Link key={a.caminho} to={a.caminho} className="cartao cartao-pagina">
+              <h3>{a.titulo}</h3>
+              <p className="texto-secundario">{a.descricao}</p>
+            </Link>
+          ))}
+        </div>
+      </div>
+      {!coletor && pessoa?.pode.includes("corrigir_registro") && (
+        <p className="texto-secundario">
+          <Link to="/paginas/recebimento/corrigir">Corrigir ou excluir um lote do recebimento de FCOJ</Link>
+        </p>
+      )}
     </section>
   );
 }
+
+/** Análises das águas (APP-037, 24/10): ficam aqui na aba Páginas, junto das outras análises. */
+const AGUAS = [
+  { caminho: "/paginas/agua-processo", titulo: "Água do processo", descricao: "Manifold e Câmaras 4, 5 e 6: coleta, C.T. e B.L., e o laudo." },
+  { caminho: "/paginas/baias", titulo: "Baias", descricao: "CIP dos mangotes do recebimento: C.T. 48 h, B.L. 72 h e 120 h, e o laudo." },
+  { caminho: "/paginas/linhas", titulo: "Linhas", descricao: "CIP das linhas de embarque: C.T. 48 h, B.L. 72 h e 120 h, e o laudo." },
+];
 
 /** /paginas/:pagina abre a página certa (a chave remonta a tela ao trocar de página). */
 export function PaginaEscolhida() {

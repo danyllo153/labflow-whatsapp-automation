@@ -28,7 +28,10 @@ export default function Entrar() {
   return (
     <div className="tela-entrar">
       <form className="cartao cartao-entrar" onSubmit={enviar} noValidate>
-        <div className="marca marca-entrar">LabFlow</div>
+        <div className="marca marca-entrar">
+          LabFlow
+          <span className="marca-subtitulo">Laboratório de microbiologia</span>
+        </div>
         <FaixaDemonstracao />
         <h1>Entrar</h1>
         <label className="campo">
