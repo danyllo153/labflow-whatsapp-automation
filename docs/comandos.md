@@ -771,6 +771,8 @@ Qualquer cargo (inclusive Consultor) pode perguntar. Não gravam nada; sem "sim"
 
 ### 16.5 Foto do laudo (recebimento, TAB e Coliformes)
 
+**Resultado do TAB pela foto (23/10/2026):** na folha de TAB, a coluna Resultado → TAB de cada composta vale: **"+" = positivo já confirmado** (o TAB fica concluído, positivo), **"—" = negativo** (concluído) e **em branco** = vai para o caldo, como antes. Só o que é novo: composta que já tem resultado fica como está ("ℹ️ Já com resultado"), e a que já está no caldo e veio em branco não aparece. A composta que não existe o Admin abre pela própria foto (recebimento + compostas) e o resultado é gravado no mesmo sim. A data é a da Análise do papel (a partir de 13/10/2026; antes disso, hoje). Por dentro o sim roda o comando interno `TAB da foto: #11 data 13/10/2026 positivo ; load 43699 item 2655 (1-3) data 13/10/2026 negativo`, que só vale pelo sim da foto.
+
 Mande a **foto do laudo preenchido** no WhatsApp (Analista e Admin; Consultor não registra). A legenda é opcional.
 
 1. O bot baixa a foto, conta 1 no limite diário de IA (tipo `foto`) e pede a leitura ao Gemini com visão (`gemini-3-flash-preview`, com reserva em `gemini-3.5-flash-lite`; cada um tenta até 3 vezes). Os modelos da foto foram escolhidos testando imagem direto no Google: `gemini-3.1-flash-lite` e `gemini-3.8-flash` davam 503 com imagem. O Groq não lê imagem: se os dois Gemini falharem, o bot avisa e pede o comando.
