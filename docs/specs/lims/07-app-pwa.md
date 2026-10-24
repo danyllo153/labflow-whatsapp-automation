@@ -179,7 +179,7 @@ Sem gráfico "por pessoa" (pode soar como vigilância).
 - Lista das esterilizações do turno embaixo dos botões, com corrigir e excluir (com motivo).
 
 ### 7.3 Registros diários (APP-043, decidido em 24/10)
-- Aba com os **laudos de rastreio** em cartões, como a aba Páginas: tocar num cartão abre o laudo para preencher. Material asséptico já funciona; meio de cultura e fluxo laminar, incubação e leitura, água do processo, limpeza de superfícies e meios de cultura (lotes) entram nesta aba quando ficarem prontos. O laudo de ciclos de esterilização fica na Esterilização.
+- Aba com os **laudos de rastreio** em cartões, como a aba Páginas: tocar num cartão abre o laudo para preencher. Material asséptico já funciona; meio de cultura e fluxo laminar, incubação e leitura e meios de cultura (lotes) entram nesta aba quando ficarem prontos. O laudo de ciclos de esterilização fica na Esterilização. **Água do processo e limpeza de superfícies (baias e linhas) são análises: ficam na aba Páginas**, com o laudo de cada uma lá (decidido em 24/10).
 - No celular, a aba fica no menu da conta (o boneco no topo) e no Turno; no computador, no menu lateral.
 
 ### 7.2 Material asséptico (APP-041, decidido em 24/10)

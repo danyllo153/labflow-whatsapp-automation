@@ -3,7 +3,8 @@ import { Link } from "react-router-dom";
 /**
  * Registros diários (APP-043): os laudos de rastreio do dia a dia num lugar só. Cada um se preenche com o que o
  * laboratório registra (app, assistente ou bot) e vira o PDF oficial para imprimir e assinar. O laudo de ciclos de
- * esterilização fica na própria Esterilização. Ordem e regras de cada laudo: rumo-do-app.md, "Laudos automáticos".
+ * esterilização fica na própria Esterilização; água do processo e limpeza de superfícies (baias e linhas) são análises e
+ * ficam na aba Páginas (24/10). Ordem e regras de cada laudo: rumo-do-app.md, "Laudos automáticos".
  */
 
 interface Laudo {
@@ -25,14 +26,6 @@ const LAUDOS: Laudo[] = [
   {
     titulo: "Incubação e leitura",
     descricao: "Um dia de incubação por linha: as amostras, os lotes dos meios e as datas de leitura de cada um.",
-  },
-  {
-    titulo: "Água do processo",
-    descricao: "C.T. e B.L. do Manifold e das Câmaras 4, 5 e 6, em cada coleta.",
-  },
-  {
-    titulo: "Limpeza de superfícies",
-    descricao: "Baias (CIP dos mangotes) e linhas (CIP das linhas de embarque), com C.T. e B.L.",
   },
   {
     titulo: "Meios de cultura (lotes)",

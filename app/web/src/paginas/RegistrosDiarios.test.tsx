@@ -30,10 +30,11 @@ describe("Registros diários (APP-043)", () => {
   it("lista os laudos de rastreio como a aba Páginas e abre o que já existe", async () => {
     abrir("/registros-diarios");
     expect(await screen.findByRole("heading", { level: 1, name: "Registros diários" })).toBeInTheDocument();
-    for (const titulo of ["Meio de cultura e fluxo laminar", "Incubação e leitura", "Água do processo", "Limpeza de superfícies", "Meios de cultura (lotes)"]) {
+    for (const titulo of ["Meio de cultura e fluxo laminar", "Incubação e leitura", "Meios de cultura (lotes)"]) {
       expect(screen.getByRole("heading", { name: new RegExp(titulo.replace(/[()]/g, "\\$&")) })).toHaveTextContent("Em breve");
     }
     expect(screen.queryByText(/Ciclos de Esterilização/i)).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /Água do processo|Limpeza de superfícies/ })).not.toBeInTheDocument(); // ficam em Páginas
     await userEvent.click(screen.getByRole("link", { name: /Material asséptico/ }));
     expect(await screen.findByRole("heading", { level: 1, name: "Material asséptico" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "← Registros diários" })).toBeInTheDocument();
