@@ -24,7 +24,9 @@
 ### 📱 App (sessão da nuvem)
 - [x] **Marcos 3 e 4 mesclados** (23/10): turno com atividades fixas, relatório e encerrar (#181, #183, #185), esterilização com o G4 (#188), estufas (#189), Admin de turnos/atividades/estufas (#190) e **corrigir/excluir/recuperar coleta pelo app** (APP-029, #191)
 - [x] Marcos 3 e 4, acabamento visual (APP-030 a APP-034), laudo de esterilização (APP-035) e os laudos de rastreio (APP-036 a APP-043) **no ar** no servidor (23 e 24/10, migrations 054 a 064)
-- [ ] **▶ APP-040, laudo de incubação e leitura** (um dia de incubação por linha, lendo a `bi.incubacao` do PB10, já no ar)
+- [ ] **▶ APP-040, laudo de incubação e leitura**: pronto no PR #231 (migration 065), falta o "mescle", publicar e enviar o modelo em PDF
+- [x] **Visual repaginado** no ar (#228, 24/10): menu claro, Inter, avatar, botões em pílula, blocos coloridos
+- [ ] Visual, se o Danyllo quiser: cores dos blocos no modo escuro, conteúdo na largura toda, e as peças do canvas que pedem dados novos (gráfico da semana, botões rápidos nos blocos, cartão da folha do laudo)
 - [x] **Histórico de lotes importado** pelo Danyllo (24/10; 30 lotes de meio no app)
 - [x] **Modelos em PDF dos laudos enviados** pelo Danyllo (23/10: esterilização, material asséptico, meios de cultura, fluxo laminar, limpeza de superfícies e água do processo)
 - [x] **Editar e excluir clicando no app:** coletas (APP-029) e recebimento de FCOJ (migration 064, funções 036), com histórico e recuperar pelo Admin
