@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
 import { lerJson } from "../../api";
+import { ColunasPorDia, LinhaPorDia } from "../../componentes/Graficos";
 import { formatar } from "./formatos";
 
 /** Visão geral (07 §5): números do período, pendências por bloco e os Não ok mais recentes. APP-019. */
@@ -12,6 +13,7 @@ interface VisaoGeralDados {
   numeros: { chave: string; rotulo: string; valor: number }[];
   pendencias: { bloco: string; vence_hoje: number; atrasados: number }[];
   alertas: { pagina: string; caminho: string; referencia: string; analise: string; resultado: string; data: string | null }[];
+  serie: { dia: string; registradas: number; nao_ok: number }[];
 }
 
 const ATUALIZAR_A_CADA_MS = 60_000;
@@ -98,6 +100,21 @@ export default function VisaoGeral() {
               </div>
             ))}
           </div>
+
+          {dados.serie && dados.serie.length > 1 && (
+            <div className="graficos-dupla">
+              <section className="cartao" aria-label="Análises registradas por dia">
+                <h2>Análises registradas por dia</h2>
+                <ColunasPorDia pontos={dados.serie.map((p) => ({ dia: p.dia, valor: p.registradas }))} descricao="Análises registradas por dia" />
+                <p className="texto-secundario">Leituras de NFC, drops, C.T/B.L, Recebimento NFC e resultados de TAB, Coliformes e Howard.</p>
+              </section>
+              <section className="cartao" aria-label="Não ok por dia">
+                <h2>Não ok por dia</h2>
+                <LinhaPorDia pontos={dados.serie.map((p) => ({ dia: p.dia, valor: p.nao_ok }))} descricao="Não ok por dia" />
+                <p className="texto-secundario">C.T/B.L Não ok, resultados positivos e desvios abertos.</p>
+              </section>
+            </div>
+          )}
 
           <div className="cartao">
             <h2>Pendências de hoje por bloco</h2>

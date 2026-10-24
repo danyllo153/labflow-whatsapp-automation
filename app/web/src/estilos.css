@@ -1929,3 +1929,735 @@ label.campo {
 .svg-g4 .g4-barra:hover {
   opacity: 0.8;
 }
+
+/* ======================================================================================================
+   Layout profissional (APP-032), a pedido do Danyllo (23/10): mais denso e sóbrio, como os LIMS de mercado.
+   Menu lateral azul, barra no topo só com símbolos (configurações e conta), painéis com barra de título,
+   tabelas compactas e fonte menor. O laranja da marca fica só como destaque (item ativo, foco, avisos).
+   Os valores desta seção valem sobre os das seções de cima (que ficam para o histórico).
+   ====================================================================================================== */
+:root {
+  font-size: 14px;
+  line-height: 1.4;
+
+  --fundo: #f2f4f7;
+  --cartao: #ffffff;
+  --borda: #d3d9e2;
+  --laranja: #f6b04a;
+  --laranja-suave: #e3edf8; /* destaque suave (selecionado, contador): agora azul claro */
+  --menu-ativo: #e6eef8;
+  --texto: #1d2733;
+  --texto-secundario: #5a6677;
+  --acao: #1f6fb5;
+  --acao-botao: #1f6fb5;
+  --acao-escura: #17568f;
+  --acao-fundo: #e6f0fa;
+  --botao-desativado: #9fb9d4;
+  --campo-borda: #b9c3d0;
+  --campo-fundo: #ffffff;
+  --linha-suave: #e6eaf0;
+  --zebra: #f8fafc;
+  --confirma-fundo: #f7fafd;
+  --painel-fundo: #ffffff;
+  --grade: #e3e8ee;
+  --contorno-ponto: #ffffff;
+  --painel-titulo: #1b4b78;
+  --aviso-fundo: #fff4dc;
+  --aviso-borda: #efd89c;
+  --cabecalho-tabela: #e8edf4;
+
+  --menu-fundo: linear-gradient(180deg, #1c5a94 0%, #2776bd 100%);
+  --menu-linha: rgba(255, 255, 255, 0.2);
+  --menu-hover: rgba(255, 255, 255, 0.12);
+  --menu-item-ativo: rgba(0, 0, 0, 0.22);
+  --marca: #ffffff;
+  --largura-menu: 200px;
+
+  --raio: 4px;
+  --sombra-1: 0 1px 2px rgba(20, 40, 70, 0.08);
+  --sombra-2: 0 2px 8px rgba(20, 40, 70, 0.16);
+  --anel: 0 0 0 2px rgba(31, 111, 181, 0.4);
+  --zona-nao-ok: rgba(192, 57, 43, 0.06);
+  --g4-0: #1f6fb5;
+  --g4-1: #f6b04a;
+  --g4-2: #5a6677;
+  --g4-3: #7d5ba6;
+  --g4-4: #1d2733;
+  --ok-fundo: #e3f2ea;
+  --pendente-fundo: #fff0c9;
+  --neutra-fundo: #e9edf2;
+}
+
+@media (min-width: 900px) {
+  :root {
+    font-size: 13px;
+  }
+}
+
+body {
+  font-feature-settings: "tnum" 1;
+}
+
+h1 {
+  font-size: 1.3rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  margin: 0 0 10px;
+}
+
+h2 {
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+.texto-secundario {
+  font-size: 0.85rem;
+}
+
+.trilha {
+  font-size: 0.8rem;
+}
+
+/* painéis: cantos pouco arredondados, sombra mínima e barra de título (como os widgets dos LIMS) */
+.cartao {
+  border-radius: var(--raio);
+  box-shadow: var(--sombra-1);
+  padding: 10px 12px;
+  margin-bottom: 10px;
+}
+
+.cartao > h2:first-child {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: -10px -12px 10px;
+  padding: 6px 12px;
+  background: var(--painel-titulo);
+  color: #fff;
+  font-size: 0.9rem;
+  font-weight: 600;
+  border-radius: 3px 3px 0 0;
+}
+
+.cartao > h2:first-child .contador {
+  background: rgba(255, 255, 255, 0.18);
+  border-color: transparent;
+  color: #fff;
+}
+
+.cartao > h2:first-child .etiqueta {
+  margin-left: auto;
+}
+
+.contador {
+  border-radius: 3px;
+  padding: 0 7px;
+  font-size: 0.75rem;
+  background: var(--laranja-suave);
+  border: 1px solid var(--borda);
+  color: var(--texto);
+}
+
+.cartao h3 {
+  font-size: 0.9rem;
+}
+
+/* números do Início: compactos, sem cara de "card de aplicativo" */
+.cartoes-numeros {
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.cartao-numero {
+  border-radius: var(--raio);
+  padding: 8px 10px;
+  min-height: 58px;
+  box-shadow: var(--sombra-1);
+}
+
+.cartao-numero .numero {
+  font-size: 1.6rem;
+  font-weight: 600;
+}
+
+.cartao-numero .rotulo {
+  font-size: 0.78rem;
+}
+
+.cartao-numero:hover {
+  border-color: var(--acao);
+  box-shadow: var(--sombra-1);
+}
+
+.cartao-numero.ativo {
+  border-color: var(--acao);
+  background: var(--acao-fundo);
+}
+
+/* etiquetas: pequenas e retas */
+.etiqueta {
+  border-radius: 3px;
+  padding: 1px 7px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0;
+}
+
+/* botões e campos: retos e compactos no computador; no celular continuam grandes para o dedo */
+.botao,
+.botao-secundario,
+.botao-topo {
+  border-radius: 4px;
+  font-size: 0.92rem;
+}
+
+.botao-principal {
+  box-shadow: none;
+}
+
+.campo input,
+.campo select,
+.campo textarea {
+  border-radius: 4px;
+}
+
+@media (min-width: 900px) {
+  .botao,
+  .botao-secundario {
+    min-height: 32px;
+    padding: 4px 12px;
+  }
+
+  .campo input,
+  .campo select {
+    min-height: 32px;
+    padding: 5px 9px;
+  }
+
+  .cartao .botao,
+  .conteudo form > .botao {
+    min-width: 140px;
+    padding: 4px 16px;
+  }
+
+  .conteudo {
+    padding: 16px 20px;
+    max-width: none;
+  }
+}
+
+/* avisos */
+.faixa-demonstracao {
+  background: var(--aviso-fundo);
+  border: 1px solid var(--aviso-borda);
+  border-radius: 3px;
+  padding: 4px 10px;
+  font-size: 0.8rem;
+  margin-bottom: 10px;
+}
+
+.aviso-turno,
+.aviso-checkin,
+.herdadas,
+.confirmacao {
+  background: var(--aviso-fundo);
+  border-radius: 3px;
+  border-left: 3px solid var(--laranja);
+}
+
+.confirmacao {
+  background: var(--confirma-fundo);
+}
+
+.botao-secundario[aria-pressed="true"],
+.botao-tipo[aria-pressed="true"],
+.opcao-turno.escolhida {
+  background: var(--acao-fundo);
+  border-color: var(--acao);
+  color: var(--texto);
+}
+
+.opcao-turno {
+  border-radius: 3px;
+  padding: 7px 10px;
+}
+
+/* tabelas compactas, com cabeçalho cinza-azulado e destaque ao passar o mouse */
+.tabela-dados {
+  font-size: 0.88rem;
+}
+
+.tabela-dados th,
+.tabela-dados td {
+  padding: 4px 8px;
+}
+
+.tabela-dados th {
+  background: var(--cabecalho-tabela);
+  color: var(--texto);
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-bottom: 1px solid var(--campo-borda);
+}
+
+@media (min-width: 900px) {
+  .so-tela .tabela-dados {
+    border-radius: var(--raio);
+    box-shadow: none;
+    border: 1px solid var(--borda);
+  }
+
+  .so-tela .tabela-dados th {
+    border-bottom: 1px solid var(--campo-borda);
+    font-size: 0.8rem;
+  }
+
+  .so-tela .tabela-dados tbody tr:hover {
+    background: var(--menu-ativo);
+  }
+}
+
+/* menu lateral azul (computador e tablet) */
+.menu-lateral {
+  color: #fff;
+}
+
+.marca {
+  font-weight: 700;
+}
+
+@media (min-width: 900px) {
+  .moldura {
+    grid-template-columns: var(--largura-menu) 1fr;
+  }
+
+  .menu-lateral {
+    padding: 14px 8px;
+    box-shadow: none;
+  }
+
+  .menu-lateral .marca {
+    font-size: 1.15rem;
+    padding: 2px 10px 14px;
+  }
+
+  .item-menu {
+    color: #eaf2fb;
+    padding: 7px 10px;
+    margin-bottom: 2px;
+    border-radius: 3px;
+    font-size: 0.93rem;
+  }
+
+  .item-menu:hover {
+    background: var(--menu-hover);
+  }
+
+  .item-menu.active {
+    background: var(--menu-item-ativo);
+    color: #fff;
+    font-weight: 600;
+  }
+
+  .item-menu.active::before {
+    left: -8px;
+    top: 5px;
+    bottom: 5px;
+    width: 3px;
+    background: var(--laranja);
+  }
+
+  .item-menu.active .icone {
+    color: var(--laranja);
+  }
+
+  .item-menu .icone {
+    width: 18px;
+    height: 18px;
+  }
+
+  .etiqueta-breve {
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 0.68rem;
+  }
+
+  .coluna {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  /* a barra do topo aparece também no computador, só com os símbolos à direita */
+  .topo-celular {
+    display: flex;
+    justify-content: flex-end;
+    height: 42px;
+    padding: 0 14px;
+    background: var(--cartao);
+    color: var(--texto-secundario);
+    border-bottom: 1px solid var(--borda);
+    box-shadow: none;
+  }
+
+  .topo-celular .marca {
+    display: none;
+  }
+}
+
+/* barra do topo no celular: azul, marca à esquerda e os dois símbolos à direita */
+@media (max-width: 899px) {
+  .topo-celular {
+    padding: 8px 12px;
+    background: var(--menu-fundo);
+    color: #fff;
+    align-items: center;
+  }
+
+  .topo-celular .marca {
+    color: #fff;
+  }
+}
+
+.topo-icones {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.icone-topo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.icone-topo:hover {
+  background: rgba(127, 140, 160, 0.2);
+}
+
+.icone-topo .icone {
+  width: 20px;
+  height: 20px;
+}
+
+@media (min-width: 900px) {
+  .icone-topo:hover {
+    color: var(--acao);
+  }
+}
+
+.menu-conta {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 10;
+  min-width: 230px;
+  padding: 10px;
+  background: var(--cartao);
+  color: var(--texto);
+  border: 1px solid var(--borda);
+  border-radius: 4px;
+  box-shadow: var(--sombra-2);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.menu-conta-nome {
+  font-weight: 600;
+}
+
+.menu-conta .texto-secundario {
+  padding-bottom: 6px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid var(--linha-suave);
+}
+
+.menu-conta a,
+.menu-conta button {
+  display: block;
+  padding: 6px 8px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--texto);
+  font: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.menu-conta a:hover,
+.menu-conta button:hover {
+  background: var(--menu-ativo);
+}
+
+/* barra de baixo no celular */
+.barra-baixo {
+  box-shadow: 0 -1px 6px rgba(20, 40, 70, 0.1);
+}
+
+.item-barra.active {
+  background: var(--acao-fundo);
+}
+
+/* filtros e listas */
+.etiquetas-filtro li {
+  border-radius: 3px;
+}
+
+.lista-simples li,
+.lista-turnos li {
+  padding: 3px 0;
+}
+
+.atividade {
+  padding: 5px 0;
+}
+
+.atividade-botoes .botao-secundario {
+  min-height: 30px;
+  padding: 3px 10px;
+}
+
+@media (max-width: 899px) {
+  .atividade-botoes .botao-secundario {
+    min-height: 40px;
+  }
+}
+
+/* tema escuro do layout profissional: azul-acinzentado, na mesma estrutura */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema="claro"]) {
+    --fundo: #11161c;
+    --cartao: #1a212a;
+    --borda: #2c3541;
+    --laranja: #f6b04a;
+    --laranja-suave: #223449;
+    --menu-ativo: #1f2d3d;
+    --texto: #e6ebf2;
+    --texto-secundario: #98a3b3;
+    --acao: #6db0ef;
+    --acao-botao: #2a6aa8;
+    --acao-escura: #8cc0f3;
+    --acao-fundo: #1b2c40;
+    --botao-desativado: #34506b;
+    --campo-borda: #3d4a5a;
+    --campo-fundo: #141a21;
+    --linha-suave: #252e39;
+    --zebra: #1d252f;
+    --confirma-fundo: #1e2a38;
+    --painel-fundo: #1c242d;
+    --grade: #2a3441;
+    --contorno-ponto: #1a212a;
+    --painel-titulo: #1f4a75;
+    --aviso-fundo: #3a2f17;
+    --aviso-borda: #5d4a1e;
+    --cabecalho-tabela: #232d39;
+    --menu-fundo: linear-gradient(180deg, #14283d 0%, #1a3a5c 100%);
+    --menu-linha: rgba(255, 255, 255, 0.14);
+    --menu-hover: rgba(255, 255, 255, 0.08);
+    --menu-item-ativo: rgba(0, 0, 0, 0.3);
+    --marca: #ffffff;
+    --sombra-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --sombra-2: 0 2px 10px rgba(0, 0, 0, 0.5);
+    --anel: 0 0 0 2px rgba(109, 176, 239, 0.55);
+    --zona-nao-ok: rgba(242, 139, 130, 0.09);
+    --ok-fundo: #1d3a29;
+    --ok-texto: #93dfb2;
+    --nao-ok-fundo: #432220;
+    --nao-ok-texto: #ffb0a8;
+    --pendente-fundo: #433610;
+    --pendente-texto: #f6d36b;
+    --neutra-fundo: #2a3340;
+    --g4-0: #6db0ef;
+    --g4-1: #f6b04a;
+    --g4-2: #a3adbb;
+    --g4-3: #b79be0;
+    --g4-4: #e6ebf2;
+    color-scheme: dark;
+  }
+
+  :root:not([data-tema="claro"]) .topo-celular {
+    color: var(--texto-secundario);
+  }
+}
+
+:root[data-tema="escuro"] {
+  --fundo: #11161c;
+  --cartao: #1a212a;
+  --borda: #2c3541;
+  --laranja: #f6b04a;
+  --laranja-suave: #223449;
+  --menu-ativo: #1f2d3d;
+  --texto: #e6ebf2;
+  --texto-secundario: #98a3b3;
+  --acao: #6db0ef;
+  --acao-botao: #2a6aa8;
+  --acao-escura: #8cc0f3;
+  --acao-fundo: #1b2c40;
+  --botao-desativado: #34506b;
+  --campo-borda: #3d4a5a;
+  --campo-fundo: #141a21;
+  --linha-suave: #252e39;
+  --zebra: #1d252f;
+  --confirma-fundo: #1e2a38;
+  --painel-fundo: #1c242d;
+  --grade: #2a3441;
+  --contorno-ponto: #1a212a;
+  --painel-titulo: #1f4a75;
+  --aviso-fundo: #3a2f17;
+  --aviso-borda: #5d4a1e;
+  --cabecalho-tabela: #232d39;
+  --menu-fundo: linear-gradient(180deg, #14283d 0%, #1a3a5c 100%);
+  --menu-linha: rgba(255, 255, 255, 0.14);
+  --menu-hover: rgba(255, 255, 255, 0.08);
+  --menu-item-ativo: rgba(0, 0, 0, 0.3);
+  --marca: #ffffff;
+  --sombra-1: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --sombra-2: 0 2px 10px rgba(0, 0, 0, 0.5);
+  --anel: 0 0 0 2px rgba(109, 176, 239, 0.55);
+  --zona-nao-ok: rgba(242, 139, 130, 0.09);
+  --ok-fundo: #1d3a29;
+  --ok-texto: #93dfb2;
+  --nao-ok-fundo: #432220;
+  --nao-ok-texto: #ffb0a8;
+  --pendente-fundo: #433610;
+  --pendente-texto: #f6d36b;
+  --neutra-fundo: #2a3340;
+  --g4-0: #6db0ef;
+  --g4-1: #f6b04a;
+  --g4-2: #a3adbb;
+  --g4-3: #b79be0;
+  --g4-4: #e6ebf2;
+  color-scheme: dark;
+}
+
+:root[data-tema="escuro"] .topo-celular {
+  color: var(--texto-secundario);
+}
+
+/* celular: a barra do topo continua azul nos dois temas */
+@media (max-width: 899px) {
+  .topo-celular,
+  :root[data-tema="escuro"] .topo-celular,
+  :root:not([data-tema="claro"]) .topo-celular {
+    color: #fff;
+  }
+}
+
+/* gráficos no estilo dos painéis de LIMS (APP-032) */
+.graficos-dupla {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 10px;
+}
+
+.graficos-dupla .cartao {
+  margin-bottom: 10px;
+}
+
+.svg-grafico {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.coluna-dia {
+  fill: var(--acao);
+}
+
+.coluna-dia:hover {
+  fill: var(--acao-escura);
+}
+
+.linha-dia {
+  fill: none;
+  stroke: var(--acao);
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.ponto-dia {
+  fill: var(--cartao);
+  stroke: var(--acao);
+  stroke-width: 1.6;
+}
+
+.ponto-dia:hover {
+  fill: var(--acao);
+}
+
+.barras-situacao {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.barra-linha {
+  display: grid;
+  grid-template-columns: 110px 1fr 90px;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 3px 4px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--texto);
+  font: inherit;
+  text-align: left;
+}
+
+button.barra-linha {
+  cursor: pointer;
+}
+
+button.barra-linha:hover,
+.barra-linha.escolhida {
+  background: var(--menu-ativo);
+}
+
+.barra-rotulo {
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+}
+
+.barra-trilho {
+  display: block;
+  height: 12px;
+  background: var(--linha-suave);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.barra-preenchida {
+  display: block;
+  height: 100%;
+  border-radius: 2px;
+}
+
+.barra-valor {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-align: right;
+}
+
+@media (max-width: 480px) {
+  .barra-linha {
+    grid-template-columns: 90px 1fr 70px;
+    gap: 6px;
+  }
+}
