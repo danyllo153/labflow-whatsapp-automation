@@ -400,6 +400,20 @@ Desde 23/10/2026, pelas mesmas funções do banco que o app usa (migration `036`
 - Dois loads com o mesmo número (itens diferentes)? O bot pede o item: `corrigir lote 4 do load 43670 item 2549 para 40`.
 - Consultor e Coletor não corrigem recebimento.
 
+### Corrigir um resultado de C.T/B.L (Admin e Analista)
+```
+corrigir ct do load 43755 para <1 motivo foto leu errado
+corrigir bl72 do load 43755 lote 148 fresh para <1 motivo placa trocada
+corrigir bl120 do load 43670 item 2549 lote 4 para 20
+```
+Desde 24/10/2026 (migration `039`, função `corrigir_resultado_pelo_bot`). Para um resultado **já gravado** do recebimento do concentrado (FCOJ) ou do **recebimento NFC**:
+- Pelo load o bot sabe se é NFC ou FCOJ. Com um lote só com aquele resultado, é ele; com vários, pede o lote (e, no NFC, fresh ou past quando há os dois). Dois loads com o mesmo número: pede o item.
+- No NFC o valor é **o da placa**, como no `ct nfc ... deu`: o bot multiplica pela diluição gravada.
+- Mostra "era 21 (21000) → <1 (<1000)" e pede **sim**; depois do sim grava e guarda no histórico o antes, o depois, o motivo e **quem corrigiu**.
+- **Motivo:** obrigatório para o **Analista** e opcional para o **Admin** (decisão do Danyllo, 24/10). Vai no fim: `motivo ...` (ou `porque ...`).
+- Se o resultado mudou entre a pergunta e o sim, nada é gravado (mande de novo). Embarque fica de fora por ora: use o comando de sempre (`ct navio ... amostra 3 deu 20`).
+- Consultor e Coletor não corrigem resultado. `bl` sem 72 ou 120 é recusado.
+
 ### Compostas
 ```
 compostas do load 77001 (1-5)(6-10)(11,12,15)
