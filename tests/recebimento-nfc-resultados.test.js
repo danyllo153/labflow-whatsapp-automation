@@ -121,17 +121,20 @@ test('workflow: o resultado do NFC passa por resolver, pergunta e sim; a gravaç
   const resolver = workflow.nodes.find((n) => n.name === 'BD · Resolver contagens NFC').parameters;
   assert.match(resolver.query, /it\.codigo = '129'/);
   assert.match(resolver.options.queryReplacement, /pedidos/);
+  // desde a 046 grava pela lancar_contagem_nfc (a mesma do app)
   const grava = workflow.nodes.find((n) => n.name === 'BD · Gravar contagens NFC');
-  assert.match(grava.parameters.query, /p\.j ->> 'acao' = 'contagem_nfc'/);
-  assert.match(grava.parameters.query, /ON CONFLICT \(analise, recebimento_nfc_id\) DO UPDATE/);
-  assert.match(grava.parameters.query, /valor_lido/);
+  assert.match(grava.parameters.query, /\$1::jsonb ->> 'acao' = 'contagem_nfc'/);
+  assert.match(grava.parameters.query, /contagem_nfc_lancar_pelo_bot\(\$2::text, \$1::jsonb -> 'itens'\)/);
+  const m046 = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'db', 'migrations', '046_nfc_funcoes.sql'), 'utf8');
+  assert.match(m046, /v_fin := trim_scale\(v_lido \* power\(10::numeric, v_r\.diluicao\)\);/);
+  assert.match(m046, /valor_lido/);
   assert.equal(grava.alwaysOutputData, true);
   assert.match(grava.parameters.options.queryReplacement || '={{ [$(\'Processar sim ou não\').first().json.tabAcao', /tabAcao|undefined/);
 });
 
 test('workflow: corrigir a diluição do lote recalcula os resultados já gravados', () => {
-  const q = workflow.nodes.find((n) => n.name === 'BD · Gravar recebimento NFC').parameters.query;
-  assert.match(q, /UPDATE contagens_nfc c SET diluicao = i\.diluicao, valor = c\.valor_lido \* power\(10, i\.diluicao\)/);
+  const q = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'db', 'migrations', '046_nfc_funcoes.sql'), 'utf8');
+  assert.match(q, /UPDATE contagens_nfc c SET diluicao = i\.diluicao, valor = trim_scale\(c\.valor_lido \* power\(10::numeric, i\.diluicao\)\)/);
   assert.match(q, /c\.diluicao <> i\.diluicao/);
   const resp = rodar('Montar resposta recebimento NFC', { gravados: [{ lote: 10, amostra: 'past', diluicao: 2, novo: false, era: 1 }], recalculados: 3 },
     { item: interpretar('load 44300 fab aqa item 129 lote 10 past 10 elevado a 2') })[0].json.textoResposta;
@@ -262,9 +265,9 @@ test('comando: recebimento NFC com "resultados" no fim grava junto (o SQL insere
   assert.deepEqual(c.blocos[0].itens[0].resultados.map((x) => [x.analise, x.sinal, x.valor]), [['CT', '=', 14], ['BL72', '<', 10], ['BL120', '=', 5]]);
   assert.equal(interpretar('recebimento nfc load 44302 fab col item 129 lote 13 fresh 10 elevado a 2 resultados ct 14 ct 15').tipo, 'erro_coleta');
   assert.equal(interpretar('recebimento nfc load 44302 fab col item 129 lote 13 fresh 10 elevado a 2').blocos[0].itens[0].resultados, undefined);
-  const q = workflow.nodes.find((n) => n.name === 'BD · Gravar recebimento NFC').parameters.query;
+  const q = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'db', 'migrations', '046_nfc_funcoes.sql'), 'utf8');
   assert.match(q, /INSERT INTO contagens_nfc \(analise, recebimento_nfc_id, sinal, valor, valor_lido, diluicao, lido_por\)/);
-  assert.match(q, /p\.lido \* power\(10, p\.diluicao\), p\.lido/);
+  assert.match(q, /trim_scale\(p\.lido \* power\(10::numeric, p\.diluicao\)\), p\.lido/);
   const resp = rodar('Montar resposta recebimento NFC', [{ gravados: [{ load: '44302', lote: 13, amostra: 'fresh', diluicao: 2, novo: true, era: null }], recalculados: 0, resultados_gravados: 3, conflitos: null }],
     { item: { ...c, nomeContato: 'Ana' } })[0].json.textoResposta;
   assert.match(resp, /lote 13 · fresh · 10\^2 — CT 14 · BL72 <10 · BL120 5/);

@@ -177,9 +177,11 @@ test('workflow: o lote entra entre o desvio e o executor de NFC e só age com ac
   assert.deepEqual(c['BD · Gravar contagens da foto'].main[0].map((x) => x.node), ['BD · Gravar contagens NFC']);
   assert.deepEqual(c['BD · Gravar contagens NFC'].main[0].map((x) => x.node), ['BD · Executar NFC']);
   const n = workflow.nodes.find((x) => x.name === 'BD · Executar placas da foto');
-  assert.match(n.parameters.query, /p\.j ->> 'acao' = 'placas_lote'/);
+  assert.match(n.parameters.query, /\$1::jsonb ->> 'acao' = 'placas_lote'/);
   assert.doesNotMatch(n.parameters.query, /desvios_tanque/, 'não abre desvio');
-  assert.match(n.parameters.query, /ON CONFLICT \(analise_id, etapa, placa\)/);
+  assert.match(n.parameters.query, /placas_lancar_pelo_bot\(\$2::text, \$1::jsonb -> 'itens'\)/, 'grava pela lancar_placas (042), a mesma do app');
+  const sql = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'db', 'migrations', '042_tanques_funcoes.sql'), 'utf8');
+  assert.match(sql, /ON CONFLICT \(analise_id, etapa, placa\) DO UPDATE/);
   assert.match(n.parameters.options.queryReplacement, /nfcAcao/);
   assert.equal(n.alwaysOutputData, true);
   // o executor de placa única não confunde o lote com uma placa

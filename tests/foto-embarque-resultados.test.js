@@ -121,8 +121,8 @@ test('o prompt ensina os resultados do embarque e que riscado não vale', () => 
 
 test('workflow: o lote de contagens roda depois do "sim", só com acao contagem_lote, e a busca traz as amostras', () => {
   const n = workflow.nodes.find((x) => x.name === 'BD · Gravar contagens da foto');
-  assert.match(n.parameters.query, /p\.j ->> 'acao' = 'contagem_lote'/);
-  assert.match(n.parameters.query, /ON CONFLICT \(analise, embarque_amostra_id\)/);
+  assert.match(n.parameters.query, /\$1::jsonb ->> 'acao' = 'contagem_lote'/);
+  assert.match(n.parameters.query, /contagem_lancar_pelo_bot\(\$2::text, \$1::jsonb\)/, 'grava pela lancar_contagem (040), a mesma do app');
   assert.match(n.parameters.options.queryReplacement, /tabAcao/);
   assert.equal(n.alwaysOutputData, true);
   const busca = workflow.nodes.find((x) => x.name === 'BD · Compostas da foto').parameters;

@@ -24,6 +24,23 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
   início" ajusta o começo do lote em uso quando preciso.
 
 ### Adicionado
+- **Desvio de tanque, repetição e leitura do dia por funções do banco** (PB17 da Fase E, migration `047`, 24/10):
+  `abrir_desvio_tanque`, `registrar_repeticao` e `finalizar_leitura_do_dia`, as mesmas para o bot e o app; o bot já usa no "sim".
+- **Recebimento de NFC por funções do banco** (PB16 da Fase E, migration `046`, 24/10): `registrar_recebimento_nfc` e
+  `lancar_contagem_nfc`, as mesmas para o bot e o app; o bot já usa no comando, na foto do laudo e no "sim" do C.T/B.L do NFC.
+- **Embarque por funções do banco** (PB12 da Fase E, migration `045`, 24/10): `registrar_embarque` e
+  `criar_compostas_embarque`, as mesmas para o bot e o app; o bot já usa no comando e na foto do embarque.
+- **Drops e desvio de drop por funções do banco** (PB15 da Fase E, migration `044`, 24/10): `concluir_drops`,
+  `abrir_desvio_drop` e `fechar_desvio_drop`, as mesmas para o bot e o app; o bot já usa no "drops concluídos" e no "sim" do desvio.
+- **Compostas, TAB, Coliformes e Howard por funções do banco** (PB13 da Fase E, migration `043`, 24/10): `criar_compostas`,
+  `teste_feito` e `teste_acao` (espalhar, confirmar, negativos, resultado, abrir lote a lote e Howard), as mesmas para o bot e
+  o app. O bot já usa nos comandos e no "sim"; se o banco recusar, diz por quê.
+- **Tanques por funções do banco** (PB14 da Fase E, migration `042`, 24/10): `registrar_coleta`, `registrar_analise`,
+  `concluir_leitura` e `lancar_placas`, as mesmas para o bot e o app. O bot já grava coleta, análise, leituras e placas por elas.
+  Novo: a mesma análise (frasco e data) na mesma coleta é recusada, em vez de duplicar.
+- **O bot grava o recebimento de FCOJ e o C.T/B.L pelas funções do banco** (migration `041`, 24/10): as mesmas do app
+  (040), pelo comando, pelo áudio e pela foto. Mesmas regras e respostas; agora um resultado lançado de novo fica no histórico
+  e, se o banco recusar, o bot diz por quê em vez de "Feito".
 - **Páginas como tela de apps e o Recebimento FCOJ como app** (app, APP-057, Fase E passos E1 e E2, 24/10; migration
   068): cada análise vira um ícone com o estado do dia ("2 atrasados · 7 para hoje", "Em dia"), com busca pelo nome e
   um grupo novo "Rotina do laboratório". No celular, o Recebimento FCOJ abre um menu que sobe de baixo (Painel,

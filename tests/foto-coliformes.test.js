@@ -130,8 +130,11 @@ test('resposta do comando interno: positivo pergunta se abre lote a lote (pendê
 });
 
 test('banco: o "abrir" aceita a composta que a foto fechou positiva; o comando interno tem rota e SQL', () => {
+  // desde a 043, o "abrir" é da teste_acao (a mesma do app), chamada pelo BD · Atualizar TABs
   const at = workflow.nodes.find((n) => n.name === 'BD · Atualizar TABs').parameters.query;
-  assert.match(at, /t\.status = 'Concluída' AND t\.resultado = 'Positivo'/);
+  assert.match(at, /teste_acao_pelo_bot\(\$2::text, \$1::jsonb\)/);
+  const f043 = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'db', 'migrations', '043_testes_funcoes.sql'), 'utf8');
+  assert.match(f043, /t\.status = 'Concluída' AND t\.resultado = 'Positivo'/);
   const sql = workflow.nodes.find((n) => n.name === 'BD · Coliformes da foto').parameters.query;
   assert.match(sql, /ON CONFLICT \(tipo, composta_id\) DO NOTHING/);
   assert.match(sql, /a\.status <> 'Em confirmação'/, 'não mexe em composta já aberta lote a lote');

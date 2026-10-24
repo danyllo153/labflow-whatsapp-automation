@@ -184,19 +184,23 @@ test('resposta do recebimento avisa dos resultados <10 gravados', () => {
   const item = { load: '44300', item: '2703', fabrica: 'AQA', nomeContato: 'Admin', dataRecebimento: '16/10/2026', lotes: [1, 2, 3], resultadosMenor10: '1' };
   const $ = () => ({ first: () => ({ json: item }) });
   const montar = (r) => new Function('$', '$input', codigoDoNode('Montar resposta recebimento'))($, { first: () => ({ json: r }) })[0].json;
-  assert.match(montar({ novos: [1, 2, 3], resultados_gravados: 9 }).textoResposta, /gravados como <10 \(sem crescimento\): 9 resultados/);
-  assert.doesNotMatch(montar({ novos: [], resultados_gravados: 0 }).textoResposta, /gravados como <10/);
+  assert.match(montar({ r: { ok: true, novos: [1, 2, 3], repetidos: [], resultados_gravados: 9 } }).textoResposta, /gravados como <10 \(sem crescimento\): 9 resultados/);
+  assert.doesNotMatch(montar({ r: { ok: true, novos: [], repetidos: [1, 2, 3], resultados_gravados: 0 } }).textoResposta, /gravados como <10/);
+  assert.equal(montar({ r: { ok: false, erro: 'O load 44300 (item 2703) já está cadastrado com a fábrica UCH, não AQA.' } }).textoResposta,
+    '❌ O load 44300 (item 2703) já está cadastrado com a fábrica UCH, não AQA. Nada foi gravado.');
 });
 
-test('o SQL do recebimento só grava <10 nos lotes novos, sem sobrescrever e só com o sufixo', () => {
+test('o recebimento grava pela registrar_recebimento (040): <10 só nos lotes novos, sem sobrescrever e só com o sufixo', () => {
   const { workflow } = require('./helpers/executar-node');
+  const fs = require('node:fs');
+  const path = require('node:path');
   const no = workflow.nodes.find((n) => n.name === 'BD · Gravar recebimento');
-  const q = no.parameters.query;
-  assert.match(q, /INSERT INTO contagens \(analise, recebimento_lote_id, sinal, valor, lido_por\)/);
-  assert.match(q, /VALUES \('CT'\), \('BL72'\), \('BL120'\)/);
-  assert.match(q, /RETURNING id, lote\n\), res AS \(/);              // usa o id devolvido pela inserção (a mesma instrução não enxerga as linhas novas)
-  assert.match(q, /FROM ins\n  CROSS JOIN \(VALUES \('CT'\)/);          // só os lotes novos
-  assert.match(q, /WHERE \$7::text = '1'/);                          // só com o sufixo
-  assert.match(q, /ON CONFLICT \(analise, recebimento_lote_id\) DO NOTHING/); // não sobrescreve resultado existente
+  assert.match(no.parameters.query, /SELECT recebimento_registrar_pelo_bot\(\$6::text, \$1::text, \$2::text, \$3::text, \$4::jsonb, \$5::text, \$7::text\) AS r;/);
   assert.match(no.parameters.options.queryReplacement, /\$json\.resultadosMenor10/);
+  const sql = fs.readFileSync(path.join(__dirname, '..', 'db', 'migrations', '040_recebimento_registrar_lancar.sql'), 'utf8');
+  assert.match(sql, /WHERE r\.load_id = v_load_row\.id AND r\.lote = ANY \(v_novos\)/);  // só os lotes novos
+  assert.match(sql, /IF p_resultados_menor10 THEN/);                                    // só com o sufixo
+  assert.match(sql, /ON CONFLICT \(analise, recebimento_lote_id\) DO NOTHING/);        // não sobrescreve resultado existente
+  const bot = fs.readFileSync(path.join(__dirname, '..', 'db', 'migrations', '041_recebimento_contagem_bot.sql'), 'utf8');
+  assert.match(bot, /COALESCE\(p_menor10, ''\) = '1'/);
 });
