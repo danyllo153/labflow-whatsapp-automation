@@ -33,8 +33,7 @@ ROTULO_DO_TIPO = {"Ponteira": "Ponteiras", "Meio": "Meio de cultura", "Frasco": 
 def rotulo_do_material(tipo: str, meio: str | None, descricao: str | None) -> str:
     if tipo == "Outro":
         return descricao or "Outro"
-    base = ROTULO_DO_TIPO[tipo]
-    return f"{base} ({meio})" if meio else base
+    return ROTULO_DO_TIPO[tipo]  # o nome do meio (ex.: PDA) fica só no app: no laudo oficial vai "Meio de cultura" (24/10)
 
 
 def primeiro_nome(nome: str) -> str:

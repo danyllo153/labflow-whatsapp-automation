@@ -7,7 +7,7 @@ A diferença (field chart − supervisório) só aparece quando as duas temperat
 As faixas de trabalho são confidenciais: ficam só no banco (cadastradas pelo Admin, APP-028).
 """
 
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 from typing import Literal
 
@@ -55,6 +55,16 @@ class Resumo(BaseModel):
     pendentes: int
 
 
+class AlertaEstufa(BaseModel):
+    """Leitura que ficou Não ok num turno anterior e ninguém conferiu Ok depois: passa como alerta para o turno seguinte."""
+
+    estufa: int
+    leitura: str
+    desde: str  # dd/mm HH:MM da primeira leitura Não ok seguida
+    temperatura: Decimal | None  # a da última leitura Não ok
+    observacao: str | None
+
+
 class EstufasDoTurno(BaseModel):
     turno_id: int
     turno: str
@@ -62,6 +72,7 @@ class EstufasDoTurno(BaseModel):
     pode_registrar: bool
     resumo: Resumo
     estufas: list[Estufa]
+    alertas: list[AlertaEstufa]
 
 
 ESTUFAS_SQL = """
@@ -122,12 +133,44 @@ def ocorrencias_do_turno(con: psycopg.Connection, turno_id: int, dia: date) -> l
     return texto
 
 
+DIAS_DE_ALERTA = 7
+
+# Por estufa e leitura: as Não ok depois da última Ok (nos últimos 7 dias). Vira alerta se começou antes deste turno.
+ALERTAS_SQL = """
+WITH ultima_ok AS (
+    SELECT estufa_id, leitura, max(feita_em) AS em FROM app.leituras_estufa
+    WHERE ok AND feita_em > %(limite)s GROUP BY estufa_id, leitura
+)
+SELECT l.estufa_id, l.leitura, min(l.feita_em),
+       (array_agg(l.temperatura ORDER BY l.feita_em DESC))[1], (array_agg(l.observacao ORDER BY l.feita_em DESC))[1]
+FROM app.leituras_estufa l JOIN app.estufas e ON e.id = l.estufa_id AND e.ativa
+LEFT JOIN ultima_ok o ON o.estufa_id = l.estufa_id AND o.leitura = l.leitura
+WHERE NOT l.ok AND l.feita_em > coalesce(o.em, %(limite)s) AND l.feita_em <= %(agora)s
+GROUP BY l.estufa_id, l.leitura
+HAVING min(l.feita_em) < %(comeco)s
+ORDER BY l.estufa_id, l.leitura DESC
+"""
+
+
+def alertas(con: psycopg.Connection, turno: rotas_turno.Turno, dia: date) -> list[AlertaEstufa]:
+    agora = rotas_turno._agora(con)
+    comeco = rotas_turno.janela(turno, dia)[0]
+    return [
+        AlertaEstufa(
+            estufa=e, leitura=l, desde=d.astimezone(rotas_turno.FUSO).strftime("%d/%m %H:%M"), temperatura=t, observacao=o
+        )
+        for e, l, d, t, o in con.execute(
+            ALERTAS_SQL, {"limite": agora - timedelta(days=DIAS_DE_ALERTA), "agora": agora, "comeco": comeco}
+        )
+    ]
+
+
 def _pagina(con: psycopg.Connection, pessoa: PessoaLogada) -> EstufasDoTurno:
     turno, dia = rotas_atividades._turno_da_pessoa(con, pessoa)
     estufas = estufas_do_turno(con, turno.id, dia)
     return EstufasDoTurno(
         turno_id=turno.id, turno=turno.nome, dia=dia, pode_registrar=pode(pessoa.cargo, "registrar_analise"),
-        resumo=resumo(estufas), estufas=estufas,
+        resumo=resumo(estufas), estufas=estufas, alertas=alertas(con, turno, dia),
     )
 
 

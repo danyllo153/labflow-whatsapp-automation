@@ -4,8 +4,8 @@ Spec: 07-app-pwa.md (v1.0), §2 Turno. Tarefa: APP-033. Tabelas das migrations 0
 
 Regras:
 - vários analistas dividem o mesmo turno: a equipe é quem tem entrada no turno (e ainda não saiu, ou já saiu e fica na lista);
-- a linha do tempo junta, no horário do turno, coletas, leituras NFC, drops, esterilizações, estufas, atividades fixas e
-  as linhas livres, sempre com quem e a que horas;
+- a linha do tempo junta, no horário do turno, coletas, leituras NFC, drops, esterilizações, estufas Não ok (a
+  conferência Ok não entra), atividades fixas e as linhas livres, sempre com quem e a que horas;
 - "Atividades realizadas" (as linhas livres do relatório em Excel): quem escreveu ou o Admin pode excluir; excluir guarda
   quem e quando (nada se apaga de verdade).
 """
@@ -99,10 +99,11 @@ SELECT * FROM (
     FROM app.esterilizacoes s JOIN usuarios u ON u.id = s.feita_por LEFT JOIN app.credenciais c ON c.usuario_id = s.feita_por
     WHERE s.turno_id = %(turno)s AND s.dia = %(dia)s AND s.excluida_em IS NULL
   UNION ALL
-    SELECT 'estufa', 'Estufa ' || lpad(l.estufa_id::text, 2, '0') || ' · ' || lower(l.leitura) || CASE WHEN l.ok THEN ' ok' ELSE ' não ok' END,
+    SELECT 'estufa', 'Estufa ' || lpad(l.estufa_id::text, 2, '0') || ' · ' || lower(l.leitura) || ' não ok'
+           || coalesce(' (' || replace(l.temperatura::text, '.', ',') || ' °C)', ''),
            coalesce(u.nome, c.usuario), l.feita_em, NULL, NULL
     FROM app.leituras_estufa l JOIN usuarios u ON u.id = l.feita_por LEFT JOIN app.credenciais c ON c.usuario_id = l.feita_por
-    WHERE l.turno_id = %(turno)s AND l.dia = %(dia)s
+    WHERE l.turno_id = %(turno)s AND l.dia = %(dia)s AND NOT l.ok  -- a conferência Ok não entra na linha do tempo (24/10)
   UNION ALL
     SELECT 'atividade', a.texto || CASE WHEN f.feito THEN '' ELSE ' (não feito)' END,
            coalesce(u.nome, c.usuario), f.marcado_em, NULL, NULL

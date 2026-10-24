@@ -59,7 +59,7 @@ def test_eficiente_comeca_em_sim_e_a_pagina_agrupa_materiais_do_mesmo_ciclo(clie
     paginas = cliente.get("/esterilizacao/laudos").json()["paginas"]
     assert len(paginas) == 1 and paginas[0]["linhas"] == 1 and paginas[0]["cheia"] is False and paginas[0]["numero"] == 1
     texto = texto_do_pdf(cliente, paginas[0]["id"])
-    assert "Meio de cultura (PDA) / Frascos" in texto and "A1092/26" in texto and re.search(r"\d\d\.\d\d\.26", texto) and "OK" in texto
+    assert "Meio de cultura / Frascos" in texto and "PDA" not in texto and "A1092/26" in texto and re.search(r"\d\d\.\d\d\.26", texto) and "OK" in texto
 
 
 def test_pagina_cheia_abre_a_proxima_e_impressa_vai_para_o_arquivo(cliente, logado, agora):

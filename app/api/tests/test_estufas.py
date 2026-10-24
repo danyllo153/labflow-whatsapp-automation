@@ -141,3 +141,45 @@ def test_sem_check_in_nao_ve_nem_confere(cliente, logado):
     logado()
     assert cliente.get("/estufas").status_code == 403
     assert cliente.put("/estufas/3", json={"leitura": "Supervisório", "ok": True}).status_code == 403
+
+
+def _leitura(conexao, uid, estufa, leitura, ok, quando, turno_id, dia, temperatura=None):
+    conexao.execute(
+        "INSERT INTO app.leituras_estufa (estufa_id, leitura, ok, temperatura, turno_id, dia, feita_por, feita_em) "
+        "VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
+        (estufa, leitura, ok, temperatura, turno_id, dia, uid, quando),
+    )
+
+
+def test_nao_ok_do_turno_anterior_vira_alerta_ate_alguem_conferir_ok(cliente, logado, agora, faixas, conexao):
+    """24/10: o Não ok passa para o próximo turno como alerta, com o horário desde quando está fora da faixa."""
+    uid = logado()
+    _leitura(conexao, uid, 3, "Field chart", False, em(22, 17, 10), 2, "2026-10-22", 43.8)
+    _leitura(conexao, uid, 3, "Field chart", False, em(23, 1, 28), 3, "2026-10-23", 44.1)  # a Madrugada também achou fora: o "desde" é o primeiro
+    _leitura(conexao, uid, 4, "Supervisório", True, em(22, 21, 28), 2, "2026-10-22")
+    agora(em(23, 9))  # Manhã do dia seguinte (passou a Madrugada)
+    alertas = cliente.get("/estufas").json()["alertas"]
+    assert [(a["estufa"], a["leitura"], a["desde"], Decimal(a["temperatura"])) for a in alertas] == [
+        (3, "Field chart", "22/10 17:10", Decimal("44.1"))
+    ]
+    # conferiu Ok neste turno: o alerta some
+    _leitura(conexao, uid, 3, "Field chart", True, em(23, 9, 5), 1, "2026-10-23")
+    agora(em(23, 9, 10))
+    assert cliente.get("/estufas").json()["alertas"] == []
+
+
+def test_nao_ok_que_comecou_neste_turno_nao_e_alerta(cliente, logado, agora, faixas, conexao):
+    uid = logado()
+    _leitura(conexao, uid, 2, "Supervisório", False, em(23, 9, 5), 1, "2026-10-23", 40.0)
+    agora(em(23, 9, 10))
+    assert cliente.get("/estufas").json()["alertas"] == []  # já aparece como Não ok na própria conferência
+
+
+def test_linha_do_tempo_so_mostra_estufa_nao_ok(cliente, logado, agora, faixas):
+    agora(em(22, 9))
+    logado()
+    cliente.post("/turno/entrar", json={"turno_id": 1})
+    cliente.put("/estufas/3", json={"leitura": "Supervisório", "ok": True})
+    cliente.put("/estufas/4", json={"leitura": "Supervisório", "ok": False, "temperatura": 43.8})
+    textos = [i["texto"] for i in cliente.get("/turno/registros").json()["itens"] if i["tipo"] == "estufa"]
+    assert textos == ["Estufa 04 · supervisório não ok (43,8 °C)"]

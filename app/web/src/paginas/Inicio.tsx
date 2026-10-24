@@ -5,7 +5,7 @@ import { lerJson } from "../api";
 import { useSessao } from "../sessao";
 import BlocosDePendencias, { type Pendencia } from "../componentes/BlocosDePendencias";
 import AtividadesDoTurno from "./AtividadesDoTurno";
-import type { DadosEstufas } from "./Estufas";
+import { AlertasEstufas, type DadosEstufas } from "./Estufas";
 import type { EstadoDoTurno } from "./Turno";
 
 /**
@@ -132,6 +132,7 @@ export default function Inicio() {
         </>
       )}
 
+      {estufas && <AlertasEstufas alertas={estufas.alertas} />}
       {estufas && (
         <div className="cartao" aria-label="Estufas do turno">
           <h2>

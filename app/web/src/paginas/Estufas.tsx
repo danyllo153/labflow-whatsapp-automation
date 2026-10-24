@@ -33,6 +33,35 @@ export interface DadosEstufas {
   pode_registrar: boolean;
   resumo: { total: number; conferidas: number; nao_ok: number; pendentes: number };
   estufas: EstufaDoTurno[];
+  alertas?: AlertaEstufa[]; // Não ok que veio de um turno anterior e ninguém conferiu Ok depois
+}
+
+export interface AlertaEstufa {
+  estufa: number;
+  leitura: string;
+  desde: string; // dd/mm HH:MM
+  temperatura: string | null;
+  observacao: string | null;
+}
+
+/** Aviso para o turno seguinte (24/10): estufa fora da faixa desde tal horário, até alguém conferir Ok. */
+export function AlertasEstufas({ alertas }: { alertas: AlertaEstufa[] | undefined }) {
+  if (!alertas || alertas.length === 0) return null;
+  return (
+    <div className="cartao alerta-estufas" role="alert" aria-label="Estufas fora da faixa">
+      <h2>Estufas fora da faixa</h2>
+      <ul className="lista-simples">
+        {alertas.map((a) => (
+          <li key={`${a.estufa}-${a.leitura}`}>
+            <strong>{nomeDaEstufa(a.estufa)}</strong> · {a.leitura.toLowerCase()} Não ok desde {a.desde}
+            {a.temperatura !== null && ` (última: ${graus(a.temperatura)})`}
+            {a.observacao && ` · ${a.observacao}`}
+          </li>
+        ))}
+      </ul>
+      <p className="texto-secundario">Confira de novo neste turno: o aviso some quando a leitura ficar Ok.</p>
+    </div>
+  );
 }
 
 type NomeLeitura = "Supervisório" | "Field chart";
@@ -94,6 +123,7 @@ export function ConferenciaEstufas({ embutida = false }: { embutida?: boolean })
         </div>
       )}
       {!dados && !erro && <p className="carregando">Carregando...</p>}
+      {dados && !embutida && <AlertasEstufas alertas={dados.alertas} />}
       {dados && (
         <>
           <p className="texto-secundario">

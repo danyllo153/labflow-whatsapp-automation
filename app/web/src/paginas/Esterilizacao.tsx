@@ -126,7 +126,7 @@ export default function Esterilizacao() {
 }
 
 function Registrar({ tipos, aoRegistrar }: { tipos: string[]; aoRegistrar: (d: DadosEsterilizacao) => void }) {
-  const [tipo, setTipo] = useState("");
+  const [escolhidos, setEscolhidos] = useState<string[]>([]); // vários materiais no mesmo ciclo viram uma linha do laudo
   const [ciclo, setCiclo] = useState("");
   const [meio, setMeio] = useState("");
   const [descricao, setDescricao] = useState("");
@@ -153,14 +153,20 @@ function Registrar({ tipos, aoRegistrar }: { tipos: string[]; aoRegistrar: (d: D
 
   async function registrar(evento: FormEvent) {
     evento.preventDefault();
-    if (!tipo) {
-      setErro("Escolha o que foi esterilizado.");
+    if (escolhidos.length === 0) {
+      setErro("Escolha o que foi esterilizado (pode escolher mais de um).");
       return;
     }
     setEnviando(true);
     setErro("");
     try {
-      aoRegistrar(await enviarJson<DadosEsterilizacao>("/esterilizacao", { tipo, ciclo, meio, descricao }));
+      // um registro por material, todos com o mesmo ciclo: no laudo saem numa linha só ("Ponteiras / Meio de cultura")
+      let ultimo: DadosEsterilizacao | null = null;
+      for (const tipo of tipos.filter((t) => escolhidos.includes(t))) {
+        ultimo = await enviarJson<DadosEsterilizacao>("/esterilizacao", { tipo, ciclo, meio, descricao });
+      }
+      if (ultimo) aoRegistrar(ultimo);
+      setEscolhidos([]);
       setCiclo("");
       setJaTem([]);
       setMeio("");
@@ -175,9 +181,16 @@ function Registrar({ tipos, aoRegistrar }: { tipos: string[]; aoRegistrar: (d: D
   return (
     <form className="cartao" onSubmit={registrar} aria-label="Registrar esterilização">
       <h2>O que foi esterilizado?</h2>
+      <p className="texto-secundario">Toque em tudo o que foi junto no mesmo ciclo.</p>
       <div className="botoes-tipo" role="group" aria-label="Tipo">
         {tipos.map((t) => (
-          <button key={t} type="button" className="botao-secundario botao-tipo" aria-pressed={tipo === t} onClick={() => setTipo(t)}>
+          <button
+            key={t}
+            type="button"
+            className="botao-secundario botao-tipo"
+            aria-pressed={escolhidos.includes(t)}
+            onClick={() => setEscolhidos((atual) => (atual.includes(t) ? atual.filter((x) => x !== t) : [...atual, t]))}
+          >
             {t}
           </button>
         ))}
@@ -192,13 +205,13 @@ function Registrar({ tipos, aoRegistrar }: { tipos: string[]; aoRegistrar: (d: D
           mesma linha do laudo.
         </p>
       )}
-      {tipo === "Meio" && (
+      {escolhidos.includes("Meio") && (
         <label className="campo">
           Nome do meio (opcional)
           <input maxLength={60} placeholder="Ex.: PDA" value={meio} onChange={(e) => setMeio(e.target.value)} />
         </label>
       )}
-      {tipo === "Outro" && (
+      {escolhidos.includes("Outro") && (
         <label className="campo">
           O que foi esterilizado
           <input maxLength={120} value={descricao} onChange={(e) => setDescricao(e.target.value)} />
@@ -210,7 +223,7 @@ function Registrar({ tipos, aoRegistrar }: { tipos: string[]; aoRegistrar: (d: D
         </p>
       )}
       <button type="submit" className="botao botao-principal" disabled={enviando}>
-        Registrar
+        {escolhidos.length > 1 ? `Registrar ${escolhidos.length} no mesmo ciclo` : "Registrar"}
       </button>
     </form>
   );
