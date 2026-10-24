@@ -181,6 +181,11 @@ Cada página do Power BI vira uma página do app, **no mesmo padrão**: cartões
 - **Gravar é igual ao bot:** o app chama a mesma função do banco (Recebimento: `registrar_recebimento` e
   `lancar_contagem`, da 040), primeiro com `previa` (o texto "o que vai ser criado" do banco) e só o Confirmar grava.
   Só Analista e Admin gravam; o Coletor vê.
+- **Compostas do Recebimento FCOJ** (aba Compostas): os loads com lote fora de composta, com o recomendado (uns 5 por
+  composta; 6 vale, 7 vira 3 + 4, 8 vira 4 + 4; decisão de 24/10) e o campo para escrever `(1-5)(6-10)`. Grava pela
+  `criar_compostas` do bot (043). Depois de registrar um load, o botão "Criar as compostas do load" leva direto para ele.
+- **Laudo do Recebimento FCOJ no modelo original** (pendente): preenchido sozinho com os loads registrados, como os outros
+  laudos de rastreio; espera o modelo em PDF.
 - **Instrução** será escrita pelo Admin no próprio app (nada de documento da empresa no repositório). **Vídeo**: em breve.
 
 ### 6. Gráficos

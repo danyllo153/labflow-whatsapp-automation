@@ -306,3 +306,114 @@ def lancar(
         itens.append({"recebimento_lote_id": i.recebimento_lote_id, "sinal": sinal, "valor": valor})
     r = _chamar(con, "SELECT lancar_contagem(%s, %s, %s, %s)", (pessoa.usuario_id, pedido.analise, Jsonb(itens), pedido.previa))
     return Resposta(ok=r["ok"], previa=r["previa"], texto=r["texto"], gravados=r.get("gravados", 0), alarmes=r.get("alarmes", 0))
+
+
+# --- compostas (a função criar_compostas da 043, PB13; permissão na 069) ----------------------------------------------
+
+
+def recomendar_compostas(lotes: list[int]) -> list[list[int]]:
+    """Divide os lotes em compostas de ~5 (pedido do Danyllo, 24/10): até 6 numa composta vale, 7 não.
+
+    O número de compostas é o maior entre "6 por composta" (arredondado para cima) e "5 por composta" (arredondado):
+    20 -> 5+5+5+5; 6 -> 6; 7 -> 3+4; 8 -> 4+4; 12 -> 6+6; 18 -> 4+4+5+5. As maiores ficam no fim, na ordem dos lotes.
+    """
+    ordem = sorted(set(lotes))
+    n = len(ordem)
+    if n == 0:
+        return []
+    k = max(-(-n // 6), int(n / 5 + 0.5), 1)
+    base, sobra = divmod(n, k)
+    tamanhos = [base] * (k - sobra) + [base + 1] * sobra
+    grupos, i = [], 0
+    for t in tamanhos:
+        grupos.append(ordem[i : i + t])
+        i += t
+    return grupos
+
+
+def _grupos(texto: str) -> list[list[int]]:
+    """"(1-5)(6-10)" ou "1-5; 6-10" -> [[1..5], [6..10]]."""
+    partes = re.findall(r"\(([^)]*)\)", texto) or [p for p in re.split(r"[;/|]", texto) if p.strip()]
+    if not partes:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Diga os lotes de cada composta, ex.: (1-5)(6-10).")
+    return [_lotes(p) for p in partes]
+
+
+def _texto_grupos(grupos: list[list[int]]) -> str:
+    return "".join(f"({_faixas(g)})" for g in grupos)
+
+
+class CompostaExistente(BaseModel):
+    id: int
+    lotes: str  # "1-5"
+
+
+class LoadSemComposta(BaseModel):
+    load: str
+    item: str
+    fabrica: str | None
+    recebido_em: date
+    livres: str  # lotes ainda fora de composta: "1-20"
+    n_livres: int
+    compostas: list[CompostaExistente]
+    recomendado: str  # "(1-5)(6-10)(11-15)(16-20)"
+
+
+@roteador.get("/compostas", response_model=list[LoadSemComposta])
+def loads_sem_composta(
+    busca: str = Query(default="", max_length=30),
+    pessoa: PessoaLogada = Depends(exigir("ver_paginas")),
+    con: psycopg.Connection = Depends(obter_conexao),
+) -> list[LoadSemComposta]:
+    """Os loads com lote ainda fora de composta (os últimos 60 dias, ou o load buscado), com a composição recomendada."""
+    termo = busca.strip()
+    linhas = con.execute(
+        """
+        SELECT l.numero, i.codigo, f.nome, max(r.data_recebimento),
+               array_agg(r.lote ORDER BY r.lote) FILTER (WHERE cl.composta_id IS NULL),
+               (SELECT coalesce(jsonb_agg(jsonb_build_object('id', c.id, 'lotes', (
+                         SELECT array_agg(r2.lote ORDER BY r2.lote) FROM composta_lotes cl2
+                         JOIN recebimento_lotes r2 ON r2.id = cl2.recebimento_lote_id WHERE cl2.composta_id = c.id)) ORDER BY c.id), '[]')
+                FROM compostas c WHERE c.load_id = l.id)
+        FROM loads l JOIN itens i ON i.id = l.item_id LEFT JOIN fabricas f ON f.id = l.fabrica_id
+        JOIN recebimento_lotes r ON r.load_id = l.id LEFT JOIN composta_lotes cl ON cl.recebimento_lote_id = r.id
+        WHERE i.codigo <> '129' AND (%(busca)s <> '' AND l.numero = %(busca)s
+                                     OR %(busca)s = '' AND r.data_recebimento >= %(desde)s)
+        GROUP BY l.id, l.numero, i.codigo, f.nome
+        HAVING %(busca)s <> '' OR count(*) FILTER (WHERE cl.composta_id IS NULL) > 0
+        ORDER BY max(r.data_recebimento) DESC, l.numero
+        LIMIT 100
+        """,
+        {"busca": termo, "desde": _hoje(con) - timedelta(days=60)},
+    ).fetchall()
+    return [
+        LoadSemComposta(
+            load=load, item=item, fabrica=fab, recebido_em=recebido, livres=_faixas(livres or []), n_livres=len(livres or []),
+            compostas=[CompostaExistente(id=c["id"], lotes=_faixas(c["lotes"] or [])) for c in compostas],
+            recomendado=_texto_grupos(recomendar_compostas(livres or [])),
+        )
+        for load, item, fab, recebido, livres, compostas in linhas
+    ]
+
+
+class PedidoDeCompostas(BaseModel):
+    load: str = Field(max_length=10)
+    item: str = Field(max_length=10)
+    grupos: str = Field(max_length=300)  # "(1-5)(6-10)"
+    previa: bool = True
+
+
+class RespostaCompostas(BaseModel):
+    ok: bool
+    previa: bool
+    texto: str
+    criadas: int = 0
+
+
+@roteador.post("/compostas", response_model=RespostaCompostas)
+def criar_compostas(
+    pedido: PedidoDeCompostas, pessoa: PessoaLogada = Depends(exigir("registrar_analise")), con: psycopg.Connection = Depends(obter_conexao)
+) -> RespostaCompostas:
+    grupos = _grupos(pedido.grupos)
+    r = _chamar(con, "SELECT criar_compostas(%s, %s, %s, %s, %s)", (pessoa.usuario_id, pedido.load, pedido.item, Jsonb(grupos), pedido.previa))
+    return RespostaCompostas(ok=r["ok"], previa=r["previa"], texto=r["texto"], criadas=r.get("criadas", 0))

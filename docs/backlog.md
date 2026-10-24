@@ -31,6 +31,8 @@
 - [ ] Se as pendências do piloto voltarem a acumular: `C:\Dev\estudos\ia\em-dia-2026-10-23.sql` (ensaio com `-v fim=ROLLBACK`; o `COMMIT` em massa o Danyllo roda no servidor)
 
 ### 📱 App (sessão da nuvem)
+- [x] **Compostas no Recebimento FCOJ** (24/10, APP-058): recomendado de ~5 por composta e prévia
+- [ ] **Laudo do Recebimento FCOJ no modelo original**, preenchido com os loads registrados (precisa do Danyllo: o modelo em PDF)
 - [ ] **▶ Fase E, E3 em diante:** a 069 dá ao app as funções da 042 a 047 (no ar no bot em 24/10, `pre80`); próximo: um app por análise em cima delas (tanques, testes, drops, embarque, NFC, desvios)
 - [x] **Fase E, E1 e E2** (24/10, APP-057, migration 068): Páginas como tela de apps e o Recebimento FCOJ como app (painel, registrar e lançar pelas funções da 040). Próximo: E3 em diante, um app por análise, conforme o bot entregar PB12 a PB17
 - [x] **Marcos 3 e 4 mesclados** (23/10): turno com atividades fixas, relatório e encerrar (#181, #183, #185), esterilização com o G4 (#188), estufas (#189), Admin de turnos/atividades/estufas (#190) e **corrigir/excluir/recuperar coleta pelo app** (APP-029, #191)

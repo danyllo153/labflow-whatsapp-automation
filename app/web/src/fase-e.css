@@ -502,3 +502,33 @@ button.numero-app {
     width: 100%;
   }
 }
+
+/* compostas do recebimento */
+.load-composta {
+  padding: 12px 0;
+  border-top: 1px solid var(--linha-suave);
+}
+
+.load-composta p {
+  margin: 6px 0;
+}
+
+.load-composta-topo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.linha-composta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.linha-composta .campo {
+  flex: 1 1 220px;
+  margin: 0;
+}

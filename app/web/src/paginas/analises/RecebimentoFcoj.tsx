@@ -15,6 +15,7 @@ import { classeDaSituacao } from "../dados/formatos";
 export const ATALHOS_DO_APP = [
   { aba: "painel", rotulo: "Painel" },
   { aba: "registrar", rotulo: "Registrar" },
+  { aba: "compostas", rotulo: "Compostas" },
   { aba: "resultados", rotulo: "Resultados" },
   { aba: "laudo", rotulo: "Laudo" },
   { aba: "instrucao", rotulo: "Instrução" },
@@ -130,8 +131,13 @@ export default function RecebimentoFcoj() {
       )}
       {aba === "painel" && (painel ? <PainelDoRecebimento painel={painel} irPara={irPara} /> : !erro && <p className="carregando">Carregando...</p>)}
       {aba === "registrar" && (
-        <Registrar pode={painel?.pode_registrar ?? false} aoGravar={() => void carregarPainel()} />
+        <Registrar
+          pode={painel?.pode_registrar ?? false}
+          aoGravar={() => void carregarPainel()}
+          aoCompor={(load) => irPara("compostas", { busca: load })}
+        />
       )}
+      {aba === "compostas" && <Compostas pode={painel?.pode_registrar ?? false} buscaInicial={params.get("busca") ?? ""} />}
       {aba === "resultados" && (
         <Resultados
           pode={painel?.pode_registrar ?? false}
@@ -248,10 +254,11 @@ function PainelDoRecebimento({ painel, irPara }: { painel: Painel; irPara: (aba:
   );
 }
 
-function Registrar({ pode, aoGravar }: { pode: boolean; aoGravar: () => void }) {
+function Registrar({ pode, aoGravar, aoCompor }: { pode: boolean; aoGravar: () => void; aoCompor: (load: string) => void }) {
   const [campos, setCampos] = useState({ load: "", item: "", fabrica: "", lotes: "", data: hojeEmSaoPaulo() });
   const [previa, setPrevia] = useState<Resposta | null>(null);
   const [feito, setFeito] = useState("");
+  const [registrado, setRegistrado] = useState("");
   const [erro, setErro] = useState("");
   const [enviando, setEnviando] = useState(false);
 
@@ -264,6 +271,7 @@ function Registrar({ pode, aoGravar }: { pode: boolean; aoGravar: () => void }) 
       const r = await enviarJson<Resposta>("/analises/recebimento-fcoj/registrar", { ...campos, previa: !confirmar });
       if (confirmar) {
         setFeito(r.texto);
+        setRegistrado(campos.load.trim());
         setPrevia(null);
         setCampos({ ...campos, load: "", lotes: "" });
         aoGravar();
@@ -346,9 +354,16 @@ function Registrar({ pode, aoGravar }: { pode: boolean; aoGravar: () => void }) 
         </button>
       )}
       {feito && (
-        <p className="texto-secundario" role="status">
-          Registrado. {feito}
-        </p>
+        <div className="botoes-lado">
+          <p className="texto-secundario" role="status">
+            Registrado. {feito}
+          </p>
+          {registrado && (
+            <button type="button" className="botao botao-simples" onClick={() => aoCompor(registrado)}>
+              Criar as compostas do load {registrado}
+            </button>
+          )}
+        </div>
       )}
     </form>
   );
@@ -586,5 +601,165 @@ function Resultados({
         </p>
       )}
     </div>
+  );
+}
+
+interface LoadSemComposta {
+  load: string;
+  item: string;
+  fabrica: string | null;
+  recebido_em: string;
+  livres: string;
+  n_livres: number;
+  compostas: { id: number; lotes: string }[];
+  recomendado: string;
+}
+
+/** Compostas dos lotes recebidos (pedido de 24/10): o app recomenda grupos de ~5 (até 6; 7 vira 3 + 4; 8 vira 4 + 4). */
+function Compostas({ pode, buscaInicial }: { pode: boolean; buscaInicial: string }) {
+  const [busca, setBusca] = useState(buscaInicial);
+  const [loads, setLoads] = useState<LoadSemComposta[] | null>(null);
+  const [erro, setErro] = useState("");
+  const [versao, setVersao] = useState(0);
+
+  useEffect(() => {
+    const t = setTimeout(async () => {
+      try {
+        setLoads(await lerJson<LoadSemComposta[]>(`/analises/recebimento-fcoj/compostas?${new URLSearchParams({ busca: busca.trim() })}`));
+        setErro("");
+      } catch (e) {
+        setErro(mensagem(e, "Não foi possível carregar os loads."));
+      }
+    }, 250);
+    return () => clearTimeout(t);
+  }, [busca, versao]);
+
+  return (
+    <div className="cartao">
+      <h2>Compostas</h2>
+      <p className="texto-secundario">
+        Loads com lote ainda fora de composta. O recomendado junta uns 5 lotes por composta (até 6 vale; 7 vira 3 e 4; 8 vira 4 e 4).
+      </p>
+      <div className="busca-com-filtro">
+        <label className="busca-redonda">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+            <circle cx="11" cy="11" r="7" />
+            <path d="m20 20-3.5-3.5" />
+          </svg>
+          <input type="search" aria-label="Procurar load" placeholder="Número do load" value={busca} onChange={(e) => setBusca(e.target.value)} />
+        </label>
+      </div>
+      {erro && (
+        <p className="mensagem-erro" role="alert">
+          {erro}
+        </p>
+      )}
+      {loads === null && !erro && <p className="carregando">Carregando...</p>}
+      {loads && loads.length === 0 && (
+        <p className="texto-secundario">{busca.trim() ? "Load não encontrado." : "Todos os lotes dos últimos 60 dias já estão em composta."}</p>
+      )}
+      {loads?.map((l) => (
+        <CompostasDoLoad key={`${l.load}-${l.item}`} load={l} pode={pode} aoCriar={() => setVersao((v) => v + 1)} />
+      ))}
+    </div>
+  );
+}
+
+function CompostasDoLoad({ load, pode, aoCriar }: { load: LoadSemComposta; pode: boolean; aoCriar: () => void }) {
+  const [grupos, setGrupos] = useState("");
+  const [previa, setPrevia] = useState<string | null>(null);
+  const [feito, setFeito] = useState("");
+  const [erro, setErro] = useState("");
+  const [enviando, setEnviando] = useState(false);
+
+  async function enviar(confirmar: boolean) {
+    setEnviando(true);
+    setErro("");
+    try {
+      const r = await enviarJson<{ texto: string }>("/analises/recebimento-fcoj/compostas", {
+        load: load.load, item: load.item, grupos, previa: !confirmar,
+      });
+      if (confirmar) {
+        setFeito(r.texto);
+        setPrevia(null);
+        setGrupos("");
+        aoCriar();
+      } else {
+        setPrevia(r.texto);
+      }
+    } catch (e) {
+      setErro(mensagem(e, "Não foi possível criar as compostas."));
+    } finally {
+      setEnviando(false);
+    }
+  }
+
+  return (
+    <section className="load-composta" aria-label={`Load ${load.load}`}>
+      <div className="load-composta-topo">
+        <strong>Load {load.load}</strong>
+        <span className="texto-secundario">
+          item {load.item} · {load.fabrica ?? "—"} · recebido {dm(load.recebido_em)}
+        </span>
+      </div>
+      <p>
+        {load.n_livres > 0 ? (
+          <>
+            Sem composta: <strong>{load.livres}</strong> ({load.n_livres} lote{load.n_livres > 1 ? "s" : ""})
+          </>
+        ) : (
+          "Todos os lotes já estão em composta."
+        )}
+        {load.compostas.length > 0 && (
+          <span className="texto-secundario"> · já criadas: {load.compostas.map((c) => `#${c.id} (${c.lotes})`).join(", ")}</span>
+        )}
+      </p>
+      {pode && load.n_livres > 0 && (
+        <>
+          <div className="linha-composta">
+            <label className="campo">
+              Compostas
+              <input
+                value={grupos}
+                maxLength={300}
+                placeholder="ex.: (1-5)(6-10)"
+                onChange={(e) => (setGrupos(e.target.value), setPrevia(null))}
+              />
+            </label>
+            <button type="button" className="botao botao-simples" onClick={() => (setGrupos(load.recomendado), setPrevia(null))}>
+              Usar o recomendado {load.recomendado}
+            </button>
+          </div>
+          {erro && (
+            <p className="mensagem-erro" role="alert">
+              {erro}
+            </p>
+          )}
+          {previa ? (
+            <div className="previa-app" role="status">
+              <strong>O que vai ser criado</strong>
+              <p>{previa}</p>
+              <div className="botoes-lado">
+                <button type="button" className="botao botao-principal" disabled={enviando} onClick={() => void enviar(true)}>
+                  Confirmar
+                </button>
+                <button type="button" className="botao botao-simples" onClick={() => setPrevia(null)}>
+                  Voltar
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button type="button" className="botao botao-principal" disabled={enviando || !grupos.trim()} onClick={() => void enviar(false)}>
+              Ver o que vai ser criado
+            </button>
+          )}
+        </>
+      )}
+      {feito && (
+        <p className="texto-secundario" role="status">
+          Criado. {feito}
+        </p>
+      )}
+    </section>
   );
 }

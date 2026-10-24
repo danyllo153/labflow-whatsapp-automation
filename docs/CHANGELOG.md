@@ -24,6 +24,10 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
   início" ajusta o começo do lote em uso quando preciso.
 
 ### Adicionado
+- **Compostas no app do Recebimento FCOJ** (app, APP-058, 24/10): aba Compostas com os loads que ainda têm lote fora de
+  composta e o **recomendado** (uns 5 por composta; 6 vale, 7 vira 3 + 4, 8 vira 4 + 4), ou os grupos escritos à mão
+  (`(1-5)(6-10)`), com a prévia antes do Confirmar. Grava pela `criar_compostas` do bot (043). Depois de registrar um load,
+  o botão "Criar as compostas do load" leva direto para ele.
 - **O app pode chamar as funções da Fase E do bot** (app, migration 069, 24/10): tanques, compostas/TAB/Coliformes/
   Howard, drops, embarque, NFC recebido, desvio de tanque e leitura do dia (042 a 047). Só as que recebem a pessoa; as do
   bot pelo telefone continuam só com o bot. Prepara os próximos apps por análise (E3 em diante).

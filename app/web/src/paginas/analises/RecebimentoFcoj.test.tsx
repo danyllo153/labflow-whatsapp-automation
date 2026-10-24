@@ -82,7 +82,7 @@ describe("Recebimento FCOJ como app (Fase E, E2)", () => {
     expect(screen.getByText("1 de 12")).toBeInTheDocument();
     const abas = screen.getByRole("navigation", { name: "Partes do Recebimento FCOJ" });
     expect(within(abas).getAllByRole("button").map((b) => b.textContent?.replace(/\d+$/, ""))).toEqual([
-      "Painel", "Registrar", "Resultados", "Laudo", "Instrução", "Vídeo",
+      "Painel", "Registrar", "Compostas", "Resultados", "Laudo", "Instrução", "Vídeo",
     ]);
   });
 
@@ -139,4 +139,36 @@ describe("Recebimento FCOJ como app (Fase E, E2)", () => {
     expect(screen.queryByRole("textbox")).toBeNull();
     expect(screen.queryByRole("button", { name: /em todos/ })).toBeNull();
   });
+
+  it("compostas: usa o recomendado, mostra a prévia e cria no Confirmar", async () => {
+    let criadas = false;
+    const api = abrir("/analises/recebimento-fcoj?aba=compostas&busca=98706", {
+      "GET /analises/recebimento-fcoj/compostas?busca=98706": () => ({
+        status: 200,
+        corpo: criadas
+          ? [{ load: "98706", item: "99902", fabrica: "UCH", recebido_em: "2026-10-24", livres: "", n_livres: 0, compostas: [{ id: 90, lotes: "1-5" }], recomendado: "" }]
+          : [{ load: "98706", item: "99902", fabrica: "UCH", recebido_em: "2026-10-24", livres: "1-20", n_livres: 20, compostas: [], recomendado: "(1-5)(6-10)(11-15)(16-20)" }],
+      }),
+      "POST /analises/recebimento-fcoj/compostas": (corpo) => ((criadas = !corpo.previa), {
+        status: 200,
+        corpo: { ok: true, previa: corpo.previa, texto: corpo.previa ? "4 compostas no load 98706: lotes 1-5; lotes 6-10; lotes 11-15; lotes 16-20." : "4 compostas no load 98706: #90 lotes 1-5; #91 lotes 6-10; #92 lotes 11-15; #93 lotes 16-20.", criadas: corpo.previa ? 0 : 4 },
+      }),
+    });
+    const load = await screen.findByRole("region", { name: "Load 98706" });
+    expect(within(load).getByText("1-20")).toBeInTheDocument();
+    await userEvent.click(within(load).getByRole("button", { name: "Usar o recomendado (1-5)(6-10)(11-15)(16-20)" }));
+    expect(within(load).getByLabelText("Compostas")).toHaveValue("(1-5)(6-10)(11-15)(16-20)");
+    await userEvent.click(within(load).getByRole("button", { name: "Ver o que vai ser criado" }));
+    expect(await within(load).findByText(/4 compostas no load 98706: lotes 1-5/)).toBeInTheDocument();
+    await userEvent.click(within(load).getByRole("button", { name: "Confirmar" }));
+    expect(await screen.findByText(/^Criado\. 4 compostas no load 98706: #90/)).toBeInTheDocument();
+    expect(await screen.findByText(/já criadas: #90 \(1-5\)/)).toBeInTheDocument();
+    expect(screen.getByText(/^Criado\. 4 compostas no load 98706: #90/)).toBeInTheDocument(); // a mensagem fica depois de recarregar
+    const enviados = api.chamadas.filter((c) => c.rota === "POST /analises/recebimento-fcoj/compostas").map((c) => c.corpo);
+    expect(enviados).toEqual([
+      { load: "98706", item: "99902", grupos: "(1-5)(6-10)(11-15)(16-20)", previa: true },
+      { load: "98706", item: "99902", grupos: "(1-5)(6-10)(11-15)(16-20)", previa: false },
+    ]);
+  });
+
 });
