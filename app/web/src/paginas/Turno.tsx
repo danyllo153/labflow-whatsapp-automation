@@ -2,6 +2,11 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 
 import { enviarJson, lerJson } from "../api";
+import BlocosDePendencias, { type Pendencia } from "../componentes/BlocosDePendencias";
+import AtividadesDoTurno from "./AtividadesDoTurno";
+import EquipeDoTurno from "./EquipeDoTurno";
+import { ConferenciaEstufas } from "./Estufas";
+import RegistrosDoTurnoCartao from "./RegistrosDoTurno";
 
 /**
  * Turno (07 §2; 08 A2; APP-022 e APP-022b): escolher Manhã, Tarde ou Madrugada (o app sugere pelo horário) e marcar
@@ -102,6 +107,7 @@ export default function Turno() {
       {!estado && !erro && <p className="carregando">Carregando...</p>}
       {estado && (
         <>
+          <EquipeDoTurno aviso={estado.no_turno?.id ?? 0} />
           {!estado.pode_entrar ? (
             <div className="cartao">
               <p>O cargo Consultor acompanha o laboratório, mas não entra em turno.</p>
@@ -112,6 +118,7 @@ export default function Turno() {
             <EntrarNoTurno estado={estado} aoEntrar={() => carregar(true)} />
           )}
           <FeitoNoTurnoCartao feito={estado.feito_no_turno} />
+          {(!estado.checkin_obrigatorio || estado.no_turno) && <CentralDoTurno />}
           {estado.pode_entrar && estado.recentes.some((r) => r.saida) && (
             <div className="cartao">
               <h2>Meus últimos turnos</h2>
@@ -392,5 +399,37 @@ function FeitoNoTurnoCartao({ feito }: { feito: FeitoNoTurno }) {
       </ul>
       <p className="texto-secundario">Conta o que foi registrado no horário do turno (app ou WhatsApp).</p>
     </div>
+  );
+}
+
+/** O que o turno tem para fazer e já fez: atividades, estufas, análises a fazer hoje e a linha do tempo (APP-033). */
+function CentralDoTurno() {
+  const [pendencias, setPendencias] = useState<Pendencia[] | null>(null);
+
+  useEffect(() => {
+    lerJson<{ itens: Pendencia[] }>("/pendencias-hoje").then(
+      (p) => setPendencias(p.itens),
+      () => setPendencias(null),
+    );
+  }, []);
+
+  return (
+    <>
+      <AtividadesDoTurno />
+      <RegistrosDoTurnoCartao />
+      <details className="recolhivel">
+        <summary>Estufas do turno (conferir)</summary>
+        <ConferenciaEstufas embutida />
+      </details>
+      {pendencias && (
+        <details className="recolhivel">
+          <summary>Análises a fazer hoje ({pendencias.length})</summary>
+          <BlocosDePendencias itens={pendencias} vazio={<p>Nada vencendo hoje e nada atrasado.</p>} />
+        </details>
+      )}
+      <p>
+        <Link to="/esterilizacao">Registrar esterilização</Link>
+      </p>
+    </>
   );
 }

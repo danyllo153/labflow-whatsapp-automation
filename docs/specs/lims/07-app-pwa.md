@@ -76,6 +76,7 @@ Usuário e senha. Primeiro acesso e recuperação de senha em [06](06-api-e-auth
 - **Corrigir o próprio horário** (esqueceu de marcar, escala do ADM como 15h–00h) **pede motivo**; o horário marcado no app fica guardado ao lado da correção (migration 053).
 - Tudo o que ela registrar **enquanto estiver no turno** (app ou WhatsApp, mesmo usuário) fica ligado a esse turno. Sem entrada no turno, vale o horário padrão.
 - **"Sair do turno"** registra a saída dela.
+- **Central do turno** (APP-033, 23/10): vários analistas dividem o turno. A tela Turno mostra a **equipe** (quem está e quem já saiu, com a hora de entrada; atualiza sozinha), as atividades fixas e pendências herdadas, as **estufas**, as **análises a fazer hoje**, a **linha do tempo** (quem fez o quê e a que horas) e **"Atividades realizadas"** (linhas livres do relatório em Excel, com autor e hora; entram no relatório do turno). Um chip no topo de todas as telas ("Tarde · 2") mostra quantas pessoas estão no turno. Antes da entrada só a equipe aparece. Coletor não vê a linha do tempo (só as próprias coletas).
 
 ### 3. Início (a minha lista do dia)
 - **Cartões no topo** (números grandes): `Para hoje` · `Atrasados` · `Desvios abertos` · `Feito no turno`. Tocar num cartão abre a lista por trás dele.
@@ -172,7 +173,9 @@ Sem gráfico "por pessoa" (pode soar como vigilância).
 ### 7. Esterilização
 - **Botões grandes:** **Ponteira, Meio, Frasco, Descarte** e **Outro** (texto livre).
 - Um passo só: **número do ciclo** (obrigatório) e, para Meio, o nome do meio (opcional, ex.: PDA). **Registrar**. Pode também pelo assistente: "esterilizei ponteira, ciclo 102".
-- Grava tipo, ciclo, quem e quando em `app.esterilizacoes`. **Sem resultado da fita** (o ok/não ok sai da nota da autoclave). A anotação no **Word continua** como rastreio oficial.
+- Grava tipo, ciclo, quem e quando em `app.esterilizacoes`. O **número do ciclo é digitado pela pessoa** (o app **não sugere**: duas pessoas podem registrar ciclos ao mesmo tempo); se o ciclo já tem material no dia, o app só **avisa** e o novo material entra na mesma linha do laudo.
+- **Eficiente: Sim por padrão** (quase sempre é); depois de olhar a fita e a nota da autoclave, "Não eficiente" (pede motivo) vale para o ciclo todo, e "Voltar para Sim" desfaz.
+- **Laudo "Controle de Ciclos de Esterilização" (APP-035, decidido em 23/10):** o app preenche o **próprio PDF da empresa** (SGI, 35 linhas por página): Data, Material esterilizado ("Meio de cultura / Frascos" quando há mais de um no ciclo), Ciclo, Sim/Não e o **nome de quem marcou** (sai do usuário logado). A assinatura (**Visto**) e o bloco do responsável ficam em branco, à mão. Página cheia vira **"pendente de imprimir"**; quem imprime marca como impressa e ela vai para o **arquivo**, com reimpressão. O PDF oficial é **confidencial: fica no banco** (Admin envia, `app.modelos_documento`), nunca no Git; sem ele o app usa uma tabela de demonstração. Pelo bot (WhatsApp) depois, como pedido à sessão do bot.
 - Lista das esterilizações do turno embaixo dos botões, com corrigir e excluir (com motivo).
 
 ### 7.1 Temperatura das estufas
@@ -231,7 +234,8 @@ O cargo **Coletor** depende do pedido PB2 à sessão do bot.
 - **Estilo** dos LIMS comerciais. **Computador e tablet:** menu na lateral, cartões com números grandes, tabelas com filtros, listas com barra de andamento. **Celular:** barra embaixo (**Início · Turno · Páginas · Esterilização · Assistente**) e cartões empilhados; tabelas viram cartões por linha.
 - **Três tamanhos** desde o começo: celular, tablet e computador.
 - **Fácil para leigos:** botões grandes com texto (não só ícone), uma ação principal por tela, confirmação sempre em português simples, nada se perde sem perguntar.
-- **Paleta clara** (laranja claro e creme), **aprovada pelo Danyllo em 15/10** depois de uma prévia visual com dados fictícios (fora do repositório):
+- **Layout profissional (decidido pelo Danyllo em 23/10, APP-032; vale sobre a paleta de 15/10 abaixo):** o app ficava "grande demais e com cara de aplicativo". Passa a seguir o jeito dos LIMS de mercado: **menu lateral azul** (item ativo com marcador laranja), **barra branca no topo só com símbolos à direita** (engrenagem = configurações e aparência; boneco = menu da conta com nome, cargo, trocar senha e sair), **painéis com barra de título azul-escura**, **tabelas compactas** (cabeçalho cinza-azulado, linhas alternadas), **fonte menor** (13 px no computador, 14 px no celular), cantos de 4 px e sombras mínimas, fundo cinza-azulado claro (`#F2F4F7`), azul das ações `#1F6FB5`. O laranja da marca fica só como destaque. Há modo escuro (automático ou escolhido em Minha conta). **Gráficos nas telas que têm dados:** Visão geral (análises registradas por dia, em colunas, e Não ok por dia, em linha) e, acima de cada tabela com situação ou status, as barras "Por situação" (tocar numa barra filtra a tabela), além do G2 e do G4.
+- **Paleta clara original** (laranja claro e creme), **aprovada pelo Danyllo em 15/10** depois de uma prévia visual com dados fictícios (fora do repositório); **substituída em 23/10 pelo layout profissional acima**, fica aqui para o histórico:
 
   | Uso | Cor |
   |---|---|
@@ -260,6 +264,9 @@ Nomes a confirmar na migration. Nenhuma altera tabela do bot (só referenciam `u
 | `app.esterilizacoes` | Tipo, ciclo, meio (opcional), quem, quando |
 | `app.atividades_fixas` | Atividades fixas de cada turno (texto, turno, dias da semana, ordem), cadastradas pelo Admin |
 | `app.atividades_feitas` | Atividade fixa ou pendência herdada marcada como feita: quem, quando, turno |
+| `app.laudos_esterilizacao` | Páginas do laudo de esterilização (35 linhas): criada, impressa por/em |
+| `app.modelos_documento` | O PDF oficial da empresa (confidencial), enviado pelo Admin |
+| `app.registros_turno` | "Atividades realizadas" escritas à mão no turno (texto até 200, quem, quando; excluir arquiva, com quem e quando) |
 | `app.estufas` | Cada estufa (número, auxiliar sim/não, faixa de trabalho mínima e máxima com vigência; valores reais só no banco) |
 | `app.leituras_estufa` | Estufa, leitura (supervisório ou field chart), Ok/Não ok, temperatura (só no Não ok), observação, quem, quando, turno |
 

@@ -245,12 +245,53 @@ class Alerta(BaseModel):
     data: date | None
 
 
+class PontoDoDia(BaseModel):
+    dia: date
+    registradas: int  # leituras de NFC, drops concluídos, C.T/B.L, Recebimento NFC e resultados de TAB, Coliformes e Howard do dia
+    nao_ok: int  # C.T/B.L Não ok, resultados positivos e desvios abertos no dia
+
+
+# um ponto por dia do período, pelas mesmas views do Power BI (APP-032: gráficos da Visão geral)
+SERIE_SQL = """
+WITH dias AS (SELECT g::date AS dia FROM generate_series(%(de)s::date, %(ate)s::date, interval '1 day') AS g),
+reg AS (
+    SELECT dia, count(*) AS n FROM (
+        SELECT (lida_em AT TIME ZONE 'America/Sao_Paulo')::date AS dia FROM bi.leituras_nfc
+          WHERE lida_em >= %(de)s::date - 1 AND lida_em < %(ate)s::date + 2
+        UNION ALL
+        SELECT (concluido_em AT TIME ZONE 'America/Sao_Paulo')::date FROM bi.drops
+          WHERE concluido_em >= %(de)s::date - 1 AND concluido_em < %(ate)s::date + 2
+        UNION ALL
+        SELECT data_leitura FROM bi.contagens WHERE lido AND data_leitura BETWEEN %(de)s AND %(ate)s
+        UNION ALL
+        SELECT data_leitura FROM bi.recebimento_nfc WHERE lido AND data_leitura BETWEEN %(de)s AND %(ate)s
+        UNION ALL
+        SELECT data_resultado FROM bi.testes WHERE data_resultado BETWEEN %(de)s AND %(ate)s
+    ) x GROUP BY dia
+),
+nok AS (
+    SELECT dia, count(*) AS n FROM (
+        SELECT data_leitura AS dia FROM bi.contagens WHERE lido AND alarme AND data_leitura BETWEEN %(de)s AND %(ate)s
+        UNION ALL
+        SELECT data_resultado FROM bi.testes WHERE positivo AND data_resultado BETWEEN %(de)s AND %(ate)s
+        UNION ALL
+        SELECT data_abertura FROM bi.desvios WHERE data_abertura BETWEEN %(de)s AND %(ate)s
+    ) x GROUP BY dia
+)
+SELECT d.dia, coalesce(reg.n, 0), coalesce(nok.n, 0)
+FROM dias d LEFT JOIN reg ON reg.dia = d.dia LEFT JOIN nok ON nok.dia = d.dia
+ORDER BY d.dia
+"""
+LIMITE_SERIE_DIAS = 366
+
+
 class VisaoGeral(BaseModel):
     data_de: date
     data_ate: date
     numeros: list[Numero]
     pendencias: list[PendenciasDoBloco]
     alertas: list[Alerta]  # os Não ok do período, mais recentes primeiro (até 20)
+    serie: list[PontoDoDia]  # um ponto por dia do período, para os gráficos
 
 
 NUMEROS_SQL = [
@@ -330,4 +371,7 @@ def visao_geral(
                resultado=res or "", data=d)
         for p, r, a, res, d, ld, nv, cid, og in con.execute(ALERTAS_SQL, periodo).fetchall()
     ]
-    return VisaoGeral(data_de=de, data_ate=ate, numeros=numeros, pendencias=pendencias, alertas=alertas)
+    if (ate - de).days >= LIMITE_SERIE_DIAS:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Escolha um período de até um ano.")
+    serie = [PontoDoDia(dia=d, registradas=r, nao_ok=n) for d, r, n in con.execute(SERIE_SQL, periodo).fetchall()]
+    return VisaoGeral(data_de=de, data_ate=ate, numeros=numeros, pendencias=pendencias, alertas=alertas, serie=serie)

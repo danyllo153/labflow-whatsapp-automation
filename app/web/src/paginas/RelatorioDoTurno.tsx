@@ -38,6 +38,7 @@ export interface Relatorio {
   atividades_feitas: { texto: string; quem: string | null; quando: string | null }[];
   atividades_nao_feitas: string[];
   estufas_nao_ok: string[];
+  realizadas: { texto: string; quem: string; quando: string }[];
   esterilizacoes: { id: number; tipo: string; ciclo: string; meio: string | null; descricao: string | null; quem: string; quando: string }[];
   adiantados: { total: number; itens: { tipo: string; referencia: string; prevista: string; quem: string | null }[] };
   pendentes: {
@@ -183,6 +184,18 @@ export default function RelatorioDoTurno() {
               </li>
             ))}
           </ul>
+        )}
+        {r.realizadas.length > 0 && (
+          <>
+            <h3>Atividades realizadas ({r.realizadas.length})</h3>
+            <ul className="lista-simples texto-secundario">
+              {r.realizadas.map((a, n) => (
+                <li key={n}>
+                  {a.texto} · {a.quem} às {a.quando}
+                </li>
+              ))}
+            </ul>
+          </>
         )}
         {r.esterilizacoes.length > 0 && (
           <>

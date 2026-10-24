@@ -6,7 +6,7 @@
 export type Tema = "auto" | "claro" | "escuro";
 
 export const CHAVE_TEMA = "labflow:tema";
-const COR_DA_BARRA: Record<"claro" | "escuro", string> = { claro: "#F6B04A", escuro: "#2B2217" };
+const COR_DA_BARRA: Record<"claro" | "escuro", string> = { claro: "#1C5A94", escuro: "#14283D" };
 
 export function lerTema(): Tema {
   try {

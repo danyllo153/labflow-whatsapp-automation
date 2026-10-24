@@ -5,6 +5,7 @@ import { lerJson } from "../../api";
 import type { Coluna, DefinicaoDePagina, Filtro } from "./definicoes";
 import { classeDaSituacao, formatar } from "./formatos";
 import GraficoG2 from "./GraficoG2";
+import { BarrasPorSituacao, type ItemDeSituacao } from "../../componentes/Graficos";
 
 /**
  * Página do laboratório em leitura (07 §5; APP-015): filtros com etiquetas removíveis, tabela (cartões no celular),
@@ -16,6 +17,8 @@ interface Pagina {
   pagina: number;
   por_pagina: number;
   linhas: Record<string, unknown>[];
+  resumo?: ItemDeSituacao[] | null;
+  resumo_coluna?: string | null;
 }
 
 const POR_PAGINA = 50;
@@ -227,6 +230,26 @@ export default function PaginaDeDados({ def }: { def: DefinicaoDePagina }) {
           </div>
         )}
         {!dados && !erro && <p className="carregando">Carregando...</p>}
+
+        {dados && !erro && dados.resumo && dados.resumo.length > 0 && dados.total > 0 && (
+          <section className="cartao" aria-label="Por situação">
+            <h2>
+              {dados.resumo_coluna === "status" ? "Por status" : "Por situação"} <span className="contador">{dados.total}</span>
+            </h2>
+            <BarrasPorSituacao
+              itens={dados.resumo}
+              escolhido={dados.resumo_coluna ? aplicados[dados.resumo_coluna] : undefined}
+              aoEscolher={
+                dados.resumo_coluna && def.filtros.some((f) => f.chave === dados.resumo_coluna)
+                  ? (rotulo) => {
+                      const chave = dados.resumo_coluna as string;
+                      irPara(aplicados[chave] === rotulo ? Object.fromEntries(Object.entries(aplicados).filter(([k]) => k !== chave)) : { ...aplicados, [chave]: rotulo });
+                    }
+                  : undefined
+              }
+            />
+          </section>
+        )}
 
         {def.grafico === "g2" && <GraficoG2 consulta={consulta(aplicados)} aoEscolherLoad={(load) => irPara({ ...aplicados, load })} />}
 

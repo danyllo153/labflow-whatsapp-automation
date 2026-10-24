@@ -20,11 +20,28 @@ roteador = APIRouter(prefix="/paginas", tags=["páginas"])
 POR_PAGINA_MAX = 200
 
 
+class ResumoItem(BaseModel):
+    rotulo: str
+    total: int
+
+
 class Pagina(BaseModel):
     total: int
     pagina: int
     por_pagina: int
     linhas: list[dict[str, Any]]
+    # APP-032: quantos registros há em cada situação (ou status), no que está filtrado, para o gráfico acima da tabela
+    resumo: list[ResumoItem] | None = None
+    resumo_coluna: str | None = None
+
+
+# ordem em que as situações aparecem no gráfico (o que pede atenção primeiro); o que não está aqui vem depois, do maior para o menor
+ORDEM_SITUACOES = ["Atrasado", "Não ok", "Vence hoje", "Positivo", "Confirmado", "Em andamento", "No prazo", "Em confirmação", "Ok", "Lido", "Negativo", "Concluído"]
+
+
+def _ordem_situacao(item: tuple[str, int]) -> tuple[int, int]:
+    rotulo, total = item
+    return (ORDEM_SITUACOES.index(rotulo), 0) if rotulo in ORDEM_SITUACOES else (len(ORDEM_SITUACOES), -total)
 
 
 class _Filtro:
@@ -57,9 +74,15 @@ def _paginar(con, base: str, filtro: _Filtro, ordem: str, pagina: int, por_pagin
         [*filtro.valores, por_pagina, (pagina - 1) * por_pagina],
     )
     nomes = [d.name for d in cur.description]
-    return Pagina(
-        total=total, pagina=pagina, por_pagina=por_pagina, linhas=[dict(zip(nomes, l)) for l in cur.fetchall()]
-    )
+    linhas = [dict(zip(nomes, l)) for l in cur.fetchall()]
+    coluna = next((c for c in ("situacao", "status") if c in nomes), None)
+    resumo = None
+    if coluna:
+        contados = con.execute(
+            f"SELECT {coluna}, count(*) FROM ({base}) t{filtro.sql()} GROUP BY 1", filtro.valores
+        ).fetchall()
+        resumo = [ResumoItem(rotulo=r, total=n) for r, n in sorted(((r or "Sem situação", n) for r, n in contados), key=_ordem_situacao)]
+    return Pagina(total=total, pagina=pagina, por_pagina=por_pagina, linhas=linhas, resumo=resumo, resumo_coluna=coluna)
 
 
 # ---------------------------------------------------------------- Coletas (bi.coletas)

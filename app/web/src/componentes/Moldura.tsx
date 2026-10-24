@@ -1,15 +1,18 @@
-import { Link, NavLink, Outlet } from "react-router-dom";
+import { NavLink, Outlet } from "react-router-dom";
 
 import { MENU } from "../menu";
 import { useSessao } from "../sessao";
+import ChipEquipe from "./ChipEquipe";
 import FaixaDemonstracao from "./FaixaDemonstracao";
 import Icone from "./Icone";
-import { nomeDoCargo } from "../cargos";
+import MenuConta from "./MenuConta";
 
-/** Moldura de todas as telas: menu lateral (computador e tablet) ou topo + barra embaixo (celular). */
+/**
+ * Moldura de todas as telas (APP-032): menu lateral azul no computador e no tablet; barra no topo com só os símbolos de
+ * configurações e conta, à direita; barra de ícones embaixo no celular.
+ */
 export default function Moldura() {
-  const { pessoa, sair } = useSessao();
-  const nome = pessoa?.nome || pessoa?.usuario;
+  const { pessoa } = useSessao();
   const menu = MENU.filter((item) => !item.pode || pessoa?.pode.includes(item.pode));
 
   return (
@@ -27,37 +30,20 @@ export default function Moldura() {
             </NavLink>
           ))}
         </nav>
-        <div className="conta">
-          <div className="conta-nome">{nome}</div>
-          <div className="texto-secundario">{nomeDoCargo(pessoa?.cargo)}</div>
-          <Link to="/conta" className="conta-link">
-            Aparência (claro e escuro)
-          </Link>
-          <Link to="/conta/senha" className="conta-link">
-            Trocar senha
-          </Link>
-          <button type="button" className="botao botao-simples" onClick={() => void sair()}>
-            Sair
-          </button>
-        </div>
       </aside>
 
-      <header className="topo-celular">
-        <span className="marca">LabFlow</span>
-        <span className="topo-conta">
-          <Link to="/conta" className="conta-link" aria-label="Minha conta">
-            {nome}
-          </Link>
-          <button type="button" className="botao-topo" onClick={() => void sair()}>
-            Sair
-          </button>
-        </span>
-      </header>
+      <div className="coluna">
+        <header className="topo-celular">
+          <span className="marca">LabFlow</span>
+          <ChipEquipe />
+          <MenuConta />
+        </header>
 
-      <main className="conteudo">
-        <FaixaDemonstracao />
-        <Outlet />
-      </main>
+        <main className="conteudo">
+          <FaixaDemonstracao />
+          <Outlet />
+        </main>
+      </div>
 
       <nav className="barra-baixo" aria-label="Menu do celular">
         {menu.filter((item) => !item.soNoMenuLateral).map((item) => (

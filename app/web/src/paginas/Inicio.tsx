@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 
 import { lerJson } from "../api";
 import { useSessao } from "../sessao";
+import BlocosDePendencias, { type Pendencia } from "../componentes/BlocosDePendencias";
 import AtividadesDoTurno from "./AtividadesDoTurno";
 import type { DadosEstufas } from "./Estufas";
 import type { EstadoDoTurno } from "./Turno";
@@ -12,14 +13,7 @@ import type { EstadoDoTurno } from "./Turno";
  * O cartão "Feito no turno" e o aviso para entrar no turno vêm de GET /turno (APP-022).
  */
 
-export interface Pendencia {
-  bloco: string;
-  tipo: string;
-  referencia: string;
-  analise: string;
-  prevista: string | null; // AAAA-MM-DD
-  situacao: "Vence hoje" | "Atrasado";
-}
+export type { Pendencia };
 
 interface Pendencias {
   vence_hoje: number;
@@ -31,13 +25,6 @@ interface Pendencias {
 type Filtro = "todos" | "Vence hoje" | "Atrasado" | "Desvios";
 
 const ATUALIZAR_A_CADA_MS = 60_000; // rumo, Fase C: as páginas se atualizam sozinhas a cada minuto
-const ITENS_ANTES_DE_RECOLHER = 8;
-
-function dia(data: string | null): string {
-  if (!data) return "";
-  const [, mes, d] = data.split("-");
-  return `${d}/${mes}`;
-}
 
 function hora(quando: Date): string {
   return quando.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" });
@@ -49,7 +36,6 @@ export default function Inicio() {
   const [erro, setErro] = useState("");
   const [atualizadoEm, setAtualizadoEm] = useState<Date | null>(null);
   const [filtro, setFiltro] = useState<Filtro>("todos");
-  const [abertos, setAbertos] = useState<Record<string, boolean>>({});
   const [turno, setTurno] = useState<EstadoDoTurno | null>(null);
   const [estufas, setEstufas] = useState<DadosEstufas | null>(null);
   const navegar = useNavigate();
@@ -77,11 +63,6 @@ export default function Inicio() {
   const itens = (dados?.itens ?? []).filter((i) =>
     filtro === "todos" ? true : filtro === "Desvios" ? i.bloco === "Desvios" : i.situacao === filtro,
   );
-  const blocos = itens.reduce<Record<string, Pendencia[]>>((grupos, item) => {
-    (grupos[item.bloco] ??= []).push(item);
-    return grupos;
-  }, {});
-
   function escolher(f: Filtro) {
     setFiltro((atual) => (atual === f ? "todos" : f));
   }
@@ -139,48 +120,15 @@ export default function Inicio() {
             </p>
           )}
 
-          {itens.length === 0 ? (
-            <div className="cartao">
-              <p>{dados.itens.length === 0 ? "Nada vencendo hoje e nada atrasado." : "Nada neste filtro."}</p>
-              {pessoa?.cargo === "Coletor" && <p className="texto-secundario">O Coletor vê aqui só as pendências de coleta.</p>}
-            </div>
-          ) : (
-            Object.entries(blocos).map(([bloco, lista]) => {
-              const mostrarTudo = abertos[bloco] || lista.length <= ITENS_ANTES_DE_RECOLHER;
-              const visiveis = mostrarTudo ? lista : lista.slice(0, ITENS_ANTES_DE_RECOLHER);
-              return (
-                <div className="cartao bloco-pendencias" key={bloco}>
-                  <h2>
-                    {bloco} <span className="contador">{lista.length}</span>
-                  </h2>
-                  <ul className="lista-pendencias">
-                    {visiveis.map((item, n) => (
-                      <li key={`${item.referencia}-${item.analise}-${n}`}>
-                        <div className="pendencia-texto">
-                          <span className="pendencia-ref">{item.referencia}</span>
-                          <span className="texto-secundario">
-                            {item.analise}
-                            {item.analise !== item.tipo && ` · ${item.tipo}`}
-                          </span>
-                        </div>
-                        <div className="pendencia-situacao">
-                          <span className={item.situacao === "Atrasado" ? "etiqueta etiqueta-nao-ok" : "etiqueta etiqueta-pendente"}>
-                            {item.situacao}
-                          </span>
-                          <span className="texto-secundario">{dia(item.prevista)}</span>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                  {!mostrarTudo && (
-                    <button type="button" className="link-botao" onClick={() => setAbertos({ ...abertos, [bloco]: true })}>
-                      Mostrar todos ({lista.length})
-                    </button>
-                  )}
-                </div>
-              );
-            })
-          )}
+          <BlocosDePendencias
+            itens={itens}
+            vazio={
+              <>
+                <p>{dados.itens.length === 0 ? "Nada vencendo hoje e nada atrasado." : "Nada neste filtro."}</p>
+                {pessoa?.cargo === "Coletor" && <p className="texto-secundario">O Coletor vê aqui só as pendências de coleta.</p>}
+              </>
+            }
+          />
         </>
       )}
 
