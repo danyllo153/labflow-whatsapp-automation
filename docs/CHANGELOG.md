@@ -23,6 +23,10 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
   início" ajusta o começo do lote em uso quando preciso.
 
 ### Adicionado
+- **Funções do banco para o bot gravar esterilização e águas por frase** (app, APP-054, migration `067`, para o PB8 e o
+  PB9): `app.bot_registrar_esterilizacao`, `app.bot_coletar_agua`, `app.bot_lancar_agua`, `app.bot_coletar_superficie` e
+  `app.bot_lancar_superficie`, com as regras e as páginas de laudo do app, cargo conferido no banco e erros em frase
+  pronta. Detalhe no rumo-do-app.
 - **Corrigir resultado de C.T/B.L com um comando curto** (bot, migration `039`, 24/10): `corrigir ct do load 43755 para <1
   motivo foto leu errado`. Pelo load acha se é NFC ou FCOJ, pede o lote quando há vários, mostra "era 21 → <1" e pede sim;
   grava com o histórico (antes, depois, motivo e quem). Só Admin e Analista; o motivo é obrigatório para o Analista.
