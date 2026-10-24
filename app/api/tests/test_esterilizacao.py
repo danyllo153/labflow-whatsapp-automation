@@ -39,7 +39,7 @@ def test_registrar_lista_o_do_turno_com_quem_e_hora(cliente, logado, agora, cone
     uid = logado()
     vazio = cliente.get("/esterilizacao").json()
     assert (vazio["turno"], vazio["dia"], vazio["itens"], vazio["pode_registrar"]) == ("Manhã", "2026-10-22", [], True)
-    assert vazio["tipos"] == ["Ponteira", "Meio", "Frasco", "Descarte", "Outro"]
+    assert vazio["tipos"] == ["Ponteira", "Meio", "Frasco", "Água de diluição", "Descarte", "Outro"]
     r = cliente.post("/esterilizacao", json={"tipo": "Ponteira", "ciclo": " 102 "})
     assert r.status_code == 201, r.text
     cliente.post("/esterilizacao", json={"tipo": "Meio", "ciclo": "103", "meio": "PDA"})
@@ -119,7 +119,7 @@ def test_grafico_g4_por_tipo_e_turno_na_semana(cliente, logado, agora):
     agora(em(23, 12))
     g = cliente.get("/esterilizacao/grafico").json()
     assert (g["de"], g["ate"], g["total"]) == ("2026-10-17", "2026-10-23", 4)
-    assert len(g["barras"]) == 15  # 3 turnos x 5 tipos, com zero
+    assert len(g["barras"]) == 18  # 3 turnos x 6 tipos, com zero
     soma = {(b["turno"], b["tipo"]): b["total"] for b in g["barras"]}
     assert soma[("Manhã", "Ponteira")] == 2 and soma[("Manhã", "Meio")] == 1 and soma[("Tarde", "Frasco")] == 1
     assert soma[("Madrugada", "Ponteira")] == 0

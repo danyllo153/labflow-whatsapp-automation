@@ -18,6 +18,12 @@ const FORMAS: Record<string, JSX.Element> = {
   ),
   "/esterilizacao": <path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3M8 15h8" />,
   "/estufas": <path d="M14 14.8V5a2 2 0 0 0-4 0v9.8a4 4 0 1 0 4 0z" />,
+  "/material-asseptico": (
+    <>
+      <ellipse cx="12" cy="14" rx="9" ry="5" />
+      <path d="M3 14v-2c0-2.8 4-5 9-5s9 2.2 9 5v2" />
+    </>
+  ),
   "/assistente": <path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z" />,
   "/admin/turnos": (
     <>

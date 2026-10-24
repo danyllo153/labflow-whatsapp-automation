@@ -2820,3 +2820,36 @@ button.barra-linha:hover,
   background: var(--nao-ok);
   color: #fff;
 }
+
+/* G4: cor da Água de diluição (APP-041) */
+:root {
+  --g4-5: #0f8b8d;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema="claro"]) {
+    --g4-5: #4fc3c5;
+  }
+}
+:root[data-tema="escuro"] {
+  --g4-5: #4fc3c5;
+}
+.g4-5 { fill: var(--g4-5); }
+.legenda-g4 .amostra.g4-5 { background: var(--g4-5); }
+
+/* Material asséptico (APP-041): os 8 dias em botões pequenos */
+.dias-material {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.dias-material .botao-secundario {
+  min-height: 32px;
+  padding: 4px 10px;
+  font-size: 0.85rem;
+}
+
+.dias-material .botao-secundario[aria-pressed="true"] {
+  font-weight: 700;
+}

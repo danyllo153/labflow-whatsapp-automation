@@ -27,7 +27,7 @@ TOPO_DAS_LINHAS = 171.26
 BASE_DAS_LINHAS = 686.38
 ALTURA_DA_LINHA = (BASE_DAS_LINHAS - TOPO_DAS_LINHAS) / CAPACIDADE
 
-ROTULO_DO_TIPO = {"Ponteira": "Ponteiras", "Meio": "Meio de cultura", "Frasco": "Frascos", "Descarte": "Descarte"}
+ROTULO_DO_TIPO = {"Ponteira": "Ponteiras", "Meio": "Meio de cultura", "Frasco": "Frascos", "Água de diluição": "Água de diluição", "Descarte": "Descarte"}
 
 
 def rotulo_do_material(tipo: str, meio: str | None, descricao: str | None) -> str:
@@ -146,6 +146,7 @@ def gerar_pdf(linhas: list[dict], modelo: bytes | None) -> bytes:
         _escrever(c, "OK" if l["eficiente"] else "-", 3, i)
         _escrever(c, "-" if l["eficiente"] else "OK", 4, i)
         _escrever(c, l["analista"], 5, i)
+    c.showPage()  # garante a página mesmo sem nenhuma linha escrita
     c.save()
     escritor.pages[0].merge_page(PdfReader(io.BytesIO(camada.getvalue())).pages[0])
     saida = io.BytesIO()

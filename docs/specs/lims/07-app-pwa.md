@@ -178,6 +178,12 @@ Sem gráfico "por pessoa" (pode soar como vigilância).
 - **Laudo "Controle de Ciclos de Esterilização" (APP-035, decidido em 23/10):** o app preenche o **próprio PDF da empresa** (SGI, 35 linhas por página): Data, Material esterilizado ("Meio de cultura / Frascos" quando há mais de um no ciclo), Ciclo, Sim/Não e o **nome de quem marcou** (sai do usuário logado). A assinatura (**Visto**) e o bloco do responsável ficam em branco, à mão. Página cheia vira **"pendente de imprimir"**; quem imprime marca como impressa e ela vai para o **arquivo**, com reimpressão. O PDF oficial é **confidencial: fica no banco** (Admin envia, `app.modelos_documento`), nunca no Git; sem ele o app usa uma tabela de demonstração. Pelo bot (WhatsApp) depois, como pedido à sessão do bot.
 - Lista das esterilizações do turno embaixo dos botões, com corrigir e excluir (com motivo).
 
+### 7.2 Material asséptico (APP-041, decidido em 24/10)
+- **Um registro por dia de análise** (hoje ou até 7 dias antes): ponteira/pipeta, água de diluição e meio de cultura com os **ciclos de esterilização** usados, placa de Petri com os **lotes** (P pequenas, para todas as análises; G grandes, para tanques de NFC), e C.T./B.L. do controle (`<1` por padrão).
+- O app **sugere** os ciclos do último dia registrado mais os esterilizados (eficientes) depois dele, e repete os lotes de placa; o analista **confirma, tira ou acrescenta livremente** (análises fora do roteiro). Os lotes das placas não têm cadastro nem laudo: são anotação livre.
+- Quem salva fica como **responsável pelo preenchimento** (salvar de novo passa para o nome de quem salvou).
+- **Laudo "Controle de Material Asséptico"**: 9 dias por página, Visto à mão, mesmo fluxo de impressão do laudo de esterilização. A Esterilização tem o tipo **Água de diluição** (migration 059).
+
 ### 7.1 Temperatura das estufas
 - **Não ok passa para o turno seguinte** (24/10): enquanto ninguém conferir Ok, o Turno, o Início e Estufas mostram "Estufas fora da faixa" com a leitura, desde quando e a última temperatura. A conferência Ok não aparece na linha do tempo do turno.
 - **Obrigatória em todo turno, para todos** (não é atividade fixa de um turno só). Tem **aba própria, Estufas**, e um **bloco no fim do Início** com as estufas do turno (conferidas e pendentes).
@@ -267,6 +273,8 @@ Nomes a confirmar na migration. Nenhuma altera tabela do bot (só referenciam `u
 | `app.atividades_feitas` | Atividade fixa ou pendência herdada marcada como feita: quem, quando, turno |
 | `app.laudos_esterilizacao` | Páginas do laudo de esterilização (35 linhas): criada, impressa por/em |
 | `app.modelos_documento` | O PDF oficial da empresa (confidencial), enviado pelo Admin |
+| `app.material_asseptico` | Um dia de análise: ciclos e lotes usados, C.T./B.L., quem preencheu, página do laudo |
+| `app.paginas_laudo` | Páginas dos laudos novos (a partir do material asséptico): impressa por/em |
 | `app.registros_turno` | "Atividades realizadas" escritas à mão no turno (texto até 200, quem, quando; excluir arquiva, com quem e quando) |
 | `app.estufas` | Cada estufa (número, auxiliar sim/não, faixa de trabalho mínima e máxima com vigência; valores reais só no banco) |
 | `app.leituras_estufa` | Estufa, leitura (supervisório ou field chart), Ok/Não ok, temperatura (só no Não ok), observação, quem, quando, turno |
