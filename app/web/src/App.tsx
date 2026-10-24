@@ -26,6 +26,7 @@ import NaoEncontrada from "./paginas/NaoEncontrada";
 import DetalheColeta from "./paginas/dados/DetalheColeta";
 import { DetalheNavio, DetalheTanque } from "./paginas/dados/Detalhes";
 import { ListaDePaginas, PaginaEscolhida } from "./paginas/Paginas";
+import RecebimentoFcoj from "./paginas/analises/RecebimentoFcoj";
 import TrocarSenha from "./paginas/TrocarSenha";
 import RelatorioDoTurno from "./paginas/RelatorioDoTurno";
 import Turno, { TURNO_MUDOU, type EstadoDoTurno } from "./paginas/Turno";
@@ -90,6 +91,7 @@ export default function App() {
         <Route path="/material-asseptico" element={<MaterialAsseptico />} />
         <Route path="/turno/relatorio" element={<RelatorioDoTurno />} />
         <Route path="/paginas" element={<ListaDePaginas />} />
+        <Route path="/analises/recebimento-fcoj" element={<RecebimentoFcoj />} />
         <Route path="/paginas/agua-processo" element={<AguaProcesso />} />
         <Route path="/paginas/baias" element={<SuperficiesPagina key="Baia" tipo="Baia" />} />
         <Route path="/paginas/linhas" element={<SuperficiesPagina key="Linha" tipo="Linha" />} />
