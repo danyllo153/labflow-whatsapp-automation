@@ -2938,6 +2938,58 @@ button.barra-linha:hover,
   width: 100%;
 }
 
+/* Pendências agrupadas (24/10): o número de cada grupo, e a lista só ao tocar */
+.lista-grupos {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.lista-grupos > li {
+  border-bottom: 1px solid var(--borda);
+}
+
+.grupo-pendencia {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 8px 2px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.grupo-numero {
+  min-width: 2.2em;
+  font-size: 1.15rem;
+  font-weight: 700;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.grupo-nome {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+}
+
+.grupo-situacoes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px;
+}
+
+.grupo-seta {
+  color: var(--texto-secundario);
+}
+
+.lista-grupos .lista-pendencias {
+  margin: 0 0 8px 3em;
 /* Botão marcado bem visível nos dois temas (24/10): fundo cheio, texto forte e o ✓ na frente */
 :root {
   --acao-texto: #fff;

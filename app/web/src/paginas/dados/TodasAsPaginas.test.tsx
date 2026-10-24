@@ -73,12 +73,13 @@ describe("todas as páginas do Power BI no app (APP-019)", () => {
   it("a lista agrupa em Geral, NFC e FCOJ, sem a página antiga de Tanques", async () => {
     abrir("/paginas");
     const principal = (await screen.findByRole("heading", { level: 1, name: "Páginas" })).closest("section") as HTMLElement;
-    expect(within(principal).getAllByRole("heading", { level: 2 }).map((h) => h.textContent)).toEqual(["Geral", "NFC", "FCOJ (concentrado)", "Águas e superfícies"]);
+    expect(within(principal).getAllByRole("heading", { level: 2 }).map((h) => h.textContent)).toEqual(["Geral", "NFC", "FCOJ (concentrado)", "TAB, Coliformes e Howard", "Águas e superfícies"]);
     const grupo = (nome: string) => within(within(principal).getByRole("heading", { level: 2, name: nome }).parentElement as HTMLElement);
     const hrefs = (nome: string) => grupo(nome).getAllByRole("link").map((l) => l.getAttribute("href"));
     expect(hrefs("Geral")).toEqual(["/paginas/visao-geral", "/paginas/coletas"]);
     expect(hrefs("NFC")).toEqual(expect.arrayContaining(["/paginas/tanques-terra", "/paginas/navios", "/paginas/drops", "/paginas/desvios", "/paginas/recebimento-nfc"]));
-    expect(hrefs("FCOJ (concentrado)")).toEqual(["/paginas/recebimento", "/paginas/embarque", "/paginas/testes"]);
+    expect(hrefs("FCOJ (concentrado)")).toEqual(["/paginas/recebimento", "/paginas/embarque"]);
+    expect(hrefs("TAB, Coliformes e Howard")).toEqual(["/paginas/tab", "/paginas/coliformes", "/paginas/howard"]); // uma página por análise (24/10)
     expect(within(principal).queryByRole("link", { name: /^Tanques Leituras/ })).toBeNull();
     expect(within(principal).queryByText("Em breve")).toBeNull();
     expect(hrefs("Águas e superfícies")).toEqual(["/paginas/agua-processo", "/paginas/baias", "/paginas/linhas"]); // APP-037
@@ -98,7 +99,7 @@ describe("todas as páginas do Power BI no app (APP-019)", () => {
     expect(await screen.findByText(/^1 registro/)).toBeInTheDocument();
     expect(urls.some((u) => u.startsWith(`${def.api}?`))).toBe(true);
     for (const c of def.colunas) expect(screen.getByRole("columnheader", { name: c.rotulo })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Exportar Excel" })).toHaveAttribute("href", `${def.api}/excel?`);
+    expect(screen.getByRole("link", { name: "Exportar Excel" })).toHaveAttribute("href", `${def.api}/excel?${new URLSearchParams(def.fixos ?? {}).toString()}`);
   });
 
   it("Navios: filtrar só FCOJ e tocar no navio abre a página dele", async () => {

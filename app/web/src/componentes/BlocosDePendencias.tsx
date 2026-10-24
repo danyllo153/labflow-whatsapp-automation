@@ -1,6 +1,10 @@
 import { useState, type ReactNode } from "react";
 
-/** As pendências de hoje agrupadas por bloco (Início e Turno): análises e leituras a fazer, com a situação e a data. */
+/**
+ * As pendências de hoje por bloco (Início e Turno). Dentro de cada bloco, o que se faz junto vira UM grupo com o número
+ * (ex.: "TAB · para espalhar 20", "O.SKY 189 · Psicrotróficos Normal · Leitura final 4"); tocar no grupo abre a lista
+ * das compostas, lotes ou tanques (pedido de 24/10: mais compacto, e dá para ter ideia de quantas coisas são).
+ */
 
 export interface Pendencia {
   bloco: string;
@@ -9,14 +13,35 @@ export interface Pendencia {
   analise: string;
   prevista: string | null; // AAAA-MM-DD
   situacao: "Vence hoje" | "Atrasado";
+  grupo?: string; // da API (24/10); sem ele, o grupo é o tipo com a análise
+  item?: string;
 }
 
-const ITENS_ANTES_DE_RECOLHER = 8;
+interface Grupo {
+  nome: string;
+  itens: Pendencia[];
+  atrasados: number;
+  hoje: number;
+}
 
 function dia(data: string | null): string {
   if (!data) return "";
   const [, mes, d] = data.split("-");
   return `${d}/${mes}`;
+}
+
+function agrupar(lista: Pendencia[]): Grupo[] {
+  const grupos = new Map<string, Grupo>();
+  for (const p of lista) {
+    const nome = p.grupo ?? (!p.analise || p.analise.startsWith(p.tipo) ? p.analise || p.tipo : `${p.tipo} · ${p.analise}`);
+    const g = grupos.get(nome) ?? { nome, itens: [], atrasados: 0, hoje: 0 };
+    g.itens.push(p);
+    if (p.situacao === "Atrasado") g.atrasados += 1;
+    else g.hoje += 1;
+    grupos.set(nome, g);
+  }
+  // ordem fixa dentro do bloco (B.L 72h antes de B.L 120h; o navio junta as análises dele)
+  return [...grupos.values()].sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR", { numeric: true }));
 }
 
 export default function BlocosDePendencias({ itens, vazio }: { itens: Pendencia[]; vazio: ReactNode }) {
@@ -30,41 +55,56 @@ export default function BlocosDePendencias({ itens, vazio }: { itens: Pendencia[
 
   return (
     <>
-      {Object.entries(blocos).map(([bloco, lista]) => {
-        const mostrarTudo = abertos[bloco] || lista.length <= ITENS_ANTES_DE_RECOLHER;
-        const visiveis = mostrarTudo ? lista : lista.slice(0, ITENS_ANTES_DE_RECOLHER);
-        return (
-          <div className="cartao bloco-pendencias" key={bloco}>
-            <h2>
-              {bloco} <span className="contador">{lista.length}</span>
-            </h2>
-            <ul className="lista-pendencias">
-              {visiveis.map((item, n) => (
-                <li key={`${item.referencia}-${item.analise}-${n}`}>
-                  <div className="pendencia-texto">
-                    <span className="pendencia-ref">{item.referencia}</span>
-                    <span className="texto-secundario">
-                      {item.analise}
-                      {item.analise !== item.tipo && ` · ${item.tipo}`}
+      {Object.entries(blocos).map(([bloco, lista]) => (
+        <div className="cartao bloco-pendencias" key={bloco}>
+          <h2>
+            {bloco} <span className="contador">{lista.length}</span>
+          </h2>
+          <ul className="lista-grupos">
+            {agrupar(lista).map((g) => {
+              const chave = `${bloco}|${g.nome}`;
+              const aberto = abertos[chave] ?? false;
+              return (
+                <li key={g.nome}>
+                  <button
+                    type="button"
+                    className="grupo-pendencia"
+                    aria-expanded={aberto}
+                    onClick={() => setAbertos({ ...abertos, [chave]: !aberto })}
+                  >
+                    <span className="grupo-numero">{g.itens.length}</span>
+                    <span className="grupo-nome">{g.nome}</span>
+                    <span className="grupo-situacoes">
+                      {g.atrasados > 0 && <span className="etiqueta etiqueta-nao-ok">{g.atrasados} atrasado{g.atrasados > 1 ? "s" : ""}</span>}
+                      {g.hoje > 0 && <span className="etiqueta etiqueta-pendente">{g.hoje} para hoje</span>}
                     </span>
-                  </div>
-                  <div className="pendencia-situacao">
-                    <span className={item.situacao === "Atrasado" ? "etiqueta etiqueta-nao-ok" : "etiqueta etiqueta-pendente"}>
-                      {item.situacao}
+                    <span className="grupo-seta" aria-hidden="true">
+                      {aberto ? "▾" : "▸"}
                     </span>
-                    <span className="texto-secundario">{dia(item.prevista)}</span>
-                  </div>
+                  </button>
+                  {aberto && (
+                    <ul className="lista-pendencias">
+                      {g.itens.map((item, n) => (
+                        <li key={`${item.referencia}-${item.analise}-${n}`}>
+                          <div className="pendencia-texto">
+                            <span className="pendencia-ref">{item.item ?? item.referencia}</span>
+                          </div>
+                          <div className="pendencia-situacao">
+                            <span className={item.situacao === "Atrasado" ? "etiqueta etiqueta-nao-ok" : "etiqueta etiqueta-pendente"}>
+                              {item.situacao}
+                            </span>
+                            <span className="texto-secundario">{dia(item.prevista)}</span>
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </li>
-              ))}
-            </ul>
-            {!mostrarTudo && (
-              <button type="button" className="link-botao" onClick={() => setAbertos({ ...abertos, [bloco]: true })}>
-                Mostrar todos ({lista.length})
-              </button>
-            )}
-          </div>
-        );
-      })}
+              );
+            })}
+          </ul>
+        </div>
+      ))}
     </>
   );
 }
