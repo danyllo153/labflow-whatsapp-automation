@@ -13,6 +13,11 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 ## [Não lançado]
 
 ### Adicionado
+- **Laudo de incubação no padrão de escrita do laboratório** (app, APP-050, 24/10): a descrição de cada dia é um texto
+  só, na ordem REC → embarque → tanques de navio → `TQ:` → água do processo (MN, C4, C5, C6) → baias → linhas → NFC,
+  com "; " entre os grupos, ponto no fim, lotes entre parênteses e o frasco `(N)`, `(ST)` ou `(N,ST)` no fim de cada
+  sequência de tanques. O texto que não cabe continua no bloco de baixo, repetindo a data, os lotes e as leituras. Neste
+  laudo, PCA só com baia ou linha (a água do processo não usa PCA) e Wort só com tanque.
 - **Laudo de incubação e leitura** (app, APP-040, migration `065`): Registros diários → Incubação e leitura. Um dia de
   incubação por bloco no modelo oficial (LAB/001, 7 por folha): as amostras plaqueadas no dia (tanques com N/ST,
   recebimento, embarque, NFC, água do processo, baias e linhas, com faixas como "L 90008 (1-10)"), o lote de cada meio
