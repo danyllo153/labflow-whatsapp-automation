@@ -13,6 +13,7 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 ## [Não lançado]
 
 ### Adicionado
+- **Dia da incubação para o laudo de incubação do app** (pedido PB10; migration `038`, só aditiva): a view `bi.incubacao` (uma linha por plaqueamento: tanque N/ST pela data da análise, recebimento e embarque no dia em que chegam, recebimento NFC na data do comando, TAB e Coliformes no dia do caldo, com o espalhar) e `bi.testes` com `espalhado_em` e `espalhado_por` no fim.
 - **Águas: editar e excluir** (app, 24/10): na água do processo, nas baias e nas linhas, cada coleta tem **Editar** (data, hora, pontos coletados, dia da análise, observação e os resultados; apagar o número tira o resultado) e **Excluir** (com motivo; sai da lista e do laudo, mas fica guardada). A água do processo virou tabela, com C.T. / B.L. de cada ponto. Os botões marcados (pontos, tipos da esterilização, dias) agora aparecem com fundo cheio e ✓, nos dois temas.
 - **Laudos de rastreio que não dependem do bot** (app, APP-036 a APP-046; migrations `060` a `064`), num motor comum de laudos (`/laudos/{laudo}`: páginas pendentes de imprimir, impressas e arquivo; o modelo oficial enviado pelo Admin fica no banco):
   - **Meios e lotes** (Registros diários): recebimento de cada lote de OSA, PDA, PCA e Wort, o **lote em uso** de cada meio com o período (voltar a um lote antigo é permitido), carga do histórico por CSV (Admin) e o laudo LAB/090, uma folha por meio.
