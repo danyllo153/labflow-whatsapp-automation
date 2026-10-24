@@ -203,6 +203,29 @@ def lancar_agua(
     return _agua(con, pessoa)
 
 
+@roteador.put("/processo/{coleta_id}", response_model=AguaDoProcesso)
+def corrigir_agua(
+    coleta_id: int, pedido: NovaColetaAgua, pessoa: PessoaLogada = Depends(exigir("registrar_analise")), con: psycopg.Connection = Depends(obter_conexao)
+) -> AguaDoProcesso:
+    """Corrige data, hora, pontos e observação. Ponto que deixa de ser coletado perde o resultado (sai "-" no laudo)."""
+    if not pedido.pontos:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Marque os pontos coletados.")
+    if con.execute("SELECT 1 FROM app.coletas_agua_processo WHERE id = %s AND excluida_em IS NULL", (coleta_id,)).fetchone() is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Coleta não encontrada.")
+    quando = _quando(con, pedido.dia, pedido.hora)
+    marcados = {p: p in pedido.pontos for p in PONTOS}
+    sem = ", ".join(f"ct_{p} = NULL, bl_{p} = NULL" for p, m in marcados.items() if not m)
+    con.execute(
+        f"""
+        UPDATE app.coletas_agua_processo SET coletada_em = %(quando)s, manifold = %(manifold)s, camara4 = %(camara4)s,
+               camara5 = %(camara5)s, camara6 = %(camara6)s, observacao = %(obs)s{", " + sem if sem else ""}
+        WHERE id = %(id)s
+        """,
+        {**marcados, "quando": quando, "obs": _obs(pedido.observacao), "id": coleta_id},
+    )
+    return _agua(con, pessoa)
+
+
 class Exclusao(BaseModel):
     motivo: str = Field(max_length=300)
 
@@ -349,6 +372,36 @@ def lancar_superficie(
             {**mudancas, "quem": pessoa.usuario_id, "id": coleta_id},
         )
     return _superficies(con, pessoa, linha[0])
+
+
+class CorrecaoSuperficie(BaseModel):
+    ponto: str = Field(max_length=10)
+    dia: date
+    hora: str
+    analisada_em: date
+    observacao: str | None = Field(default=None, max_length=60)
+
+
+@roteador.put("/superficies/{coleta_id}", response_model=Superficies)
+def corrigir_superficie(
+    coleta_id: int, pedido: CorrecaoSuperficie, pessoa: PessoaLogada = Depends(exigir("registrar_analise")), con: psycopg.Connection = Depends(obter_conexao)
+) -> Superficies:
+    """Corrige o ponto, a data e a hora da coleta, o dia da análise e a observação (os resultados ficam)."""
+    linha = con.execute("SELECT tipo FROM app.coletas_superficie WHERE id = %s AND excluida_em IS NULL", (coleta_id,)).fetchone()
+    if linha is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Coleta não encontrada.")
+    tipo = linha[0]
+    quando = _quando(con, pedido.dia, pedido.hora)
+    if pedido.analisada_em < pedido.dia or (pedido.analisada_em - pedido.dia).days > 3:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "O dia da análise deve ser o da coleta ou até 3 dias depois.")
+    ponto = pedido.ponto.strip().upper().removeprefix(tipo.upper()).strip()
+    if not ponto:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, f"Informe o número da {tipo.lower()}.")
+    con.execute(
+        "UPDATE app.coletas_superficie SET ponto = %s, coletada_em = %s, analisada_em = %s, observacao = %s WHERE id = %s",
+        (ponto.zfill(2) if ponto.isdigit() and tipo == "Baia" else ponto, quando, pedido.analisada_em, _obs(pedido.observacao), coleta_id),
+    )
+    return _superficies(con, pessoa, tipo)
 
 
 @roteador.post("/superficies/{coleta_id}/excluir", response_model=Superficies)

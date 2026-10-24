@@ -101,6 +101,7 @@ export default function SuperficiesPagina({ tipo }: { tipo: Tipo }) {
                     <th scope="col">B.L. 72h</th>
                     <th scope="col">B.L. 120h</th>
                     <th scope="col">Situação</th>
+                    {dados.pode_lancar && <th scope="col">Ações</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -201,10 +202,17 @@ function NovaColeta({ tipo, aoGravar }: { tipo: Tipo; aoGravar: (d: Superficies)
 
 function LinhaDaColeta({ coleta: c, pode, aoMudar }: { coleta: Coleta; pode: boolean; aoMudar: (d: Superficies) => void }) {
   const [valores, setValores] = useState({ ct_48: c.ct_48 ?? "", bl_72: c.bl_72 ?? "", bl_120: c.bl_120 ?? "" });
+  const [modo, setModo] = useState<"editar" | "excluir" | null>(null);
+  const [ponto, setPonto] = useState(c.ponto);
+  const [dia, setDia] = useState(c.dia);
+  const [hora, setHora] = useState(c.hora);
+  const [analise, setAnalise] = useState(c.analisada_em);
+  const [observacao, setObservacao] = useState(c.observacao ?? "");
+  const [motivo, setMotivo] = useState("");
   const [erro, setErro] = useState("");
   const mudou = valores.ct_48 !== (c.ct_48 ?? "") || valores.bl_72 !== (c.bl_72 ?? "") || valores.bl_120 !== (c.bl_120 ?? "");
 
-  async function salvar() {
+  async function salvarResultados() {
     setErro("");
     try {
       aoMudar(await enviarJson<Superficies>(`/aguas/superficies/${c.id}/resultados`, valores, "PUT"));
@@ -213,42 +221,123 @@ function LinhaDaColeta({ coleta: c, pode, aoMudar }: { coleta: Coleta; pode: boo
     }
   }
 
-  const ponto = `${c.tipo} ${c.ponto}`;
+  async function salvarColeta() {
+    setErro("");
+    try {
+      aoMudar(await enviarJson<Superficies>(`/aguas/superficies/${c.id}`, { ponto, dia, hora, analisada_em: analise, observacao }, "PUT"));
+      setModo(null);
+    } catch (e) {
+      setErro(mensagem(e, "Não foi possível corrigir."));
+    }
+  }
+
+  async function excluir() {
+    setErro("");
+    try {
+      aoMudar(await enviarJson<Superficies>(`/aguas/superficies/${c.id}/excluir`, { motivo }));
+    } catch (e) {
+      setErro(mensagem(e, "Não foi possível excluir."));
+    }
+  }
+
+  const nome = `${c.tipo} ${c.ponto}`;
   return (
-    <tr>
-      <td>
-        {dm(c.dia)} {c.hora}
-      </td>
-      <td>{ponto}</td>
-      <td>{dm(c.analisada_em)}</td>
-      {(["ct_48", "bl_72", "bl_120"] as const).map((campo) => (
-        <td key={campo}>
-          {pode ? (
-            <input
-              className="entrada-celula"
-              maxLength={10}
-              aria-label={`${ROTULO[campo]} da ${ponto} de ${dm(c.dia)}`}
-              value={valores[campo]}
-              onChange={(e) => setValores({ ...valores, [campo]: e.target.value })}
-            />
-          ) : (
-            (c[campo] ?? "…")
+    <>
+      <tr>
+        <td>
+          {dm(c.dia)} {c.hora}
+        </td>
+        <td>{nome}</td>
+        <td>{dm(c.analisada_em)}</td>
+        {(["ct_48", "bl_72", "bl_120"] as const).map((campo) => (
+          <td key={campo}>
+            {pode ? (
+              <input
+                className="entrada-celula"
+                maxLength={10}
+                aria-label={`${ROTULO[campo]} da ${nome} de ${dm(c.dia)}`}
+                value={valores[campo]}
+                onChange={(e) => setValores({ ...valores, [campo]: e.target.value })}
+              />
+            ) : (
+              (c[campo] ?? "…")
+            )}
+          </td>
+        ))}
+        <td>
+          <span className={classeDaSituacao(c.situacao)}>{c.situacao}</span>
+          {pode && mudou && (
+            <button type="button" className="link-botao" aria-label={`Salvar ${nome} de ${dm(c.dia)}`} onClick={() => void salvarResultados()}>
+              Salvar
+            </button>
+          )}
+          {erro && !modo && (
+            <span className="mensagem-erro" role="alert">
+              {erro}
+            </span>
           )}
         </td>
-      ))}
-      <td>
-        <span className={classeDaSituacao(c.situacao)}>{c.situacao}</span>
-        {pode && mudou && (
-          <button type="button" className="link-botao" aria-label={`Salvar ${ponto} de ${dm(c.dia)}`} onClick={() => void salvar()}>
-            Salvar
-          </button>
+        {pode && (
+          <td className="acoes-celula">
+            <button type="button" className="link-botao" aria-label={`Editar a coleta da ${nome} de ${dm(c.dia)}`} onClick={() => setModo("editar")}>
+              Editar
+            </button>
+            <button type="button" className="link-botao" aria-label={`Excluir a coleta da ${nome} de ${dm(c.dia)}`} onClick={() => setModo("excluir")}>
+              Excluir
+            </button>
+          </td>
         )}
-        {erro && (
-          <span className="mensagem-erro" role="alert">
-            {erro}
-          </span>
-        )}
-      </td>
-    </tr>
+      </tr>
+      {modo && (
+        <tr>
+          <td colSpan={pode ? 8 : 7}>
+            <div className="corrigir-horario" role="group" aria-label={modo === "editar" ? `Editar a coleta da ${nome}` : `Excluir a coleta da ${nome}`}>
+              {modo === "editar" ? (
+                <div className="linha-formulario">
+                  <label className="campo campo-hora">
+                    {c.tipo}
+                    <input maxLength={10} value={ponto} onChange={(e) => setPonto(e.target.value)} />
+                  </label>
+                  <label className="campo campo-hora">
+                    Data da coleta
+                    <input type="date" max={hojeSP()} value={dia} onChange={(e) => setDia(e.target.value)} />
+                  </label>
+                  <label className="campo campo-hora">
+                    Hora
+                    <input type="time" value={hora} onChange={(e) => setHora(e.target.value)} />
+                  </label>
+                  <label className="campo campo-hora">
+                    Dia da análise
+                    <input type="date" min={dia} value={analise} onChange={(e) => setAnalise(e.target.value)} />
+                  </label>
+                  <label className="campo">
+                    Observação
+                    <input maxLength={60} value={observacao} onChange={(e) => setObservacao(e.target.value)} />
+                  </label>
+                </div>
+              ) : (
+                <label className="campo">
+                  Motivo da exclusão (a coleta sai da lista e do laudo, mas fica guardada)
+                  <input maxLength={300} value={motivo} onChange={(e) => setMotivo(e.target.value)} />
+                </label>
+              )}
+              {erro && (
+                <p className="mensagem-erro" role="alert">
+                  {erro}
+                </p>
+              )}
+              <div className="botoes-lado">
+                <button type="button" className="botao botao-principal" onClick={() => void (modo === "editar" ? salvarColeta() : excluir())}>
+                  {modo === "editar" ? "Salvar" : "Excluir a coleta"}
+                </button>
+                <button type="button" className="botao botao-simples" onClick={() => setModo(null)}>
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </td>
+        </tr>
+      )}
+    </>
   );
 }
