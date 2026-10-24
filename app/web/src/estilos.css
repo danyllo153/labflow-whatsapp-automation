@@ -2990,4 +2990,39 @@ button.barra-linha:hover,
 
 .lista-grupos .lista-pendencias {
   margin: 0 0 8px 3em;
+/* Botão marcado bem visível nos dois temas (24/10): fundo cheio, texto forte e o ✓ na frente */
+:root {
+  --acao-texto: #fff;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema="claro"]) {
+    --acao-texto: #0b1724;
+  }
+}
+:root[data-tema="escuro"] {
+  --acao-texto: #0b1724;
+}
+
+.botao-tipo[aria-pressed="true"],
+.dias-material .botao-secundario[aria-pressed="true"] {
+  background: var(--acao);
+  border-color: var(--acao);
+  color: var(--acao-texto);
+  font-weight: 700;
+}
+
+.botao-tipo[aria-pressed="true"]::before {
+  content: "✓ ";
+}
+
+.botao-tipo[aria-pressed="false"] {
+  opacity: 0.8;
+}
+
+.acoes-celula {
+  white-space: nowrap;
+}
+
+.acoes-celula .link-botao + .link-botao {
+  margin-left: 8px;
 }

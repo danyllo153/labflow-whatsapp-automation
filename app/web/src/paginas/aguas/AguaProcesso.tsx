@@ -94,11 +94,31 @@ export default function AguaProcesso() {
           {dados.coletas.length === 0 ? (
             <p className="texto-secundario">Nenhuma coleta registrada.</p>
           ) : (
-            <ul className="lista-simples">
-              {dados.coletas.map((c) => (
-                <LinhaDaColeta key={c.id} coleta={c} pode={dados.pode_lancar} aoMudar={mudou} />
-              ))}
-            </ul>
+            <div className="tabela-rolagem">
+              <table className="tabela">
+                <thead>
+                  <tr>
+                    <th scope="col">Coleta</th>
+                    {PONTOS.map((p) => (
+                      <th key={p.chave} scope="col">
+                        {p.nome}
+                        <br />
+                        <span className="texto-secundario">C.T. / B.L.</span>
+                      </th>
+                    ))}
+                    <th scope="col">Observação</th>
+                    <th scope="col">Quem</th>
+                    <th scope="col">Situação</th>
+                    {dados.pode_lancar && <th scope="col">Ações</th>}
+                  </tr>
+                </thead>
+                <tbody>
+                  {dados.coletas.map((c) => (
+                    <LinhaDaColeta key={`${c.id}-${versao}`} coleta={c} pode={dados.pode_lancar} aoMudar={mudou} />
+                  ))}
+                </tbody>
+              </table>
+            </div>
           )}
         </div>
       )}
@@ -173,85 +193,153 @@ function NovaColeta({ aoGravar }: { aoGravar: (d: AguaDoProcesso) => void }) {
 }
 
 function LinhaDaColeta({ coleta, pode, aoMudar }: { coleta: Coleta; pode: boolean; aoMudar: (d: AguaDoProcesso) => void }) {
-  const coletados = PONTOS.filter((p) => coleta.pontos[p.chave].coletado);
-  const [aberto, setAberto] = useState(false);
-  const [ct, setCt] = useState<Record<string, string>>(Object.fromEntries(coletados.map((p) => [p.chave, coleta.pontos[p.chave].ct ?? ""])));
-  const [bl, setBl] = useState<Record<string, string>>(Object.fromEntries(coletados.map((p) => [p.chave, coleta.pontos[p.chave].bl ?? ""])));
+  const [modo, setModo] = useState<"editar" | "excluir" | null>(null);
+  const [dia, setDia] = useState(coleta.dia);
+  const [hora, setHora] = useState(coleta.hora);
+  const [pontos, setPontos] = useState<Ponto[]>(PONTOS.filter((p) => coleta.pontos[p.chave].coletado).map((p) => p.chave));
+  const [observacao, setObservacao] = useState(coleta.observacao ?? "");
+  const [ct, setCt] = useState<Record<string, string>>(Object.fromEntries(PONTOS.map((p) => [p.chave, coleta.pontos[p.chave].ct ?? ""])));
+  const [bl, setBl] = useState<Record<string, string>>(Object.fromEntries(PONTOS.map((p) => [p.chave, coleta.pontos[p.chave].bl ?? ""])));
+  const [motivo, setMotivo] = useState("");
   const [erro, setErro] = useState("");
+  const quando = `${dm(coleta.dia)} ${coleta.hora}`;
 
   async function salvar() {
     setErro("");
     try {
-      aoMudar(await enviarJson<AguaDoProcesso>(`/aguas/processo/${coleta.id}/resultados`, { ct, bl }, "PUT"));
-      setAberto(false);
+      await enviarJson<AguaDoProcesso>(`/aguas/processo/${coleta.id}`, { dia, hora, pontos, observacao }, "PUT");
+      const so = (v: Record<string, string>) => Object.fromEntries(pontos.map((p) => [p, v[p] ?? ""]));
+      aoMudar(await enviarJson<AguaDoProcesso>(`/aguas/processo/${coleta.id}/resultados`, { ct: so(ct), bl: so(bl) }, "PUT"));
+      setModo(null);
     } catch (e) {
       setErro(mensagem(e, "Não foi possível salvar."));
     }
   }
 
-  function menorQue1(tipo: "ct" | "bl") {
-    const todos = Object.fromEntries(coletados.map((p) => [p.chave, "<1"]));
-    if (tipo === "ct") setCt(todos);
-    else setBl(todos);
+  async function excluir() {
+    setErro("");
+    try {
+      aoMudar(await enviarJson<AguaDoProcesso>(`/aguas/processo/${coleta.id}/excluir`, { motivo }));
+    } catch (e) {
+      setErro(mensagem(e, "Não foi possível excluir."));
+    }
   }
 
-  const quando = `${dm(coleta.dia)} ${coleta.hora}`;
+  function menorQue1(tipo: "ct" | "bl") {
+    const todos = Object.fromEntries(pontos.map((p) => [p, "<1"]));
+    if (tipo === "ct") setCt({ ...ct, ...todos });
+    else setBl({ ...bl, ...todos });
+  }
+
+  const colunas = PONTOS.length + (pode ? 5 : 4);
   return (
-    <li>
-      <div className="linha-turno">
-        <span>
-          <strong>{quando}</strong> ·{" "}
-          {PONTOS.map((p) => {
-            const l = coleta.pontos[p.chave];
-            return `${p.nome}: ${l.coletado ? `${l.ct ?? "…"} / ${l.bl ?? "…"}` : "-"}`;
-          }).join(" · ")}
-          {coleta.observacao && ` · ${coleta.observacao}`} · {coleta.quem}{" "}
+    <>
+      <tr>
+        <th scope="row">{quando}</th>
+        {PONTOS.map((p) => {
+          const l = coleta.pontos[p.chave];
+          return <td key={p.chave}>{l.coletado ? `${l.ct ?? "…"} / ${l.bl ?? "…"}` : "-"}</td>;
+        })}
+        <td>{coleta.observacao ?? ""}</td>
+        <td>{coleta.quem}</td>
+        <td>
           <span className={classeDaSituacao(coleta.situacao)}>{coleta.situacao}</span>
-        </span>
-        {pode && !aberto && (
-          <button type="button" className="link-botao" aria-label={`Lançar resultados da coleta de ${quando}`} onClick={() => setAberto(true)}>
-            Lançar resultados
-          </button>
+        </td>
+        {pode && (
+          <td className="acoes-celula">
+            <button type="button" className="link-botao" aria-label={`Editar a coleta de ${quando}`} onClick={() => setModo("editar")}>
+              Editar
+            </button>
+            <button type="button" className="link-botao" aria-label={`Excluir a coleta de ${quando}`} onClick={() => setModo("excluir")}>
+              Excluir
+            </button>
+          </td>
         )}
-      </div>
-      {aberto && (
-        <div className="corrigir-horario" role="group" aria-label={`Resultados da coleta de ${quando}`}>
-          <p className="texto-secundario">C.T. em 48 h, B.L. em 120 h. Em branco = ainda não lido.</p>
-          {coletados.map((p) => (
-            <div key={p.chave} className="linha-formulario">
-              <label className="campo campo-hora">
-                {p.nome} C.T.
-                <input maxLength={10} value={ct[p.chave]} onChange={(e) => setCt({ ...ct, [p.chave]: e.target.value })} />
-              </label>
-              <label className="campo campo-hora">
-                {p.nome} B.L.
-                <input maxLength={10} value={bl[p.chave]} onChange={(e) => setBl({ ...bl, [p.chave]: e.target.value })} />
-              </label>
+      </tr>
+      {modo && (
+        <tr>
+          <td colSpan={colunas}>
+            <div className="corrigir-horario" role="group" aria-label={modo === "editar" ? `Editar a coleta de ${quando}` : `Excluir a coleta de ${quando}`}>
+              {modo === "editar" ? (
+                <>
+                  <div className="linha-formulario">
+                    <label className="campo campo-hora">
+                      Data
+                      <input type="date" max={hojeSP()} value={dia} onChange={(e) => setDia(e.target.value)} />
+                    </label>
+                    <label className="campo campo-hora">
+                      Hora
+                      <input type="time" value={hora} onChange={(e) => setHora(e.target.value)} />
+                    </label>
+                    <label className="campo">
+                      Observação
+                      <input maxLength={60} value={observacao} onChange={(e) => setObservacao(e.target.value)} />
+                    </label>
+                  </div>
+                  <div className="botoes-tipo" role="group" aria-label="Pontos coletados">
+                    {PONTOS.map((p) => (
+                      <button
+                        key={p.chave}
+                        type="button"
+                        className="botao-secundario botao-tipo"
+                        aria-pressed={pontos.includes(p.chave)}
+                        onClick={() => setPontos((a) => (a.includes(p.chave) ? a.filter((x) => x !== p.chave) : [...a, p.chave]))}
+                      >
+                        {p.nome}
+                      </button>
+                    ))}
+                  </div>
+                  <p className="texto-secundario">C.T. em 48 h, B.L. em 120 h. Apague o número para tirar um resultado.</p>
+                  {PONTOS.filter((p) => pontos.includes(p.chave)).map((p) => (
+                    <div key={p.chave} className="linha-formulario">
+                      <label className="campo campo-hora">
+                        {p.nome} C.T.
+                        <input maxLength={10} value={ct[p.chave]} onChange={(e) => setCt({ ...ct, [p.chave]: e.target.value })} />
+                      </label>
+                      <label className="campo campo-hora">
+                        {p.nome} B.L.
+                        <input maxLength={10} value={bl[p.chave]} onChange={(e) => setBl({ ...bl, [p.chave]: e.target.value })} />
+                      </label>
+                    </div>
+                  ))}
+                  <div className="botoes-lado">
+                    <button type="button" className="botao botao-simples" onClick={() => menorQue1("ct")}>
+                      C.T. &lt;1 em todos
+                    </button>
+                    <button type="button" className="botao botao-simples" onClick={() => menorQue1("bl")}>
+                      B.L. &lt;1 em todos
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <label className="campo">
+                  Motivo da exclusão (a coleta sai da lista e do laudo, mas fica guardada)
+                  <input maxLength={300} value={motivo} onChange={(e) => setMotivo(e.target.value)} />
+                </label>
+              )}
+              {erro && (
+                <p className="mensagem-erro" role="alert">
+                  {erro}
+                </p>
+              )}
+              <div className="botoes-lado">
+                {modo === "editar" ? (
+                  <button type="button" className="botao botao-principal" disabled={pontos.length === 0} onClick={() => void salvar()}>
+                    Salvar
+                  </button>
+                ) : (
+                  <button type="button" className="botao botao-principal" onClick={() => void excluir()}>
+                    Excluir a coleta
+                  </button>
+                )}
+                <button type="button" className="botao botao-simples" onClick={() => setModo(null)}>
+                  Cancelar
+                </button>
+              </div>
             </div>
-          ))}
-          <div className="botoes-lado">
-            <button type="button" className="botao botao-simples" onClick={() => menorQue1("ct")}>
-              C.T. &lt;1 em todos
-            </button>
-            <button type="button" className="botao botao-simples" onClick={() => menorQue1("bl")}>
-              B.L. &lt;1 em todos
-            </button>
-          </div>
-          {erro && (
-            <p className="mensagem-erro" role="alert">
-              {erro}
-            </p>
-          )}
-          <div className="botoes-lado">
-            <button type="button" className="botao botao-principal" onClick={() => void salvar()}>
-              Salvar resultados
-            </button>
-            <button type="button" className="botao botao-simples" onClick={() => setAberto(false)}>
-              Cancelar
-            </button>
-          </div>
-        </div>
+          </td>
+        </tr>
       )}
-    </li>
+    </>
   );
 }
