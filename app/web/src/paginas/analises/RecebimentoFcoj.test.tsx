@@ -193,4 +193,20 @@ describe("Recebimento FCOJ como app (Fase E, E2)", () => {
     expect(within(laudo).getByLabelText("Arquivo PDF do modelo: Laudo do recebimento de FCOJ")).toBeInTheDocument();
   });
 
+
+  it("o Analista dispensa o aviso de amostra pulada, com o motivo", async () => {
+    const api = abrir("/analises/recebimento-fcoj", {
+      "POST /analises/recebimento-fcoj/pulados/dispensar": () => ({ status: 200, corpo: { ...PAINEL, pulados: [] } }),
+    });
+    const pulos = await screen.findByRole("status", { name: "Amostras puladas" });
+    await userEvent.click(within(pulos).getByRole("button", { name: "Dispensar aviso" }));
+    await userEvent.type(within(pulos).getByLabelText("Motivo (opcional)"), "amostra perdida");
+    await userEvent.click(within(pulos).getByRole("button", { name: "Dispensar aviso do load 98709" }));
+    expect(api.chamadas.find((c) => c.rota === "POST /analises/recebimento-fcoj/pulados/dispensar")?.corpo).toEqual({
+      load: "98709", item: "99902", lotes: "33-34, 37-38", motivo: "amostra perdida",
+    });
+    await screen.findByText("Para fazer agora");
+    expect(screen.queryByRole("status", { name: "Amostras puladas" })).toBeNull();
+  });
+
 });

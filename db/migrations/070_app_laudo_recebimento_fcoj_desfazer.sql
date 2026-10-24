@@ -3,6 +3,7 @@
 
 BEGIN;
 
+DROP TABLE IF EXISTS app.pulos_dispensados;
 DROP TABLE IF EXISTS app.recebimento_laudo;
 DELETE FROM app.paginas_laudo WHERE laudo = 'recebimento-fcoj';
 ALTER TABLE app.paginas_laudo DROP CONSTRAINT paginas_laudo_laudo_check;

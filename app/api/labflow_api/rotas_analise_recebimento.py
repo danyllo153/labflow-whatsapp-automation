@@ -168,18 +168,20 @@ def painel(pessoa: PessoaLogada = Depends(exigir("ver_paginas")), con: psycopg.C
 
 
 def loads_com_pulo(con: psycopg.Connection, hoje: date) -> list[LoadComPulo]:
-    """Loads dos últimos 60 dias com lote pulado: chegou o 10, mas o 3 e o 4 não. Sai da lista quando o lote chega."""
+    """Loads dos últimos 60 dias com lote pulado: chegou o 10, mas o 3 e o 4 não. Sai da lista quando o lote chega ou
+    quando alguém dispensa o aviso (app.pulos_dispensados)."""
     pulos = []
-    for load, item, fab, lotes in con.execute(
+    for load, item, fab, lotes, dispensados in con.execute(
         """
-        SELECT l.numero, i.codigo, f.nome, array_agg(r.lote) FROM loads l JOIN itens i ON i.id = l.item_id
+        SELECT l.numero, i.codigo, f.nome, array_agg(r.lote),
+               (SELECT array_agg(d.lote) FROM app.pulos_dispensados d WHERE d.load_id = l.id) FROM loads l JOIN itens i ON i.id = l.item_id
         LEFT JOIN fabricas f ON f.id = l.fabrica_id JOIN recebimento_lotes r ON r.load_id = l.id
         WHERE i.codigo <> '129' GROUP BY l.id, l.numero, i.codigo, f.nome HAVING max(r.data_recebimento) >= %s
         ORDER BY max(r.data_recebimento) DESC, l.numero
         """,
         (hoje - timedelta(days=60),),
     ):
-        faltam = lotes_que_faltam(lotes)
+        faltam = [n for n in lotes_que_faltam(lotes) if n not in (dispensados or [])]
         if faltam:
             pulos.append(LoadComPulo(load=load, item=item, fabrica=fab, faltam=_faixas(faltam)))
     return pulos
@@ -311,14 +313,53 @@ def registrar(
         con, "SELECT registrar_recebimento(%s, %s, %s, %s, %s, %s, false, %s)",
         (pessoa.usuario_id, pedido.load, pedido.item, pedido.fabrica, _lotes(pedido.lotes), pedido.data, pedido.previa),
     )
-    ja = con.execute(
-        "SELECT array_agg(r.lote) FROM recebimento_lotes r JOIN loads l ON l.id = r.load_id JOIN itens i ON i.id = l.item_id"
-        " WHERE l.numero = %s AND i.codigo = %s",
+    ja, dispensados = con.execute(
+        """
+        SELECT array_agg(r.lote), (SELECT array_agg(d.lote) FROM app.pulos_dispensados d WHERE d.load_id = l.id)
+        FROM recebimento_lotes r JOIN loads l ON l.id = r.load_id JOIN itens i ON i.id = l.item_id
+        WHERE l.numero = %s AND i.codigo = %s GROUP BY l.id
+        """,
         (pedido.load.strip(), pedido.item.strip()),
-    ).fetchone()[0] or []
+    ).fetchone() or (None, None)
     return Resposta(ok=r["ok"], previa=r["previa"], texto=r["texto"], novos=r.get("novos", []), repetidos=r.get("repetidos", []),
                     gravados=len(r.get("novos", [])) if not r["previa"] else 0,
-                    pulados=lotes_que_faltam([*ja, *r.get("novos", [])]))
+                    pulados=[n for n in lotes_que_faltam([*(ja or []), *r.get("novos", [])]) if n not in (dispensados or [])])
+
+
+class Dispensa(BaseModel):
+    load: str = Field(max_length=10)
+    item: str = Field(max_length=10)
+    lotes: str = Field(max_length=200)  # "3-4"
+    motivo: str = Field(default="", max_length=200)  # opcional
+
+
+@roteador.post("/pulados/dispensar", response_model=Painel)
+def dispensar_pulo(
+    pedido: Dispensa, pessoa: PessoaLogada = Depends(exigir("registrar_analise")), con: psycopg.Connection = Depends(obter_conexao)
+) -> Painel:
+    """Tira o aviso de amostra pulada (Admin e Analista, pedido de 24/10). O "*" do laudo continua: o lote não veio."""
+    linha = con.execute(
+        """
+        SELECT l.id, array_agg(r.lote) FROM loads l JOIN itens i ON i.id = l.item_id JOIN recebimento_lotes r ON r.load_id = l.id
+        WHERE l.numero = %s AND i.codigo = %s GROUP BY l.id
+        """,
+        (pedido.load.strip(), pedido.item.strip()),
+    ).fetchone()
+    if not linha:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Load não encontrado.")
+    load_id, recebidos = linha
+    pedidos = _lotes(pedido.lotes)
+    fora = [n for n in pedidos if n not in lotes_que_faltam(recebidos)]
+    if fora:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, f"Não há aviso de amostra pulada para o lote {_faixas(fora)}.")
+    con.execute(
+        """
+        INSERT INTO app.pulos_dispensados (load_id, lote, motivo, dispensado_por)
+        SELECT %s, n, nullif(%s, ''), %s FROM unnest(%s::int[]) n ON CONFLICT DO NOTHING
+        """,
+        (load_id, pedido.motivo.strip(), pessoa.usuario_id, pedidos),
+    )
+    return painel(pessoa, con)
 
 
 class ItemLancado(BaseModel):

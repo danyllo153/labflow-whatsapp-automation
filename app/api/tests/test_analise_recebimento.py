@@ -216,3 +216,22 @@ def test_amostra_pulada_avisa_no_registrar_e_no_painel(cliente, logado, hoje):
     assert r["pulados"] == [4]
     cliente.post(f"{URL}/registrar", json={**pedido, "lotes": "4", "previa": False})
     assert all(p["load"] != "98708" for p in cliente.get(f"{URL}/painel").json()["pulados"])  # chegou tudo: sai do aviso
+
+
+def test_dispensar_o_aviso_de_amostra_pulada(cliente, logado, hoje):
+    logado()
+    pedido = {"load": "98710", "item": "99902", "fabrica": "ITA", "lotes": "1, 4-6", "data": str(hoje), "previa": False}
+    cliente.post(f"{URL}/registrar", json=pedido)
+    dispensa = {"load": "98710", "item": "99902", "lotes": "2", "motivo": "amostra perdida no transporte"}
+    r = cliente.post(f"{URL}/pulados/dispensar", json=dispensa)
+    assert r.status_code == 200, r.text
+    assert next(p for p in r.json()["pulados"] if p["load"] == "98710")["faltam"] == "3"  # o 2 saiu do aviso
+    assert cliente.post(f"{URL}/registrar", json={**pedido, "lotes": "7", "previa": True}).json()["pulados"] == [3]
+
+    r = cliente.post(f"{URL}/pulados/dispensar", json={**dispensa, "lotes": "5"})
+    assert r.status_code == 422 and "Não há aviso" in r.json()["detail"]  # o 5 chegou
+    cliente.post(f"{URL}/pulados/dispensar", json={**dispensa, "lotes": "3", "motivo": ""})
+    assert all(p["load"] != "98710" for p in cliente.get(f"{URL}/painel").json()["pulados"])
+
+    logado("Coletor")
+    assert cliente.post(f"{URL}/pulados/dispensar", json=dispensa).status_code == 403

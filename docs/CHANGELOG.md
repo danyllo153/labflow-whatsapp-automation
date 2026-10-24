@@ -26,7 +26,8 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 ### Adicionado
 - **Aviso de amostra pulada no Recebimento FCOJ** (app, APP-059, 24/10): chegou lote depois e um anterior não veio
   (ex.: 1 a 10 sem o 3 e o 4)? A prévia do registro avisa, o Painel mostra o cartão "Amostras puladas" e o laudo leva
-  `* 3, 4` na Observação, até o lote chegar. Não existe "finalizar load": o fim do load fica em aberto.
+  `* 3, 4` na Observação, até o lote chegar. Não existe "finalizar load": o fim do load fica em aberto. O Admin ou o
+  Analista pode **dispensar o aviso**, com o motivo se quiser (`app.pulos_dispensados`, na 070); o `*` do laudo continua.
 - **Laudo do Recebimento FCOJ** (app, APP-059, 24/10; migration 070): na aba Laudo do app do Recebimento, o "Laudo de
   Análises Microbiológicas – Recebimento" como o papel: A4 deitado, **um lote por linha** (15 por folha), com load, fábrica e
   item só na primeira linha do load, a data da análise, C.T 48h, B.L 72h e 120h conforme são lançados e, na Observação, os

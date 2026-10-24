@@ -26,4 +26,17 @@ CREATE INDEX recebimento_laudo_pagina ON app.recebimento_laudo (pagina_id);
 
 GRANT SELECT, INSERT ON app.recebimento_laudo TO labflow_app_web;   -- sem UPDATE nem DELETE: o lugar do lote não muda
 
+-- Aviso de amostra pulada dispensado (pedido de 24/10): o Admin ou o Analista tira o aviso de um lote que pulou, com o
+-- motivo se quiser. O laudo continua com o "*" (o lote não veio); some só o aviso do app.
+CREATE TABLE app.pulos_dispensados (
+    load_id       bigint NOT NULL REFERENCES loads (id) ON DELETE CASCADE,
+    lote          int NOT NULL CHECK (lote > 0),
+    motivo        text CHECK (length(motivo) <= 200),
+    dispensado_por bigint NOT NULL REFERENCES usuarios (id),
+    dispensado_em timestamptz NOT NULL DEFAULT now(),
+    PRIMARY KEY (load_id, lote)
+);
+
+GRANT SELECT, INSERT ON app.pulos_dispensados TO labflow_app_web;
+
 COMMIT;

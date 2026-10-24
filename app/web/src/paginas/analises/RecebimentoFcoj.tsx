@@ -148,7 +148,7 @@ export default function RecebimentoFcoj() {
           <p className="mensagem-erro">{erro}</p>
         </div>
       )}
-      {aba === "painel" && (painel ? <PainelDoRecebimento painel={painel} irPara={irPara} /> : !erro && <p className="carregando">Carregando...</p>)}
+      {aba === "painel" && (painel ? <PainelDoRecebimento painel={painel} irPara={irPara} aoAtualizar={setPainel} /> : !erro && <p className="carregando">Carregando...</p>)}
       {aba === "registrar" && (
         <Registrar
           pode={painel?.pode_registrar ?? false}
@@ -202,7 +202,15 @@ export default function RecebimentoFcoj() {
   );
 }
 
-function PainelDoRecebimento({ painel, irPara }: { painel: Painel; irPara: (aba: string, extra?: Record<string, string>) => void }) {
+function PainelDoRecebimento({
+  painel,
+  irPara,
+  aoAtualizar,
+}: {
+  painel: Painel;
+  irPara: (aba: string, extra?: Record<string, string>) => void;
+  aoAtualizar: (p: Painel) => void;
+}) {
   const maior = Math.max(1, ...painel.fabricas.map((f) => f.nao_ok));
   return (
     <>
@@ -226,10 +234,7 @@ function PainelDoRecebimento({ painel, irPara }: { painel: Painel; irPara: (aba:
           <p className="texto-secundario">Chegaram lotes depois destes, mas eles ainda não vieram. O aviso sai quando chegarem.</p>
           <ul>
             {painel.pulados.map((p) => (
-              <li key={`${p.load}-${p.item}`}>
-                <strong>L {p.load}</strong> <span className="texto-secundario">· {p.item}{p.fabrica ? ` · ${p.fabrica}` : ""}</span>: faltam{" "}
-                <strong>{p.faltam}</strong>
-              </li>
+              <Pulo key={`${p.load}-${p.item}`} pulo={p} pode={painel.pode_registrar} aoDispensar={aoAtualizar} />
             ))}
           </ul>
         </div>
@@ -285,6 +290,65 @@ function PainelDoRecebimento({ painel, irPara }: { painel: Painel; irPara: (aba:
         </div>
       </div>
     </>
+  );
+}
+
+/** Um load com amostra pulada; o Admin e o Analista podem dispensar o aviso, com o motivo se quiserem (pedido de 24/10). */
+function Pulo({ pulo, pode, aoDispensar }: { pulo: Painel["pulados"][number]; pode: boolean; aoDispensar: (p: Painel) => void }) {
+  const [abrindo, setAbrindo] = useState(false);
+  const [motivo, setMotivo] = useState("");
+  const [erro, setErro] = useState("");
+  const [enviando, setEnviando] = useState(false);
+
+  async function dispensar() {
+    setEnviando(true);
+    setErro("");
+    try {
+      aoDispensar(
+        await enviarJson<Painel>("/analises/recebimento-fcoj/pulados/dispensar", { load: pulo.load, item: pulo.item, lotes: pulo.faltam, motivo }),
+      );
+    } catch (e) {
+      setErro(mensagem(e, "Não foi possível dispensar o aviso."));
+      setEnviando(false);
+    }
+  }
+
+  return (
+    <li>
+      <strong>L {pulo.load}</strong>{" "}
+      <span className="texto-secundario">
+        · {pulo.item}
+        {pulo.fabrica ? ` · ${pulo.fabrica}` : ""}
+      </span>
+      : faltam <strong>{pulo.faltam}</strong>
+      {pode && !abrindo && (
+        <button type="button" className="botao-link" onClick={() => setAbrindo(true)}>
+          Dispensar aviso
+        </button>
+      )}
+      {abrindo && (
+        <div className="dispensar-pulo">
+          <label className="campo">
+            Motivo (opcional)
+            <input maxLength={200} value={motivo} placeholder="ex.: amostra perdida no transporte" onChange={(e) => setMotivo(e.target.value)} />
+          </label>
+          <p className="texto-secundario">O aviso sai do app; no laudo, o lote continua com * (não chegou).</p>
+          {erro && (
+            <p className="mensagem-erro" role="alert">
+              {erro}
+            </p>
+          )}
+          <div className="botoes-lado">
+            <button type="button" className="botao botao-principal" disabled={enviando} onClick={() => void dispensar()}>
+              Dispensar aviso do load {pulo.load}
+            </button>
+            <button type="button" className="botao botao-simples" onClick={() => (setAbrindo(false), setMotivo(""))}>
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+    </li>
   );
 }
 
