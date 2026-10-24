@@ -105,23 +105,25 @@ COLUNAS_TANQUES_TERRA = [
 @roteador.get("/tanques-terra", response_model=Pagina)
 def tanques_terra(
     filtros: FiltrosTanquesTerra = Depends(),
+    busca: str = Query(default="", max_length=60, description="Texto em qualquer coluna"),
     pagina: int = Query(default=1, ge=1),
     por_pagina: int = Query(default=50, ge=1, le=POR_PAGINA_MAX),
     pessoa: PessoaLogada = Depends(exigir("ver_paginas")),
     con: psycopg.Connection = Depends(obter_conexao),
 ) -> Pagina:
     _barrar_coletor(pessoa)
-    return _paginar(con, TANQUES_TERRA_BASE, filtros.montar(), ORDEM_TANQUES_TERRA, pagina, por_pagina)
+    return _paginar(con, TANQUES_TERRA_BASE, filtros.montar(), ORDEM_TANQUES_TERRA, pagina, por_pagina, busca)
 
 
 @roteador.get("/tanques-terra/excel", response_class=Response, responses={200: {"content": {MIME_XLSX: {}}}})
 def tanques_terra_excel(
     filtros: FiltrosTanquesTerra = Depends(),
+    busca: str = Query(default="", max_length=60, description="Texto em qualquer coluna"),
     pessoa: PessoaLogada = Depends(exigir("imprimir_exportar")),
     con: psycopg.Connection = Depends(obter_conexao),
 ) -> Response:
     _barrar_coletor(pessoa)
-    linhas = _linhas_para_excel(con, TANQUES_TERRA_BASE, filtros.montar(), ORDEM_TANQUES_TERRA)
+    linhas = _linhas_para_excel(con, TANQUES_TERRA_BASE, filtros.montar(), ORDEM_TANQUES_TERRA, busca)
     return resposta_xlsx(planilha("Tanques terra", COLUNAS_TANQUES_TERRA, linhas, filtros.descricao()), "tanques-terra")
 
 
@@ -268,23 +270,25 @@ COLUNAS_NAVIOS = [
 @roteador.get("/navios", response_model=Pagina)
 def navios(
     filtros: FiltrosNavios = Depends(),
+    busca: str = Query(default="", max_length=60, description="Texto em qualquer coluna"),
     pagina: int = Query(default=1, ge=1),
     por_pagina: int = Query(default=50, ge=1, le=POR_PAGINA_MAX),
     pessoa: PessoaLogada = Depends(exigir("ver_paginas")),
     con: psycopg.Connection = Depends(obter_conexao),
 ) -> Pagina:
     _barrar_coletor(pessoa)
-    return _paginar(con, NAVIOS_BASE, filtros.montar(), ORDEM_NAVIOS, pagina, por_pagina)
+    return _paginar(con, NAVIOS_BASE, filtros.montar(), ORDEM_NAVIOS, pagina, por_pagina, busca)
 
 
 @roteador.get("/navios/excel", response_class=Response, responses={200: {"content": {MIME_XLSX: {}}}})
 def navios_excel(
     filtros: FiltrosNavios = Depends(),
+    busca: str = Query(default="", max_length=60, description="Texto em qualquer coluna"),
     pessoa: PessoaLogada = Depends(exigir("imprimir_exportar")),
     con: psycopg.Connection = Depends(obter_conexao),
 ) -> Response:
     _barrar_coletor(pessoa)
-    linhas = _linhas_para_excel(con, NAVIOS_BASE, filtros.montar(), ORDEM_NAVIOS)
+    linhas = _linhas_para_excel(con, NAVIOS_BASE, filtros.montar(), ORDEM_NAVIOS, busca)
     return resposta_xlsx(planilha("Navios", COLUNAS_NAVIOS, linhas, filtros.descricao()), "navios")
 
 

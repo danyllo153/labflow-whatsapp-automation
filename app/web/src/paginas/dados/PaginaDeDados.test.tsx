@@ -1,4 +1,4 @@
-import { act, render, screen, within } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, useLocation } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -103,6 +103,17 @@ describe("Páginas: Coletas e Recebimento (APP-015)", () => {
     expect(within(etiquetas).getByText("Navio")).toBeInTheDocument();
     await u.click(screen.getByRole("button", { name: "Tirar o filtro Origem" }));
     expect(endereco).toBe("/paginas/coletas?tanque=1c");
+  });
+
+  it("a busca procura em todos os registros (a API) e segue com os filtros e o Excel", async () => {
+    const { urls } = abrir("/paginas/coletas?origem=Navio", { "GET /paginas/coletas": (url: string) => paginaDe(COLETAS, url) });
+    const u = userEvent.setup();
+    await u.type(await screen.findByRole("searchbox", { name: "Pesquisar em Coletas" }), "O.SKY");
+    await waitFor(() => expect(endereco).toBe("/paginas/coletas?origem=Navio&busca=O.SKY"));
+    await waitFor(() => expect(urls[urls.length - 1]).toBe("/paginas/coletas?origem=Navio&busca=O.SKY&pagina=1&por_pagina=50"));
+    expect(screen.getByRole("link", { name: "Exportar Excel" })).toHaveAttribute("href", "/paginas/coletas/excel?origem=Navio&busca=O.SKY");
+    await u.click(screen.getByRole("button", { name: "Tirar o filtro Origem" }));
+    expect(endereco).toBe("/paginas/coletas?busca=O.SKY"); // tirar um filtro não apaga a busca
   });
 
   it("o Excel leva os mesmos filtros", async () => {

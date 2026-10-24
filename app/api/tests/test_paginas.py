@@ -132,3 +132,19 @@ def test_recebimento_por_load_fabrica_e_analise(cliente, logado, conexao):
 def test_sem_login_nao_ve_paginas(cliente):
     assert cliente.get("/paginas/coletas").status_code == 401
     assert cliente.get("/paginas/recebimento").status_code == 401
+
+
+def test_busca_acha_o_texto_em_qualquer_coluna(cliente, conexao, criar_pessoa):
+    """A busca da página (24/10) vale para todos os registros, não só os da página na tela, e segue para o Excel."""
+    criar_pessoa(usuario="ana.busca", cargo="Analista")
+    cliente.cookies.clear()
+    assert cliente.post("/login", json={"usuario": "ana.busca", "senha": "Senha-de-teste-1"}).status_code == 200
+    item = conexao.execute("INSERT INTO itens (codigo) VALUES ('99911') RETURNING id").fetchone()[0]
+    load = conexao.execute("INSERT INTO loads (numero, item_id) VALUES ('97531', %s) RETURNING id", (item,)).fetchone()[0]
+    conexao.execute("INSERT INTO recebimento_lotes (load_id, lote, data_recebimento) VALUES (%s, 1, '2026-10-20')", (load,))
+    achados = cliente.get("/paginas/recebimento", params={"busca": "97531"}).json()
+    assert achados["total"] >= 1 and all(l["load"] == "97531" for l in achados["linhas"])
+    assert cliente.get("/paginas/recebimento", params={"busca": "nada-assim-xyz"}).json()["total"] == 0
+    assert cliente.get("/paginas/drops", params={"busca": "nada-assim-xyz"}).json()["total"] == 0
+    assert cliente.get("/paginas/navios", params={"busca": "nada-assim-xyz"}).json()["total"] == 0
+    assert cliente.get("/paginas/recebimento/excel", params={"busca": "97531"}).status_code == 200

@@ -199,37 +199,40 @@ COLUNAS_DESVIOS = [
 @roteador.get("/tanques", response_model=Pagina)
 def tanques(
     filtros: FiltrosTanques = Depends(),
+    busca: str = Query(default="", max_length=60, description="Texto em qualquer coluna"),
     pagina: int = Query(default=1, ge=1),
     por_pagina: int = Query(default=50, ge=1, le=POR_PAGINA_MAX),
     pessoa: PessoaLogada = Depends(exigir("ver_paginas")),
     con: psycopg.Connection = Depends(obter_conexao),
 ) -> Pagina:
     _barrar_coletor(pessoa)
-    return _paginar(con, TANQUES_BASE, filtros.montar(), ORDEM_TANQUES, pagina, por_pagina)
+    return _paginar(con, TANQUES_BASE, filtros.montar(), ORDEM_TANQUES, pagina, por_pagina, busca)
 
 
 @roteador.get("/drops", response_model=Pagina)
 def drops(
     filtros: FiltrosDrops = Depends(),
+    busca: str = Query(default="", max_length=60, description="Texto em qualquer coluna"),
     pagina: int = Query(default=1, ge=1),
     por_pagina: int = Query(default=50, ge=1, le=POR_PAGINA_MAX),
     pessoa: PessoaLogada = Depends(exigir("ver_paginas")),
     con: psycopg.Connection = Depends(obter_conexao),
 ) -> Pagina:
     _barrar_coletor(pessoa)
-    return _paginar(con, DROPS_BASE, filtros.montar(), ORDEM_DROPS, pagina, por_pagina)
+    return _paginar(con, DROPS_BASE, filtros.montar(), ORDEM_DROPS, pagina, por_pagina, busca)
 
 
 @roteador.get("/desvios", response_model=Pagina)
 def desvios(
     filtros: FiltrosDesvios = Depends(),
+    busca: str = Query(default="", max_length=60, description="Texto em qualquer coluna"),
     pagina: int = Query(default=1, ge=1),
     por_pagina: int = Query(default=50, ge=1, le=POR_PAGINA_MAX),
     pessoa: PessoaLogada = Depends(exigir("ver_paginas")),
     con: psycopg.Connection = Depends(obter_conexao),
 ) -> Pagina:
     _barrar_coletor(pessoa)
-    return _paginar(con, DESVIOS_BASE, filtros.montar(), ORDEM_DESVIOS, pagina, por_pagina)
+    return _paginar(con, DESVIOS_BASE, filtros.montar(), ORDEM_DESVIOS, pagina, por_pagina, busca)
 
 
 _XLSX = {"response_class": Response, "responses": {200: {"content": {MIME_XLSX: {}}}}}
@@ -238,31 +241,34 @@ _XLSX = {"response_class": Response, "responses": {200: {"content": {MIME_XLSX: 
 @roteador.get("/tanques/excel", **_XLSX)
 def tanques_excel(
     filtros: FiltrosTanques = Depends(),
+    busca: str = Query(default="", max_length=60, description="Texto em qualquer coluna"),
     pessoa: PessoaLogada = Depends(exigir("imprimir_exportar")),
     con: psycopg.Connection = Depends(obter_conexao),
 ) -> Response:
     _barrar_coletor(pessoa)
-    linhas = _linhas_para_excel(con, TANQUES_BASE, filtros.montar(), ORDEM_TANQUES)
+    linhas = _linhas_para_excel(con, TANQUES_BASE, filtros.montar(), ORDEM_TANQUES, busca)
     return resposta_xlsx(planilha("Tanques", COLUNAS_TANQUES, linhas, filtros.descricao()), "tanques")
 
 
 @roteador.get("/drops/excel", **_XLSX)
 def drops_excel(
     filtros: FiltrosDrops = Depends(),
+    busca: str = Query(default="", max_length=60, description="Texto em qualquer coluna"),
     pessoa: PessoaLogada = Depends(exigir("imprimir_exportar")),
     con: psycopg.Connection = Depends(obter_conexao),
 ) -> Response:
     _barrar_coletor(pessoa)
-    linhas = _linhas_para_excel(con, DROPS_BASE, filtros.montar(), ORDEM_DROPS)
+    linhas = _linhas_para_excel(con, DROPS_BASE, filtros.montar(), ORDEM_DROPS, busca)
     return resposta_xlsx(planilha("Drops", COLUNAS_DROPS, linhas, filtros.descricao()), "drops")
 
 
 @roteador.get("/desvios/excel", **_XLSX)
 def desvios_excel(
     filtros: FiltrosDesvios = Depends(),
+    busca: str = Query(default="", max_length=60, description="Texto em qualquer coluna"),
     pessoa: PessoaLogada = Depends(exigir("imprimir_exportar")),
     con: psycopg.Connection = Depends(obter_conexao),
 ) -> Response:
     _barrar_coletor(pessoa)
-    linhas = _linhas_para_excel(con, DESVIOS_BASE, filtros.montar(), ORDEM_DESVIOS)
+    linhas = _linhas_para_excel(con, DESVIOS_BASE, filtros.montar(), ORDEM_DESVIOS, busca)
     return resposta_xlsx(planilha("Desvios", COLUNAS_DESVIOS, linhas, filtros.descricao()), "desvios")

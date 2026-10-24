@@ -195,21 +195,23 @@ def _registrar(caminho: str) -> None:
 
     def lista(
         filtros: Filtros = Depends(),  # type: ignore[valid-type]
+        busca: str = Query(default="", max_length=60, description="Texto em qualquer coluna"),
         pagina: int = Query(default=1, ge=1),
         por_pagina: int = Query(default=50, ge=1, le=POR_PAGINA_MAX),
         pessoa: PessoaLogada = Depends(exigir("ver_paginas")),
         con: psycopg.Connection = Depends(obter_conexao),
     ) -> Pagina:
         _barrar_coletor(pessoa)
-        return _paginar(con, base, filtros.montar(), ordem, pagina, por_pagina)
+        return _paginar(con, base, filtros.montar(), ordem, pagina, por_pagina, busca)
 
     def excel(
         filtros: Filtros = Depends(),  # type: ignore[valid-type]
+        busca: str = Query(default="", max_length=60, description="Texto em qualquer coluna"),
         pessoa: PessoaLogada = Depends(exigir("imprimir_exportar")),
         con: psycopg.Connection = Depends(obter_conexao),
     ) -> Response:
         _barrar_coletor(pessoa)
-        linhas = _linhas_para_excel(con, base, filtros.montar(), ordem)
+        linhas = _linhas_para_excel(con, base, filtros.montar(), ordem, busca)
         return resposta_xlsx(planilha(titulo, colunas, linhas, filtros.descricao()), caminho)
 
     roteador.add_api_route(f"/{caminho}", lista, methods=["GET"], response_model=Pagina, name=f"pagina_{caminho}",

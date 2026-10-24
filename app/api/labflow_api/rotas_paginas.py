@@ -67,7 +67,16 @@ class _Filtro:
         return (" WHERE " + " AND ".join(self.partes)) if self.partes else ""
 
 
-def _paginar(con, base: str, filtro: _Filtro, ordem: str, pagina: int, por_pagina: int) -> Pagina:
+def _com_busca(filtro: _Filtro, busca: str) -> _Filtro:
+    """A busca da página (pedido de 24/10): o texto aparece em qualquer coluna da linha (load, tanque, navio, nome...)."""
+    termo = busca.strip()
+    if termo:
+        filtro.add("t::text ILIKE %s", f"%{termo}%")
+    return filtro
+
+
+def _paginar(con, base: str, filtro: _Filtro, ordem: str, pagina: int, por_pagina: int, busca: str = "") -> Pagina:
+    filtro = _com_busca(filtro, busca)
     total = con.execute(f"SELECT count(*) FROM ({base}) t{filtro.sql()}", filtro.valores).fetchone()[0]
     cur = con.execute(
         f"SELECT * FROM ({base}) t{filtro.sql()} ORDER BY {ordem} LIMIT %s OFFSET %s",
@@ -147,12 +156,13 @@ ORDEM_COLETAS = "data_coleta DESC, registrado_em DESC, coleta_id DESC"
 @roteador.get("/coletas", response_model=Pagina)
 def coletas(
     filtros: FiltrosColetas = Depends(),
+    busca: str = Query(default="", max_length=60, description="Texto em qualquer coluna"),
     pagina: int = Query(default=1, ge=1),
     por_pagina: int = Query(default=50, ge=1, le=POR_PAGINA_MAX),
     pessoa: PessoaLogada = Depends(exigir("ver_paginas")),
     con: psycopg.Connection = Depends(obter_conexao),
 ) -> Pagina:
-    resultado = _paginar(con, COLETAS_BASE, filtros.montar(pessoa), ORDEM_COLETAS, pagina, por_pagina)
+    resultado = _paginar(con, COLETAS_BASE, filtros.montar(pessoa), ORDEM_COLETAS, pagina, por_pagina, busca)
     for linha in resultado.linhas:
         linha.pop("digitado_por_id", None)  # o id interno não vai para a tela
     return resultado
@@ -232,13 +242,14 @@ def _barrar_coletor(pessoa: PessoaLogada) -> None:
 @roteador.get("/recebimento", response_model=Pagina)
 def recebimento(
     filtros: FiltrosRecebimento = Depends(),
+    busca: str = Query(default="", max_length=60, description="Texto em qualquer coluna"),
     pagina: int = Query(default=1, ge=1),
     por_pagina: int = Query(default=50, ge=1, le=POR_PAGINA_MAX),
     pessoa: PessoaLogada = Depends(exigir("ver_paginas")),
     con: psycopg.Connection = Depends(obter_conexao),
 ) -> Pagina:
     _barrar_coletor(pessoa)
-    return _paginar(con, RECEBIMENTO_BASE, filtros.montar(), ORDEM_RECEBIMENTO, pagina, por_pagina)
+    return _paginar(con, RECEBIMENTO_BASE, filtros.montar(), ORDEM_RECEBIMENTO, pagina, por_pagina, busca)
 
 
 # ---------------------------------------------------------------- Exportar para Excel (APP-009)
@@ -256,7 +267,8 @@ COLUNAS_RECEBIMENTO = [
 ]
 
 
-def _linhas_para_excel(con, base: str, filtro: _Filtro, ordem: str) -> list[dict[str, Any]]:
+def _linhas_para_excel(con, base: str, filtro: _Filtro, ordem: str, busca: str = "") -> list[dict[str, Any]]:
+    filtro = _com_busca(filtro, busca)
     cur = con.execute(
         f"SELECT * FROM ({base}) t{filtro.sql()} ORDER BY {ordem} LIMIT %s", [*filtro.valores, LINHAS_MAX_EXCEL + 1]
     )
@@ -273,10 +285,11 @@ def _linhas_para_excel(con, base: str, filtro: _Filtro, ordem: str) -> list[dict
 @roteador.get("/coletas/excel", response_class=Response, responses={200: {"content": {MIME_XLSX: {}}}})
 def coletas_excel(
     filtros: FiltrosColetas = Depends(),
+    busca: str = Query(default="", max_length=60, description="Texto em qualquer coluna"),
     pessoa: PessoaLogada = Depends(exigir("imprimir_exportar")),
     con: psycopg.Connection = Depends(obter_conexao),
 ) -> Response:
-    linhas = _linhas_para_excel(con, COLETAS_BASE, filtros.montar(pessoa), ORDEM_COLETAS)
+    linhas = _linhas_para_excel(con, COLETAS_BASE, filtros.montar(pessoa), ORDEM_COLETAS, busca)
     arquivo = planilha("Coletas", COLUNAS_COLETAS, linhas, filtros.descricao())
     return resposta_xlsx(arquivo, "coletas")
 
@@ -284,11 +297,12 @@ def coletas_excel(
 @roteador.get("/recebimento/excel", response_class=Response, responses={200: {"content": {MIME_XLSX: {}}}})
 def recebimento_excel(
     filtros: FiltrosRecebimento = Depends(),
+    busca: str = Query(default="", max_length=60, description="Texto em qualquer coluna"),
     pessoa: PessoaLogada = Depends(exigir("imprimir_exportar")),
     con: psycopg.Connection = Depends(obter_conexao),
 ) -> Response:
     _barrar_coletor(pessoa)
-    linhas = _linhas_para_excel(con, RECEBIMENTO_BASE, filtros.montar(), ORDEM_RECEBIMENTO)
+    linhas = _linhas_para_excel(con, RECEBIMENTO_BASE, filtros.montar(), ORDEM_RECEBIMENTO, busca)
     arquivo = planilha("Recebimento", COLUNAS_RECEBIMENTO, linhas, filtros.descricao())
     return resposta_xlsx(arquivo, "recebimento")
 
@@ -328,11 +342,12 @@ class GraficoG2(BaseModel):
 @roteador.get("/recebimento/grafico", response_model=GraficoG2)
 def recebimento_grafico(
     filtros: FiltrosRecebimento = Depends(),
+    busca: str = Query(default="", max_length=60, description="Texto em qualquer coluna"),
     pessoa: PessoaLogada = Depends(exigir("ver_paginas")),
     con: psycopg.Connection = Depends(obter_conexao),
 ) -> GraficoG2:
     _barrar_coletor(pessoa)
-    filtro = filtros.montar()
+    filtro = _com_busca(filtros.montar(), busca)  # o gráfico segue a busca da página
     filtro.add("lido")
     filtro.add("data_leitura IS NOT NULL")
     linhas = con.execute(

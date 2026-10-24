@@ -57,6 +57,10 @@ export default function PaginaDeDados({ def }: { def: DefinicaoDePagina }) {
   const [busca, setBusca] = useSearchParams();
   const aplicados = useMemo(() => filtrosDoEndereco(busca, def.filtros), [busca, def.filtros]);
   const pagina = Math.max(1, Number(busca.get("pagina")) || 1);
+  // a busca (24/10): texto em qualquer coluna, em todos os registros (a API procura), e segue para o Excel e a impressão
+  const termo = (busca.get("busca") ?? "").trim();
+  const [texto, setTexto] = useState(termo);
+  const comBusca = useMemo(() => (termo ? { ...aplicados, busca: termo } : aplicados), [aplicados, termo]);
 
   const [rascunho, setRascunho] = useState<Record<string, string>>(aplicados);
   const [filtrosAbertos, setFiltrosAbertos] = useState(false);
@@ -68,15 +72,22 @@ export default function PaginaDeDados({ def }: { def: DefinicaoDePagina }) {
   const [avisoImpressao, setAvisoImpressao] = useState("");
 
   useEffect(() => setRascunho(aplicados), [aplicados]);
+  useEffect(() => setTexto(termo), [termo]);
+  useEffect(() => {
+    if (texto.trim() === termo) return;
+    const t = window.setTimeout(() => irPara(aplicados, 1, texto.trim()), 300);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [texto]);
 
   const carregar = useCallback(async () => {
     try {
-      setDados(await lerJson<Pagina>(`${def.api}?${consulta({ ...aplicados, ...def.fixos }, { pagina, por_pagina: POR_PAGINA })}`));
+      setDados(await lerJson<Pagina>(`${def.api}?${consulta({ ...comBusca, ...def.fixos }, { pagina, por_pagina: POR_PAGINA })}`));
       setErro("");
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não foi possível carregar a página.");
     }
-  }, [def.api, def.fixos, aplicados, pagina]);
+  }, [def.api, def.fixos, comBusca, pagina]);
 
   useEffect(() => {
     void carregar();
@@ -84,9 +95,9 @@ export default function PaginaDeDados({ def }: { def: DefinicaoDePagina }) {
     return () => window.clearInterval(relogio);
   }, [carregar]);
 
-  function irPara(valores: Record<string, string>, novaPagina = 1) {
+  function irPara(valores: Record<string, string>, novaPagina = 1, novoTermo = termo) {
     const limpos = Object.fromEntries(Object.entries(valores).filter(([, v]) => v.trim() !== ""));
-    setBusca(consulta(limpos, novaPagina > 1 ? { pagina: novaPagina } : {}));
+    setBusca(consulta(novoTermo ? { ...limpos, busca: novoTermo } : limpos, novaPagina > 1 ? { pagina: novaPagina } : {}));
   }
 
   function aplicar(evento: FormEvent) {
@@ -111,7 +122,7 @@ export default function PaginaDeDados({ def }: { def: DefinicaoDePagina }) {
     try {
       const todas: Record<string, unknown>[] = [];
       for (let p = 1; ; p++) {
-        const parte = await lerJson<Pagina>(`${def.api}?${consulta({ ...aplicados, ...def.fixos }, { pagina: p, por_pagina: POR_PAGINA_IMPRESSAO })}`);
+        const parte = await lerJson<Pagina>(`${def.api}?${consulta({ ...comBusca, ...def.fixos }, { pagina: p, por_pagina: POR_PAGINA_IMPRESSAO })}`);
         todas.push(...parte.linhas);
         if (todas.length >= parte.total || parte.linhas.length === 0) break;
       }
@@ -134,9 +145,8 @@ export default function PaginaDeDados({ def }: { def: DefinicaoDePagina }) {
 
   const totalPaginas = dados ? Math.max(1, Math.ceil(dados.total / POR_PAGINA)) : 1;
   const etiquetas = def.filtros.filter((f) => aplicados[f.chave]);
-  const textoDosFiltros = etiquetas.length
-    ? etiquetas.map((f) => `${f.rotulo}: ${valorDoFiltro(f, aplicados[f.chave])}`).join(" · ")
-    : "Sem filtro (todos os registros)";
+  const descritos = [...(termo ? [`Busca: ${termo}`] : []), ...etiquetas.map((f) => `${f.rotulo}: ${valorDoFiltro(f, aplicados[f.chave])}`)];
+  const textoDosFiltros = descritos.length ? descritos.join(" · ") : "Sem filtro (todos os registros)";
 
   return (
     <section className="pagina-dados">
@@ -146,11 +156,36 @@ export default function PaginaDeDados({ def }: { def: DefinicaoDePagina }) {
         </p>
         <h1>{def.titulo}</h1>
 
-        <div className="barra-acoes">
-          <button type="button" className="botao-secundario" aria-expanded={filtrosAbertos} onClick={() => setFiltrosAbertos(!filtrosAbertos)}>
-            Filtros{etiquetas.length > 0 && ` (${etiquetas.length})`}
+        <div className="busca-com-filtro">
+          <label className="busca-redonda">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+              <circle cx="11" cy="11" r="7" />
+              <path d="m20 20-3.5-3.5" />
+            </svg>
+            <input
+              type="search"
+              aria-label={`Pesquisar em ${def.titulo}`}
+              placeholder="Pesquisar load, lote, tanque, navio, nome..."
+              maxLength={60}
+              value={texto}
+              onChange={(e) => setTexto(e.target.value)}
+            />
+          </label>
+          <button
+            type="button"
+            className="botao-filtro"
+            aria-label="Filtros"
+            aria-expanded={filtrosAbertos}
+            onClick={() => setFiltrosAbertos(!filtrosAbertos)}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+              <path d="M4 6h16M7 12h10M10 18h4" />
+            </svg>
+            {etiquetas.length > 0 && <span className="abas-contador">{etiquetas.length}</span>}
           </button>
-          <a className="botao-secundario" href={`${def.api}/excel?${consulta({ ...aplicados, ...def.fixos })}`} download>
+        </div>
+        <div className="barra-acoes">
+          <a className="botao-secundario" href={`${def.api}/excel?${consulta({ ...comBusca, ...def.fixos })}`} download>
             Exportar Excel
           </a>
           <button type="button" className="botao-secundario" onClick={() => void imprimir()} disabled={preparando || !dados}>
@@ -251,7 +286,7 @@ export default function PaginaDeDados({ def }: { def: DefinicaoDePagina }) {
           </section>
         )}
 
-        {def.grafico === "g2" && <GraficoG2 consulta={consulta(aplicados)} aoEscolherLoad={(load) => irPara({ ...aplicados, load })} />}
+        {def.grafico === "g2" && <GraficoG2 consulta={consulta(comBusca)} aoEscolherLoad={(load) => irPara({ ...aplicados, load })} />}
 
         {dados && !erro && (
           <>

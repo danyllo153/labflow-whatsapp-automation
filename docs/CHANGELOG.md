@@ -24,6 +24,10 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
   início" ajusta o começo do lote em uso quando preciso.
 
 ### Adicionado
+- **Pesquisa e ícone de filtro em todas as páginas de dados** (app, APP-060, 24/10): Coletas, Recebimento, Drops, Navios,
+  Tanques terra, Desvios, TAB, Coliformes, Howard e as outras ganham o campo "Pesquisar" (acha o texto em qualquer coluna,
+  em **todos** os registros, não só na página da tela) e o botão redondo de filtro no lugar do "Filtros". A busca segue
+  para o Excel, a impressão e o gráfico do Recebimento.
 - **Aviso de amostra pulada no Recebimento FCOJ** (app, APP-059, 24/10): chegou lote depois e um anterior não veio
   (ex.: 1 a 10 sem o 3 e o 4)? A prévia do registro avisa, o Painel mostra o cartão "Amostras puladas" e o laudo leva
   `* 3, 4` na Observação, até o lote chegar. Não existe "finalizar load": o fim do load fica em aberto. O Admin ou o
