@@ -23,6 +23,8 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
   início" ajusta o começo do lote em uso quando preciso.
 
 ### Adicionado
+- **Drops e desvio de drop por funções do banco** (PB15 da Fase E, migration `044`, 24/10): `concluir_drops`,
+  `abrir_desvio_drop` e `fechar_desvio_drop`, as mesmas para o bot e o app; o bot já usa no "drops concluídos" e no "sim" do desvio.
 - **Compostas, TAB, Coliformes e Howard por funções do banco** (PB13 da Fase E, migration `043`, 24/10): `criar_compostas`,
   `teste_feito` e `teste_acao` (espalhar, confirmar, negativos, resultado, abrir lote a lote e Howard), as mesmas para o bot e
   o app. O bot já usa nos comandos e no "sim"; se o banco recusar, diz por quê.
