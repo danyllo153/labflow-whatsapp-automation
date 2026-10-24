@@ -13,6 +13,9 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 ## [Não lançado]
 
 ### Corrigido
+- **Lote marcado por engano no meio do período** (app, APP-052, 24/10): "Corrigir a data de início" do lote em uso agora
+  pode voltar para antes de outra marcação; a marcação errada que fica no meio é anulada (o período vira vazio, nada é
+  apagado) e sai do laudo de incubação e do histórico de uso. Caso do OSA: 5217877 desde 02/03/2026.
 - **Lotes dos meios em branco no laudo de incubação** (app, APP-051, 24/10): o período de uso de um lote começava no
   momento em que ele era marcado (na carga do histórico, por exemplo), e os dias anteriores saíam sem lote. Agora o laudo
   acha o lote de cada dia sozinho: o marcado em uso naquele dia ou, sem marcação, o último lote recebido até o dia.
