@@ -256,6 +256,7 @@ async def enviar_modelo(
     """O Admin envia o PDF oficial em branco (exportado do Word); fica no banco, nunca no Git."""
     pdf = await pedido.body()
     try:
+        pdf = laudo_esterilizacao.so_a_primeira_folha(pdf)
         laudo_esterilizacao.modelo_valido(pdf)
     except ValueError as e:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(e)) from e

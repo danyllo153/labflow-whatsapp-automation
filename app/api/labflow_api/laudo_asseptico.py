@@ -4,7 +4,7 @@ Spec: 07-app-pwa.md (v1.0), §7.2 Material asséptico. Tarefa: APP-041. Tabelas 
 
 Cada dia ocupa 4 linhas (ponteira/pipeta, água de diluição, placa de Petri, meio de cultura); C.T., B.L. e o analista
 ficam uma vez por dia; os ciclos e lotes vão na linha de cada material. O Visto fica em branco (assinatura à mão).
-A geometria abaixo é a do modelo de demonstração; quando o PDF oficial chegar (exportado do Word), ela é medida nele.
+A geometria abaixo foi medida no PDF oficial (LAB/001, exportado do Word em 24/10): 9 dias de 4 linhas por folha.
 """
 
 import io
@@ -21,9 +21,10 @@ NOME_DO_MODELO = "material-asseptico"
 MATERIAIS = ("ponteira / pipeta", "água de diluição", "placa de Petri", "meio de cultura")
 
 LARGURA, ALTURA = A4
-COLUNAS_X = (36.0, 92.0, 205.0, 250.0, 295.0, 360.0, 410.0, 577.0)  # Data, Material, C.T., B.L., Nome, Visto, Ciclo
-TOPO_DOS_DIAS = 150.0
-ALTURA_DA_LINHA = 14.0  # 4 linhas por dia
+COLUNAS_X = (35.52, 84.5, 217.2, 273.4, 327.9, 384.6, 441.2, 560.26)  # Data, Material, C.T., B.L., Nome, Visto, Ciclo
+TOPO_DOS_DIAS = 161.18
+BASE_DOS_DIAS = 685.06
+ALTURA_DA_LINHA = (BASE_DOS_DIAS - TOPO_DOS_DIAS) / (DIAS_POR_PAGINA * 4)  # 4 linhas por dia
 
 
 def _y(linha: float) -> float:

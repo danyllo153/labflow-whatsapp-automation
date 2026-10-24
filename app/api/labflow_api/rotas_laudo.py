@@ -96,6 +96,7 @@ async def enviar_modelo(
     if len(pdf) > MAXIMO_DO_MODELO:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "O PDF é grande demais (máximo de 4 MB).")
     try:
+        pdf = laudo.so_a_primeira_folha(pdf)
         laudo.modelo_valido(pdf)
     except ValueError as e:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, str(e)) from e

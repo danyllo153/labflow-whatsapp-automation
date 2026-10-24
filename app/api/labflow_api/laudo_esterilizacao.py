@@ -154,6 +154,24 @@ def gerar_pdf(linhas: list[dict], modelo: bytes | None) -> bytes:
     return saida.getvalue()
 
 
+def so_a_primeira_folha(pdf: bytes) -> bytes:
+    """O Word às vezes exporta uma folha a mais, vazia: fica só a primeira (a com a tabela). Folha extra com texto é erro."""
+    try:
+        leitor = PdfReader(io.BytesIO(pdf))
+        extras = leitor.pages[1:]
+    except Exception:
+        return pdf  # o modelo_valido explica o problema
+    if not extras:
+        return pdf
+    if any((p.extract_text() or "").strip() for p in extras):
+        raise ValueError("O modelo deve ter uma página só (a folha com as linhas em branco).")
+    escritor = PdfWriter()
+    escritor.add_page(leitor.pages[0])
+    saida = io.BytesIO()
+    escritor.write(saida)
+    return saida.getvalue()
+
+
 def modelo_valido(pdf: bytes) -> None:
     """Confere que o PDF enviado é uma página A4 como o modelo (ValueError com a mensagem para a pessoa)."""
     if not pdf.startswith(b"%PDF"):
