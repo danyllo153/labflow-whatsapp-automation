@@ -16,7 +16,7 @@ Pela hora de Brasília (`TZ=UTC+3 date "+%H:%M %d/%m"`; no Git Bash do Windows `
 1. `git fetch -q --prune` e ler da `main` remota, sem mexer na pasta: `MSYS_NO_PATHCONV=1 git show origin/main:docs/handoff.md` (no Git Bash do Windows o `MSYS_NO_PATHCONV=1` evita que o caminho seja estragado). A **seção 0** é a fonte principal: os blocos do topo são os mais recentes; o bloco do app começa com "sessão do APP".
 2. O que entrou desde a última vez: `git log --since="36 hours ago" --format="%h %ci %an %s" origin/main`. O autor `danyllo` (minúsculo) é o notebook; `Danyllo Gomes` é o PC ou a nuvem pelo GitHub.
 3. O que está em andamento: `gh pr list --state open --json number,title,isDraft,updatedAt,files`. **Rascunho (draft) = trabalho em andamento de alguma sessão.** PR do bot é o que mexe em `LabFlow.json`, `tests/` ou `db/migrations/0[2-4]*`; do app, o que mexe em `app/` ou `docs/specs/lims/`.
-4. O próximo combinado: o "▶ Próximos passos" de `C:\Users\danil\OneDrive\Valts\PROJETO- LABFLOW\LABFLOW\03-Backlog\backlog.md` (no computador sem o vault, pular).
+4. O próximo combinado: o "▶ Próximos passos" de `docs/backlog.md` (`MSYS_NO_PATHCONV=1 git show origin/main:docs/backlog.md | sed -n '/▶ Próximos/,/^## /p'`). **Não ler** o `docs/handoff-historico.md` nem o Obsidian: gasta token, e o estado está no handoff e no backlog.
 5. Opcional, se a conversa for sobre o bot no ar: o último backup no servidor (`ssh labflow 'ls -t ~/labflow/backups-n8n | head -1'`) diz qual foi a última publicação. Se o SSH não responder, seguir sem.
 
 ## 3. Responder neste formato

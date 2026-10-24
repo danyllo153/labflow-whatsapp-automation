@@ -14,7 +14,8 @@ Automação de laboratório de microbiologia: WhatsApp → Evolution API → n8n
 ## Continuidade entre computadores e celular
 O Danyllo trabalha no PC, no notebook e no celular. A memória local do Claude Code (`~/.claude`) **não sincroniza** entre eles: o que precisa valer em qualquer aparelho mora **neste repositório**.
 - Regra ou preferência nova do Danyllo → vai para este `CLAUDE.md` no mesmo dia (não só para a memória local).
-- Estado, pendências e decisões em aberto → `docs/handoff.md` seção 0, atualizado ao fim de cada sessão de trabalho (não só no fim do dia) e enviado com push, para o outro aparelho só precisar de `git pull`.
+- Estado, pendências e decisões em aberto → `docs/handoff.md` seção 0, atualizado ao fim de cada sessão de trabalho (não só no fim do dia) e enviado com push, para o outro aparelho só precisar de `git pull`. **Um bloco por sessão** (bot e app): o novo substitui o antigo, que vai para o topo de `docs/handoff-historico.md` (não se lê no dia a dia).
+- **O repositório é a única fonte do estado e dos planos** (decidido em 24/10/2026, para não gastar token escrevendo a mesma coisa em dois lugares): handoff, `docs/backlog.md` (o "próximo"), CHANGELOG e `docs/specs/lims/rumo-do-app.md`. **Não espelhar no Obsidian.**
 - Antes de começar em qualquer aparelho: `git pull` na `main` e ler o handoff.
 - **Várias sessões ao mesmo tempo:** a pasta `C:\Dev\labflow-whatsapp-automation` é de **uma** sessão só. Outra sessão local trabalha num worktree próprio (`git worktree add <pasta> <branch>`) e **nunca** troca de branch, faz stash ou commit na pasta principal (em 15/10 uma troca de branch acertou o commit de outra sessão).
 
@@ -89,10 +90,11 @@ Desde 15/10 uma sessão cuida do **app** (web e celular) e outra do **bot**. Par
 
 ## Documentação (cada instrução em um lugar só)
 - Repositório: `docs/comandos.md` é a referência oficial dos comandos; `docs/handoff.md` guarda onde paramos; `docs/troubleshooting.md` guarda os bugs.
-- Vault do Obsidian (`OneDrive\Valts\PROJETO- LABFLOW`): a sintaxe dos comandos mora só em `Comandos-Disponiveis`; o "próximo" só no `backlog`; o histórico no `decisoes-log`; comandos de servidor e banco em `00-Servidores` e `Postgres-Migracao`. Notas de domínio só explicam regras.
-- Comando novo: atualizar `docs/comandos.md`, a cheatsheet do vault, o CHANGELOG e o backlog.
+- Repositório também: `docs/backlog.md` é o único lugar do "próximo"; as specs ficam só em `docs/specs/lims/` (o vault não tem mais cópia).
+- Vault do Obsidian (`OneDrive\Valts\PROJETO- LABFLOW`): **só o que não pode ir para o Git** (servidor, senhas, limites reais, o sistema de monitoramento ambiental) e as **regras de domínio** do laboratório. Atualizar o vault **só quando o Danyllo pedir**, uma nota por vez; o fim do dia não mexe nele. Exceção: decisão com dado confidencial vai para o `decisoes-log` do vault.
+- Comando novo: atualizar `docs/comandos.md`, o CHANGELOG e o `docs/backlog.md`.
 
 ## Ao começar e ao encerrar o dia
 Quando ele cumprimentar ("bom dia", "boa tarde", "boa noite") ou perguntar onde paramos: skill `/bom-dia` (`.claude/skills/bom-dia`), só leitura, com o que foi feito por último em qualquer aparelho e os próximos passos.
 
-Ao encerrar: usar a skill `/fechar-dia` (`.claude/skills/fechar-dia`): atualiza `docs/handoff.md`, o `decisoes-log` e o `backlog`, commita e passa ao Danyllo o roteiro de push, PR e merge, para ele continuar em outro computador só com `git pull`.
+Ao encerrar: usar a skill `/fechar-dia` (`.claude/skills/fechar-dia`): atualiza o `docs/handoff.md`, o `docs/backlog.md` e o CHANGELOG (só o repositório, nada no Obsidian), commita e passa ao Danyllo o roteiro de push, PR e merge, para ele continuar em outro computador só com `git pull`.
