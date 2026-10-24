@@ -425,16 +425,18 @@ def criar_compostas(
 # --- laudo (APP-059): "Laudo de Análises Microbiológicas – Recebimento", A4 deitado, uma linha por lote --------------
 # Como no papel (fotos de 24/10): Load, Fábrica e Item só na primeira linha do load na folha; a data muda quando o lote
 # chegou em outro dia; na Observação, "* 33, 34, 37, 38" = os lotes que faltam na sequência do load (saem quando chegam).
-# Analista Responsável = quem registrou os lotes da folha; o Visto é à mão. Geometria medida nas fotos, até ter o PDF.
+# Analista Responsável = quem registrou os lotes da folha; o Visto é à mão. Geometria medida no PDF do modelo (LAB/001,
+# revisão 7, enviado pelo Danyllo em 24/10; o PDF fica fora do Git, no banco).
 
 NOME_DO_LAUDO = "recebimento-fcoj"
 DIAS_PARA_TRAS = 7  # na primeira vez, a folha começa com os lotes da última semana
 LARGURA_DEITADA, ALTURA_DEITADA = 841.89, 595.28
 TABELA = laudos.Tabela(
-    colunas=(28.0, 98.0, 186.0, 273.0, 345.0, 427.0, 490.0, 561.0, 640.0, 814.0), topo=178.0, base=388.0, linhas=15
+    colunas=(21.0, 91.8, 182.2, 272.7, 347.1, 432.2, 495.9, 566.9, 644.9, 815.2), topo=179.3, base=393.8, linhas=15
 )
+CABECALHO, SUBCABECALHO = 137.3, 165.0  # topo da tabela e a linha de baixo de "C.T." e "B.L." (onde começam 48h, 72h e 120h)
 COLUNAS_DO_PAPEL = ("Load", "Fábrica", "Item", "Lote", "Data da Análise", "48h", "72h", "120h", "Observação")
-LINHA_DO_ANALISTA = (132.0, 560.0, 428.0, 444.0)  # x0, x1, topo e base do traço "Analista Responsável"
+LINHA_DO_ANALISTA = (136.5, 562.6, 438.5, 451.5)  # x0, x1, topo e base do traço "Analista Responsável"
 
 
 def _demonstracao() -> bytes:
@@ -444,26 +446,26 @@ def _demonstracao() -> bytes:
     y = lambda topo: ALTURA_DEITADA - topo  # noqa: E731
     col = TABELA.colunas
     c.setFont("Helvetica-BoldOblique", 11)
-    c.drawCentredString(LARGURA_DEITADA / 2, y(125), "Laudo de Análises Microbiológicas – Recebimento (modelo de demonstração)")
+    c.drawCentredString(LARGURA_DEITADA / 2, y(121), "Laudo de Análises Microbiológicas – Recebimento (modelo de demonstração)")
     c.setLineWidth(0.6)
-    c.rect(col[0], y(TABELA.base), col[-1] - col[0], TABELA.base - 132)
-    c.line(col[5], y(160), col[8], y(160))
+    c.rect(col[0], y(TABELA.base), col[-1] - col[0], TABELA.base - CABECALHO)
+    c.line(col[5], y(SUBCABECALHO), col[8], y(SUBCABECALHO))
     for x in col[1:-1]:
-        c.line(x, y(132 if x not in (col[6], col[7]) else 160), x, y(TABELA.base))
+        c.line(x, y(SUBCABECALHO if x == col[7] else CABECALHO), x, y(TABELA.base))
     for i in range(TABELA.linhas):
         c.line(col[0], y(TABELA.topo + i * TABELA.altura), col[-1], y(TABELA.topo + i * TABELA.altura))
-    c.setFont("Helvetica", 8.5)
+    c.setFont("Helvetica", 9)
     for x0, x1, nome in zip(col, col[1:], COLUNAS_DO_PAPEL):
-        c.drawCentredString((x0 + x1) / 2, y(170 if nome in ("48h", "72h", "120h") else 148), nome)
-    c.drawCentredString((col[5] + col[6]) / 2, y(146), "C.T. (UFC/ml)")
-    c.drawCentredString((col[6] + col[8]) / 2, y(146), "B.L. (UFC/ml)")
-    c.drawString(col[0] + 2, y(402), "C.T. = Contagem Total e B.L. = Bolores e Leveduras")
-    c.drawString(col[0] + 2, y(440), "Analista Responsável:")
-    c.line(LINHA_DO_ANALISTA[0], y(442), LINHA_DO_ANALISTA[1], y(442))
-    c.drawString(575, y(440), "Visto:")
-    c.line(602, y(442), col[-1], y(442))
-    c.drawString(col[0] + 2, y(468), "Responsável pela Correta Aplicação:")
-    c.line(178, y(470), col[-1], y(470))
+        c.drawCentredString((x0 + x1) / 2, y(176 if nome in ("48h", "72h", "120h") else 150), nome)
+    c.drawCentredString((col[5] + col[6]) / 2, y(150), "C.T. (UFC/ml)")
+    c.drawCentredString((col[6] + col[8]) / 2, y(150), "B.L. (UFC/ml)")
+    c.drawString(26.6, y(419), "C.T. = Contagem Total e B.L. = Bolores e Leveduras")
+    c.drawString(26.6, y(448), "Analista Responsável:")
+    c.line(LINHA_DO_ANALISTA[0], y(450), LINHA_DO_ANALISTA[1], y(450))
+    c.drawString(565.6, y(448), "Visto:")
+    c.line(598.0, y(450), 808.2, y(450))
+    c.drawString(26.6, y(476), "Responsável pela Correta Aplicação:")
+    c.line(207.0, y(478), 807.4, y(478))
     c.showPage()
     c.save()
     return saida.getvalue()

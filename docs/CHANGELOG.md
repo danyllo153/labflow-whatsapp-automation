@@ -29,7 +29,7 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
   item só na primeira linha do load, a data da análise, C.T 48h, B.L 72h e 120h conforme são lançados e, na Observação, os
   lotes que faltam na sequência (`* 33, 34, 37, 38`, que saem quando chegam). Analista Responsável = quem registrou; o Visto
   é à mão. Pendente de imprimir, impressa e reimprimir como os outros laudos, e o Admin envia o **PDF do modelo** (e a
-  revisão nova, quando entrar em vigor). Geometria medida nas fotos do papel, até ter o PDF.
+  revisão nova, quando entrar em vigor). Geometria medida no PDF do modelo (LAB/001, revisão 7) e conferida com ele preenchido.
 - **Compostas no app do Recebimento FCOJ** (app, APP-058, 24/10): aba Compostas com os loads que ainda têm lote fora de
   composta e o **recomendado** (uns 5 por composta; 6 vale, 7 vira 3 + 4, 8 vira 4 + 4), ou os grupos escritos à mão
   (`(1-5)(6-10)`), com a prévia antes do Confirmar. Grava pela `criar_compostas` do bot (043). Depois de registrar um load,
