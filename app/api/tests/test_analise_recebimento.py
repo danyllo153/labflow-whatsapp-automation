@@ -106,3 +106,45 @@ def test_o_app_chama_as_funcoes_do_bot(conexao):
         "lancar_contagem(bigint, text, jsonb, boolean)",
     ):
         assert conexao.execute("SELECT has_function_privilege('labflow_app_web', %s, 'EXECUTE')", (assinatura,)).fetchone()[0]
+
+
+@pytest.mark.parametrize(
+    ("n", "tamanhos"),
+    [(1, [1]), (5, [5]), (6, [6]), (7, [3, 4]), (8, [4, 4]), (10, [5, 5]), (12, [6, 6]), (13, [4, 4, 5]), (18, [4, 4, 5, 5]),
+     (20, [5, 5, 5, 5])],
+)
+def test_recomendar_compostas(n, tamanhos):
+    from labflow_api.rotas_analise_recebimento import recomendar_compostas
+
+    grupos = recomendar_compostas(list(range(1, n + 1)))
+    assert [len(g) for g in grupos] == tamanhos
+    assert sum(grupos, []) == list(range(1, n + 1))  # todos os lotes, na ordem, uma vez só
+
+
+def test_compostas_recomenda_previa_e_cria(cliente, logado, hoje):
+    logado()
+    cliente.post(f"{URL}/registrar", json={"load": "98706", "item": "99902", "fabrica": "UCH", "lotes": "1-20", "data": str(hoje), "previa": False})
+    load = next(l for l in cliente.get(f"{URL}/compostas").json() if l["load"] == "98706")
+    assert (load["livres"], load["n_livres"], load["compostas"]) == ("1-20", 20, [])
+    assert load["recomendado"] == "(1-5)(6-10)(11-15)(16-20)"
+
+    pedido = {"load": "98706", "item": "99902", "grupos": "(1-3)(4-6)"}
+    r = cliente.post(f"{URL}/compostas", json=pedido)
+    assert r.status_code == 200, r.text
+    assert r.json()["previa"] and r.json()["criadas"] == 0 and "2 compostas no load 98706" in r.json()["texto"]
+    r = cliente.post(f"{URL}/compostas", json={**pedido, "previa": False})
+    assert r.json()["criadas"] == 2
+
+    load = cliente.get(f"{URL}/compostas", params={"busca": "98706"}).json()[0]
+    assert load["livres"] == "7-20" and [c["lotes"] for c in load["compostas"]] == ["1-3", "4-6"]
+    assert load["recomendado"] == "(7-10)(11-15)(16-20)"  # 14 livres: 4+5+5
+
+    r = cliente.post(f"{URL}/compostas", json={**pedido, "grupos": "(6-8)", "previa": True})
+    assert r.status_code == 422 and "já está na composta" in r.json()["detail"]
+    r = cliente.post(f"{URL}/compostas", json={**pedido, "grupos": "nada"})
+    assert r.status_code == 422
+
+
+def test_coletor_nao_cria_composta(cliente, logado):
+    logado("Coletor")
+    assert cliente.post(f"{URL}/compostas", json={"load": "1", "item": "1", "grupos": "(1)"}).status_code == 403

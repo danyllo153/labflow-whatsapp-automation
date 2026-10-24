@@ -16,6 +16,7 @@ Uma linha por decisão, mais recente no topo, com o porquê. O que está aqui n�
 
 ## Decidido
 
+- **2026-10-24** (app) **Composta recomendada no recebimento de FCOJ:** o app sugere grupos de uns **5 lotes** por composta; **6 numa composta vale, 7 não** (7 vira 3 + 4; 8 vira 4 + 4; 20 vira 5 + 5 + 5 + 5). O número de compostas é o maior entre "até 6 por composta" e "5 por composta" arredondado; as maiores ficam no fim. O analista usa o recomendado com um toque ou escreve os grupos, e sempre vê a prévia antes do Confirmar. Por quê: é a regra do laboratório, e assim a composta sai certa sem fazer conta.
 - **2026-10-24** (app) **Botões que gravam em lote no app** ("Espalhei todos", "Lançar leituras"): abrem a lista com tudo marcado e um único **"Confirmar"**, como o "sim" do bot; enquanto as funções do banco do bot não chegam (PB13), os botões só abrem a página certa ("Ver os 20"). Por quê: gravar muitas coisas de uma vez precisa de uma conferência antes, igual no WhatsApp.
 
 - **2026-10-24** (bot e app) **Corrigir resultado de C.T/B.L: motivo obrigatório para o Analista, opcional para o Admin** (comando curto `corrigir ct do load 43755 para <1`, plano de 23/10). Por quê: a correção de resultado do Analista precisa de rastro (regra de 16/10), e o Admin, que revisa, não precisa justificar cada ajuste; quem corrigiu fica guardado nos dois casos. Vale também para a mesma correção pelo app.
