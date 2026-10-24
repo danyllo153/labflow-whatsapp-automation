@@ -4,14 +4,17 @@
 > Legenda: 🤖 bot · 📱 app · 🧪 teste ao vivo · 🛠️ infra e piloto · 🎨 portfólio. "(precisa do Danyllo)" = depende de decisão, foto ou ação dele.
 
 ## ▶ Próximos passos (arrumado em 24/10/2026) — retomar daqui
-> **Estado em 24/10/2026:** **v1.4.0 lançada** (23/10). Bot no ar com **259 nós** (`pre76`), banco até a migration **038** do bot e a **064** do app; cargo **Analista** (antes Operador). App com os Marcos 1 a 4, o acabamento visual e os laudos de rastreio no ar. Piloto: por enquanto só o Danyllo testa; dados em dia em lote em 23/10. Detalhe e como publicar: `docs/handoff.md` seção 0 no repositório.
+> **Estado em 24/10/2026 (tarde):** **v1.4.0 lançada** (23/10). Bot no ar com **263 nós** (`pre79`), banco até a migration **040** do bot e a **064** do app; cargo **Analista** (antes Operador). App com os Marcos 1 a 4, o acabamento visual e os laudos de rastreio no ar. Piloto: por enquanto só o Danyllo testa; dados em dia em lote em 23/10. Detalhe e como publicar: `docs/handoff.md` seção 0 no repositório.
 
 ### 🤖 Bot
 - [x] **PB10 (dia da incubação) no ar** (24/10, #225, migration 038 aplicada; `bi.incubacao` conferida)
 - [ ] **PB8** (esterilização por frase) e **PB9** (água, baias e linhas por frase): as funções do banco do app estão no PR do APP-054 (migration 067); falta o bot usar (rumo-do-app, "Funções do app para o PB8 e o PB9")
-- [x] **Resultado do TAB pela foto** (23/10, PR #205, `pre76`, 259 nós): "+" positivo já confirmado, "—" negativo, em branco = caldo; só o novo. Testar ao vivo com a folha do 43701 em 24/10
+- [x] **Resultado do TAB pela foto** (23/10, PR #205): "+" positivo já confirmado, "—" negativo, em branco = caldo; só o novo. Testado ao vivo em 24/10 com a folha do 43701 (#10, #4, #5 negativos), com as correções do aviso de data (#246) e do item lido errado (#247, `pre79`)
+- [x] **PB11, funções do recebimento de FCOJ para o app** (24/10, #244, migration 040): `registrar_recebimento` e `lancar_contagem`, com prévia e o mesmo alarme
+- [ ] **▶ O bot chamar a 040** no recebimento (`BD · Gravar recebimento`) e no lançamento de C.T/B.L, no lugar do SQL próprio (mesma regra do app)
+- [ ] **Fase E, próximas funções do banco** (pedido do app, #243): PB14 tanques (041), PB13 compostas/TAB/Coliformes/Howard (042), PB15 drops (043), PB12 embarque (044), PB16 NFC recebido (045), PB17 desvios e leitura do dia (046)
 - [x] **TAB do load 43699 gravado à mão** (23/10): 10 compostas positivas confirmadas, feito em 13/10; criadas #87 (1-3) e #88 (4-6)
-- [ ] **Plano (23/10, pedido do Danyllo): alterar resultado de C.T/B.L com um comando curto**, só Analista e Admin: `corrigir ct do load 43755 para <1`. Pelo load o bot sabe se é NFC ou FCOJ (concentrado/embarque) e, com um lote só, qual é o lote; com vários, pede o lote. Mostra "era 21 → <1" e pede sim. **Decidido em 24/10:** motivo **obrigatório para o Analista** e **opcional para o Admin** (10-decisoes). Caso real: foto do NFC leu `<1` como 21 no CT do load 43755 lote 148 (fresh 10^3); hoje corrige com `ct nfc load 43755 lote 148 fresh deu <1`
+- [x] **Corrigir resultado de C.T/B.L com um comando curto** (24/10, #240, migration 039, `pre77`): `corrigir ct do load 43755 para <1 motivo ...`; motivo obrigatório para o Analista, opcional para o Admin (#238); testado ao vivo até a prévia
 - [x] **Recebimento pelas funções do banco e pelo WhatsApp** (23/10, PRs #197 e #198, migrations 036 e 037, `pre75`): corrigir load/item/fábrica, lote e data, apagar lote (arquiva); testado ao vivo
 - [ ] Apagar o load de teste **99902** (id 46, lote 1) e o que o teste ao vivo de 23/10 deixou no histórico e no arquivo, se quiser (precisa do Danyllo)
 - [ ] **PB6:** canal `app` no webhook (assistente do app pelo mesmo workflow), só na Fase D do app
