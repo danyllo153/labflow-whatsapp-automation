@@ -165,6 +165,10 @@ Cada página do Power BI vira uma página do app, **no mesmo padrão**: cartões
 
 **Recebimento de FCOJ: corrigir e excluir pelo app (APP-045, 24/10; migration 064).** Na aba Páginas, "Corrigir ou excluir um lote do recebimento": busca o load pelo número e mostra os lotes; corrige número, item e fábrica do load ou número e data do lote, e exclui (arquiva) o lote. As regras são as das funções do banco do bot (036): só Admin e Analista, lote com leitura ou teste não muda a data nem se exclui; a recusa aparece como veio. Recuperar fica para o Admin, numa próxima tela.
 
+- **Pesquisa nas páginas** (APP-060, 24/10): campo "Pesquisar" no topo de cada página de dados (parâmetro `busca` da
+  API: o texto em qualquer coluna da linha, em todos os registros) e o ícone de filtro ao lado; a busca vai junto para o
+  Excel, a impressão e o gráfico.
+
 ### 5.1 Águas e superfícies (APP-037, decidido em 24/10; migrations 061 e 062)
 - São **análises**: ficam na aba Páginas, no grupo "Águas e superfícies", com o laudo de cada uma na própria tela.
 - **Água do processo:** uma coleta (data e hora) com os pontos coletados (Manifold, Câmaras 4, 5 e 6); C.T. (PCA, 48 h) e B.L. (PDA, 120 h) de cada ponto; ponto não coletado sai "-"; observação livre ("Esterilizando"). Laudo sobre a folha digitalizada do terminal (tabela deitada), 23 coletas por folha.
