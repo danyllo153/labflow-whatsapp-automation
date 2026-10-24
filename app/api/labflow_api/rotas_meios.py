@@ -83,7 +83,7 @@ def lote_em_uso(con: psycopg.Connection, meio: str, dia: date) -> str | None:
     linha = con.execute(
         """
         SELECT l.lote FROM app.uso_lote_meio u JOIN app.lotes_meio l ON l.id = u.lote_meio_id
-        WHERE u.meio = %s AND u.desde < %s AND (u.ate IS NULL OR u.ate > %s)
+        WHERE u.meio = %s AND u.desde < %s AND (u.ate IS NULL OR u.ate > %s) AND u.ate IS DISTINCT FROM u.desde
         ORDER BY u.desde DESC LIMIT 1
         """,
         (meio, fim, comeco),
@@ -101,7 +101,9 @@ def lote_em_uso(con: psycopg.Connection, meio: str, dia: date) -> str | None:
 
 def _tudo(con: psycopg.Connection, pessoa: PessoaLogada) -> MeiosELotes:
     usos: dict[int, list[Periodo]] = {}
-    for lote_id, desde, ate in con.execute("SELECT lote_meio_id, desde, ate FROM app.uso_lote_meio ORDER BY desde DESC"):
+    for lote_id, desde, ate in con.execute(
+        "SELECT lote_meio_id, desde, ate FROM app.uso_lote_meio WHERE ate IS DISTINCT FROM desde ORDER BY desde DESC"
+    ):  # período vazio = marcação anulada pela correção da data
         usos.setdefault(lote_id, []).append(Periodo(desde=_quando(desde), ate=_quando(ate) if ate else None))
     em_uso = {
         meio: EmUso(lote_id=i, lote=lote, desde=_quando(desde, hora=True), quem=quem)
@@ -229,28 +231,28 @@ def corrigir_em_uso_desde(
     pessoa: PessoaLogada = Depends(exigir("registrar_analise")),
     con: psycopg.Connection = Depends(obter_conexao),
 ) -> MeiosELotes:
-    """O lote em uso já era usado antes de ser marcado no app (ex.: marcado na carga do histórico): a data de início do
-    uso volta para o dia certo, e os laudos daqueles dias (incubação) passam a mostrar este lote. O período anterior do
-    mesmo meio termina onde este começa; não pode voltar para antes do início do período anterior nem passar de hoje."""
-    atual = con.execute("SELECT id, desde FROM app.uso_lote_meio WHERE meio = %s AND ate IS NULL", (meio,)).fetchone()
+    """O lote em uso já era usado antes de ser marcado no app: a data de início volta para o dia certo, e os laudos
+    daqueles dias (incubação) passam a mostrar este lote. As marcações de outros lotes do mesmo meio que ficarem dentro do
+    período corrigido são anuladas (o período delas vira vazio; nada é apagado), e a que estava aberta antes termina no
+    novo início. Não pode passar de hoje."""
+    atual = con.execute("SELECT id FROM app.uso_lote_meio WHERE meio = %s AND ate IS NULL", (meio,)).fetchone()
     if atual is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Nenhum lote em uso neste meio.")
     hoje = rotas_turno._agora(con).astimezone(FUSO).date()
     if pedido.desde > hoje:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "A data não pode ser depois de hoje.")
     novo = datetime.combine(pedido.desde, time.min, FUSO)
-    anterior = con.execute(
-        "SELECT id, desde, ate FROM app.uso_lote_meio WHERE meio = %s AND id <> %s AND desde < %s ORDER BY desde DESC LIMIT 1",
-        (meio, atual[0], atual[1]),
-    ).fetchone()
-    if anterior and novo <= anterior[1]:
-        raise HTTPException(
-            status.HTTP_422_UNPROCESSABLE_ENTITY,
-            f"O lote anterior começou a ser usado em {_quando(anterior[1])}: escolha uma data depois dessa.",
-        )
+    # marcações que começaram depois do novo início: ficam sem período (ate = desde)
+    con.execute(
+        "UPDATE app.uso_lote_meio SET ate = desde WHERE meio = %s AND id <> %s AND desde >= %s AND ate IS DISTINCT FROM desde",
+        (meio, atual[0], novo),
+    )
+    # a que começou antes e ainda valia depois do novo início: termina nele
+    con.execute(
+        "UPDATE app.uso_lote_meio SET ate = %s WHERE meio = %s AND id <> %s AND desde < %s AND ate > %s",
+        (novo, meio, atual[0], novo, novo),
+    )
     con.execute("UPDATE app.uso_lote_meio SET desde = %s WHERE id = %s", (novo, atual[0]))
-    if anterior and anterior[2] is not None and anterior[2] > novo:
-        con.execute("UPDATE app.uso_lote_meio SET ate = %s WHERE id = %s", (novo, anterior[0]))
     return _tudo(con, pessoa)
 
 

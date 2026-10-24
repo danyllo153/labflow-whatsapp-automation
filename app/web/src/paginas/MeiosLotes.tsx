@@ -385,7 +385,8 @@ function CorrigirDesde({ meio, aoMudar }: { meio: string; aoMudar: (d: MeiosELot
   return (
     <form className="corrigir-horario" onSubmit={salvar} aria-label={`Corrigir desde quando o lote de ${meio} está em uso`}>
       <p className="texto-secundario">
-        Os dias a partir desta data passam a mostrar este lote no laudo de incubação. O lote anterior termina no dia escolhido.
+        Os dias a partir desta data passam a mostrar este lote no laudo de incubação. Outro lote marcado em uso depois desta data
+        (por engano) deixa de valer; antes dela, vale o que estava marcado ou o último lote recebido.
       </p>
       <label className="campo campo-hora">
         Em uso desde
