@@ -2853,3 +2853,20 @@ button.barra-linha:hover,
 .dias-material .botao-secundario[aria-pressed="true"] {
   font-weight: 700;
 }
+
+/* Registros diários (APP-043) */
+.cartao-pagina.em-breve {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.voltar {
+  margin: 0 0 4px;
+  font-size: 0.9rem;
+}
+
+@media (min-width: 900px) {
+  .menu-conta .so-celular {
+    display: none;
+  }
+}

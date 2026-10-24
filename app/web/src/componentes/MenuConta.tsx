@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
 import { nomeDoCargo } from "../cargos";
+import { MENU } from "../menu";
 import { useSessao } from "../sessao";
 import Icone from "./Icone";
 
@@ -15,6 +16,8 @@ export default function MenuConta() {
   const raiz = useRef<HTMLDivElement>(null);
   const local = useLocation();
   const nome = pessoa?.nome || pessoa?.usuario;
+  // no celular a barra de baixo tem só os 5 fixos: as outras telas ficam aqui (no computador estão no menu lateral)
+  const outras = MENU.filter((item) => item.soNoMenuLateral && (!item.pode || pessoa?.pode.includes(item.pode)));
 
   useEffect(() => setAberto(false), [local.pathname]);
 
@@ -60,6 +63,11 @@ export default function MenuConta() {
           <Link to="/conta/senha" role="menuitem">
             Trocar senha
           </Link>
+          {outras.map((item) => (
+            <Link key={item.caminho} to={item.caminho} role="menuitem" className="so-celular">
+              {item.rotulo}
+            </Link>
+          ))}
           <button type="button" role="menuitem" onClick={() => void sair()}>
             Sair
           </button>
