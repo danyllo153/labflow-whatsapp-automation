@@ -2810,3 +2810,13 @@ button.barra-linha:hover,
   cursor: pointer;
   position: relative;
 }
+
+/* Estufa fora da faixa vinda do turno anterior (24/10) */
+.alerta-estufas {
+  border-left: 4px solid var(--nao-ok);
+}
+
+.cartao.alerta-estufas > h2:first-child {
+  background: var(--nao-ok);
+  color: #fff;
+}

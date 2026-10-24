@@ -107,4 +107,20 @@ describe("Turno como central (APP-033)", () => {
     expect(await screen.findByText("Análises a fazer hoje (1)")).toBeInTheDocument();
     expect(await screen.findByText("T-01")).toBeInTheDocument();
   });
+
+  it("avisa a estufa que ficou Não ok no turno anterior, com o horário desde quando", async () => {
+    abrir("/turno", {
+      "GET /turno": () => ({ status: 200, corpo: { ...ESTADO_TURNO, no_turno: NA_TARDE } }),
+      "GET /estufas": () => ({
+        status: 200,
+        corpo: {
+          turno_id: 2, turno: "Tarde", dia: "2026-10-22", pode_registrar: true,
+          resumo: { total: 11, conferidas: 0, nao_ok: 0, pendentes: 11 }, estufas: [],
+          alertas: [{ estufa: 3, leitura: "Field chart", desde: "22/10 09:10", temperatura: "44.1", observacao: "porta aberta" }],
+        },
+      }),
+    });
+    const aviso = await screen.findByRole("alert", { name: "Estufas fora da faixa" });
+    expect(aviso).toHaveTextContent("Estufa 03 · field chart Não ok desde 22/10 09:10 (última: 44,1 °C) · porta aberta");
+  });
 });

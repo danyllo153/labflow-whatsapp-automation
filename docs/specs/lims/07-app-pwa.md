@@ -171,7 +171,7 @@ Ficam **dentro das páginas** (cada página com os seus), não numa tela separad
 Sem gráfico "por pessoa" (pode soar como vigilância).
 
 ### 7. Esterilização
-- **Botões grandes:** **Ponteira, Meio, Frasco, Descarte** e **Outro** (texto livre).
+- **Botões grandes:** **Ponteira, Meio, Frasco, Descarte** e **Outro** (texto livre). **Pode escolher mais de um** quando foram juntos no mesmo ciclo (24/10): um registro por material, uma linha no laudo.
 - Um passo só: **número do ciclo** (obrigatório) e, para Meio, o nome do meio (opcional, ex.: PDA). **Registrar**. Pode também pelo assistente: "esterilizei ponteira, ciclo 102".
 - Grava tipo, ciclo, quem e quando em `app.esterilizacoes`. O **número do ciclo é digitado pela pessoa** (o app **não sugere**: duas pessoas podem registrar ciclos ao mesmo tempo); se o ciclo já tem material no dia, o app só **avisa** e o novo material entra na mesma linha do laudo.
 - **Eficiente: Sim por padrão** (quase sempre é); depois de olhar a fita e a nota da autoclave, "Não eficiente" (pede motivo) vale para o ciclo todo, e "Voltar para Sim" desfaz.
@@ -179,6 +179,7 @@ Sem gráfico "por pessoa" (pode soar como vigilância).
 - Lista das esterilizações do turno embaixo dos botões, com corrigir e excluir (com motivo).
 
 ### 7.1 Temperatura das estufas
+- **Não ok passa para o turno seguinte** (24/10): enquanto ninguém conferir Ok, o Turno, o Início e Estufas mostram "Estufas fora da faixa" com a leitura, desde quando e a última temperatura. A conferência Ok não aparece na linha do tempo do turno.
 - **Obrigatória em todo turno, para todos** (não é atividade fixa de um turno só). Tem **aba própria, Estufas**, e um **bloco no fim do Início** com as estufas do turno (conferidas e pendentes).
 - **Uma conferência por estufa no início de cada turno** (decidido em 15/10, confirmado em 16/10: por turno, não uma por dia como nos blocos da planilha).
 - **Duas leituras por estufa, como na planilha** (decidido em 16/10): **Supervisório (painel)** e **Field chart**. Cada leitura tem os botões **Ok** e **Não ok**. Ok não pede número. **Não ok** abre o campo para **digitar a temperatura** que aquela leitura está marcando (obrigatório) e uma observação opcional. A estufa 06 (auxiliar) também tem as duas leituras, sem faixa.

@@ -120,4 +120,19 @@ describe("Laudo de esterilização (APP-035)", () => {
     expect(await screen.findByText(/Modelo da empresa enviado em 23\/10\/2026 20:00/)).toBeInTheDocument();
     expect(api.vezes("PUT /esterilizacao/laudos/modelo")).toBe(1);
   });
+
+  it("vários materiais no mesmo ciclo: um toque em cada e um Registrar só", async () => {
+    const api = abrir({ "POST /esterilizacao": () => ({ status: 201, corpo: BASE }) });
+    const form = await screen.findByRole("form", { name: "Registrar esterilização" });
+    await userEvent.click(within(form).getByRole("button", { name: "Ponteira" }));
+    await userEvent.click(within(form).getByRole("button", { name: "Meio" }));
+    await userEvent.type(within(form).getByLabelText("Número do ciclo"), "A1000");
+    await userEvent.click(within(form).getByRole("button", { name: "Registrar 2 no mesmo ciclo" }));
+    const enviados = api.chamadas.filter((c) => c.rota === "POST /esterilizacao").map((c) => [c.corpo.tipo, c.corpo.ciclo]);
+    expect(enviados).toEqual([
+      ["Ponteira", "A1000"],
+      ["Meio", "A1000"],
+    ]);
+    expect(within(form).getByRole("button", { name: "Ponteira" })).toHaveAttribute("aria-pressed", "false");
+  });
 });

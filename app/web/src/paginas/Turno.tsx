@@ -5,7 +5,7 @@ import { enviarJson, lerJson } from "../api";
 import BlocosDePendencias, { type Pendencia } from "../componentes/BlocosDePendencias";
 import AtividadesDoTurno from "./AtividadesDoTurno";
 import EquipeDoTurno from "./EquipeDoTurno";
-import { ConferenciaEstufas } from "./Estufas";
+import { AlertasEstufas, ConferenciaEstufas, type DadosEstufas } from "./Estufas";
 import RegistrosDoTurnoCartao from "./RegistrosDoTurno";
 
 /**
@@ -405,8 +405,10 @@ function FeitoNoTurnoCartao({ feito }: { feito: FeitoNoTurno }) {
 /** O que o turno tem para fazer e já fez: atividades, estufas, análises a fazer hoje e a linha do tempo (APP-033). */
 function CentralDoTurno() {
   const [pendencias, setPendencias] = useState<Pendencia[] | null>(null);
+  const [estufas, setEstufas] = useState<DadosEstufas | null>(null);
 
   useEffect(() => {
+    lerJson<DadosEstufas>("/estufas").then(setEstufas, () => setEstufas(null));
     lerJson<{ itens: Pendencia[] }>("/pendencias-hoje").then(
       (p) => setPendencias(p.itens),
       () => setPendencias(null),
@@ -415,6 +417,7 @@ function CentralDoTurno() {
 
   return (
     <>
+      <AlertasEstufas alertas={estufas?.alertas} />
       <AtividadesDoTurno />
       <RegistrosDoTurnoCartao />
       <details className="recolhivel">
