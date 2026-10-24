@@ -13,6 +13,12 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 ## [Não lançado]
 
 ### Adicionado
+- **Visual repaginado** (app, APP-049, 24/10): fonte Inter (instalada junto com o app, funciona sem internet), menu
+  lateral claro com o item ativo em cartão branco, avatar com as iniciais no canto direito, botões em pílula, cartões com
+  cantos mais redondos e sem a barra azul no título, números do Início em blocos coloridos (azul, laranja da marca e
+  verde), barra de baixo do celular com o item ativo em pílula azul clara, tela de entrar clara e o tema escuro
+  equivalente. Corrige também uma chave de CSS que ficou aberta na junção do #223 com o #224 e anulava os estilos
+  seguintes (entre eles o destaque do botão marcado).
 - **Dia da incubação para o laudo de incubação do app** (pedido PB10; migration `038`, só aditiva): a view `bi.incubacao` (uma linha por plaqueamento: tanque N/ST pela data da análise, recebimento e embarque no dia em que chegam, recebimento NFC na data do comando, TAB e Coliformes no dia do caldo, com o espalhar) e `bi.testes` com `espalhado_em` e `espalhado_por` no fim.
 - **Início mais compacto: pendências por número** (app, 24/10): em cada bloco, o que se faz junto vira um grupo com o número e quantos estão atrasados ou são para hoje (ex.: "20 TAB · para espalhar", "10 B.L 120h"); tocar abre as compostas, lotes ou tanques. **No navio aparece só o nome com Normal, Stress ou Drops**, e os tanques ficam dentro. TAB e Coliformes mostram a próxima ação (para espalhar, para ler, para confirmar). Vale também para "Análises a fazer hoje" no Turno.
 - **TAB, Coliformes e Howard em páginas separadas** (app, 24/10): na aba Páginas, um grupo novo com uma página por análise (a antiga "TAB e Coliformes" continua abrindo pelo endereço antigo).

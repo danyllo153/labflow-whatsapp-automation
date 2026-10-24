@@ -96,11 +96,12 @@ export default function Inicio() {
       {dados && (
         <>
           <div className="cartoes-numeros">
-            <CartaoNumero rotulo="Para hoje" valor={dados.vence_hoje} ativo={filtro === "Vence hoje"} onClick={() => escolher("Vence hoje")} />
-            <CartaoNumero rotulo="Atrasados" valor={dados.atrasados} ativo={filtro === "Atrasado"} alerta={dados.atrasados > 0} onClick={() => escolher("Atrasado")} />
+            <CartaoNumero cor="azul" rotulo="Para hoje" valor={dados.vence_hoje} ativo={filtro === "Vence hoje"} onClick={() => escolher("Vence hoje")} />
+            <CartaoNumero cor="laranja" rotulo="Atrasados" valor={dados.atrasados} ativo={filtro === "Atrasado"} alerta={dados.atrasados > 0} onClick={() => escolher("Atrasado")} />
             <CartaoNumero rotulo="Desvios abertos" valor={dados.desvios_abertos} ativo={filtro === "Desvios"} onClick={() => escolher("Desvios")} />
             {turno && (
               <CartaoNumero
+                cor="verde"
                 rotulo="Feito no turno"
                 valor={turno.feito_no_turno.total}
                 ativo={false}
@@ -157,11 +158,19 @@ export default function Inicio() {
   );
 }
 
-function CartaoNumero(props: { rotulo: string; valor: number; ativo: boolean; alerta?: boolean; onClick: () => void }) {
+// cor: os blocos coloridos do visual repaginado (24/10); sem cor, o cartão é branco
+function CartaoNumero(props: {
+  rotulo: string;
+  valor: number;
+  ativo: boolean;
+  alerta?: boolean;
+  cor?: "azul" | "laranja" | "verde";
+  onClick: () => void;
+}) {
   return (
     <button
       type="button"
-      className={`cartao-numero${props.ativo ? " ativo" : ""}${props.alerta ? " alerta" : ""}`}
+      className={`cartao-numero${props.cor ? ` bloco-${props.cor}` : ""}${props.ativo ? " ativo" : ""}${props.alerta ? " alerta" : ""}`}
       aria-pressed={props.ativo}
       onClick={props.onClick}
     >
