@@ -13,6 +13,12 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 ## [Não lançado]
 
 ### Adicionado
+- **Laudo de incubação e leitura** (app, APP-040, migration `065`): Registros diários → Incubação e leitura. Um dia de
+  incubação por bloco no modelo oficial (LAB/001, 7 por folha): as amostras plaqueadas no dia (tanques com N/ST,
+  recebimento, embarque, NFC, água do processo, baias e linhas, com faixas como "L 90008 (1-10)"), o lote de cada meio
+  em uso naquele dia e as datas de leitura (OSA/PCA 48 h, PDA 72 h e 120 h, Wort 240 h); "-" no meio sem amostra. Lê a
+  view `bi.incubacao` do bot (038). O dia entra na folha quando fecha; a tela mostra qualquer dia da semana e avisa o
+  meio usado sem lote marcado.
 - **Visual repaginado** (app, APP-049, 24/10): fonte Inter (instalada junto com o app, funciona sem internet), menu
   lateral claro com o item ativo em cartão branco, avatar com as iniciais no canto direito, botões em pílula, cartões com
   cantos mais redondos e sem a barra azul no título, números do Início em blocos coloridos (azul, laranja da marca e

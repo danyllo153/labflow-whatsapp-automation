@@ -187,6 +187,12 @@ Sem gráfico "por pessoa" (pode soar como vigilância).
 - **Laudo "Controle de Ciclos de Esterilização" (APP-035, decidido em 23/10):** o app preenche o **próprio PDF da empresa** (SGI, 35 linhas por página): Data, Material esterilizado ("Meio de cultura / Frascos" quando há mais de um no ciclo), Ciclo, Sim/Não e o **nome de quem marcou** (sai do usuário logado). A assinatura (**Visto**) e o bloco do responsável ficam em branco, à mão. Página cheia vira **"pendente de imprimir"**; quem imprime marca como impressa e ela vai para o **arquivo**, com reimpressão. O PDF oficial é **confidencial: fica no banco** (Admin envia, `app.modelos_documento`), nunca no Git; sem ele o app usa uma tabela de demonstração. Pelo bot (WhatsApp) depois, como pedido à sessão do bot.
 - Lista das esterilizações do turno embaixo dos botões, com corrigir e excluir (com motivo).
 
+### 7.6 Incubação e leitura (APP-040, 24/10; migration 065, lê a `bi.incubacao` da 038 do bot)
+- Laudo "Controle de Incubação e Leitura" (LAB/001): **um dia de incubação por bloco**, 7 por folha, com 4 linhas de descrição das amostras, o **lote de cada meio em uso naquele dia** (OSA, PDA, PCA, Wort) e as **datas de leitura** (OSA/PCA 48 h, PDA 72 h e 120 h, Wort 240 h). Meio sem amostra no dia sai "-", e a leitura dele também. Nome e Visto do responsável são à mão.
+- **Dia da incubação** (PB10, decidido em 24/10): tanque = a `data_analise` do comando de análise (o ST leva a data que o analista disser, **sem somar dia**); recebimento e embarque = o dia em que chegam; recebimento NFC = a data do comando; água do processo = o dia da coleta; baias e linhas = o dia da análise. **TAB e Coliformes não entram.**
+- Descrição compacta, com faixas: "TQ 38 (N, ST), 40 (ST)", "Receb. FCOJ: L 90008 (1-10)", "Embarque D.SKY 123 L2 F3 (A1-A10)", "Água do processo", "Baias 08, 10". Dia com mais de 4 linhas ocupa mais de um bloco.
+- O dia **entra na folha no dia seguinte** (quando fecha), na ordem; o lugar fica guardado (`app.incubacao_dias`) e o conteúdo é lido na hora do PDF. Na primeira vez, a folha começa uma semana antes. A tela mostra qualquer dia (hoje e os 7 anteriores): amostras, lotes, leituras e se já está na folha; meio usado sem lote marcado aparece em destaque, com o atalho para Meios e lotes.
+
 ### 7.5 Branco do dia: meio de cultura e fluxo laminar (APP-038, 24/10; migration 063)
 - Um dia de análise por linha (hoje ou até 7 dias antes): capela do fluxo laminar (C.T. e B.L., UFC/50 cm²/30 min) e o controle de cada meio (OSA, PDA, Wort, PCA, UFC/ml). Tudo começa em `<1`; **Wort e PCA vêm com "-"** nos dias sem análise que os use (Wort = tanques de NFC; PCA = águas, baias e linhas), e o app diz por quê. Quem salva é o responsável. Laudo de 39 dias por folha (versão de 2024 do modelo).
 
@@ -196,7 +202,7 @@ Sem gráfico "por pessoa" (pode soar como vigilância).
 - Laudo "Controle de Qualidade e Aceitação de Meios de Cultura" (LAB/090): **uma folha por meio**, 33 linhas; o bloco Analista / Responsável é à mão. O histórico em papel entra **uma vez por CSV** (Admin); os números reais nunca vão para o Git.
 
 ### 7.3 Registros diários (APP-043, decidido em 24/10)
-- Aba com os **laudos de rastreio** em cartões, como a aba Páginas: tocar num cartão abre o laudo para preencher. Funcionam: material asséptico, meio de cultura e fluxo laminar e meios de cultura (lotes). Incubação e leitura entra quando a sessão do bot responder o PB10. O laudo de ciclos de esterilização fica na Esterilização. **Água do processo e limpeza de superfícies (baias e linhas) são análises: ficam na aba Páginas**, com o laudo de cada uma lá (decidido em 24/10).
+- Aba com os **laudos de rastreio** em cartões, como a aba Páginas: tocar num cartão abre o laudo para preencher. Funcionam: material asséptico, meio de cultura e fluxo laminar e meios de cultura (lotes). Incubação e leitura entrou em 24/10 (§7.6). O laudo de ciclos de esterilização fica na Esterilização. **Água do processo e limpeza de superfícies (baias e linhas) são análises: ficam na aba Páginas**, com o laudo de cada uma lá (decidido em 24/10).
 - No celular, a aba fica no menu da conta (o boneco no topo) e no Turno; no computador, no menu lateral.
 
 ### 7.2 Material asséptico (APP-041, decidido em 24/10)

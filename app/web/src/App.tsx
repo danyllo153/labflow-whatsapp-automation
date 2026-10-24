@@ -15,6 +15,7 @@ import Esterilizacao from "./paginas/Esterilizacao";
 import MaterialAsseptico from "./paginas/MaterialAsseptico";
 import RegistrosDiarios from "./paginas/RegistrosDiarios";
 import BrancoDoDia from "./paginas/BrancoDoDia";
+import IncubacaoLeitura from "./paginas/IncubacaoLeitura";
 import MeiosLotes from "./paginas/MeiosLotes";
 import AguaProcesso from "./paginas/aguas/AguaProcesso";
 import SuperficiesPagina from "./paginas/aguas/Superficies";
@@ -84,6 +85,7 @@ export default function App() {
         <Route path="/estufas" element={<Estufas />} />
         <Route path="/registros-diarios" element={<RegistrosDiarios />} />
         <Route path="/fluxo-laminar" element={<BrancoDoDia />} />
+        <Route path="/incubacao" element={<IncubacaoLeitura />} />
         <Route path="/meios-lotes" element={<MeiosLotes />} />
         <Route path="/material-asseptico" element={<MaterialAsseptico />} />
         <Route path="/turno/relatorio" element={<RelatorioDoTurno />} />
