@@ -20,6 +20,7 @@ from pydantic import BaseModel, Field
 from labflow_api import rotas_atividades, rotas_esterilizacao, rotas_estufas, rotas_turno
 from labflow_api.dependencias import PessoaLogada, obter_conexao
 from labflow_api.permissoes import exigir, pode
+from labflow_api import rotas_equipe
 from labflow_api.rotas_pendencias import BLOCOS, PENDENCIAS_SQL
 from labflow_api.rotas_turno import FUSO, Turno
 
@@ -128,6 +129,7 @@ class RelatorioTurno(BaseModel):
     atividades_feitas: list[AtividadeFeita]
     atividades_nao_feitas: list[str]
     estufas_nao_ok: list[str]  # ocorrências automáticas: estufa Não ok com a temperatura anotada
+    realizadas: list[rotas_equipe.Realizada]  # "Atividades realizadas" escritas à mão na tela Turno
     esterilizacoes: list[rotas_esterilizacao.Item]  # "Esterilizações realizadas" (automático, da tela Esterilização)
     adiantados: Adiantados
     pendentes: Pendentes
@@ -305,6 +307,7 @@ def _montar(con: psycopg.Connection, pessoa: PessoaLogada, turno: Turno, dia: da
         analistas=analistas, analistas_extras=extras, feito=feito,
         atividades_feitas=feitas, atividades_nao_feitas=nao_feitas,
         estufas_nao_ok=rotas_estufas.ocorrencias_do_turno(con, turno.id, dia),
+        realizadas=rotas_equipe.realizadas_do_turno(con, turno.id, dia),
         esterilizacoes=rotas_esterilizacao.itens_do_turno(con, turno.id, dia),
         adiantados=Adiantados(
             total=len(adiantados),

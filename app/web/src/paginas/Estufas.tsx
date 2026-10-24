@@ -55,6 +55,16 @@ function classe(status: EstufaDoTurno["status"]): string {
 }
 
 export default function Estufas() {
+  return (
+    <section className="pagina-estufas">
+      <h1>Estufas</h1>
+      <ConferenciaEstufas />
+    </section>
+  );
+}
+
+/** A conferência das estufas do turno; `embutida` (tela Turno) não mostra erro, só some se a lista não carregar. */
+export function ConferenciaEstufas({ embutida = false }: { embutida?: boolean }) {
   const [dados, setDados] = useState<DadosEstufas | null>(null);
   const [erro, setErro] = useState("");
 
@@ -71,9 +81,10 @@ export default function Estufas() {
     void carregar();
   }, [carregar]);
 
+  if (embutida && erro) return null;
+
   return (
-    <section className="pagina-estufas">
-      <h1>Estufas</h1>
+    <>
       {erro && (
         <div className="cartao" role="alert">
           <p className="mensagem-erro">{erro}</p>
@@ -101,7 +112,7 @@ export default function Estufas() {
           ))}
         </>
       )}
-    </section>
+    </>
   );
 }
 

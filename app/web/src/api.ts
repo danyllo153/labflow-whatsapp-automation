@@ -47,8 +47,8 @@ export function lerJson<T>(caminho: string): Promise<T> {
   return pedir<T>(caminho, {}, true);
 }
 
-/** POST (ou PUT) com corpo JSON. Em /login o 401 é "senha errada", não sessão expirada. */
-export function enviarJson<T>(caminho: string, corpo?: unknown, metodo: "POST" | "PUT" = "POST"): Promise<T> {
+/** POST (ou PUT, DELETE) com corpo JSON. Em /login o 401 é "senha errada", não sessão expirada. */
+export function enviarJson<T>(caminho: string, corpo?: unknown, metodo: "POST" | "PUT" | "DELETE" = "POST"): Promise<T> {
   return pedir<T>(
     caminho,
     { method: metodo, body: corpo === undefined ? undefined : JSON.stringify(corpo) },

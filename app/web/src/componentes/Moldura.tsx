@@ -2,6 +2,7 @@ import { NavLink, Outlet } from "react-router-dom";
 
 import { MENU } from "../menu";
 import { useSessao } from "../sessao";
+import ChipEquipe from "./ChipEquipe";
 import FaixaDemonstracao from "./FaixaDemonstracao";
 import Icone from "./Icone";
 import MenuConta from "./MenuConta";
@@ -34,6 +35,7 @@ export default function Moldura() {
       <div className="coluna">
         <header className="topo-celular">
           <span className="marca">LabFlow</span>
+          <ChipEquipe />
           <MenuConta />
         </header>
 

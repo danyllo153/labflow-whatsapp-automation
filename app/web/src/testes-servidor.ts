@@ -41,6 +41,8 @@ export function servidorFalso(rotas: Record<string, Rota>) {
     "GET /pendencias-hoje": () => ({ status: 200, corpo: { vence_hoje: 0, atrasados: 0, desvios_abertos: 0, itens: [] } }),
     "GET /turno": () => ({ status: 200, corpo: ESTADO_TURNO }),
     "GET /turno/atividades": () => ({ status: 200, corpo: ATIVIDADES_VAZIAS }),
+    "GET /turno/equipe": () => ({ status: 200, corpo: { turno: "Tarde", dia: "2026-10-22", no_turno: 0, pessoas: [] } }),
+    "GET /turno/registros": () => ({ status: 200, corpo: { turno: "Tarde", dia: "2026-10-22", pode_escrever: true, itens: [] } }),
     "GET /estufas": () => ({ status: 404, corpo: { detail: "sem estufas nos testes das outras telas" } }),
     "GET /esterilizacao/grafico": () => ({ status: 200, corpo: { de: "2026-10-17", ate: "2026-10-23", total: 0, barras: [] } }),
     ...rotas,
