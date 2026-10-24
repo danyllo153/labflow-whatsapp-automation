@@ -1,29 +1,39 @@
 """Controle de Incubação e Leitura (LAB/001): um dia de incubação por bloco, com as amostras, os lotes e as leituras.
 
-Spec: rumo-do-app.md, "Laudos automáticos". Tarefa: APP-040. Migration 065 (lugar de cada dia na folha) e a 038 do bot
-(view `bi.incubacao`).
+Spec: rumo-do-app.md, "Laudos automáticos", e 07-app-pwa.md §7.6. Tarefas: APP-040 e APP-050. Migration 065 (lugar de
+cada dia na folha) e a 038 do bot (view `bi.incubacao`).
 
-Regras (PB10, respondido pela sessão do bot e decidido pelo Danyllo em 24/10):
+Regras (PB10 e o padrão de escrita do Danyllo, 24/10):
 - o dia da incubação é o do plaqueamento: tanque = `data_analise` do comando de análise (o ST leva a data que o analista
-  disser, sem somar dia); recebimento e embarque = o dia em que chegam; recebimento NFC = a data do comando; águas = o dia
-  da coleta (água do processo) ou o dia da análise (baias e linhas);
-- TAB e Coliformes não entram (outros meios);
-- meios: C.T. de suco e NFC em OSA; B.L. em PDA (também nas águas); C.T. das águas em PCA; psicrotróficos dos tanques em
-  Wort. Meio sem amostra no dia sai "-", e a leitura dele também;
-- leituras: OSA/PCA 48 h (+2 dias), PDA 72 h (+3) e 120 h (+5), Wort 240 h (+10);
-- o lote é o que estava em uso NAQUELE dia (Meios e lotes);
-- o dia entra na folha quando fecha (no dia seguinte), na ordem; o conteúdo é lido na hora de gerar o PDF. Um dia com mais
-  de 4 linhas de amostras ocupa mais de um bloco. Visto e Nome do responsável ficam em branco (à mão).
+  disser, sem somar dia); recebimento e embarque = o dia em que chegam; recebimento NFC = a data do comando; água do
+  processo = o dia da coleta; baias e linhas = o dia da análise. TAB e Coliformes não entram;
+- a descrição é UM texto por dia, nesta ordem, grupos separados por "; " e ponto no fim:
+  REC (recebimento de FCOJ) → embarque de FCOJ → tanques de navio → tanques terra (TQ) → água do processo → baias →
+  linhas → NFC (recebimento NFC). Ex.: "REC: 44444 (1-10, 12), 44445 (39-42); O.SKY-123: 43222 (A1-A5);
+  O.SKY-123: 1C, 2P, 2S (N); TQ: 44, 45 (N), 46 (ST); Água do processo: MN, C5, C6; Baias: 2,3,4,4,5; Linhas: 1,2,4;
+  NFC: 43777 (123).";
+  · lotes entre parênteses, números seguidos em faixa; no embarque, depois do ":" vêm os loads com as amostras (A1-A5);
+  · tanques: o navio pelo nome e viagem ("O.SKY-123:"), os de terra com "TQ:"; o frasco vai no fim de cada sequência de
+    tanques com o mesmo frasco: (N), (ST) ou (N,ST) quando os dois foram feitos no dia;
+  · NFC: o load e os lotes, sem fresh/past nem diluição;
+  · água do processo por extenso, só os pontos coletados: MN (Manifold), C4, C5, C6 (Câmaras);
+  · "Baia:"/"Linha:" no singular com uma amostra e "Baias:"/"Linhas:" com mais; os números podem repetir;
+- meios: C.T. em OSA (suco, NFC, tanques e água do processo); B.L. em PDA (todos); PCA só com baia ou linha (a água do
+  processo NÃO usa PCA neste laudo); Wort só com tanque (terra ou navio). Meio sem amostra sai "-", e a leitura também;
+- leituras: OSA/PCA 48 h (+2 dias), PDA 72 h (+3) e 120 h (+5), Wort 240 h (+10); o lote é o que estava em uso NAQUELE dia;
+- o dia entra na folha quando fecha (no dia seguinte), na ordem; o conteúdo é lido na hora de gerar o PDF. Texto que não
+  cabe nas 4 linhas continua no bloco de baixo, com a mesma data, os mesmos lotes e as mesmas leituras (o bloco nunca
+  ganha linha a mais). Nome e Visto do responsável ficam em branco (à mão).
 """
 
 import math
 import re
-import textwrap
 from datetime import date, timedelta
 
 import psycopg
 from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
+from reportlab.pdfbase.pdfmetrics import stringWidth
 
 from labflow_api import laudos, rotas_turno
 from labflow_api.dependencias import PessoaLogada, obter_conexao
@@ -36,10 +46,12 @@ roteador = APIRouter(prefix="/incubacao", tags=["incubação"])
 NOME = "incubacao"
 BLOCOS_POR_FOLHA = 7
 LINHAS_POR_BLOCO = 4
-LETRAS_POR_LINHA = 50  # a coluna "Descrição das amostras" cabe ~50 letras em 7 pt
+FONTE_DA_DESCRICAO = 7
+LARGURA_DA_DESCRICAO = 170  # pontos úteis da coluna "Descrição das amostras" (176 menos as margens)
 DIAS_PARA_TRAS = 7  # na primeira vez, a folha começa uma semana antes de hoje (o que veio antes já está no papel)
 MEIOS = ("OSA", "PDA", "PCA", "Wort")
 LEITURAS = (("48h", 2, ("OSA", "PCA")), ("72h", 3, ("PDA",)), ("120h", 5, ("PDA",)), ("240h", 10, ("Wort",)))
+PONTOS_DA_AGUA = (("manifold", "MN"), ("camara4", "C4"), ("camara5", "C5"), ("camara6", "C6"))
 
 
 class DiaDeIncubacao(BaseModel):
@@ -52,10 +64,6 @@ class DiaDeIncubacao(BaseModel):
 
 def _hoje(con: psycopg.Connection) -> date:
     return rotas_turno._agora(con).astimezone(FUSO).date()
-
-
-def _juntar(itens: list[str]) -> str:
-    return ", ".join(itens)
 
 
 def _numero(texto: str):
@@ -84,13 +92,35 @@ def _faixas(itens: set[str]) -> str:
     return ", ".join(partes)
 
 
-def _amostras(con: psycopg.Connection, dia: date) -> tuple[list[str], set[str]]:
-    """Os trechos da descrição do dia (um por grupo de amostras) e os meios usados."""
+def _navio(nome_e_viagem: str) -> str:
+    """"O.SKY 123" -> "O.SKY-123" (a viagem é a última palavra; o nome pode ter espaço)."""
+    nome, _, viagem = nome_e_viagem.strip().rpartition(" ")
+    return f"{nome}-{viagem}" if nome else viagem
+
+
+def _tanques(frascos_por_tanque: dict[str, set[str]]) -> str:
+    """"1C, 2P, 2S (N)" ou "44, 45 (N), 46 (ST)": o frasco no fim de cada sequência de tanques com o mesmo frasco."""
+    ordem = sorted(frascos_por_tanque, key=_numero)
+    rotulos = [",".join(f for f in ("N", "ST") if f in frascos_por_tanque[t]) for t in ordem]
+    partes = []
+    for i, tanque in enumerate(ordem):
+        fim_da_sequencia = i == len(ordem) - 1 or rotulos[i + 1] != rotulos[i]
+        partes.append(f"{tanque} ({rotulos[i]})" if fim_da_sequencia and rotulos[i] else tanque)
+    return ", ".join(partes)
+
+
+def _ponto(ponto: str) -> str:
+    """Baia "08" -> "8" (o número como se escreve no papel)."""
+    return str(int(ponto)) if ponto.isdigit() else ponto
+
+
+def _amostras(con: psycopg.Connection, dia: date) -> tuple[str, set[str]]:
+    """O texto da descrição do dia, no padrão do laboratório, e os meios usados."""
     meios: set[str] = set()
-    tanques_terra: dict[str, set[str]] = {}
-    tanques_navio: dict[str, dict[str, set[str]]] = {}
     recebimento: dict[str, set[str]] = {}
-    embarque: dict[str, set[str]] = {}
+    embarque: dict[str, dict[str, set[str]]] = {}  # navio -> load -> amostras
+    navios: dict[str, dict[str, set[str]]] = {}  # navio -> tanque -> frascos
+    terra: dict[str, set[str]] = {}
     nfc: dict[str, set[str]] = {}
     for tipo, frasco, origem, alvo, load, analise in con.execute(
         """
@@ -103,82 +133,94 @@ def _amostras(con: psycopg.Connection, dia: date) -> tuple[list[str], set[str]]:
         if tipo == "Tanque":
             meios.add("OSA" if analise.startswith("CT") else "PDA" if analise.startswith("BL") else "Wort")
             if origem == "Terra":
-                tanques_terra.setdefault(alvo.removeprefix("Tanque "), set()).add(frasco or "")
+                terra.setdefault(alvo.removeprefix("Tanque "), set()).add(frasco or "")
             else:
                 navio, _, tanque = alvo.rpartition(" tanque ")
-                tanques_navio.setdefault(navio, {}).setdefault(tanque, set()).add(frasco or "")
+                navios.setdefault(_navio(navio), {}).setdefault(tanque, set()).add(frasco or "")
             continue
         meios.add("OSA" if analise.startswith("C.T") else "PDA")
+        lote = re.search(r"lote (\S+)", alvo)
         if tipo == "Recebimento":
-            lote = re.search(r"lote (\S+)", alvo)
             recebimento.setdefault(load or "?", set()).add(lote.group(1) if lote else "?")
         elif tipo == "Embarque":
-            navio, _, amostra = alvo.rpartition(" A")
-            embarque.setdefault(navio, set()).add("A" + amostra)
+            m = re.fullmatch(r"(.*) L\d+ F\d+ (A\d+)", alvo)
+            navio, amostra = (m.group(1), m.group(2)) if m else (alvo, "?")
+            embarque.setdefault(_navio(navio), {}).setdefault(load or "?", set()).add(amostra)
         else:  # Recebimento NFC
-            lote = re.search(r"lote (\S+)", alvo)
-            nfc.setdefault(load or "?", set()).add(f"{lote.group(1) if lote else '?'} {frasco or ''}".strip())
+            nfc.setdefault(load or "?", set()).add(lote.group(1) if lote else "?")
 
-    def frascos(f: set[str]) -> str:
-        ordem = [x for x in ("N", "ST") if x in f] + sorted(x for x in f if x not in ("N", "ST", ""))
-        return f" ({', '.join(ordem)})" if ordem else ""
+    def por_load(grupo: dict[str, set[str]]) -> str:
+        return ", ".join(f"{l} ({_faixas(itens)})" for l, itens in sorted(grupo.items(), key=lambda x: _numero(x[0])))
 
-    trechos = []
-    if tanques_terra:
-        trechos.append("TQ " + _juntar([t + frascos(f) for t, f in sorted(tanques_terra.items(), key=lambda x: _numero(x[0]))]))
-    for navio, tanques in sorted(tanques_navio.items()):
-        trechos.append(f"{navio}: TQ " + _juntar([t + frascos(f) for t, f in sorted(tanques.items(), key=lambda x: _numero(x[0]))]))
+    grupos = []
     if recebimento:
-        trechos.append(
-            "Receb. FCOJ: " + _juntar([f"L {l} ({_faixas(lotes)})" for l, lotes in sorted(recebimento.items())])
-        )
-    if nfc:
-        trechos.append("Receb. NFC: " + _juntar([f"L {l} ({_faixas(a)})" for l, a in sorted(nfc.items())]))
-    for navio, amostras in sorted(embarque.items()):
-        trechos.append(f"Embarque {navio} ({_faixas(amostras)})")
+        grupos.append(f"REC: {por_load(recebimento)}")
+    for navio, loads in sorted(embarque.items()):
+        grupos.append(f"{navio}: {por_load(loads)}")
+    for navio, tanques in sorted(navios.items()):
+        grupos.append(f"{navio}: {_tanques(tanques)}")
+    if terra:
+        grupos.append(f"TQ: {_tanques(terra)}")
 
-    agua = con.execute(
+    pontos = con.execute(
         """
-        SELECT count(*) FROM app.coletas_agua_processo
+        SELECT bool_or(manifold), bool_or(camara4), bool_or(camara5), bool_or(camara6) FROM app.coletas_agua_processo
         WHERE excluida_em IS NULL AND (coletada_em AT TIME ZONE 'America/Sao_Paulo')::date = %s
         """,
         (dia,),
-    ).fetchone()[0]
-    if agua:
-        trechos.append("Água do processo")
-    superficies: dict[str, list[str]] = {}
-    for tipo, ponto in con.execute(
-        "SELECT tipo, ponto FROM app.coletas_superficie WHERE excluida_em IS NULL AND analisada_em = %s ORDER BY ponto", (dia,)
-    ):
-        if ponto not in superficies.setdefault(tipo, []):
-            superficies[tipo].append(ponto)
-    for tipo, rotulo in (("Baia", "Baias"), ("Linha", "Linhas")):
-        if tipo in superficies:
-            trechos.append(f"{rotulo} " + _faixas(set(superficies[tipo])))
-    if agua or superficies:
-        meios.update(("PCA", "PDA"))
-    return trechos, meios
+    ).fetchone()
+    coletados = [sigla for (_, sigla), sim in zip(PONTOS_DA_AGUA, pontos) if sim]
+    if coletados:
+        grupos.append("Água do processo: " + ", ".join(coletados))
+        meios.update(("OSA", "PDA"))
+    for tipo, singular, plural in (("Baia", "Baia", "Baias"), ("Linha", "Linha", "Linhas")):
+        numeros = [
+            _ponto(p)
+            for (p,) in con.execute(
+                "SELECT ponto FROM app.coletas_superficie WHERE excluida_em IS NULL AND tipo = %s AND analisada_em = %s",
+                (tipo, dia),
+            )
+        ]
+        if numeros:
+            grupos.append(f"{plural if len(numeros) > 1 else singular}: " + ",".join(sorted(numeros, key=_numero)))
+            meios.update(("PCA", "PDA"))
+    if nfc:
+        grupos.append(f"NFC: {por_load(nfc)}")
+    return ("; ".join(grupos) + ".") if grupos else "", meios
 
 
-def _linhas(trechos: list[str]) -> list[str]:
-    """Os trechos em linhas de até LETRAS_POR_LINHA letras; trecho longo quebra nas vírgulas."""
+def _linhas(texto: str) -> list[str]:
+    """O texto em linhas que cabem na coluna da descrição (medidas na fonte do laudo), quebrando nos espaços; uma lista
+    sem espaço que não cabe ("Linhas: 1,2,3,...") quebra depois de uma vírgula."""
+
+    def cabe(t: str) -> bool:
+        return stringWidth(t, "Helvetica", FONTE_DA_DESCRICAO) <= LARGURA_DA_DESCRICAO
+
+    pedacos: list[tuple[str, bool]] = []  # (texto, vai colado no anterior)
+    for palavra in texto.split():
+        partes = [palavra] if cabe(palavra) else re.findall(r"[^,]+,?", palavra)
+        pedacos += [(p, i > 0) for i, p in enumerate(partes)]
     linhas: list[str] = []
-    for trecho in trechos:
-        for pedaco in textwrap.wrap(trecho, LETRAS_POR_LINHA, break_long_words=True):
-            if linhas and len(linhas[-1]) + 3 + len(pedaco) <= LETRAS_POR_LINHA:
-                linhas[-1] += " · " + pedaco
-            else:
-                linhas.append(pedaco)
+    atual = ""
+    for pedaco, colado in pedacos:
+        tentativa = (atual + pedaco if colado else f"{atual} {pedaco}") if atual else pedaco
+        if atual and not cabe(tentativa):
+            linhas.append(atual)
+            atual = pedaco
+        else:
+            atual = tentativa
+    if atual:
+        linhas.append(atual)
     return linhas
 
 
 def montar_dia(con: psycopg.Connection, dia: date, na_folha: bool | None = None) -> DiaDeIncubacao:
-    trechos, usados = _amostras(con, dia)
+    texto, usados = _amostras(con, dia)
     meios = {m: (lote_em_uso(con, m, dia) if m in usados else "-") for m in MEIOS}
     leituras = {rotulo: (dia + timedelta(days=d) if any(m in usados for m in quais) else None) for rotulo, d, quais in LEITURAS}
     if na_folha is None:
         na_folha = con.execute("SELECT 1 FROM app.incubacao_dias WHERE dia = %s", (dia,)).fetchone() is not None
-    return DiaDeIncubacao(dia=dia, amostras=_linhas(trechos), meios=meios, leituras=leituras, na_folha=na_folha)
+    return DiaDeIncubacao(dia=dia, amostras=_linhas(texto), meios=meios, leituras=leituras, na_folha=na_folha)
 
 
 def distribuir(con: psycopg.Connection) -> None:
@@ -242,20 +284,25 @@ DEMONSTRACAO = laudos.demonstracao(
 
 
 def _celulas_do_dia(dia: DiaDeIncubacao, bloco: int, blocos: int) -> list[laudos.Celula]:
+    """O texto corre pelas linhas dos blocos do dia; cada bloco repete a data, os lotes e as leituras (continuação)."""
     cabem = blocos * LINHAS_POR_BLOCO
     amostras = dia.amostras
     if len(amostras) > cabem:  # o dia cresceu depois de entrar na folha: a última linha avisa quanto ficou de fora
         amostras = amostras[: cabem - 1] + [f"(+{len(amostras) - cabem + 1} linhas: ver o app)"]
-    celulas = [TABELA.celula(texto, bloco * LINHAS_POR_BLOCO + i, 0, centro=False, tamanho=7) for i, texto in enumerate(amostras)]
-    topo = TABELA.topo + bloco * LINHAS_POR_BLOCO * TABELA.altura
-    base = topo + cabem * TABELA.altura
+    celulas = [
+        TABELA.celula(texto, bloco * LINHAS_POR_BLOCO + i, 0, centro=False, tamanho=FONTE_DA_DESCRICAO)
+        for i, texto in enumerate(amostras)
+    ]
     textos = [
         *(dia.meios[m] or "" for m in MEIOS),
         dia.dia.strftime("%d/%m/%y"),
         *(d.strftime("%d/%m") if d else "-" for d in dia.leituras.values()),
     ]
-    for i, texto in enumerate(textos, start=1):
-        celulas.append(laudos.Celula(texto, COLUNAS[i], COLUNAS[i + 1], topo, base, tamanho=7.5))
+    for b in range(bloco, bloco + blocos):
+        topo = TABELA.topo + b * LINHAS_POR_BLOCO * TABELA.altura
+        base = topo + LINHAS_POR_BLOCO * TABELA.altura
+        for i, texto in enumerate(textos, start=1):
+            celulas.append(laudos.Celula(texto, COLUNAS[i], COLUNAS[i + 1], topo, base, tamanho=7.5))
     return celulas
 
 

@@ -209,7 +209,7 @@ describe("Corrigir recebimento (APP-045)", () => {
 
 const INCUBACAO: DiaDeIncubacao = {
   dia: "2026-10-22",
-  amostras: ["TQ 38 (N), 40 (ST) · Receb. FCOJ: L 98770 (1, 2)", "Baias 08, 10"],
+  amostras: ["REC: 98770 (1, 2); TQ: 38 (N), 40 (ST);", "Baias 08, 10"],
   meios: { OSA: "1000002", PDA: "2000001", PCA: null, Wort: "-" },
   leituras: { "48h": "2026-10-24", "72h": "2026-10-25", "120h": "2026-10-27", "240h": null },
   na_folha: false,

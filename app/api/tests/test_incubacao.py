@@ -59,20 +59,44 @@ def dados(conexao, logado, cliente):
 
 def test_dia_com_tanques_recebimento_lotes_e_leituras(cliente, dados):
     d = cliente.get("/incubacao", params={"dia": DIA.isoformat()}).json()
-    assert d["amostras"] == ["TQ 38 (N), 40 (N) · Receb. FCOJ: L 98770 (1, 2)"]
+    assert d["amostras"] == ["REC: 98770 (1, 2); TQ: 38, 40 (N)."]
     assert d["meios"] == {"OSA": "OSA-77", "PDA": "PDA-55", "PCA": "-", "Wort": "WRT-11"}
     assert d["leituras"] == {"48h": "2031-03-12", "72h": "2031-03-13", "120h": "2031-03-15", "240h": "2031-03-20"}
     st = cliente.get("/incubacao", params={"dia": "2031-03-11"}).json()
-    assert st["amostras"] == ["TQ 38 (ST)"]
+    assert st["amostras"] == ["TQ: 38 (ST)."]
 
 
 def test_aguas_usam_pca_e_pda_e_dia_sem_tanque_fica_com_traco(cliente, dados):
     r = cliente.post("/aguas/superficies", json={"tipo": "Baia", "pontos": ["10", "08"], "dia": "2031-03-11", "hora": "07:10"})
     assert r.status_code in (200, 201), r.text
     d = cliente.get("/incubacao", params={"dia": "2031-03-11"}).json()
-    assert d["amostras"] == ["TQ 38 (ST) · Baias 08, 10"]
+    assert d["amostras"] == ["TQ: 38 (ST); Baias: 8,10."]
     assert d["meios"]["PCA"] is None  # o meio foi usado, mas não há lote de PCA marcado: fica em branco no laudo
     assert d["leituras"]["48h"] == "2031-03-13"
+
+
+def test_padrao_de_escrita_ordem_singular_e_agua_sem_pca(cliente, dados, conexao):
+    """Ordem do laboratório: REC; embarque; navio; TQ; água do processo; baias; linhas; NFC. Ponto no fim."""
+    for tipo, ponto in (("Linha", "4"), ("Baia", "3"), ("Baia", "3")):
+        cliente.post("/aguas/superficies", json={"tipo": tipo, "pontos": [ponto], "dia": "2031-03-10", "hora": "07:10"})
+    r = cliente.post("/aguas/processo", json={"dia": "2031-03-10", "hora": "09:00", "pontos": ["manifold", "camara5"]})
+    assert r.status_code in (200, 201), r.text
+    d = cliente.get("/incubacao", params={"dia": DIA.isoformat()}).json()
+    assert " ".join(d["amostras"]) == "REC: 98770 (1, 2); TQ: 38, 40 (N); Água do processo: MN, C5; Baias: 3,3; Linha: 4."
+    # só água do processo (sem baia nem linha) não usa PCA, e sem tanque não há Wort
+    cliente.post("/aguas/processo", json={"dia": "2031-03-12", "hora": "09:00", "pontos": ["camara6"]})
+    s = cliente.get("/incubacao", params={"dia": "2031-03-12"}).json()
+    assert s["amostras"] == ["Água do processo: C6."]
+    assert (s["meios"]["PCA"], s["meios"]["Wort"], s["meios"]["OSA"]) == ("-", "-", "OSA-77")
+
+
+def test_tanques_por_sequencia_de_frasco_e_navio(cliente, dados, conexao):
+    from labflow_api.rotas_incubacao import _navio, _tanques
+
+    assert _tanques({"44": {"N"}, "45": {"N"}, "46": {"ST"}}) == "44, 45 (N), 46 (ST)"
+    assert _tanques({"1C": {"N"}, "2P": {"N"}, "8C": {"N"}}) == "1C, 2P, 8C (N)"
+    assert _tanques({"38": {"N", "ST"}, "40": {"ST"}}) == "38 (N,ST), 40 (ST)"
+    assert _navio("O.SKY 123") == "O.SKY-123"
 
 
 def test_tab_e_coliformes_nao_entram(cliente, logado, conexao):
@@ -88,7 +112,7 @@ def test_dias_fechados_entram_na_folha_em_ordem_e_o_pdf(cliente, dados):
     assert cliente.get("/incubacao", params={"dia": DIA.isoformat()}).json()["na_folha"] is True
     pdf = cliente.get(f"/laudos/incubacao/{paginas[0]['id']}/pdf")
     texto = PdfReader(io.BytesIO(pdf.content)).pages[0].extract_text()
-    assert "TQ 38 (N), 40 (N)" in texto and "10/03/31" in texto and "OSA-77" in texto and "20/03" in texto
+    assert "TQ: 38, 40 (N)" in texto and "10/03/31" in texto and "OSA-77" in texto and "20/03" in texto
     # listar de novo não duplica os dias
     assert cliente.get("/laudos/incubacao").json()["paginas"][0]["linhas"] == 2
 
