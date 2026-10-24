@@ -32,8 +32,9 @@
 - [x] **Material asséptico:** resultado pendente, "<1 em todos" e excluir dia (#236, migration 066), no ar
 - [x] **Visual repaginado** no ar (#228, 24/10): menu claro, Inter, avatar, botões em pílula, blocos coloridos
 - [x] **Visual, parte 2** (APP-055, 24/10): gráfico da semana, cartão das folhas no menu, largura toda e blocos mais suaves no escuro
-- [ ] **▶ Fase E, o app faz tudo o que o bot faz** (pedido de 24/10): tela de apps com a busca e o filtro (E1), Recebimento FCOJ completo (E2, depende do PB11), depois tanques, testes, drops, embarque, NFC e desvios (PB12 a PB17) e a instrução/vídeo de cada análise. Plano e tabela "bot × app" no rumo-do-app, seção "Fase E"
-- [ ] Botões rápidos nos blocos do Início (ex.: "Espalhei todos"): gravam em lote, então pedem decisão do Danyllo sobre a confirmação antes
+- [x] **Início e Turno no layout do canvas** (APP-056, 24/10): cartão "Agora", destaques do dia, equipe e estufas lado a lado, "Quem fez o quê" com filtro
+- [ ] **▶ Fase E, o app faz tudo o que o bot faz** (pedido de 24/10): tela de apps com a busca e o filtro (E1 ✔) e Recebimento FCOJ completo (E2 ✔, #253); faltam tanques, testes, drops, embarque, NFC e desvios (PB12 a PB17) e a instrução/vídeo de cada análise. Plano e tabela "bot × app" no rumo-do-app, seção "Fase E"
+- [ ] Botões que gravam em lote nos destaques ("Espalhei todos", "Lançar leituras"): **decidido em 24/10**, lista toda marcada e um "Confirmar"; esperam o PB13 do bot (hoje só abrem a página)
 - [x] **Histórico de lotes importado** pelo Danyllo (24/10; 30 lotes de meio no app)
 - [x] **Modelos em PDF dos laudos enviados** pelo Danyllo (23/10: esterilização, material asséptico, meios de cultura, fluxo laminar, limpeza de superfícies e água do processo)
 - [x] **Editar e excluir clicando no app:** coletas (APP-029) e recebimento de FCOJ (migration 064, funções 036), com histórico e recuperar pelo Admin

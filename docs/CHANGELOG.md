@@ -34,6 +34,9 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 - **Funções do banco para registrar recebimento de FCOJ e lançar C.T/B.L** (PB11 da Fase E, migration `040`, 24/10):
   `registrar_recebimento` e `lancar_contagem`, com prévia ("o que vai ser criado") e o mesmo alarme do bot, para o app e o
   bot chamarem a mesma regra.
+- **Início e Turno no layout do canvas** (app, APP-056): no Início, o cartão "Agora" com o relógio do turno e quanto
+  falta, o chip das estufas, o registro livre e os 3 destaques do dia em blocos coloridos (os botões abrem a página
+  certa); no Turno, a equipe e as estufas lado a lado e o "Quem fez o quê" com etiqueta por tipo e filtro por pessoa.
 - **Visual repaginado, parte 2** (app, APP-055): no Início, o gráfico do que foi concluído nos últimos 7 dias (TAB,
   Coliformes, NFC e C.T/B.L) com os totais; no pé do menu lateral, o cartão da folha de laudo mais perto de encher (ou das
   folhas cheias para imprimir) com o atalho para o laudo; o conteúdo na largura toda; e, no modo escuro, os blocos

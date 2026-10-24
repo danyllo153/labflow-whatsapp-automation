@@ -16,6 +16,8 @@ Uma linha por decisão, mais recente no topo, com o porquê. O que está aqui n�
 
 ## Decidido
 
+- **2026-10-24** (app) **Botões que gravam em lote no app** ("Espalhei todos", "Lançar leituras"): abrem a lista com tudo marcado e um único **"Confirmar"**, como o "sim" do bot; enquanto as funções do banco do bot não chegam (PB13), os botões só abrem a página certa ("Ver os 20"). Por quê: gravar muitas coisas de uma vez precisa de uma conferência antes, igual no WhatsApp.
+
 - **2026-10-24** (bot e app) **Corrigir resultado de C.T/B.L: motivo obrigatório para o Analista, opcional para o Admin** (comando curto `corrigir ct do load 43755 para <1`, plano de 23/10). Por quê: a correção de resultado do Analista precisa de rastro (regra de 16/10), e o Admin, que revisa, não precisa justificar cada ajuste; quem corrigiu fica guardado nos dois casos. Vale também para a mesma correção pelo app.
 
 - **2026-10-23** (app e bot) **Laudos automáticos são objetivo principal**: o que se registra no app, no assistente ou no bot preenche sozinho os laudos oficiais (esterilização, incubação e leitura, água do processo, limpeza de superfícies), escrevendo no **próprio PDF da empresa**, que fica no banco (enviado pelo Admin) e **nunca no Git**; Visto, RCA e responsável ficam para assinatura à mão; página cheia = pendente de imprimir. As análises novas (água do processo, baias, linhas) nascem no app, e o bot as registra depois por funções do banco (PB8, PB9). Por quê: acabar com a digitação dupla no papel, que é o maior retrabalho do laboratório; o PDF no banco segue a regra de documentos confidenciais.
