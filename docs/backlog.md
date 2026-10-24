@@ -17,7 +17,8 @@
 - [x] **PB15, drops e desvio de drop** (24/10, migration 044), o bot já usando
 - [x] **PB12, embarque** (24/10, migration 045), o bot já usando
 - [x] **PB16, recebimento de NFC** (24/10, migration 046), o bot já usando
-- [ ] **Fase E, próximas funções do banco** (pedido do app, #243): PB14 tanques (042), PB13 compostas/TAB/Coliformes/Howard (043), PB15 drops (044), PB12 embarque (045), PB16 NFC recebido (046), PB17 desvios e leitura do dia (047); cada uma já com a porta de entrada do bot e o bot usando
+- [x] **PB17, desvio de tanque, repetição e leitura do dia** (24/10, migration 047), o bot já usando
+- [ ] **Fase E, o que falta no bot:** passar pelas funções a foto de TAB/Coliformes (`BD · TAB da foto`, `BD · Coliformes da foto`) e o TAB de tanque "completo" (`BD · TAB feito NFC`); depois as funções do PB8/PB9 (067 do app)
 - [x] **TAB do load 43699 gravado à mão** (23/10): 10 compostas positivas confirmadas, feito em 13/10; criadas #87 (1-3) e #88 (4-6)
 - [x] **Corrigir resultado de C.T/B.L com um comando curto** (24/10, #240, migration 039, `pre77`): `corrigir ct do load 43755 para <1 motivo ...`; motivo obrigatório para o Analista, opcional para o Admin (#238); testado ao vivo até a prévia
 - [x] **Recebimento pelas funções do banco e pelo WhatsApp** (23/10, PRs #197 e #198, migrations 036 e 037, `pre75`): corrigir load/item/fábrica, lote e data, apagar lote (arquiva); testado ao vivo

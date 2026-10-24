@@ -23,6 +23,8 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
   início" ajusta o começo do lote em uso quando preciso.
 
 ### Adicionado
+- **Desvio de tanque, repetição e leitura do dia por funções do banco** (PB17 da Fase E, migration `047`, 24/10):
+  `abrir_desvio_tanque`, `registrar_repeticao` e `finalizar_leitura_do_dia`, as mesmas para o bot e o app; o bot já usa no "sim".
 - **Recebimento de NFC por funções do banco** (PB16 da Fase E, migration `046`, 24/10): `registrar_recebimento_nfc` e
   `lancar_contagem_nfc`, as mesmas para o bot e o app; o bot já usa no comando, na foto do laudo e no "sim" do C.T/B.L do NFC.
 - **Embarque por funções do banco** (PB12 da Fase E, migration `045`, 24/10): `registrar_embarque` e

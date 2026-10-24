@@ -49,7 +49,10 @@ test('painel e app: bi.leituras_nfc ganha lida_em no FIM da lista (não desloca 
 test('o workflow continua gravando quem fez a leitura (o gatilho cuida da hora)', () => {
   // desde a 042, as leituras e as placas gravam pela concluir_leitura e pela lancar_placas (as mesmas do app)
   const sql042 = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'db', 'migrations', '042_tanques_funcoes.sql'), 'utf8');
-  const textos = { 'BD · Finalizar leitura do dia': workflow.nodes.find((n) => n.name === 'BD · Finalizar leitura do dia').parameters.query, '042 (concluir_leitura e lancar_placas)': sql042 };
+  // e, desde a 047, a leitura do dia finalizada grava pela finalizar_leitura_do_dia
+  const sql047 = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'db', 'migrations', '047_desvio_tanque_dia_funcoes.sql'), 'utf8');
+  const textos = { '047 (finalizar_leitura_do_dia)': sql047, '042 (concluir_leitura e lancar_placas)': sql042 };
+  assert.match(workflow.nodes.find((n) => n.name === 'BD · Finalizar leitura do dia').parameters.query, /leitura_dia_finalizar_pelo_bot\(\$2::text\)/);
   for (const [nome, q] of Object.entries(textos)) {
     assert.match(q, /pre_leitura_por/, nome);
     assert.match(q, /leitura_final_por/, nome);
