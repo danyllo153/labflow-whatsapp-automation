@@ -23,6 +23,10 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
   início" ajusta o começo do lote em uso quando preciso.
 
 ### Adicionado
+- **Funções do banco para o bot gravar esterilização e águas por frase** (app, APP-054, migration `067`, para o PB8 e o
+  PB9): `app.bot_registrar_esterilizacao`, `app.bot_coletar_agua`, `app.bot_lancar_agua`, `app.bot_coletar_superficie` e
+  `app.bot_lancar_superficie`, com as regras e as páginas de laudo do app, cargo conferido no banco e erros em frase
+  pronta. Detalhe no rumo-do-app.
 - **Material asséptico: resultado pendente, "<1 em todos" e excluir dia** (app, APP-053, migration `066`): C.T. e B.L.
   em branco ficam pendentes (lançados depois), o botão "<1 em todos" preenche os dois, e "Excluir o dia" tira o dia do
   laudo, arquivado com quem, quando e o motivo (dia de página já impressa não se exclui).

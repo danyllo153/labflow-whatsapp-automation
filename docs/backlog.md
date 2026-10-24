@@ -8,7 +8,7 @@
 
 ### 🤖 Bot
 - [x] **PB10 (dia da incubação) no ar** (24/10, #225, migration 038 aplicada; `bi.incubacao` conferida)
-- [ ] **PB8** (esterilização por frase) e **PB9** (água, baias e linhas por frase): esperam as funções do banco do app
+- [ ] **PB8** (esterilização por frase) e **PB9** (água, baias e linhas por frase): as funções do banco do app estão no PR do APP-054 (migration 067); falta o bot usar (rumo-do-app, "Funções do app para o PB8 e o PB9")
 - [x] **Resultado do TAB pela foto** (23/10, PR #205, `pre76`, 259 nós): "+" positivo já confirmado, "—" negativo, em branco = caldo; só o novo. Testar ao vivo com a folha do 43701 em 24/10
 - [x] **TAB do load 43699 gravado à mão** (23/10): 10 compostas positivas confirmadas, feito em 13/10; criadas #87 (1-3) e #88 (4-6)
 - [ ] **Plano (23/10, pedido do Danyllo): alterar resultado de C.T/B.L com um comando curto**, só Analista e Admin: `corrigir ct do load 43755 para <1`. Pelo load o bot sabe se é NFC ou FCOJ (concentrado/embarque) e, com um lote só, qual é o lote; com vários, pede o lote. Mostra "era 21 → <1" e pede sim. **A decidir:** motivo obrigatório (regra de 16/10 para resultado) ou opcional. Caso real: foto do NFC leu `<1` como 21 no CT do load 43755 lote 148 (fresh 10^3); hoje corrige com `ct nfc load 43755 lote 148 fresh deu <1`
