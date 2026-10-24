@@ -23,6 +23,9 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
   início" ajusta o começo do lote em uso quando preciso.
 
 ### Adicionado
+- **Funções do banco para registrar recebimento de FCOJ e lançar C.T/B.L** (PB11 da Fase E, migration `040`, 24/10):
+  `registrar_recebimento` e `lancar_contagem`, com prévia ("o que vai ser criado") e o mesmo alarme do bot, para o app e o
+  bot chamarem a mesma regra.
 - **Visual repaginado, parte 2** (app, APP-055): no Início, o gráfico do que foi concluído nos últimos 7 dias (TAB,
   Coliformes, NFC e C.T/B.L) com os totais; no pé do menu lateral, o cartão da folha de laudo mais perto de encher (ou das
   folhas cheias para imprimir) com o atalho para o laudo; o conteúdo na largura toda; e, no modo escuro, os blocos
