@@ -233,7 +233,7 @@ describe("Incubação e leitura (APP-040)", () => {
     const cartao = await screen.findByRole("generic", { name: "Incubação de 22/10" });
     expect(within(cartao).getByText("Baias 08, 10")).toBeInTheDocument();
     expect(within(cartao).getByText("1000002")).toBeInTheDocument();
-    expect(within(cartao).getByText("sem lote em uso")).toBeInTheDocument();
+    expect(within(cartao).getByText("sem lote")).toBeInTheDocument();
     expect(within(cartao).getByText("Entra na folha amanhã")).toBeInTheDocument();
     expect(within(cartao).getByText("27/10")).toBeInTheDocument();
     expect(within(cartao).getByRole("link", { name: "Meios e lotes" })).toHaveAttribute("href", "/meios-lotes");

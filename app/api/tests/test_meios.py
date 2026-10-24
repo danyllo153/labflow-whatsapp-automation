@@ -131,4 +131,18 @@ def test_lote_em_uso_do_dia_depois_da_correcao(cliente, logado, conexao, monkeyp
     cliente.post("/meios", json={"meio": "Wort", "lote": "WRT-1", "recebido_em": "2026-01-02", "usar": True})
     cliente.put("/meios/Wort/em-uso-desde", json={"desde": "2031-05-01"})
     assert rotas_meios.lote_em_uso(conexao, "Wort", date(2031, 5, 3)) == "WRT-1"
-    assert rotas_meios.lote_em_uso(conexao, "Wort", date(2031, 4, 30)) is None
+    assert rotas_meios.lote_em_uso(conexao, "Wort", date(2025, 12, 31)) is None  # nenhum lote recebido até o dia
+
+
+def test_sem_marcacao_no_dia_vale_o_ultimo_lote_recebido_ate_ele(cliente, logado, conexao):
+    """Antes da marcação (carga do histórico), o laudo usa o último lote recebido até aquele dia; depois, o marcado."""
+    logado()
+    for lote, recebido in (("PCA-1", "2026-03-01"), ("PCA-2", "2026-08-01"), ("PCA-3", "2026-09-15")):
+        cliente.post("/meios", json={"meio": "PCA", "lote": lote, "recebido_em": recebido})
+    p2 = next(l["id"] for l in _meio(cliente.get("/meios").json(), "PCA")["lotes"] if l["lote"] == "PCA-2")
+    cliente.post(f"/meios/{p2}/usar")  # marcado agora: o PCA-3 chegou, mas o em uso continua o PCA-2
+    assert rotas_meios.lote_em_uso(conexao, "PCA", date(2026, 5, 10)) == "PCA-1"
+    assert rotas_meios.lote_em_uso(conexao, "PCA", date(2026, 8, 20)) == "PCA-2"
+    assert rotas_meios.lote_em_uso(conexao, "PCA", date(2026, 9, 20)) == "PCA-3"  # sem marcação: o último recebido
+    hoje = datetime.now(FUSO).date()
+    assert rotas_meios.lote_em_uso(conexao, "PCA", hoje) == "PCA-2"  # com marcação: o marcado

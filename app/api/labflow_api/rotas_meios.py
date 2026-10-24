@@ -75,7 +75,9 @@ def _quando(valor: datetime, hora: bool = False) -> str:
 
 
 def lote_em_uso(con: psycopg.Connection, meio: str, dia: date) -> str | None:
-    """O lote que estava em uso no dia (o último que passou a ser usado até o fim do dia e não tinha saído antes dele)."""
+    """O lote do meio NAQUELE dia, sozinho (decidido em 24/10): o que estava marcado em uso no dia (o último que passou a
+    ser usado até o fim do dia e não tinha saído antes dele); sem marcação que cubra o dia (ex.: antes da carga do
+    histórico), o último lote recebido até o dia. Trocar o lote em uso muda o laudo a partir daquele dia."""
     comeco = datetime.combine(dia, time.min, FUSO)
     fim = comeco + timedelta(days=1)
     linha = con.execute(
@@ -86,6 +88,14 @@ def lote_em_uso(con: psycopg.Connection, meio: str, dia: date) -> str | None:
         """,
         (meio, fim, comeco),
     ).fetchone()
+    if linha is None:
+        linha = con.execute(
+            """
+            SELECT lote FROM app.lotes_meio WHERE meio = %s AND excluido_em IS NULL AND recebido_em <= %s
+            ORDER BY recebido_em DESC, id DESC LIMIT 1
+            """,
+            (meio, dia),
+        ).fetchone()
     return linha[0] if linha else None
 
 

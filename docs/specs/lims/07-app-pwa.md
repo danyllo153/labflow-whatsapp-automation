@@ -207,7 +207,7 @@ Sem gráfico "por pessoa" (pode soar como vigilância).
 
 ### 7.4 Meios e lotes (APP-036, 23 e 24/10; migration 060)
 - Cadastro de cada **lote recebido** de OSA, PDA, PCA e Wort (data, lote, estado de conservação, pH, observação). Cada meio tem **um lote em uso**, escolhido com um toque ("Usar este"); trocar fecha o período do anterior. O lote em uso **não é sempre o mais novo** e um antigo pode voltar a ser usado.
-- O laudo de incubação usa o lote que estava em uso **naquele dia** (trocar hoje não muda o passado). O período começa quando o lote é marcado; se ele **já era usado antes** (ex.: marcado na carga do histórico), "Já era usado antes? Corrigir a data de início" volta o início para o dia certo (não passa de hoje nem do início do lote anterior, que termina nesse dia). Corrigido em 24/10: sem isso, os dias antes da marcação saíam sem lote no laudo de incubação.
+- O laudo de incubação acha **sozinho** o lote de cada dia (decidido em 24/10): vale o lote **marcado em uso** naquele dia; sem marcação que cubra o dia (ex.: antes da carga do histórico), vale o **último lote recebido até aquele dia**. Trocar o lote em uso muda o laudo a partir daquele dia, e o PDF é refeito na hora (inclusive o das folhas já montadas). Se o lote já era usado antes de ser marcado, "Já era usado antes? Corrigir a data de início" volta o início para o dia certo (não passa de hoje nem do início do lote anterior, que termina nesse dia).
 - Laudo "Controle de Qualidade e Aceitação de Meios de Cultura" (LAB/090): **uma folha por meio**, 33 linhas; o bloco Analista / Responsável é à mão. O histórico em papel entra **uma vez por CSV** (Admin); os números reais nunca vão para o Git.
 
 ### 7.3 Registros diários (APP-043, decidido em 24/10)
