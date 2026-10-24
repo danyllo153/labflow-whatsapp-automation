@@ -107,3 +107,25 @@ def test_esterilizacao_aceita_agua_de_diluicao(cliente, logado, agora):
 
 def test_pdf_de_demonstracao_sem_dias():
     assert PdfReader(io.BytesIO(laudo_asseptico.gerar_pdf([], None))).pages[0]
+
+
+def test_modelo_do_word_com_folha_extra_vazia_fica_so_com_a_primeira(cliente, logado, agora):
+    """O Word exporta às vezes uma 2ª folha vazia: o app guarda só a primeira; folha extra com texto é recusada."""
+    from reportlab.lib.pagesizes import A4
+    from reportlab.pdfgen import canvas
+
+    def pdf(texto_na_segunda):
+        saida = io.BytesIO()
+        c = canvas.Canvas(saida, pagesize=A4)
+        c.drawString(100, 700, "Controle de Material Asséptico")
+        c.showPage()
+        if texto_na_segunda:
+            c.drawString(100, 700, "outra coisa")
+        c.showPage()
+        c.save()
+        return saida.getvalue()
+
+    logado("Admin")
+    assert cliente.put("/material-asseptico/laudos/modelo", content=pdf(True)).status_code == 422
+    r = cliente.put("/material-asseptico/laudos/modelo", content=pdf(False))
+    assert r.status_code == 200 and r.json()["modelo_enviado"]
