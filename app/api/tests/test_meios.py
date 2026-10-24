@@ -117,9 +117,12 @@ def test_corrigir_desde_quando_o_lote_esta_em_uso(cliente, logado, monkeypatch):
     assert r.status_code == 200, r.text
     assert _meio(r.json(), "OSA")["em_uso"]["desde"].startswith("10/05/2031")
     assert lotes  # o primeiro lote continua no histórico
-    # o anterior começou "agora" (hoje de verdade, antes de 2031): voltar para antes dele é recusado
+    # voltar para antes do lote anterior: a marcação dele, que ficou no meio, é anulada (sai do histórico de uso)
     r = cliente.put("/meios/OSA/em-uso-desde", json={"desde": "2020-01-01"})
-    assert r.status_code == 422 and "lote anterior" in r.json()["detail"]
+    assert r.status_code == 200, r.text
+    lotes = _meio(r.json(), "OSA")["lotes"]
+    assert next(l for l in lotes if l["lote"] == "9000001")["usos"] == []
+    assert next(l for l in lotes if l["lote"] == "9000002")["usos"] == [{"desde": "01/01/2020", "ate": None}]
     assert cliente.put("/meios/PCA/em-uso-desde", json={"desde": "2031-05-10"}).status_code == 404  # sem lote em uso
 
 
@@ -146,3 +149,19 @@ def test_sem_marcacao_no_dia_vale_o_ultimo_lote_recebido_ate_ele(cliente, logado
     assert rotas_meios.lote_em_uso(conexao, "PCA", date(2026, 9, 20)) == "PCA-3"  # sem marcação: o último recebido
     hoje = datetime.now(FUSO).date()
     assert rotas_meios.lote_em_uso(conexao, "PCA", hoje) == "PCA-2"  # com marcação: o marcado
+
+
+def test_marcacao_errada_no_meio_some_do_laudo(cliente, logado, conexao):
+    """Caso do OSA (24/10): o 4115870 ficou marcado por engano; o certo é o 5217877 desde 02/03/2026."""
+    logado()
+    cliente.post("/meios", json={"meio": "OSA", "lote": "OSA-ANTIGO", "recebido_em": "2025-10-10"})
+    cliente.post("/meios", json={"meio": "OSA", "lote": "OSA-NOVO", "recebido_em": "2026-03-02"})
+    ids = {l["lote"]: l["id"] for l in _meio(cliente.get("/meios").json(), "OSA")["lotes"]}
+    cliente.post(f"/meios/{ids['OSA-ANTIGO']}/usar")  # o toque errado
+    hoje = datetime.now(FUSO).date()
+    assert rotas_meios.lote_em_uso(conexao, "OSA", hoje) == "OSA-ANTIGO"
+    cliente.post(f"/meios/{ids['OSA-NOVO']}/usar")
+    assert cliente.put("/meios/OSA/em-uso-desde", json={"desde": "2026-03-02"}).status_code == 200
+    for dia in (date(2026, 3, 2), date(2026, 10, 17), hoje):
+        assert rotas_meios.lote_em_uso(conexao, "OSA", dia) == "OSA-NOVO"
+    assert rotas_meios.lote_em_uso(conexao, "OSA", date(2026, 3, 1)) == "OSA-ANTIGO"  # antes: o último recebido
