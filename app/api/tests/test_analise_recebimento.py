@@ -150,18 +150,33 @@ def test_coletor_nao_cria_composta(cliente, logado):
     assert cliente.post(f"{URL}/compostas", json={"load": "1", "item": "1", "grupos": "(1)"}).status_code == 403
 
 
-def test_resumo_dos_resultados_por_load():
-    from labflow_api.rotas_analise_recebimento import _resumo
+def test_lotes_que_faltam_na_sequencia():
+    from labflow_api.rotas_analise_recebimento import lotes_que_faltam
 
-    assert _resumo({1: "<1", 2: "<1", 3: "<1"}) == "<1"
-    assert _resumo({1: "<1", 2: "<1", 3: "210"}) == "<1 (1-2); 210 (3)"
-    assert _resumo({1: "<1", 2: None}) == "<1"  # o que ainda não foi lido fica de fora
-    assert _resumo({1: None, 2: None}) == ""
+    assert lotes_que_faltam([23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 35, 36, 39, 40]) == [33, 34, 37, 38]  # o "*" da foto
+    assert lotes_que_faltam(list(range(20, 35))) == []
+    assert lotes_que_faltam([]) == []
+
+
+def test_modelo_do_recebimento_e_deitado():
+    from labflow_api.rotas_analise_recebimento import _demonstracao, modelo_deitado_valido
+
+    modelo_deitado_valido(_demonstracao())
+    with pytest.raises(ValueError, match="A4 deitado"):
+        from reportlab.lib.pagesizes import A4
+        from reportlab.pdfgen import canvas
+        import io
+
+        saida = io.BytesIO()
+        c = canvas.Canvas(saida, pagesize=A4)
+        c.showPage()
+        c.save()
+        modelo_deitado_valido(saida.getvalue())
 
 
 def test_laudo_recebe_os_loads_sozinho_e_gera_o_pdf(cliente, logado, hoje):
     logado()
-    cliente.post(f"{URL}/registrar", json={"load": "98707", "item": "99902", "fabrica": "TMG", "lotes": "1-4", "data": str(hoje), "previa": False})
+    cliente.post(f"{URL}/registrar", json={"load": "98707", "item": "99902", "fabrica": "TMG", "lotes": "1-2, 4", "data": str(hoje), "previa": False})
     lotes = cliente.get(f"{URL}/resultados", params={"busca": "98707"}).json()["lotes"]
     cliente.post(f"{URL}/lancar", json={"analise": "CT", "previa": False, "itens": [{"recebimento_lote_id": l["id"], "resultado": "<1"} for l in lotes]})
 
@@ -170,7 +185,7 @@ def test_laudo_recebe_os_loads_sozinho_e_gera_o_pdf(cliente, logado, hoje):
     laudo = r.json()
     assert laudo["titulo"] == "Recebimento de FCOJ" and laudo["paginas"]
     pagina = laudo["paginas"][0]
-    assert pagina["capacidade"] == 25 and pagina["linhas"] >= 1 and not pagina["impresso"]
+    assert pagina["capacidade"] == 15 and pagina["linhas"] >= 1 and not pagina["impresso"]  # uma linha por lote
     assert cliente.get("/laudos/recebimento-fcoj").json()["paginas"][0]["linhas"] == pagina["linhas"]  # não entra duas vezes
 
     pdf = cliente.get(f"/laudos/recebimento-fcoj/{pagina['id']}/pdf")
@@ -179,7 +194,8 @@ def test_laudo_recebe_os_loads_sozinho_e_gera_o_pdf(cliente, logado, hoje):
     import io
 
     texto = PdfReader(io.BytesIO(pdf.content)).pages[0].extract_text()
-    assert "98707" in texto and "TMG" in texto and "1-4" in texto
+    assert "98707" in texto and "TMG" in texto and "<1" in texto and "* 3" in texto  # o lote 3 faltou
+    assert "analista.teste" in texto  # Analista Responsável: quem registrou
 
 
 def test_laudo_do_recebimento_no_banco(conexao):

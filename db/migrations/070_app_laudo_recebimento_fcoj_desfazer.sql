@@ -1,4 +1,4 @@
--- Desfaz a 070_app_laudo_recebimento_fcoj.sql: apaga o lugar dos loads e as páginas do laudo do recebimento. Backup antes.
+-- Desfaz a 070_app_laudo_recebimento_fcoj.sql: apaga o lugar dos lotes e as páginas do laudo do recebimento. Backup antes.
 -- O modelo enviado (app.modelos_documento, nome 'recebimento-fcoj') fica; apague à mão se quiser.
 
 BEGIN;

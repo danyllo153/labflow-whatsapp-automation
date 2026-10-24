@@ -5,6 +5,7 @@ bot (PB11): `registrar_recebimento` e `lancar_contagem`, as mesmas que o bot cha
 criado", mostrada antes do Confirmar), as mesmas recusas e o mesmo alarme. Permissão de chamar: migration 068.
 """
 
+import io
 import re
 from datetime import date, timedelta
 from typing import Literal
@@ -13,6 +14,8 @@ import psycopg
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from psycopg.types.json import Jsonb
 from pydantic import BaseModel, Field
+from pypdf import PdfReader
+from reportlab.pdfgen import canvas
 
 from labflow_api import laudo_esterilizacao, laudos, rotas_turno
 from labflow_api.dependencias import PessoaLogada, obter_conexao
@@ -419,94 +422,141 @@ def criar_compostas(
     return RespostaCompostas(ok=r["ok"], previa=r["previa"], texto=r["texto"], criadas=r.get("criadas", 0))
 
 
-# --- laudo (APP-059): uma linha por load, na ordem do recebimento ------------------------------------------------------
-# Geometria provisória (A4 em pé, 25 loads por folha) até medir o modelo oficial, que o Admin envia na aba Laudo.
+# --- laudo (APP-059): "Laudo de Análises Microbiológicas – Recebimento", A4 deitado, uma linha por lote --------------
+# Como no papel (fotos de 24/10): Load, Fábrica e Item só na primeira linha do load na folha; a data muda quando o lote
+# chegou em outro dia; na Observação, "* 33, 34, 37, 38" = os lotes que faltam na sequência do load (saem quando chegam).
+# Analista Responsável = quem registrou os lotes da folha; o Visto é à mão. Geometria medida nas fotos, até ter o PDF.
 
 NOME_DO_LAUDO = "recebimento-fcoj"
-DIAS_PARA_TRAS = 7  # na primeira vez, a folha começa com os loads da última semana
-TABELA = laudos.Tabela(colunas=(28.0, 78.0, 128.0, 168.0, 205.0, 300.0, 365.0, 430.0, 495.0, 567.0), topo=150.0, base=760.0, linhas=25)
-DEMONSTRACAO = laudos.demonstracao(
-    "Recebimento de FCOJ", TABELA, ("Recebido", "Load", "Item", "Fábrica", "Lotes", "C.T 48h", "B.L 72h", "B.L 120h", "Analista")
+DIAS_PARA_TRAS = 7  # na primeira vez, a folha começa com os lotes da última semana
+LARGURA_DEITADA, ALTURA_DEITADA = 841.89, 595.28
+TABELA = laudos.Tabela(
+    colunas=(28.0, 98.0, 186.0, 273.0, 345.0, 427.0, 490.0, 561.0, 640.0, 814.0), topo=178.0, base=388.0, linhas=15
 )
+COLUNAS_DO_PAPEL = ("Load", "Fábrica", "Item", "Lote", "Data da Análise", "48h", "72h", "120h", "Observação")
+LINHA_DO_ANALISTA = (132.0, 560.0, 428.0, 444.0)  # x0, x1, topo e base do traço "Analista Responsável"
 
 
-def _resumo(por_lote: dict[int, str | None]) -> str:
-    """{1: "<1", 2: "<1", 3: "210"} -> "<1 (1-2); 210 (3)"; todos iguais -> só o valor; sem leitura -> vazio."""
-    if not por_lote or any(v is None for v in por_lote.values()):
-        lidos = {l: v for l, v in por_lote.items() if v is not None}
-        if not lidos:
-            return ""
-        por_lote = lidos
-    valores: dict[str, list[int]] = {}
-    for lote, valor in sorted(por_lote.items()):
-        valores.setdefault(valor, []).append(lote)
-    if len(valores) == 1:
-        return next(iter(valores))
-    return "; ".join(f"{v} ({_faixas(l)})" for v, l in valores.items())
+def _demonstracao() -> bytes:
+    """Folha deitada com o título, os cabeçalhos, as 15 linhas e o rodapé, na geometria do papel (sem dado da empresa)."""
+    saida = io.BytesIO()
+    c = canvas.Canvas(saida, pagesize=(LARGURA_DEITADA, ALTURA_DEITADA))
+    y = lambda topo: ALTURA_DEITADA - topo  # noqa: E731
+    col = TABELA.colunas
+    c.setFont("Helvetica-BoldOblique", 11)
+    c.drawCentredString(LARGURA_DEITADA / 2, y(125), "Laudo de Análises Microbiológicas – Recebimento (modelo de demonstração)")
+    c.setLineWidth(0.6)
+    c.rect(col[0], y(TABELA.base), col[-1] - col[0], TABELA.base - 132)
+    c.line(col[5], y(160), col[8], y(160))
+    for x in col[1:-1]:
+        c.line(x, y(132 if x not in (col[6], col[7]) else 160), x, y(TABELA.base))
+    for i in range(TABELA.linhas):
+        c.line(col[0], y(TABELA.topo + i * TABELA.altura), col[-1], y(TABELA.topo + i * TABELA.altura))
+    c.setFont("Helvetica", 8.5)
+    for x0, x1, nome in zip(col, col[1:], COLUNAS_DO_PAPEL):
+        c.drawCentredString((x0 + x1) / 2, y(170 if nome in ("48h", "72h", "120h") else 148), nome)
+    c.drawCentredString((col[5] + col[6]) / 2, y(146), "C.T. (UFC/ml)")
+    c.drawCentredString((col[6] + col[8]) / 2, y(146), "B.L. (UFC/ml)")
+    c.drawString(col[0] + 2, y(402), "C.T. = Contagem Total e B.L. = Bolores e Leveduras")
+    c.drawString(col[0] + 2, y(440), "Analista Responsável:")
+    c.line(LINHA_DO_ANALISTA[0], y(442), LINHA_DO_ANALISTA[1], y(442))
+    c.drawString(575, y(440), "Visto:")
+    c.line(602, y(442), col[-1], y(442))
+    c.drawString(col[0] + 2, y(468), "Responsável pela Correta Aplicação:")
+    c.line(178, y(470), col[-1], y(470))
+    c.showPage()
+    c.save()
+    return saida.getvalue()
 
 
-def distribuir_loads(con: psycopg.Connection) -> None:
-    """Põe nas folhas, na ordem do recebimento, os loads que ainda não têm lugar. Trava para duas telas não dividirem uma vaga."""
+def modelo_deitado_valido(pdf: bytes) -> None:
+    """O modelo do recebimento é uma página A4 deitada (ValueError com a mensagem para a pessoa)."""
+    if not pdf.startswith(b"%PDF"):
+        raise ValueError("Esse arquivo não é um PDF.")
+    try:
+        leitor = PdfReader(io.BytesIO(pdf))
+        paginas = len(leitor.pages)
+        largura, altura = float(leitor.pages[0].mediabox.width), float(leitor.pages[0].mediabox.height)
+    except Exception as e:  # PDF quebrado
+        raise ValueError("Não consegui abrir esse PDF.") from e
+    if paginas != 1:
+        raise ValueError("O modelo deve ter uma página só (a folha com as linhas em branco).")
+    if abs(largura - LARGURA_DEITADA) > 6 or abs(altura - ALTURA_DEITADA) > 6:
+        raise ValueError("O modelo do recebimento deve ser A4 deitado, como o laudo da empresa.")
+
+
+def lotes_que_faltam(lotes: list[int]) -> list[int]:
+    """Os buracos na sequência dos lotes recebidos do load: [23..32, 35, 36, 39, 40] -> [33, 34, 37, 38]."""
+    tem = set(lotes)
+    return [n for n in range(min(tem), max(tem) + 1) if n not in tem] if tem else []
+
+
+def distribuir_lotes(con: psycopg.Connection) -> None:
+    """Põe nas folhas, na ordem do recebimento, os lotes que ainda não têm linha. Trava para duas telas não dividirem uma vaga."""
     con.execute("SELECT pg_advisory_xact_lock(60, hashtext(%s))", (NOME_DO_LAUDO,))
     inicio = con.execute(
-        "SELECT min(r.data_recebimento) FROM app.recebimento_laudo x JOIN recebimento_lotes r ON r.load_id = x.load_id"
+        "SELECT min(r.data_recebimento) FROM app.recebimento_laudo x JOIN recebimento_lotes r ON r.id = x.recebimento_lote_id"
     ).fetchone()[0] or _hoje(con) - timedelta(days=DIAS_PARA_TRAS)
-    novos = [
-        load_id
-        for (load_id,) in con.execute(
-            """
-            SELECT l.id FROM loads l JOIN itens i ON i.id = l.item_id JOIN recebimento_lotes r ON r.load_id = l.id
-            WHERE i.codigo <> '129' AND NOT EXISTS (SELECT 1 FROM app.recebimento_laudo x WHERE x.load_id = l.id)
-            GROUP BY l.id HAVING min(r.data_recebimento) >= %s ORDER BY min(r.data_recebimento), l.id
-            """,
-            (inicio,),
-        )
-    ]
-    for load_id in novos:
+    for (lote_id,) in con.execute(
+        """
+        SELECT r.id FROM recebimento_lotes r JOIN loads l ON l.id = r.load_id JOIN itens i ON i.id = l.item_id
+        WHERE i.codigo <> '129' AND r.data_recebimento >= %s
+          AND NOT EXISTS (SELECT 1 FROM app.recebimento_laudo x WHERE x.recebimento_lote_id = r.id)
+        ORDER BY r.data_recebimento, r.id
+        """,
+        (inicio,),
+    ).fetchall():
         con.execute(
-            "INSERT INTO app.recebimento_laudo (load_id, pagina_id) VALUES (%s, %s)", (load_id, laudos.pagina_com_vaga(con, NOME_DO_LAUDO))
+            "INSERT INTO app.recebimento_laudo (recebimento_lote_id, pagina_id) VALUES (%s, %s)",
+            (lote_id, laudos.pagina_com_vaga(con, NOME_DO_LAUDO)),
         )
 
 
 def _gerar_laudo(con: psycopg.Connection, pagina_id: int, modelo: bytes | None) -> bytes:
-    celulas = []
-    for n, (recebido, load, item, fab, lotes, leituras, quem) in enumerate(
-        con.execute(
-            """
-            SELECT min(r.data_recebimento), l.numero, i.codigo, f.nome, array_agg(r.lote ORDER BY r.lote),
-                   (SELECT jsonb_agg(jsonb_build_object('lote', r2.lote, 'analise', c.analise, 'sinal', c.sinal, 'valor', c.valor))
-                    FROM contagens c JOIN recebimento_lotes r2 ON r2.id = c.recebimento_lote_id WHERE r2.load_id = l.id),
-                   (SELECT coalesce(u.nome, cr.usuario) FROM recebimento_lotes r3 LEFT JOIN usuarios u ON u.id = r3.registrado_por
-                    LEFT JOIN app.credenciais cr ON cr.usuario_id = r3.registrado_por WHERE r3.load_id = l.id ORDER BY r3.id LIMIT 1)
-            FROM app.recebimento_laudo x JOIN loads l ON l.id = x.load_id JOIN itens i ON i.id = l.item_id
-            LEFT JOIN fabricas f ON f.id = l.fabrica_id JOIN recebimento_lotes r ON r.load_id = l.id
-            WHERE x.pagina_id = %s GROUP BY x.load_id, l.id, l.numero, i.codigo, f.nome ORDER BY min(r.data_recebimento), l.id
-            """,
-            (pagina_id,),
-        )
-    ):
-        resultados = []
-        for cod in ANALISES:
-            por_lote: dict[int, str | None] = {lote: None for lote in lotes}
-            for c in leituras or []:
-                if c["analise"] == cod:
-                    por_lote[c["lote"]] = _texto(c)
-            resultados.append(_resumo(por_lote))
-        textos = [recebido.strftime("%d.%m.%y"), load, item, fab or "", _faixas(lotes), *resultados,
-                  laudo_esterilizacao.primeiro_nome(quem) if quem else ""]
+    linhas = con.execute(
+        """
+        SELECT l.id, l.numero, f.nome, i.codigo, r.lote, r.data_recebimento,
+               (SELECT jsonb_object_agg(c.analise, jsonb_build_object('sinal', c.sinal, 'valor', c.valor))
+                FROM contagens c WHERE c.recebimento_lote_id = r.id),
+               (SELECT array_agg(r2.lote) FROM recebimento_lotes r2 WHERE r2.load_id = l.id),
+               coalesce(u.nome, cr.usuario)
+        FROM app.recebimento_laudo x JOIN recebimento_lotes r ON r.id = x.recebimento_lote_id
+        JOIN loads l ON l.id = r.load_id JOIN itens i ON i.id = l.item_id LEFT JOIN fabricas f ON f.id = l.fabrica_id
+        LEFT JOIN usuarios u ON u.id = r.registrado_por LEFT JOIN app.credenciais cr ON cr.usuario_id = r.registrado_por
+        WHERE x.pagina_id = %s ORDER BY x.incluido_em, r.data_recebimento, l.numero, r.lote
+        """,
+        (pagina_id,),
+    ).fetchall()
+    celulas, anterior, analistas = [], (None, None), []
+    for n, (load_id, load, fab, item, lote, recebido, leituras, todos, quem) in enumerate(linhas):
+        primeira = load_id != anterior[0]
+        leituras = leituras or {}
+        faltam = lotes_que_faltam(todos or []) if primeira else []
+        textos = [
+            load if primeira else "", (fab or "") if primeira else "", item if primeira else "", str(lote),
+            recebido.strftime("%d.%m.%y") if primeira or recebido != anterior[1] else "",
+            *(_texto(leituras.get(cod)) or "" for cod in ANALISES),
+            ("* " + ", ".join(map(str, faltam))) if faltam else "",
+        ]
         for i, texto in enumerate(textos):
-            celulas.append(TABELA.celula(texto, n, i, tamanho=8))
-    return laudos.preencher(modelo, DEMONSTRACAO, celulas)
+            celulas.append(TABELA.celula(texto, n, i, centro=i != 8, tamanho=8.5))
+        anterior = (load_id, recebido)
+        nome = laudo_esterilizacao.primeiro_nome(quem) if quem else ""
+        if nome and nome not in analistas:
+            analistas.append(nome)
+    if analistas:
+        x0, x1, topo, base = LINHA_DO_ANALISTA
+        celulas.append(laudos.Celula(", ".join(analistas), x0, x1, topo, base, centro=False, tamanho=10))
+    return laudos.preencher(modelo, _demonstracao, celulas)
 
 
 laudos.registrar(
     laudos.Laudo(
         nome=NOME_DO_LAUDO, titulo="Recebimento de FCOJ", modelo=NOME_DO_LAUDO, capacidade=TABELA.linhas,
         contar_sql="""
-            SELECT count(*), min(d), max(d) FROM (
-                SELECT (SELECT min(r.data_recebimento) FROM recebimento_lotes r WHERE r.load_id = x.load_id) AS d
-                FROM app.recebimento_laudo x WHERE x.pagina_id = %s) t
+            SELECT count(*), min(r.data_recebimento), max(r.data_recebimento)
+            FROM app.recebimento_laudo x JOIN recebimento_lotes r ON r.id = x.recebimento_lote_id WHERE x.pagina_id = %s
         """,
-        gerar=_gerar_laudo, preparar=distribuir_loads,
+        gerar=_gerar_laudo, aceitar_modelo=modelo_deitado_valido, preparar=distribuir_lotes,
     )
 )

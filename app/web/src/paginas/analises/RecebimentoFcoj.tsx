@@ -28,8 +28,8 @@ const LAUDO = {
   titulo: "Laudo do recebimento de FCOJ",
   rotulo: "Laudo do recebimento de FCOJ",
   explicacao:
-    "Um load por linha, na ordem do recebimento: entra sozinho quando é registrado, e os resultados de C.T e B.L aparecem conforme são lançados. Quando sair uma revisão nova do modelo, o Admin envia o PDF atualizado aqui.",
-  unidade: "loads",
+    "Como o papel: A4 deitado, um lote por linha, 15 por folha. O lote entra sozinho quando é registrado; os resultados aparecem conforme são lançados; na Observação, os lotes que faltam na sequência (*). O Analista Responsável é quem registrou; o Visto é à mão. Quando sair uma revisão nova do modelo, o Admin envia o PDF atualizado aqui.",
+  unidade: "lotes",
 };
 
 interface GrupoDeHoje {

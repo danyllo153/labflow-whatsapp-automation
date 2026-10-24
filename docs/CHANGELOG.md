@@ -24,11 +24,12 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
   início" ajusta o começo do lote em uso quando preciso.
 
 ### Adicionado
-- **Laudo do Recebimento FCOJ** (app, APP-059, 24/10; migration 070): na aba Laudo do app do Recebimento, as folhas se
-  enchem sozinhas, um load por linha na ordem do recebimento (data, load, item, fábrica, lotes, C.T 48h, B.L 72h,
-  B.L 120h e quem registrou). Os resultados aparecem conforme são lançados ("<1", ou "<1 (1-2); 210 (3)" quando diferem).
-  Pendente de imprimir, impressa e reimprimir como os outros laudos, e o Admin envia o **PDF do modelo** (e a revisão nova,
-  quando entrar em vigor). Até medir o modelo oficial, as colunas são provisórias (25 loads por folha).
+- **Laudo do Recebimento FCOJ** (app, APP-059, 24/10; migration 070): na aba Laudo do app do Recebimento, o "Laudo de
+  Análises Microbiológicas – Recebimento" como o papel: A4 deitado, **um lote por linha** (15 por folha), com load, fábrica e
+  item só na primeira linha do load, a data da análise, C.T 48h, B.L 72h e 120h conforme são lançados e, na Observação, os
+  lotes que faltam na sequência (`* 33, 34, 37, 38`, que saem quando chegam). Analista Responsável = quem registrou; o Visto
+  é à mão. Pendente de imprimir, impressa e reimprimir como os outros laudos, e o Admin envia o **PDF do modelo** (e a
+  revisão nova, quando entrar em vigor). Geometria medida nas fotos do papel, até ter o PDF.
 - **Compostas no app do Recebimento FCOJ** (app, APP-058, 24/10): aba Compostas com os loads que ainda têm lote fora de
   composta e o **recomendado** (uns 5 por composta; 6 vale, 7 vira 3 + 4, 8 vira 4 + 4), ou os grupos escritos à mão
   (`(1-5)(6-10)`), com a prévia antes do Confirmar. Grava pela `criar_compostas` do bot (043). Depois de registrar um load,
