@@ -19,8 +19,8 @@ interface Uso {
 }
 
 interface Registro extends Uso {
-  ct: string;
-  bl: string;
+  ct: string | null; // nulo = resultado pendente
+  bl: string | null;
   quem: string;
   quando: string;
 }
@@ -105,8 +105,10 @@ function Formulario({ dados, aoSalvar }: { dados: DiaDoMaterial; aoSalvar: (d: D
     placas: base.placas ?? "",
     meios: base.meios ?? "",
   });
-  const [ct, setCt] = useState(dados.registro?.ct ?? "<1");
-  const [bl, setBl] = useState(dados.registro?.bl ?? "<1");
+  const [ct, setCt] = useState(dados.registro?.ct ?? "");
+  const [bl, setBl] = useState(dados.registro?.bl ?? "");
+  const [excluindo, setExcluindo] = useState(false);
+  const [motivo, setMotivo] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState("");
   const [salvo, setSalvo] = useState(false);
@@ -124,6 +126,17 @@ function Formulario({ dados, aoSalvar }: { dados: DiaDoMaterial; aoSalvar: (d: D
       setEnviando(false);
     }
   }
+
+  async function excluir() {
+    setErro("");
+    try {
+      aoSalvar(await enviarJson<DiaDoMaterial>(`/material-asseptico/${dados.dia}/excluir`, { motivo }));
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Não foi possível excluir.");
+    }
+  }
+
+  const pendente = dados.registro && (dados.registro.ct === null || dados.registro.bl === null);
 
   return (
     <form className="cartao" onSubmit={salvar} aria-label="Material do dia">
@@ -148,13 +161,22 @@ function Formulario({ dados, aoSalvar }: { dados: DiaDoMaterial; aoSalvar: (d: D
       <div className="linha-formulario">
         <label className="campo campo-hora">
           C.T. (UFC/ml)
-          <input maxLength={10} value={ct} disabled={!dados.pode_preencher} onChange={(e) => setCt(e.target.value)} />
+          <input maxLength={10} value={ct} placeholder="pendente" disabled={!dados.pode_preencher} onChange={(e) => setCt(e.target.value)} />
         </label>
         <label className="campo campo-hora">
           B.L. (UFC/ml)
-          <input maxLength={10} value={bl} disabled={!dados.pode_preencher} onChange={(e) => setBl(e.target.value)} />
+          <input maxLength={10} value={bl} placeholder="pendente" disabled={!dados.pode_preencher} onChange={(e) => setBl(e.target.value)} />
         </label>
       </div>
+      {dados.pode_preencher && (
+        <div className="botoes-lado">
+          <button type="button" className="botao botao-simples" onClick={() => (setCt("<1"), setBl("<1"))}>
+            &lt;1 em todos
+          </button>
+          {pendente && <span className="etiqueta etiqueta-pendente">Resultado pendente</span>}
+        </div>
+      )}
+      <p className="texto-secundario">C.T. e B.L. em branco ficam pendentes: lance quando ler as placas.</p>
       {erro && (
         <p className="mensagem-erro" role="alert">
           {erro}
@@ -166,11 +188,35 @@ function Formulario({ dados, aoSalvar }: { dados: DiaDoMaterial; aoSalvar: (d: D
         </p>
       )}
       {dados.pode_preencher ? (
-        <button type="submit" className="botao botao-principal" disabled={enviando}>
-          {dados.registro ? "Salvar correção" : "Salvar o dia"}
-        </button>
+        <div className="botoes-lado">
+          <button type="submit" className="botao botao-principal" disabled={enviando}>
+            {dados.registro ? "Salvar correção" : "Salvar o dia"}
+          </button>
+          {dados.registro && !excluindo && (
+            <button type="button" className="botao botao-simples" onClick={() => setExcluindo(true)}>
+              Excluir o dia
+            </button>
+          )}
+        </div>
       ) : (
         <p className="texto-secundario">O seu cargo vê o material asséptico, mas não preenche.</p>
+      )}
+      {excluindo && (
+        <div className="corrigir-horario" role="group" aria-label={`Excluir o dia ${dm(dados.dia)}`}>
+          <p>O dia sai do laudo (fica guardado, com quem excluiu e o motivo) e pode ser lançado de novo.</p>
+          <label className="campo">
+            Motivo (opcional)
+            <input maxLength={300} value={motivo} onChange={(e) => setMotivo(e.target.value)} />
+          </label>
+          <div className="botoes-lado">
+            <button type="button" className="botao botao-perigo" onClick={() => void excluir()}>
+              Excluir
+            </button>
+            <button type="button" className="botao botao-simples" onClick={() => setExcluindo(false)}>
+              Cancelar
+            </button>
+          </div>
+        </div>
       )}
     </form>
   );

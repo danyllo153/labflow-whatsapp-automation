@@ -23,6 +23,9 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
   início" ajusta o começo do lote em uso quando preciso.
 
 ### Adicionado
+- **Material asséptico: resultado pendente, "<1 em todos" e excluir dia** (app, APP-053, migration `066`): C.T. e B.L.
+  em branco ficam pendentes (lançados depois), o botão "<1 em todos" preenche os dois, e "Excluir o dia" tira o dia do
+  laudo, arquivado com quem, quando e o motivo (dia de página já impressa não se exclui).
 - **Laudo de incubação no padrão de escrita do laboratório** (app, APP-050, 24/10): a descrição de cada dia é um texto
   só, na ordem REC → embarque → tanques de navio → `TQ:` → água do processo (MN, C4, C5, C6) → baias → linhas → NFC,
   com "; " entre os grupos, ponto no fim, lotes entre parênteses e o frasco `(N)`, `(ST)` ou `(N,ST)` no fim de cada

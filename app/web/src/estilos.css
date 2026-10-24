@@ -3652,3 +3652,14 @@ h2 {
   --sombra-2: 0 8px 24px rgba(0, 0, 0, 0.5);
   --anel: 0 0 0 3px rgba(109, 176, 239, 0.4);
 }
+
+/* botão de perigo (excluir), em pílula como os outros (APP-053) */
+.botao-perigo {
+  background: var(--nao-ok);
+  border-color: var(--nao-ok);
+  color: #fff;
+}
+
+.botao-perigo:hover {
+  filter: brightness(0.92);
+}

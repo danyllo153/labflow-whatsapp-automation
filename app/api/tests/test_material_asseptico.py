@@ -59,10 +59,12 @@ def test_sugere_os_ciclos_do_dia_anterior_e_os_esterilizados_depois(cliente, log
 
 def test_preencher_grava_quem_e_corrigir_troca_o_responsavel(cliente, logado, agora):
     logado(usuario="ana.teste")
-    r = cliente.put("/material-asseptico/2026-10-22", json={"ponteiras": " A959 ;A962, a959 ", "placas": "P26073", "meios": "A964"})
+    r = cliente.put(
+        "/material-asseptico/2026-10-22", json={"ponteiras": " A959 ;A962, a959 ", "placas": "P26073", "meios": "A964", "ct": "<1", "bl": " < 1 "}
+    )
     assert r.status_code == 200, r.text
     reg = r.json()["registro"]
-    assert (reg["ponteiras"], reg["ct"], reg["bl"]) == ("A959, A962", "<1", "<1")  # sem repetir e com o <1 padrão
+    assert (reg["ponteiras"], reg["ct"], reg["bl"]) == ("A959, A962", "<1", "<1")  # sem repetir
     assert reg["quem"] == "ana.teste (teste)"
     logado(usuario="bia.teste")
     reg = cliente.put("/material-asseptico/2026-10-22", json={"ponteiras": "A959", "agua_diluicao": "A971"}).json()["registro"]
@@ -80,7 +82,7 @@ def test_laudo_tem_9_dias_por_pagina_e_o_pdf_traz_os_ciclos(cliente, logado, ago
     logado()
     for d in range(22, 31):  # 9 dias enchem a página (cada um preenchido no próprio dia)
         agora(em(d, 9))
-        cliente.put(f"/material-asseptico/2026-10-{d}", json={"ponteiras": f"A9{d}", "placas": "P26073"})
+        cliente.put(f"/material-asseptico/2026-10-{d}", json={"ponteiras": f"A9{d}", "placas": "P26073", "ct": "<1", "bl": "<1"})
     paginas = cliente.get("/material-asseptico/laudos").json()["paginas"]
     assert [(p["linhas"], p["cheia"]) for p in paginas] == [(9, True)]
     texto = PdfReader(io.BytesIO(cliente.get(f"/material-asseptico/laudos/{paginas[0]['id']}/pdf").content)).pages[0].extract_text()
@@ -129,3 +131,34 @@ def test_modelo_do_word_com_folha_extra_vazia_fica_so_com_a_primeira(cliente, lo
     assert cliente.put("/material-asseptico/laudos/modelo", content=pdf(True)).status_code == 422
     r = cliente.put("/material-asseptico/laudos/modelo", content=pdf(False))
     assert r.status_code == 200 and r.json()["modelo_enviado"]
+
+
+def test_resultado_pendente_e_lancado_depois(cliente, logado, agora):
+    logado()
+    reg = cliente.put("/material-asseptico/2026-10-22", json={"ponteiras": "A959"}).json()["registro"]
+    assert (reg["ct"], reg["bl"]) == (None, None)  # em branco = pendente
+    reg = cliente.put("/material-asseptico/2026-10-22", json={"ponteiras": "A959", "ct": "<1", "bl": "<1"}).json()["registro"]
+    assert (reg["ct"], reg["bl"]) == ("<1", "<1")
+
+
+def test_excluir_dia_arquiva_e_deixa_lancar_de_novo(cliente, logado, agora, conexao):
+    logado()
+    cliente.put("/material-asseptico/2026-10-21", json={"ponteiras": "A950"})
+    cliente.put("/material-asseptico/2026-10-22", json={"ponteiras": "A959"})
+    r = cliente.post("/material-asseptico/2026-10-22/excluir", json={"motivo": "lançado no dia errado"})
+    assert r.status_code == 200, r.text
+    assert r.json()["registro"] is None and "2026-10-22" not in r.json()["recentes"]
+    assert conexao.execute(
+        "SELECT motivo_exclusao FROM app.material_asseptico WHERE dia = '2026-10-22' AND excluido_em IS NOT NULL"
+    ).fetchone() == ("lançado no dia errado",)
+    assert [p["linhas"] for p in cliente.get("/material-asseptico/laudos").json()["paginas"]] == [1]
+    assert cliente.post("/material-asseptico/2026-10-22/excluir", json={}).status_code == 404  # já excluído
+    assert cliente.put("/material-asseptico/2026-10-22", json={"ponteiras": "A960"}).json()["registro"]["ponteiras"] == "A960"
+
+
+def test_nao_exclui_dia_de_pagina_impressa(cliente, logado, agora):
+    logado()
+    cliente.put("/material-asseptico/2026-10-22", json={"ponteiras": "A959"})
+    pagina = cliente.get("/material-asseptico/laudos").json()["paginas"][0]
+    cliente.post(f"/material-asseptico/laudos/{pagina['id']}/impresso")
+    assert cliente.post("/material-asseptico/2026-10-22/excluir", json={}).status_code == 409

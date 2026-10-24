@@ -219,6 +219,7 @@ Sem gráfico "por pessoa" (pode soar como vigilância).
 - O app **sugere** os ciclos do último dia registrado mais os esterilizados (eficientes) depois dele, e repete os lotes de placa; o analista **confirma, tira ou acrescenta livremente** (análises fora do roteiro). Os lotes das placas não têm cadastro nem laudo: são anotação livre.
 - Quem salva fica como **responsável pelo preenchimento** (salvar de novo passa para o nome de quem salvou).
 - **Laudo "Controle de Material Asséptico"**: 9 dias por página, Visto à mão, mesmo fluxo de impressão do laudo de esterilização. A Esterilização tem o tipo **Água de diluição** (migration 059).
+- **Resultado pendente e excluir dia (APP-053, 24/10; migration 066):** C.T. e B.L. em branco ficam **pendentes** (o laudo sai com a célula vazia) e se lançam depois; o botão **"<1 em todos"** preenche os dois. **"Excluir o dia"** tira o dia do laudo (arquiva com quem, quando e o motivo; o dia pode ser lançado de novo); dia de página já impressa não se exclui (corrige-se).
 
 ### 7.1 Temperatura das estufas
 - **Não ok passa para o turno seguinte** (24/10): enquanto ninguém conferir Ok, o Turno, o Início e Estufas mostram "Estufas fora da faixa" com a leitura, desde quando e a última temperatura. A conferência Ok não aparece na linha do tempo do turno.
