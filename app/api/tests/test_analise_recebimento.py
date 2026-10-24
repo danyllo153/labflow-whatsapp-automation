@@ -148,3 +148,40 @@ def test_compostas_recomenda_previa_e_cria(cliente, logado, hoje):
 def test_coletor_nao_cria_composta(cliente, logado):
     logado("Coletor")
     assert cliente.post(f"{URL}/compostas", json={"load": "1", "item": "1", "grupos": "(1)"}).status_code == 403
+
+
+def test_resumo_dos_resultados_por_load():
+    from labflow_api.rotas_analise_recebimento import _resumo
+
+    assert _resumo({1: "<1", 2: "<1", 3: "<1"}) == "<1"
+    assert _resumo({1: "<1", 2: "<1", 3: "210"}) == "<1 (1-2); 210 (3)"
+    assert _resumo({1: "<1", 2: None}) == "<1"  # o que ainda não foi lido fica de fora
+    assert _resumo({1: None, 2: None}) == ""
+
+
+def test_laudo_recebe_os_loads_sozinho_e_gera_o_pdf(cliente, logado, hoje):
+    logado()
+    cliente.post(f"{URL}/registrar", json={"load": "98707", "item": "99902", "fabrica": "TMG", "lotes": "1-4", "data": str(hoje), "previa": False})
+    lotes = cliente.get(f"{URL}/resultados", params={"busca": "98707"}).json()["lotes"]
+    cliente.post(f"{URL}/lancar", json={"analise": "CT", "previa": False, "itens": [{"recebimento_lote_id": l["id"], "resultado": "<1"} for l in lotes]})
+
+    r = cliente.get("/laudos/recebimento-fcoj")
+    assert r.status_code == 200, r.text
+    laudo = r.json()
+    assert laudo["titulo"] == "Recebimento de FCOJ" and laudo["paginas"]
+    pagina = laudo["paginas"][0]
+    assert pagina["capacidade"] == 25 and pagina["linhas"] >= 1 and not pagina["impresso"]
+    assert cliente.get("/laudos/recebimento-fcoj").json()["paginas"][0]["linhas"] == pagina["linhas"]  # não entra duas vezes
+
+    pdf = cliente.get(f"/laudos/recebimento-fcoj/{pagina['id']}/pdf")
+    assert pdf.status_code == 200 and pdf.content.startswith(b"%PDF")
+    from pypdf import PdfReader
+    import io
+
+    texto = PdfReader(io.BytesIO(pdf.content)).pages[0].extract_text()
+    assert "98707" in texto and "TMG" in texto and "1-4" in texto
+
+
+def test_laudo_do_recebimento_no_banco(conexao):
+    assert conexao.execute("SELECT has_table_privilege('labflow_app_web', 'app.recebimento_laudo', 'INSERT')").fetchone()[0]
+    assert not conexao.execute("SELECT has_table_privilege('labflow_app_web', 'app.recebimento_laudo', 'DELETE')").fetchone()[0]

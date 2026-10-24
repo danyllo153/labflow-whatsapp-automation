@@ -5,6 +5,7 @@ import { enviarJson, lerJson } from "../../api";
 import { dm } from "../../componentes/SeletorDeDias";
 import { FABRICAS } from "../dados/definicoes";
 import { classeDaSituacao } from "../dados/formatos";
+import LaudoEsterilizacao from "../LaudoEsterilizacao";
 
 /**
  * Recebimento FCOJ como um app (Fase E, E2; APP-057): Painel, Registrar, Resultados, Laudo, Instrução e Vídeo numa
@@ -21,6 +22,15 @@ export const ATALHOS_DO_APP = [
   { aba: "instrucao", rotulo: "Instrução" },
   { aba: "video", rotulo: "Vídeo" },
 ];
+
+const LAUDO = {
+  base: "/laudos/recebimento-fcoj",
+  titulo: "Laudo do recebimento de FCOJ",
+  rotulo: "Laudo do recebimento de FCOJ",
+  explicacao:
+    "Um load por linha, na ordem do recebimento: entra sozinho quando é registrado, e os resultados de C.T e B.L aparecem conforme são lançados. Quando sair uma revisão nova do modelo, o Admin envia o PDF atualizado aqui.",
+  unidade: "loads",
+};
 
 interface GrupoDeHoje {
   analise: string;
@@ -147,11 +157,12 @@ export default function RecebimentoFcoj() {
           aoGravar={() => void carregarPainel()}
         />
       )}
+      {aba === "laudo" && painel?.pode_registrar && <LaudoEsterilizacao versao={0} config={LAUDO} />}
       {aba === "laudo" && (
         <div className="cartao">
-          <h2>Laudo</h2>
-          <p>
-            A página do Recebimento FCOJ tem a tabela pronta para imprimir e exportar para o Excel, com o gráfico por fábrica.
+          <h2>Tabela e correções</h2>
+          <p className="texto-secundario">
+            A página do Recebimento FCOJ tem a tabela para imprimir e exportar para o Excel, com o gráfico por fábrica.
           </p>
           <div className="botoes-lado">
             <Link className="botao botao-principal" to="/paginas/recebimento">

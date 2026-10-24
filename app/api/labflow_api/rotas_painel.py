@@ -74,6 +74,7 @@ CAMINHOS = {
     "superficies-Linha": "/paginas/linhas",
     "fluxo-laminar": "/fluxo-laminar",
     "incubacao": "/incubacao",
+    "recebimento-fcoj": "/analises/recebimento-fcoj?aba=laudo",
     "esterilizacao": "/esterilizacao",
 }
 

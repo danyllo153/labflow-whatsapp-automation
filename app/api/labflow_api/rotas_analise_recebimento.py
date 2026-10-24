@@ -14,7 +14,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from psycopg.types.json import Jsonb
 from pydantic import BaseModel, Field
 
-from labflow_api import rotas_turno
+from labflow_api import laudo_esterilizacao, laudos, rotas_turno
 from labflow_api.dependencias import PessoaLogada, obter_conexao
 from labflow_api.permissoes import exigir
 from labflow_api.rotas_admin import _recusa_do_banco
@@ -417,3 +417,96 @@ def criar_compostas(
     grupos = _grupos(pedido.grupos)
     r = _chamar(con, "SELECT criar_compostas(%s, %s, %s, %s, %s)", (pessoa.usuario_id, pedido.load, pedido.item, Jsonb(grupos), pedido.previa))
     return RespostaCompostas(ok=r["ok"], previa=r["previa"], texto=r["texto"], criadas=r.get("criadas", 0))
+
+
+# --- laudo (APP-059): uma linha por load, na ordem do recebimento ------------------------------------------------------
+# Geometria provisória (A4 em pé, 25 loads por folha) até medir o modelo oficial, que o Admin envia na aba Laudo.
+
+NOME_DO_LAUDO = "recebimento-fcoj"
+DIAS_PARA_TRAS = 7  # na primeira vez, a folha começa com os loads da última semana
+TABELA = laudos.Tabela(colunas=(28.0, 78.0, 128.0, 168.0, 205.0, 300.0, 365.0, 430.0, 495.0, 567.0), topo=150.0, base=760.0, linhas=25)
+DEMONSTRACAO = laudos.demonstracao(
+    "Recebimento de FCOJ", TABELA, ("Recebido", "Load", "Item", "Fábrica", "Lotes", "C.T 48h", "B.L 72h", "B.L 120h", "Analista")
+)
+
+
+def _resumo(por_lote: dict[int, str | None]) -> str:
+    """{1: "<1", 2: "<1", 3: "210"} -> "<1 (1-2); 210 (3)"; todos iguais -> só o valor; sem leitura -> vazio."""
+    if not por_lote or any(v is None for v in por_lote.values()):
+        lidos = {l: v for l, v in por_lote.items() if v is not None}
+        if not lidos:
+            return ""
+        por_lote = lidos
+    valores: dict[str, list[int]] = {}
+    for lote, valor in sorted(por_lote.items()):
+        valores.setdefault(valor, []).append(lote)
+    if len(valores) == 1:
+        return next(iter(valores))
+    return "; ".join(f"{v} ({_faixas(l)})" for v, l in valores.items())
+
+
+def distribuir_loads(con: psycopg.Connection) -> None:
+    """Põe nas folhas, na ordem do recebimento, os loads que ainda não têm lugar. Trava para duas telas não dividirem uma vaga."""
+    con.execute("SELECT pg_advisory_xact_lock(60, hashtext(%s))", (NOME_DO_LAUDO,))
+    inicio = con.execute(
+        "SELECT min(r.data_recebimento) FROM app.recebimento_laudo x JOIN recebimento_lotes r ON r.load_id = x.load_id"
+    ).fetchone()[0] or _hoje(con) - timedelta(days=DIAS_PARA_TRAS)
+    novos = [
+        load_id
+        for (load_id,) in con.execute(
+            """
+            SELECT l.id FROM loads l JOIN itens i ON i.id = l.item_id JOIN recebimento_lotes r ON r.load_id = l.id
+            WHERE i.codigo <> '129' AND NOT EXISTS (SELECT 1 FROM app.recebimento_laudo x WHERE x.load_id = l.id)
+            GROUP BY l.id HAVING min(r.data_recebimento) >= %s ORDER BY min(r.data_recebimento), l.id
+            """,
+            (inicio,),
+        )
+    ]
+    for load_id in novos:
+        con.execute(
+            "INSERT INTO app.recebimento_laudo (load_id, pagina_id) VALUES (%s, %s)", (load_id, laudos.pagina_com_vaga(con, NOME_DO_LAUDO))
+        )
+
+
+def _gerar_laudo(con: psycopg.Connection, pagina_id: int, modelo: bytes | None) -> bytes:
+    celulas = []
+    for n, (recebido, load, item, fab, lotes, leituras, quem) in enumerate(
+        con.execute(
+            """
+            SELECT min(r.data_recebimento), l.numero, i.codigo, f.nome, array_agg(r.lote ORDER BY r.lote),
+                   (SELECT jsonb_agg(jsonb_build_object('lote', r2.lote, 'analise', c.analise, 'sinal', c.sinal, 'valor', c.valor))
+                    FROM contagens c JOIN recebimento_lotes r2 ON r2.id = c.recebimento_lote_id WHERE r2.load_id = l.id),
+                   (SELECT coalesce(u.nome, cr.usuario) FROM recebimento_lotes r3 LEFT JOIN usuarios u ON u.id = r3.registrado_por
+                    LEFT JOIN app.credenciais cr ON cr.usuario_id = r3.registrado_por WHERE r3.load_id = l.id ORDER BY r3.id LIMIT 1)
+            FROM app.recebimento_laudo x JOIN loads l ON l.id = x.load_id JOIN itens i ON i.id = l.item_id
+            LEFT JOIN fabricas f ON f.id = l.fabrica_id JOIN recebimento_lotes r ON r.load_id = l.id
+            WHERE x.pagina_id = %s GROUP BY x.load_id, l.id, l.numero, i.codigo, f.nome ORDER BY min(r.data_recebimento), l.id
+            """,
+            (pagina_id,),
+        )
+    ):
+        resultados = []
+        for cod in ANALISES:
+            por_lote: dict[int, str | None] = {lote: None for lote in lotes}
+            for c in leituras or []:
+                if c["analise"] == cod:
+                    por_lote[c["lote"]] = _texto(c)
+            resultados.append(_resumo(por_lote))
+        textos = [recebido.strftime("%d.%m.%y"), load, item, fab or "", _faixas(lotes), *resultados,
+                  laudo_esterilizacao.primeiro_nome(quem) if quem else ""]
+        for i, texto in enumerate(textos):
+            celulas.append(TABELA.celula(texto, n, i, tamanho=8))
+    return laudos.preencher(modelo, DEMONSTRACAO, celulas)
+
+
+laudos.registrar(
+    laudos.Laudo(
+        nome=NOME_DO_LAUDO, titulo="Recebimento de FCOJ", modelo=NOME_DO_LAUDO, capacidade=TABELA.linhas,
+        contar_sql="""
+            SELECT count(*), min(d), max(d) FROM (
+                SELECT (SELECT min(r.data_recebimento) FROM recebimento_lotes r WHERE r.load_id = x.load_id) AS d
+                FROM app.recebimento_laudo x WHERE x.pagina_id = %s) t
+        """,
+        gerar=_gerar_laudo, preparar=distribuir_loads,
+    )
+)

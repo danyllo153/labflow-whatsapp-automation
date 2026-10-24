@@ -171,4 +171,22 @@ describe("Recebimento FCOJ como app (Fase E, E2)", () => {
     ]);
   });
 
+
+  it("a aba Laudo traz as folhas e o envio do modelo, como os outros laudos", async () => {
+    abrir("/analises/recebimento-fcoj?aba=laudo", {
+      "GET /laudos/recebimento-fcoj": () => ({
+        status: 200,
+        corpo: {
+          titulo: "Recebimento de FCOJ", pode_enviar_modelo: true, modelo_enviado: false, modelo_enviado_em: null,
+          paginas: [{ id: 7, numero: 1, linhas: 3, capacidade: 25, cheia: false, impresso: false, impresso_por: null, impresso_em: null, de: "2026-10-20", ate: "2026-10-24" }],
+        },
+      }),
+    });
+    const laudo = await screen.findByRole("region", { name: "Laudo do recebimento de FCOJ" });
+    expect(await within(laudo).findByText(/3 de 25 loads/)).toBeInTheDocument();
+    expect(within(laudo).getByRole("link", { name: "Abrir o PDF da página 1" })).toHaveAttribute("href", "/laudos/recebimento-fcoj/7/pdf");
+    expect(within(laudo).getByText(/sem o modelo da empresa/)).toBeInTheDocument(); // o Admin envia o PDF da revisão em vigor
+    expect(within(laudo).getByLabelText("Arquivo PDF do modelo: Laudo do recebimento de FCOJ")).toBeInTheDocument();
+  });
+
 });
