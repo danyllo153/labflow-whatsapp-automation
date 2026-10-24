@@ -85,6 +85,9 @@ export default function MaterialAsseptico() {
 
   return (
     <section className="pagina-material">
+      <p className="voltar">
+        <Link to="/registros-diarios">← Registros diários</Link>
+      </p>
       <h1>Material asséptico</h1>
       <p className="texto-secundario">
         O que foi usado nas análises do dia: os ciclos vêm da <Link to="/esterilizacao">Esterilização</Link>, e você pode

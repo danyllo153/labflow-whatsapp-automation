@@ -431,7 +431,7 @@ function CentralDoTurno() {
         </details>
       )}
       <p className="links-do-turno">
-        <Link to="/esterilizacao">Registrar esterilização</Link> · <Link to="/material-asseptico">Material asséptico do dia</Link>
+        <Link to="/esterilizacao">Registrar esterilização</Link> · <Link to="/material-asseptico">Material asséptico do dia</Link> · <Link to="/registros-diarios">Registros diários</Link>
       </p>
     </>
   );

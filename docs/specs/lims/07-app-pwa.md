@@ -178,6 +178,10 @@ Sem gráfico "por pessoa" (pode soar como vigilância).
 - **Laudo "Controle de Ciclos de Esterilização" (APP-035, decidido em 23/10):** o app preenche o **próprio PDF da empresa** (SGI, 35 linhas por página): Data, Material esterilizado ("Meio de cultura / Frascos" quando há mais de um no ciclo), Ciclo, Sim/Não e o **nome de quem marcou** (sai do usuário logado). A assinatura (**Visto**) e o bloco do responsável ficam em branco, à mão. Página cheia vira **"pendente de imprimir"**; quem imprime marca como impressa e ela vai para o **arquivo**, com reimpressão. O PDF oficial é **confidencial: fica no banco** (Admin envia, `app.modelos_documento`), nunca no Git; sem ele o app usa uma tabela de demonstração. Pelo bot (WhatsApp) depois, como pedido à sessão do bot.
 - Lista das esterilizações do turno embaixo dos botões, com corrigir e excluir (com motivo).
 
+### 7.3 Registros diários (APP-043, decidido em 24/10)
+- Aba com os **laudos de rastreio** em cartões, como a aba Páginas: tocar num cartão abre o laudo para preencher. Material asséptico já funciona; meio de cultura e fluxo laminar, incubação e leitura, água do processo, limpeza de superfícies e meios de cultura (lotes) entram nesta aba quando ficarem prontos. O laudo de ciclos de esterilização fica na Esterilização.
+- No celular, a aba fica no menu da conta (o boneco no topo) e no Turno; no computador, no menu lateral.
+
 ### 7.2 Material asséptico (APP-041, decidido em 24/10)
 - **Um registro por dia de análise** (hoje ou até 7 dias antes): ponteira/pipeta, água de diluição e meio de cultura com os **ciclos de esterilização** usados, placa de Petri com os **lotes** (P pequenas, para todas as análises; G grandes, para tanques de NFC), e C.T./B.L. do controle (`<1` por padrão).
 - O app **sugere** os ciclos do último dia registrado mais os esterilizados (eficientes) depois dele, e repete os lotes de placa; o analista **confirma, tira ou acrescenta livremente** (análises fora do roteiro). Os lotes das placas não têm cadastro nem laudo: são anotação livre.
