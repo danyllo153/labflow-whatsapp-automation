@@ -66,8 +66,8 @@ export default function IncubacaoLeitura() {
       </p>
       <h1>Incubação e leitura</h1>
       <p className="texto-secundario">
-        O que foi plaqueado em cada dia, com o lote de cada meio em uso e quando ler. Vem do que foi registrado no bot e no app;
-        TAB e Coliformes não entram.
+        O que foi plaqueado em cada dia e quando ler. Vem do que foi registrado no bot e no app; TAB e Coliformes não entram. Os
+        lotes dos meios saem sozinhos no laudo (o lote em uso de cada meio, em Meios e lotes).
       </p>
       {erro && (
         <div className="cartao" role="alert">
@@ -93,34 +93,14 @@ export default function IncubacaoLeitura() {
               ))}
             </ul>
           )}
-          <div className="tabela-rolagem">
-            <table className="tabela">
-              <thead>
-                <tr>
-                  {MEIOS.map((m) => (
-                    <th key={m} scope="col">
-                      Lote {m}
-                    </th>
-                  ))}
-                  {LEITURAS.map(([, rotulo]) => (
-                    <th key={rotulo} scope="col">
-                      {rotulo}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  {MEIOS.map((m) => (
-                    <td key={m}>{dados.meios[m] ?? <span className="etiqueta etiqueta-pendente">sem lote</span>}</td>
-                  ))}
-                  {LEITURAS.map(([chave]) => (
-                    <td key={chave}>{dados.leituras[chave] ? dm(dados.leituras[chave] as string) : "-"}</td>
-                  ))}
-                </tr>
-              </tbody>
-            </table>
-          </div>
+          {LEITURAS.some(([chave]) => dados.leituras[chave]) && (
+            <p className="texto-secundario leituras-do-dia">
+              Ler em:{" "}
+              {LEITURAS.filter(([chave]) => dados.leituras[chave])
+                .map(([chave, rotulo]) => `${rotulo} ${dm(dados.leituras[chave] as string)}`)
+                .join(" · ")}
+            </p>
+          )}
           {MEIOS.some((m) => dados.meios[m] === null) && (
             <p className="texto-secundario">
               Meio usado sem nenhum lote recebido até este dia: cadastre o lote em <Link to="/meios-lotes">Meios e lotes</Link>.

@@ -98,7 +98,7 @@ describe("Páginas: Coletas e Recebimento (APP-015)", () => {
     await u.type(within(form).getByLabelText("Tanque"), "1c");
     await u.click(within(form).getByRole("button", { name: "Filtrar" }));
     expect(endereco).toBe("/paginas/coletas?origem=Navio&tanque=1c");
-    expect(urls[urls.length - 1]).toBe("/paginas/coletas?origem=Navio&tanque=1c&pagina=1&por_pagina=50");
+    expect(urls.filter((x) => !x.includes("por_pagina=200")).slice(-1)[0]).toBe("/paginas/coletas?origem=Navio&tanque=1c&pagina=1&por_pagina=50");
     const etiquetas = screen.getByRole("list", { name: "Filtros usados" });
     expect(within(etiquetas).getByText("Navio")).toBeInTheDocument();
     await u.click(screen.getByRole("button", { name: "Tirar o filtro Origem" }));
@@ -110,7 +110,7 @@ describe("Páginas: Coletas e Recebimento (APP-015)", () => {
     const u = userEvent.setup();
     await u.type(await screen.findByRole("searchbox", { name: "Pesquisar em Coletas" }), "O.SKY");
     await waitFor(() => expect(endereco).toBe("/paginas/coletas?origem=Navio&busca=O.SKY"));
-    await waitFor(() => expect(urls[urls.length - 1]).toBe("/paginas/coletas?origem=Navio&busca=O.SKY&pagina=1&por_pagina=50"));
+    await waitFor(() => expect(urls.filter((x) => !x.includes("por_pagina=200")).slice(-1)[0]).toBe("/paginas/coletas?origem=Navio&busca=O.SKY&pagina=1&por_pagina=50"));
     expect(screen.getByRole("link", { name: "Exportar Excel" })).toHaveAttribute("href", "/paginas/coletas/excel?origem=Navio&busca=O.SKY");
     await u.click(screen.getByRole("button", { name: "Tirar o filtro Origem" }));
     expect(endereco).toBe("/paginas/coletas?busca=O.SKY"); // tirar um filtro não apaga a busca
@@ -148,7 +148,7 @@ describe("Páginas: Coletas e Recebimento (APP-015)", () => {
     expect(within(folha).getAllByRole("row")).toHaveLength(121);
     expect(within(folha).getByText(/Origem: Terra/)).toBeInTheDocument();
     expect(folha.querySelector("style")?.textContent).toContain("A4 landscape");
-    expect(urls.filter((x) => x.includes("por_pagina=200"))).toHaveLength(1);
+    expect(urls.filter((x) => x.includes("por_pagina=200")).length).toBeGreaterThanOrEqual(1); // a impressão (e o Dashboard da página, aberto em Coletas)
     await act(async () => {
       window.dispatchEvent(new Event("afterprint"));
     });

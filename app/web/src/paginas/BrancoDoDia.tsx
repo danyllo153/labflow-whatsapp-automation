@@ -75,7 +75,10 @@ export default function BrancoDoDia() {
         <Link to="/registros-diarios">← Registros diários</Link>
       </p>
       <h1>Meio de cultura e fluxo laminar</h1>
-      <p className="texto-secundario">O branco do dia: as placas da capela e de cada meio em uso, sem amostra. O normal é &lt;1.</p>
+      <p className="texto-secundario">
+        O branco do dia: as placas da capela e de cada meio em uso, sem amostra. O normal é &lt;1. Todo dia que teve análise entra
+        sozinho no dia seguinte, já preenchido; só corrija se algo crescer.
+      </p>
       {erro && (
         <div className="cartao" role="alert">
           <p className="mensagem-erro">{erro}</p>
@@ -123,7 +126,7 @@ function Formulario({ dados, aoSalvar }: { dados: DiaDoFluxo; aoSalvar: (d: DiaD
       <p className="texto-secundario">
         {dados.registro
           ? `Preenchido por ${dados.registro.quem} em ${dados.registro.quando}. Salvar de novo deixa no seu nome.`
-          : `Ainda não preenchido. Wort: ${dados.motivo_wort}. PCA: ${dados.motivo_pca}.`}
+          : `Ainda não preenchido (entra sozinho amanhã, se o dia tiver análise). Wort: ${dados.motivo_wort}. PCA: ${dados.motivo_pca}.`}
       </p>
       {grupos.map((g) => (
         <fieldset key={g} className="grupo-campos">

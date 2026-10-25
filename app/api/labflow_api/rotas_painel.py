@@ -16,7 +16,7 @@ from pydantic import BaseModel
 
 from labflow_api import laudo_asseptico, laudo_esterilizacao, laudos, rotas_turno
 from labflow_api.dependencias import PessoaLogada, obter_conexao
-from labflow_api.permissoes import exigir
+from labflow_api.permissoes import exigir, pode
 from labflow_api.rotas_turno import FUSO
 
 roteador = APIRouter(prefix="/painel", tags=["painel"])
@@ -97,6 +97,10 @@ def _resumo(nome: str, titulo: str, contagens: list[int], capacidade: int) -> Fo
 @roteador.get("/folhas", response_model=list[Folha])
 def folhas(pessoa: PessoaLogada = Depends(exigir("ver_paginas")), con: psycopg.Connection = Depends(obter_conexao)) -> list[Folha]:
     """As folhas dos laudos: as cheias primeiro, depois as mais perto de encher."""
+    if pode(pessoa.cargo, "registrar_analise"):  # o branco dos dias com análise entra sozinho (25/10, APP-067)
+        from labflow_api.rotas_fluxo_laminar import preencher_sozinho
+
+        preencher_sozinho(con, pessoa.usuario_id)
     resultado: list[Folha] = []
     for laudo in laudos.LAUDOS.values():
         contagens = [

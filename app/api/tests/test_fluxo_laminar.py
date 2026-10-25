@@ -47,3 +47,14 @@ def test_preencher_e_o_laudo(cliente, logado):
     assert (pagina["linhas"], pagina["capacidade"]) == (1, 39)
     texto = PdfReader(io.BytesIO(cliente.get(f"/laudos/fluxo-laminar/{pagina['id']}/pdf").content)).pages[0].extract_text()
     assert "22.10.26" in texto and "analista.teste" in texto
+
+
+def test_branco_entra_sozinho_nos_dias_com_analise(cliente, logado):
+    """25/10 (APP-067): o dia que teve análise já entra com o branco preenchido (o analista só corrige)."""
+    logado()
+    cliente.post("/aguas/superficies", json={"tipo": "Linha", "pontos": ["4"], "dia": "2026-10-21", "hora": "08:00"})
+    d = cliente.get("/fluxo-laminar", params={"dia": "2026-10-21"}).json()
+    assert d["registro"] is not None
+    assert (d["registro"]["capela_ct"], d["registro"]["osa"], d["registro"]["pca"]) == ("<1", "<1", "<1")
+    hoje = cliente.get("/fluxo-laminar", params={"dia": "2026-10-22"}).json()
+    assert hoje["registro"] is None  # o dia de hoje fica para amanhã, quando já se sabe tudo o que foi plaqueado

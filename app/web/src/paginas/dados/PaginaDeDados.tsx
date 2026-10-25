@@ -4,6 +4,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { lerJson } from "../../api";
 import type { Coluna, DefinicaoDePagina, Filtro } from "./definicoes";
 import { classeDaSituacao, formatar } from "./formatos";
+import Dashboard, { type Linha } from "./Dashboard";
 import GraficoG2 from "./GraficoG2";
 import { BarrasPorSituacao, type ItemDeSituacao } from "../../componentes/Graficos";
 
@@ -71,6 +72,8 @@ export default function PaginaDeDados({ def }: { def: DefinicaoDePagina }) {
   const [preparando, setPreparando] = useState(false);
   const [avisoImpressao, setAvisoImpressao] = useState("");
   const [menuImprimir, setMenuImprimir] = useState(false);
+  const [dashboard, setDashboard] = useState<{ linhas: Linha[]; total: number } | null>(null);
+  const [dashboardAberto, setDashboardAberto] = useState(!!def.dashboard?.aberto);
 
   useEffect(() => setRascunho(aplicados), [aplicados]);
   useEffect(() => setTexto(termo), [termo]);
@@ -113,6 +116,32 @@ export default function PaginaDeDados({ def }: { def: DefinicaoDePagina }) {
     irPara(resto);
   }
 
+  /** Todas as linhas do filtro (até o limite), página por página: para imprimir e para o Dashboard. */
+  const buscarTodas = useCallback(async (limite = Infinity) => {
+    const todas: Record<string, unknown>[] = [];
+    let total = 0;
+    for (let p = 1; ; p++) {
+      const parte = await lerJson<Pagina>(`${def.api}?${consulta({ ...comBusca, ...def.fixos }, { pagina: p, por_pagina: POR_PAGINA_IMPRESSAO })}`);
+      total = parte.total;
+      todas.push(...parte.linhas);
+      if (todas.length >= parte.total || parte.linhas.length === 0 || todas.length >= limite) break;
+    }
+    return { linhas: todas, total };
+  }, [def.api, def.fixos, comBusca]);
+
+  // o Dashboard acompanha o filtro da tela (pedido de 25/10)
+  useEffect(() => {
+    if (!dashboardAberto) return;
+    let vivo = true;
+    buscarTodas(LIMITE_IMPRESSAO).then(
+      (r) => vivo && setDashboard(r),
+      () => vivo && setDashboard({ linhas: [], total: 0 }),
+    );
+    return () => {
+      vivo = false;
+    };
+  }, [dashboardAberto, buscarTodas]);
+
   async function imprimir() {
     setAvisoImpressao("");
     if (dados && dados.total > LIMITE_IMPRESSAO) {
@@ -121,12 +150,7 @@ export default function PaginaDeDados({ def }: { def: DefinicaoDePagina }) {
     }
     setPreparando(true);
     try {
-      const todas: Record<string, unknown>[] = [];
-      for (let p = 1; ; p++) {
-        const parte = await lerJson<Pagina>(`${def.api}?${consulta({ ...comBusca, ...def.fixos }, { pagina: p, por_pagina: POR_PAGINA_IMPRESSAO })}`);
-        todas.push(...parte.linhas);
-        if (todas.length >= parte.total || parte.linhas.length === 0) break;
-      }
+      const { linhas: todas } = await buscarTodas();
       setParaImprimir(todas);
     } catch (e) {
       setAvisoImpressao(e instanceof Error ? e.message : "Não foi possível preparar a impressão.");
@@ -158,6 +182,18 @@ export default function PaginaDeDados({ def }: { def: DefinicaoDePagina }) {
         <div className="titulo-com-acoes">
           <h1>{def.titulo}</h1>
           <div className="acoes-icone">
+            <button
+              type="button"
+              className="botao-icone"
+              aria-pressed={dashboardAberto}
+              title="Gráfico com o filtro da tela: colunas ou tendência"
+              onClick={() => setDashboardAberto(!dashboardAberto)}
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
+              </svg>
+              Dashboard
+            </button>
             <a
               className="botao-icone"
               aria-label="Exportar Excel"
@@ -323,6 +359,12 @@ export default function PaginaDeDados({ def }: { def: DefinicaoDePagina }) {
           </section>
         )}
 
+        {dashboardAberto &&
+          (dashboard ? (
+            <Dashboard def={def} linhas={dashboard.linhas} total={dashboard.total} inicial={def.dashboard} aoFechar={() => setDashboardAberto(false)} />
+          ) : (
+            <p className="carregando">Montando o dashboard...</p>
+          ))}
         {def.grafico === "g2" && <GraficoG2 consulta={consulta(comBusca)} aoEscolherLoad={(load) => irPara({ ...aplicados, load })} />}
 
         {dados && !erro && (
