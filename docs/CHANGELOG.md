@@ -13,6 +13,7 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 ## [Não lançado]
 
 ### Alterado
+- **Esterilização com ícone e cor por material** (25/10): Ponteira, Meio (frasco com líquido), Frasco (grande, vazio), Água de diluição (garrafinhas), Descarte (saco com placas) e Outro (reticências), cada um na cor do gráfico; no botão e na lista do turno.
 - **Ok e Não ok em ícone redondo** (25/10): nas estufas, os botões viraram o círculo verde com visto e o vermelho com X (cheio quando escolhido, contorno cinza quando não); a temperatura do Não ok fica ao lado. Nas Leituras, as marcas de lido e de fora do limite usam os mesmos ícones.
 
 ### Corrigido
