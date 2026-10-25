@@ -21,6 +21,7 @@ test('todas: SECURITY DEFINER com search_path fixo, GRANT só ao labflow_app, de
     ['045_embarque_funcoes', ['registrar_embarque', 'criar_compostas_embarque']],
     ['046_nfc_funcoes', ['registrar_recebimento_nfc', 'lancar_contagem_nfc']],
     ['047_desvio_tanque_dia_funcoes', ['abrir_desvio_tanque', 'registrar_repeticao', 'finalizar_leitura_do_dia']],
+    ['048_foto_tab_nfc_funcoes', ['tab_registrar_foto', 'coliformes_registrar_foto', 'tab_feito_nfc']],
   ]) {
     const s = mig(f + '.sql');
     const d = mig(f + '_desfazer.sql');
@@ -105,4 +106,23 @@ test('workflow: os nós chamam as portas de entrada (a mesma regra do app)', () 
   const ret = workflow.nodes.find((n) => n.name === 'Retomar resposta do sim').parameters.jsCode;
   for (const k of ['contagem_erro', 'placas_erro', 'placas_lote_erro', 'teste_erro', 'desvio_erro', 'contagem_nfc_erro', 'desvio_tanque_erro', 'dia_erro']) assert.ok(ret.includes(k), 'o sim avisa: ' + k);
   assert.match(q('BD · Executar NFC'), /desvio_tanque_pelo_bot\(\$2::text, p\.j\)/, 'o desvio de tanque e a repetição pela 047');
+});
+
+test('048 foto de TAB/Coliformes e TAB de tanque: Admin e Analista, completo só Admin, os nós chamam a função e mostram o erro', () => {
+  const m = mig('048_foto_tab_nfc_funcoes.sql');
+  assert.equal(m.split("ARRAY['Admin', 'Analista']").length - 1, 3, 'as três funções conferem o cargo');
+  assert.match(m, /p_completo AND v_cargo <> 'Admin'[\s\S]*Só um Admin registra o TAB de tanque junto com a coleta/);
+  assert.doesNotMatch(m, /\$\d/, 'nenhum parâmetro posicional sobrou do SQL dos nós');
+  for (const no of ['BD · TAB da foto', 'BD · Coliformes da foto', 'BD · TAB feito NFC']) {
+    assert.ok(q(no).includes('pelo_bot('), no);
+    assert.doesNotMatch(q(no), /INSERT INTO|UPDATE testes/, no + ' não grava pelo SQL próprio');
+    assert.match(q(no), /r ->> 'erro' AS erro/, no + ' devolve o erro da regra');
+  }
+  for (const no of ['Montar resposta TAB da foto', 'Montar resposta coliformes da foto', 'Montar resposta TAB NFC']) {
+    const cod = workflow.nodes.find((n) => n.name === no).parameters.jsCode;
+    const run = (r) => new Function('$', '$input', cod)(() => ({ first: () => ({ json: { nomeContato: 'Ana', tanques: ['44'], dataColeta: '16/10/2026', dataFeito: '16/10/2026' } }) }), { first: () => ({ json: r }) })[0].json;
+    const out = run({ erro: 'Seu cargo (Coletor) não pode fazer isso.' });
+    assert.equal(out.textoResposta, '❌ Seu cargo (Coletor) não pode fazer isso. Nada foi gravado.', no);
+    assert.ok(!out.salvar || out.salvar === '0', no + ' não guarda pendência quando o banco recusa');
+  }
 });

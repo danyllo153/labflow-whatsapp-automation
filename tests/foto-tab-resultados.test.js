@@ -96,7 +96,8 @@ test('workflow e SQL: rota tab_foto até o WhatsApp; positivo e negativo conclue
   assert.deepEqual(c['BD · TAB da foto'].main[0].map((x) => x.node), ['Montar resposta TAB da foto']);
   assert.deepEqual(c['Montar resposta TAB da foto'].main[0].map((x) => x.node), ['Zap · TAB da foto']);
   assert.deepEqual(c['Zap · TAB da foto'].main[0].map((x) => x.node), ['Fim · TAB da foto']);
-  const q = workflow.nodes.find((n) => n.name === 'BD · TAB da foto').parameters.query;
+  assert.ok(workflow.nodes.find((n) => n.name === 'BD · TAB da foto').parameters.query.includes('tab_foto_pelo_bot($2::text, $1::jsonb)'), 'desde a 048 o nó chama a função do banco');
+  const q = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'db', 'migrations', '048_foto_tab_nfc_funcoes.sql'), 'utf8');
   assert.match(q, /SET status = 'Concluída',\s+resultado = CASE r\.acao WHEN 'positivo' THEN 'Positivo' ELSE 'Negativo' END/);
   assert.match(q, /a\.status IN \('No caldo', 'Incubada', 'Em confirmação'\)/, 'concluído não muda');
   assert.match(q, /ON CONFLICT \(tipo, composta_id\) DO NOTHING/);

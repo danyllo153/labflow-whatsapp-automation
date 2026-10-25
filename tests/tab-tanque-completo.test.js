@@ -102,13 +102,14 @@ test('resposta do completo conta o que foi feito e o que ficou sem marcar', () =
 });
 
 test('o SQL do completo: coleta com drops e arquivo, análises, placas <1 só do que venceu e sem duplicar', () => {
-  const q = workflow.nodes.find((n) => n.name === 'BD · TAB feito NFC').parameters.query;
+  assert.ok(workflow.nodes.find((n) => n.name === 'BD · TAB feito NFC').parameters.query.includes('tab_feito_nfc_pelo_bot($4::text, $1::jsonb, $2::text, $3::text, $5::text)'), 'desde a 048 o nó chama a função do banco');
+  const q = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'db', 'migrations', '048_foto_tab_nfc_funcoes.sql'), 'utf8');
   assert.match(q, /INSERT INTO coletas \(origem, tanque, data_coleta, registrado_por\)/);
   assert.match(q, /VALUES \(5\), \(10\), \(15\)/);                                  // drops
   assert.match(q, /CASE WHEN n\.data_coleta \+ x\.dia <= \(SELECT feito FROM dia\) THEN 'Concluído' ELSE 'Pendente' END/); // drop vencido nasce feito
   assert.match(q, /AND d\.data_prevista <= \(SELECT feito FROM dia\)/);               // coleta existente: só marca o vencido
   assert.match(q, /INSERT INTO arquivo_amostras/);
-  assert.match(q, /WHERE \$5::text = '1' AND NOT EXISTS \(SELECT 1 FROM existentes/); // só com o "completo"
+  assert.match(q, /WHERE v_completo = '1' AND NOT EXISTS \(SELECT 1 FROM existentes/); // só com o "completo"
   assert.match(q, /\('CT',   'Profundidade', NULL::int, 2\)/);                       // prazos do comando de análise
   assert.match(q, /\('BL',   'Profundidade', 3,         5\)/);
   assert.match(q, /\('WORT', 'Profundidade', 5,         10\)/);

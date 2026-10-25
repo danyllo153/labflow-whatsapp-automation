@@ -8,7 +8,7 @@
 
 ### 🤖 Bot
 - [x] **PB10 (dia da incubação) no ar** (24/10, #225, migration 038 aplicada; `bi.incubacao` conferida)
-- [ ] **PB8** (esterilização por frase) e **PB9** (água, baias e linhas por frase): as funções do banco do app estão no PR do APP-054 (migration 067); falta o bot usar (rumo-do-app, "Funções do app para o PB8 e o PB9")
+- [x] **PB8 e PB9** feitos (ver abaixo)
 - [x] **Resultado do TAB pela foto** (23/10, PR #205): "+" positivo já confirmado, "—" negativo, em branco = caldo; só o novo. Testado ao vivo em 24/10 com a folha do 43701 (#10, #4, #5 negativos), com as correções do aviso de data (#246) e do item lido errado (#247, `pre79`)
 - [x] **PB11, funções do recebimento de FCOJ para o app** (24/10, #244, migration 040): `registrar_recebimento` e `lancar_contagem`, com prévia e o mesmo alarme
 - [x] **O bot chama a 040** (24/10, migration 041) no recebimento (`BD · Gravar recebimento`) e no lançamento de C.T/B.L, no lugar do SQL próprio (mesma regra do app)
@@ -18,7 +18,8 @@
 - [x] **PB12, embarque** (24/10, migration 045), o bot já usando
 - [x] **PB16, recebimento de NFC** (24/10, migration 046), o bot já usando
 - [x] **PB17, desvio de tanque, repetição e leitura do dia** (24/10, migration 047), o bot já usando
-- [ ] **Fase E, o que falta no bot:** passar pelas funções a foto de TAB/Coliformes (`BD · TAB da foto`, `BD · Coliformes da foto`) e o TAB de tanque "completo" (`BD · TAB feito NFC`); depois as funções do PB8/PB9 (067 do app)
+- [x] **Fase E no bot concluída** (24/10, migration 048, PR aberto): foto de TAB, foto de Coliformes e TAB de tanque "completo" pelas funções do banco; falta aplicar a 048 e publicar
+- [x] **PB8 e PB9 no bot** (24/10, migration 049, PR #266): esterilização, água do processo, baias e linhas por frase, pelas funções da 067; falta aplicar a 048 e a 049 e publicar, e repetir uma frase de cada nova intenção na IA (regressão)
 - [x] **TAB do load 43699 gravado à mão** (23/10): 10 compostas positivas confirmadas, feito em 13/10; criadas #87 (1-3) e #88 (4-6)
 - [x] **Corrigir resultado de C.T/B.L com um comando curto** (24/10, #240, migration 039, `pre77`): `corrigir ct do load 43755 para <1 motivo ...`; motivo obrigatório para o Analista, opcional para o Admin (#238); testado ao vivo até a prévia
 - [x] **Recebimento pelas funções do banco e pelo WhatsApp** (23/10, PRs #197 e #198, migrations 036 e 037, `pre75`): corrigir load/item/fábrica, lote e data, apagar lote (arquiva); testado ao vivo
