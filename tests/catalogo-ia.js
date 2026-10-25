@@ -85,7 +85,8 @@ module.exports = [
   ['esterilizei meio de cultura e frascos ciclo A1092/26', 'laudo_registrar', 'pede_sim'],
   ['coleta agua do processo manifold, camara 5', 'laudo_registrar', 'pede_sim'],
   ['agua do processo ct <1 bl <1 camara 5 bl 2', 'laudo_registrar', 'pede_sim'],
-  ['coleta de baia 8,9 analise 26/10/2026', 'laudo_registrar', 'pede_sim'],
+  ['analisei baia 8,9', 'laudo_registrar', 'pede_sim'],
+  ['analisei linha 3 data 24/10/2026', 'laudo_registrar', 'pede_sim'],
   ['baia 8 ct48 <1 bl72 <1 bl120 <1', 'laudo_registrar', 'pede_sim'],
   ['linha 3 ct48 <1', 'laudo_registrar', 'pede_sim'],
 ];

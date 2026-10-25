@@ -45,17 +45,22 @@ test('água do processo: coleta por ponto e resultados (sem ponto vale para todo
   assert.match(como('coleta agua do processo').textoResposta, /Diga os pontos coletados/);
 });
 
-test('baias e linhas: coleta, dia da análise e resultados; "bl" sozinho é recusado', () => {
+test('baias e linhas: "analisei" (são análise, 25/10), data e resultados; "bl" sozinho é recusado', () => {
+  assert.deepEqual(dados('analisei baia 8,9'), { acao: 'superficie_coletar', tipo: 'Baia', pontos: ['8', '9'] });
+  assert.deepEqual(dados('Analisei a linha 3 data 24/10 14:00'), { acao: 'superficie_coletar', tipo: 'Linha', pontos: ['3'], data: `24/10/${ANO}`, hora: '14:00' });
+  assert.deepEqual(dados('analisamos as baias 8 e 9').pontos, ['8', '9']);
   assert.deepEqual(dados('coleta de baia 8,9 analise 26/10'), { acao: 'superficie_coletar', tipo: 'Baia', pontos: ['8', '9'], analise: `26/10/${ANO}` });
-  assert.deepEqual(dados('coleta de linha 3'), { acao: 'superficie_coletar', tipo: 'Linha', pontos: ['3'] });
+  assert.match(como('analisei baia data 24/10').textoResposta, /Ex\.: analisei baia 8,9/);
   assert.deepEqual(dados('baia 8 ct48 <1 bl72 <1 bl120 2'), { acao: 'superficie_lancar', tipo: 'Baia', ponto: '8', campos: { ct_48: '<1', bl_72: '<1', bl_120: '2' } });
   assert.deepEqual(dados('linha 3 ct <1').campos, { ct_48: '<1' });
   assert.match(como('linha 3 ct <1 bl 5').textoResposta, /Diga qual B\.L: bl72 ou bl120/);
 });
 
-test('permissões: Consultor bloqueado; Coletor chega ao banco (que confere o cargo); o sim é só do reenvio', () => {
+test('permissões: Consultor bloqueado; Coletor só na água (baia e linha são análise); o sim é só do reenvio', () => {
   assert.match(como('esterilizei frascos ciclo A1', 'Consultor').textoResposta, /somente de consulta/);
-  assert.equal(como('coleta de baia 8', 'Coletor').tipo, 'laudo_registrar');
+  assert.equal(como('coleta agua do processo manifold', 'Coletor').tipo, 'laudo_registrar');
+  assert.match(como('analisei baia 8', 'Coletor').textoResposta, /Baias e linhas são análise: só Admin e Analista/);
+  assert.match(como('coleta de baia 8', 'Coletor').textoResposta, /Baias e linhas são análise/);
   const cmd = 'laudo registrado: ' + JSON.stringify({ acao: 'agua_coletar', pontos: ['manifold'] });
   assert.match(como(cmd).textoResposta, /usado pelo \*sim\*/);
   const r = como(cmd, 'Analista', { reenvio: true });
@@ -87,6 +92,7 @@ test('workflow: rota laudo_registrar até o WhatsApp; a IA conhece os formatos',
   assert.ok(bd.options.queryReplacement.includes('$json.fase') && bd.options.queryReplacement.includes('$json.dadosJson'));
   const prompt = JSON.stringify(workflow.nodes.find((n) => n.name === 'IA · Montar pedido').parameters);
   assert.ok(prompt.includes('esterilizei <ponteiras') && prompt.includes('coleta agua do processo') && prompt.includes('<baia|linha> <n> <ct48|bl72|bl120>'));
+  assert.ok(prompt.includes('analisei <baia|linha> <n>') && !prompt.includes('coleta de <baia|linha>'));
 });
 
 test('migration 049: prévia desfeita por exceção própria, pendência do sim, funções do app, GRANT só ao bot, desfazer', () => {
@@ -99,4 +105,15 @@ test('migration 049: prévia desfeita por exceção própria, pendência do sim,
   assert.match(m, /TO labflow_app;/);
   assert.doesNotMatch(m, /labflow_app_web/);
   assert.match(mig('049_laudos_pelo_bot_desfazer.sql'), /DROP FUNCTION IF EXISTS laudo_registrar_pelo_bot\(text, jsonb, text\);/);
+});
+
+test('migration 100: baia e linha são análise (só Admin e Analista, resumo "análise de"); o desfazer volta a 049', () => {
+  const m = mig('100_baias_linhas_analise.sql');
+  const f049 = (s) => s.slice(s.indexOf('BEGIN;'), s.indexOf('COMMIT;'));
+  assert.match(m, /NOT IN \('Admin', 'Analista'\) THEN\s+RAISE EXCEPTION 'Baias e linhas são análise/);
+  assert.ok(m.includes("': análise de '") && m.includes("', análise de ' || to_char(v_sup.analisada_em"));
+  assert.doesNotMatch(f049(m), /': coleta de '|', coleta de ' \|\| to_char\(v_sup/);
+  assert.match(m, /TO labflow_app;/);
+  assert.doesNotMatch(m, /labflow_app_web/);
+  assert.equal(f049(mig('100_baias_linhas_analise_desfazer.sql')), f049(mig('049_laudos_pelo_bot.sql')));
 });

@@ -19,7 +19,9 @@
 - [x] **PB16, recebimento de NFC** (24/10, migration 046), o bot já usando
 - [x] **PB17, desvio de tanque, repetição e leitura do dia** (24/10, migration 047), o bot já usando
 - [x] **Fase E no bot concluída** (24/10, migration 048, PR aberto): foto de TAB, foto de Coliformes e TAB de tanque "completo" pelas funções do banco; falta aplicar a 048 e publicar
-- [x] **PB8 e PB9 no bot** (24/10, migration 049, PR #266): esterilização, água do processo, baias e linhas por frase, pelas funções da 067; falta aplicar a 048 e a 049 e publicar, e repetir uma frase de cada nova intenção na IA (regressão)
+- [x] **PB8 e PB9 no bot** (24/10, migration 049, PR #266): esterilização, água do processo, baias e linhas por frase, pelas funções da 067; 048 e 049 no ar (`pre81`). A regressão na IA está em andamento (25/10: a frase de esterilização passou)
+- [ ] **Baias e linhas são análise** (25/10, migration 100, primeira da faixa nova 100–149): frase `analisei baia 8,9`, só Admin e Analista, prévia "análise de ..."; falta aplicar a 100 e publicar
+- [ ] **Apagar o que os testes de 24 e 25/10 gravaram** (pedido do Danyllo): o ciclo de esterilização A1095/26 e o que mais entrar nos testes; listar antes, backup, trava de contagem
 - [x] **TAB do load 43699 gravado à mão** (23/10): 10 compostas positivas confirmadas, feito em 13/10; criadas #87 (1-3) e #88 (4-6)
 - [x] **Corrigir resultado de C.T/B.L com um comando curto** (24/10, #240, migration 039, `pre77`): `corrigir ct do load 43755 para <1 motivo ...`; motivo obrigatório para o Analista, opcional para o Admin (#238); testado ao vivo até a prévia
 - [x] **Recebimento pelas funções do banco e pelo WhatsApp** (23/10, PRs #197 e #198, migrations 036 e 037, `pre75`): corrigir load/item/fábrica, lote e data, apagar lote (arquiva); testado ao vivo
@@ -34,6 +36,8 @@
 ### 📱 App (sessão da nuvem)
 - [x] **Compostas no Recebimento FCOJ** (24/10, APP-058): recomendado de ~5 por composta e prévia
 - [x] **Laudo do Recebimento FCOJ** (24/10, APP-059, migration 070): como o papel (deitado, um lote por linha, faltantes com *), envio do modelo na aba Laudo
+- [ ] **GRANT das funções da 048** (`tab_registrar_foto`, `coliformes_registrar_foto`, `tab_feito_nfc`) ao `labflow_app_web`, numa migration do app (072 em diante)
+- [ ] **Coletor não registra baias e linhas** (decisão de 25/10: são análise): tirar o Coletor da `app.bot_coletar_superficie` (067) e da tela do app; o bot já barra (migration 100)
 - [ ] **Arquivo de amostras** (bot e app): caixa de cada load ("CX: 128" na Observação do laudo), bags, potes, recebimento e embarque
 - [x] **Aviso de amostra pulada** (24/10, APP-059): na prévia do registro e no Painel do Recebimento, até o lote chegar; sem "finalizar load" (decisão de 24/10)
 - [x] **Fase E, E3 a E8** (24/10, APP-061): apps de Tanques, TAB/Coliformes/Howard, Drops, Embarque, Recebimento NFC e Desvios, pelas funções da 042 a 047
@@ -59,7 +63,7 @@
 - [ ] Futuro: **barreiras de segurança no celular** (localização da fábrica, horário do turno, aparelho autorizado, nada guardado no aparelho; aviso de LGPD antes de ligar), depois do piloto do app
 
 ### 🧪 Testes ao vivo (pelo WhatsApp)
-- [ ] **Foto da folha de TAB com resultado** (no ar desde 23/10): mandar a folha do load **43701** depois da leitura (fica para **25/10**) (esperado: "+" positivo confirmado, "—" negativo, uma mensagem, um sim)
+- [x] **Foto da folha de TAB com resultado** do load **43701** depois da leitura: testada pelo Danyllo em 24/10, tudo certo
 - [ ] Foto de **embarque com resultados** (grava só se o embarque existe; riscado não vale)
 - [ ] Foto de **NFC com placa acima do limite** (ver o 🚨 e o comando de desvio)
 - [ ] Testar o **Coletor** com um celular real

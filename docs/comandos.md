@@ -936,11 +936,11 @@ Coleta: Admin, Analista e Coletor (manifold, câmaras 4, 5 e 6, ou `todos`). Res
 
 ### 19.3 Baias e linhas
 ```
-coleta de baia 8,9
-coleta de linha 3 analise 26/10/2026
+analisei baia 8,9
+analisei linha 3 data 24/10/2026 14:00
 baia 8 ct48 <1 bl72 <1 bl120 <1
 linha 3 ct48 <1
 ```
-A análise vai até 3 dias depois da coleta. O resultado vale para a coleta mais recente do ponto que ainda não tem aquela leitura. `bl` precisa de 72 ou 120.
+Baia e linha são **análise**, não coleta (decidido em 25/10/2026, migration 100): só Admin e Analista registram; sem a data, vale agora. O resultado vale para a coleta mais recente do ponto que ainda não tem aquela leitura. `bl` precisa de 72 ou 120.
 
 Ajuda: `comandos esterilização`.
