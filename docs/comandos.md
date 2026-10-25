@@ -448,10 +448,12 @@ Os dois aceitam o **número `#`** ou o **formato por extenso** (load + lotes; `(
 ```
 embarque navio O.SKY 133 linha 2 fase 2 load 77010 item 444 amostras 1-10
 embarque navio O.SKY 133 linha 2 fase 2 load 77011 item 444 amostras 11-20 data 03/10/2026
+embarque navio O.SKY 189 linha 6 fase 1 load 43453/43462 item 2503/2503 amostras 1-5
 ```
 
 - O navio leva a viagem junto (`O.SKY 133`). As amostras são A1, A2... e podem ser escritas com ou sem o `A` (`A1-A5` ou `1-5`, `A1-A5,A7`).
 - Uma linha+fase pode ter mais de um load: um comando por load. A numeração das amostras não repete dentro da linha+fase.
+- **Vários loads e itens na mesma linha+fase** (a "receita" embarcada, desde 25/10/2026, migration 102): `load 43453/43462 item 2503/2503`, com barra. O **primeiro é o principal**: as amostras ficam nele; os outros ficam registrados na linha+fase (tabela `embarque_loads`). Um item por load, na mesma ordem; um item só vale para todos.
 - **O load não precisa existir.** Se for um load antigo, o bot o cadastra na hora (número e item, sem fábrica) e avisa. Se o recebimento for registrado depois, a fábrica é preenchida.
 - Amostras já registradas são ignoradas, e a resposta diz a qual load pertencem. Se o mesmo número de load já existir com outro item, o bot avisa para conferir a digitação.
 - Grava direto, sem "sim", como o recebimento. Só Admin e Analista.
@@ -460,7 +462,7 @@ embarque navio O.SKY 133 linha 2 fase 2 load 77011 item 444 amostras 11-20 data 
 ```
 compostas do navio O.SKY 133 linha 2 fase 2 (A1-A5)(A6-A10)
 ```
-Todas as amostras precisam estar registradas e livres; uma composta pode juntar amostras de loads diferentes da mesma linha+fase. Nada é gravado se alguma amostra faltar ou já estiver em outra composta. O bot devolve o número de cada composta (`#21`).
+Todas as amostras precisam estar registradas e livres; uma composta pode juntar amostras de loads diferentes da mesma linha+fase. Nada é gravado se alguma amostra faltar ou já estiver em outra composta. O bot devolve o número de cada composta (`#21`). **O Coliformes de cada composta já vai para o caldo junto** (data de hoje, estriar amanhã; decisão de 25/10/2026, migration 101). O TAB e o Howard continuam pelos comandos abaixo (ou, no app, pelos botões da composta, função `criar_teste_da_composta`).
 
 ### TAB e Coliformes nas compostas de embarque
 Os mesmos comandos do recebimento, com o número `#` ou por extenso:
@@ -578,6 +580,38 @@ relatório do dia recebimento             só o bloco pedido (também: embarque,
 relatório do dia tanques terra           só NFC (também: tanques navio, tanques)
 ```
 `completo` também pode vir depois do filtro (`relatório do dia embarque completo`), e `relatório completo` vale como `relatório do dia completo`.
+
+### Modelo do relatório completo (a ordem das seções)
+Respondido ao app em 25/10/2026 (pedido PB18). O `relatório do dia completo` sai assim, de cima para baixo:
+```
+📋 *Relatório do dia 25/10/2026 — completo*
+
+*FCOJ — Recebimento*
+C.T 48h: 77001 (4-5 ✅, 6 🚨, 7) — não ok
+B.L 72h: ...  ·  B.L 120h: ...
+TAB: 77001 (1-5 ✅)(6-8 🚨) — não ok
+Coliformes: ...
+🚨 C.T 48h ≥ 200 — 77001: lote 6 = 250        (alertas do bloco, um por problema)
+
+*FCOJ — Embarque*
+C.T 48h / B.L 72h / B.L 120h: O.SKY 133 linha 2 fase 2 - 77010 (A1-A2 ✅, A3)
+Coliformes: ...  ·  Howard: O.SKY 133 linha 2 fase 2 - 77010 (A1-A5): 2% — ok  ·  TAB: ...
+(alertas do bloco)
+
+*NFC — Tank farm*
+AMOSTRA NORMAL: C.T 48h, B.L 72h, B.L 120h, Psicrotróficos 120h, Psicrotróficos 240h (uma linha cada: 42 ✅, 43 — ok)
+AMOSTRA STRESS: as mesmas 5 linhas; depois "Desvios de tanque: ..."
+DROPS: Drop 5, Drop 10, Drop 15; depois "Desvios: ..."
+TAB: 42 (coleta 28/09) ✅                       (só no Tank farm, depois dos drops)
+(alertas do NFC)
+
+*NFC — Navio*   (as mesmas seções; os tanques agrupados por navio: O.SKY 133 (1C ✅, 4P))
+
+✅ lido: X de Y.
+⚠️ Ainda há N leituras de hoje por fazer        (só se faltar)
+✅ Leitura do dia finalizada por Ana às 16:40.  (depois do "leitura do dia finalizada")
+```
+Bloco sem nada no dia não aparece (com filtro, só o bloco pedido). Linha sem leitura fica `-`. No relatório sem `completo` não há `— ok/não ok`.
 
 ### O que entra em cada linha
 | Linha | O que mostra |

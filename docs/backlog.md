@@ -27,6 +27,7 @@
 - [x] **Corrigir resultado de C.T/B.L com um comando curto** (24/10, #240, migration 039, `pre77`): `corrigir ct do load 43755 para <1 motivo ...`; motivo obrigatório para o Analista, opcional para o Admin (#238); testado ao vivo até a prévia
 - [x] **Recebimento pelas funções do banco e pelo WhatsApp** (23/10, PRs #197 e #198, migrations 036 e 037, `pre75`): corrigir load/item/fábrica, lote e data, apagar lote (arquiva); testado ao vivo
 - [x] **Load de teste 99902 apagado** (25/10, a pedido do Danyllo; backup antes `labflow_2026-10-25_1404.dump`): load, lote 1, a linha do laudo do app, 5 registros do histórico e 1 da lixeira de 23/10
+- [ ] **PB18, PB19 e PB20 do app** (25/10, migrations 101 e 102): modelo do relatório na doc; embarque com vários loads e itens (`43783/43784`); Coliformes nasce com a composta do embarque e `criar_teste_da_composta` para TAB/Howard; falta aplicar a 101 e a 102 e publicar
 - [ ] **PB6:** canal `app` no webhook (assistente do app pelo mesmo workflow), só na Fase D do app
 - [x] **C.T/B.L do recebimento de FCOJ pela foto** (25/10): lê o resultado de cada lote, traço por cima = já digitado (ignora sem comentar), só o novo, um sim; no ar (#280, `pre83`); o traço marca um bloco; falta testar ao vivo com a folha do load 43599 (lotes 9-20)
 - [ ] **Fase seguinte da foto:** o "+" da confirmação (legenda com `confirmação`); TAB/Coliformes de embarque
