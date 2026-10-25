@@ -652,3 +652,16 @@ button.numero-app {
   width: 18px;
   height: 18px;
 }
+
+/* Instrução de cada app (E9): o texto do Admin com as quebras de linha dele, e o editor largo. */
+.instrucao-texto {
+  white-space: pre-wrap;
+  line-height: 1.6;
+  max-width: 75ch;
+  margin-bottom: 12px;
+}
+.instrucao-editor {
+  width: 100%;
+  font: inherit;
+  line-height: 1.5;
+}

@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { Pendencia } from "./BlocosDePendencias";
 import { ESTADO_TURNO, servidorFalso } from "../testes-servidor";
-import CartaoAgora, { destaquesDoDia, situacaoDoTurno } from "./CartaoAgora";
+import CartaoAgora, { destaquesDoDia, destinoDe, situacaoDoTurno } from "./CartaoAgora";
 
 /** APP-056: o cartão "Agora" do Início (relógio do turno, registro livre e destaques). Dados fictícios. */
 
@@ -21,7 +21,7 @@ describe("Cartão Agora (APP-056)", () => {
     expect(tarde).toEqual({ texto: "Tarde · 16:00 às 00:00", faltam: "faltam 3 h 18" });
   });
 
-  it("os destaques são os 3 grupos com mais coisa, atrasados primeiro, e levam à página certa", () => {
+  it("os destaques são os 3 grupos com mais coisa, atrasados primeiro, e levam ao app certo", () => {
     const itens = [
       ...Array.from({ length: 5 }, () => p("FCOJ Recebimento", "TAB", "TAB · para espalhar")),
       ...Array.from({ length: 2 }, () => p("FCOJ Recebimento", "C.T/B.L", "B.L 72h", "Atrasado")),
@@ -30,10 +30,24 @@ describe("Cartão Agora (APP-056)", () => {
     ];
     const d = destaquesDoDia(itens);
     expect(d.map((x) => [x.nome, x.n, x.caminho])).toEqual([
-      ["Recebimento · B.L 72h", 2, "/paginas/recebimento"],
-      ["Recebimento · TAB · para espalhar", 5, "/paginas/tab"],
-      ["O.SKY 189 · Normal", 3, "/paginas/navios"],
+      ["Recebimento · B.L 72h", 2, "/analises/recebimento-fcoj?aba=resultados&analise=BL72"],
+      ["Recebimento · TAB · para espalhar", 5, "/analises/testes"],
+      ["O.SKY 189 · Normal", 3, "/analises/tanques?aba=leituras"],
     ]);
+  });
+
+  it("o botão do destaque diz a ação do grupo e abre o app (que só grava com o Confirmar)", () => {
+    const d = (bloco: string, tipo: string, grupo: string) => destinoDe(p(bloco, tipo, grupo));
+    expect(d("FCOJ Recebimento", "TAB", "TAB · para espalhar")).toEqual({ caminho: "/analises/testes", acao: "Espalhei todos" });
+    expect(d("FCOJ Recebimento", "Coliformes", "Coliformes · para espalhar")).toEqual({ caminho: "/analises/testes", acao: "Estriei todos" });
+    expect(d("FCOJ Embarque", "TAB", "TAB · para ler")).toEqual({ caminho: "/analises/testes", acao: null });
+    expect(d("FCOJ Embarque", "Howard", "Howard")).toEqual({ caminho: "/analises/testes?aba=howard", acao: null });
+    expect(d("NFC Tank farm", "Leitura de NFC", "Psicrotróficos Normal · Leitura final")).toEqual({ caminho: "/analises/tanques?aba=leituras", acao: "Lançar leituras" });
+    expect(d("NFC Navio", "Drop", "O.SKY 189 · Drops")).toEqual({ caminho: "/analises/drops", acao: "Concluir drops" });
+    expect(d("FCOJ Embarque", "C.T/B.L", "C.T 48h")).toEqual({ caminho: "/analises/embarque-fcoj?aba=resultados", acao: "Lançar resultados" });
+    expect(d("Recebimento NFC", "C.T/B.L", "B.L 72h")).toEqual({ caminho: "/analises/recebimento-nfc?aba=resultados", acao: "Lançar resultados" });
+    expect(d("Desvios", "Desvio de tanque", "Desvio de tanque · C.T")).toEqual({ caminho: "/analises/desvios?aba=abertos", acao: null });
+    expect(d("Águas e superfícies", "Baia", "Baia 3")).toEqual({ caminho: "/paginas/baias", acao: null });
   });
 
   it("o registro livre vai para a linha do tempo do turno", async () => {
@@ -47,6 +61,6 @@ describe("Cartão Agora (APP-056)", () => {
     await userEvent.click(screen.getByRole("button", { name: "Registrar" }));
     expect(api.chamadas.find((c) => c.rota === "POST /turno/registros")?.corpo).toEqual({ texto: "troquei o filtro da capela" });
     expect(await screen.findByText("Registrado na linha do tempo do turno.")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Ver o 1" })).toHaveAttribute("href", "/paginas/tab");
+    expect(screen.getByRole("link", { name: "Ver o 1" })).toHaveAttribute("href", "/analises/testes");
   });
 });

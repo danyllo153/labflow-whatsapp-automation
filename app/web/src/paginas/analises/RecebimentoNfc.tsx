@@ -15,6 +15,7 @@ import {
   useGravacao,
   useLista,
 } from "./comum";
+import { ABAS_FINAIS } from "./Instrucao";
 
 /**
  * Recebimento de NFC (Fase E, E7; funções da 046): lotes fresh e past com a diluição, e o C.T/B.L lido na placa (o final é
@@ -44,6 +45,7 @@ export const ABAS_NFC = [
   { aba: "resultados", rotulo: "Para lançar" },
   { aba: "registrar", rotulo: "Registrar" },
   { aba: "tabelas", rotulo: "Resultados" },
+  ...ABAS_FINAIS,
 ];
 
 const ROTULO = { CT: "C.T 48h", BL72: "B.L 72h", BL120: "B.L 120h" };
@@ -56,6 +58,7 @@ export default function RecebimentoNfc() {
   const atrasados = (lista.dados ?? []).filter((p) => p.situacao === "Atrasado").length;
   return (
     <AppDeAnalise
+      app="recebimento-nfc"
       sigla="RN"
       cor="verde"
       titulo="Recebimento NFC"

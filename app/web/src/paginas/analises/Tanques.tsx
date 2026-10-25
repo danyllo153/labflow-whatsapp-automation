@@ -17,6 +17,7 @@ import {
   useLista,
   useMarcados,
 } from "./comum";
+import { ABAS_FINAIS } from "./Instrucao";
 
 /** Tanques de terra e de navio (Fase E, E3; funções da 042): leituras do dia, coleta e análise, como o bot. */
 
@@ -37,6 +38,7 @@ export const ABAS_TANQUES = [
   { aba: "coleta", rotulo: "Coleta" },
   { aba: "analise", rotulo: "Análise" },
   { aba: "resultados", rotulo: "Resultados" },
+  ...ABAS_FINAIS,
 ];
 
 const chave = (l: Leitura) => `${l.analise_id}-${l.etapa}`;
@@ -51,6 +53,7 @@ export default function Tanques() {
 
   return (
     <AppDeAnalise
+      app="tanques"
       sigla="TQ"
       cor="verde"
       titulo="Tanques"

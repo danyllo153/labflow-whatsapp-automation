@@ -2,6 +2,7 @@
 
 import json
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 
 import psycopg
 import pytest
@@ -107,7 +108,7 @@ def test_baias_e_linhas_coleta_e_leituras(conexao, criar_pessoa):
     pontos = conexao.execute(
         "SELECT ponto, analisada_em FROM app.bot_coletar_superficie(%s, 'Baia', ARRAY['8', 'baia 10'], %s)", (uid, AGORA)
     ).fetchall()
-    assert [p[0] for p in pontos] == ["08", "10"] and pontos[0][1] == AGORA.date()
+    assert [p[0] for p in pontos] == ["08", "10"] and pontos[0][1] == AGORA.astimezone(ZoneInfo("America/Sao_Paulo")).date()  # o dia em São Paulo (à noite o UTC já virou)
     r = conexao.execute(
         "SELECT ponto, ct_48, bl_72 FROM app.bot_lancar_superficie(%s, 'Baia', '8', %s)", (uid, json.dumps({"ct_48": "<1"}))
     ).fetchone()
