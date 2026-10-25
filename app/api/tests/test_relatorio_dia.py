@@ -36,12 +36,12 @@ def test_relatorio_mostra_as_leituras_de_hoje_e_o_texto_do_bot(cliente, criar_pe
     r = cliente.get("/relatorio-do-dia")
     assert r.status_code == 200, r.text
     rel = r.json()
-    assert rel["dia"] == str(hoje) and rel["texto"].startswith(f"📋 *Relatório do dia {hoje:%d/%m/%Y}*")
+    assert rel["dia"] == str(hoje) and rel["texto"].startswith(f"*Relatório do dia {hoje:%d/%m/%Y}*")
     tank = next(b for b in rel["blocos"] if b["titulo"] == "NFC — Tank farm")
     normal = next(s for s in tank["secoes"] if s["titulo"] == "AMOSTRA NORMAL")
     ct = next(l for l in normal["linhas"] if l["rotulo"] == "C.T 48h")
     assert {"9951", "9952"} <= {e["texto"] for e in ct["entradas"]}
-    assert "C.T 48h: " in rel["texto"] and "✅ = lido" in rel["texto"]
+    assert "C.T 48h: " in rel["texto"] and "Lidas: " in rel["texto"]
 
     # lida: entra com ✅ e aparece no completo; a outra fica de fora do completo
     leitura = next(l for l in cliente.get("/analises/tanques/leituras", params={"busca": "9951"}).json()
@@ -52,7 +52,8 @@ def test_relatorio_mostra_as_leituras_de_hoje_e_o_texto_do_bot(cliente, criar_pe
     ct = next(l for s in tank["secoes"] if s["titulo"] == "AMOSTRA NORMAL" for l in s["linhas"] if l["rotulo"] == "C.T 48h")
     textos = [e["texto"] for e in ct["entradas"]]
     assert "9951 ✅" in textos and "9952" not in textos and ct["situacao"] == "ok"
-    assert "— completo*" in rel["texto"] and "✅ lido:" in rel["texto"]
+    assert "— completo*" in rel["texto"] and "9951 — ok" in rel["texto"]
+    assert not any(m in rel["texto"] for m in ("✅", "🚨", "⚠️", "📋"))
 
 
 def test_relatorio_de_outro_dia_e_dia_sem_nada(cliente, criar_pessoa, hoje):
@@ -70,10 +71,10 @@ def test_montar_concentrado_alarmes_e_faixas(hoje):
     ] + [{**base, "bloco": "Recebimento", "linha": "TAB", "numero": None, "lotes": [6, 7, 8], "composta_id": 1, "lido": True,
           "resultado": "Positivo", "alarme": True}]
     blocos, texto, lidos, total, alertas = montar(hoje, False, [], conc, {})
-    assert "C.T 48h: 77001 (4-5 ✅, 6 🚨, 7)" in texto
-    assert "TAB: 77001 (6-8 🚨)" in texto
-    assert "🚨 C.T 48h ≥ 200 — 77001: lote 6 = 250" in texto and "🚨 TAB POSITIVO — 77001 (6-8)" in texto
+    assert "C.T 48h: 77001 (4-7)" in texto and "TAB: 77001 (6-8)" in texto
+    assert texto.endswith("*Atenção:*\n- C.T 48h ≥ 200 — 77001: lote 6 = 250\n- TAB POSITIVO — 77001 (6-8)")
     assert (lidos, total, alertas) == (4, 5, 2) and [b.titulo for b in blocos] == ["FCOJ — Recebimento"]
+    assert blocos[0].secoes[0].linhas[0].entradas[0].texto == "77001 (4-5 ✅, 6 🚨, 7)"  # na tela, as marcas continuam
     _, texto, *_ = montar(hoje, True, [], conc, {"finalizado_por": "Ana", "finalizado_as": "16:40"})
-    assert "C.T 48h: 77001 (4-5 ✅, 6 🚨) — não ok" in texto and "B.L 72h: -" in texto
-    assert "⚠️ Ainda há 1 leitura por fazer" in texto and texto.endswith("finalizada por Ana às 16:40.")
+    assert "C.T 48h: 77001 (4-6) — não ok" in texto and "B.L 72h: -" in texto
+    assert "Ainda há 1 leitura por fazer" in texto and "finalizada por Ana às 16:40.\n\n*Atenção:*" in texto
