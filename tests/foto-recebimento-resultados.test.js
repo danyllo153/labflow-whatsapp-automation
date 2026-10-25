@@ -153,6 +153,8 @@ test('o prompt ensina os resultados do recebimento e que traço por cima é já 
   assert.match(p, /"lotes": \[ \{ "n": 1, "fecha": false, "ct": "<10", "bl72": "<10", "bl120": null \}/);
   assert.match(p, /TRAÇO = JÁ DIGITADO \(recebimento e embarque\)/);
   assert.match(p, /Não comente em "duvidas" nada sobre o traço/);
+  assert.match(p, /O traço marca um BLOCO: todo resultado dentro do retângulo que o traço atravessa/);
+  assert.match(p, /um número escrito ao lado, dentro desse bloco, também já foi digitado/);
   assert.doesNotMatch(p, /qual vale, use null e anote em "duvidas"/);
 });
 
