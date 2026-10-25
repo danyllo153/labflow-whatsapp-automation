@@ -12,6 +12,9 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 
 ## [Não lançado]
 
+### Alterado
+- **Fase E fechada no bot** (24/10, migration 048): a foto de TAB, a foto de Coliformes e o TAB de tanque (incluindo o "completo") gravam pelas funções do banco `tab_registrar_foto`, `coliformes_registrar_foto` e `tab_feito_nfc`, as mesmas que o app vai chamar (o GRANT ao `labflow_app_web` fica com o app). Mesmas regras de antes; agora conferem o cargo no banco e, se o banco recusar, o bot diz o motivo.
+
 ### Corrigido
 - **Cartão das folhas no menu** (app, 24/10): a folha de incubação mostra "faltam N dias", não "linhas".
 - **Lote marcado por engano no meio do período** (app, APP-052, 24/10): "Corrigir a data de início" do lote em uso agora

@@ -135,7 +135,9 @@ test('banco: o "abrir" aceita a composta que a foto fechou positiva; o comando i
   assert.match(at, /teste_acao_pelo_bot\(\$2::text, \$1::jsonb\)/);
   const f043 = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'db', 'migrations', '043_testes_funcoes.sql'), 'utf8');
   assert.match(f043, /t\.status = 'Concluída' AND t\.resultado = 'Positivo'/);
-  const sql = workflow.nodes.find((n) => n.name === 'BD · Coliformes da foto').parameters.query;
+  const no = workflow.nodes.find((n) => n.name === 'BD · Coliformes da foto').parameters.query;
+  assert.ok(no.includes('coliformes_foto_pelo_bot($2::text, $1::jsonb)'), 'desde a 048 o nó chama a função do banco');
+  const sql = require('node:fs').readFileSync(require('node:path').join(__dirname, '..', 'db', 'migrations', '048_foto_tab_nfc_funcoes.sql'), 'utf8');
   assert.match(sql, /ON CONFLICT \(tipo, composta_id\) DO NOTHING/);
   assert.match(sql, /a\.status <> 'Em confirmação'/, 'não mexe em composta já aberta lote a lote');
   const rot = workflow.nodes.find((n) => n.name === 'Rotear comando').parameters.rules.values.map((v) => v.outputKey);

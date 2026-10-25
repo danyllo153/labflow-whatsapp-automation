@@ -18,7 +18,8 @@
 - [x] **PB12, embarque** (24/10, migration 045), o bot já usando
 - [x] **PB16, recebimento de NFC** (24/10, migration 046), o bot já usando
 - [x] **PB17, desvio de tanque, repetição e leitura do dia** (24/10, migration 047), o bot já usando
-- [ ] **Fase E, o que falta no bot:** passar pelas funções a foto de TAB/Coliformes (`BD · TAB da foto`, `BD · Coliformes da foto`) e o TAB de tanque "completo" (`BD · TAB feito NFC`); depois as funções do PB8/PB9 (067 do app)
+- [x] **Fase E no bot concluída** (24/10, migration 048, PR aberto): foto de TAB, foto de Coliformes e TAB de tanque "completo" pelas funções do banco; falta aplicar a 048 e publicar
+- [ ] **PB8/PB9 no bot** (esterilização, água, baias e linhas por frase, pelas funções da 067 do app): comando novo, regex, prompt da IA e testes; é a próxima fatia
 - [x] **TAB do load 43699 gravado à mão** (23/10): 10 compostas positivas confirmadas, feito em 13/10; criadas #87 (1-3) e #88 (4-6)
 - [x] **Corrigir resultado de C.T/B.L com um comando curto** (24/10, #240, migration 039, `pre77`): `corrigir ct do load 43755 para <1 motivo ...`; motivo obrigatório para o Analista, opcional para o Admin (#238); testado ao vivo até a prévia
 - [x] **Recebimento pelas funções do banco e pelo WhatsApp** (23/10, PRs #197 e #198, migrations 036 e 037, `pre75`): corrigir load/item/fábrica, lote e data, apagar lote (arquiva); testado ao vivo
