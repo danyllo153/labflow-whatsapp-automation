@@ -84,3 +84,8 @@ recebimento, os **laudos** por caixa (PDF) e o descarte com a prévia e um Confi
 4. Descarte: **Admin e Analista**.
 5. **O que já está preenchido na planilha entra no banco** (carga inicial por arquivo fora do Git, como os limites).
 6. Recebimento: caixas **121 a 145**; a caixa vem da **foto** (o número está na folha) ou é **digitada** no app/site.
+7. (25/10, depois de ver a planilha) Tanques terra de **34 a 49**. O que já venceu na planilha **já foi descartado** (entra como descartado); o recebimento começa vazio, sugerindo a **121**. **Sem aviso para ninguém:** cada um consulta no bot ou na página Arquivo, onde o vencido fica **em vermelho** como pendência de descarte. Nomes dos navios no padrão do bot (`O.SKY 189`, viagem sem zero à esquerda).
+
+## 6. Feito no banco e no bot (migration 105, 25/10/2026)
+
+Tabelas `arquivo_familias`, `arquivo_caixas`, `arquivo_navios` (a caixa de cada navio e viagem, reservada por gatilho quando o navio é cadastrado) e `arquivo_recebimento`; os bags e potes continuam na `arquivo_amostras` do bot. Views `vw_arquivo_itens` e `vw_arquivo_caixas`, funções `arquivo_arquivar_recebimento` e `arquivo_descartar` (app e bot) e os comandos da seção 20 do [`comandos.md`](../../comandos.md). A carga inicial (famílias, faixas e as viagens da planilha) é um arquivo fora do Git. Próximo: a caixa do recebimento lida pela foto.
