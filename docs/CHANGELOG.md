@@ -14,6 +14,7 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 
 ### Adicionado
 - **Estufas compactas no Turno e no Início** (25/10): uma linha por estufa, com Ok / Não ok do Supervisório e do Field chart (o Não ok pede a temperatura ali mesmo) e **Todas as pendentes Ok** com um Confirmar. A página Estufas saiu do menu e das Análises; o endereço `/estufas` leva ao Turno.
+- **Leituras do dia no app** (25/10): o relatório do dia do bot (os quatro blocos, ✓ lido e ! fora do limite, alertas, `completo` com ok / não ok) numa página **Leituras**, na barra do celular e no menu, de hoje ou dos 7 dias anteriores; **Copiar o relatório**, **Enviar no WhatsApp** (o mesmo texto do bot) e Imprimir. Rota `GET /relatorio-do-dia?dia=&completo=`, que repete as consultas do bot. O Assistente (em breve) saiu da barra do celular.
 - **Embarque de FCOJ com vários loads e itens na mesma linha e fase** (bot e app, PB19, migration 102): `load 43453/43462 item 2503/2503`; as amostras ficam no load principal (o primeiro) e os outros ficam na linha+fase (`embarque_loads`).
 - **`criar_teste_da_composta`** (PB20, migration 101): TAB ou Coliformes no caldo hoje, ou Howard com o percentual, a partir da composta (botões do app).
 - **Coliformes pendente nas compostas do embarque** (bot e app, PB20, migrations 101 e 103): abrir a composta não faz o Coliformes; ele fica pendente até o `coliformes feitos do navio ...` (a resposta do bot lembra o comando) e a view `vw_coliformes_pendentes` lista o que falta. A 101 chegou a pôr o Coliformes no caldo junto; a 103 desfez isso no mesmo dia.
