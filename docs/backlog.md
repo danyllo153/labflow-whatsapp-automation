@@ -28,6 +28,10 @@
 - [x] **Recebimento pelas funções do banco e pelo WhatsApp** (23/10, PRs #197 e #198, migrations 036 e 037, `pre75`): corrigir load/item/fábrica, lote e data, apagar lote (arquiva); testado ao vivo
 - [x] **Load de teste 99902 apagado** (25/10, a pedido do Danyllo; backup antes `labflow_2026-10-25_1404.dump`): load, lote 1, a linha do laudo do app, 5 registros do histórico e 1 da lixeira de 23/10
 - [x] **PB18, PB19 e PB20 do app** (25/10, #286 e #289, migrations 101, 102 e 103, no ar `pre85`; o Coliformes do embarque fica pendente até o comando): modelo do relatório na doc; embarque com vários loads e itens (`43783/43784`); Coliformes nasce com a composta do embarque e `criar_teste_da_composta` para TAB/Howard; falta testar ao vivo (embarque com dois loads e compostas do navio)
+- [ ] **Coliformes obrigatório** (regra do Danyllo de 25/10): coluna `obrigatorio` e motivo na `vw_coliformes_pendentes` (embarque: toda composta; recebimento: compostas com os lotes 1 a 5 do load e toda composta da COL); migration 104
+- [ ] **Relatório do dia numa função do banco** para o bot e o app, contando também água do processo, baias, linhas e esterilização (hoje o bot não conta)
+- [ ] **Corrigir resultado (039) numa função geral** (`corrigir_resultado(quem, ...)`) para o app também chamar
+- [ ] Registrar por frase o que hoje só o app faz: material asséptico, lote de meio (receber e trocar o em uso) e temperatura das estufas (funções do app)
 - [ ] **PB6:** canal `app` no webhook (assistente do app pelo mesmo workflow), só na Fase D do app
 - [x] **C.T/B.L do recebimento de FCOJ pela foto** (25/10): lê o resultado de cada lote, traço por cima = já digitado (ignora sem comentar), só o novo, um sim; no ar (#280, `pre83`); o traço marca um bloco; falta testar ao vivo com a folha do load 43599 (lotes 9-20)
 - [ ] **Fase seguinte da foto:** o "+" da confirmação (legenda com `confirmação`); TAB/Coliformes de embarque
@@ -40,7 +44,9 @@
 - [x] **Pedidos de 25/10 (29 itens) e o visual novo** (APP-065 a APP-067, #282, #283 e a leva 3): menu escuro com ícones, Análises com ícone e cor
   por família, Excel/Imprimir em ícone, IT, atividades com a caixa, TAB/Coliformes/Howard separados, Wort numa linha, compostas no Registrar,
   sininho, <10 no FCOJ, Relatório do dia, Dashboard, branco automático, incubação sem lotes; no ar em 25/10 (`6c041c3`, com o #285)
-- [ ] **Laudo do Recebimento NFC** (preenche a cada lançamento): precisa do PDF do modelo (Danyllo)
+- [ ] **Laudos novos** (modelos recebidos em 25/10; detalhe na tabela "Laudos automáticos" do rumo): Recebimento NFC (mesmo modelo do FCOJ, item 129), NFC de tanques e navios, Embarque, TAB, Coliformes e Howard; drops e estufas não têm laudo
+- [ ] Mostrar só o **Coliformes obrigatório** (embarque: toda composta; recebimento: lotes 1 a 5 do load e toda composta da COL), quando o bot pôr a coluna `obrigatorio` na `vw_coliformes_pendentes`
+- [ ] **Recuperar lote apagado do recebimento** pelo Admin (`recuperar_recebimento`, 036)
 - [ ] Botões **Criar TAB** e **Criar Howard** na composta do embarque, quando o bot fizer o PB20
 - [ ] Relatório do dia no formato do relatório diário do bot, quando o bot responder o PB18
 - [ ] Embarque com vários loads/itens na tela, quando o bot fizer o PB19
