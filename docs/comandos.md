@@ -912,3 +912,35 @@ wort profundidade 120h todos os tanques do navio O.SKY 123 deu <1
 
 - **Concentrado, embarque e NFC recebido:** o prazo nunca travou: `bl72 load 44502 lotes 1-5 deu <10` grava com 2 dias.
 - **Tanques:** sem a data da coleta, o comando de placas pega a leitura de hoje ou a atrasada; **se não houver nenhuma**, pega a próxima ainda sem placas e avisa `⏩ Leitura antecipada`. No "todos os tanques", a data futura (`todos de 18/10`) lança antes do prazo.
+
+## 19. Esterilização, água do processo, baias e linhas
+
+Mesmas regras do app (funções do banco, migration 049 do bot e 067 do app). O bot mostra o que vai registrar e você responde **sim** ou **não**; se o banco recusar (cargo, ponto, ciclo), o bot diz o motivo e nada é gravado. Sem a data, vale agora.
+
+### 19.1 Esterilização (Admin e Analista)
+```
+esterilizei meio de cultura e frascos ciclo A1092/26
+esterilizei ponteiras ciclo A1093/26 data 24/10/2026 14:30
+esterilizei outro ciclo A1094/26 descricao luvas
+esterilizei meio de cultura ciclo A1095/26 nome do meio PCA
+```
+Materiais: ponteira, meio de cultura, frasco, água de diluição, descarte, outro (com descrição). O ciclo é obrigatório e fica como digitado; vários materiais do mesmo ciclo vão para a mesma linha do laudo.
+
+### 19.2 Água do processo
+```
+coleta agua do processo manifold, camara 5
+agua do processo ct <1 bl <1
+agua do processo ct <1 bl <1 camara 5 bl 2
+```
+Coleta: Admin, Analista e Coletor (manifold, câmaras 4, 5 e 6, ou `todos`). Resultado (Admin e Analista): sem ponto vale para os pontos coletados; o ponto dito vale só para ele; sem `coleta`, vale a coleta mais recente que espera resultado. Valores: `<1`, número ou `-`.
+
+### 19.3 Baias e linhas
+```
+coleta de baia 8,9
+coleta de linha 3 analise 26/10/2026
+baia 8 ct48 <1 bl72 <1 bl120 <1
+linha 3 ct48 <1
+```
+A análise vai até 3 dias depois da coleta. O resultado vale para a coleta mais recente do ponto que ainda não tem aquela leitura. `bl` precisa de 72 ou 120.
+
+Ajuda: `comandos esterilização`.

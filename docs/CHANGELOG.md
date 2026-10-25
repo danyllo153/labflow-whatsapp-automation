@@ -12,6 +12,9 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 
 ## [Não lançado]
 
+### Adicionado
+- **Esterilização, água do processo, baias e linhas por frase** (bot, PB8 e PB9, migration 049): `esterilizei meio de cultura e frascos ciclo A1092/26`, `coleta agua do processo manifold, camara 5`, `agua do processo ct <1 bl <1`, `coleta de baia 8,9`, `baia 8 ct48 <1 bl72 <1`. Mostra o resumo, pede o "sim" e grava pelas funções do app (067). A IA conhece os formatos; ajuda em `comandos esterilização`.
+
 ### Alterado
 - **Fase E fechada no bot** (24/10, migration 048): a foto de TAB, a foto de Coliformes e o TAB de tanque (incluindo o "completo") gravam pelas funções do banco `tab_registrar_foto`, `coliformes_registrar_foto` e `tab_feito_nfc`, as mesmas que o app vai chamar (o GRANT ao `labflow_app_web` fica com o app). Mesmas regras de antes; agora conferem o cargo no banco e, se o banco recusar, o bot diz o motivo.
 
