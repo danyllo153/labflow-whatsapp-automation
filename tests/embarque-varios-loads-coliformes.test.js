@@ -33,11 +33,13 @@ test('resposta do embarque: diz que as amostras ficam no principal e avisa os lo
   assert.doesNotMatch(um, /principal|não estava cadastrado/);
 });
 
-test('compostas do embarque: a resposta diz que o Coliformes já foi para o caldo', () => {
+test('compostas do embarque: o Coliformes fica pendente e a resposta lembra o comando', () => {
   const item = { navio: 'O.SKY 133', linha: '2', fase: '2', compostas: [[1, 2, 3, 4, 5]] };
   const t = montar('Montar resposta compostas embarque', { r: { ok: true, ids: [106], coliformes_em: '25/10/2026', estriar_em: '26/10/2026' } }, item);
-  assert.match(t, /✅ 1 composta criada em O\.SKY 133 linha 2 fase 2:\n#106 amostras A1-A5\n\n🧪 Coliformes no caldo em 25\/10\/2026; estriar em 26\/10\/2026\./);
-  assert.doesNotMatch(montar('Montar resposta compostas embarque', { r: { ok: true, ids: [7] } }, item), /Coliformes no caldo/);
+  assert.match(t, /✅ 1 composta criada em O\.SKY 133 linha 2 fase 2:\n#106 amostras A1-A5\n\n🧪 Coliformes pendente\. Quando fizer, mande: coliformes feitos do navio O\.SKY 133 linha 2 fase 2/);
+  assert.doesNotMatch(t, /Coliformes no caldo/, 'abrir a composta não faz o Coliformes (103)');
+  // o comando lembrado é aceito pelo bot
+  assert.equal(interpretar('coliformes feitos do navio O.SKY 133 linha 2 fase 2', { cargo: 'Analista' }).tipo, 'tab_feito');
 });
 
 test('workflow: o banco devolve os outros loads; a IA conhece o embarque com barra e o Coliformes das compostas', () => {
@@ -45,7 +47,21 @@ test('workflow: o banco devolve os outros loads; a IA conhece o embarque com bar
   assert.match(bd, /x\.r -> 'outros_loads' AS outros_loads, x\.r -> 'loads_novos' AS loads_novos/);
   const prompt = JSON.stringify(workflow.nodes.find((n) => n.name === 'IA · Montar pedido').parameters);
   assert.ok(prompt.includes('load <load>[/<load>] item <item>[/<item>]'));
-  assert.ok(prompt.includes('o Coliformes de cada composta já vai para o caldo junto'));
+  assert.ok(prompt.includes('só abre as compostas; o Coliformes fica pendente até o comando'));
+});
+
+test('migration 103: a composta do embarque volta a nascer sem teste e a view lista o Coliformes pendente', () => {
+  const m = mig('103_compostas_embarque_coliformes_pendente.sql');
+  assert.match(m, /CREATE OR REPLACE FUNCTION criar_compostas_embarque\(/);
+  assert.doesNotMatch(m, /INSERT INTO testes/);
+  assert.match(m, /CREATE OR REPLACE VIEW vw_coliformes_pendentes AS[\s\S]*WHERE NOT EXISTS \(SELECT 1 FROM testes t WHERE t\.tipo = 'COLIFORMES' AND t\.composta_id = v\.id\);/);
+  assert.match(m, /GRANT SELECT ON vw_coliformes_pendentes TO labflow_app, labflow_app_web, labflow_leitura;/);
+  const f045 = mig('045_embarque_funcoes.sql');
+  const corpo = (s) => s.slice(s.indexOf('CREATE OR REPLACE FUNCTION criar_compostas_embarque('), s.indexOf('$$ LANGUAGE plpgsql', s.indexOf('CREATE OR REPLACE FUNCTION criar_compostas_embarque(')));
+  assert.equal(corpo(m), corpo(f045), 'igual à da 045');
+  const d = mig('103_compostas_embarque_coliformes_pendente_desfazer.sql');
+  assert.match(d, /DROP VIEW IF EXISTS vw_coliformes_pendentes;/);
+  assert.match(d, /VALUES \('COLIFORMES', v_cid, 'No caldo', v_hoje, p_quem, v_hoje \+ 1\);/, 'o desfazer volta a 101');
 });
 
 test('migration 101: compostas do embarque nascem com o Coliformes no caldo; criar_teste_da_composta com GRANT ao app', () => {
