@@ -12,6 +12,9 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 
 ## [Não lançado]
 
+### Alterado
+- **Ok e Não ok em ícone redondo** (25/10): nas estufas, os botões viraram o círculo verde com visto e o vermelho com X (cheio quando escolhido, contorno cinza quando não); a temperatura do Não ok fica ao lado. Nas Leituras, as marcas de lido e de fora do limite usam os mesmos ícones.
+
 ### Adicionado
 - **Estufas compactas no Turno e no Início** (25/10): uma linha por estufa, com Ok / Não ok do Supervisório e do Field chart (o Não ok pede a temperatura ali mesmo) e **Todas as pendentes Ok** com um Confirmar. A página Estufas saiu do menu e das Análises; o endereço `/estufas` leva ao Turno.
 - **Leituras do dia no app** (25/10): o relatório do dia do bot (os quatro blocos, ✓ lido e ! fora do limite, alertas, `completo` com ok / não ok) numa página **Leituras**, na barra do celular e no menu, de hoje ou dos 7 dias anteriores; **Copiar o relatório**, **Enviar no WhatsApp** (o mesmo texto do bot) e Imprimir. Rota `GET /relatorio-do-dia?dia=&completo=`, que repete as consultas do bot. O Assistente (em breve) saiu da barra do celular.

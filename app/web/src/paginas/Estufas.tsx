@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 
 import { enviarJson, lerJson } from "../api";
+import IconeOk from "../componentes/IconeOk";
 
 /**
  * Temperatura das estufas (07 §7.1; APP-027): uma conferência por estufa no início de cada turno, com duas leituras
@@ -280,15 +281,19 @@ function Leitura(props: {
       <span className="leitura-nome">{nome}</span>
       {props.pode ? (
         <span className="botoes-estufa">
-          <button type="button" className="botao-mini" aria-pressed={leitura?.ok === true} disabled={enviando} onClick={() => void gravar({ ok: true })}>
-            Ok
+          <button type="button" className="botao-icone-ok" aria-label="Ok" title="Ok" aria-pressed={leitura?.ok === true} disabled={enviando} onClick={() => void gravar({ ok: true })}>
+            <IconeOk ok apagado={leitura?.ok !== true} />
           </button>
-          <button type="button" className="botao-mini botao-mini-nao" aria-pressed={leitura?.ok === false || naoOk} disabled={enviando} onClick={() => setNaoOk(true)}>
-            {leitura && !leitura.ok ? `Não ok · ${graus(leitura.temperatura)}` : "Não ok"}
+          <button type="button" className="botao-icone-ok" aria-label="Não ok" title="Não ok" aria-pressed={leitura?.ok === false || naoOk} disabled={enviando} onClick={() => setNaoOk(true)}>
+            <IconeOk ok={false} apagado={!(leitura?.ok === false || naoOk)} />
           </button>
+          {leitura && !leitura.ok && <span className="temperatura-estufa">{graus(leitura.temperatura)}</span>}
         </span>
       ) : leitura ? (
-        <span className={leitura.ok ? "etiqueta etiqueta-ok" : "etiqueta etiqueta-nao-ok"}>{leitura.ok ? "Ok" : `Não ok · ${graus(leitura.temperatura)}`}</span>
+        <span className="botoes-estufa" aria-label={leitura.ok ? "Ok" : `Não ok, ${graus(leitura.temperatura)}`}>
+          <IconeOk ok={leitura.ok} />
+          {!leitura.ok && <span className="temperatura-estufa">{graus(leitura.temperatura)}</span>}
+        </span>
       ) : (
         <span className="etiqueta etiqueta-pendente">Pendente</span>
       )}
