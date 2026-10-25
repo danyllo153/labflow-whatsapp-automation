@@ -34,6 +34,7 @@
 - [ ] Registrar por frase o que hoje só o app faz: material asséptico, lote de meio (receber e trocar o em uso) e temperatura das estufas (funções do app)
 - [x] **PB21, arquivo de contra-amostras** (25/10, migration 105): caixas, reserva do navio, arquivar o recebimento, descartar com sim, consultas; carga inicial da planilha fora do Git (`C:\Dev\estudos\ia\arquivo`)
 - [ ] **PB21 parte 2:** a caixa do recebimento lida pela **foto** da folha e `caixa N` no próprio comando de recebimento
+- [x] **PB22, pendências do dia** e **apelidos de navio** (25/10, migration 106): `pendências do dia` no bot, `vw_pendencias_do_dia` para o app; O.BLOSSOM vira o nome oficial (apelido fora do Git)
 - [ ] **PB6:** canal `app` no webhook (assistente do app pelo mesmo workflow), só na Fase D do app
 - [x] **C.T/B.L do recebimento de FCOJ pela foto** (25/10): lê o resultado de cada lote, traço por cima = já digitado (ignora sem comentar), só o novo, um sim; no ar (#280, `pre83`); o traço marca um bloco; falta testar ao vivo com a folha do load 43599 (lotes 9-20)
 - [ ] **Fase seguinte da foto:** o "+" da confirmação (legenda com `confirmação`); TAB/Coliformes de embarque

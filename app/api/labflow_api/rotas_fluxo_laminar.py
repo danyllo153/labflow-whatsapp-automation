@@ -27,6 +27,7 @@ from labflow_api.rotas_turno import FUSO
 roteador = APIRouter(prefix="/fluxo-laminar", tags=["fluxo laminar"])
 
 CAMPOS = ("capela_ct", "capela_bl", "osa", "pda", "wort", "pca")
+DUAS_PLACAS = "<1|<1"  # a capela tem duas placas por meio (direita e esquerda), como no papel (pedido de 25/10)
 
 
 class Valores(BaseModel):
@@ -69,7 +70,7 @@ def _sugestao(con: psycopg.Connection, dia: date) -> tuple[Valores, str, str]:
         """,
         {"dia": dia},
     ).fetchone()[0]
-    valores = Valores(capela_ct="<1", capela_bl="<1", osa="<1", pda="<1", wort="<1" if tanques else "-", pca="<1" if aguas else "-")
+    valores = Valores(capela_ct=DUAS_PLACAS, capela_bl=DUAS_PLACAS, osa="<1", pda="<1", wort="<1" if tanques else "-", pca="<1" if aguas else "-")
     motivo_wort = f"{tanques} tanque(s) de NFC no dia" if tanques else "nenhum tanque de NFC no dia"
     motivo_pca = f"{aguas} coleta(s) de água, baia ou linha no dia" if aguas else "nenhuma água, baia ou linha no dia"
     return valores, motivo_wort, motivo_pca
@@ -142,8 +143,8 @@ def ver(
 
 
 class Preenchimento(BaseModel):
-    capela_ct: str = Field(default="<1", max_length=10)
-    capela_bl: str = Field(default="<1", max_length=10)
+    capela_ct: str = Field(default="<1|<1", max_length=10)
+    capela_bl: str = Field(default="<1|<1", max_length=10)
     osa: str = Field(default="<1", max_length=10)
     pda: str = Field(default="<1", max_length=10)
     wort: str = Field(default="-", max_length=10)
@@ -186,22 +187,42 @@ DEMONSTRACAO = laudos.demonstracao(
 )
 
 
+# Quando cada placa pode ser lida, em dias depois do plaqueamento (o método: OSA/PCA 48 h, PDA 72 h e 120 h, Wort 240 h); a
+# capela segue o meio da contagem (C.T. no OSA, B.L. no PDA). Antes disso a célula fica em branco: "<1" ainda não é resultado.
+LIDO_EM = {"capela_ct": 2, "capela_bl": 5, "osa": 2, "pda": 5, "wort": 10, "pca": 2}
+
+
+def _no_laudo(campo: str, valor: str, dia: date, hoje: date) -> str:
+    if valor == "-":
+        return valor
+    if hoje < dia + timedelta(days=LIDO_EM[campo]):
+        return ""
+    if campo.startswith("capela") and valor == "<1":
+        return DUAS_PLACAS  # linhas gravadas antes de 25/10, com uma placa só
+    return valor
+
+
 def _gerar(con: psycopg.Connection, pagina_id: int, modelo: bytes | None) -> bytes:
+    """A folha como o papel (25/10): Times 10, data dd.mm.aaaa, capela "<1|<1", o meio só depois de lido e, na folha
+    marcada como impressa, o traço que fecha as linhas vazias."""
+    hoje = _hoje(con)
     celulas = []
-    for n, linha in enumerate(
-        con.execute(
-            """
-            SELECT f.dia, f.capela_ct, f.capela_bl, f.osa, f.pda, f.wort, f.pca, coalesce(u.nome, c.usuario)
-            FROM app.fluxo_laminar f JOIN usuarios u ON u.id = f.preenchido_por LEFT JOIN app.credenciais c ON c.usuario_id = f.preenchido_por
-            WHERE f.pagina_id = %s ORDER BY f.dia
-            """,
-            (pagina_id,),
-        )
-    ):
-        dia, *valores, quem = linha
-        for i, texto in enumerate([dia.strftime("%d.%m.%y"), *valores, laudo_esterilizacao.primeiro_nome(quem)]):
-            celulas.append(TABELA.celula(texto, n, i, tamanho=8.5))
-    return laudos.preencher(modelo, DEMONSTRACAO, celulas)
+    linhas = con.execute(
+        """
+        SELECT f.dia, f.capela_ct, f.capela_bl, f.osa, f.pda, f.wort, f.pca, coalesce(u.nome, c.usuario)
+        FROM app.fluxo_laminar f JOIN usuarios u ON u.id = f.preenchido_por LEFT JOIN app.credenciais c ON c.usuario_id = f.preenchido_por
+        WHERE f.pagina_id = %s ORDER BY f.dia
+        """,
+        (pagina_id,),
+    ).fetchall()
+    for n, (dia, *valores, quem) in enumerate(linhas):
+        textos = [dia.strftime("%d.%m.%Y"), *(_no_laudo(c, v, dia, hoje) for c, v in zip(CAMPOS, valores)),
+                  laudo_esterilizacao.primeiro_nome(quem)]
+        for i, texto in enumerate(textos):
+            celulas.append(TABELA.celula(texto, n, i, tamanho=10))
+    impressa = con.execute("SELECT impresso_em IS NOT NULL FROM app.paginas_laudo WHERE id = %s", (pagina_id,)).fetchone()[0]
+    traco = TABELA.traco_das_vazias(len(linhas)) if impressa else None
+    return laudos.preencher(modelo, DEMONSTRACAO, celulas, riscos=[traco] if traco else None)
 
 
 laudos.registrar(
