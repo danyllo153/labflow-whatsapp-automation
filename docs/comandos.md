@@ -462,7 +462,7 @@ embarque navio O.SKY 189 linha 6 fase 1 load 43453/43462 item 2503/2503 amostras
 ```
 compostas do navio O.SKY 133 linha 2 fase 2 (A1-A5)(A6-A10)
 ```
-Todas as amostras precisam estar registradas e livres; uma composta pode juntar amostras de loads diferentes da mesma linha+fase. Nada é gravado se alguma amostra faltar ou já estiver em outra composta. O bot devolve o número de cada composta (`#21`). **O Coliformes de cada composta já vai para o caldo junto** (data de hoje, estriar amanhã; decisão de 25/10/2026, migration 101). O TAB e o Howard continuam pelos comandos abaixo (ou, no app, pelos botões da composta, função `criar_teste_da_composta`).
+Todas as amostras precisam estar registradas e livres; uma composta pode juntar amostras de loads diferentes da mesma linha+fase. Nada é gravado se alguma amostra faltar ou já estiver em outra composta. O bot devolve o número de cada composta (`#21`). **Abrir a composta não faz o Coliformes:** como no recebimento, ele fica **pendente** até o comando `coliformes feitos do navio ... linha ... fase ...` (a resposta do bot lembra o comando; decisão de 25/10/2026, migration 103). TAB, Coliformes e Howard seguem pelos comandos abaixo (ou, no app, pelos botões da composta, função `criar_teste_da_composta`; a lista do que falta está na view `vw_coliformes_pendentes`).
 
 ### TAB e Coliformes nas compostas de embarque
 Os mesmos comandos do recebimento, com o número `#` ou por extenso:
