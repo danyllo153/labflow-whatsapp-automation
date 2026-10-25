@@ -36,6 +36,13 @@
 - [ ] Se as pendências do piloto voltarem a acumular: `C:\Dev\estudos\ia\em-dia-2026-10-23.sql` (ensaio com `-v fim=ROLLBACK`; o `COMMIT` em massa o Danyllo roda no servidor)
 
 ### 📱 App (sessão da nuvem)
+- [x] **Pedidos de 25/10 (29 itens) e o visual novo** (APP-065 a APP-067, #282, #283 e a leva 3): menu escuro com ícones, Análises com ícone e cor
+  por família, Excel/Imprimir em ícone, IT, atividades com a caixa, TAB/Coliformes/Howard separados, Wort numa linha, compostas no Registrar,
+  sininho, <10 no FCOJ, Relatório do dia, Dashboard, branco automático, incubação sem lotes; falta publicar o container
+- [ ] **Laudo do Recebimento NFC** (preenche a cada lançamento): precisa do PDF do modelo (Danyllo)
+- [ ] Botões **Criar TAB** e **Criar Howard** na composta do embarque, quando o bot fizer o PB20
+- [ ] Relatório do dia no formato do relatório diário do bot, quando o bot responder o PB18
+- [ ] Embarque com vários loads/itens na tela, quando o bot fizer o PB19
 - [x] **Compostas no Recebimento FCOJ** (24/10, APP-058): recomendado de ~5 por composta e prévia
 - [x] **Laudo do Recebimento FCOJ** (24/10, APP-059, migration 070): como o papel (deitado, um lote por linha, faltantes com *), envio do modelo na aba Laudo
 - [ ] **Arquivo de amostras** (bot e app): caixa de cada load ("CX: 128" na Observação do laudo), bags, potes, recebimento e embarque
