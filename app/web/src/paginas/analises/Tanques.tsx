@@ -119,6 +119,7 @@ function Leituras({ leituras, erro, pode, aoGravar }: { leituras: Leitura[] | nu
     return g.set(k, [...(g.get(k) ?? []), l]);
   }, new Map<string, Leitura[]>())];
   const comPlacas = leituras.filter((l) => (placas[chave(l)] ?? "").trim());
+  const vazias = leituras.filter((l) => !(placas[chave(l)] ?? "").trim());
 
   function concluir() {
     acao.perguntar(
@@ -139,7 +140,12 @@ function Leituras({ leituras, erro, pode, aoGravar }: { leituras: Leitura[] | nu
         <section key={grupo} className="grupo-leituras" aria-label={grupo}>
           <h3>
             {pode && (
-              <input type="checkbox" aria-label={`Marcar todas de ${grupo}`} onChange={() => m.todos(itens.map(chave))} />
+              <input
+                type="checkbox"
+                aria-label={`Marcar todas de ${grupo}`}
+                checked={itens.every((l) => m.tem(chave(l)))}
+                onChange={() => m.todos(itens.map(chave))}
+              />
             )}
             {grupo} <span className="contador">{itens.length}</span>
           </h3>
@@ -152,7 +158,7 @@ function Leituras({ leituras, erro, pode, aoGravar }: { leituras: Leitura[] | nu
                   )}
                   <strong>{l.tanque}</strong>
                   <span>
-                    {l.frasco} · {l.analise}
+                    {l.frasco} · {l.analise} · {l.etapa === "pre" ? "pré-leitura" : "leitura final"}
                   </span>
                   {l.situacao !== "Atrasado" && <span className={classeDaSituacao(l.situacao)}>{l.situacao}</span>}
                 </label>
@@ -172,6 +178,14 @@ function Leituras({ leituras, erro, pode, aoGravar }: { leituras: Leitura[] | nu
       ))}
       {pode && (
         <div className="botoes-lado">
+          <button
+            type="button"
+            className="botao botao-simples"
+            disabled={vazias.length === 0}
+            onClick={() => (setPlacas({ ...placas, ...Object.fromEntries(vazias.map((l) => [chave(l), "<1, <1, <1"])) }), gravacao.voltar())}
+          >
+            &lt;1 em todas as vazias ({vazias.length})
+          </button>
           <button type="button" className="botao botao-simples" disabled={marcadas.length === 0} onClick={concluir}>
             Feitas sem placas ({marcadas.length})
           </button>

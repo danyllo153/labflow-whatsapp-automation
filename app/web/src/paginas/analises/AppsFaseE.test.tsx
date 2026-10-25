@@ -56,6 +56,23 @@ describe("apps de análise da Fase E (E3 a E8)", () => {
     expect(posts("POST /analises/tanques/leituras/concluir")).toEqual([{ itens: [{ analise_id: 7, etapa: "final" }] }]);
   });
 
+  it("Tanques: <1 em todas as vazias preenche as placas e grava depois da prévia", async () => {
+    const { posts } = abrir("/analises/tanques", {
+      "GET /analises/tanques/leituras": () => ({ status: 200, corpo: [LEITURA] }),
+      "POST /analises/tanques/placas": (c) => gravacao("Placas:\ntanque 44 normal CT = <1,<1,<1", c.previa),
+    });
+    expect(await screen.findByRole("checkbox", { name: /Marcar todas de Terra/ })).toBeChecked(); // o grupo acompanha os itens
+    expect(screen.getByText(/C\.T 48h · leitura final/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "<1 em todas as vazias (1)" }));
+    expect(screen.getByRole("textbox", { name: "Placas de 44 C.T 48h" })).toHaveValue("<1, <1, <1");
+    await userEvent.click(screen.getByRole("button", { name: "Ver as placas (1)" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Confirmar" }));
+    expect(posts("POST /analises/tanques/placas")).toEqual([
+      { itens: [{ analise_id: 7, etapa: "final", placas: "<1, <1, <1" }], previa: true },
+      { itens: [{ analise_id: 7, etapa: "final", placas: "<1, <1, <1" }], previa: false },
+    ]);
+  });
+
   it("Tanques: registrar coleta de navio com a prévia", async () => {
     const { posts } = abrir("/analises/tanques?aba=coleta", {
       "GET /analises/tanques/leituras": () => ({ status: 200, corpo: [] }),
