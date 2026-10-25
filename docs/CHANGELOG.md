@@ -13,7 +13,7 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 ## [Não lançado]
 
 ### Corrigido
-- **Leituras do dia: texto para o WhatsApp sem emoji** (25/10): o ✅ e o 🚨 chegavam como "�" ao compartilhar. O texto copiado e enviado leva só os números (as faixas juntas, `77001 (4-7)`) e o que fugiu do normal vai para **Atenção**, no fim da mensagem. Na tela as marcas continuam.
+- **Leituras do dia: texto para o WhatsApp sem emoji** (25/10): o ✅ e o 🚨 chegavam como "�" ao compartilhar. O texto copiado e enviado leva só os números (as faixas juntas, `77001 (4-7)`) e o que fugiu do normal vai para **Atenção**, no fim da mensagem. Na tela as marcas continuam, e **cada bloco tem a cor da família** (Recebimento laranja, Embarque laranja-escuro, Tank farm verde-água, Navio azul).
 
 ### Adicionado
 - **Estufas compactas no Turno e no Início** (25/10): uma linha por estufa, com Ok / Não ok do Supervisório e do Field chart (o Não ok pede a temperatura ali mesmo) e **Todas as pendentes Ok** com um Confirmar. A página Estufas saiu do menu e das Análises; o endereço `/estufas` leva ao Turno.
