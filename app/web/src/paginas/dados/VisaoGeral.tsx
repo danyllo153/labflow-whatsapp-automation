@@ -58,7 +58,7 @@ export default function VisaoGeral() {
   return (
     <section>
       <p className="trilha">
-        <Link to="/paginas">Páginas</Link> / Visão geral
+        <Link to="/paginas">Análises</Link> / Visão geral
       </p>
       <h1>Visão geral</h1>
 

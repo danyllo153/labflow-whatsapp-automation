@@ -70,6 +70,7 @@ export default function PaginaDeDados({ def }: { def: DefinicaoDePagina }) {
   const [paraImprimir, setParaImprimir] = useState<Record<string, unknown>[] | null>(null);
   const [preparando, setPreparando] = useState(false);
   const [avisoImpressao, setAvisoImpressao] = useState("");
+  const [menuImprimir, setMenuImprimir] = useState(false);
 
   useEffect(() => setRascunho(aplicados), [aplicados]);
   useEffect(() => setTexto(termo), [termo]);
@@ -152,9 +153,60 @@ export default function PaginaDeDados({ def }: { def: DefinicaoDePagina }) {
     <section className="pagina-dados">
       <div className="so-tela">
         <p className="trilha">
-          <Link to="/paginas">Páginas</Link> / {def.titulo}
+          <Link to="/paginas">Análises</Link> / {def.titulo}
         </p>
-        <h1>{def.titulo}</h1>
+        <div className="titulo-com-acoes">
+          <h1>{def.titulo}</h1>
+          <div className="acoes-icone">
+            <a
+              className="botao-icone"
+              aria-label="Exportar Excel"
+              title="Exportar para o Excel (só o que está filtrado)"
+              href={`${def.api}/excel?${consulta({ ...comBusca, ...def.fixos })}`}
+              download
+            >
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
+                <path d="M14 3v6h6M9 13l6 6M15 13l-6 6" />
+              </svg>
+            </a>
+            <div className="menu-imprimir">
+              <button
+                type="button"
+                className="botao-icone"
+                aria-label="Imprimir"
+                aria-expanded={menuImprimir}
+                title="Imprimir (escolha o papel)"
+                onClick={() => setMenuImprimir(!menuImprimir)}
+                disabled={preparando || !dados}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                  <path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                  <rect x="6" y="14" width="12" height="7" />
+                </svg>
+              </button>
+              {menuImprimir && (
+                <div className="menu-imprimir-opcoes" role="group" aria-label="Papel">
+                  {(["em pé", "deitado"] as const).map((o) => (
+                    <button
+                      key={o}
+                      type="button"
+                      aria-pressed={orientacao === o}
+                      onClick={() => {
+                        setOrientacao(o);
+                        setMenuImprimir(false);
+                        void imprimir();
+                      }}
+                    >
+                      A4 {o}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+        {preparando && <p className="texto-secundario">Preparando a impressão...</p>}
 
         <div className="busca-com-filtro">
           <label className="busca-redonda">
@@ -183,21 +235,6 @@ export default function PaginaDeDados({ def }: { def: DefinicaoDePagina }) {
             </svg>
             {etiquetas.length > 0 && <span className="abas-contador">{etiquetas.length}</span>}
           </button>
-        </div>
-        <div className="barra-acoes">
-          <a className="botao-secundario" href={`${def.api}/excel?${consulta({ ...comBusca, ...def.fixos })}`} download>
-            Exportar Excel
-          </a>
-          <button type="button" className="botao-secundario" onClick={() => void imprimir()} disabled={preparando || !dados}>
-            {preparando ? "Preparando..." : "Imprimir"}
-          </button>
-          <label className="orientacao">
-            Papel
-            <select value={orientacao} onChange={(e) => setOrientacao(e.target.value as typeof orientacao)}>
-              <option value="em pé">A4 em pé</option>
-              <option value="deitado">A4 deitado</option>
-            </select>
-          </label>
         </div>
         {avisoImpressao && (
           <p className="mensagem-erro" role="alert">

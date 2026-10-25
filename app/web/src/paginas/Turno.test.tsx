@@ -156,7 +156,7 @@ describe("Check-in: o resto do app só abre depois da entrada (APP-022b)", () =>
     abrir("/paginas", { "GET /turno": () => ({ status: 200, corpo: TRAVADO }) });
     expect(await screen.findByRole("heading", { level: 1, name: "Turno" })).toBeInTheDocument();
     expect(screen.getByText("Marque a sua entrada no turno para abrir o resto do app.")).toBeInTheDocument();
-    expect(screen.queryByRole("heading", { name: "Páginas" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "Análises" })).not.toBeInTheDocument();
   });
 
   it("depois de entrar, abre o app", async () => {
@@ -179,6 +179,6 @@ describe("Check-in: o resto do app só abre depois da entrada (APP-022b)", () =>
 
   it("quem não precisa de check-in usa o app direto", async () => {
     abrir("/paginas");
-    expect(await screen.findByRole("heading", { level: 1, name: "Páginas" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 1, name: "Análises" })).toBeInTheDocument();
   });
 });

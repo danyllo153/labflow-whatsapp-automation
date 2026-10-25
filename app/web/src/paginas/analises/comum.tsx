@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
 import { enviarJson, lerJson } from "../../api";
+import IconeApp from "../../componentes/IconeApp";
 import Instrucao, { type AppComInstrucao } from "./Instrucao";
 
 /**
@@ -37,6 +38,26 @@ export function dm(data: string | null | undefined): string {
   return `${d}/${mes}`;
 }
 
+/** Ícone e cor da família de cada app (visual novo, APP-065): o mesmo da grade de Análises. */
+const ICONE_DO_APP: Partial<Record<AppComInstrucao, string>> = {
+  "recebimento-fcoj": "recebimento-fcoj",
+  tanques: "tanques",
+  testes: "tab",
+  drops: "drops",
+  "embarque-fcoj": "embarque-fcoj",
+  "recebimento-nfc": "recebimento-nfc",
+  desvios: "desvios",
+};
+const COR_DO_APP: Partial<Record<AppComInstrucao, string>> = {
+  "recebimento-fcoj": "fcoj",
+  tanques: "nfc",
+  testes: "tab",
+  drops: "drops",
+  "embarque-fcoj": "embarque",
+  "recebimento-nfc": "nfc-receb",
+  desvios: "desvios",
+};
+
 /** A moldura do app: voltar, ícone, título, abas (no endereço, ?aba=) e o conteúdo da aba escolhida; Instrução e Vídeo
  * são iguais em todos os apps e ficam aqui (E9). */
 export function AppDeAnalise({
@@ -62,11 +83,11 @@ export function AppDeAnalise({
   return (
     <section className="app-analise">
       <p className="voltar">
-        <Link to="/paginas">← Páginas</Link>
+        <Link to="/paginas">← Análises</Link>
       </p>
       <div className="app-analise-topo">
-        <span className={`app-icone app-cor-${cor}`} aria-hidden="true">
-          {sigla}
+        <span className={`app-icone app-cor-${COR_DO_APP[app] ?? cor}`} aria-hidden="true">
+          {ICONE_DO_APP[app] ? <IconeApp nome={ICONE_DO_APP[app]} /> : sigla}
         </span>
         <div>
           <h1>{titulo}</h1>

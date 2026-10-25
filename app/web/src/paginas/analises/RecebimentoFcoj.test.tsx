@@ -85,7 +85,7 @@ describe("Recebimento FCOJ como app (Fase E, E2)", () => {
     expect(within(pulos).getByText("33-34, 37-38")).toBeInTheDocument();
     const abas = screen.getByRole("navigation", { name: "Partes do Recebimento FCOJ" });
     expect(within(abas).getAllByRole("button").map((b) => b.textContent?.replace(/\d+$/, ""))).toEqual([
-      "Painel", "Registrar", "Compostas", "Resultados", "Laudo", "Instrução", "Vídeo",
+      "Painel", "Registrar", "Compostas", "Resultados", "Laudo", "IT", "Vídeo",
     ]);
   });
 

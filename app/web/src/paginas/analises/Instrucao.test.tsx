@@ -44,7 +44,7 @@ describe("Instrução e Vídeo dos apps (E9)", () => {
     });
     expect(await screen.findByText(/1\. Separe as placas\./)).toBeInTheDocument();
     expect(screen.getByText("Versão 2 · Ana Souza em 24/10/2026 10:00")).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /Editar a instrução/ })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: /Editar a IT/ })).not.toBeInTheDocument();
   });
 
   it("o Admin escreve a instrução e grava", async () => {
@@ -59,8 +59,8 @@ describe("Instrução e Vídeo dos apps (E9)", () => {
       },
       "Admin",
     );
-    await userEvent.click(await screen.findByRole("button", { name: "Escrever a instrução" }));
-    await userEvent.type(screen.getByLabelText("Instrução de trabalho"), "Conclua os drops do dia.");
+    await userEvent.click(await screen.findByRole("button", { name: "Adicionar IT" }));
+    await userEvent.type(screen.getByLabelText(/Instrução de trabalho/), "Conclua os drops do dia.");
     await userEvent.click(screen.getByRole("button", { name: "Gravar" }));
     expect(await screen.findByText("Conclua os drops do dia.")).toBeInTheDocument();
     expect(api.chamadas.find((c) => c.rota === "PUT /analises/instrucoes/drops")?.corpo).toEqual({ texto: "Conclua os drops do dia.", video_url: null });

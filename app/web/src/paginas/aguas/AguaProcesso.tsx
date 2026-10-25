@@ -75,7 +75,7 @@ export default function AguaProcesso() {
   return (
     <section>
       <p className="voltar">
-        <Link to="/paginas">← Páginas</Link>
+        <Link to="/paginas">← Análises</Link>
       </p>
       <h1>Água do processo</h1>
       <p className="texto-secundario">Anéis de água estéril do Manifold e das linhas de carregamento das Câmaras 4, 5 e 6.</p>

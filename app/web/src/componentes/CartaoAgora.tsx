@@ -5,6 +5,7 @@ import { enviarJson } from "../api";
 import type { DadosEstufas } from "../paginas/Estufas";
 import type { EstadoDoTurno } from "../paginas/Turno";
 import type { Pendencia } from "./BlocosDePendencias";
+import IconeApp from "./IconeApp";
 
 /**
  * Cartão "Agora" no topo do Início (layout do canvas, APP-056): o relógio do turno com quanto falta, o registro livre
@@ -39,7 +40,8 @@ interface Destaque {
   atrasados: number;
   caminho: string;
   acao: string | null; // o texto do botão ("Espalhei todos"); sem ele, "Ver os N"
-  cor: "azul" | "laranja" | "verde" | "marinho";
+  cor: string; // família (app-cor-<cor>): o mesmo ícone e cor do app em Análises
+  icone: string;
 }
 
 const COD_DA_ANALISE: Record<string, string> = { "C.T 48h": "CT", "B.L 72h": "BL72", "B.L 120h": "BL120" };
@@ -66,12 +68,21 @@ export function destinoDe(p: Pendencia): { caminho: string; acao: string | null 
   return { caminho: "/paginas", acao: null };
 }
 
-function corDe(p: Pendencia): Destaque["cor"] {
+/** A família da pendência (visual novo, APP-065): cada análise com a sua cor e o seu ícone, iguais aos de Análises. */
+export function familiaDe(p: Pendencia): Pick<Destaque, "cor" | "icone"> {
   const texto = `${p.tipo} ${p.analise} ${p.grupo ?? ""}`;
-  if (/coliforme/i.test(texto)) return "laranja";
-  if (/\bTAB\b/.test(texto)) return "azul";
-  if (p.bloco.startsWith("NFC") || p.tipo === "Drop") return "verde";
-  return "marinho";
+  if (/howard/i.test(texto)) return { cor: "howard", icone: "howard" };
+  if (/coliforme/i.test(texto)) return { cor: "coli", icone: "coliformes" };
+  if (/\bTAB\b/.test(texto)) return { cor: "tab", icone: "tab" };
+  if (p.tipo === "Drop") return { cor: "drops", icone: "drops" };
+  if (p.bloco === "Desvios") return { cor: "desvios", icone: "desvios" };
+  if (p.bloco === "Recebimento NFC") return { cor: "nfc-receb", icone: "recebimento-nfc" };
+  if (p.bloco.startsWith("NFC")) return { cor: "nfc", icone: "tanques" };
+  if (p.bloco === "FCOJ Recebimento") return { cor: "fcoj", icone: "recebimento-fcoj" };
+  if (p.bloco === "FCOJ Embarque") return { cor: "embarque", icone: "embarque-fcoj" };
+  if (p.bloco === "Águas e superfícies")
+    return /baia/i.test(texto) ? { cor: "baias", icone: "baias" } : /linha/i.test(texto) ? { cor: "linhas", icone: "linhas" } : { cor: "agua", icone: "agua" };
+  return { cor: "geral", icone: "visao-geral" };
 }
 
 /** Os 3 grupos com mais coisa para hoje (atrasados primeiro), com o bloco na frente quando o grupo sozinho é vago. */
@@ -80,7 +91,7 @@ export function destaquesDoDia(itens: Pendencia[]): Destaque[] {
   for (const p of itens) {
     const grupo = p.grupo ?? p.analise ?? p.tipo;
     const nome = p.bloco.startsWith("FCOJ") ? `${p.bloco.replace("FCOJ ", "")} · ${grupo}` : grupo;
-    const d = grupos.get(nome) ?? { nome, n: 0, atrasados: 0, ...destinoDe(p), cor: corDe(p) };
+    const d = grupos.get(nome) ?? { nome, n: 0, atrasados: 0, ...destinoDe(p), ...familiaDe(p) };
     d.n += 1;
     if (p.situacao === "Atrasado") d.atrasados += 1;
     grupos.set(nome, d);
@@ -168,8 +179,11 @@ export default function CartaoAgora(props: { turno: EstadoDoTurno | null; estufa
       {destaques.length > 0 && (
         <div className="agora-destaques">
           {destaques.map((d) => (
-            <div key={d.nome} className={`destaque bloco-${d.cor}`}>
+            <div key={d.nome} className={`destaque familia-${d.cor}`}>
               <div className="destaque-topo">
+                <span className={`app-icone app-cor-${d.cor}`} aria-hidden="true">
+                  <IconeApp nome={d.icone} tamanho={20} />
+                </span>
                 <span className="destaque-nome">{d.nome}</span>
                 <span className="destaque-numero">{d.n}</span>
               </div>

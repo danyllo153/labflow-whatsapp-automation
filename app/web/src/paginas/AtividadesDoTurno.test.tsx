@@ -46,32 +46,30 @@ describe("Início: atividades fixas do turno (APP-023)", () => {
     const cartao = await screen.findByRole("region", { name: "Atividades do turno" });
     expect(within(cartao).getByRole("heading", { level: 2 })).toHaveTextContent("Para fazer agora · Manhã 1 de 2");
     expect(within(cartao).getByText(/Feito por Ana Souza às 09:12/)).toBeInTheDocument();
-    const feito = within(cartao).getByRole("group", { name: "Marcar Planilhas" });
-    expect(within(feito).getByRole("button", { name: "Feito" })).toHaveAttribute("aria-pressed", "true");
-    expect(within(feito).getByRole("button", { name: "Não feito" })).toHaveAttribute("aria-pressed", "false");
+    expect(within(cartao).getByRole("checkbox", { name: /^Planilhas/ })).toBeChecked();
+    expect(within(cartao).getByRole("checkbox", { name: /^Leitura de placa/ })).not.toBeChecked();
+    expect(within(cartao).queryByRole("button", { name: "Não feito" })).not.toBeInTheDocument(); // só a caixa (25/10)
   });
 
-  it("Feito e Não feito gravam pela API; tocar no marcado desmarca", async () => {
+  it("a caixa marca Feito pela API e, tocada de novo, desmarca", async () => {
     const api = abrir(BASE, "Operador", {
       "PUT /turno/atividades/1": (corpo) => ({
         status: 200,
         corpo: {
           ...BASE,
           atividades: [
-            { id: 1, texto: "Leitura de placa", estado: corpo.feito ? "feito" : "nao_feito", quem: "Ana Souza", quando: "10:00" },
+            corpo.feito
+              ? { id: 1, texto: "Leitura de placa", estado: "feito", quem: "Ana Souza", quando: "10:00" }
+              : { id: 1, texto: "Leitura de placa", estado: null, quem: null, quando: null },
             BASE.atividades[1],
           ],
         },
       }),
     });
-    const grupo = await screen.findByRole("group", { name: "Marcar Leitura de placa" });
-    await userEvent.click(within(grupo).getByRole("button", { name: "Não feito" }));
-    expect(api.chamadas.filter((c) => c.rota === "PUT /turno/atividades/1").map((c) => c.corpo)).toEqual([{ feito: false }]);
-    expect(await screen.findByText(/Não feito por Ana Souza às 10:00/)).toBeInTheDocument();
-    const marcado = screen.getByRole("group", { name: "Marcar Leitura de placa" });
-    expect(within(marcado).getByRole("button", { name: "Não feito" })).toHaveAttribute("aria-pressed", "true");
-    await userEvent.click(within(marcado).getByRole("button", { name: "Não feito" }));
-    expect(api.chamadas.filter((c) => c.rota === "PUT /turno/atividades/1").map((c) => c.corpo)).toEqual([{ feito: false }, { feito: null }]);
+    await userEvent.click(await screen.findByRole("checkbox", { name: /^Leitura de placa/ }));
+    expect(await screen.findByText(/Feito por Ana Souza às 10:00/)).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("checkbox", { name: /^Leitura de placa/ }));
+    expect(api.chamadas.filter((c) => c.rota === "PUT /turno/atividades/1").map((c) => c.corpo)).toEqual([{ feito: true }, { feito: null }]);
   });
 
   it("pendência herdada tem a caixa de Feito e diz de onde veio", async () => {
@@ -105,8 +103,7 @@ describe("Início: atividades fixas do turno (APP-023)", () => {
 
   it("mostra o erro da API ao gravar", async () => {
     abrir(BASE, "Operador", { "PUT /turno/atividades/1": () => ({ status: 404, corpo: { detail: "Essa atividade não é do seu turno de hoje." } }) });
-    const grupo = await screen.findByRole("group", { name: "Marcar Leitura de placa" });
-    await userEvent.click(within(grupo).getByRole("button", { name: "Feito" }));
+    await userEvent.click(await screen.findByRole("checkbox", { name: /^Leitura de placa/ }));
     expect(await screen.findByRole("alert")).toHaveTextContent("não é do seu turno de hoje");
   });
 });

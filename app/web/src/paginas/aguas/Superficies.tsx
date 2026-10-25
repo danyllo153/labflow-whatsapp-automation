@@ -71,7 +71,7 @@ export default function SuperficiesPagina({ tipo }: { tipo: Tipo }) {
   return (
     <section>
       <p className="voltar">
-        <Link to="/paginas">← Páginas</Link>
+        <Link to="/paginas">← Análises</Link>
       </p>
       <h1>{t.titulo}</h1>
       <p className="texto-secundario">{t.descricao} C.T. em 48 h, B.L. em 72 h e 120 h, contadas do dia da análise.</p>

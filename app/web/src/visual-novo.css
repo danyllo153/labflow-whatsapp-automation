@@ -1,0 +1,595 @@
+/* ======================================================================================================
+   Visual novo (APP-065, 25/10/2026), aprovado pelo Danyllo no canvas de design: a "mistura" das três direções.
+   - base clara e sóbria: fundo cinza-claro, cartões brancos com borda fina, títulos grandes e fortes;
+   - menu lateral cinza-escuro com ícones (como a referência que ele mandou);
+   - cada família de análise com a sua cor e o seu ícone, iguais em todo o app (Análises, Início, cabeçalho dos apps):
+     NFC verde-água, drops ciano, FCOJ laranja, TAB roxo, Coliformes rosa, Howard índigo, águas azul, rotina cinza;
+   - o estado tem cor própria e sempre com texto: verde ok/feito, vermelho não ok/não feito, âmbar vence hoje;
+   - números em fonte de largura fixa, botões menores, Excel e Imprimir só com ícone.
+   Carregado depois de estilos.css e fase-e.css: os valores daqui valem sobre os de lá.
+   ====================================================================================================== */
+:root {
+  --fundo: #f5f6fa;
+  --cartao: #ffffff;
+  --borda: #e5e7eb;
+  --borda-forte: #d5dbe4;
+  --texto: #0f172a;
+  --texto-secundario: #5b6678;
+  --acao: #2563eb;
+  --acao-botao: #2563eb;
+  --acao-escura: #1d4ed8;
+  --acao-fundo: #eaf1fe;
+  --ok: #16a34a;
+  --ok-fundo: #dcfce7;
+  --ok-texto: #166534;
+  --nao-ok: #dc2626;
+  --nao-ok-fundo: #fee2e2;
+  --nao-ok-texto: #991b1b;
+  --pendente-fundo: #fef3c7;
+  --pendente-texto: #92400e;
+  --no-prazo-fundo: #dbeafe;
+  --no-prazo-texto: #1e40af;
+  --linha-suave: #eef0f4;
+  --zebra: #f9fafc;
+  --cabecalho-tabela: #f3f5f9;
+  --menu-ativo: #eef1f6;
+  --raio: 10px;
+  --raio-cartao: 14px;
+  --sombra-1: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --sombra-2: 0 8px 24px rgba(15, 23, 42, 0.1);
+  --fonte-numero: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+
+  /* menu lateral escuro */
+  --menu-fundo: #2b3240;
+  --menu-texto: #cbd5e1;
+  --menu-item-ativo: #3d4657;
+  --menu-hover: #353d4d;
+
+  /* famílias */
+  --fam-nfc: #0d9488;
+  --fam-drops: #0891b2;
+  --fam-nfc-receb: #115e59;
+  --fam-desvios: #dc2626;
+  --fam-fcoj: #ea580c;
+  --fam-embarque: #c2410c;
+  --fam-tab: #7c3aed;
+  --fam-coli: #db2777;
+  --fam-howard: #4f46e5;
+  --fam-agua: #0284c7;
+  --fam-baias: #0369a1;
+  --fam-linhas: #075985;
+  --fam-rotina: #475569;
+  --fam-geral: #2b3240;
+}
+
+/* ---------- títulos ---------- */
+h1 {
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+h2 {
+  font-size: 1.12rem;
+  font-weight: 700;
+}
+
+.cartao > h2:first-child {
+  font-size: 1.12rem;
+  font-weight: 700;
+}
+
+@media (min-width: 900px) {
+  h1 {
+    font-size: 2.1rem; /* ~30 px */
+  }
+}
+
+/* ---------- menu lateral cinza-escuro com ícones ---------- */
+@media (min-width: 900px) {
+  .menu-lateral {
+    background: var(--menu-fundo);
+    color: var(--menu-texto);
+    border-right: 0;
+  }
+
+  .menu-lateral .marca {
+    color: #ffffff;
+  }
+
+  .menu-lateral .marca-logo {
+    background: #ffffff;
+    color: var(--menu-fundo);
+  }
+
+  .item-menu {
+    color: var(--menu-texto);
+    gap: 12px;
+  }
+
+  .item-menu:hover {
+    background: var(--menu-hover);
+    color: #ffffff;
+  }
+
+  .item-menu.active {
+    background: var(--menu-item-ativo);
+    border-color: transparent;
+    box-shadow: none;
+    color: #ffffff;
+  }
+
+  .menu-lateral .etiqueta-breve {
+    background: rgba(255, 255, 255, 0.1);
+    color: var(--menu-texto);
+  }
+
+  /* o cartão das folhas fica claro sobre o menu escuro */
+  .menu-lateral .cartao-folhas {
+    border-color: transparent;
+  }
+}
+
+/* ---------- ícones dos apps, por família ---------- */
+.app-icone {
+  border-radius: 12px;
+}
+
+.app-icone svg {
+  display: block;
+}
+
+.app-cor-nfc { background: var(--fam-nfc); }
+.app-cor-drops { background: var(--fam-drops); }
+.app-cor-nfc-receb { background: var(--fam-nfc-receb); }
+.app-cor-desvios { background: var(--fam-desvios); }
+.app-cor-fcoj { background: var(--fam-fcoj); }
+.app-cor-embarque { background: var(--fam-embarque); }
+.app-cor-tab { background: var(--fam-tab); }
+.app-cor-coli { background: var(--fam-coli); }
+.app-cor-howard { background: var(--fam-howard); }
+.app-cor-agua { background: var(--fam-agua); }
+.app-cor-baias { background: var(--fam-baias); }
+.app-cor-linhas { background: var(--fam-linhas); }
+.app-cor-rotina { background: var(--fam-rotina); }
+.app-cor-geral { background: var(--fam-geral); }
+
+.grupo-paginas > h2 {
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--texto-secundario);
+}
+
+.app-cartao {
+  border-radius: var(--raio-cartao);
+}
+
+.app-estado-atrasado,
+.app-estado-hoje {
+  font-weight: 700;
+}
+
+/* ---------- Início: números com a cor do estado, em fonte de largura fixa ---------- */
+.cartao-numero,
+.cartao-numero.bloco-azul,
+.cartao-numero.bloco-laranja,
+.cartao-numero.bloco-verde {
+  background: var(--cartao);
+  color: var(--texto);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-cartao);
+  box-shadow: var(--sombra-1);
+}
+
+.cartao-numero .numero {
+  font-family: var(--fonte-numero);
+  font-weight: 600;
+}
+
+.cartao-numero .rotulo {
+  color: var(--texto-secundario);
+}
+
+.cartao-numero.bloco-laranja .numero {
+  color: var(--nao-ok);
+}
+
+.cartao-numero.bloco-verde .numero {
+  color: var(--ok);
+}
+
+.cartao-numero.ativo {
+  border-color: var(--acao);
+  box-shadow: 0 0 0 2px var(--acao-fundo);
+}
+
+/* destaques do dia: cartão branco, ícone da família e o botão com a cor dela */
+.destaque {
+  background: var(--cartao) !important;
+  color: var(--texto) !important;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-cartao);
+}
+
+.destaque-topo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.destaque-topo .app-icone {
+  width: 40px;
+  height: 40px;
+  border-radius: 11px;
+}
+
+.destaque-nome {
+  flex: 1;
+  font-weight: 700;
+  color: var(--texto);
+}
+
+.destaque-numero {
+  font-family: var(--fonte-numero);
+  font-weight: 600;
+  color: var(--texto);
+}
+
+.destaque .pilula-acao {
+  background: var(--menu-ativo);
+  color: var(--texto);
+  border-radius: var(--raio);
+  font-weight: 700;
+}
+
+.familia-nfc .pilula-acao { background: #ccfbf1; color: #115e59; }
+.familia-drops .pilula-acao { background: #cffafe; color: #155e75; }
+.familia-nfc-receb .pilula-acao { background: #ccfbf1; color: #134e4a; }
+.familia-desvios .pilula-acao { background: var(--nao-ok-fundo); color: var(--nao-ok-texto); }
+.familia-fcoj .pilula-acao { background: #ffedd5; color: #9a3412; }
+.familia-embarque .pilula-acao { background: #ffedd5; color: #9a3412; }
+.familia-tab .pilula-acao { background: #ede9fe; color: #5b21b6; }
+.familia-coli .pilula-acao { background: #fce7f3; color: #9d174d; }
+.familia-howard .pilula-acao { background: #e0e7ff; color: #3730a3; }
+.familia-agua .pilula-acao,
+.familia-baias .pilula-acao,
+.familia-linhas .pilula-acao { background: #e0f2fe; color: #075985; }
+
+.destaque .pilula-info {
+  background: var(--nao-ok-fundo);
+  color: var(--nao-ok-texto);
+}
+
+/* ---------- atividades do turno: só a caixa de Feito ---------- */
+.atividade-caixa {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.atividade-caixa input[type="checkbox"] {
+  width: 22px;
+  height: 22px;
+  margin: 0;
+  flex: none;
+  accent-color: var(--ok);
+  cursor: pointer;
+}
+
+.atividade-caixa .atividade-texto {
+  display: flex;
+  flex-direction: column;
+}
+
+.atividade.feito .atividade-texto > span:first-child {
+  color: var(--texto);
+}
+
+.atividade.feito .texto-secundario {
+  color: var(--ok-texto);
+  font-weight: 600;
+}
+
+.atividade.nao_feito .texto-secundario {
+  color: var(--nao-ok-texto);
+  font-weight: 600;
+}
+
+.herdadas {
+  border-left: 0;
+  background: var(--nao-ok-fundo);
+  border-radius: var(--raio);
+  padding: 8px 12px;
+}
+
+.herdadas h3 {
+  color: var(--nao-ok-texto);
+}
+
+.atividades-dica {
+  margin: 8px 0 0;
+}
+
+/* ---------- botões menores, cantos de 10 px ---------- */
+.botao,
+.botao-secundario,
+.botao-topo {
+  border-radius: var(--raio);
+}
+
+@media (min-width: 900px) {
+  .botao,
+  .botao-secundario {
+    min-height: 38px;
+    padding: 6px 16px;
+    font-size: 0.93rem;
+  }
+}
+
+.botao-principal {
+  background: var(--acao-botao);
+  border-color: var(--acao-botao);
+}
+
+/* ---------- título com as ações em ícone (Excel, Imprimir) ---------- */
+.titulo-com-acoes {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.titulo-com-acoes h1 {
+  margin: 0;
+}
+
+.acoes-icone {
+  display: flex;
+  gap: 8px;
+  flex: none;
+}
+
+.botao-icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 40px;
+  height: 40px;
+  padding: 0 10px;
+  border-radius: var(--raio);
+  border: 1px solid var(--borda);
+  background: var(--cartao);
+  color: var(--texto);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.botao-icone:hover:not(:disabled) {
+  background: var(--menu-ativo);
+}
+
+.botao-icone:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.botao-icone[aria-label="Exportar Excel"] {
+  color: #15803d;
+}
+
+.menu-imprimir {
+  position: relative;
+}
+
+.menu-imprimir-opcoes {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 6px);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  min-width: 150px;
+  padding: 6px;
+  background: var(--cartao);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra-2);
+}
+
+.menu-imprimir-opcoes button {
+  text-align: left;
+  padding: 9px 10px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--texto);
+  font: inherit;
+  cursor: pointer;
+}
+
+.menu-imprimir-opcoes button:hover,
+.menu-imprimir-opcoes button[aria-pressed="true"] {
+  background: var(--menu-ativo);
+}
+
+/* ---------- tabelas: cabeçalho marcado, linhas alternadas, números em fonte de largura fixa ---------- */
+.tabela-dados th {
+  background: var(--cabecalho-tabela);
+  color: var(--texto-secundario);
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.tabela-dados tbody tr:nth-child(even) {
+  background: var(--zebra);
+}
+
+.tabela-dados td.numero,
+.tabela-dados td[data-tipo="numero"] {
+  font-family: var(--fonte-numero);
+}
+
+/* ---------- etiquetas de situação ---------- */
+.etiqueta-ok {
+  background: var(--ok-fundo);
+  color: var(--ok-texto);
+}
+
+.etiqueta-nao-ok {
+  background: var(--nao-ok-fundo);
+  color: var(--nao-ok-texto);
+}
+
+.etiqueta-pendente {
+  background: var(--pendente-fundo);
+  color: var(--pendente-texto);
+}
+
+/* ---------- abas dos apps: a da vez com a cor da ação ---------- */
+.abas-app button[aria-current="page"] {
+  font-weight: 700;
+}
+
+/* ---------- modo escuro ---------- */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema="claro"]) {
+    --fundo: #0b1120;
+    --cartao: #131c2e;
+    --borda: #1f2a3f;
+    --borda-forte: #2b3954;
+    --texto: #e2e8f0;
+    --texto-secundario: #94a3b8;
+    --acao: #60a5fa;
+    --acao-botao: #2563eb;
+    --acao-escura: #93c5fd;
+    --acao-fundo: #172554;
+    --ok: #4ade80;
+    --ok-fundo: #12321f;
+    --ok-texto: #86efac;
+    --nao-ok: #f87171;
+    --nao-ok-fundo: #3b1414;
+    --nao-ok-texto: #fca5a5;
+    --pendente-fundo: #3b2a0a;
+    --pendente-texto: #fcd34d;
+    --no-prazo-fundo: #172554;
+    --no-prazo-texto: #93c5fd;
+    --linha-suave: #1e293b;
+    --zebra: #111a2b;
+    --cabecalho-tabela: #172036;
+    --menu-ativo: #1e293b;
+    --menu-fundo: #111a2e;
+    --menu-item-ativo: #1e293b;
+    --menu-hover: #182236;
+  }
+}
+
+:root[data-tema="escuro"] {
+  --fundo: #0b1120;
+  --cartao: #131c2e;
+  --borda: #1f2a3f;
+  --borda-forte: #2b3954;
+  --texto: #e2e8f0;
+  --texto-secundario: #94a3b8;
+  --acao: #60a5fa;
+  --acao-botao: #2563eb;
+  --acao-escura: #93c5fd;
+  --acao-fundo: #172554;
+  --ok: #4ade80;
+  --ok-fundo: #12321f;
+  --ok-texto: #86efac;
+  --nao-ok: #f87171;
+  --nao-ok-fundo: #3b1414;
+  --nao-ok-texto: #fca5a5;
+  --pendente-fundo: #3b2a0a;
+  --pendente-texto: #fcd34d;
+  --no-prazo-fundo: #172554;
+  --no-prazo-texto: #93c5fd;
+  --linha-suave: #1e293b;
+  --zebra: #111a2b;
+  --cabecalho-tabela: #172036;
+  --menu-ativo: #1e293b;
+  --menu-fundo: #111a2e;
+  --menu-item-ativo: #1e293b;
+  --menu-hover: #182236;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema="claro"]) .familia-nfc .pilula-acao,
+  :root:not([data-tema="claro"]) .familia-nfc-receb .pilula-acao { background: #0b2e2b; color: #5eead4; }
+  :root:not([data-tema="claro"]) .familia-drops .pilula-acao { background: #082f3a; color: #67e8f9; }
+  :root:not([data-tema="claro"]) .familia-fcoj .pilula-acao,
+  :root:not([data-tema="claro"]) .familia-embarque .pilula-acao { background: #3a1d0b; color: #fdba74; }
+  :root:not([data-tema="claro"]) .familia-tab .pilula-acao { background: #2a1b4d; color: #c4b5fd; }
+  :root:not([data-tema="claro"]) .familia-coli .pilula-acao { background: #3d1229; color: #f9a8d4; }
+  :root:not([data-tema="claro"]) .familia-howard .pilula-acao { background: #1e1b4b; color: #a5b4fc; }
+  :root:not([data-tema="claro"]) .familia-agua .pilula-acao,
+  :root:not([data-tema="claro"]) .familia-baias .pilula-acao,
+  :root:not([data-tema="claro"]) .familia-linhas .pilula-acao { background: #0c2a3e; color: #7dd3fc; }
+}
+
+:root[data-tema="escuro"] .familia-nfc .pilula-acao,
+:root[data-tema="escuro"] .familia-nfc-receb .pilula-acao { background: #0b2e2b; color: #5eead4; }
+:root[data-tema="escuro"] .familia-drops .pilula-acao { background: #082f3a; color: #67e8f9; }
+:root[data-tema="escuro"] .familia-fcoj .pilula-acao,
+:root[data-tema="escuro"] .familia-embarque .pilula-acao { background: #3a1d0b; color: #fdba74; }
+:root[data-tema="escuro"] .familia-tab .pilula-acao { background: #2a1b4d; color: #c4b5fd; }
+:root[data-tema="escuro"] .familia-coli .pilula-acao { background: #3d1229; color: #f9a8d4; }
+:root[data-tema="escuro"] .familia-howard .pilula-acao { background: #1e1b4b; color: #a5b4fc; }
+:root[data-tema="escuro"] .familia-agua .pilula-acao,
+:root[data-tema="escuro"] .familia-baias .pilula-acao,
+:root[data-tema="escuro"] .familia-linhas .pilula-acao { background: #0c2a3e; color: #7dd3fc; }
+
+/* ---------- ajustes vistos na tela (25/10) ---------- */
+.cartoes-numeros .cartao-numero[class*="bloco-"] .numero {
+  color: var(--texto);
+}
+
+.cartoes-numeros .cartao-numero[class*="bloco-"] .rotulo {
+  color: var(--texto-secundario);
+}
+
+.cartoes-numeros .cartao-numero.bloco-laranja.alerta .numero {
+  color: var(--nao-ok);
+}
+
+.cartoes-numeros .cartao-numero.bloco-verde .numero {
+  color: var(--ok);
+}
+
+.destaque .pilula-info {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  padding: 0 10px;
+  border-radius: 999px;
+  font-weight: 600;
+  opacity: 1;
+}
+
+/* gráfico da semana: as cores das famílias (TAB roxo, Coliformes rosa, NFC verde-água, C.T/B.L do FCOJ laranja) */
+.serie-azul { background: var(--fam-tab) !important; }
+.serie-laranja { background: var(--fam-coli) !important; }
+.serie-verde { background: var(--fam-nfc) !important; }
+.serie-marinho { background: var(--fam-fcoj) !important; }
+
+/* Turno: equipe e estufas com a mesma altura (sem o buraco branco ao lado da equipe) */
+.turno-topo {
+  align-items: stretch;
+}
+
+.turno-topo > .cartao {
+  height: calc(100% - 16px);
+}

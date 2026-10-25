@@ -17,6 +17,15 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 - **Esterilização, água do processo, baias e linhas por frase** (bot, PB8 e PB9, migration 049): `esterilizei meio de cultura e frascos ciclo A1092/26`, `coleta agua do processo manifold, camara 5`, `agua do processo ct <1 bl <1`, `analisei baia 8,9`, `baia 8 ct48 <1 bl72 <1`. Mostra o resumo, pede o "sim" e grava pelas funções do app (067). A IA conhece os formatos; ajuda em `comandos esterilização`.
 
 ### Alterado
+- **Visual novo do app** (25/10, APP-065, aprovado no canvas de design): menu lateral cinza-escuro com ícones; "Páginas"
+  passa a se chamar **Análises**, com um **ícone por app** no lugar das siglas e **uma cor por família** (NFC verde-água,
+  drops ciano, FCOJ laranja, TAB roxo, Coliformes rosa, Howard índigo, águas azul, rotina cinza), a mesma no Início e
+  no cabeçalho de cada app; títulos maiores, números em fonte de largura fixa, botões menores, tabelas com cabeçalho
+  marcado e linhas alternadas; **Excel e Imprimir só com ícone** (o papel A4 em pé ou deitado fica dentro do Imprimir);
+  **Tanques terra e Navios num app só** ("Análise de tanques"; o app "Navios" abria o de Tanques); a aba Instrução vira
+  **IT** ("Adicionar IT"); modo escuro com as mesmas cores.
+- **Atividades do turno só com a caixa de Feito** (25/10, APP-065): sem o botão Não feito; o que ninguém marcar até o
+  fim do turno passa como não feito para o turno seguinte, em "Pendências herdadas".
 - **Leituras de tanque mais rápidas** (app, 25/10, APP-064): botão "<1 em todas as vazias" (preenche `<1, <1, <1`, mostra a
   prévia e grava no Confirmar), a caixa do grupo acompanha os itens marcados e cada linha diz se é pré-leitura ou leitura final.
 - **Baias e linhas são análise, não coleta** (bot, 25/10, migration 100): a frase passa a ser `analisei baia 8,9` / `analisei linha 3` (a IA também entende "coletei" ou "passei swab na baia 8"); só Admin e Analista registram (o Coletor deixa de registrar baias e linhas pelo bot); a prévia fala "Baia 8, 9: análise de 25/10/2026 14:00". `coleta de baia` ainda é aceito.
