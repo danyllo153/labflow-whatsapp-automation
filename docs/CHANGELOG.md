@@ -12,6 +12,9 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 
 ## [Não lançado]
 
+### Adicionado
+- **Laudo do Recebimento NFC** (25/10, migration 073 do app): aba **Laudo** no app Recebimento NFC, no mesmo papel e modelo do laudo do Recebimento FCOJ, em folhas próprias: uma linha por lote e tipo, C.T/B.L como lidos na placa e, na Observação, o tipo e a diluição (`past 10¹`, `fresh 10³`).
+
 ### Alterado
 - **Ok e Não ok em ícone redondo** (25/10): nas estufas, os botões viraram o círculo verde com visto e o vermelho com X (cheio quando escolhido, contorno cinza quando não); a temperatura do Não ok fica ao lado. Nas Leituras, as marcas de lido e de fora do limite usam os mesmos ícones.
 

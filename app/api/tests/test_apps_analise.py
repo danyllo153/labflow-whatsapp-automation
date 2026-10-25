@@ -180,3 +180,30 @@ def test_o_consultor_ve_mas_nao_grava(cliente, logado):
     assert cliente.get("/analises/tanques/leituras").status_code == 200
     assert cliente.get("/analises/drops").status_code == 200
     assert cliente.post("/analises/leitura-do-dia/finalizar", json={"previa": True}).status_code == 403
+
+
+def test_laudo_do_recebimento_nfc_no_modelo_do_fcoj(cliente, logado, hoje):
+    """073: folhas próprias do NFC, no mesmo modelo do FCOJ; o lido na placa e, na Observação, o tipo e a diluição."""
+    logado()
+    pedido = {"load": "98723", "fabrica": "UCH", "data": str(hoje - timedelta(days=2)),
+              "lotes": [{"lote": 7, "amostra": "fresh", "diluicao": 3}, {"lote": 7, "amostra": "past", "diluicao": 1}]}
+    _confirmar(cliente, "/analises/recebimento-nfc/registrar", pedido)
+    ct = next(p for p in cliente.get("/analises/recebimento-nfc/pendentes", params={"busca": "98723"}).json()
+              if p["amostra"] == "fresh" and p["analise"] == "CT")
+    _confirmar(cliente, "/analises/recebimento-nfc/lancar", {"itens": [{"id": ct["id"], "analise": "CT", "resultado": "2"}]})
+
+    r = cliente.get("/laudos/recebimento-nfc")
+    assert r.status_code == 200, r.text
+    laudo = r.json()
+    assert laudo["titulo"] == "Recebimento NFC" and laudo["paginas"][0]["capacidade"] == 15
+    assert cliente.get("/laudos/recebimento-nfc").json()["paginas"][0]["linhas"] == laudo["paginas"][0]["linhas"]  # não entra duas vezes
+    pdf = cliente.get(f"/laudos/recebimento-nfc/{laudo['paginas'][0]['id']}/pdf")
+    assert pdf.status_code == 200 and pdf.content.startswith(b"%PDF")
+    from pypdf import PdfReader
+    import io
+
+    texto = PdfReader(io.BytesIO(pdf.content)).pages[0].extract_text()
+    assert "98723" in texto and "129" in texto and "fresh 10³" in texto and "past 10¹" in texto
+    assert "2000" not in texto  # o C.T sai como lido na placa (2), não multiplicado
+    fcoj = cliente.get("/laudos/recebimento-fcoj").json()["paginas"]
+    assert all(p["id"] != laudo["paginas"][0]["id"] for p in fcoj)  # folhas separadas do FCOJ
