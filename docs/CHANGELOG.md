@@ -13,9 +13,10 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 ## [Não lançado]
 
 ### Adicionado
-- **Esterilização, água do processo, baias e linhas por frase** (bot, PB8 e PB9, migration 049): `esterilizei meio de cultura e frascos ciclo A1092/26`, `coleta agua do processo manifold, camara 5`, `agua do processo ct <1 bl <1`, `coleta de baia 8,9`, `baia 8 ct48 <1 bl72 <1`. Mostra o resumo, pede o "sim" e grava pelas funções do app (067). A IA conhece os formatos; ajuda em `comandos esterilização`.
+- **Esterilização, água do processo, baias e linhas por frase** (bot, PB8 e PB9, migration 049): `esterilizei meio de cultura e frascos ciclo A1092/26`, `coleta agua do processo manifold, camara 5`, `agua do processo ct <1 bl <1`, `analisei baia 8,9`, `baia 8 ct48 <1 bl72 <1`. Mostra o resumo, pede o "sim" e grava pelas funções do app (067). A IA conhece os formatos; ajuda em `comandos esterilização`.
 
 ### Alterado
+- **Baias e linhas são análise, não coleta** (bot, 25/10, migration 100): a frase passa a ser `analisei baia 8,9` / `analisei linha 3` (a IA também entende "coletei" ou "passei swab na baia 8"); só Admin e Analista registram (o Coletor deixa de registrar baias e linhas pelo bot); a prévia fala "Baia 8, 9: análise de 25/10/2026 14:00". `coleta de baia` ainda é aceito.
 - **Baias e linhas são análise no app** (25/10, APP-063, migration 072): só Admin e Analista registram (a API, a tela de
   Páginas e a função `app.bot_coletar_superficie` deixam de aceitar o Coletor, como o bot na 100). A 072 também dá ao
   app as funções da 048 (`tab_registrar_foto`, `coliformes_registrar_foto`, `tab_feito_nfc`), pedidas pela sessão do bot.
