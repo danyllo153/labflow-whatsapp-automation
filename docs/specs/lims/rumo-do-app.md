@@ -303,6 +303,24 @@ O app não mexe nas tabelas nem no workflow do bot: o que ele precisa vira pedid
 - Está mudando algo do bot do WhatsApp.
 - Decidiu sozinho uma das "decisões em aberto".
 
+## Pedidos do Danyllo para o app (25/10/2026, noite, passados pela sessão do bot)
+
+1. **"Análises a fazer hoje" (Início/Turno) mostra só as leituras do dia.** Tem que mostrar também as **análises pendentes**, como
+   etapas a fazer, cada uma com o que está **atrasado (herdado de outro turno)** em destaque:
+   - **TAB no caldo para espalhar e incubar** (previsto em `bi.testes.espalhar_prevista`, ainda sem `espalhado_em`);
+   - **Coliformes no caldo para estriar** (tirar do caldo) e **Coliformes para ler**;
+   - **confirmatório**: TAB em confirmação (PCA) e Coliformes aberto lote a lote esperando resultado;
+   - **composta esperando a análise**: Coliformes obrigatório (`vw_coliformes_pendentes` com `obrigatorio = true`, migration 104)
+     e composta sem TAB quando o TAB é pedido;
+   - **Stress de tanque** ainda por fazer (coleta com o frasco Normal analisado e o Stress pendente);
+   - o que passou do dia previsto (atrasado) aparece primeiro, em vermelho, como o bot faz (`⚠️ Atrasados — previsto dd/mm`).
+   As mesmas consultas o bot já responde (`quais tabs tenho para espalhar hoje?`, `quais coliformes tenho para estriar hoje?`,
+   `... para ler hoje?`); a sessão do bot pode entregar uma view única de pendências do dia, se o app pedir (seria o PB22).
+2. **Esterilização: ícone e cor em cada material** (os botões hoje são só texto): **Ponteira** = ícone de ponteira;
+   **Meio** = frasco com líquido dentro; **Frasco** = frasco grande vazio; **Água de diluição** = uma ou várias garrafinhas;
+   **Descarte** = saco de lixo com placas dentro; **Outro** = um ícone neutro (ex.: reticências ou caixa). Cada um com a sua cor,
+   para reconhecer de relance (no botão e na lista/laudo da tela).
+
 ## Ideias do Danyllo (anotar aqui, decidir depois)
 
 - 15/10/2026: relatório do turno com o que foi feito e o que fica para o próximo turno.
