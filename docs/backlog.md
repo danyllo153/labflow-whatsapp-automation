@@ -28,7 +28,7 @@
 - [x] **Recebimento pelas funções do banco e pelo WhatsApp** (23/10, PRs #197 e #198, migrations 036 e 037, `pre75`): corrigir load/item/fábrica, lote e data, apagar lote (arquiva); testado ao vivo
 - [x] **Load de teste 99902 apagado** (25/10, a pedido do Danyllo; backup antes `labflow_2026-10-25_1404.dump`): load, lote 1, a linha do laudo do app, 5 registros do histórico e 1 da lixeira de 23/10
 - [ ] **PB6:** canal `app` no webhook (assistente do app pelo mesmo workflow), só na Fase D do app
-- [x] **C.T/B.L do recebimento de FCOJ pela foto** (25/10): lê o resultado de cada lote, traço por cima = já digitado (ignora sem comentar), só o novo, um sim; falta testar ao vivo com a folha do load 43599 (lotes 9-20)
+- [x] **C.T/B.L do recebimento de FCOJ pela foto** (25/10): lê o resultado de cada lote, traço por cima = já digitado (ignora sem comentar), só o novo, um sim; no ar (#280, `pre83`); o traço marca um bloco; falta testar ao vivo com a folha do load 43599 (lotes 9-20)
 - [ ] **Fase seguinte da foto:** o "+" da confirmação (legenda com `confirmação`); TAB/Coliformes de embarque
 - [ ] Ajustar o prompt da foto com o que a IA errar nas fotos reais (letra de mão, risco diagonal)
 - [ ] **Regressão do prompt de texto:** repetir só as 14 frases que nunca tiveram resposta em 14/10 (46 de 60 acertadas, 0 erradas), em hora calma; depois apagar o workflow de teste do prompt pela tela do n8n
