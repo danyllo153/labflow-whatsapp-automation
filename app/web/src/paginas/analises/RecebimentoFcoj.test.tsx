@@ -81,11 +81,13 @@ describe("Recebimento FCOJ como app (Fase E, E2)", () => {
     expect(await screen.findByText("L 98704 (1-2)")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /2\s*Atrasados/ })).toBeInTheDocument();
     expect(screen.getByText("1 de 12")).toBeInTheDocument();
+    expect(screen.queryByRole("status", { name: "Amostras puladas" })).toBeNull(); // sem o quadro grande (25/10)
+    await userEvent.click(screen.getByRole("button", { name: "Em observação: 1 aviso" })); // o sininho ao lado do título
     const pulos = screen.getByRole("status", { name: "Amostras puladas" });
     expect(within(pulos).getByText("33-34, 37-38")).toBeInTheDocument();
     const abas = screen.getByRole("navigation", { name: "Partes do Recebimento FCOJ" });
     expect(within(abas).getAllByRole("button").map((b) => b.textContent?.replace(/\d+$/, ""))).toEqual([
-      "Painel", "Registrar", "Compostas", "Resultados", "Laudo", "IT", "Vídeo",
+      "Painel", "Registrar", "Resultados", "Laudo", "IT", "Vídeo",
     ]);
   });
 
@@ -93,7 +95,11 @@ describe("Recebimento FCOJ como app (Fase E, E2)", () => {
     const api = abrir("/analises/recebimento-fcoj?aba=registrar", {
       "POST /analises/recebimento-fcoj/registrar": (corpo) => ({
         status: 200,
-        corpo: { ok: true, previa: corpo.previa, texto: "Load 98701 novo (item 99902, fábrica AQA): lotes 1-3 (3), recebidos em 24/10/2026.", gravados: corpo.previa ? 0 : 3, alarmes: 0, pulados: [4] },
+        corpo: {
+          ok: true, previa: corpo.previa, texto: "Load 98701 novo (item 99902, fábrica AQA): lotes 1-3 (3), recebidos em 24/10/2026.",
+          gravados: corpo.previa ? 0 : 3, alarmes: 0, pulados: [4],
+          compostas: corpo.compostas ?? "(1-3)", texto_compostas: `1 composta no load 98701: lotes ${(corpo.compostas ?? "(1-3)").replace(/[()]/g, "")}.`,
+        },
       }),
     });
     const form = await screen.findByRole("form", { name: "Registrar recebimento" });
@@ -105,14 +111,17 @@ describe("Recebimento FCOJ como app (Fase E, E2)", () => {
     expect(await within(form).findByText(/Load 98701 novo/)).toBeInTheDocument();
     expect(within(form).getByText(/O lote 4 ainda não chegou e já vieram lotes depois/)).toBeInTheDocument();
     expect(api.chamadas.filter((c) => c.rota.startsWith("POST")).map((c) => c.corpo.previa)).toEqual([true]);
+    // a composta recomendada já aparece ao lado, no campo, e na prévia (25/10: sem a aba Compostas)
+    expect(within(form).getByLabelText("Compostas")).toHaveValue("(1-3)");
+    expect(within(form).getByText("1 composta no load 98701: lotes 1-3.")).toBeInTheDocument();
 
     await userEvent.click(within(form).getByRole("button", { name: "Confirmar" }));
     expect(await within(form).findByText(/^Registrado\./)).toBeInTheDocument();
     const enviado = api.chamadas.filter((c) => c.rota.startsWith("POST")).slice(-1)[0]?.corpo;
-    expect(enviado).toMatchObject({ load: "98701", item: "99902", fabrica: "AQA", lotes: "1-3", previa: false });
+    expect(enviado).toMatchObject({ load: "98701", item: "99902", fabrica: "AQA", lotes: "1-3", compostas: "(1-3)", previa: false });
   });
 
-  it("resultados: <1 em todos os vazios, prévia com o alarme e Confirmar", async () => {
+  it("resultados: <10 em todos os vazios, prévia com o alarme e Confirmar", async () => {
     const api = abrir("/analises/recebimento-fcoj?aba=resultados&analise=CT", {
       "POST /analises/recebimento-fcoj/lancar": (corpo) => ({
         status: 200,
@@ -120,7 +129,7 @@ describe("Recebimento FCOJ como app (Fase E, E2)", () => {
       }),
     });
     expect(await screen.findByRole("textbox", { name: "C.T 48h do load 98704 lote 1" })).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "<1 em todos os vazios (2)" }));
+    await userEvent.click(screen.getByRole("button", { name: "<10 em todos os vazios (2)" }));
     const lote2 = screen.getByRole("textbox", { name: "C.T 48h do load 98704 lote 2" });
     await userEvent.clear(lote2);
     await userEvent.type(lote2, "210");
@@ -130,8 +139,8 @@ describe("Recebimento FCOJ como app (Fase E, E2)", () => {
     expect(await screen.findByText("2 resultados de C.T 48h gravados.")).toBeInTheDocument();
     const lancados = api.chamadas.filter((c) => c.rota === "POST /analises/recebimento-fcoj/lancar").map((c) => c.corpo);
     expect(lancados).toEqual([
-      { analise: "CT", previa: true, itens: [{ recebimento_lote_id: 11, resultado: "<1" }, { recebimento_lote_id: 12, resultado: "210" }] },
-      { analise: "CT", previa: false, itens: [{ recebimento_lote_id: 11, resultado: "<1" }, { recebimento_lote_id: 12, resultado: "210" }] },
+      { analise: "CT", previa: true, itens: [{ recebimento_lote_id: 11, resultado: "<10" }, { recebimento_lote_id: 12, resultado: "210" }] },
+      { analise: "CT", previa: false, itens: [{ recebimento_lote_id: 11, resultado: "<10" }, { recebimento_lote_id: 12, resultado: "210" }] },
     ]);
   });
 
@@ -144,9 +153,9 @@ describe("Recebimento FCOJ como app (Fase E, E2)", () => {
     expect(screen.queryByRole("button", { name: /em todos/ })).toBeNull();
   });
 
-  it("compostas: usa o recomendado, mostra a prévia e cria no Confirmar", async () => {
+  it("compostas de load antigo (dentro do Registrar): usa o recomendado, mostra a prévia e cria no Confirmar", async () => {
     let criadas = false;
-    const api = abrir("/analises/recebimento-fcoj?aba=compostas&busca=98706", {
+    const api = abrir("/analises/recebimento-fcoj?aba=registrar&busca=98706", {
       "GET /analises/recebimento-fcoj/compostas?busca=98706": () => ({
         status: 200,
         corpo: criadas
@@ -198,7 +207,8 @@ describe("Recebimento FCOJ como app (Fase E, E2)", () => {
     const api = abrir("/analises/recebimento-fcoj", {
       "POST /analises/recebimento-fcoj/pulados/dispensar": () => ({ status: 200, corpo: { ...PAINEL, pulados: [] } }),
     });
-    const pulos = await screen.findByRole("status", { name: "Amostras puladas" });
+    await userEvent.click(await screen.findByRole("button", { name: /Em observação/ }));
+    const pulos = screen.getByRole("status", { name: "Amostras puladas" });
     await userEvent.click(within(pulos).getByRole("button", { name: "Dispensar aviso" }));
     await userEvent.type(within(pulos).getByLabelText("Motivo (opcional)"), "amostra perdida");
     await userEvent.click(within(pulos).getByRole("button", { name: "Dispensar aviso do load 98709" }));

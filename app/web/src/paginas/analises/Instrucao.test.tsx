@@ -30,7 +30,9 @@ describe("Instrução e Vídeo dos apps (E9)", () => {
   it.each([
     ["/analises/drops", "drops"],
     ["/analises/tanques", "tanques"],
-    ["/analises/testes", "testes"],
+    ["/analises/tab", "testes"],
+    ["/analises/coliformes", "testes"],
+    ["/analises/howard", "testes"],
     ["/analises/embarque-fcoj", "embarque-fcoj"],
     ["/analises/recebimento-nfc", "recebimento-nfc"],
     ["/analises/desvios", "desvios"],
@@ -67,7 +69,7 @@ describe("Instrução e Vídeo dos apps (E9)", () => {
   });
 
   it("o vídeo abre pelo link; sem link, avisa que ainda não há", async () => {
-    abrir("/analises/testes?aba=video", {
+    abrir("/analises/tab?aba=video", {
       "GET /analises/instrucoes/testes": () => ({ status: 200, corpo: { app: "testes", ...VAZIA, video_url: "https://exemplo.com/video-ficticio", versao: 1, escrita_por: "Ana Souza", escrita_em: "24/10/2026 11:00", pode_editar: false } }),
     });
     expect(await screen.findByRole("link", { name: "Abrir o vídeo" })).toHaveAttribute("href", "https://exemplo.com/video-ficticio");

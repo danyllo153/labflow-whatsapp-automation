@@ -31,18 +31,18 @@ describe("Cartão Agora (APP-056)", () => {
     const d = destaquesDoDia(itens);
     expect(d.map((x) => [x.nome, x.n, x.caminho])).toEqual([
       ["Recebimento · B.L 72h", 2, "/analises/recebimento-fcoj?aba=resultados&analise=BL72"],
-      ["Recebimento · TAB · para espalhar", 5, "/analises/testes"],
+      ["Recebimento · TAB · para espalhar", 5, "/analises/tab"],
       ["O.SKY 189 · Normal", 3, "/analises/tanques?aba=leituras"],
     ]);
   });
 
   it("o botão do destaque diz a ação do grupo e abre o app (que só grava com o Confirmar)", () => {
     const d = (bloco: string, tipo: string, grupo: string) => destinoDe(p(bloco, tipo, grupo));
-    expect(d("FCOJ Recebimento", "TAB", "TAB · para espalhar")).toEqual({ caminho: "/analises/testes", acao: "Espalhei todos" });
-    expect(d("FCOJ Recebimento", "Coliformes", "Coliformes · para espalhar")).toEqual({ caminho: "/analises/testes", acao: "Estriei todos" });
-    expect(d("FCOJ Embarque", "TAB", "TAB · para ler")).toEqual({ caminho: "/analises/testes", acao: null });
-    expect(d("FCOJ Embarque", "Howard", "Howard")).toEqual({ caminho: "/analises/testes?aba=howard", acao: null });
-    expect(d("NFC Tank farm", "Leitura de NFC", "Psicrotróficos Normal · Leitura final")).toEqual({ caminho: "/analises/tanques?aba=leituras", acao: "Lançar leituras" });
+    expect(d("FCOJ Recebimento", "TAB", "TAB · para espalhar")).toEqual({ caminho: "/analises/tab", acao: "Espalhei todos" });
+    expect(d("FCOJ Recebimento", "Coliformes", "Coliformes · para espalhar")).toEqual({ caminho: "/analises/coliformes", acao: "Estriei todos" });
+    expect(d("FCOJ Embarque", "TAB", "TAB · para ler")).toEqual({ caminho: "/analises/tab", acao: null });
+    expect(d("FCOJ Embarque", "Howard", "Howard")).toEqual({ caminho: "/analises/howard", acao: null });
+    expect(d("NFC Tank farm", "Leitura de NFC", "Psicrotróficos Normal · Leitura final")).toEqual({ caminho: "/analises/tanques?aba=leituras", acao: "Ler as placas" });
     expect(d("NFC Navio", "Drop", "O.SKY 189 · Drops")).toEqual({ caminho: "/analises/drops", acao: "Concluir drops" });
     expect(d("FCOJ Embarque", "C.T/B.L", "C.T 48h")).toEqual({ caminho: "/analises/embarque-fcoj?aba=resultados", acao: "Lançar resultados" });
     expect(d("Recebimento NFC", "C.T/B.L", "B.L 72h")).toEqual({ caminho: "/analises/recebimento-nfc?aba=resultados", acao: "Lançar resultados" });
@@ -61,6 +61,6 @@ describe("Cartão Agora (APP-056)", () => {
     await userEvent.click(screen.getByRole("button", { name: "Registrar" }));
     expect(api.chamadas.find((c) => c.rota === "POST /turno/registros")?.corpo).toEqual({ texto: "troquei o filtro da capela" });
     expect(await screen.findByText("Registrado na linha do tempo do turno.")).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Ver o 1" })).toHaveAttribute("href", "/analises/testes");
+    expect(screen.getByRole("link", { name: "Ver o 1" })).toHaveAttribute("href", "/analises/tab");
   });
 });

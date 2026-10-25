@@ -49,13 +49,14 @@ const COD_DA_ANALISE: Record<string, string> = { "C.T 48h": "CT", "B.L 72h": "BL
 /** O app da análise (Fase E) na aba do que falta fazer, e o botão com a ação; águas e superfícies seguem nas páginas. */
 export function destinoDe(p: Pendencia): { caminho: string; acao: string | null } {
   const texto = `${p.tipo} ${p.analise} ${p.grupo ?? ""}`;
-  if (/howard/i.test(texto)) return { caminho: "/analises/testes?aba=howard", acao: null };
+  if (/howard/i.test(texto)) return { caminho: "/analises/howard", acao: null };
   if (/coliforme|\bTAB\b/i.test(texto)) {
     const espalhar = /para espalhar/.test(p.grupo ?? "");
-    return { caminho: "/analises/testes", acao: espalhar ? (/coliforme/i.test(texto) ? "Estriei todos" : "Espalhei todos") : null };
+    const coli = /coliforme/i.test(texto);
+    return { caminho: coli ? "/analises/coliformes" : "/analises/tab", acao: espalhar ? (coli ? "Estriei todos" : "Espalhei todos") : null };
   }
   if (p.tipo === "Drop") return { caminho: "/analises/drops", acao: "Concluir drops" };
-  if (p.tipo === "Leitura de NFC") return { caminho: "/analises/tanques?aba=leituras", acao: "Lançar leituras" };
+  if (p.tipo === "Leitura de NFC") return { caminho: "/analises/tanques?aba=leituras", acao: "Ler as placas" };
   if (p.bloco === "FCOJ Recebimento") {
     const cod = COD_DA_ANALISE[p.analise];
     return { caminho: `/analises/recebimento-fcoj?aba=resultados${cod ? `&analise=${cod}` : ""}`, acao: "Lançar resultados" };

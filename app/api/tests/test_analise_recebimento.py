@@ -123,7 +123,7 @@ def test_recomendar_compostas(n, tamanhos):
 
 def test_compostas_recomenda_previa_e_cria(cliente, logado, hoje):
     logado()
-    cliente.post(f"{URL}/registrar", json={"load": "98706", "item": "99902", "fabrica": "UCH", "lotes": "1-20", "data": str(hoje), "previa": False})
+    cliente.post(f"{URL}/registrar", json={"load": "98706", "item": "99902", "fabrica": "UCH", "lotes": "1-20", "data": str(hoje), "previa": False, "compostas": ""})
     load = next(l for l in cliente.get(f"{URL}/compostas").json() if l["load"] == "98706")
     assert (load["livres"], load["n_livres"], load["compostas"]) == ("1-20", 20, [])
     assert load["recomendado"] == "(1-5)(6-10)(11-15)(16-20)"
@@ -235,3 +235,25 @@ def test_dispensar_o_aviso_de_amostra_pulada(cliente, logado, hoje):
 
     logado("Coletor")
     assert cliente.post(f"{URL}/pulados/dispensar", json=dispensa).status_code == 403
+
+
+def test_registrar_ja_cria_as_compostas_recomendadas_no_mesmo_confirmar(cliente, logado, hoje):
+    """25/10 (APP-066): sem a aba Compostas; o registro já mostra e cria as compostas (~5 lotes por composta)."""
+    logado()
+    pedido = {"load": "98731", "item": "99902", "fabrica": "aqa", "lotes": "1-7", "data": str(hoje)}
+    r = cliente.post(f"{URL}/registrar", json=pedido).json()
+    assert r["compostas"] == "(1-3)(4-7)" and r["texto_compostas"]  # 7 vira 3 + 4
+    assert cliente.get(f"{URL}/compostas", params={"busca": "98731"}).json() == []  # a prévia não grava nada
+
+    r = cliente.post(f"{URL}/registrar", json={**pedido, "compostas": "(1-4)(5-7)", "previa": False}).json()
+    assert r["gravados"] == 7 and r["compostas"] == "(1-4)(5-7)"
+    load = cliente.get(f"{URL}/compostas", params={"busca": "98731"}).json()[0]
+    assert load["n_livres"] == 0 and [c["lotes"] for c in load["compostas"]] == ["1-4", "5-7"]
+
+
+def test_registrar_sem_compostas_quando_o_analista_apaga(cliente, logado, hoje):
+    logado()
+    pedido = {"load": "98732", "item": "99902", "fabrica": "aqa", "lotes": "1-3", "data": str(hoje), "compostas": ""}
+    r = cliente.post(f"{URL}/registrar", json={**pedido, "previa": False}).json()
+    assert r["gravados"] == 3 and r["compostas"] == "" and r["texto_compostas"] == ""
+    assert cliente.get(f"{URL}/compostas", params={"busca": "98732"}).json()[0]["n_livres"] == 3

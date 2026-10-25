@@ -593,3 +593,82 @@ h2 {
 .turno-topo > .cartao {
   height: calc(100% - 16px);
 }
+
+/* botões das etapas em lote presos embaixo da tela: com muita amostra não é preciso rolar até o fim (25/10) */
+.barra-acoes-fixa {
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  margin: 8px -18px -16px;
+  padding: 12px 18px;
+  background: var(--cartao);
+  border-top: 1px solid var(--borda);
+  border-radius: 0 0 var(--raio-cartao) var(--raio-cartao);
+  box-shadow: 0 -6px 16px rgba(15, 23, 42, 0.06);
+}
+
+@media (max-width: 899px) {
+  .barra-acoes-fixa {
+    bottom: var(--altura-barra, 60px); /* acima da barra de ícones do celular */
+  }
+}
+
+/* listas marcáveis mais compactas */
+.lista-marcavel li {
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+/* "Em observação": sininho com o número de avisos ao lado do título, que abre a lista (25/10) */
+.titulo-com-sino {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.titulo-com-sino h1 {
+  margin: 0;
+}
+
+.sino-observacao {
+  position: relative;
+}
+
+.botao-icone.sino {
+  position: relative;
+  color: #b45309;
+}
+
+.sino-contador {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 9px;
+  background: #d97706;
+  color: #ffffff;
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sino-painel {
+  position: absolute;
+  left: 0;
+  top: calc(100% + 8px);
+  z-index: 30;
+  width: min(440px, 88vw);
+  padding: 14px 16px;
+  background: var(--cartao);
+  border: 1px solid var(--borda);
+  border-radius: var(--raio-cartao);
+  box-shadow: var(--sombra-2);
+}
+
+.sino-painel h2 {
+  margin: 0 0 6px;
+}

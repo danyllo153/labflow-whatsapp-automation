@@ -118,7 +118,7 @@ def test_desvio_de_tanque_repeticao_e_finalizar_o_dia(cliente, logado, hoje):
 def test_tab_do_recebimento_em_lote(cliente, logado, hoje):
     logado()
     url = "/analises/recebimento-fcoj"
-    cliente.post(f"{url}/registrar", json={"load": "98720", "item": "99902", "fabrica": "AQA", "lotes": "1-6", "data": str(hoje), "previa": False})
+    cliente.post(f"{url}/registrar", json={"load": "98720", "item": "99902", "fabrica": "AQA", "lotes": "1-6", "data": str(hoje), "previa": False, "compostas": ""})
     cliente.post(f"{url}/compostas", json={"load": "98720", "item": "99902", "grupos": "(1-3)(4-6)", "previa": False})
     sem_tab = [c for c in cliente.get("/analises/testes/compostas", params={"tipo": "TAB"}).json() if c["alvo"].startswith("Load 98720")]
     assert len(sem_tab) == 2

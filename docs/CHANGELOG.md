@@ -17,6 +17,14 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 - **Esterilização, água do processo, baias e linhas por frase** (bot, PB8 e PB9, migration 049): `esterilizei meio de cultura e frascos ciclo A1092/26`, `coleta agua do processo manifold, camara 5`, `agua do processo ct <1 bl <1`, `analisei baia 8,9`, `baia 8 ct48 <1 bl72 <1`. Mostra o resumo, pede o "sim" e grava pelas funções do app (067). A IA conhece os formatos; ajuda em `comandos esterilização`.
 
 ### Alterado
+- **Apps de análise reorganizados** (25/10, APP-066): **TAB, Coliformes e Howard viram três apps** (cada um com o seu
+  ícone e cor); os botões das etapas em lote ficam **presos embaixo da lista** (não é preciso rolar); **Análise de tanques**
+  com o **Wort numa linha por frasco** (profundidade e superfície juntas) e só dois botões, **"<1 em todas as leituras"**
+  e **"Ler as placas"** (sai o "Feitas sem placas"); no **Recebimento FCOJ** as **compostas entram no Registrar** (a
+  recomendada, ~5 lotes por composta, aparece no campo e na prévia e é criada no mesmo Confirmar; sai a aba Compostas) e
+  as amostras puladas viram o **sininho "Em observação"** ao lado do título; Recebimento e Embarque de FCOJ com
+  **"<10 em todos os vazios"** (a amostra é diluída); a **Leitura do dia sai de Desvios** e vai para a página nova
+  **Relatório do dia** (o que sai hoje em cada análise e o Finalizar).
 - **Visual novo do app** (25/10, APP-065, aprovado no canvas de design): menu lateral cinza-escuro com ícones; "Páginas"
   passa a se chamar **Análises**, com um **ícone por app** no lugar das siglas e **uma cor por família** (NFC verde-água,
   drops ciano, FCOJ laranja, TAB roxo, Coliformes rosa, Howard índigo, águas azul, rotina cinza), a mesma no Início e

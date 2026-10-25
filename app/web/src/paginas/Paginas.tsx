@@ -11,7 +11,7 @@ import { ABAS_EMBARQUE } from "./analises/Embarque";
 import { ABAS_NFC } from "./analises/RecebimentoNfc";
 import { ATALHOS_DO_APP } from "./analises/RecebimentoFcoj";
 import { ABAS_TANQUES } from "./analises/Tanques";
-import { ABAS_TESTES } from "./analises/Testes";
+import { ABAS_HOWARD, ABAS_TESTES } from "./analises/Testes";
 import { PAGINAS, type DefinicaoDePagina } from "./dados/definicoes";
 import PaginaDeDados from "./dados/PaginaDeDados";
 import VisaoGeral from "./dados/VisaoGeral";
@@ -74,9 +74,9 @@ const APPS_DA_FASE_E: Record<string, { caminho: string; atalhos: { aba: string; 
   desvios: { caminho: "/analises/desvios", atalhos: ABAS_DESVIOS },
   "recebimento-nfc": { caminho: "/analises/recebimento-nfc", atalhos: ABAS_NFC },
   embarque: { caminho: "/analises/embarque-fcoj", atalhos: ABAS_EMBARQUE },
-  tab: { caminho: "/analises/testes", atalhos: ABAS_TESTES },
-  coliformes: { caminho: "/analises/testes", atalhos: ABAS_TESTES },
-  howard: { caminho: "/analises/testes?aba=howard", atalhos: ABAS_TESTES },
+  tab: { caminho: "/analises/tab", atalhos: ABAS_TESTES },
+  coliformes: { caminho: "/analises/coliformes", atalhos: ABAS_TESTES },
+  howard: { caminho: "/analises/howard", atalhos: ABAS_HOWARD },
 };
 
 const APPS_FIXOS: App[] = [

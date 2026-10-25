@@ -8,18 +8,16 @@ import {
   dm,
   Numeros,
   PerguntaDaAcao,
-  PreviaDaGravacao,
   Resultados,
-  SoQuemGrava,
   useAcao,
-  useGravacao,
   useLista,
 } from "./comum";
 import { ABAS_FINAIS } from "./Instrucao";
 
 /**
- * Desvios de tanque e a leitura do dia (Fase E, E8; funções da 047). O app nunca abre desvio sozinho: lista as leituras
- * não ok e o analista abre (regra do bot). A repetição usa o frasco de arquivo e o desvio fecha com o resultado dela.
+ * Desvios de tanque (Fase E, E8; funções da 047): só o que fugiu do padrão. O app nunca abre desvio sozinho: lista as
+ * leituras não ok e o analista abre (regra do bot). A repetição usa o frasco de arquivo e o desvio fecha com o resultado
+ * dela. A "Leitura do dia" (finalizar o dia) saiu daqui em 25/10 e foi para a página Relatório do dia.
  */
 
 interface NaoOk {
@@ -56,7 +54,6 @@ interface Dados {
 export const ABAS_DESVIOS = [
   { aba: "abrir", rotulo: "Não ok" },
   { aba: "abertos", rotulo: "Em repetição" },
-  { aba: "dia", rotulo: "Leitura do dia" },
   { aba: "resultados", rotulo: "Resultados" },
   ...ABAS_FINAIS,
 ];
@@ -76,7 +73,7 @@ export default function Desvios() {
       sigla="!"
       cor="vermelho"
       titulo="Desvios"
-      descricao="Leitura de tanque não ok, a repetição com o frasco de arquivo e o fim da leitura do dia."
+      descricao="O que fugiu do padrão: leitura de tanque não ok, a repetição com o frasco de arquivo e o resultado dela."
       abas={ABAS_DESVIOS.map((a) =>
         a.aba === "abrir" ? { ...a, contador: d?.para_abrir.length } : a.aba === "abertos" ? { ...a, contador: d?.abertos.length } : a,
       )}
@@ -98,11 +95,6 @@ export default function Desvios() {
           )}
           {aba === "abrir" && d && <ParaAbrir leituras={d.para_abrir} pode={pode} aoGravar={lista.recarregar} />}
           {aba === "abertos" && d && <Abertos desvios={d.abertos} pode={pode} aoGravar={lista.recarregar} />}
-          {aba === "dia" && (
-            <SoQuemGrava pode={pode}>
-              <LeituraDoDia finalizado={!!d?.dia_finalizado} aoGravar={lista.recarregar} />
-            </SoQuemGrava>
-          )}
           {aba === "resultados" && (
             <Resultados
               paginas={[
@@ -189,27 +181,6 @@ function Abertos({ desvios, pode, aoGravar }: { desvios: Aberto[]; pode: boolean
         ))}
       </ul>
       <PerguntaDaAcao a={acao} titulo="Registrar a repetição" />
-    </div>
-  );
-}
-
-function LeituraDoDia({ finalizado, aoGravar }: { finalizado: boolean; aoGravar: () => void }) {
-  const g = useGravacao("/analises/leitura-do-dia/finalizar", () => aoGravar());
-  return (
-    <div className="cartao">
-      <h2>Leitura do dia</h2>
-      <p>
-        Finalizar marca como lido tudo o que sai hoje: as placas que ninguém digitou nas leituras de tanque viram <code>&lt;1</code>, os
-        drops de hoje são concluídos e o TAB e os Coliformes com leitura hoje ficam negativos. C.T/B.L do concentrado e o que está em
-        confirmação não mudam.
-      </p>
-      {finalizado && <p className="etiqueta etiqueta-ok">O dia de hoje já foi finalizado.</p>}
-      {!g.previa && (
-        <button type="button" className="botao botao-principal" disabled={g.enviando} onClick={() => void g.ver({})}>
-          Ver o que vai ser finalizado
-        </button>
-      )}
-      <PreviaDaGravacao g={g} titulo="O que vai ser finalizado" />
     </div>
   );
 }
