@@ -30,6 +30,12 @@ const FORMAS: Record<string, JSX.Element> = {
       <path d="M3 9h18M8 2v4M16 2v4M8 14l2.5 2.5L16 12" />
     </>
   ),
+  "/arquivo": (
+    <>
+      <rect x="3" y="4" width="18" height="5" rx="1" />
+      <path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9M10 13h4" />
+    </>
+  ),
   "/material-asseptico": (
     <>
       <ellipse cx="12" cy="14" rx="9" ry="5" />

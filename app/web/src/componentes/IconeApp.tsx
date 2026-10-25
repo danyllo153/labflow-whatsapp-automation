@@ -62,6 +62,12 @@ const FORMAS: Record<string, JSX.Element> = {
       <path d="M3 14v-2c0-2.8 4-5 9-5s9 2.2 9 5v2" />
     </>
   ),
+  arquivo: (
+    <>
+      <rect x="3" y="4" width="18" height="5" rx="1" />
+      <path d="M5 9v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V9M10 13h4" />
+    </>
+  ),
   meios: (
     <>
       <path d="M8 3h8M9 3v4l-3 4v9a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-9l-3-4V3" />

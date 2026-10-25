@@ -96,6 +96,8 @@ const APPS_FIXOS: App[] = [
     descricao: "Lotes dos meios de cultura em uso." },
   { caminho: "/fluxo-laminar", titulo: "Branco do dia", icone: "branco", cor: "rotina", grupo: "Rotina", semColetor: true,
     descricao: "Fluxo laminar: o branco de cada dia." },
+  { caminho: "/arquivo", titulo: "Arquivo", icone: "arquivo", cor: "rotina", grupo: "Rotina", semColetor: true,
+    descricao: "Caixas de contra-amostras e o que dá para descartar." },
   { caminho: "/incubacao", titulo: "Incubação", icone: "incubacao", cor: "rotina", grupo: "Rotina", semColetor: true,
     descricao: "O que entrou nas estufas em cada dia." },
 ];

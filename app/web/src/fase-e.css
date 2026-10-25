@@ -760,3 +760,28 @@ button.numero-app {
 /* o dia ou filtro escolhido continua legível com o mouse em cima */
 .dias-material .botao-secundario[aria-pressed="true"]:hover,
 .dias-material .botao-secundario[aria-pressed="true"]:focus { background: var(--acao-escura, #1d4ed8); border-color: var(--acao-escura, #1d4ed8); color: #fff; }
+
+/* Arquivo de contra-amostras (PB21): uma caixa por botão; vermelho = venceu, azul = em uso, cinza = livre */
+.grade-caixas { list-style: none; margin: 12px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
+.caixa-arquivo { width: 100%; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 8px 10px; min-height: 72px; border: 1px solid var(--borda, #e5e7eb); border-left: 5px solid var(--borda-forte, #d5dbe4); border-radius: 8px; background: var(--cartao, #fff); color: var(--texto); font: inherit; text-align: left; cursor: pointer; }
+.caixa-arquivo strong { font-size: 1.2rem; line-height: 1.1; }
+.caixa-legenda, .caixa-data { font-size: 0.75rem; color: var(--texto-secundario); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.caixa-arquivo.caixa-em-uso { border-left-color: var(--acao, #2563eb); }
+.caixa-arquivo.caixa-vencida { border-left-color: var(--nao-ok, #dc2626); background: var(--nao-ok-fundo, #fee2e2); }
+.caixa-arquivo.caixa-vencida .caixa-data { color: var(--nao-ok-texto, #991b1b); font-weight: 700; }
+.caixa-arquivo.caixa-livre strong { color: var(--texto-secundario); }
+.caixa-arquivo[aria-pressed="true"] { outline: 2px solid var(--acao, #2563eb); outline-offset: 1px; }
+.conteudo-caixa h2 { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.tabela-arquivo { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+.tabela-arquivo th, .tabela-arquivo td { padding: 6px 8px; border-bottom: 1px solid var(--borda, #e5e7eb); text-align: left; }
+.tabela-arquivo th { font-size: 0.75rem; color: var(--texto-secundario); font-weight: 600; }
+.tabela-arquivo tr.linha-vencida td { color: var(--nao-ok-texto, #991b1b); background: var(--nao-ok-fundo, #fee2e2); font-weight: 600; }
+.tabela-arquivo tr.linha-descartada td { color: var(--texto-secundario); text-decoration: line-through; }
+.acoes-caixa { margin-top: 12px; flex-wrap: wrap; }
+.campos-linha { display: flex; flex-wrap: wrap; gap: 8px 12px; margin-bottom: 12px; }
+.campos-linha .campo { flex: 1 1 140px; }
+.campos-linha .campo-hora { flex: 0 1 130px; }
+@media print {
+  .pagina-arquivo .numeros-app, .pagina-arquivo .dias-material, .pagina-arquivo .grade-caixas, .pagina-arquivo .arquivar-recebimento, .acoes-caixa { display: none; }
+}
+.acoes-caixa > * { flex: 0 0 auto; }

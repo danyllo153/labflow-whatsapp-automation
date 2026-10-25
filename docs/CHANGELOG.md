@@ -12,6 +12,9 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 
 ## [Não lançado]
 
+### Adicionado
+- **Página Arquivo** (25/10, PB21): as caixas de contra-amostras do navio, do recebimento (121 a 145) e dos tanques de terra, com o que tem em cada uma e quando vence; **Para descartar** abre primeiro, com o vencido em vermelho (ninguém é avisado). Arquivar o recebimento (caixa sugerida) e descartar com a prévia e um Confirmar, pelas funções do bot (105). Rotas `GET /arquivo`, `GET /arquivo/{tipo}/{numero}`, `POST /arquivo/arquivar` e `/arquivo/descartar`.
+
 ### Alterado
 - **Ok e Não ok em ícone redondo** (25/10): nas estufas, os botões viraram o círculo verde com visto e o vermelho com X (cheio quando escolhido, contorno cinza quando não); a temperatura do Não ok fica ao lado. Nas Leituras, as marcas de lido e de fora do limite usam os mesmos ícones.
 
