@@ -36,8 +36,6 @@
 ### 📱 App (sessão da nuvem)
 - [x] **Compostas no Recebimento FCOJ** (24/10, APP-058): recomendado de ~5 por composta e prévia
 - [x] **Laudo do Recebimento FCOJ** (24/10, APP-059, migration 070): como o papel (deitado, um lote por linha, faltantes com *), envio do modelo na aba Laudo
-- [ ] **GRANT das funções da 048** (`tab_registrar_foto`, `coliformes_registrar_foto`, `tab_feito_nfc`) ao `labflow_app_web`, numa migration do app (072 em diante)
-- [ ] **Coletor não registra baias e linhas** (decisão de 25/10: são análise): tirar o Coletor da `app.bot_coletar_superficie` (067) e da tela do app; o bot já barra (migration 100)
 - [ ] **Arquivo de amostras** (bot e app): caixa de cada load ("CX: 128" na Observação do laudo), bags, potes, recebimento e embarque
 - [x] **Aviso de amostra pulada** (24/10, APP-059): na prévia do registro e no Painel do Recebimento, até o lote chegar; sem "finalizar load" (decisão de 24/10)
 - [x] **Fase E, E3 a E8** (24/10, APP-061): apps de Tanques, TAB/Coliformes/Howard, Drops, Embarque, Recebimento NFC e Desvios, pelas funções da 042 a 047
@@ -54,6 +52,8 @@
 - [x] **Início e Turno no layout do canvas** (APP-056, 24/10): cartão "Agora", destaques do dia, equipe e estufas lado a lado, "Quem fez o quê" com filtro
 - [x] **▶ Fase E, o app faz tudo o que o bot faz** (pedido de 24/10): tela de apps com a busca e o filtro (E1 ✔) e Recebimento FCOJ completo (E2 ✔, #253); E3 a E8 (#264) e E9 (APP-062) feitos em 24/10. Plano e tabela "bot × app" no rumo-do-app, seção "Fase E"
 - [x] Botões que gravam em lote nos destaques: abrem o app com a lista toda marcada e o "Confirmar" (decisão de 24/10)
+- [x] **Drops e leituras de tanque todos marcados** e **baias e linhas só Admin e Analista** (25/10, APP-063, migration 072,
+  com o GRANT das funções da 048 pedido pela sessão do bot); falta aplicar a 072 e publicar
 - [x] **Histórico de lotes importado** pelo Danyllo (24/10; 30 lotes de meio no app)
 - [x] **Modelos em PDF dos laudos enviados** pelo Danyllo (23/10: esterilização, material asséptico, meios de cultura, fluxo laminar, limpeza de superfícies e água do processo)
 - [x] **Editar e excluir clicando no app:** coletas (APP-029) e recebimento de FCOJ (migration 064, funções 036), com histórico e recuperar pelo Admin
