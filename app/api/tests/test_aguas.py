@@ -65,6 +65,13 @@ def test_coleta_de_agua_tem_regras(cliente, logado, agora):
     assert cliente.put(f"/aguas/processo/{r.json()['coletas'][0]['id']}/resultados", json={"ct": {"manifold": "<1"}}).status_code == 403
 
 
+def test_baias_e_linhas_sao_analise_o_coletor_nao_registra(cliente, logado, agora):
+    logado("Coletor")
+    assert cliente.get("/aguas/superficies", params={"tipo": "Baia"}).json()["pode_coletar"] is False
+    r = cliente.post("/aguas/superficies", json={"tipo": "Baia", "pontos": ["8"], "dia": "2026-10-22", "hora": "07:10"})
+    assert r.status_code == 403
+
+
 def test_baias_e_linhas_uma_coleta_por_ponto(cliente, logado, agora):
     logado()
     r = cliente.post("/aguas/superficies", json={"tipo": "Baia", "pontos": ["8", "Baia 10"], "dia": "2026-10-22", "hora": "07:10"})

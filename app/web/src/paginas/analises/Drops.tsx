@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useSessao } from "../../sessao";
 import { classeDaSituacao } from "../dados/formatos";
@@ -106,6 +106,9 @@ function Pendentes({ drops, pode, aoGravar }: { drops: Drop[]; pode: boolean; ao
   const m = useMarcados<number>();
   const g = useGravacao("/analises/drops/concluir", () => (m.limpar(), aoGravar()));
   const acao = useAcao(() => aoGravar());
+  const ids = drops.map((d) => d.drop_id);
+  // a lista vem toda marcada (decisão de 24/10), como no "Concluir drops" do Início; o analista desmarca o que não fez
+  useEffect(() => m.todos(ids.filter((i) => !m.tem(i))), [ids.join(",")]); // eslint-disable-line react-hooks/exhaustive-deps
   if (drops.length === 0) return <p className="texto-secundario">Nenhum drop atrasado nem para hoje.</p>;
   const marcados = drops.filter((d) => m.tem(d.drop_id));
   return (

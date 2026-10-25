@@ -1,4 +1,4 @@
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 
 import { useSessao } from "../../sessao";
 import { classeDaSituacao } from "../dados/formatos";
@@ -104,6 +104,9 @@ function Leituras({ leituras, erro, pode, aoGravar }: { leituras: Leitura[] | nu
   const [placas, setPlacas] = useState<Record<string, string>>({});
   const acao = useAcao(() => (m.limpar(), aoGravar()));
   const gravacao = useGravacao("/analises/tanques/placas", () => (setPlacas({}), aoGravar()));
+  const chaves = (leituras ?? []).map(chave);
+  // a lista vem toda marcada (decisão de 24/10), como no "Lançar leituras" do Início; o analista desmarca o que não fez
+  useEffect(() => m.todos(chaves.filter((k) => !m.tem(k))), [chaves.join(",")]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (erro) return <p className="mensagem-erro">{erro}</p>;
   if (!leituras) return <p className="carregando">Carregando...</p>;
