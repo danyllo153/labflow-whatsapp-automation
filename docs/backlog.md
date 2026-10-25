@@ -50,6 +50,8 @@
 - [x] **Início e Turno no layout do canvas** (APP-056, 24/10): cartão "Agora", destaques do dia, equipe e estufas lado a lado, "Quem fez o quê" com filtro
 - [x] **▶ Fase E, o app faz tudo o que o bot faz** (pedido de 24/10): tela de apps com a busca e o filtro (E1 ✔) e Recebimento FCOJ completo (E2 ✔, #253); E3 a E8 (#264) e E9 (APP-062) feitos em 24/10. Plano e tabela "bot × app" no rumo-do-app, seção "Fase E"
 - [x] Botões que gravam em lote nos destaques: abrem o app com a lista toda marcada e o "Confirmar" (decisão de 24/10)
+- [x] **Drops e leituras de tanque todos marcados** e **baias e linhas só Admin e Analista** (25/10, APP-063, migration 072,
+  com o GRANT das funções da 048 pedido pela sessão do bot); falta aplicar a 072 e publicar
 - [x] **Histórico de lotes importado** pelo Danyllo (24/10; 30 lotes de meio no app)
 - [x] **Modelos em PDF dos laudos enviados** pelo Danyllo (23/10: esterilização, material asséptico, meios de cultura, fluxo laminar, limpeza de superfícies e água do processo)
 - [x] **Editar e excluir clicando no app:** coletas (APP-029) e recebimento de FCOJ (migration 064, funções 036), com histórico e recuperar pelo Admin

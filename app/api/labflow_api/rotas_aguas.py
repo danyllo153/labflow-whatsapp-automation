@@ -8,7 +8,8 @@ Regras (decididas com o Danyllo em 23 e 24/10; meios e tempos do método de aná
 - baias (CIP dos mangotes do recebimento) e linhas (CIP das linhas de embarque): uma coleta por ponto, com o dia em que
   foi plaqueada ("Análise dd.mm.aa"), C.T. 48 h, B.L. 72 h e 120 h; uma folha do laudo para baias e outra para linhas;
 - o resultado é texto ("<1", número); vazio = ainda não lido, e vira pendência no Início na data prevista;
-- quem coleta: Admin, Analista e Coletor; quem lança o resultado: Admin e Analista; excluir guarda o motivo.
+- quem coleta água: Admin, Analista e Coletor; baias e linhas são análise (decisão de 25/10): só Admin e Analista;
+  quem lança o resultado: Admin e Analista; excluir guarda o motivo.
 """
 
 import io
@@ -303,7 +304,7 @@ def _superficies(con: psycopg.Connection, pessoa: PessoaLogada, tipo: str, de: d
         (tipo, datetime.combine(de, time.min, FUSO)),
     ).fetchall()
     return Superficies(
-        tipo=tipo, pode_coletar=pode(pessoa.cargo, "registrar_coleta"), pode_lancar=pode(pessoa.cargo, "registrar_analise"),
+        tipo=tipo, pode_coletar=pode(pessoa.cargo, "registrar_analise"), pode_lancar=pode(pessoa.cargo, "registrar_analise"),
         coletas=[_coleta_superficie(l, hoje) for l in linhas],
     )
 
@@ -329,7 +330,7 @@ class NovaColetaSuperficie(BaseModel):
 
 @roteador.post("/superficies", response_model=Superficies, status_code=status.HTTP_201_CREATED)
 def coletar_superficie(
-    pedido: NovaColetaSuperficie, pessoa: PessoaLogada = Depends(exigir("registrar_coleta")), con: psycopg.Connection = Depends(obter_conexao)
+    pedido: NovaColetaSuperficie, pessoa: PessoaLogada = Depends(exigir("registrar_analise")), con: psycopg.Connection = Depends(obter_conexao)
 ) -> Superficies:
     quando = _quando(con, pedido.dia, pedido.hora)
     analise = pedido.analisada_em or pedido.dia

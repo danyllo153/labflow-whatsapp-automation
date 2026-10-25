@@ -86,11 +86,11 @@ describe("todas as páginas do Power BI no app (APP-019)", () => {
     expect(hrefs("Rotina do laboratório")).toEqual(["/esterilizacao", "/estufas", "/material-asseptico", "/meios-lotes", "/fluxo-laminar", "/incubacao"]);
   });
 
-  it("o Coletor só vê Coletas e as águas (que ele também coleta)", async () => {
+  it("o Coletor só vê Coletas e a água do processo (baias e linhas são análise, 25/10)", async () => {
     abrir("/paginas", { ...ANA, cargo: "Coletor" });
     const principal = (await screen.findByRole("heading", { level: 1, name: "Páginas" })).closest("section") as HTMLElement;
     expect(within(principal).getAllByRole("link").map((l) => l.getAttribute("href"))).toEqual([
-      "/paginas/coletas", "/paginas/agua-processo", "/paginas/baias", "/paginas/linhas",
+      "/paginas/coletas", "/paginas/agua-processo",
     ]);
   });
 

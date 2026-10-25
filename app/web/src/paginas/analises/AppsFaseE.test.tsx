@@ -45,6 +45,17 @@ describe("apps de análise da Fase E (E3 a E8)", () => {
     ]);
   });
 
+  it("Tanques: as leituras vêm todas marcadas e só gravam depois do Confirmar", async () => {
+    const { posts } = abrir("/analises/tanques", {
+      "GET /analises/tanques/leituras": () => ({ status: 200, corpo: [LEITURA] }),
+      "POST /analises/tanques/leituras/concluir": () => gravacao("1 leitura feita.", false),
+    });
+    await userEvent.click(await screen.findByRole("button", { name: "Feitas sem placas (1)" }));
+    expect(posts("POST /analises/tanques/leituras/concluir")).toEqual([]);
+    await userEvent.click(screen.getByRole("button", { name: "Confirmar" }));
+    expect(posts("POST /analises/tanques/leituras/concluir")).toEqual([{ itens: [{ analise_id: 7, etapa: "final" }] }]);
+  });
+
   it("Tanques: registrar coleta de navio com a prévia", async () => {
     const { posts } = abrir("/analises/tanques?aba=coleta", {
       "GET /analises/tanques/leituras": () => ({ status: 200, corpo: [] }),
@@ -77,13 +88,13 @@ describe("apps de análise da Fase E (E3 a E8)", () => {
     expect(await screen.findByText(/2 testes atualizados/)).toBeInTheDocument();
   });
 
-  it("Drops: marca, vê a prévia e conclui", async () => {
+  it("Drops: vêm todos marcados, vê a prévia e conclui", async () => {
     const drop = { drop_id: 5, drop: "D10", origem: "Terra", tanque: "44", navio: null, data_coleta: "2026-10-14", prevista: "2026-10-24", situacao: "Vence hoje" };
     const { posts } = abrir("/analises/drops", {
       "GET /analises/drops": () => ({ status: 200, corpo: { pendentes: [drop], desvios: [] } }),
       "POST /analises/drops/concluir": (c) => gravacao("1 drop: tanque 44 D10.", c.previa),
     });
-    await userEvent.click(await screen.findByRole("checkbox", { name: /tanque 44 · D10/ }));
+    expect(await screen.findByRole("checkbox", { name: /tanque 44 · D10/ })).toBeChecked(); // a lista vem toda marcada
     await userEvent.click(screen.getByRole("button", { name: "Concluir (1)" }));
     await userEvent.click(await screen.findByRole("button", { name: "Confirmar" }));
     expect(posts("POST /analises/drops/concluir")).toEqual([{ ids: [5], previa: true }, { ids: [5], previa: false }]);
