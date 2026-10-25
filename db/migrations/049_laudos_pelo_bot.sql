@@ -23,8 +23,8 @@ DECLARE
     v_quando  timestamptz;
     v_resumo  text;
     v_lista   text;
-    v_agua    app.coletas_agua_processo;
-    v_sup     app.coletas_superficie;
+    v_agua    record;
+    v_sup     record;
     v_tipo    text;
     r         record;
 BEGIN
