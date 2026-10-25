@@ -3,11 +3,14 @@ import { createRoot } from "react-dom/client";
 import { BrowserRouter } from "react-router-dom";
 
 import "@fontsource-variable/inter";
+import "@fontsource/ibm-plex-mono/500.css";
+import "@fontsource/ibm-plex-mono/600.css";
 
 import App from "./App";
 import { ProvedorDeSessao } from "./sessao";
 import "./estilos.css";
 import "./fase-e.css";
+import "./visual-novo.css";
 import { aplicarTema } from "./tema";
 
 aplicarTema(); // antes de desenhar a tela, para não piscar claro e depois escuro

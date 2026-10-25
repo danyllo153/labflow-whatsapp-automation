@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
 import { enviarJson, lerJson } from "../../api";
+import IconeApp from "../../componentes/IconeApp";
 import { dm } from "../../componentes/SeletorDeDias";
 import { FABRICAS } from "../dados/definicoes";
 import { classeDaSituacao } from "../dados/formatos";
@@ -20,7 +21,7 @@ export const ATALHOS_DO_APP = [
   { aba: "compostas", rotulo: "Compostas" },
   { aba: "resultados", rotulo: "Resultados" },
   { aba: "laudo", rotulo: "Laudo" },
-  { aba: "instrucao", rotulo: "Instrução" },
+  { aba: "instrucao", rotulo: "IT" },
   { aba: "video", rotulo: "Vídeo" },
 ];
 
@@ -125,11 +126,11 @@ export default function RecebimentoFcoj() {
   return (
     <section className="app-analise">
       <p className="voltar">
-        <Link to="/paginas">← Páginas</Link>
+        <Link to="/paginas">← Análises</Link>
       </p>
       <div className="app-analise-topo">
-        <span className="app-icone app-cor-azul" aria-hidden="true">
-          RF
+        <span className="app-icone app-cor-fcoj" aria-hidden="true">
+          <IconeApp nome="recebimento-fcoj" />
         </span>
         <div>
           <h1>Recebimento FCOJ</h1>

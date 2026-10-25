@@ -3,8 +3,9 @@ import { useCallback, useEffect, useState } from "react";
 import { enviarJson, lerJson } from "../api";
 
 /**
- * "Para fazer agora" (07 §3; APP-023): as atividades fixas do turno, cada uma com Feito e Não feito (grava quem e
- * quando). O Não feito passa como pendência herdada para o turno seguinte, com a caixa de Feito.
+ * "Para fazer agora" (07 §3; APP-023): as atividades fixas do turno, cada uma com a caixa de Feito (grava quem e quando;
+ * desde 25/10, APP-065, sem o botão Não feito). O que ninguém marcar até o fim do turno passa como não feito para o
+ * turno seguinte, em "Pendências herdadas".
  */
 
 export interface AtividadeDoTurno {
@@ -156,41 +157,30 @@ export default function AtividadesDoTurno() {
       <ul className="lista-atividades">
         {dados.atividades.map((a) => (
           <li key={a.id} className={a.estado ? `atividade ${a.estado}` : "atividade"}>
-            <div className="atividade-texto">
-              <span>{a.texto}</span>
-              {a.estado && (
-                <span className="texto-secundario">
-                  {a.estado === "feito" ? "Feito" : "Não feito"}
-                  {a.quem && ` por ${a.quem}`}
-                  {a.quando && ` às ${a.quando}`}
-                </span>
-              )}
-            </div>
-            {dados.pode_marcar && (
-              <div className="atividade-botoes" role="group" aria-label={`Marcar ${a.texto}`}>
-                <button
-                  type="button"
-                  className="botao-secundario"
-                  aria-pressed={a.estado === "feito"}
-                  disabled={gravando === a.id}
-                  onClick={() => void marcar(a.id, a.estado === "feito" ? null : true)}
-                >
-                  Feito
-                </button>
-                <button
-                  type="button"
-                  className="botao-secundario"
-                  aria-pressed={a.estado === "nao_feito"}
-                  disabled={gravando === a.id}
-                  onClick={() => void marcar(a.id, a.estado === "nao_feito" ? null : false)}
-                >
-                  Não feito
-                </button>
-              </div>
-            )}
+            <label className="atividade-caixa">
+              <input
+                type="checkbox"
+                checked={a.estado === "feito"}
+                disabled={!dados.pode_marcar || gravando === a.id}
+                onChange={() => void marcar(a.id, a.estado === "feito" ? null : true)}
+              />
+              <span className="atividade-texto">
+                <span>{a.texto}</span>
+                {a.estado && (
+                  <span className="texto-secundario">
+                    {a.estado === "feito" ? "Feito" : "Não feito"}
+                    {a.quem && ` por ${a.quem}`}
+                    {a.quando && ` às ${a.quando}`}
+                  </span>
+                )}
+              </span>
+            </label>
           </li>
         ))}
       </ul>
+      {dados.pode_marcar && dados.total > 0 && (
+        <p className="texto-secundario atividades-dica">O que ficar sem marcar até o fim do turno passa como não feito para o turno seguinte.</p>
+      )}
       {dados.total === 0 && <p className="texto-secundario">Nenhuma atividade fixa para este turno hoje.</p>}
     </section>
   );

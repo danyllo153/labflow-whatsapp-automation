@@ -11,7 +11,7 @@ import { enviarJson, lerJson } from "../../api";
 export type AppComInstrucao = "recebimento-fcoj" | "tanques" | "testes" | "drops" | "embarque-fcoj" | "recebimento-nfc" | "desvios";
 
 export const ABAS_FINAIS = [
-  { aba: "instrucao", rotulo: "Instrução" },
+  { aba: "instrucao", rotulo: "IT" },
   { aba: "video", rotulo: "Vídeo" },
 ];
 
@@ -59,7 +59,7 @@ export default function Instrucao({ app, parte }: { app: AppComInstrucao; parte:
     }
   }
 
-  const titulo = parte === "instrucao" ? "Instrução" : "Vídeo";
+  const titulo = parte === "instrucao" ? "Instrução de trabalho (IT)" : "Vídeo";
   if (!dados)
     return (
       <div className="cartao">
@@ -75,7 +75,7 @@ export default function Instrucao({ app, parte }: { app: AppComInstrucao; parte:
         <>
           {parte === "instrucao" ? (
             <label className="campo">
-              Instrução de trabalho
+              Instrução de trabalho (IT)
               <textarea className="instrucao-editor" rows={14} maxLength={20000} value={texto} onChange={(e) => setTexto(e.target.value)} />
             </label>
           ) : (
@@ -105,7 +105,7 @@ export default function Instrucao({ app, parte }: { app: AppComInstrucao; parte:
               <div className="instrucao-texto">{dados.texto}</div>
             ) : (
               <p className="texto-secundario">
-                {dados.pode_editar ? "Ainda não há instrução. Escreva a instrução de trabalho desta análise." : "O Admin ainda não escreveu a instrução desta análise."}
+                {dados.pode_editar ? "Ainda não há IT desta análise. Toque em Adicionar IT." : "O Admin ainda não adicionou a IT desta análise."}
               </p>
             ))}
           {parte === "video" &&
@@ -125,7 +125,7 @@ export default function Instrucao({ app, parte }: { app: AppComInstrucao; parte:
           )}
           {dados.pode_editar && (
             <button type="button" className="botao botao-simples" onClick={editar}>
-              {parte === "instrucao" ? (dados.texto ? "Editar a instrução" : "Escrever a instrução") : dados.video_url ? "Trocar o link" : "Colar o link do vídeo"}
+              {parte === "instrucao" ? (dados.texto ? "Editar a IT" : "Adicionar IT") : dados.video_url ? "Trocar o link" : "Colar o link do vídeo"}
             </button>
           )}
         </>

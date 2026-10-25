@@ -41,12 +41,17 @@ def _por_texto(corpo, texto):
     return next(a for a in corpo["atividades"] if a["texto"] == texto)
 
 
+def _marcadas_nao_feito(corpo):
+    """As herdadas que alguém marcou como Não feito (as sem marcação do turno anterior vêm com quem = None)."""
+    return [h for h in corpo["herdadas"] if h["quem"]]
+
+
 def test_lista_do_turno_de_agora_na_ordem_do_cadastro(cliente, logado, agora):
     agora(em(22, 9))
     logado()
     corpo = cliente.get("/turno/atividades").json()
     assert (corpo["turno"], corpo["dia"], corpo["pode_marcar"]) == ("Manhã", "2026-10-22", True)
-    assert corpo["total"] == 11 and corpo["feitas"] == 0 and corpo["herdadas"] == []
+    assert corpo["total"] == 11 and corpo["feitas"] == 0 and _marcadas_nao_feito(corpo) == []
     assert [a["texto"] for a in corpo["atividades"]][:3] == ["Leitura de placa", "Planilhas", "Materiais"]
     assert all(a["estado"] is None and a["quem"] is None for a in corpo["atividades"])
 
@@ -99,15 +104,15 @@ def test_nao_feito_vira_pendencia_herdada_do_turno_seguinte_ate_ser_feito(client
     agora(em(22, 17))  # Tarde: a Calibração da Manhã chega como pendência herdada
     tarde = cliente.get("/turno/atividades").json()
     assert tarde["turno"] == "Tarde"
-    assert [(h["atividade_id"], h["texto"], h["turno"], h["dia"]) for h in tarde["herdadas"]] == [
+    assert [(h["atividade_id"], h["texto"], h["turno"], h["dia"]) for h in _marcadas_nao_feito(tarde)] == [
         (a["id"], "Calibração", "Manhã", "2026-10-22")
     ]
     assert "Calibração" not in {x["texto"] for x in tarde["atividades"]}  # não é da Tarde
 
     r = cliente.put(f"/turno/atividades/{a['id']}", json={"feito": True}).json()  # marca Feito na herdada
-    assert r["herdadas"] == []
+    assert a["id"] not in {h["atividade_id"] for h in r["herdadas"]}
     agora(em(23, 1))  # Madrugada: já resolvida, não herda mais
-    assert cliente.get("/turno/atividades").json()["herdadas"] == []
+    assert a["id"] not in {h["atividade_id"] for h in cliente.get("/turno/atividades").json()["herdadas"]}
 
 
 def test_herdada_continua_nos_turnos_seguintes_se_ninguem_fez(cliente, logado, agora):
@@ -117,7 +122,7 @@ def test_herdada_continua_nos_turnos_seguintes_se_ninguem_fez(cliente, logado, a
     cliente.put(f"/turno/atividades/{a['id']}", json={"feito": False})
     for hora in (17, 23):
         agora(em(22, hora))
-        assert [h["texto"] for h in cliente.get("/turno/atividades").json()["herdadas"]] == ["Reagentes"]
+        assert [h["texto"] for h in _marcadas_nao_feito(cliente.get("/turno/atividades").json())] == ["Reagentes"]
 
 
 def test_herdada_so_se_marca_como_feito(cliente, logado, agora):
@@ -169,3 +174,24 @@ def test_quem_esta_no_turno_ve_a_lista_do_turno_dele(cliente, logado, agora):
 def test_sem_check_in_o_operador_nao_ve_as_atividades(cliente, logado):
     logado()
     assert cliente.get("/turno/atividades").status_code == 403
+
+
+def test_nao_marcada_ate_o_fim_do_turno_passa_como_nao_feita_so_para_o_seguinte(cliente, logado, agora):
+    """25/10 (APP-065): a tela tem só a caixa de Feito; o que ninguém marcou passa para o turno seguinte."""
+    logado()
+    agora(em(22, 15))  # Manhã: marca só a Leitura de placa
+    manha = cliente.get("/turno/atividades").json()
+    feita = _por_texto(manha, "Leitura de placa")
+    cliente.put(f"/turno/atividades/{feita['id']}", json={"feito": True})
+    planilhas = _por_texto(manha, "Planilhas")
+
+    agora(em(22, 17))  # Tarde: as não marcadas da Manhã chegam como herdadas, sem "quem"
+    tarde = cliente.get("/turno/atividades").json()
+    herdadas = {h["atividade_id"]: h for h in tarde["herdadas"]}
+    assert feita["id"] not in herdadas
+    assert herdadas[planilhas["id"]]["turno"] == "Manhã" and herdadas[planilhas["id"]]["quem"] is None
+    r = cliente.put(f"/turno/atividades/{planilhas['id']}", json={"feito": True}).json()  # feita na Tarde
+    assert planilhas["id"] not in {h["atividade_id"] for h in r["herdadas"]}
+
+    agora(em(23, 1))  # Madrugada: a Manhã não é mais o turno anterior; nada da Manhã sem marcação
+    assert all(h["turno"] != "Manhã" for h in cliente.get("/turno/atividades").json()["herdadas"])

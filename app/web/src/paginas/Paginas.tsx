@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 
 import { lerJson } from "../api";
 import { useSessao } from "../sessao";
+import IconeApp from "../componentes/IconeApp";
 import NaoEncontrada from "./NaoEncontrada";
 import { ABAS_DESVIOS } from "./analises/Desvios";
 import { ABAS_DROPS } from "./analises/Drops";
@@ -27,8 +28,8 @@ interface App {
   caminho: string; // endereço que o app abre
   chave?: string; // de onde vem a contagem do dia (a página antiga); sem ela, o próprio caminho
   titulo: string;
-  sigla: string;
-  cor: "azul" | "verde" | "marinho" | "laranja" | "cinza" | "agua" | "vermelho";
+  icone: string; // desenho do app (componentes/IconeApp)
+  cor: string; // família: app-cor-<cor> (nfc, drops, nfc-receb, desvios, fcoj, embarque, tab, coli, howard, agua, baias, linhas, rotina, geral)
   grupo: Grupo;
   descricao: string;
   semColetor?: boolean;
@@ -44,20 +45,23 @@ const GRUPOS: { grupo: Grupo; titulo: string }[] = [
   { grupo: "Rotina", titulo: "Rotina do laboratório" },
 ];
 
-/** Sigla e cor de cada página (o resto vem de definicoes.ts). */
-const VISUAL: Record<string, Pick<App, "sigla" | "cor">> = {
-  coletas: { sigla: "CL", cor: "cinza" },
-  recebimento: { sigla: "RF", cor: "azul" },
-  embarque: { sigla: "EF", cor: "azul" },
-  "tanques-terra": { sigla: "TQ", cor: "verde" },
-  navios: { sigla: "NV", cor: "verde" },
-  drops: { sigla: "D", cor: "verde" },
-  desvios: { sigla: "!", cor: "vermelho" },
-  "recebimento-nfc": { sigla: "RN", cor: "verde" },
-  tab: { sigla: "TAB", cor: "marinho" },
-  coliformes: { sigla: "CO", cor: "laranja" },
-  howard: { sigla: "HW", cor: "cinza" },
+/** Ícone e cor (da família) de cada página; o resto vem de definicoes.ts. */
+const VISUAL: Record<string, Pick<App, "icone" | "cor"> & { titulo?: string }> = {
+  coletas: { icone: "coletas", cor: "geral" },
+  recebimento: { icone: "recebimento-fcoj", cor: "fcoj" },
+  embarque: { icone: "embarque-fcoj", cor: "embarque" },
+  "tanques-terra": { icone: "tanques", cor: "nfc", titulo: "Análise de tanques" },
+  drops: { icone: "drops", cor: "drops" },
+  desvios: { icone: "desvios", cor: "desvios" },
+  "recebimento-nfc": { icone: "recebimento-nfc", cor: "nfc-receb" },
+  tab: { icone: "tab", cor: "tab" },
+  coliformes: { icone: "coliformes", cor: "coli" },
+  howard: { icone: "howard", cor: "howard" },
 };
+
+/** Tanques terra e navios são um app só ("Análise de tanques", com a pesquisa por navio): a página de navios não
+ * aparece na grade, e as pendências dela contam no app de tanques. */
+const JUNTADAS = new Set(["navios"]);
 
 const APP_DO_RECEBIMENTO = "/analises/recebimento-fcoj";
 
@@ -76,40 +80,41 @@ const APPS_DA_FASE_E: Record<string, { caminho: string; atalhos: { aba: string; 
 };
 
 const APPS_FIXOS: App[] = [
-  { caminho: "/paginas/visao-geral", titulo: "Visão geral", sigla: "VG", cor: "marinho", grupo: "Geral", semColetor: true,
+  { caminho: "/paginas/visao-geral", titulo: "Visão geral", icone: "visao-geral", cor: "geral", grupo: "Geral", semColetor: true,
     descricao: "Números do período, pendências por bloco e os Não ok mais recentes." },
-  { caminho: "/paginas/agua-processo", titulo: "Água do processo", sigla: "AP", cor: "agua", grupo: "Aguas",
+  { caminho: "/paginas/agua-processo", titulo: "Água do processo", icone: "agua", cor: "agua", grupo: "Aguas",
     descricao: "Manifold e Câmaras 4, 5 e 6: coleta, C.T. e B.L., e o laudo." },
-  { caminho: "/paginas/baias", titulo: "Baias", sigla: "BA", cor: "agua", grupo: "Aguas", semColetor: true,
+  { caminho: "/paginas/baias", titulo: "Baias", icone: "baias", cor: "baias", grupo: "Aguas", semColetor: true,
     descricao: "CIP dos mangotes do recebimento: C.T. 48 h, B.L. 72 h e 120 h, e o laudo." },
-  { caminho: "/paginas/linhas", titulo: "Linhas", sigla: "LI", cor: "agua", grupo: "Aguas", semColetor: true,
+  { caminho: "/paginas/linhas", titulo: "Linhas", icone: "linhas", cor: "linhas", grupo: "Aguas", semColetor: true,
     descricao: "CIP das linhas de embarque: C.T. 48 h, B.L. 72 h e 120 h, e o laudo." },
-  { caminho: "/esterilizacao", titulo: "Esterilização", sigla: "ES", cor: "marinho", grupo: "Rotina", semColetor: true,
+  { caminho: "/esterilizacao", titulo: "Esterilização", icone: "esterilizacao", cor: "rotina", grupo: "Rotina", semColetor: true,
     descricao: "Ciclos da autoclave e o laudo." },
-  { caminho: "/estufas", titulo: "Estufas", sigla: "ET", cor: "laranja", grupo: "Rotina", semColetor: true,
+  { caminho: "/estufas", titulo: "Estufas", icone: "estufas", cor: "rotina", grupo: "Rotina", semColetor: true,
     descricao: "Temperaturas do dia." },
-  { caminho: "/material-asseptico", titulo: "Material asséptico", sigla: "MA", cor: "cinza", grupo: "Rotina", semColetor: true,
+  { caminho: "/material-asseptico", titulo: "Material asséptico", icone: "material", cor: "rotina", grupo: "Rotina", semColetor: true,
     descricao: "O que foi usado em cada dia de análise." },
-  { caminho: "/meios-lotes", titulo: "Meios e lotes", sigla: "ML", cor: "cinza", grupo: "Rotina", semColetor: true,
+  { caminho: "/meios-lotes", titulo: "Meios e lotes", icone: "meios", cor: "rotina", grupo: "Rotina", semColetor: true,
     descricao: "Lotes dos meios de cultura em uso." },
-  { caminho: "/fluxo-laminar", titulo: "Branco do dia", sigla: "BD", cor: "cinza", grupo: "Rotina", semColetor: true,
+  { caminho: "/fluxo-laminar", titulo: "Branco do dia", icone: "branco", cor: "rotina", grupo: "Rotina", semColetor: true,
     descricao: "Fluxo laminar: o branco de cada dia." },
-  { caminho: "/incubacao", titulo: "Incubação", sigla: "IN", cor: "cinza", grupo: "Rotina", semColetor: true,
+  { caminho: "/incubacao", titulo: "Incubação", icone: "incubacao", cor: "rotina", grupo: "Rotina", semColetor: true,
     descricao: "O que entrou nas estufas em cada dia." },
 ];
 
 export const APPS: App[] = [
   ...APPS_FIXOS.filter((a) => a.grupo === "Geral"),
-  ...PAGINAS.filter((p) => !p.oculta).map(
+  ...PAGINAS.filter((p) => !p.oculta && !JUNTADAS.has(p.caminho)).map(
     (p): App => ({
       caminho: APPS_DA_FASE_E[p.caminho]?.caminho ?? `/paginas/${p.caminho}`,
       chave: `/paginas/${p.caminho}`,
-      titulo: p.titulo,
+      titulo: VISUAL[p.caminho]?.titulo ?? p.titulo,
       grupo: p.grupo,
       descricao: p.descricao,
       semColetor: p.semColetor,
       atalhos: APPS_DA_FASE_E[p.caminho]?.atalhos,
-      ...(VISUAL[p.caminho] ?? { sigla: p.titulo.slice(0, 2).toUpperCase(), cor: "cinza" }),
+      icone: VISUAL[p.caminho]?.icone ?? p.caminho,
+      cor: VISUAL[p.caminho]?.cor ?? "geral",
     }),
   ),
   ...APPS_FIXOS.filter((a) => a.grupo !== "Geral"),
@@ -133,7 +138,7 @@ function appDaPendencia(p: Pendencia): string | null {
     case "NFC Tank farm":
       return "/paginas/tanques-terra";
     case "NFC Navio":
-      return "/paginas/navios";
+      return "/paginas/tanques-terra"; // navios e tanques terra são o mesmo app
     case "Recebimento NFC":
       return "/paginas/recebimento-nfc";
     case "Desvios":
@@ -192,7 +197,7 @@ export function ListaDePaginas() {
   return (
     <section className="tela-apps">
       <div className="apps-topo">
-        <h1>Páginas</h1>
+        <h1>Análises</h1>
         <label className="busca-redonda">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
             <circle cx="11" cy="11" r="7" />
@@ -224,7 +229,7 @@ export function ListaDePaginas() {
                     }}
                   >
                     <span className={`app-icone app-cor-${a.cor}`} aria-hidden="true">
-                      {a.sigla}
+                      <IconeApp nome={a.icone} />
                     </span>
                     <span className="app-textos">
                       <span className="app-nome">{a.titulo}</span>
@@ -249,7 +254,7 @@ export function ListaDePaginas() {
             <span className="folha-alca" aria-hidden="true" />
             <div className="folha-titulo">
               <span className={`app-icone app-cor-${aberto.cor}`} aria-hidden="true">
-                {aberto.sigla}
+                <IconeApp nome={aberto.icone} />
               </span>
               <strong>{aberto.titulo}</strong>
             </div>

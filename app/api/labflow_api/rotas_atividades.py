@@ -8,7 +8,9 @@ Regras:
 - atividade com dia certo ("só às sextas") só aparece nesse dia da semana; a Madrugada conta no dia em que começou;
 - "Feito" e "Não feito" gravam quem e quando; tocar de novo no mesmo botão desmarca;
 - "Não feito" vira pendência do turno seguinte: aparece em "Pendências herdadas" (com a caixa de Feito) até alguém
-  marcar a atividade como feita ou passarem 3 dias.
+  marcar a atividade como feita ou passarem 3 dias;
+- (25/10, APP-065) a tela tem só a caixa de Feito: a atividade que ninguém marcou até o fim do turno também passa como
+  não feita para o turno seguinte (só para o turno logo depois), até alguém marcá-la.
 """
 
 from datetime import date, timedelta
@@ -121,11 +123,39 @@ def _lista(con: psycopg.Connection, turno: Turno, dia: date) -> list[Atividade]:
     return itens
 
 
-def _herdadas(con: psycopg.Connection, turno: Turno) -> list[Herdada]:
-    return [
+# As atividades do turno anterior que ninguém marcou (nem Feito nem Não feito) e ninguém fez depois do fim dele.
+NAO_MARCADAS_SQL = """
+SELECT a.id, a.texto
+FROM app.atividades_fixas a
+WHERE a.turno_id = %(ant)s AND a.ativa
+  AND (a.dias_semana IS NULL OR %(dia_semana)s = ANY (a.dias_semana))
+  AND NOT EXISTS (
+      SELECT 1 FROM app.atividades_feitas f WHERE f.atividade_fixa_id = a.id AND f.turno_id = %(ant)s AND f.dia = %(dia_ant)s
+  )
+  AND NOT EXISTS (
+      SELECT 1 FROM app.atividades_feitas r WHERE r.atividade_fixa_id = a.id AND r.feito AND r.marcado_em >= %(fim)s
+  )
+ORDER BY a.ordem
+"""
+
+
+def _herdadas(con: psycopg.Connection, turno: Turno, dia: date) -> list[Herdada]:
+    herdadas = [
         Herdada(atividade_id=i, texto=t, turno=n, dia=d, quem=q)
         for i, t, n, d, q, _ in con.execute(HERDADAS_SQL, {"turno": turno.id, "dias": DIAS_DE_HERANCA})
     ]
+    turnos = rotas_turno._turnos(con)
+    ant, dia_ant = rotas_turno.turno_agora(turnos, rotas_turno.janela(turno, dia)[0] - timedelta(minutes=1))
+    if ant.id == turno.id:
+        return herdadas
+    ja = {h.atividade_id for h in herdadas}
+    for i, t in con.execute(
+        NAO_MARCADAS_SQL,
+        {"ant": ant.id, "dia_ant": dia_ant, "dia_semana": dia_ant.isoweekday(), "fim": rotas_turno.janela(ant, dia_ant)[1]},
+    ):
+        if i not in ja:
+            herdadas.append(Herdada(atividade_id=i, texto=t, turno=ant.nome, dia=dia_ant, quem=None))
+    return herdadas
 
 
 RECADOS_SQL = """
@@ -160,7 +190,7 @@ def _resposta(con: psycopg.Connection, pessoa: PessoaLogada, turno: Turno, dia: 
     return AtividadesDoTurno(
         turno_id=turno.id, turno=turno.nome, dia=dia, pode_marcar=pode(pessoa.cargo, "registrar_analise"),
         total=len(atividades), feitas=sum(a.estado == "feito" for a in atividades),
-        atividades=atividades, herdadas=_herdadas(con, turno), recados=_recados(con, turno, dia),
+        atividades=atividades, herdadas=_herdadas(con, turno, dia), recados=_recados(con, turno, dia),
     )
 
 
@@ -185,7 +215,7 @@ def marcar(
 ) -> AtividadesDoTurno:
     turno, dia = _turno_da_pessoa(con, pessoa)
     do_turno = {a.id for a in _lista(con, turno, dia)}
-    herdada = atividade_id in {h.atividade_id for h in _herdadas(con, turno)}
+    herdada = atividade_id in {h.atividade_id for h in _herdadas(con, turno, dia)}
     if atividade_id not in do_turno and not herdada:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Essa atividade não é do seu turno de hoje.")
     if atividade_id not in do_turno and marcacao.feito is not True:

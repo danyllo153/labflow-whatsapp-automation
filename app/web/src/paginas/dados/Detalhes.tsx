@@ -148,7 +148,7 @@ export function DetalheTanque() {
   return (
     <section>
       <p className="trilha">
-        <Link to="/paginas">Páginas</Link> /{" "}
+        <Link to="/paginas">Análises</Link> /{" "}
         {deNavio ? (
           <Link to={`/paginas/navios/${encodeURIComponent(String(r?.navio))}`}>{String(r?.navio)}</Link>
         ) : (
@@ -221,7 +221,7 @@ export function DetalheNavio() {
   return (
     <section>
       <p className="trilha">
-        <Link to="/paginas">Páginas</Link> / <Link to="/paginas/navios">Navios</Link> / {navio}
+        <Link to="/paginas">Análises</Link> / <Link to="/paginas/navios">Navios</Link> / {navio}
       </p>
       {erro && <p className="mensagem-erro" role="alert">{erro}</p>}
       {!dados && !erro && <p className="carregando">Carregando...</p>}

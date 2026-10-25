@@ -141,8 +141,8 @@ describe("Páginas: Coletas e Recebimento (APP-015)", () => {
     const { urls } = abrir("/paginas/coletas?origem=Terra", { "GET /paginas/coletas": (url: string) => paginaDe(COLETAS, url) });
     const u = userEvent.setup();
     await screen.findByText(/120 registros/);
-    await u.selectOptions(screen.getByLabelText("Papel"), "deitado");
-    await u.click(screen.getByRole("button", { name: "Imprimir" }));
+    await u.click(screen.getByRole("button", { name: "Imprimir" })); // o papel fica dentro do botão (25/10)
+    await u.click(screen.getByRole("button", { name: "A4 deitado" }));
     const folha = await screen.findByTestId("impressao");
     expect(imprimir).toHaveBeenCalledTimes(1);
     expect(within(folha).getAllByRole("row")).toHaveLength(121);
@@ -162,6 +162,7 @@ describe("Páginas: Coletas e Recebimento (APP-015)", () => {
     const u = userEvent.setup();
     await screen.findByText(/2001 registros/);
     await u.click(screen.getByRole("button", { name: "Imprimir" }));
+    await u.click(screen.getByRole("button", { name: "A4 em pé" }));
     expect(screen.getByRole("alert")).toHaveTextContent("use o Excel");
     expect(imprimir).not.toHaveBeenCalled();
   });

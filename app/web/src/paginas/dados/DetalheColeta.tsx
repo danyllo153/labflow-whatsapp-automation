@@ -62,7 +62,7 @@ export default function DetalheColeta() {
     return (
       <section>
         <p className="trilha">
-          <Link to="/paginas">Páginas</Link> / <Link to="/paginas/coletas">Coletas</Link>
+          <Link to="/paginas">Análises</Link> / <Link to="/paginas/coletas">Coletas</Link>
         </p>
         <h1>Coleta</h1>
         <div className="cartao" role="alert">
@@ -79,7 +79,7 @@ export default function DetalheColeta() {
   return (
     <section className="detalhe-coleta">
       <p className="trilha">
-        <Link to="/paginas">Páginas</Link> / <Link to="/paginas/coletas">Coletas</Link> / Tanque {c.tanque}
+        <Link to="/paginas">Análises</Link> / <Link to="/paginas/coletas">Coletas</Link> / Tanque {c.tanque}
       </p>
       <h1>
         Coleta · Tanque {c.tanque} · {formatar(c.data_coleta, "data")}

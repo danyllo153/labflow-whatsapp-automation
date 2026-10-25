@@ -11,7 +11,7 @@ export interface ItemDoMenu {
 export const MENU: ItemDoMenu[] = [
   { caminho: "/", rotulo: "Início", pronto: true },
   { caminho: "/turno", rotulo: "Turno", pronto: true },
-  { caminho: "/paginas", rotulo: "Páginas", pronto: true },
+  { caminho: "/paginas", rotulo: "Análises", pronto: true },
   { caminho: "/esterilizacao", rotulo: "Esterilização", pronto: true },
   { caminho: "/estufas", rotulo: "Estufas", pronto: true, soNoMenuLateral: true },
   { caminho: "/registros-diarios", rotulo: "Registros diários", pronto: true, soNoMenuLateral: true },
