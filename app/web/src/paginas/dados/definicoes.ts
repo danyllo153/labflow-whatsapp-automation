@@ -32,6 +32,7 @@ export interface DefinicaoDePagina {
   oculta?: boolean; // não aparece na lista, mas o endereço continua abrindo (links antigos)
   linkDaLinha?: (linha: Record<string, unknown>) => string; // tocar na linha abre a página do item
   fixos?: Record<string, string>; // filtro sempre aplicado na API (ex.: uma página por teste, 24/10)
+  dashboard?: { tipo: "colunas" | "tendencia"; coluna: string; aberto?: boolean }; // gráfico que o Dashboard mostra primeiro (25/10)
 }
 
 export const FABRICAS = ["AQA", "CON", "COL", "UCH", "ITA", "TMG"]; // fábricas travadas (decisão de 14/10)
@@ -45,6 +46,7 @@ export const PAGINAS: DefinicaoDePagina[] = [
     api: "/paginas/coletas",
     impressao: "em pé",
     linkDaLinha: (l) => `/paginas/coletas/${l.coleta_id}`,
+    dashboard: { tipo: "colunas", coluna: "coletado_por", aberto: true }, // quem coletou o quê, já aberto (25/10)
     colunas: [
       { chave: "data_coleta", rotulo: "Data da coleta", formato: "data" },
       { chave: "tanque", rotulo: "Tanque", principal: true },
@@ -245,7 +247,6 @@ export const PAGINAS: DefinicaoDePagina[] = [
       { chave: "data_feito", rotulo: "Feito em", formato: "data" },
       { chave: "status", rotulo: "Status" },
       { chave: "resultado", rotulo: "Resultado", formato: "situacao" },
-      { chave: "howard_percentual", rotulo: "Howard (%)" },
       { chave: "proxima_etapa", rotulo: "Próxima etapa", formato: "data" },
       { chave: "situacao", rotulo: "Situação", formato: "situacao" },
       { chave: "feito_por", rotulo: "Feito por" },
@@ -277,7 +278,6 @@ export const PAGINAS: DefinicaoDePagina[] = [
       { chave: "data_feito", rotulo: "Feito em", formato: "data" },
       { chave: "status", rotulo: "Status" },
       { chave: "resultado", rotulo: "Resultado", formato: "situacao" },
-      { chave: "howard_percentual", rotulo: "Howard (%)" },
       { chave: "proxima_etapa", rotulo: "Próxima etapa", formato: "data" },
       { chave: "situacao", rotulo: "Situação", formato: "situacao" },
       { chave: "feito_por", rotulo: "Feito por" },

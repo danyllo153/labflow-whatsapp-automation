@@ -5,9 +5,15 @@ Spec: 07-app-pwa.md (v1.0), §7.5 Branco do dia. Tarefa: APP-038. Tabela da migr
 Regras (decididas com o Danyllo em 24/10): um dia de análise por linha; tudo começa em "<1"; Wort e PCA ficam com "-"
 nos dias sem análise que use esses meios (Wort = tanques de NFC; PCA = águas, baias e linhas): o app sugere, o
 analista confirma ou troca. Quem salva é o responsável. Vale a versão de 2024 do modelo (LAB/001, capela em UFC/50 cm²).
+
+Desde 25/10 (APP-067, pedido do Danyllo) o branco é AUTOMÁTICO: todo dia que teve análise (plaqueamento de recebimento,
+concentrado, embarque, tanques, NFC, águas, baias ou linhas) já entra preenchido com a sugestão (capela e OSA/PDA "<1";
+Wort e PCA "<1" ou "-" conforme o dia), sem o analista registrar; ele só corrige se algo crescer. O app preenche os dias
+anteriores (até 7 dias, o dia de hoje fica para amanhã, quando já se sabe tudo o que foi plaqueado) na primeira vez que
+alguém do laboratório abre o app; o responsável é essa pessoa.
 """
 
-from datetime import date
+from datetime import date, timedelta
 
 import psycopg
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -69,6 +75,41 @@ def _sugestao(con: psycopg.Connection, dia: date) -> tuple[Valores, str, str]:
     return valores, motivo_wort, motivo_pca
 
 
+def _houve_analise(con: psycopg.Connection, dia: date) -> bool:
+    """O dia teve plaqueamento (fora TAB e Coliformes, que não usam a capela) ou água, baia ou linha."""
+    return con.execute(
+        """
+        SELECT EXISTS (SELECT 1 FROM bi.incubacao WHERE dia_incubacao = %(dia)s AND tipo NOT IN ('TAB', 'Coliformes'))
+            OR EXISTS (SELECT 1 FROM app.coletas_agua_processo WHERE excluida_em IS NULL
+                         AND (coletada_em AT TIME ZONE 'America/Sao_Paulo')::date = %(dia)s)
+            OR EXISTS (SELECT 1 FROM app.coletas_superficie WHERE excluida_em IS NULL AND analisada_em = %(dia)s)
+        """,
+        {"dia": dia},
+    ).fetchone()[0]
+
+
+def preencher_sozinho(con: psycopg.Connection, quem: int) -> int:
+    """Preenche o branco dos 7 dias anteriores que tiveram análise e ainda não têm branco. Devolve quantos preencheu."""
+    hoje = _hoje(con)
+    feitos = {d for (d,) in con.execute("SELECT dia FROM app.fluxo_laminar WHERE dia BETWEEN %s AND %s", (hoje - timedelta(days=7), hoje))}
+    preenchidos = 0
+    for atras in range(7, 0, -1):  # do mais antigo para o mais novo: as linhas do laudo ficam na ordem dos dias
+        dia = hoje - timedelta(days=atras)
+        if dia in feitos or not _houve_analise(con, dia):
+            continue
+        valores, _, _ = _sugestao(con, dia)
+        con.execute(
+            """
+            INSERT INTO app.fluxo_laminar (dia, capela_ct, capela_bl, osa, pda, wort, pca, preenchido_por, preenchido_em, pagina_id)
+            VALUES (%(dia)s, %(capela_ct)s, %(capela_bl)s, %(osa)s, %(pda)s, %(wort)s, %(pca)s, %(quem)s, clock_timestamp(), %(pagina)s)
+            ON CONFLICT (dia) DO NOTHING
+            """,
+            {**valores.model_dump(), "quem": quem, "dia": dia, "pagina": laudos.pagina_com_vaga(con, "fluxo-laminar")},
+        )
+        preenchidos += 1
+    return preenchidos
+
+
 def _dia(con: psycopg.Connection, pessoa: PessoaLogada, dia: date) -> DiaDoFluxo:
     linha = con.execute(
         """
@@ -95,6 +136,8 @@ def ver(
     pessoa: PessoaLogada = Depends(exigir("ver_paginas")),
     con: psycopg.Connection = Depends(obter_conexao),
 ) -> DiaDoFluxo:
+    if pode(pessoa.cargo, "registrar_analise"):
+        preencher_sozinho(con, pessoa.usuario_id)
     return _dia(con, pessoa, dia or _hoje(con))
 
 

@@ -60,6 +60,7 @@ export default function MeiosLotes() {
   const [meio, setMeio] = useState("OSA");
   const [erro, setErro] = useState("");
   const [versao, setVersao] = useState(0);
+  const [aviso, setAviso] = useState("");
 
   const carregar = useCallback(async () => {
     try {
@@ -75,6 +76,16 @@ export default function MeiosLotes() {
   }, [carregar]);
 
   function mudou(novo: MeiosELotes) {
+    // trocou o lote em uso: avisa que a incubação e leitura passa a usar o lote novo daqui para frente (pedido de 25/10)
+    const trocados = novo.meios.filter((m) => {
+      const antes = dados?.meios.find((a) => a.meio === m.meio)?.em_uso?.lote;
+      return m.em_uso && m.em_uso.lote !== antes;
+    });
+    setAviso(
+      trocados.length > 0
+        ? trocados.map((m) => `Daqui para frente, a incubação e leitura usa o lote ${m.em_uso?.lote} de ${m.meio}.`).join(" ")
+        : "",
+    );
     setDados(novo);
     setVersao((v) => v + 1);
   }
@@ -92,6 +103,11 @@ export default function MeiosLotes() {
         </div>
       )}
       {!dados && !erro && <p className="carregando">Carregando...</p>}
+      {aviso && (
+        <p className="aviso-lote" role="status">
+          {aviso}
+        </p>
+      )}
       {dados && (
         <>
           <div className="cartoes-numeros" role="group" aria-label="Meio">

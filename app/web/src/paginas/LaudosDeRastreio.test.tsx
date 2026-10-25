@@ -228,14 +228,13 @@ const INCUBACAO: DiaDeIncubacao = {
 };
 
 describe("Incubação e leitura (APP-040)", () => {
-  it("mostra as amostras do dia, os lotes, as leituras e avisa o meio sem lote", async () => {
+  it("mostra as amostras do dia e quando ler, sem a tabela de lotes, e avisa o meio sem lote", async () => {
     abrir("/incubacao", { "GET /incubacao": () => ({ status: 200, corpo: INCUBACAO }) });
     const cartao = await screen.findByRole("generic", { name: "Incubação de 22/10" });
     expect(within(cartao).getByText("Baias 08, 10")).toBeInTheDocument();
-    expect(within(cartao).getByText("1000002")).toBeInTheDocument();
-    expect(within(cartao).getByText("sem lote")).toBeInTheDocument();
+    expect(within(cartao).queryByText("1000002")).not.toBeInTheDocument(); // os lotes saíram da tela (25/10); o laudo usa o lote em uso
     expect(within(cartao).getByText("Entra na folha amanhã")).toBeInTheDocument();
-    expect(within(cartao).getByText("27/10")).toBeInTheDocument();
+    expect(within(cartao).getByText(/Ler em: .*27\/10/)).toBeInTheDocument();
     expect(within(cartao).getByRole("link", { name: "Meios e lotes" })).toHaveAttribute("href", "/meios-lotes");
   });
 });

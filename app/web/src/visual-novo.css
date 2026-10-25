@@ -672,3 +672,80 @@ h2 {
 .sino-painel h2 {
   margin: 0 0 6px;
 }
+
+/* Meios e lotes: aviso da troca do lote em uso (25/10) */
+.aviso-lote {
+  background: var(--no-prazo-fundo);
+  color: var(--no-prazo-texto);
+  border-radius: var(--raio);
+  padding: 10px 14px;
+  font-weight: 600;
+}
+
+/* Dashboard das páginas de dados (25/10) */
+.dashboard-topo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.dashboard-topo h2 {
+  margin: 0;
+}
+
+.dashboard-topo .botao-icone {
+  margin-left: auto;
+}
+
+.dashboard-escolhas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.campo-inline {
+  margin: 0;
+  min-width: 180px;
+}
+
+.seletor-segmentado {
+  display: inline-flex;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  overflow: hidden;
+  background: var(--cartao);
+}
+
+.seletor-segmentado button {
+  min-height: 38px;
+  padding: 0 14px;
+  border: 0;
+  background: transparent;
+  color: var(--texto);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.seletor-segmentado button + button {
+  border-left: 1px solid var(--borda);
+}
+
+.seletor-segmentado button[aria-pressed="true"] {
+  background: var(--acao);
+  color: #ffffff;
+}
+
+.seletor-segmentado button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.botao-icone[aria-pressed="true"] {
+  background: var(--acao-fundo);
+  border-color: var(--acao);
+  color: var(--acao-escura);
+}

@@ -17,6 +17,12 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 - **Esterilização, água do processo, baias e linhas por frase** (bot, PB8 e PB9, migration 049): `esterilizei meio de cultura e frascos ciclo A1092/26`, `coleta agua do processo manifold, camara 5`, `agua do processo ct <1 bl <1`, `analisei baia 8,9`, `baia 8 ct48 <1 bl72 <1`. Mostra o resumo, pede o "sim" e grava pelas funções do app (067). A IA conhece os formatos; ajuda em `comandos esterilização`.
 
 ### Alterado
+- **Dados e laudos** (25/10, APP-067): botão **Dashboard** nas páginas de dados (com o filtro da tela: colunas
+  contando por uma coluna, ou tendência por dia), já aberto em **Coletas** com "quem coletou o quê"; o **branco do dia
+  entra sozinho** nos dias que tiveram análise (capela e OSA/PDA <1; Wort e PCA conforme o dia), preenchido no dia
+  seguinte quando alguém do laboratório abre o app; a **Incubação** não mostra mais a tabela de lotes (o laudo usa o
+  lote em uso); **Meios e lotes** avisa "daqui para frente a incubação usa o lote X" ao trocar o lote em uso; TAB e
+  Coliformes sem a coluna Howard.
 - **Apps de análise reorganizados** (25/10, APP-066): **TAB, Coliformes e Howard viram três apps** (cada um com o seu
   ícone e cor); os botões das etapas em lote ficam **presos embaixo da lista** (não é preciso rolar); **Análise de tanques**
   com o **Wort numa linha por frasco** (profundidade e superfície juntas) e só dois botões, **"<1 em todas as leituras"**
