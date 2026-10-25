@@ -719,6 +719,32 @@ button.numero-app {
 @media print {
   .acoes-relatorio, .relatorio-do-dia .dias-material, .relatorio-do-dia details, .relatorio-do-dia [aria-label="Finalizar o dia"] { display: none; }
 }
+
+/* Ok e Não ok em ícone redondo (25/10): verde com visto, vermelho com X */
+.icone-ok circle { stroke: none; }
+.icone-ok path { fill: none; stroke: #fff; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+.icone-ok-sim circle { fill: var(--ok, #16a34a); }
+.icone-ok-nao circle { fill: var(--nao-ok, #dc2626); }
+.icone-ok-apagado circle { fill: var(--cartao, #fff); stroke: var(--borda-forte, #d5dbe4); stroke-width: 1.5; }
+.icone-ok-apagado path { stroke: var(--texto-secundario, #5b6678); }
+.botao-icone-ok { display: inline-flex; align-items: center; justify-content: center; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 50%; background: transparent; cursor: pointer; }
+.botao-icone-ok svg { width: 30px; height: 30px; transition: transform 0.1s; }
+.botao-icone-ok:hover svg { transform: scale(1.08); }
+.botao-icone-ok:hover .icone-ok-apagado.icone-ok-sim circle { stroke: var(--ok, #16a34a); }
+.botao-icone-ok:hover .icone-ok-apagado.icone-ok-nao circle { stroke: var(--nao-ok, #dc2626); }
+.botao-icone-ok:focus-visible { outline: 2px solid var(--acao, #2563eb); outline-offset: 1px; }
+.botao-icone-ok:disabled { opacity: 0.6; cursor: default; }
+.botoes-estufa { align-items: center; gap: 2px; }
+.temperatura-estufa { white-space: nowrap; margin-left: 4px; font-weight: 600; color: var(--nao-ok-texto, #991b1b); font-size: 0.85rem; }
+.marca-icone { display: inline-flex; vertical-align: -3px; margin-left: 3px; }
+@media (max-width: 600px) {
+  .botao-icone-ok { width: 36px; height: 36px; }
+  .botao-icone-ok svg { width: 28px; height: 28px; }
+}
+.estufa-linha { grid-template-columns: minmax(120px, 200px) minmax(120px, 220px) minmax(120px, 1fr); }
+@media (max-width: 600px) {
+  .estufa-linha { grid-template-columns: 62px 1fr 1fr; }
+}
 /* Leituras do dia: cada bloco com a cor da família (25/10) */
 .bloco-relatorio { --cor-bloco: var(--fam-geral); border-left: 6px solid var(--cor-bloco); }
 .bloco-relatorio.bloco-fcoj { --cor-bloco: var(--fam-fcoj); }

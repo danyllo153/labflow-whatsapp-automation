@@ -12,6 +12,9 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 
 ## [Não lançado]
 
+### Alterado
+- **Ok e Não ok em ícone redondo** (25/10): nas estufas, os botões viraram o círculo verde com visto e o vermelho com X (cheio quando escolhido, contorno cinza quando não); a temperatura do Não ok fica ao lado. Nas Leituras, as marcas de lido e de fora do limite usam os mesmos ícones.
+
 ### Corrigido
 - **Leituras do dia: texto para o WhatsApp sem emoji** (25/10): o ✅ e o 🚨 chegavam como "�" ao compartilhar. O texto copiado e enviado leva só os números (as faixas juntas, `77001 (4-7)`) e o que fugiu do normal vai para **Atenção**, no fim da mensagem. Na tela as marcas continuam, e **cada bloco tem a cor da família** (Recebimento laranja, Embarque laranja-escuro, Tank farm verde-água, Navio azul).
 

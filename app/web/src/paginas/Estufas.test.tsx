@@ -63,7 +63,7 @@ describe("Estufas (APP-027; compactas no Início e no Turno desde 25/10)", () =>
     expect(await screen.findByText(/^Turno Manhã de 22\/10:/)).toHaveTextContent("Turno Manhã de 22/10: 1 de 3 conferidas · 1 Não ok.");
     const e3 = screen.getByRole("region", { name: "Estufa 03" });
     expect(e3).toHaveTextContent("35,0 °C a 37,0 °C");
-    expect(within(e3).getByRole("group", { name: "Supervisório da Estufa 03" })).toHaveTextContent("Não ok · 43,8 °C");
+    expect(within(e3).getByRole("group", { name: "Supervisório da Estufa 03" })).toHaveTextContent("43,8 °C");
     expect(within(e3).getByRole("group", { name: "Supervisório da Estufa 03" })).toHaveTextContent("porta aberta");
     expect(e3).toHaveTextContent("Diferença (field chart − supervisório): 1,2 °C");
     expect(screen.getByRole("region", { name: "Estufa 06" })).toHaveTextContent("auxiliar");

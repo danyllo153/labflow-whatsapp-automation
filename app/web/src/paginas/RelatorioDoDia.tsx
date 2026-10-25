@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 
 import { lerJson } from "../api";
+import IconeOk from "../componentes/IconeOk";
 import BlocosDePendencias, { type Pendencia } from "../componentes/BlocosDePendencias";
 import SeletorDeDias, { dm } from "../componentes/SeletorDeDias";
 import { useSessao } from "../sessao";
@@ -61,8 +62,18 @@ interface Desvios {
 function ComMarcas({ texto }: { texto: string }) {
   const partes: ReactNode[] = [];
   texto.split(/(✅|🚨)/u).forEach((p, i) => {
-    if (p === "✅") partes.push(<span key={i} className="marca-lido" title="lido" aria-label="lido">✓</span>);
-    else if (p === "🚨") partes.push(<span key={i} className="marca-alarme" title="fora do limite" aria-label="fora do limite">!</span>);
+    if (p === "✅")
+      partes.push(
+        <span key={i} className="marca-icone" title="lido" aria-label="lido" role="img">
+          <IconeOk ok tamanho={16} />
+        </span>,
+      );
+    else if (p === "🚨")
+      partes.push(
+        <span key={i} className="marca-icone" title="fora do limite" aria-label="fora do limite" role="img">
+          <IconeOk ok={false} tamanho={16} />
+        </span>,
+      );
     else if (p) partes.push(p);
   });
   return <>{partes}</>;
