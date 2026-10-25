@@ -13,6 +13,7 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 ## [Não lançado]
 
 ### Adicionado
+- **C.T/B.L do recebimento de FCOJ pela foto** (bot, 25/10): a foto da folha de recebimento lê o resultado de cada lote; traço por cima = já digitado (o bot ignora sem comentar); só o que é novo aparece (lote, composta e resultado que falta ou mudou) e tudo grava com um só sim, inclusive quando os lotes ainda não estavam registrados (comando interno `Contagem da foto`). No embarque, o resultado igual ao do sistema deixa de aparecer.
 - **Esterilização, água do processo, baias e linhas por frase** (bot, PB8 e PB9, migration 049): `esterilizei meio de cultura e frascos ciclo A1092/26`, `coleta agua do processo manifold, camara 5`, `agua do processo ct <1 bl <1`, `analisei baia 8,9`, `baia 8 ct48 <1 bl72 <1`. Mostra o resumo, pede o "sim" e grava pelas funções do app (067). A IA conhece os formatos; ajuda em `comandos esterilização`.
 
 ### Alterado
