@@ -434,6 +434,7 @@ Os dois aceitam o **número `#`** ou o **formato por extenso** (load + lotes; `(
 | `tabs de hoje lidos` → sim: sem crescimento, todos negativos | `coliformes de hoje lidos` → sim: todos negativos |
 | `quais tabs foram lidos hoje?` | `quais coliformes foram lidos hoje?` |
 
+- **Coliformes obrigatório** (regra do laboratório, migration 104, 25/10/2026): no **recebimento**, só **uma composta de cada load**, a primeira (ex.: lotes 1-5 de um load novo); feito o Coliformes de uma composta do load, as outras não pedem mais. Na fábrica **COL**, **toda** composta do load. No **embarque**, toda composta. A resposta das compostas avisa (`🧪 Coliformes obrigatório na composta #109 (primeira composta do load). Quando fizer, mande: coliformes feitos das compostas #109`) e a view `vw_coliformes_pendentes` tem as colunas `obrigatorio` e `motivo` para o app. As compostas que já estavam no banco antes da 104 não viram obrigatórias.
 - `data dd/mm/aaaa` no "feito" (`tab feito das compostas #7 data 28/09/2026`) faz o prazo contar dessa data, útil para registrar retroativo.
 - O que não foi feito no dia previsto continua aparecendo, com a **data prevista**: `⚠️ Atrasados — previsto 03/10/2026`.
 - Por extenso: `Tab da composta load 77001, lotes 6-10, item 444, em confirmação`; `composta load 77001, lote 7 item 444, da confirmação deu positivo`.
