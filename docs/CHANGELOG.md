@@ -13,6 +13,7 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 ## [Não lançado]
 
 ### Adicionado
+- **Coliformes obrigatório nas compostas** (bot e app, migration 104, regra do Danyllo de 25/10): no recebimento, a primeira composta de cada load (toda composta na fábrica COL); no embarque, toda composta. A resposta das compostas avisa e lembra o comando; `vw_coliformes_pendentes` ganha `obrigatorio` e `motivo`. O que já estava no banco não vira obrigatório.
 - **Embarque de FCOJ com vários loads e itens na mesma linha e fase** (bot e app, PB19, migration 102): `load 43453/43462 item 2503/2503`; as amostras ficam no load principal (o primeiro) e os outros ficam na linha+fase (`embarque_loads`).
 - **`criar_teste_da_composta`** (PB20, migration 101): TAB ou Coliformes no caldo hoje, ou Howard com o percentual, a partir da composta (botões do app).
 - **Coliformes pendente nas compostas do embarque** (bot e app, PB20, migrations 101 e 103): abrir a composta não faz o Coliformes; ele fica pendente até o `coliformes feitos do navio ...` (a resposta do bot lembra o comando) e a view `vw_coliformes_pendentes` lista o que falta. A 101 chegou a pôr o Coliformes no caldo junto; a 103 desfez isso no mesmo dia.
