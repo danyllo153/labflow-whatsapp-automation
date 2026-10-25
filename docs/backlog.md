@@ -39,7 +39,7 @@
 ### 📱 App (sessão da nuvem)
 - [x] **Pedidos de 25/10 (29 itens) e o visual novo** (APP-065 a APP-067, #282, #283 e a leva 3): menu escuro com ícones, Análises com ícone e cor
   por família, Excel/Imprimir em ícone, IT, atividades com a caixa, TAB/Coliformes/Howard separados, Wort numa linha, compostas no Registrar,
-  sininho, <10 no FCOJ, Relatório do dia, Dashboard, branco automático, incubação sem lotes; falta publicar o container
+  sininho, <10 no FCOJ, Relatório do dia, Dashboard, branco automático, incubação sem lotes; no ar em 25/10 (`6c041c3`, com o #285)
 - [ ] **Laudo do Recebimento NFC** (preenche a cada lançamento): precisa do PDF do modelo (Danyllo)
 - [ ] Botões **Criar TAB** e **Criar Howard** na composta do embarque, quando o bot fizer o PB20
 - [ ] Relatório do dia no formato do relatório diário do bot, quando o bot responder o PB18
