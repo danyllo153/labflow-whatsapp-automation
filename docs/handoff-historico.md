@@ -1,5 +1,7 @@
 # LabFlow — histórico do handoff
 
+> **24/10/2026, noite — sessão do bot (PC), onde paramos.** **No ar:** workflow `MJMm3QnbqFrCafsz` com **263 nós** (último backup `pre80`); banco até a migration **047** do bot (próxima livre **048**; a faixa do bot vai até 049); app até a 068. **Hoje, Fase E:** o bot grava quase tudo pelas **funções do banco**, as mesmas que o app chama (PR #256, que juntou os #249 a #255; migrations 041 a 047 aplicadas com o backup `labflow_2026-10-24_1700.dump`, depois da publicação do app com a 068): recebimento de FCOJ e C.T/B.L (041, pela 040), tanques (042), compostas/TAB/Coliformes/Howard (043), drops e desvio de drop (044), embarque (045), NFC recebido (046), desvio de tanque, repetição e leitura do dia (047). Quando o banco recusa no "sim", o bot diz o motivo. Teste ao vivo com 4 comandos que o banco recusa: todos responderam e nada foi gravado. **Antes, hoje:** corrigir resultado de C.T/B.L (#240, 039, `pre77`); PB11 (#244, 040); foto de TAB só com resultado e com o item lido errado (#246, #247, `pre79`). **Para o app:** as funções da 042 a 047 precisam do GRANT ao `labflow_app_web` numa migration do app (069 em diante). **Próximo do bot:** passar pelas funções a foto de TAB/Coliformes e o TAB de tanque "completo"; PB8/PB9 com a 067 do app. Fila em [`backlog.md`](backlog.md).
+
 Blocos antigos da seção 0 do [`handoff.md`](handoff.md), do mais novo para o mais antigo. Só para consulta: o estado atual está no handoff e o próximo no [`backlog.md`](backlog.md).
 
 ## Até 24/10/2026
