@@ -20,7 +20,7 @@
 - [x] **PB17, desvio de tanque, repetição e leitura do dia** (24/10, migration 047), o bot já usando
 - [x] **Fase E no bot concluída** (24/10, migration 048, PR aberto): foto de TAB, foto de Coliformes e TAB de tanque "completo" pelas funções do banco; falta aplicar a 048 e publicar
 - [x] **PB8 e PB9 no bot** (24/10, migration 049, PR #266): esterilização, água do processo, baias e linhas por frase, pelas funções da 067; 048 e 049 no ar (`pre81`). A regressão na IA está em andamento (25/10: a frase de esterilização passou)
-- [ ] **Baias e linhas são análise** (25/10, migration 100, primeira da faixa nova 100–149): frase `analisei baia 8,9`, só Admin e Analista, prévia "análise de ..."; falta aplicar a 100 e publicar
+- [x] **Baias e linhas são análise** (25/10, #271, migration 100, primeira da faixa nova 100–149): frase `analisei baia 8,9`, só Admin e Analista, prévia "análise de ..."; no ar (`pre82`)
 - [ ] **Apagar o que os testes de 24 e 25/10 gravaram** (pedido do Danyllo): o ciclo de esterilização A1095/26 e o que mais entrar nos testes; listar antes, backup, trava de contagem
 - [x] **TAB do load 43699 gravado à mão** (23/10): 10 compostas positivas confirmadas, feito em 13/10; criadas #87 (1-3) e #88 (4-6)
 - [x] **Corrigir resultado de C.T/B.L com um comando curto** (24/10, #240, migration 039, `pre77`): `corrigir ct do load 43755 para <1 motivo ...`; motivo obrigatório para o Analista, opcional para o Admin (#238); testado ao vivo até a prévia
