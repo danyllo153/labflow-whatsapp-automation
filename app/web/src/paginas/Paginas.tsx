@@ -90,8 +90,6 @@ const APPS_FIXOS: App[] = [
     descricao: "CIP das linhas de embarque: C.T. 48 h, B.L. 72 h e 120 h, e o laudo." },
   { caminho: "/esterilizacao", titulo: "Esterilização", icone: "esterilizacao", cor: "rotina", grupo: "Rotina", semColetor: true,
     descricao: "Ciclos da autoclave e o laudo." },
-  { caminho: "/estufas", titulo: "Estufas", icone: "estufas", cor: "rotina", grupo: "Rotina", semColetor: true,
-    descricao: "Temperaturas do dia." },
   { caminho: "/material-asseptico", titulo: "Material asséptico", icone: "material", cor: "rotina", grupo: "Rotina", semColetor: true,
     descricao: "O que foi usado em cada dia de análise." },
   { caminho: "/meios-lotes", titulo: "Meios e lotes", icone: "meios", cor: "rotina", grupo: "Rotina", semColetor: true,

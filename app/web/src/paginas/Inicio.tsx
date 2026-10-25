@@ -7,7 +7,7 @@ import { useSessao } from "../sessao";
 import BlocosDePendencias, { type Pendencia } from "../componentes/BlocosDePendencias";
 import CartaoAgora from "../componentes/CartaoAgora";
 import AtividadesDoTurno from "./AtividadesDoTurno";
-import { AlertasEstufas, type DadosEstufas } from "./Estufas";
+import { AlertasEstufas, ConferenciaEstufas, type DadosEstufas } from "./Estufas";
 import type { EstadoDoTurno } from "./Turno";
 
 /**
@@ -100,6 +100,19 @@ export default function Inicio() {
         <>
           <CartaoAgora turno={turno} estufas={estufas} itens={dados.itens} />
 
+          {estufas && <AlertasEstufas alertas={estufas.alertas} />}
+          {estufas && (
+            <div className="cartao" aria-label="Estufas do turno" id="estufas">
+              <h2>
+                Estufas do turno{" "}
+                <span className="contador">
+                  {estufas.resumo.conferidas} de {estufas.resumo.total}
+                </span>
+              </h2>
+              <ConferenciaEstufas embutida aoMudar={setEstufas} />
+            </div>
+          )}
+
           <div className="cartoes-numeros">
             <CartaoNumero cor="azul" rotulo="Para hoje" valor={dados.vence_hoje} ativo={filtro === "Vence hoje"} onClick={() => escolher("Vence hoje")} />
             <CartaoNumero cor="laranja" rotulo="Atrasados" valor={dados.atrasados} ativo={filtro === "Atrasado"} alerta={dados.atrasados > 0} onClick={() => escolher("Atrasado")} />
@@ -140,27 +153,6 @@ export default function Inicio() {
         </>
       )}
 
-      {estufas && <AlertasEstufas alertas={estufas.alertas} />}
-      {estufas && (
-        <div className="cartao" aria-label="Estufas do turno">
-          <h2>
-            Estufas do turno{" "}
-            <span className="contador">
-              {estufas.resumo.conferidas} de {estufas.resumo.total}
-            </span>
-          </h2>
-          <p>
-            <strong>{estufas.resumo.conferidas}</strong> conferidas · <strong>{estufas.resumo.pendentes}</strong> pendentes
-            {estufas.resumo.nao_ok > 0 && (
-              <>
-                {" "}
-                · <strong>{estufas.resumo.nao_ok}</strong> Não ok
-              </>
-            )}
-          </p>
-          <Link to="/estufas">{estufas.resumo.pendentes > 0 ? "Conferir as estufas" : "Ver as estufas"}</Link>
-        </div>
-      )}
     </section>
   );
 }

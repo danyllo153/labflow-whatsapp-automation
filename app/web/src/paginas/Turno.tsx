@@ -6,7 +6,7 @@ import BlocosDePendencias, { type Pendencia } from "../componentes/BlocosDePende
 import ResumoEstufas from "../componentes/ResumoEstufas";
 import AtividadesDoTurno from "./AtividadesDoTurno";
 import EquipeDoTurno from "./EquipeDoTurno";
-import { AlertasEstufas, ConferenciaEstufas, type DadosEstufas } from "./Estufas";
+import { AlertasEstufas, type DadosEstufas } from "./Estufas";
 import RegistrosDoTurnoCartao from "./RegistrosDoTurno";
 
 /**
@@ -426,10 +426,6 @@ function CentralDoTurno() {
       <AlertasEstufas alertas={estufas?.alertas} />
       <AtividadesDoTurno />
       <RegistrosDoTurnoCartao />
-      <details className="recolhivel">
-        <summary>Estufas do turno (conferir)</summary>
-        <ConferenciaEstufas embutida />
-      </details>
       {pendencias && (
         <details className="recolhivel">
           <summary>Análises a fazer hoje ({pendencias.length})</summary>
