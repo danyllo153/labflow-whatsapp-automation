@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 
 import { lerJson } from "./api";
 
@@ -34,6 +34,7 @@ import RecebimentoNfc from "./paginas/analises/RecebimentoNfc";
 import Tanques from "./paginas/analises/Tanques";
 import Testes from "./paginas/analises/Testes";
 import TrocarSenha from "./paginas/TrocarSenha";
+import RelatorioDoDia from "./paginas/RelatorioDoDia";
 import RelatorioDoTurno from "./paginas/RelatorioDoTurno";
 import Turno, { TURNO_MUDOU, type EstadoDoTurno } from "./paginas/Turno";
 import { useSessao } from "./sessao";
@@ -96,10 +97,14 @@ export default function App() {
         <Route path="/meios-lotes" element={<MeiosLotes />} />
         <Route path="/material-asseptico" element={<MaterialAsseptico />} />
         <Route path="/turno/relatorio" element={<RelatorioDoTurno />} />
+        <Route path="/relatorio-do-dia" element={<RelatorioDoDia />} />
         <Route path="/paginas" element={<ListaDePaginas />} />
         <Route path="/analises/recebimento-fcoj" element={<RecebimentoFcoj />} />
         <Route path="/analises/tanques" element={<Tanques />} />
-        <Route path="/analises/testes" element={<Testes />} />
+        <Route path="/analises/tab" element={<Testes key="TAB" qual="TAB" />} />
+        <Route path="/analises/coliformes" element={<Testes key="COLIFORMES" qual="COLIFORMES" />} />
+        <Route path="/analises/howard" element={<Testes key="HOWARD" qual="HOWARD" />} />
+        <Route path="/analises/testes" element={<Navigate to="/analises/tab" replace />} />
         <Route path="/analises/drops" element={<Drops />} />
         <Route path="/analises/embarque-fcoj" element={<Embarque />} />
         <Route path="/analises/recebimento-nfc" element={<RecebimentoNfc />} />

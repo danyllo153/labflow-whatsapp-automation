@@ -20,8 +20,10 @@ import {
 import { ABAS_FINAIS } from "./Instrucao";
 
 /**
- * Compostas, TAB, Coliformes e Howard (Fase E, E4; funções da 043). Cada etapa é em lote, como o "sim" do bot: a lista
- * vem toda marcada, o analista tira o que não fez e confirma (decisão de 24/10). TAB e Coliformes são masculinos nos textos.
+ * TAB, Coliformes e Howard (Fase E, E4; funções da 043), desde 25/10 (APP-066) em três apps, um para cada (pedido do
+ * Danyllo): /analises/tab, /analises/coliformes e /analises/howard. Cada etapa é em lote, como o "sim" do bot: a lista
+ * vem toda marcada, o analista tira o que não fez e confirma (decisão de 24/10); os botões ficam presos embaixo da tela,
+ * sem rolar a lista inteira. TAB e Coliformes são masculinos nos textos.
  */
 
 interface Teste {
@@ -41,13 +43,44 @@ interface Composta {
   criada_em: string;
 }
 
+export type QualTeste = "TAB" | "COLIFORMES" | "HOWARD";
+
 export const ABAS_TESTES = [
   { aba: "para-fazer", rotulo: "Para fazer" },
   { aba: "caldo", rotulo: "Caldo" },
-  { aba: "howard", rotulo: "Howard" },
   { aba: "resultados", rotulo: "Resultados" },
   ...ABAS_FINAIS,
 ];
+
+export const ABAS_HOWARD = [
+  { aba: "howard", rotulo: "Lançar" },
+  { aba: "resultados", rotulo: "Resultados" },
+  ...ABAS_FINAIS,
+];
+
+const APP_DO_TESTE: Record<QualTeste, { titulo: string; descricao: string; icone: string; cor: string; pagina: { caminho: string; titulo: string; descricao: string } }> = {
+  TAB: {
+    titulo: "TAB",
+    descricao: "Compostas no caldo, espalhar, ler e confirmar no PCA, tudo em lote.",
+    icone: "tab",
+    cor: "tab",
+    pagina: { caminho: "/paginas/tab", titulo: "TAB", descricao: "do recebimento, do embarque e dos tanques" },
+  },
+  COLIFORMES: {
+    titulo: "Coliformes",
+    descricao: "Compostas no caldo, estriar, ler e o resultado de cada lote, tudo em lote.",
+    icone: "coliformes",
+    cor: "coli",
+    pagina: { caminho: "/paginas/coliformes", titulo: "Coliformes", descricao: "com os lotes abertos" },
+  },
+  HOWARD: {
+    titulo: "Howard",
+    descricao: "Campos positivos das compostas do embarque de FCOJ (cada campo vale 2%).",
+    icone: "howard",
+    cor: "howard",
+    pagina: { caminho: "/paginas/howard", titulo: "Howard", descricao: "das compostas do embarque" },
+  },
+};
 
 type Botao = { rotulo: string; acao: string; resultado?: "Positivo" | "Negativo"; principal?: boolean };
 
@@ -74,58 +107,54 @@ const NOME_DA_ETAPA: Record<string, string> = {
   "resultado do lote": "aberto por lote (resultado de cada lote)",
 };
 
-export default function Testes() {
+export default function Testes({ qual }: { qual: QualTeste }) {
   const { pessoa } = useSessao();
   const pode = !!pessoa?.pode.includes("registrar_analise");
   const [busca, setBusca] = useState("");
+  const howard = qual === "HOWARD";
   const lista = useLista<Teste[]>("/analises/testes/pendentes", busca);
-  const atrasados = (lista.dados ?? []).filter((t) => t.situacao === "Atrasado").length;
+  const doTeste = (lista.dados ?? []).filter((t) => (qual === "TAB" ? t.teste === "Tab" : t.teste !== "Tab"));
+  const atrasados = doTeste.filter((t) => t.situacao === "Atrasado").length;
+  const app = APP_DO_TESTE[qual];
 
   return (
     <AppDeAnalise
       app="testes"
-      sigla="TAB"
-      cor="marinho"
-      titulo="TAB, Coliformes e Howard"
-      descricao="Compostas no caldo, espalhar ou estriar, ler, confirmar e o Howard do embarque, tudo em lote."
-      abas={ABAS_TESTES.map((a) => (a.aba === "para-fazer" ? { ...a, contador: atrasados } : a))}
+      icone={app.icone}
+      sigla={app.titulo.slice(0, 3)}
+      cor={app.cor}
+      titulo={app.titulo}
+      descricao={app.descricao}
+      abas={howard ? ABAS_HOWARD : ABAS_TESTES.map((a) => (a.aba === "para-fazer" ? { ...a, contador: atrasados } : a))}
     >
       {(aba) => (
         <>
-          {aba === "para-fazer" && (
+          {aba === "para-fazer" && !howard && (
             <>
               <Numeros
                 itens={[
                   { rotulo: "Atrasados", valor: atrasados, tom: "atrasado" },
-                  { rotulo: "Em andamento", valor: (lista.dados ?? []).length - atrasados, tom: "hoje" },
+                  { rotulo: "Em andamento", valor: doTeste.length - atrasados, tom: "hoje" },
                 ]}
               />
               <Busca valor={busca} aoMudar={setBusca} rotulo="Procurar load, tanque ou composta" dica="Load, tanque ou nº da composta" />
               {lista.erro && <p className="mensagem-erro">{lista.erro}</p>}
               {!lista.dados && !lista.erro && <p className="carregando">Carregando...</p>}
-              {lista.dados && lista.dados.length === 0 && <p className="texto-secundario">Nenhum TAB nem Coliformes em andamento.</p>}
-              {lista.dados && <Grupos testes={lista.dados} pode={pode} aoGravar={lista.recarregar} />}
+              {lista.dados && doTeste.length === 0 && <p className="texto-secundario">Nenhum {app.titulo} em andamento.</p>}
+              {lista.dados && <Grupos testes={doTeste} pode={pode} aoGravar={lista.recarregar} />}
             </>
           )}
-          {aba === "caldo" && (
+          {aba === "caldo" && !howard && (
             <SoQuemGrava pode={pode}>
-              <Caldo aoGravar={lista.recarregar} />
+              <Caldo tipo={qual as "TAB" | "COLIFORMES"} aoGravar={lista.recarregar} />
             </SoQuemGrava>
           )}
-          {aba === "howard" && (
+          {aba === "howard" && howard && (
             <SoQuemGrava pode={pode}>
               <Howard />
             </SoQuemGrava>
           )}
-          {aba === "resultados" && (
-            <Resultados
-              paginas={[
-                { caminho: "/paginas/tab", titulo: "TAB", descricao: "do recebimento, do embarque e dos tanques" },
-                { caminho: "/paginas/coliformes", titulo: "Coliformes", descricao: "com os lotes abertos" },
-                { caminho: "/paginas/howard", titulo: "Howard", descricao: "das compostas do embarque" },
-              ]}
-            />
-          )}
+          {aba === "resultados" && <Resultados paginas={[app.pagina]} />}
         </>
       )}
     </AppDeAnalise>
@@ -187,7 +216,7 @@ function Grupo({ itens, pode, aoGravar }: { itens: Teste[]; pode: boolean; aoGra
         ))}
       </ul>
       {pode && (
-        <div className="botoes-lado">
+        <div className="botoes-lado barra-acoes-fixa">
           {botoes.map((b) => (
             <button
               key={b.rotulo}
@@ -206,8 +235,7 @@ function Grupo({ itens, pode, aoGravar }: { itens: Teste[]; pode: boolean; aoGra
   );
 }
 
-function Caldo({ aoGravar }: { aoGravar: () => void }) {
-  const [tipo, setTipo] = useState<"TAB" | "COLIFORMES">("TAB");
+function Caldo({ tipo, aoGravar }: { tipo: "TAB" | "COLIFORMES"; aoGravar: () => void }) {
   const [data, setData] = useState(hojeEmSaoPaulo());
   const lista = useLista<Composta[]>(`/analises/testes/compostas?tipo=${tipo}`);
   const m = useMarcados<number>();
@@ -217,16 +245,10 @@ function Caldo({ aoGravar }: { aoGravar: () => void }) {
     <div className="cartao">
       <h2>Compostas no caldo</h2>
       <p className="texto-secundario">
-        Marque as compostas que entraram no caldo. O TAB é espalhado em 5 dias; os Coliformes são estriados no dia seguinte.
+        Marque as compostas que entraram no caldo.{" "}
+        {tipo === "TAB" ? "O TAB é espalhado em 5 dias." : "Os Coliformes são estriados no dia seguinte."}
       </p>
       <div className="linha-formulario">
-        <label className="campo">
-          Teste
-          <select value={tipo} onChange={(e) => (setTipo(e.target.value as "TAB" | "COLIFORMES"), m.limpar(), g.voltar())}>
-            <option value="TAB">TAB</option>
-            <option value="COLIFORMES">Coliformes</option>
-          </select>
-        </label>
         <label className="campo">
           Data
           <input type="date" max={hojeEmSaoPaulo()} value={data} onChange={(e) => (setData(e.target.value), g.voltar())} />

@@ -62,6 +62,7 @@ const COR_DO_APP: Partial<Record<AppComInstrucao, string>> = {
  * são iguais em todos os apps e ficam aqui (E9). */
 export function AppDeAnalise({
   app,
+  icone,
   sigla,
   cor,
   titulo,
@@ -70,6 +71,7 @@ export function AppDeAnalise({
   children,
 }: {
   app: AppComInstrucao;
+  icone?: string; // quando o app divide a IT com outro (TAB, Coliformes e Howard usam a de "testes"): o ícone e a cor dele
   sigla: string;
   cor: string;
   titulo: string;
@@ -86,8 +88,8 @@ export function AppDeAnalise({
         <Link to="/paginas">← Análises</Link>
       </p>
       <div className="app-analise-topo">
-        <span className={`app-icone app-cor-${COR_DO_APP[app] ?? cor}`} aria-hidden="true">
-          {ICONE_DO_APP[app] ? <IconeApp nome={ICONE_DO_APP[app]} /> : sigla}
+        <span className={`app-icone app-cor-${icone ? cor : COR_DO_APP[app] ?? cor}`} aria-hidden="true">
+          {icone || ICONE_DO_APP[app] ? <IconeApp nome={icone ?? ICONE_DO_APP[app] ?? ""} /> : sigla}
         </span>
         <div>
           <h1>{titulo}</h1>

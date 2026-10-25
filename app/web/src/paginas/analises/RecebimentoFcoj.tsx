@@ -18,7 +18,6 @@ import Instrucao from "./Instrucao";
 export const ATALHOS_DO_APP = [
   { aba: "painel", rotulo: "Painel" },
   { aba: "registrar", rotulo: "Registrar" },
-  { aba: "compostas", rotulo: "Compostas" },
   { aba: "resultados", rotulo: "Resultados" },
   { aba: "laudo", rotulo: "Laudo" },
   { aba: "instrucao", rotulo: "IT" },
@@ -77,6 +76,8 @@ interface Resposta {
   gravados: number;
   alarmes: number;
   pulados?: number[];
+  compostas?: string; // no registrar: as compostas que vão junto ("(1-5)(6-10)")
+  texto_compostas?: string;
 }
 
 /** "3, 4" -> o aviso de amostra pulada (pedido de 24/10): chegou lote depois, mas estes ainda não. */
@@ -133,7 +134,10 @@ export default function RecebimentoFcoj() {
           <IconeApp nome="recebimento-fcoj" />
         </span>
         <div>
-          <h1>Recebimento FCOJ</h1>
+          <div className="titulo-com-sino">
+            <h1>Recebimento FCOJ</h1>
+            {painel && painel.pulados.length > 0 && <SinoEmObservacao painel={painel} aoAtualizar={setPainel} />}
+          </div>
           <p className="texto-secundario">C.T 48h, B.L 72h e B.L 120h dos lotes de cada load, do recebimento ao laudo.</p>
         </div>
       </div>
@@ -150,15 +154,16 @@ export default function RecebimentoFcoj() {
           <p className="mensagem-erro">{erro}</p>
         </div>
       )}
-      {aba === "painel" && (painel ? <PainelDoRecebimento painel={painel} irPara={irPara} aoAtualizar={setPainel} /> : !erro && <p className="carregando">Carregando...</p>)}
+      {aba === "painel" && (painel ? <PainelDoRecebimento painel={painel} irPara={irPara} /> : !erro && <p className="carregando">Carregando...</p>)}
       {aba === "registrar" && (
-        <Registrar
-          pode={painel?.pode_registrar ?? false}
-          aoGravar={() => void carregarPainel()}
-          aoCompor={(load) => irPara("compostas", { busca: load })}
-        />
+        <>
+          <Registrar pode={painel?.pode_registrar ?? false} aoGravar={() => void carregarPainel()} />
+          <details className="cartao compostas-antigas">
+            <summary>Loads já recebidos com lote fora de composta</summary>
+            <Compostas pode={painel?.pode_registrar ?? false} buscaInicial={params.get("busca") ?? ""} />
+          </details>
+        </>
       )}
-      {aba === "compostas" && <Compostas pode={painel?.pode_registrar ?? false} buscaInicial={params.get("busca") ?? ""} />}
       {aba === "resultados" && (
         <Resultados
           pode={painel?.pode_registrar ?? false}
@@ -190,15 +195,43 @@ export default function RecebimentoFcoj() {
   );
 }
 
-function PainelDoRecebimento({
-  painel,
-  irPara,
-  aoAtualizar,
-}: {
-  painel: Painel;
-  irPara: (aba: string, extra?: Record<string, string>) => void;
-  aoAtualizar: (p: Painel) => void;
-}) {
+/** "Em observação" (25/10): no lugar do quadro laranja grande, um sininho ao lado do título com o número de avisos; tocar
+ * abre a lista do que precisa de atenção (as amostras puladas, que o Admin/Analista pode dispensar com motivo). */
+function SinoEmObservacao({ painel, aoAtualizar }: { painel: Painel; aoAtualizar: (p: Painel) => void }) {
+  const [aberto, setAberto] = useState(false);
+  const n = painel.pulados.length;
+  return (
+    <div className="sino-observacao">
+      <button
+        type="button"
+        className="botao-icone sino"
+        aria-label={`Em observação: ${n} ${n > 1 ? "avisos" : "aviso"}`}
+        aria-expanded={aberto}
+        onClick={() => setAberto(!aberto)}
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+          <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9M10.3 21a1.9 1.9 0 0 0 3.4 0" />
+        </svg>
+        <span className="sino-contador">{n}</span>
+      </button>
+      {aberto && (
+        <div className="sino-painel aviso-pulo" role="status" aria-label="Amostras puladas">
+          <h2>Em observação</h2>
+          <p className="texto-secundario">
+            Amostras puladas: chegaram lotes depois destes, mas eles ainda não vieram. O aviso sai quando chegarem.
+          </p>
+          <ul>
+            {painel.pulados.map((p) => (
+              <Pulo key={`${p.load}-${p.item}`} pulo={p} pode={painel.pode_registrar} aoDispensar={aoAtualizar} />
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function PainelDoRecebimento({ painel, irPara }: { painel: Painel; irPara: (aba: string, extra?: Record<string, string>) => void }) {
   const maior = Math.max(1, ...painel.fabricas.map((f) => f.nao_ok));
   return (
     <>
@@ -216,17 +249,6 @@ function PainelDoRecebimento({
           <span>Não ok na semana</span>
         </div>
       </div>
-      {painel.pulados.length > 0 && (
-        <div className="cartao aviso-pulo" role="status" aria-label="Amostras puladas">
-          <h2>Amostras puladas</h2>
-          <p className="texto-secundario">Chegaram lotes depois destes, mas eles ainda não vieram. O aviso sai quando chegarem.</p>
-          <ul>
-            {painel.pulados.map((p) => (
-              <Pulo key={`${p.load}-${p.item}`} pulo={p} pode={painel.pode_registrar} aoDispensar={aoAtualizar} />
-            ))}
-          </ul>
-        </div>
-      )}
       <div className="painel-app-grade">
         <div className="cartao">
           <h2>Para fazer agora</h2>
@@ -340,11 +362,13 @@ function Pulo({ pulo, pode, aoDispensar }: { pulo: Painel["pulados"][number]; po
   );
 }
 
-function Registrar({ pode, aoGravar, aoCompor }: { pode: boolean; aoGravar: () => void; aoCompor: (load: string) => void }) {
+/** Registrar o recebimento com as compostas juntas (25/10): a prévia já mostra as compostas recomendadas (~5 lotes por
+ * composta) no campo ao lado; o analista olha, muda se quiser (ou apaga para não criar agora) e um Confirmar grava tudo. */
+function Registrar({ pode, aoGravar }: { pode: boolean; aoGravar: () => void }) {
   const [campos, setCampos] = useState({ load: "", item: "", fabrica: "", lotes: "", data: hojeEmSaoPaulo() });
+  const [compostas, setCompostas] = useState<string | null>(null); // null = as recomendadas
   const [previa, setPrevia] = useState<Resposta | null>(null);
   const [feito, setFeito] = useState("");
-  const [registrado, setRegistrado] = useState("");
   const [erro, setErro] = useState("");
   const [enviando, setEnviando] = useState(false);
 
@@ -354,15 +378,17 @@ function Registrar({ pode, aoGravar, aoCompor }: { pode: boolean; aoGravar: () =
     setEnviando(true);
     setErro("");
     try {
-      const r = await enviarJson<Resposta>("/analises/recebimento-fcoj/registrar", { ...campos, previa: !confirmar });
+      const r = await enviarJson<Resposta>("/analises/recebimento-fcoj/registrar", { ...campos, compostas, previa: !confirmar });
       if (confirmar) {
-        setFeito(r.pulados && r.pulados.length > 0 ? `${r.texto} ⚠️ ${avisoDePulo(r.pulados)}` : r.texto);
-        setRegistrado(campos.load.trim());
+        const texto = [r.texto, r.texto_compostas].filter(Boolean).join(" ");
+        setFeito(r.pulados && r.pulados.length > 0 ? `${texto} ⚠️ ${avisoDePulo(r.pulados)}` : texto);
         setPrevia(null);
         setCampos({ ...campos, load: "", lotes: "" });
+        setCompostas(null);
         aoGravar();
       } else {
         setPrevia(r);
+        setCompostas(r.compostas ?? "");
         setFeito("");
       }
     } catch (e) {
@@ -374,6 +400,7 @@ function Registrar({ pode, aoGravar, aoCompor }: { pode: boolean; aoGravar: () =
 
   const mudar = (chave: keyof typeof campos) => (e: { target: { value: string } }) => {
     setCampos({ ...campos, [chave]: e.target.value });
+    if (chave === "lotes" || chave === "load") setCompostas(null); // outros lotes: a recomendação se refaz
     setPrevia(null);
   };
 
@@ -415,6 +442,15 @@ function Registrar({ pode, aoGravar, aoCompor }: { pode: boolean; aoGravar: () =
           Recebido em
           <input required type="date" max={hojeEmSaoPaulo()} value={campos.data} onChange={mudar("data")} />
         </label>
+        <label className="campo">
+          Compostas
+          <input
+            maxLength={300}
+            value={compostas ?? ""}
+            placeholder="automático (~5 lotes por composta)"
+            onChange={(e) => (setCompostas(e.target.value), setPrevia(null))}
+          />
+        </label>
       </div>
       {erro && (
         <p className="mensagem-erro" role="alert">
@@ -425,6 +461,7 @@ function Registrar({ pode, aoGravar, aoCompor }: { pode: boolean; aoGravar: () =
         <div className="previa-app" role="status">
           <strong>O que vai ser criado</strong>
           <p>{previa.texto}</p>
+          {previa.texto_compostas ? <p>{previa.texto_compostas}</p> : <p className="texto-secundario">Sem compostas agora.</p>}
           {previa.pulados && previa.pulados.length > 0 && <p className="aviso-pulo-texto">⚠️ {avisoDePulo(previa.pulados)}</p>}
           <div className="botoes-lado">
             <button type="button" className="botao botao-principal" disabled={enviando || previa.texto.includes("nada novo")} onClick={() => void enviar(true)}>
@@ -441,16 +478,9 @@ function Registrar({ pode, aoGravar, aoCompor }: { pode: boolean; aoGravar: () =
         </button>
       )}
       {feito && (
-        <div className="botoes-lado">
-          <p className="texto-secundario" role="status">
-            Registrado. {feito}
-          </p>
-          {registrado && (
-            <button type="button" className="botao botao-simples" onClick={() => aoCompor(registrado)}>
-              Criar as compostas do load {registrado}
-            </button>
-          )}
-        </div>
+        <p className="texto-secundario" role="status">
+          Registrado. {feito}
+        </p>
       )}
     </form>
   );
@@ -592,9 +622,9 @@ function Resultados({
             <button
               type="button"
               className="botao botao-simples"
-              onClick={() => (setValores(Object.fromEntries(lancaveis.map((l) => [l.id, valores[l.id]?.trim() || "<1"]))), setPrevia(null))}
+              onClick={() => (setValores(Object.fromEntries(lancaveis.map((l) => [l.id, valores[l.id]?.trim() || "<10"]))), setPrevia(null))}
             >
-              &lt;1 em todos os vazios ({lancaveis.length})
+              &lt;10 em todos os vazios ({lancaveis.length})
             </button>
           )}
         </div>

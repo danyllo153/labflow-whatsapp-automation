@@ -35,8 +35,8 @@ describe("apps de análise da Fase E (E3 a E8)", () => {
       "GET /analises/tanques/leituras": () => ({ status: 200, corpo: [LEITURA] }),
       "POST /analises/tanques/placas": (c) => gravacao(c.previa ? "Placas:\ntanque 44 normal CT = <1,<1,2" : "Placas:\ntanque 44 normal CT = <1,<1,2", c.previa),
     });
-    await userEvent.type(await screen.findByRole("textbox", { name: "Placas de 44 C.T 48h" }), "<1, <1, 2");
-    await userEvent.click(screen.getByRole("button", { name: "Ver as placas (1)" }));
+    await userEvent.type(await screen.findByRole("textbox", { name: "Placas de 44 Normal C.T 48h" }), "<1, <1, 2");
+    await userEvent.click(screen.getByRole("button", { name: "Ler as placas (1)" }));
     expect(await screen.findByRole("status", { name: "O que vai ser gravado" })).toHaveTextContent("tanque 44 normal CT = <1,<1,2");
     await userEvent.click(screen.getByRole("button", { name: "Confirmar" }));
     expect(posts("POST /analises/tanques/placas")).toEqual([
@@ -45,32 +45,23 @@ describe("apps de análise da Fase E (E3 a E8)", () => {
     ]);
   });
 
-  it("Tanques: as leituras vêm todas marcadas e só gravam depois do Confirmar", async () => {
+  it("Tanques: o Wort (profundidade e superfície) é uma linha só por frasco e <1 em todas grava as duas", async () => {
+    const wort = { ...LEITURA, analise: "Psicrotróficos 240h", tanque: "41", situacao: "Vence hoje", prevista: "2026-10-25" };
     const { posts } = abrir("/analises/tanques", {
-      "GET /analises/tanques/leituras": () => ({ status: 200, corpo: [LEITURA] }),
-      "POST /analises/tanques/leituras/concluir": () => gravacao("1 leitura feita.", false),
-    });
-    await userEvent.click(await screen.findByRole("button", { name: "Feitas sem placas (1)" }));
-    expect(posts("POST /analises/tanques/leituras/concluir")).toEqual([]);
-    await userEvent.click(screen.getByRole("button", { name: "Confirmar" }));
-    expect(posts("POST /analises/tanques/leituras/concluir")).toEqual([{ itens: [{ analise_id: 7, etapa: "final" }] }]);
-  });
-
-  it("Tanques: <1 em todas as vazias preenche as placas e grava depois da prévia", async () => {
-    const { posts } = abrir("/analises/tanques", {
-      "GET /analises/tanques/leituras": () => ({ status: 200, corpo: [LEITURA] }),
-      "POST /analises/tanques/placas": (c) => gravacao("Placas:\ntanque 44 normal CT = <1,<1,<1", c.previa),
+      "GET /analises/tanques/leituras": () => ({ status: 200, corpo: [{ ...wort, analise_id: 7 }, { ...wort, analise_id: 8 }] }),
+      "POST /analises/tanques/placas": (c) => gravacao("Placas:\ntanque 41 normal Wort = <1,<1,<1", c.previa),
     });
     expect(await screen.findByRole("checkbox", { name: /Marcar todas de Terra/ })).toBeChecked(); // o grupo acompanha os itens
-    expect(screen.getByText(/C\.T 48h · leitura final/)).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "<1 em todas as vazias (1)" }));
-    expect(screen.getByRole("textbox", { name: "Placas de 44 C.T 48h" })).toHaveValue("<1, <1, <1");
-    await userEvent.click(screen.getByRole("button", { name: "Ver as placas (1)" }));
+    expect(screen.getAllByText(/Normal \(Wort 240h\) · leitura final/)).toHaveLength(1);
+    expect(screen.queryByRole("button", { name: /Feitas sem placas/ })).not.toBeInTheDocument(); // saiu (25/10)
+    await userEvent.click(screen.getByRole("button", { name: "<1 em todas as leituras (1)" }));
+    expect(screen.getByRole("textbox", { name: "Placas de 41 Normal Wort 240h" })).toHaveValue("<1, <1, <1");
     await userEvent.click(await screen.findByRole("button", { name: "Confirmar" }));
-    expect(posts("POST /analises/tanques/placas")).toEqual([
-      { itens: [{ analise_id: 7, etapa: "final", placas: "<1, <1, <1" }], previa: true },
-      { itens: [{ analise_id: 7, etapa: "final", placas: "<1, <1, <1" }], previa: false },
-    ]);
+    const itens = [
+      { analise_id: 7, etapa: "final", placas: "<1, <1, <1" },
+      { analise_id: 8, etapa: "final", placas: "<1, <1, <1" },
+    ];
+    expect(posts("POST /analises/tanques/placas")).toEqual([{ itens, previa: true }, { itens, previa: false }]);
   });
 
   it("Tanques: registrar coleta de navio com a prévia", async () => {
@@ -93,7 +84,7 @@ describe("apps de análise da Fase E (E3 a E8)", () => {
 
   it("TAB: o grupo vem todo marcado e um Confirmar espalha todos", async () => {
     const tab = (id: number, alvo: string) => ({ teste_id: id, teste: "Tab", alvo, status: "No caldo", proxima: "espalhar", prevista: "2026-10-24", situacao: "Vence hoje", lote_aberto: false });
-    const { posts } = abrir("/analises/testes", {
+    const { posts } = abrir("/analises/tab", {
       "GET /analises/testes/pendentes": () => ({ status: 200, corpo: [tab(1, "Load 43669 · #87 (1-5)"), tab(2, "Load 43669 · #88 (6-10)")] }),
       "POST /analises/testes/acao": () => gravacao("2 testes atualizados.", false),
     });

@@ -8,11 +8,9 @@ import {
   dm,
   hojeEmSaoPaulo,
   Numeros,
-  PerguntaDaAcao,
   PreviaDaGravacao,
   Resultados,
   SoQuemGrava,
-  useAcao,
   useGravacao,
   useLista,
   useMarcados,
@@ -41,7 +39,6 @@ export const ABAS_TANQUES = [
   ...ABAS_FINAIS,
 ];
 
-const chave = (l: Leitura) => `${l.analise_id}-${l.etapa}`;
 
 export default function Tanques() {
   const { pessoa } = useSessao();
@@ -56,8 +53,8 @@ export default function Tanques() {
       app="tanques"
       sigla="TQ"
       cor="verde"
-      titulo="Tanques"
-      descricao="Tanques de terra e de navio: coleta, análise normal e stress, pré-leitura e leitura final com as placas."
+      titulo="Análise de tanques"
+      descricao="Tanques de terra e de navio (pesquise pelo navio): coleta, análise normal e stress, pré-leitura e leitura final."
       abas={ABAS_TANQUES.map((a) => (a.aba === "leituras" ? { ...a, contador: atrasadas } : a))}
     >
       {(aba) => (
@@ -99,12 +96,43 @@ export default function Tanques() {
   );
 }
 
+/** Uma linha da tela: as análises do mesmo tanque, frasco, análise e etapa que vencem no mesmo dia. O Wort (Psicrotróficos)
+ * tem duas análises por frasco (profundidade e superfície) e aparece numa linha só (pedido de 25/10). */
+interface Linha {
+  chave: string;
+  tanque: string;
+  navio: string | null;
+  frasco: string;
+  rotulo: string; // "Wort 240h", "C.T 48h"...
+  etapa: "pre" | "final";
+  prevista: string;
+  situacao: string;
+  itens: Leitura[];
+}
+
+const ROTULO_DA_ANALISE = (analise: string) => (/psicrotr|wort/i.test(analise) ? `Wort ${analise.match(/\d+\s*h/i)?.[0] ?? "240h"}` : analise);
+
+export function linhasDeLeitura(leituras: Leitura[]): Linha[] {
+  const grupos = new Map<string, Linha>();
+  for (const l of leituras) {
+    const rotulo = ROTULO_DA_ANALISE(l.analise);
+    const k = [l.navio ?? "", l.tanque, l.frasco, rotulo, l.etapa, l.prevista].join("|");
+    const g = grupos.get(k) ?? { chave: k, tanque: l.tanque, navio: l.navio, frasco: l.frasco, rotulo, etapa: l.etapa, prevista: l.prevista, situacao: l.situacao, itens: [] };
+    g.itens.push(l);
+    if (l.situacao === "Atrasado") g.situacao = "Atrasado";
+    grupos.set(k, g);
+  }
+  return [...grupos.values()];
+}
+
+const MENOR_QUE_1 = "<1, <1, <1";
+
 function Leituras({ leituras, erro, pode, aoGravar }: { leituras: Leitura[] | null; erro: string; pode: boolean; aoGravar: () => void }) {
   const m = useMarcados<string>();
   const [placas, setPlacas] = useState<Record<string, string>>({});
-  const acao = useAcao(() => (m.limpar(), aoGravar()));
   const gravacao = useGravacao("/analises/tanques/placas", () => (setPlacas({}), aoGravar()));
-  const chaves = (leituras ?? []).map(chave);
+  const linhas = linhasDeLeitura(leituras ?? []);
+  const chaves = linhas.map((l) => l.chave);
   // a lista vem toda marcada (decisão de 24/10), como no "Lançar leituras" do Início; o analista desmarca o que não fez
   useEffect(() => m.todos(chaves.filter((k) => !m.tem(k))), [chaves.join(",")]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -112,29 +140,27 @@ function Leituras({ leituras, erro, pode, aoGravar }: { leituras: Leitura[] | nu
   if (!leituras) return <p className="carregando">Carregando...</p>;
   if (leituras.length === 0) return <p className="texto-secundario">Nenhuma leitura atrasada nem para hoje.</p>;
 
-  const marcadas = leituras.filter((l) => m.tem(chave(l)));
+  const marcadas = linhas.filter((l) => m.tem(l.chave));
   // por navio (ou terra) e dia previsto, como o relatório do bot: o atrasado já aparece no título do grupo
-  const grupos = [...leituras.reduce((g, l) => {
+  const grupos = [...linhas.reduce((g, l) => {
     const k = `${l.navio ?? "Terra"} · ${dm(l.prevista)}${l.situacao === "Atrasado" ? " · atrasado" : ""}`;
     return g.set(k, [...(g.get(k) ?? []), l]);
-  }, new Map<string, Leitura[]>())];
-  const comPlacas = leituras.filter((l) => (placas[chave(l)] ?? "").trim());
-  const vazias = leituras.filter((l) => !(placas[chave(l)] ?? "").trim());
+  }, new Map<string, Linha[]>())];
+  const comPlacas = linhas.filter((l) => (placas[l.chave] ?? "").trim());
+  const itensDe = (lista: Linha[], valor: (l: Linha) => string) =>
+    lista.flatMap((l) => l.itens.map((i) => ({ analise_id: i.analise_id, etapa: i.etapa, placas: valor(l) })));
 
-  function concluir() {
-    acao.perguntar(
-      "/analises/tanques/leituras/concluir",
-      `Marcar como feitas, sem digitar as placas (${marcadas.length}):\n` +
-        marcadas.map((l) => `${l.navio ? `${l.navio} ` : ""}tanque ${l.tanque} · ${l.frasco} · ${l.analise}`).join("\n"),
-      { itens: marcadas.map((l) => ({ analise_id: l.analise_id, etapa: l.etapa })) },
-    );
+  function menorQue1EmTodas() {
+    setPlacas({ ...placas, ...Object.fromEntries(marcadas.map((l) => [l.chave, MENOR_QUE_1])) });
+    void gravacao.ver({ itens: itensDe(marcadas, () => MENOR_QUE_1) });
   }
 
   return (
     <div className="cartao">
       <h2>Leituras para fazer</h2>
       <p className="texto-secundario">
-        Marque as que foram feitas sem crescimento, ou digite as 3 placas (ex.: <code>&lt;1, &lt;1, 2</code>) e veja a prévia.
+        Marque as leituras e use <strong>&lt;1 em todas</strong>, ou digite as 3 placas (ex.: <code>&lt;1, &lt;1, 2</code>) e toque em{" "}
+        <strong>Ler as placas</strong>. Nada é gravado antes do Confirmar.
       </p>
       {grupos.map(([grupo, itens]) => (
         <section key={grupo} className="grupo-leituras" aria-label={grupo}>
@@ -143,32 +169,32 @@ function Leituras({ leituras, erro, pode, aoGravar }: { leituras: Leitura[] | nu
               <input
                 type="checkbox"
                 aria-label={`Marcar todas de ${grupo}`}
-                checked={itens.every((l) => m.tem(chave(l)))}
-                onChange={() => m.todos(itens.map(chave))}
+                checked={itens.every((l) => m.tem(l.chave))}
+                onChange={() => m.todos(itens.map((l) => l.chave))}
               />
             )}
             {grupo} <span className="contador">{itens.length}</span>
           </h3>
           <ul className="lista-marcavel">
             {itens.map((l) => (
-              <li key={chave(l)}>
+              <li key={l.chave}>
                 <label>
                   {pode && (
-                    <input type="checkbox" aria-label={`Marcar ${l.tanque} ${l.analise}`} checked={m.tem(chave(l))} onChange={() => m.alternar(chave(l))} />
+                    <input type="checkbox" aria-label={`Marcar ${l.tanque} ${l.frasco} ${l.rotulo}`} checked={m.tem(l.chave)} onChange={() => m.alternar(l.chave)} />
                   )}
                   <strong>{l.tanque}</strong>
                   <span>
-                    {l.frasco} · {l.analise} · {l.etapa === "pre" ? "pré-leitura" : "leitura final"}
+                    {l.frasco} ({l.rotulo}) · {l.etapa === "pre" ? "pré-leitura" : "leitura final"}
                   </span>
                   {l.situacao !== "Atrasado" && <span className={classeDaSituacao(l.situacao)}>{l.situacao}</span>}
                 </label>
                 {pode && (
                   <input
                     className="entrada-resultado entrada-placas"
-                    aria-label={`Placas de ${l.tanque} ${l.analise}`}
-                    placeholder="<1, <1, <1"
-                    value={placas[chave(l)] ?? ""}
-                    onChange={(e) => setPlacas({ ...placas, [chave(l)]: e.target.value })}
+                    aria-label={`Placas de ${l.tanque} ${l.frasco} ${l.rotulo}`}
+                    placeholder={MENOR_QUE_1}
+                    value={placas[l.chave] ?? ""}
+                    onChange={(e) => setPlacas({ ...placas, [l.chave]: e.target.value })}
                   />
                 )}
               </li>
@@ -177,31 +203,20 @@ function Leituras({ leituras, erro, pode, aoGravar }: { leituras: Leitura[] | nu
         </section>
       ))}
       {pode && (
-        <div className="botoes-lado">
-          <button
-            type="button"
-            className="botao botao-simples"
-            disabled={vazias.length === 0}
-            onClick={() => (setPlacas({ ...placas, ...Object.fromEntries(vazias.map((l) => [chave(l), "<1, <1, <1"])) }), gravacao.voltar())}
-          >
-            &lt;1 em todas as vazias ({vazias.length})
-          </button>
-          <button type="button" className="botao botao-simples" disabled={marcadas.length === 0} onClick={concluir}>
-            Feitas sem placas ({marcadas.length})
+        <div className="botoes-lado barra-acoes-fixa">
+          <button type="button" className="botao botao-simples" disabled={marcadas.length === 0 || gravacao.enviando} onClick={menorQue1EmTodas}>
+            &lt;1 em todas as leituras ({marcadas.length})
           </button>
           <button
             type="button"
             className="botao botao-principal"
             disabled={comPlacas.length === 0 || gravacao.enviando}
-            onClick={() =>
-              void gravacao.ver({ itens: comPlacas.map((l) => ({ analise_id: l.analise_id, etapa: l.etapa, placas: placas[chave(l)] })) })
-            }
+            onClick={() => void gravacao.ver({ itens: itensDe(comPlacas, (l) => placas[l.chave]) })}
           >
-            Ver as placas ({comPlacas.length})
+            Ler as placas ({comPlacas.length})
           </button>
         </div>
       )}
-      <PerguntaDaAcao a={acao} titulo="Marcar como feitas" />
       <PreviaDaGravacao g={gravacao} titulo="O que vai ser gravado" />
     </div>
   );

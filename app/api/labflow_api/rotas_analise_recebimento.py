@@ -290,6 +290,9 @@ class Registro(BaseModel):
     lotes: str = Field(max_length=200)  # "1-10, 12"
     data: date
     previa: bool = True  # primeiro a prévia ("o que vai ser criado"); depois o Confirmar manda previa = false
+    # As compostas entram no próprio registro (25/10): None = as recomendadas (~5 lotes por composta), "" = nenhuma agora,
+    # ou o que o analista escreveu, ex.: "(1-5)(6-10)". Elas se criam no mesmo Confirmar, pela criar_compostas da 043.
+    compostas: str | None = Field(default=None, max_length=300)
 
 
 class Resposta(BaseModel):
@@ -301,6 +304,8 @@ class Resposta(BaseModel):
     gravados: int = 0
     alarmes: int = 0
     pulados: list[int] = []  # no registrar: os lotes do load que ficam para trás, sem chegar, com este registro
+    compostas: str = ""  # no registrar: as compostas usadas ("(1-5)(6-10)"), já com o que o analista mudou
+    texto_compostas: str = ""  # o texto da criar_compostas (prévia ou o que foi criado)
 
 
 @roteador.post("/registrar", response_model=Resposta)
@@ -309,10 +314,22 @@ def registrar(
 ) -> Resposta:
     if pedido.data > _hoje(con):
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "A data do recebimento não pode ser depois de hoje.")
-    r = _chamar(
-        con, "SELECT registrar_recebimento(%s, %s, %s, %s, %s, %s, false, %s)",
-        (pessoa.usuario_id, pedido.load, pedido.item, pedido.fabrica, _lotes(pedido.lotes), pedido.data, pedido.previa),
-    )
+    args = (pessoa.usuario_id, pedido.load, pedido.item, pedido.fabrica, _lotes(pedido.lotes), pedido.data)
+    r = _chamar(con, "SELECT registrar_recebimento(%s, %s, %s, %s, %s, %s, false, %s)", (*args, pedido.previa))
+    grupos = recomendar_compostas(r.get("novos", [])) if pedido.compostas is None else _grupos(pedido.compostas) if pedido.compostas.strip() else []
+    texto_compostas = ""
+    if grupos:
+        sql = "SELECT criar_compostas(%s, %s, %s, %s, %s)"
+        if pedido.previa:
+            # a prévia das compostas precisa dos lotes gravados: grava e desfaz tudo (savepoint), só para ler o texto
+            try:
+                with con.transaction(force_rollback=True):
+                    con.execute("SELECT registrar_recebimento(%s, %s, %s, %s, %s, %s, false, false)", args)
+                    texto_compostas = con.execute(sql, (pessoa.usuario_id, pedido.load, pedido.item, Jsonb(grupos), True)).fetchone()[0]["texto"]
+            except psycopg.errors.RaiseException as erro:
+                raise _recusa_do_banco(erro) from None
+        else:
+            texto_compostas = _chamar(con, sql, (pessoa.usuario_id, pedido.load, pedido.item, Jsonb(grupos), False))["texto"]
     ja, dispensados = con.execute(
         """
         SELECT array_agg(r.lote), (SELECT array_agg(d.lote) FROM app.pulos_dispensados d WHERE d.load_id = l.id)
@@ -323,7 +340,8 @@ def registrar(
     ).fetchone() or (None, None)
     return Resposta(ok=r["ok"], previa=r["previa"], texto=r["texto"], novos=r.get("novos", []), repetidos=r.get("repetidos", []),
                     gravados=len(r.get("novos", [])) if not r["previa"] else 0,
-                    pulados=[n for n in lotes_que_faltam([*(ja or []), *r.get("novos", [])]) if n not in (dispensados or [])])
+                    pulados=[n for n in lotes_que_faltam([*(ja or []), *r.get("novos", [])]) if n not in (dispensados or [])],
+                    compostas=_texto_grupos(grupos), texto_compostas=texto_compostas)
 
 
 class Dispensa(BaseModel):

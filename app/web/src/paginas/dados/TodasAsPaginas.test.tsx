@@ -80,7 +80,7 @@ describe("todas as páginas do Power BI no app (APP-019)", () => {
     expect(hrefs("NFC")).toEqual(expect.arrayContaining(["/analises/tanques", "/analises/drops", "/analises/desvios", "/analises/recebimento-nfc"])); // apps da Fase E
     expect(hrefs("NFC").filter((h) => h === "/analises/tanques")).toHaveLength(1); // terra e navio num app só (25/10)
     expect(hrefs("FCOJ (concentrado)")).toEqual(["/analises/recebimento-fcoj", "/analises/embarque-fcoj"]); // viraram apps (Fase E)
-    expect(hrefs("TAB, Coliformes e Howard")).toEqual(["/analises/testes", "/analises/testes", "/analises/testes?aba=howard"]); // um app só (Fase E)
+    expect(hrefs("TAB, Coliformes e Howard")).toEqual(["/analises/tab", "/analises/coliformes", "/analises/howard"]); // um app para cada (25/10)
     expect(within(principal).queryByRole("link", { name: /^Tanques Leituras/ })).toBeNull();
     expect(within(principal).queryByText("Em breve")).toBeNull();
     expect(hrefs("Águas e superfícies")).toEqual(["/paginas/agua-processo", "/paginas/baias", "/paginas/linhas"]); // APP-037

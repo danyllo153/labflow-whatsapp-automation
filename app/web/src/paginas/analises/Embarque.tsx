@@ -214,9 +214,9 @@ function Lancar({ amostras, pode, aoGravar }: { amostras: Amostra[]; pode: boole
             <button
               type="button"
               className="botao botao-simples"
-              onClick={() => (setValores(Object.fromEntries(vazias.map((a) => [a.id, valores[a.id]?.trim() || "<1"]))), g.voltar())}
+              onClick={() => (setValores(Object.fromEntries(vazias.map((a) => [a.id, valores[a.id]?.trim() || "<10"]))), g.voltar())}
             >
-              &lt;1 em todos os vazios ({vazias.length})
+              &lt;10 em todos os vazios ({vazias.length})
             </button>
           )}
         </div>
