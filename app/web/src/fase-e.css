@@ -719,3 +719,18 @@ button.numero-app {
 @media print {
   .acoes-relatorio, .relatorio-do-dia .dias-material, .relatorio-do-dia details, .relatorio-do-dia [aria-label="Finalizar o dia"] { display: none; }
 }
+/* Leituras do dia: cada bloco com a cor da família (25/10) */
+.bloco-relatorio { --cor-bloco: var(--fam-geral); border-left: 6px solid var(--cor-bloco); }
+.bloco-relatorio.bloco-fcoj { --cor-bloco: var(--fam-fcoj); }
+.bloco-relatorio.bloco-embarque { --cor-bloco: var(--fam-embarque); }
+.bloco-relatorio.bloco-nfc { --cor-bloco: var(--fam-nfc); }
+.bloco-relatorio.bloco-agua { --cor-bloco: var(--fam-agua); }
+.bloco-relatorio > h2 { color: var(--cor-bloco); }
+.bloco-relatorio .secao-relatorio h3 { color: var(--cor-bloco); }
+@media print {
+  .bloco-relatorio { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+}
+.cartao.bloco-relatorio > h2 { color: var(--cor-bloco); }
+/* o dia ou filtro escolhido continua legível com o mouse em cima */
+.dias-material .botao-secundario[aria-pressed="true"]:hover,
+.dias-material .botao-secundario[aria-pressed="true"]:focus { background: var(--acao-escura, #1d4ed8); border-color: var(--acao-escura, #1d4ed8); color: #fff; }

@@ -109,6 +109,7 @@ SELECT (SELECT u.nome FROM leituras_finalizadas f LEFT JOIN usuarios u ON u.id =
 class Entrada(BaseModel):
     texto: str  # "77001 (4-5 ✅, 6 🚨, 7)", "42 ✅", "O.SKY 133 (1C ✅, 4P)"
     alarme: bool = False
+    simples: str | None = None  # o mesmo sem as marcas, para o texto do WhatsApp: "77001 (4-7)"
 
 
 class Linha(BaseModel):
@@ -142,7 +143,7 @@ class Relatorio(BaseModel):
     alertas: int
     finalizado_por: str | None
     finalizado_as: str | None
-    texto: str  # o mesmo texto do WhatsApp, para copiar
+    texto: str  # para copiar e mandar no WhatsApp: sem emoji, com "Atenção" no fim quando algo fugiu do normal
 
 
 # --- montagem (a mesma do node "Montar relatório geral") -------------------------------------------------------------
@@ -211,6 +212,15 @@ def _temps(lista: list | None) -> str:
     return ", ".join(f"{t} °C" for t in (lista or []))
 
 
+def _sem_emoji(texto: str) -> str:
+    """"77001 (4-5 ✅, 6 🚨, 7)" -> "77001 (4-5, 6, 7)"; "🚨 TAB POSITIVO ..." -> "TAB POSITIVO ..."."""
+    for marca in ("✅ ", "🚨 ", "⚠️ "):
+        texto = texto.replace(marca, "")
+    for marca in (" ✅", " 🚨", "✅", "🚨", "⚠️"):
+        texto = texto.replace(marca, "")
+    return texto.strip()
+
+
 def montar(dia: date, completo: bool, nfc: list[dict], conc: list[dict], fin: dict[str, Any]) -> tuple[list[Bloco], str, int, int, int]:
     visivel = (lambda r: r["lido"]) if completo else (lambda r: True)
     desvios = fin.get("desvios") or []
@@ -231,7 +241,8 @@ def montar(dia: date, completo: bool, nfc: list[dict], conc: list[dict], fin: di
                 for g in _agrupar(lista):
                     rot = _onde(g[0]["onde"], g[0]["load"])
                     alarmes = sorted((r for r in g if r["alarme"]), key=lambda r: r["numero"])
-                    entradas.append(Entrada(texto=f"{rot} ({', '.join(_tokens_contagem(g, pref))})", alarme=bool(alarmes)))
+                    juntas = ", ".join(_txt_faixa(f, pref) for f in _faixas([r["numero"] for r in g]))
+                    entradas.append(Entrada(texto=f"{rot} ({', '.join(_tokens_contagem(g, pref))})", alarme=bool(alarmes), simples=f"{rot} ({juntas})"))
                     if alarmes:
                         valores = ", ".join(f"{palavra} {pref}{r['numero']} = {str(r['resultado']).replace('.', ',')}" for r in alarmes)
                         alertas.append(f"🚨 {linha} ≥ {LIMITE[linha]} — {rot}: {valores}")
@@ -345,8 +356,11 @@ def montar(dia: date, completo: bool, nfc: list[dict], conc: list[dict], fin: di
             blocos.append(Bloco(titulo=f"NFC — {bloco}", secoes=secoes, alertas=alertas,
                                 lidos=sum(l.lidos for s in secoes for l in s.linhas), total=total))
 
-    # ---------------- texto (o mesmo do WhatsApp) ----------------
-    partes = [f"📋 *Relatório do dia {dia:%d/%m/%Y}{' — completo' if completo else ''}*"]
+    # ---------------- texto para copiar e mandar no WhatsApp (sem emoji, 25/10) ----------------
+    # O emoji chegava quebrado ("�") ao compartilhar: as linhas levam só os números e o que fugiu do normal vai para
+    # "Atenção", no fim da mensagem. Na tela, o ✅/🚨 das entradas continua (vira marca colorida).
+    partes = [f"*Relatório do dia {dia:%d/%m/%Y}{' — completo' if completo else ''}*"]
+    atencao: list[str] = []
     for b in blocos:
         partes += ["", f"*{b.titulo}*"]
         for s in b.secoes:
@@ -354,28 +368,27 @@ def montar(dia: date, completo: bool, nfc: list[dict], conc: list[dict], fin: di
                 partes += ["", s.titulo]
             for l in s.linhas:
                 if l.rotulo == "Desvios de tanque":
-                    partes += ["", f"{l.rotulo}: {', '.join(e.texto for e in l.entradas)}"]
+                    partes += ["", f"{l.rotulo}: {', '.join(_sem_emoji(e.texto) for e in l.entradas)}"]
                     continue
                 sep = ", " if b.titulo == "NFC — Tank farm" or l.rotulo.startswith("Desvios") else "; "
-                celula = sep.join(e.texto for e in l.entradas) or "-"
+                celula = sep.join((e.simples or _sem_emoji(e.texto)) for e in l.entradas) or "-"
                 if l.situacao:
                     celula += f" — {l.situacao}"
                 partes.append(f"{l.rotulo}: {celula}")
-        partes += b.alertas
+        atencao += [_sem_emoji(a) for a in b.alertas]
     lidos, total = sum(b.lidos for b in blocos), sum(b.total for b in blocos)
-    n_alarmes = sum(1 for p in partes if p.startswith("🚨"))
+    n_alarmes = sum(1 for b in blocos for a in b.alertas if a.startswith("🚨"))
     if not total:
         partes += ["", "Nenhuma leitura prevista para este dia."]
-    elif completo:
-        falta = total - lidos
-        aviso = f"\n⚠️ Ainda há {falta} leitura{'' if falta == 1 else 's'} por fazer: este relatório traz só o que já foi lido." if falta else ""
-        partes += ["", f"✅ lido: {lidos} de {total}.{aviso}"]
-        if n_alarmes:
-            partes.append(f"🚨 {n_alarmes} alerta{'' if n_alarmes == 1 else 's'} acima.")
     else:
-        partes += ["", f"✅ = lido ({lidos} de {total})" + (" · 🚨 = fora do limite ou positivo" if n_alarmes else "")]
+        partes += ["", f"Lidas: {lidos} de {total}."]
+        if completo and total > lidos:
+            falta = total - lidos
+            partes.append(f"Ainda há {falta} leitura{'' if falta == 1 else 's'} por fazer: este relatório traz só o que já foi lido.")
     if fin.get("finalizado_por"):
-        partes.append(f"✅ Leitura do dia finalizada por {fin['finalizado_por']} às {fin['finalizado_as']}.")
+        partes.append(f"Leitura do dia finalizada por {fin['finalizado_por']} às {fin['finalizado_as']}.")
+    if atencao:
+        partes += ["", "*Atenção:*"] + [f"- {a}" for a in atencao]
     return blocos, "\n".join(partes), lidos, total, n_alarmes
 
 

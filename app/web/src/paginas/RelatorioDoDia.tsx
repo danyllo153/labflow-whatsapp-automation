@@ -68,6 +68,14 @@ function ComMarcas({ texto }: { texto: string }) {
   return <>{partes}</>;
 }
 
+/** A cor de cada bloco, a mesma da família nas Análises (visual-novo.css, --fam-*). */
+const COR_DO_BLOCO: Record<string, string> = {
+  "FCOJ — Recebimento": "fcoj",
+  "FCOJ — Embarque": "embarque",
+  "NFC — Tank farm": "nfc",
+  "NFC — Navio": "agua",
+};
+
 const semEmoji = (t: string) => t.replace(/^(🚨|⚠️)\s*/u, "");
 
 export default function RelatorioDoDia() {
@@ -165,7 +173,7 @@ export default function RelatorioDoDia() {
           </div>
           {rel.blocos.length === 0 && <p className="texto-secundario">Nenhuma leitura prevista em {dm(rel.dia)}.</p>}
           {rel.blocos.map((b) => (
-            <article key={b.titulo} className="cartao bloco-relatorio" aria-label={b.titulo}>
+            <article key={b.titulo} className={`cartao bloco-relatorio bloco-${COR_DO_BLOCO[b.titulo] ?? "geral"}`} aria-label={b.titulo}>
               <h2>
                 {b.titulo}{" "}
                 <span className={b.lidos === b.total ? "etiqueta etiqueta-ok" : "etiqueta etiqueta-neutra"}>
