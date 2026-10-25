@@ -81,6 +81,47 @@ interface Resposta {
 }
 
 /** "3, 4" -> o aviso de amostra pulada (pedido de 24/10): chegou lote depois, mas estes ainda não. */
+/** "1-10, 12" -> [1..10, 12] (o mesmo que a API aceita); o que não entender fica de fora. */
+export function lotesDoTexto(texto: string): number[] {
+  const lotes = new Set<number>();
+  for (const parte of texto.split(/[,;\s]+/)) {
+    const m = parte.match(/^(\d{1,4})(?:-(\d{1,4}))?$/);
+    if (!m) continue;
+    const ini = Number(m[1]);
+    const fim = m[2] ? Number(m[2]) : ini;
+    for (let n = ini; n <= fim && n - ini < 500; n++) lotes.add(n);
+  }
+  return [...lotes].sort((a, b) => a - b);
+}
+
+function faixas(numeros: number[]): string {
+  const partes: string[] = [];
+  for (let i = 0; i < numeros.length; i++) {
+    let j = i;
+    while (j + 1 < numeros.length && numeros[j + 1] === numeros[j] + 1) j++;
+    partes.push(i === j ? `${numeros[i]}` : `${numeros[i]}-${numeros[j]}`);
+    i = j;
+  }
+  return partes.join(", ");
+}
+
+/** As compostas recomendadas, como a API (recomendar_compostas): ~5 lotes por composta, até 6 vale; 7 vira 3+4, 8 vira 4+4. */
+export function compostasRecomendadas(lotes: number[]): string {
+  const n = lotes.length;
+  if (n === 0) return "";
+  const k = Math.max(Math.ceil(n / 6), Math.floor(n / 5 + 0.5), 1);
+  const base = Math.floor(n / k);
+  const sobra = n % k;
+  const grupos: number[][] = [];
+  let i = 0;
+  for (let g = 0; g < k; g++) {
+    const t = base + (g >= k - sobra ? 1 : 0);
+    grupos.push(lotes.slice(i, i + t));
+    i += t;
+  }
+  return grupos.map((g) => `(${faixas(g)})`).join("");
+}
+
 function avisoDePulo(lotes: number[]) {
   const n = lotes.length;
   const lista = n > 1 ? `${lotes.slice(0, -1).join(", ")} e ${lotes[n - 1]}` : String(lotes[0]);
@@ -446,7 +487,7 @@ function Registrar({ pode, aoGravar }: { pode: boolean; aoGravar: () => void }) 
           Compostas
           <input
             maxLength={300}
-            value={compostas ?? ""}
+            value={compostas ?? compostasRecomendadas(lotesDoTexto(campos.lotes))}
             placeholder="automático (~5 lotes por composta)"
             onChange={(e) => (setCompostas(e.target.value), setPrevia(null))}
           />

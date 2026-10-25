@@ -220,3 +220,25 @@ describe("Recebimento FCOJ como app (Fase E, E2)", () => {
   });
 
 });
+
+describe("compostas recomendadas ao digitar os lotes (25/10)", () => {
+  it("segue a regra da API: ~5 por composta, até 6 vale", async () => {
+    const { compostasRecomendadas, lotesDoTexto } = await import("./RecebimentoFcoj");
+    const r = (t: string) => compostasRecomendadas(lotesDoTexto(t));
+    expect(r("1-20")).toBe("(1-5)(6-10)(11-15)(16-20)");
+    expect(r("1-6")).toBe("(1-6)");
+    expect(r("1-7")).toBe("(1-3)(4-7)");
+    expect(r("1-8")).toBe("(1-4)(5-8)");
+    expect(r("1-12")).toBe("(1-6)(7-12)");
+    expect(r("1-18")).toBe("(1-4)(5-8)(9-13)(14-18)");
+    expect(r("1-3, 5")).toBe("(1-3, 5)");
+    expect(r("")).toBe("");
+  });
+
+  it("o campo Compostas já mostra a sugestão enquanto digita", async () => {
+    abrir("/analises/recebimento-fcoj?aba=registrar");
+    const form = await screen.findByRole("form", { name: "Registrar recebimento" });
+    await userEvent.type(within(form).getByLabelText("Lotes"), "1-10");
+    expect(within(form).getByLabelText("Compostas")).toHaveValue("(1-5)(6-10)");
+  });
+});
