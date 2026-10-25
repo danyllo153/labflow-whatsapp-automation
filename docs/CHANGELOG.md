@@ -13,6 +13,7 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 ## [Não lançado]
 
 ### Alterado
+- **Análises a fazer hoje com as etapas pendentes** (25/10): além das leituras, o **Stress de tanque** ainda por fazer (coleta com o Normal analisado e sem o Stress) e a composta esperando o **Coliformes obrigatório** (104); o Coliformes no caldo aparece como **para estriar** (era "para espalhar"). TAB para espalhar, Coliformes para ler e os confirmatórios já vinham; o atrasado vem primeiro.
 - **Ok e Não ok em ícone redondo** (25/10): nas estufas, os botões viraram o círculo verde com visto e o vermelho com X (cheio quando escolhido, contorno cinza quando não); a temperatura do Não ok fica ao lado. Nas Leituras, as marcas de lido e de fora do limite usam os mesmos ícones.
 
 ### Corrigido
