@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
 import { enviarJson, lerJson } from "../../api";
+import Instrucao, { type AppComInstrucao } from "./Instrucao";
 
 /**
  * Base dos apps de análise da Fase E (APP-061): a moldura com as abas, a prévia com o Confirmar e as listas marcáveis.
@@ -36,8 +37,10 @@ export function dm(data: string | null | undefined): string {
   return `${d}/${mes}`;
 }
 
-/** A moldura do app: voltar, ícone, título, abas (no endereço, ?aba=) e o conteúdo da aba escolhida. */
+/** A moldura do app: voltar, ícone, título, abas (no endereço, ?aba=) e o conteúdo da aba escolhida; Instrução e Vídeo
+ * são iguais em todos os apps e ficam aqui (E9). */
 export function AppDeAnalise({
+  app,
   sigla,
   cor,
   titulo,
@@ -45,6 +48,7 @@ export function AppDeAnalise({
   abas,
   children,
 }: {
+  app: AppComInstrucao;
   sigla: string;
   cor: string;
   titulo: string;
@@ -77,7 +81,7 @@ export function AppDeAnalise({
           </button>
         ))}
       </nav>
-      {children(aba, irPara)}
+      {aba === "instrucao" || aba === "video" ? <Instrucao app={app} parte={aba} /> : children(aba, irPara)}
     </section>
   );
 }

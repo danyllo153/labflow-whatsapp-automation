@@ -17,6 +17,7 @@ import {
   useLista,
   useMarcados,
 } from "./comum";
+import { ABAS_FINAIS } from "./Instrucao";
 
 /**
  * Compostas, TAB, Coliformes e Howard (Fase E, E4; funções da 043). Cada etapa é em lote, como o "sim" do bot: a lista
@@ -45,6 +46,7 @@ export const ABAS_TESTES = [
   { aba: "caldo", rotulo: "Caldo" },
   { aba: "howard", rotulo: "Howard" },
   { aba: "resultados", rotulo: "Resultados" },
+  ...ABAS_FINAIS,
 ];
 
 type Botao = { rotulo: string; acao: string; resultado?: "Positivo" | "Negativo"; principal?: boolean };
@@ -81,6 +83,7 @@ export default function Testes() {
 
   return (
     <AppDeAnalise
+      app="testes"
       sigla="TAB"
       cor="marinho"
       titulo="TAB, Coliformes e Howard"

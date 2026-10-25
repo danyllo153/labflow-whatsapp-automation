@@ -15,6 +15,7 @@ import {
   useGravacao,
   useLista,
 } from "./comum";
+import { ABAS_FINAIS } from "./Instrucao";
 
 /**
  * Desvios de tanque e a leitura do dia (Fase E, E8; funções da 047). O app nunca abre desvio sozinho: lista as leituras
@@ -57,6 +58,7 @@ export const ABAS_DESVIOS = [
   { aba: "abertos", rotulo: "Em repetição" },
   { aba: "dia", rotulo: "Leitura do dia" },
   { aba: "resultados", rotulo: "Resultados" },
+  ...ABAS_FINAIS,
 ];
 
 const nome = (d: { navio: string | null; tanque: string; frasco: string | null; analise: string | null }) =>
@@ -70,6 +72,7 @@ export default function Desvios() {
   const d = lista.dados;
   return (
     <AppDeAnalise
+      app="desvios"
       sigla="!"
       cor="vermelho"
       titulo="Desvios"

@@ -8,8 +8,9 @@ import type { Pendencia } from "./BlocosDePendencias";
 
 /**
  * Cartão "Agora" no topo do Início (layout do canvas, APP-056): o relógio do turno com quanto falta, o registro livre
- * ("O que você está fazendo?", vai para a linha do tempo do turno) e os destaques do dia em blocos coloridos. Os botões
- * dos blocos só ABREM a página certa (decidido em 24/10): gravar em lote vem depois, com a lista marcada e um "Confirmar".
+ * ("O que você está fazendo?", vai para a linha do tempo do turno) e os destaques do dia em blocos coloridos. O botão
+ * de cada bloco abre o app da análise (Fase E) na aba certa, onde a lista já vem toda marcada e só grava com o
+ * "Confirmar" (decidido em 24/10): "Espalhei todos" ou "Lançar leituras" no Início nunca gravam sozinhos.
  */
 
 const FUSO_SP = "-03:00"; // São Paulo sem horário de verão desde 2019
@@ -37,22 +38,32 @@ interface Destaque {
   n: number;
   atrasados: number;
   caminho: string;
+  acao: string | null; // o texto do botão ("Espalhei todos"); sem ele, "Ver os N"
   cor: "azul" | "laranja" | "verde" | "marinho";
 }
 
-function caminhoDe(p: Pendencia): string {
+const COD_DA_ANALISE: Record<string, string> = { "C.T 48h": "CT", "B.L 72h": "BL72", "B.L 120h": "BL120" };
+
+/** O app da análise (Fase E) na aba do que falta fazer, e o botão com a ação; águas e superfícies seguem nas páginas. */
+export function destinoDe(p: Pendencia): { caminho: string; acao: string | null } {
   const texto = `${p.tipo} ${p.analise} ${p.grupo ?? ""}`;
-  if (/coliforme/i.test(texto)) return "/paginas/coliformes";
-  if (/\bTAB\b/.test(texto)) return "/paginas/tab";
-  if (p.bloco === "NFC Navio") return "/paginas/navios";
-  if (p.tipo === "Drop") return "/paginas/drops";
-  if (p.bloco === "NFC Tank farm") return "/paginas/tanques-terra";
-  if (p.bloco === "FCOJ Recebimento") return "/paginas/recebimento";
-  if (p.bloco === "FCOJ Embarque") return "/paginas/embarque";
-  if (p.bloco === "Recebimento NFC") return "/paginas/recebimento-nfc";
-  if (p.bloco === "Desvios") return "/paginas/desvios";
-  if (p.bloco === "Águas e superfícies") return /baia/i.test(texto) ? "/paginas/baias" : /linha/i.test(texto) ? "/paginas/linhas" : "/paginas/agua-processo";
-  return "/paginas";
+  if (/howard/i.test(texto)) return { caminho: "/analises/testes?aba=howard", acao: null };
+  if (/coliforme|\bTAB\b/i.test(texto)) {
+    const espalhar = /para espalhar/.test(p.grupo ?? "");
+    return { caminho: "/analises/testes", acao: espalhar ? (/coliforme/i.test(texto) ? "Estriei todos" : "Espalhei todos") : null };
+  }
+  if (p.tipo === "Drop") return { caminho: "/analises/drops", acao: "Concluir drops" };
+  if (p.tipo === "Leitura de NFC") return { caminho: "/analises/tanques?aba=leituras", acao: "Lançar leituras" };
+  if (p.bloco === "FCOJ Recebimento") {
+    const cod = COD_DA_ANALISE[p.analise];
+    return { caminho: `/analises/recebimento-fcoj?aba=resultados${cod ? `&analise=${cod}` : ""}`, acao: "Lançar resultados" };
+  }
+  if (p.bloco === "FCOJ Embarque") return { caminho: "/analises/embarque-fcoj?aba=resultados", acao: "Lançar resultados" };
+  if (p.bloco === "Recebimento NFC") return { caminho: "/analises/recebimento-nfc?aba=resultados", acao: "Lançar resultados" };
+  if (p.bloco === "Desvios") return { caminho: "/analises/desvios?aba=abertos", acao: null };
+  if (p.bloco === "Águas e superfícies")
+    return { caminho: /baia/i.test(texto) ? "/paginas/baias" : /linha/i.test(texto) ? "/paginas/linhas" : "/paginas/agua-processo", acao: null };
+  return { caminho: "/paginas", acao: null };
 }
 
 function corDe(p: Pendencia): Destaque["cor"] {
@@ -69,7 +80,7 @@ export function destaquesDoDia(itens: Pendencia[]): Destaque[] {
   for (const p of itens) {
     const grupo = p.grupo ?? p.analise ?? p.tipo;
     const nome = p.bloco.startsWith("FCOJ") ? `${p.bloco.replace("FCOJ ", "")} · ${grupo}` : grupo;
-    const d = grupos.get(nome) ?? { nome, n: 0, atrasados: 0, caminho: caminhoDe(p), cor: corDe(p) };
+    const d = grupos.get(nome) ?? { nome, n: 0, atrasados: 0, ...destinoDe(p), cor: corDe(p) };
     d.n += 1;
     if (p.situacao === "Atrasado") d.atrasados += 1;
     grupos.set(nome, d);
@@ -164,7 +175,7 @@ export default function CartaoAgora(props: { turno: EstadoDoTurno | null; estufa
               </div>
               <div className="destaque-acoes">
                 <Link to={d.caminho} className="pilula-acao">
-                  Ver {d.n > 1 ? `os ${d.n}` : "o 1"}
+                  {d.acao ?? `Ver ${d.n > 1 ? `os ${d.n}` : "o 1"}`}
                 </Link>
                 {d.atrasados > 0 && <span className="pilula-info">{d.atrasados} atrasado{d.atrasados > 1 ? "s" : ""}</span>}
               </div>

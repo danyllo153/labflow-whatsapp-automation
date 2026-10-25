@@ -4365,3 +4365,38 @@ h2 {
     padding: 14px 16px 16px;
   }
 }
+
+/* Com a largura toda (APP-055), os gráficos em SVG cresciam com o cartão e o texto ficava gigante: a altura tem teto e o
+   desenho fica centrado no cartão, com as letras no tamanho de sempre. */
+.svg-g2,
+.svg-g4,
+.svg-grafico {
+  max-height: 280px;
+  margin-inline: auto;
+}
+
+/* "Abrir PDF" (link) e "Marcar como impressa" (botão) na mesma linha: o botão tem respiro em cima e embaixo e o link
+   não, e um ficava acima do outro. */
+.acoes-linha {
+  align-items: center;
+  flex-wrap: wrap;
+}
+.acoes-linha > a {
+  padding: 6px 0;
+}
+.linha-turno {
+  align-items: center;
+}
+
+/* A tabela com os números do gráfico da esterilização: letra legível e da largura do gráfico, não do cartão. */
+.tabela-g4 {
+  font-size: 0.85rem;
+  max-width: 720px;
+  margin-inline: auto;
+}
+.tabela-g4 thead th:first-child {
+  text-align: left;
+}
+.cartao.grafico-g4 .legenda-g4 {
+  justify-content: center;
+}

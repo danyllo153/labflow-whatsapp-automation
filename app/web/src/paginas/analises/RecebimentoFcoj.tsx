@@ -6,6 +6,7 @@ import { dm } from "../../componentes/SeletorDeDias";
 import { FABRICAS } from "../dados/definicoes";
 import { classeDaSituacao } from "../dados/formatos";
 import LaudoEsterilizacao from "../LaudoEsterilizacao";
+import Instrucao from "./Instrucao";
 
 /**
  * Recebimento FCOJ como um app (Fase E, E2; APP-057): Painel, Registrar, Resultados, Laudo, Instrução e Vídeo numa
@@ -183,21 +184,7 @@ export default function RecebimentoFcoj() {
           </div>
         </div>
       )}
-      {aba === "instrucao" && (
-        <div className="cartao">
-          <h2>Instrução</h2>
-          <p className="texto-secundario">
-            A instrução de trabalho do recebimento vai aparecer aqui, escrita pelo Admin no próprio app (nada de documento da
-            empresa no repositório).
-          </p>
-        </div>
-      )}
-      {aba === "video" && (
-        <div className="cartao">
-          <h2>Vídeo</h2>
-          <p className="texto-secundario">Em breve: um vídeo curto de como fazer a análise, para quem está aprendendo.</p>
-        </div>
-      )}
+      {(aba === "instrucao" || aba === "video") && <Instrucao app="recebimento-fcoj" parte={aba} />}
     </section>
   );
 }

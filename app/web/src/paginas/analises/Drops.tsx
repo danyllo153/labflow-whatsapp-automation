@@ -15,6 +15,7 @@ import {
   useLista,
   useMarcados,
 } from "./comum";
+import { ABAS_FINAIS } from "./Instrucao";
 
 /** Drops D5, D10 e D15 e o desvio de drop em 7, 13 e 25 °C (Fase E, E5; funções da 044). */
 
@@ -44,6 +45,7 @@ export const ABAS_DROPS = [
   { aba: "concluir", rotulo: "Para concluir" },
   { aba: "desvios", rotulo: "Desvios de drop" },
   { aba: "resultados", rotulo: "Resultados" },
+  ...ABAS_FINAIS,
 ];
 
 const nomeDo = (d: { navio: string | null; tanque: string; drop: string }) => `${d.navio ? `${d.navio} ` : ""}tanque ${d.tanque} · ${d.drop}`;
@@ -59,6 +61,7 @@ export default function Drops() {
 
   return (
     <AppDeAnalise
+      app="drops"
       sigla="D"
       cor="verde"
       titulo="Drops"

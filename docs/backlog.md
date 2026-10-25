@@ -36,8 +36,9 @@
 - [ ] **Arquivo de amostras** (bot e app): caixa de cada load ("CX: 128" na Observação do laudo), bags, potes, recebimento e embarque
 - [x] **Aviso de amostra pulada** (24/10, APP-059): na prévia do registro e no Painel do Recebimento, até o lote chegar; sem "finalizar load" (decisão de 24/10)
 - [x] **Fase E, E3 a E8** (24/10, APP-061): apps de Tanques, TAB/Coliformes/Howard, Drops, Embarque, Recebimento NFC e Desvios, pelas funções da 042 a 047
-- [ ] **E9, Instrução e vídeo:** o Admin escreve a instrução de cada app; os vídeos serão feitos depois por IA a partir da instrução de trabalho (decisão de 24/10)
-- [ ] Ligar os botões dos destaques do Início ("Espalhei todos", "Lançar leituras") aos apps novos (hoje só abrem a página)
+- [x] **E9, Instrução e vídeo** (24/10, APP-062, migration 071): abas Instrução e Vídeo em todos os apps; o Admin escreve a instrução e cola o link do vídeo (versões no banco)
+- [ ] Escrever a instrução de cada app no app, como Admin (precisa do Danyllo); os vídeos serão feitos depois por IA a partir dela
+- [x] Botões dos destaques do Início ligados aos apps novos (24/10): "Espalhei todos", "Lançar leituras" etc. abrem o app na aba certa, com a lista marcada e o Confirmar
 - [x] **Fase E, E1 e E2** (24/10, APP-057, migration 068): Páginas como tela de apps e o Recebimento FCOJ como app (painel, registrar e lançar pelas funções da 040). Próximo: E3 em diante, um app por análise, conforme o bot entregar PB12 a PB17
 - [x] **Marcos 3 e 4 mesclados** (23/10): turno com atividades fixas, relatório e encerrar (#181, #183, #185), esterilização com o G4 (#188), estufas (#189), Admin de turnos/atividades/estufas (#190) e **corrigir/excluir/recuperar coleta pelo app** (APP-029, #191)
 - [x] Marcos 3 e 4, acabamento visual (APP-030 a APP-034), laudo de esterilização (APP-035) e os laudos de rastreio (APP-036 a APP-043) **no ar** no servidor (23 e 24/10, migrations 054 a 064)
@@ -46,8 +47,8 @@
 - [x] **Visual repaginado** no ar (#228, 24/10): menu claro, Inter, avatar, botões em pílula, blocos coloridos
 - [x] **Visual, parte 2** (APP-055, 24/10): gráfico da semana, cartão das folhas no menu, largura toda e blocos mais suaves no escuro
 - [x] **Início e Turno no layout do canvas** (APP-056, 24/10): cartão "Agora", destaques do dia, equipe e estufas lado a lado, "Quem fez o quê" com filtro
-- [ ] **▶ Fase E, o app faz tudo o que o bot faz** (pedido de 24/10): tela de apps com a busca e o filtro (E1 ✔) e Recebimento FCOJ completo (E2 ✔, #253); faltam tanques, testes, drops, embarque, NFC e desvios (PB12 a PB17) e a instrução/vídeo de cada análise. Plano e tabela "bot × app" no rumo-do-app, seção "Fase E"
-- [ ] Botões que gravam em lote nos destaques ("Espalhei todos", "Lançar leituras"): **decidido em 24/10**, lista toda marcada e um "Confirmar"; esperam o PB13 do bot (hoje só abrem a página)
+- [x] **▶ Fase E, o app faz tudo o que o bot faz** (pedido de 24/10): tela de apps com a busca e o filtro (E1 ✔) e Recebimento FCOJ completo (E2 ✔, #253); E3 a E8 (#264) e E9 (APP-062) feitos em 24/10. Plano e tabela "bot × app" no rumo-do-app, seção "Fase E"
+- [x] Botões que gravam em lote nos destaques: abrem o app com a lista toda marcada e o "Confirmar" (decisão de 24/10)
 - [x] **Histórico de lotes importado** pelo Danyllo (24/10; 30 lotes de meio no app)
 - [x] **Modelos em PDF dos laudos enviados** pelo Danyllo (23/10: esterilização, material asséptico, meios de cultura, fluxo laminar, limpeza de superfícies e água do processo)
 - [x] **Editar e excluir clicando no app:** coletas (APP-029) e recebimento de FCOJ (migration 064, funções 036), com histórico e recuperar pelo Admin

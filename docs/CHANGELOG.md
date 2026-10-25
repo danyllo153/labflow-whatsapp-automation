@@ -13,6 +13,9 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 ## [Não lançado]
 
 ### Corrigido
+- **Gráficos gigantes e links desalinhados** (app, 24/10): com a largura toda, os gráficos (Esterilização, páginas de
+  dados e Início) cresciam junto com o cartão e o texto ficava enorme; agora têm altura máxima e ficam centrados. "Abrir
+  PDF" e "Marcar como impressa" (e as outras ações em linha) ficam na mesma altura.
 - **Cartão das folhas no menu** (app, 24/10): a folha de incubação mostra "faltam N dias", não "linhas".
 - **Lote marcado por engano no meio do período** (app, APP-052, 24/10): "Corrigir a data de início" do lote em uso agora
   pode voltar para antes de outra marcação; a marcação errada que fica no meio é anulada (o período vira vazio, nada é
@@ -24,6 +27,12 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
   início" ajusta o começo do lote em uso quando preciso.
 
 ### Adicionado
+- **Instrução e Vídeo em todos os apps de análise** (app, APP-062, E9, migration 071, 24/10): o Admin escreve a
+  instrução de trabalho de cada app (Recebimento FCOJ, Tanques, TAB/Coliformes/Howard, Drops, Embarque, Recebimento NFC
+  e Desvios) e cola o link do vídeo, no próprio app. O texto fica só no banco (`app.instrucoes`), cada gravação é uma
+  versão nova (quem e quando) e nada se apaga.
+- **Destaques do Início abrem os apps** (app, 24/10): "Espalhei todos", "Estriei todos", "Lançar leituras", "Concluir
+  drops" e "Lançar resultados" levam ao app da análise na aba certa, com a lista toda marcada; só grava no Confirmar.
 - **Seis apps de análise novos: o app grava tudo o que o bot grava** (app, APP-061, Fase E passos E3 a E8, 24/10): cada um
   com as abas, a pesquisa e a prévia do banco antes do Confirmar, chamando as **mesmas funções do bot** (042 a 047):
   **Tanques** (leituras do dia agrupadas por navio/terra e dia, "feitas sem placas" ou as 3 placas, coleta e análise normal

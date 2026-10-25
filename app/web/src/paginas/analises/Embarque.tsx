@@ -12,6 +12,7 @@ import {
   useGravacao,
   useLista,
 } from "./comum";
+import { ABAS_FINAIS } from "./Instrucao";
 
 /**
  * Embarque FCOJ (Fase E, E6): amostras A1, A2... do navio, linha e fase e as compostas (045), e o C.T/B.L de cada amostra
@@ -35,6 +36,7 @@ export const ABAS_EMBARQUE = [
   { aba: "compostas", rotulo: "Compostas" },
   { aba: "resultados", rotulo: "C.T e B.L" },
   { aba: "tabelas", rotulo: "Resultados" },
+  ...ABAS_FINAIS,
 ];
 
 const ANALISES = [
@@ -50,6 +52,7 @@ export default function Embarque() {
   const lista = useLista<Amostra[]>("/analises/embarque/amostras", busca);
   return (
     <AppDeAnalise
+      app="embarque-fcoj"
       sigla="EF"
       cor="azul"
       titulo="Embarque FCOJ"
