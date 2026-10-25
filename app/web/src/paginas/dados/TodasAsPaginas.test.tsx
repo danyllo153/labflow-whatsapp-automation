@@ -84,7 +84,7 @@ describe("todas as páginas do Power BI no app (APP-019)", () => {
     expect(within(principal).queryByRole("link", { name: /^Tanques Leituras/ })).toBeNull();
     expect(within(principal).queryByText("Em breve")).toBeNull();
     expect(hrefs("Águas e superfícies")).toEqual(["/paginas/agua-processo", "/paginas/baias", "/paginas/linhas"]); // APP-037
-    expect(hrefs("Rotina do laboratório")).toEqual(["/esterilizacao", "/estufas", "/material-asseptico", "/meios-lotes", "/fluxo-laminar", "/incubacao"]);
+    expect(hrefs("Rotina do laboratório")).toEqual(["/esterilizacao", "/material-asseptico", "/meios-lotes", "/fluxo-laminar", "/incubacao"]);
   });
 
   it("o Coletor só vê Coletas e a água do processo (baias e linhas são análise, 25/10)", async () => {

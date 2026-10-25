@@ -148,9 +148,9 @@ export default function CartaoAgora(props: { turno: EstadoDoTurno | null; estufa
             )}
           </div>
           {resumo && resumo.total > 0 && (
-            <Link to="/estufas" className={`etiqueta ${resumo.nao_ok > 0 ? "etiqueta-nao-ok" : resumo.pendentes > 0 ? "etiqueta-pendente" : "etiqueta-ok"} agora-estufas`}>
+            <a href="#estufas" className={`etiqueta ${resumo.nao_ok > 0 ? "etiqueta-nao-ok" : resumo.pendentes > 0 ? "etiqueta-pendente" : "etiqueta-ok"} agora-estufas`}>
               {resumo.nao_ok > 0 ? `${resumo.nao_ok} estufa${resumo.nao_ok > 1 ? "s" : ""} não ok` : resumo.pendentes > 0 ? `${resumo.pendentes} estufas para conferir` : "Estufas OK"}
-            </Link>
+            </a>
           )}
         </div>
         <form className="registro-livre" onSubmit={registrar} aria-label="Registro livre">

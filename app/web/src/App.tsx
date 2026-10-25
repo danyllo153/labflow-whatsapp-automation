@@ -20,7 +20,6 @@ import MeiosLotes from "./paginas/MeiosLotes";
 import AguaProcesso from "./paginas/aguas/AguaProcesso";
 import SuperficiesPagina from "./paginas/aguas/Superficies";
 import CorrigirRecebimento from "./paginas/dados/CorrigirRecebimento";
-import Estufas from "./paginas/Estufas";
 import Inicio from "./paginas/Inicio";
 import NaoEncontrada from "./paginas/NaoEncontrada";
 import DetalheColeta from "./paginas/dados/DetalheColeta";
@@ -90,7 +89,7 @@ export default function App() {
         <Route index element={<Inicio />} />
         <Route path="/turno" element={<Turno />} />
         <Route path="/esterilizacao" element={<Esterilizacao />} />
-        <Route path="/estufas" element={<Estufas />} />
+        <Route path="/estufas" element={<Navigate to="/turno" replace />} />  {/* as estufas ficam no Início e no Turno (25/10) */}
         <Route path="/registros-diarios" element={<RegistrosDiarios />} />
         <Route path="/fluxo-laminar" element={<BrancoDoDia />} />
         <Route path="/incubacao" element={<IncubacaoLeitura />} />
