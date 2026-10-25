@@ -33,6 +33,7 @@ from labflow_api.rotas_navios_tanques import roteador as roteador_navios_tanques
 from labflow_api.rotas_paginas_mais import roteador as roteador_paginas_mais
 from labflow_api.rotas_paginas_nfc import roteador as roteador_paginas_nfc
 from labflow_api.rotas_pendencias import roteador as roteador_pendencias
+from labflow_api.rotas_relatorio_dia import roteador as roteador_relatorio_dia
 from labflow_api.rotas_relatorio_turno import roteador as roteador_relatorio_turno
 from labflow_api.rotas_turno import roteador as roteador_turno
 from labflow_api.telas import roteador as roteador_telas
@@ -68,6 +69,7 @@ app.include_router(roteador_paginas_nfc)
 app.include_router(roteador_paginas_mais)
 app.include_router(roteador_navios_tanques)
 app.include_router(roteador_pendencias)
+app.include_router(roteador_relatorio_dia)
 app.include_router(roteador_estufas)
 app.include_router(roteador_laudos)
 app.include_router(roteador_meios)

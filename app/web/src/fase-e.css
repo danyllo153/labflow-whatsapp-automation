@@ -665,3 +665,57 @@ button.numero-app {
   font: inherit;
   line-height: 1.5;
 }
+
+/* Estufas compactas (25/10): uma linha por estufa, no Início e no Turno */
+.todas-ok { margin: 8px 0; }
+.previa-estufas { padding: 10px 12px; border: 1px solid var(--borda); border-radius: 8px; background: var(--acao-fundo, #eaf1fe); }
+.previa-estufas p { margin: 0 0 8px; }
+.lista-estufas { display: flex; flex-direction: column; border: 1px solid var(--borda); border-radius: 8px; overflow: hidden; }
+.estufa-linha { display: grid; grid-template-columns: minmax(110px, 150px) 1fr 1fr; gap: 6px 12px; align-items: start; padding: 6px 10px; border-bottom: 1px solid var(--borda); border-left: 4px solid var(--borda-forte, #d5dbe4); }
+.estufa-linha:last-child { border-bottom: 0; }
+.estufa-linha.estufa-ok { border-left-color: var(--ok); }
+.estufa-linha.estufa-nao-ok { border-left-color: var(--nao-ok); background: var(--nao-ok-fundo, #fee2e2); }
+.estufa-nome { display: flex; flex-direction: column; line-height: 1.2; }
+.estufa-nome .texto-secundario { font-size: 0.75rem; }
+.estufa-diferenca { grid-column: 1 / -1; margin: 0; font-size: 0.75rem; }
+.estufa-linha .leitura-estufa { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; padding: 0; border: 0; margin: 0; }
+.leitura-nome { font-size: 0.75rem; color: var(--texto-secundario); min-width: 74px; }
+.leitura-obs { font-size: 0.75rem; flex-basis: 100%; }
+.botoes-estufa { display: inline-flex; gap: 4px; }
+.botao-mini { font: inherit; font-size: 0.8rem; padding: 3px 10px; min-height: 30px; border: 1px solid var(--borda-forte, #d5dbe4); border-radius: 6px; background: var(--cartao, #fff); color: var(--texto); cursor: pointer; }
+.botao-mini[aria-pressed="true"] { background: var(--ok-fundo, #dcfce7); border-color: var(--ok); color: var(--ok-texto, #166534); font-weight: 600; }
+.botao-mini-nao[aria-pressed="true"] { background: var(--nao-ok-fundo, #fee2e2); border-color: var(--nao-ok); color: var(--nao-ok-texto, #991b1b); }
+.botao-mini:disabled { opacity: 0.6; }
+.nao-ok-estufa { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 8px; align-items: end; margin-top: 4px; }
+@media (max-width: 600px) {
+  .estufa-linha { grid-template-columns: 62px 1fr 1fr; gap: 4px 6px; padding: 5px 6px; }
+  .estufa-nome strong { font-size: 0.85rem; }
+  .estufa-nome .texto-secundario { display: none; }
+  .botao-mini { padding: 3px 7px; }
+}
+.estufa-cabecalho { padding-top: 4px; padding-bottom: 4px; font-size: 0.75rem; color: var(--texto-secundario); background: var(--fundo, #f5f6fa); }
+.estufa-linha { align-items: center; }
+.estufa-linha .leitura-nome { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.estufa-nome { flex-direction: row; gap: 6px; align-items: baseline; flex-wrap: wrap; }
+/* Leituras do dia (relatório do dia como o do bot) */
+.acoes-relatorio { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.acoes-relatorio a[aria-disabled="true"] { pointer-events: none; opacity: 0.5; }
+.bloco-relatorio h2 { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.secao-relatorio h3 { margin: 12px 0 4px; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--texto-secundario); }
+.linhas-relatorio { margin: 0; }
+.linha-relatorio { display: grid; grid-template-columns: minmax(110px, 160px) 1fr; gap: 8px; padding: 6px 0; border-bottom: 1px solid var(--borda, #e5e7eb); }
+.linha-relatorio:last-child { border-bottom: 0; }
+.linha-relatorio dt { font-weight: 600; }
+.linha-relatorio dd { margin: 0; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; min-width: 0; overflow-wrap: anywhere; }
+.linha-relatorio.com-alarme dt { color: var(--nao-ok); }
+.entrada-alarme { color: var(--nao-ok-texto, #a02d20); }
+.marca-lido, .marca-alarme { display: inline-block; margin-left: 3px; font-weight: 700; }
+.marca-lido { color: var(--ok); }
+.marca-alarme { color: #fff; background: var(--nao-ok); border-radius: 50%; width: 1.1em; height: 1.1em; line-height: 1.1em; text-align: center; font-size: 0.8em; }
+.alertas-relatorio { margin: 12px 0 0; padding: 8px 12px 8px 28px; background: var(--nao-ok-fundo, #fee2e2); color: var(--nao-ok-texto, #a02d20); border-radius: 8px; }
+@media (max-width: 600px) {
+  .linha-relatorio { grid-template-columns: 1fr; gap: 2px; }
+}
+@media print {
+  .acoes-relatorio, .relatorio-do-dia .dias-material, .relatorio-do-dia details, .relatorio-do-dia [aria-label="Finalizar o dia"] { display: none; }
+}

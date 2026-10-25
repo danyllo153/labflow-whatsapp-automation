@@ -79,23 +79,22 @@ function nomeDaEstufa(id: number): string {
   return `Estufa ${String(id).padStart(2, "0")}`;
 }
 
-function classe(status: EstufaDoTurno["status"]): string {
-  return status === "Ok" ? "etiqueta etiqueta-ok" : status === "Não ok" ? "etiqueta etiqueta-nao-ok" : "etiqueta etiqueta-pendente";
-}
-
-export default function Estufas() {
-  return (
-    <section className="pagina-estufas">
-      <h1>Estufas</h1>
-      <ConferenciaEstufas />
-    </section>
-  );
-}
-
-/** A conferência das estufas do turno; `embutida` (tela Turno) não mostra erro, só some se a lista não carregar. */
-export function ConferenciaEstufas({ embutida = false }: { embutida?: boolean }) {
+/**
+ * A conferência das estufas do turno, compacta (25/10): uma linha por estufa, com Ok / Não ok das duas leituras, e
+ * "Todas as pendentes Ok" com um Confirmar. Fica no Início e no Turno; `embutida` não mostra erro nem os alertas
+ * (a tela já mostra), só some se a lista não carregar.
+ */
+export function ConferenciaEstufas({ embutida = false, aoMudar }: { embutida?: boolean; aoMudar?: (d: DadosEstufas) => void }) {
   const [dados, setDados] = useState<DadosEstufas | null>(null);
   const [erro, setErro] = useState("");
+
+  const mudar = useCallback(
+    (d: DadosEstufas) => {
+      setDados(d);
+      aoMudar?.(d);
+    },
+    [aoMudar],
+  );
 
   const carregar = useCallback(async () => {
     try {
@@ -125,7 +124,7 @@ export function ConferenciaEstufas({ embutida = false }: { embutida?: boolean })
       {!dados && !erro && <p className="carregando">Carregando...</p>}
       {dados && !embutida && <AlertasEstufas alertas={dados.alertas} />}
       {dados && (
-        <>
+        <div className="conferencia-estufas">
           <p className="texto-secundario">
             Turno {dados.turno} de {dm(dados.dia)}: <strong>{dados.resumo.conferidas}</strong> de {dados.resumo.total} conferidas
             {dados.resumo.nao_ok > 0 && (
@@ -137,30 +136,99 @@ export function ConferenciaEstufas({ embutida = false }: { embutida?: boolean })
             .
           </p>
           {!dados.pode_registrar && <p className="texto-secundario">O seu cargo vê as estufas, mas não confere.</p>}
-          {dados.estufas.map((e) => (
-            <CartaoDaEstufa key={e.id} estufa={e} pode={dados.pode_registrar} aoMudar={setDados} />
-          ))}
-        </>
+          {dados.pode_registrar && <TodasOk dados={dados} aoMudar={mudar} />}
+          <div className="lista-estufas">
+            <div className="estufa-linha estufa-cabecalho" aria-hidden="true">
+              <span className="estufa-nome">Estufa</span>
+              <span>Supervisório</span>
+              <span>Field chart</span>
+            </div>
+            {dados.estufas.map((e) => (
+              <LinhaDaEstufa key={e.id} estufa={e} pode={dados.pode_registrar} aoMudar={mudar} />
+            ))}
+          </div>
+        </div>
       )}
     </>
   );
 }
 
-function CartaoDaEstufa({ estufa: e, pode, aoMudar }: { estufa: EstufaDoTurno; pode: boolean; aoMudar: (d: DadosEstufas) => void }) {
+/** As leituras ainda sem conferência, para o "Todas as pendentes Ok". */
+function pendentes(dados: DadosEstufas): { estufa: number; leitura: NomeLeitura }[] {
+  return dados.estufas.flatMap((e) => [
+    ...(e.supervisorio ? [] : [{ estufa: e.id, leitura: "Supervisório" as NomeLeitura }]),
+    ...(e.field_chart ? [] : [{ estufa: e.id, leitura: "Field chart" as NomeLeitura }]),
+  ]);
+}
+
+function TodasOk({ dados, aoMudar }: { dados: DadosEstufas; aoMudar: (d: DadosEstufas) => void }) {
+  const [vendo, setVendo] = useState(false);
+  const [enviando, setEnviando] = useState(false);
+  const [erro, setErro] = useState("");
+  const lista = pendentes(dados);
+  if (lista.length === 0) return null;
+  const estufas = [...new Set(lista.map((p) => p.estufa))];
+
+  async function confirmar() {
+    setEnviando(true);
+    setErro("");
+    try {
+      let ultimo: DadosEstufas | null = null;
+      for (const p of lista) {
+        ultimo = await enviarJson<DadosEstufas>(`/estufas/${p.estufa}`, { leitura: p.leitura, ok: true }, "PUT");
+      }
+      if (ultimo) aoMudar(ultimo);
+      setVendo(false);
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Não foi possível gravar.");
+    } finally {
+      setEnviando(false);
+    }
+  }
+
   return (
-    <section className="cartao estufa" aria-label={nomeDaEstufa(e.id)}>
-      <h2>
-        {nomeDaEstufa(e.id)} <span className={classe(e.status)}>{e.status}</span>
-      </h2>
-      <p className="texto-secundario">
-        {e.auxiliar ? "Estufa auxiliar (sem faixa de trabalho)" : e.faixa ? `Faixa de trabalho: ${graus(e.faixa.minimo)} a ${graus(e.faixa.maximo)}` : "Faixa de trabalho não cadastrada"}
-      </p>
+    <div className="todas-ok">
+      {!vendo ? (
+        <button type="button" className="botao botao-principal" onClick={() => setVendo(true)}>
+          Todas as pendentes Ok ({lista.length})
+        </button>
+      ) : (
+        <div className="previa-estufas" role="group" aria-label="Confirmar todas Ok">
+          <p>
+            Grava <strong>Ok</strong> em {lista.length} leitura{lista.length === 1 ? "" : "s"}: {estufas.map(nomeDaEstufa).join(", ")}. O que já foi
+            conferido não muda.
+          </p>
+          <div className="botoes-lado">
+            <button type="button" className="botao botao-principal" disabled={enviando} onClick={() => void confirmar()}>
+              Confirmar
+            </button>
+            <button type="button" className="botao botao-simples" onClick={() => setVendo(false)}>
+              Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+      {erro && (
+        <p className="mensagem-erro" role="alert">
+          {erro}
+        </p>
+      )}
+    </div>
+  );
+}
+
+function LinhaDaEstufa({ estufa: e, pode, aoMudar }: { estufa: EstufaDoTurno; pode: boolean; aoMudar: (d: DadosEstufas) => void }) {
+  const faixa = e.auxiliar ? "auxiliar" : e.faixa ? `${graus(e.faixa.minimo)} a ${graus(e.faixa.maximo)}` : "sem faixa";
+  return (
+    <section className={`estufa-linha estufa-${e.status === "Ok" ? "ok" : e.status === "Não ok" ? "nao-ok" : "pendente"}`} aria-label={nomeDaEstufa(e.id)}>
+      <div className="estufa-nome">
+        <strong>{nomeDaEstufa(e.id)}</strong>
+        <span className="texto-secundario">{faixa}</span>
+      </div>
       <Leitura estufa={e} nome="Supervisório" leitura={e.supervisorio} pode={pode} aoMudar={aoMudar} />
       <Leitura estufa={e} nome="Field chart" leitura={e.field_chart} pode={pode} aoMudar={aoMudar} />
       {e.diferenca !== null && (
-        <p className="texto-secundario">
-          Diferença (field chart − supervisório): {Number(e.diferenca).toFixed(1).replace(".", ",")} °C
-        </p>
+        <p className="texto-secundario estufa-diferenca">Diferença (field chart − supervisório): {Number(e.diferenca).toFixed(1).replace(".", ",")} °C</p>
       )}
     </section>
   );
@@ -205,39 +273,31 @@ function Leitura(props: {
     void gravar({ ok: false, temperatura: numero, observacao });
   }
 
+  const quem = leitura ? `${leitura.quem} às ${leitura.quando}${leitura.observacao ? ` · ${leitura.observacao}` : ""}` : "";
+
   return (
-    <div className="leitura-estufa" role="group" aria-label={`${nome} da ${nomeDaEstufa(estufa.id)}`}>
-      <div className="leitura-linha">
-        <strong>{nome}</strong>
-        {leitura ? (
-          <span className={leitura.ok ? "etiqueta etiqueta-ok" : "etiqueta etiqueta-nao-ok"}>
-            {leitura.ok ? "Ok" : `Não ok · ${graus(leitura.temperatura)}`}
-          </span>
-        ) : (
-          <span className="etiqueta etiqueta-pendente">Pendente</span>
-        )}
-      </div>
-      {leitura && (
-        <p className="texto-secundario">
-          {leitura.quem} às {leitura.quando}
-          {leitura.observacao && ` · ${leitura.observacao}`}
-        </p>
-      )}
-      {props.pode && !naoOk && (
-        <div className="atividade-botoes">
-          <button type="button" className="botao-secundario" aria-pressed={leitura?.ok === true} disabled={enviando} onClick={() => void gravar({ ok: true })}>
+    <div className="leitura-estufa" role="group" aria-label={`${nome} da ${nomeDaEstufa(estufa.id)}`} title={quem || undefined}>
+      <span className="leitura-nome">{nome}</span>
+      {props.pode ? (
+        <span className="botoes-estufa">
+          <button type="button" className="botao-mini" aria-pressed={leitura?.ok === true} disabled={enviando} onClick={() => void gravar({ ok: true })}>
             Ok
           </button>
-          <button type="button" className="botao-secundario" aria-pressed={leitura?.ok === false} disabled={enviando} onClick={() => setNaoOk(true)}>
-            Não ok
+          <button type="button" className="botao-mini botao-mini-nao" aria-pressed={leitura?.ok === false || naoOk} disabled={enviando} onClick={() => setNaoOk(true)}>
+            {leitura && !leitura.ok ? `Não ok · ${graus(leitura.temperatura)}` : "Não ok"}
           </button>
-        </div>
+        </span>
+      ) : leitura ? (
+        <span className={leitura.ok ? "etiqueta etiqueta-ok" : "etiqueta etiqueta-nao-ok"}>{leitura.ok ? "Ok" : `Não ok · ${graus(leitura.temperatura)}`}</span>
+      ) : (
+        <span className="etiqueta etiqueta-pendente">Pendente</span>
       )}
+      {leitura && !leitura.ok && leitura.observacao && <span className="texto-secundario leitura-obs">{leitura.observacao}</span>}
       {naoOk && (
-        <form className="corrigir-horario" onSubmit={gravarNaoOk} aria-label={`Não ok: ${nome} da ${nomeDaEstufa(estufa.id)}`}>
+        <form className="nao-ok-estufa" onSubmit={gravarNaoOk} aria-label={`Não ok: ${nome} da ${nomeDaEstufa(estufa.id)}`}>
           <label className="campo campo-hora">
             Temperatura (°C)
-            <input inputMode="decimal" value={temperatura} onChange={(e) => setTemperatura(e.target.value)} />
+            <input inputMode="decimal" value={temperatura} onChange={(e) => setTemperatura(e.target.value)} autoFocus />
           </label>
           <label className="campo">
             Observação (opcional)

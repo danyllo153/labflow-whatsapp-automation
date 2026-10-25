@@ -28,6 +28,7 @@ Esta pasta é a **"semente"** do LIMS (Spec-Driven Development): primeiro decidi
 | 08 | [Fluxos](08-fluxos.md) | O caminho de cada ação, pelo WhatsApp e pelo app |
 | 09 | [Pontos de atenção](09-pontos-de-atencao.md) | LGPD, ISO/IEC 17025, segurança e riscos |
 | 10 | [Decisões](10-decisoes.md) | O que já foi decidido e por quê |
+| 11 | [Arquivo de contra-amostras](11-arquivo-contra-amostras.md) | Caixas, bags, laudos e descarte (pedido PB21) |
 | — | [Guia prático](guia-pratico.md) | Como semear estes docs, gerar tarefas e implementar |
 | — | [Rumo do app](rumo-do-app.md) | Bússola do app: para onde vamos, fase atual e o que perguntar antes de decidir |
 
