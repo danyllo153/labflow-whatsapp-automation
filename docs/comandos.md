@@ -1011,3 +1011,20 @@ descartei bags do tanque 35
 - As famílias de navio e as faixas reais entram pela **carga inicial** (gerada da planilha do laboratório, fora do Git); o que já tinha vencido na planilha entra como descartado. Exemplo fictício: `db/seeds/arquivo_exemplo.sql`.
 
 Ajuda: `comandos descarte` (ou `comandos arquivo`).
+
+## 21. Pendências do dia e apelidos de navio
+
+Pedido PB22 (migration `106`). Uma lista só, no banco, do que está para fazer hoje **além das leituras** de C.T/B.L e de tanques (essas saem no relatório do dia), com o que está **atrasado** (herdado de outro turno) primeiro:
+
+```
+pendências do dia
+o que falta fazer hoje
+análises pendentes
+```
+
+- **TAB:** espalhar e incubar (no caldo), ler, confirmação (PCA). **Coliformes:** estriar (tirar do caldo), ler, confirmação lote a lote.
+- **Compostas:** Coliformes obrigatório por fazer (migration 104) e TAB por fazer nas compostas do recebimento criadas a partir de 26/10/2026.
+- **Tanques:** Stress por fazer (o frasco Normal já analisado e o Stress não).
+- Resposta direta, por etapa, até 8 itens cada (`e mais N`); `⚠️` quando há atrasado, com a data mais antiga. O app lê a mesma lista na view `vw_pendencias_do_dia` (grupo, etapa, alvo, prevista, atrasado, tabela, ref_id).
+
+**Apelidos de navio:** a tabela `navio_apelidos` (apelido → nome oficial) faz o bot trocar o nome antes de entender o comando, e o banco grava sempre o oficial (gatilho em `navios`). Ex. fictício: com `O.ALFA → O.ALFA II`, `embarque navio O.ALFA 95 ...` vira `O.ALFA II 95`; quem já escreve o oficial não muda. Os apelidos reais entram por arquivo fora do Git.
