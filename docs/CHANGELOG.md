@@ -13,6 +13,7 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 ## [Não lançado]
 
 ### Alterado
+- **Turno: equipe numa faixa fina** (25/10): as pessoas do turno lado a lado, em cima, e as estufas embaixo na largura toda (antes o cartão da equipe ficava do tamanho do das estufas).
 - **Ok e Não ok em ícone redondo** (25/10): nas estufas, os botões viraram o círculo verde com visto e o vermelho com X (cheio quando escolhido, contorno cinza quando não); a temperatura do Não ok fica ao lado. Nas Leituras, as marcas de lido e de fora do limite usam os mesmos ícones.
 
 ### Corrigido
