@@ -15,8 +15,8 @@ export const MENU: ItemDoMenu[] = [
   { caminho: "/esterilizacao", rotulo: "Esterilização", pronto: true },
   { caminho: "/estufas", rotulo: "Estufas", pronto: true, soNoMenuLateral: true },
   { caminho: "/registros-diarios", rotulo: "Registros diários", pronto: true, soNoMenuLateral: true },
-  { caminho: "/relatorio-do-dia", rotulo: "Relatório do dia", pronto: true, pode: "registrar_analise", soNoMenuLateral: true },
-  { caminho: "/assistente", rotulo: "Assistente", pronto: false, tarefa: "Fase D" },
+  { caminho: "/relatorio-do-dia", rotulo: "Leituras", pronto: true, pode: "ver_paginas" }, // o relatório do dia, na barra do celular
+  { caminho: "/assistente", rotulo: "Assistente", pronto: false, tarefa: "Fase D", soNoMenuLateral: true },
   { caminho: "/admin/turnos", rotulo: "Turnos e estufas", pronto: true, pode: "configurar_turnos", soNoMenuLateral: true },
   { caminho: "/admin/coletas-excluidas", rotulo: "Coletas excluídas", pronto: true, pode: "configurar_turnos", soNoMenuLateral: true },
   { caminho: "/admin/pessoas", rotulo: "Pessoas", pronto: true, pode: "gerenciar_pessoas", soNoMenuLateral: true },
