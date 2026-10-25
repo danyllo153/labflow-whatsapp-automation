@@ -29,7 +29,7 @@ describe("moldura do app (APP-012)", () => {
     abrir("/");
     const lateral = await screen.findByRole("complementary", { name: "Menu" });
     const barra = screen.getByRole("navigation", { name: "Menu do celular" });
-    for (const rotulo of ["Início", "Turno", "Análises", "Esterilização", "Assistente"]) {
+    for (const rotulo of ["Início", "Turno", "Análises", "Esterilização", "Leituras"]) {
       expect(within(lateral).getByRole("link", { name: new RegExp(rotulo) })).toBeInTheDocument();
       expect(within(barra).getByRole("link", { name: rotulo })).toBeInTheDocument();
     }
