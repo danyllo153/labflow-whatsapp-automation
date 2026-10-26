@@ -197,18 +197,20 @@ export default function PaginaDeDados({ def }: { def: DefinicaoDePagina }) {
           descricao={def.descricao}
           acoes={
             <>
-              <button
-                type="button"
-                className="botao-icone"
-                aria-pressed={dashboardAberto}
-                title={def.resultado ? "Gráfico do resultado com o filtro da tela" : "Gráfico com o filtro da tela: colunas ou tendência"}
-                onClick={() => setDashboardAberto(!dashboardAberto)}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-                  <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
-                </svg>
-                {def.resultado ? "Gráfico" : "Dashboard"}
-              </button>
+              {(def.resultado || def.dashboard) && (
+                <button
+                  type="button"
+                  className="botao-icone"
+                  aria-pressed={dashboardAberto}
+                  title={def.resultado ? "Gráfico do resultado com o filtro da tela" : "Gráfico com o filtro da tela: colunas ou tendência"}
+                  onClick={() => setDashboardAberto(!dashboardAberto)}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                    <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
+                  </svg>
+                  Gráfico
+                </button>
+              )}
               <a
                 className="botao-icone"
                 aria-label="Exportar Excel"
@@ -377,12 +379,12 @@ export default function PaginaDeDados({ def }: { def: DefinicaoDePagina }) {
 
         {dashboardAberto && def.resultado && (
           <Suspense fallback={<p className="carregando">Montando o gráfico...</p>}>
-            {def.resultado.tipo === "tab" ? (
-              <TabPositivos aoDesenhar={(c) => (canvasDoGrafico.current = c)} />
+            {def.resultado.tipo === "positivos" ? (
+              <TabPositivos teste={def.resultado.teste} aoDesenhar={(c) => (canvasDoGrafico.current = c)} />
             ) : (
               <GraficoResultado
-                api={def.api}
-                consulta={consulta(comBusca)}
+                api={def.resultado.api ?? def.api}
+                consulta={consulta({ ...comBusca, ...def.fixos })}
                 rotuloData={def.resultado.data}
                 aoDesenhar={(c) => (canvasDoGrafico.current = c)}
               />

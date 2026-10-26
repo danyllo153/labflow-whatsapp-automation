@@ -27,7 +27,7 @@ export interface DefinicaoDePagina {
   filtros: Filtro[];
   impressao: "em pé" | "deitado"; // 07: em pé para listas estreitas, deitado para tabelas largas
   semColetor?: boolean; // 07: o Coletor não vê esta página
-  resultado?: { tipo: "tendencia"; data: string } | { tipo: "tab" }; // gráfico de resultado no lugar do Dashboard (26/10)
+  resultado?: { tipo: "tendencia"; data: string; api?: string } | { tipo: "positivos"; teste: "TAB" | "Coliformes" }; // gráfico de resultado no lugar do Dashboard (26/10)
   grupo: "Geral" | "NFC" | "FCOJ" | "Testes"; // como a lista de páginas agrupa (pedidos de 23 e 24/10)
   oculta?: boolean; // não aparece na lista, mas o endereço continua abrindo (links antigos)
   linkDaLinha?: (linha: Record<string, unknown>) => string; // tocar na linha abre a página do item
@@ -122,6 +122,7 @@ export const PAGINAS: DefinicaoDePagina[] = [
     titulo: "Tanques",
     descricao: "Leituras de C.T, B.L e Psicrotróficos por tanque (normal e stress), com o resultado Ok / Não ok.",
     api: "/paginas/tanques",
+    resultado: { tipo: "tendencia", data: "coleta" },
     impressao: "deitado",
     semColetor: true,
     colunas: [
@@ -255,7 +256,7 @@ export const PAGINAS: DefinicaoDePagina[] = [
     grupo: "Testes",
     titulo: "TAB",
     fixos: { teste: "TAB" },
-    resultado: { tipo: "tab" },
+    resultado: { tipo: "positivos", teste: "TAB" },
     descricao: "TAB por composta, lote e tanque: no caldo, estriado, incubado, em confirmação, resultado e próxima etapa.",
     api: "/paginas/testes",
     impressao: "deitado",
@@ -287,6 +288,7 @@ export const PAGINAS: DefinicaoDePagina[] = [
     grupo: "Testes",
     titulo: "Coliformes",
     fixos: { teste: "Coliformes" },
+    resultado: { tipo: "positivos", teste: "Coliformes" },
     descricao: "Coliformes por composta e lote: no caldo, estriado, resultado e próxima etapa.",
     api: "/paginas/testes",
     impressao: "deitado",
@@ -318,6 +320,7 @@ export const PAGINAS: DefinicaoDePagina[] = [
     grupo: "Testes",
     titulo: "Howard",
     fixos: { teste: "Howard" },
+    resultado: { tipo: "tendencia", data: "feito em", api: "/paginas/howard" },
     descricao: "Howard (bolores na câmara) por composta: percentual de campos positivos e situação.",
     api: "/paginas/testes",
     impressao: "deitado",

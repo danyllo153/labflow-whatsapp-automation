@@ -1,9 +1,12 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { Suspense, lazy, useCallback, useEffect, useState, type FormEvent } from "react";
 import { AbasDaPagina, CabecalhoDaPagina, useAba } from "../../componentes/CabecalhoDaPagina";
 
 import { enviarJson, lerJson } from "../../api";
 import LaudoEsterilizacao from "../LaudoEsterilizacao";
 import { agoraSP, classeDaSituacao, dm, hojeSP, mensagem } from "./comum";
+
+// o Chart.js só é baixado quando a aba Gráfico abre (26/10)
+const GraficoResultado = lazy(() => import("../dados/GraficoResultado"));
 
 /**
  * Água do processo (07 §5.1; APP-037): coleta nos anéis de água estéril (Manifold e Câmaras 4, 5 e 6), C.T. (48 h) e
@@ -72,7 +75,7 @@ export default function AguaProcesso() {
     setVersao((v) => v + 1);
   }
 
-  const abas = [{ aba: "principal", rotulo: "Coletas" }, ...(dados?.pode_lancar ? [{ aba: "laudo", rotulo: "Laudo" }] : [])];
+  const abas = [{ aba: "principal", rotulo: "Coletas" }, { aba: "grafico", rotulo: "Gráfico" }, ...(dados?.pode_lancar ? [{ aba: "laudo", rotulo: "Laudo" }] : [])];
   const [aba, irPara] = useAba(abas);
   return (
     <section>
@@ -133,6 +136,11 @@ export default function AguaProcesso() {
             </div>
           )}
         </>
+      )}
+      {aba === "grafico" && (
+        <Suspense fallback={<p className="carregando">Montando o gráfico...</p>}>
+          <GraficoResultado api="/paginas/agua-processo" consulta="" rotuloData="coleta" />
+        </Suspense>
       )}
       {aba === "laudo" && dados?.pode_lancar && <LaudoEsterilizacao versao={versao} config={LAUDO} />}
     </section>

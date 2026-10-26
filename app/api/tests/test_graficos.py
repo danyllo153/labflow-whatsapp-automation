@@ -80,7 +80,8 @@ def test_tab_positivos_do_ano_batem_com_a_view(cliente, logado, conexao):
 
 
 @pytest.mark.parametrize("url", ["/paginas/recebimento/resultados", "/paginas/embarque/resultados",
-                                 "/paginas/recebimento-nfc/resultados", "/paginas/tab/positivos?ano=2026"])
+                                 "/paginas/recebimento-nfc/resultados", "/paginas/tab/positivos?ano=2026",
+                                 "/paginas/tanques/resultados", "/paginas/agua-processo/resultados", "/paginas/testes/positivos?ano=2026"])
 def test_coletor_nao_ve(cliente, logado, url):
     logado("Coletor")
     assert cliente.get(url).status_code == 403
@@ -92,3 +93,50 @@ def test_painel_do_embarque_bate_com_a_view(cliente, logado, conexao):
     assert p["atrasados"] == _conta(conexao, "SELECT count(*) FROM bi.contagens WHERE origem = 'Embarque' AND situacao = 'Atrasado'")
     assert p["para_hoje"] == _conta(conexao, "SELECT count(*) FROM bi.contagens WHERE origem = 'Embarque' AND situacao = 'Vence hoje'")
     assert all(n["nao_ok"] <= n["lidos"] for n in p["navios"])
+
+
+@pytest.mark.parametrize("pagina,analise", [("tanques", "C.T"), ("howard", "Howard")])
+def test_tanques_e_howard_trazem_o_limite_do_banco(cliente, logado, conexao, pagina, analise):
+    logado()
+    corpo = cliente.get(f"/paginas/{pagina}/resultados").json()
+    assert corpo["rotulo_limite"] == "Limite"
+    assert corpo["escala"] == ("linear" if pagina == "howard" else "log")
+    pontos = [p for p in corpo["pontos"] if p["analise"] == analise]
+    if analise in corpo["alertas"]:
+        limite = corpo["alertas"][analise]
+        assert all(p["acima"] == (p["valor"] > limite) for p in pontos if not p["menor"])
+
+
+def test_tanques_contam_as_leituras_lidas_da_view(cliente, logado, conexao):
+    logado()
+    pontos = cliente.get("/paginas/tanques/resultados", params={"analise": "C.T"}).json()["pontos"]
+    assert len(pontos) == _conta(conexao, "SELECT count(*) FROM bi.leituras_nfc WHERE lida AND maior IS NOT NULL AND analise = 'C.T'")
+    assert all(p["ref"].startswith("Tanque ") for p in pontos)
+
+
+def test_agua_baias_e_linhas_viram_numero(cliente, logado, monkeypatch):
+    from datetime import datetime, timedelta
+
+    from labflow_api import rotas_turno
+    from labflow_api.rotas_turno import FUSO
+
+    agora = datetime.now(FUSO).replace(hour=10, minute=0, second=0, microsecond=0)
+    monkeypatch.setattr(rotas_turno, "_agora", lambda con: agora)
+    logado()
+    ontem = (agora - timedelta(days=1)).date().isoformat()
+    r = cliente.post("/aguas/processo", json={"dia": ontem, "hora": "09:30", "pontos": ["manifold"]})
+    assert r.status_code == 201, r.text
+    cliente.put(f"/aguas/processo/{r.json()['coletas'][0]['id']}/resultados", json={"ct": {"manifold": "<1"}, "bl": {"manifold": "3"}})
+    pontos = cliente.get("/paginas/agua-processo/resultados").json()["pontos"]
+    assert {(p["analise"], p["valor"], p["menor"], p["ref"]) for p in pontos} >= {("C.T", 1.0, True, "Manifold"), ("B.L", 3.0, False, "Manifold")}
+    r = cliente.post("/aguas/superficies", json={"tipo": "Baia", "pontos": ["8"], "dia": ontem, "hora": "07:10"})
+    cliente.put(f"/aguas/superficies/{r.json()['coletas'][0]['id']}/resultados", json={"ct_48": "2"})
+    baias = cliente.get("/paginas/baias/resultados").json()["pontos"]
+    assert any(p["analise"] == "C.T 48h" and p["valor"] == 2 and p["ref"] == "Baia 08" for p in baias)
+    assert not any(p["ref"] == "Baia 08" for p in cliente.get("/paginas/linhas/resultados").json()["pontos"])
+
+
+def test_coliformes_positivos_do_ano(cliente, logado, conexao):
+    logado()
+    total = _conta(conexao, "SELECT count(*) FROM bi.testes WHERE teste = 'Coliformes' AND positivo AND extract(year FROM data_feito) = 2026")
+    assert len(cliente.get("/paginas/testes/positivos", params={"ano": 2026, "teste": "Coliformes"}).json()) == total

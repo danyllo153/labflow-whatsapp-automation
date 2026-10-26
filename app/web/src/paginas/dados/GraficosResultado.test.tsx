@@ -2,7 +2,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import GraficoResultado, { estadoDo, faixaNormal, type PontoResultado } from "./GraficoResultado";
+import GraficoResultado, { coresDasSeries, estadoDo, faixaNormal, type PontoResultado } from "./GraficoResultado";
 import TabPositivos, { contarPorMes, type TabPositivo } from "./TabPositivos";
 
 function ponto(dia: number, valor: number, extra: Partial<PontoResultado> = {}): PontoResultado {
@@ -43,6 +43,13 @@ describe("Faixa normal e estado do ponto", () => {
     expect(faixaNormal([ponto(1, 100), ponto(2, 100)])).toBeNull(); // poucos pontos: sem faixa
   });
 
+  it("cada série tem a sua cor: C.T, B.L 72h e B.L 120h fixas, as outras sem repetir", () => {
+    const cores = coresDasSeries(["B.L", "B.L pré", "C.T", "Psicrotróficos", "Psicrotróficos pré"]);
+    expect(cores[0]).toBe("#db2777");
+    expect(cores[2]).toBe("#2563eb");
+    expect(new Set(cores).size).toBe(5);
+  });
+
   it("acima do alerta vem antes de 'fora da faixa'; o '<' nunca fica fora", () => {
     const faixa = { de: 20, ate: 80 };
     expect(estadoDo(ponto(1, 300, { acima: true }), faixa)).toBe("acima");
@@ -80,6 +87,24 @@ describe("Tendência do resultado", () => {
   });
 });
 
+describe("Limite das tabelas com vigência (tanques, Howard)", () => {
+  it("a linha é o Limite (vermelho), não o alerta; Howard em % na escala comum", async () => {
+    servir({
+      "/paginas/howard/resultados": {
+        alertas: { Howard: 24 },
+        rotulo_limite: "Limite",
+        escala: "linear",
+        unidade: "Howard (%)",
+        pontos: [ponto(1, 32, { analise: "Howard", acima: true, ref: "NAVIO EXEMPLO L1 F2" }), ponto(2, 10, { analise: "Howard" })],
+        cortado: false,
+      },
+    });
+    render(<GraficoResultado api="/paginas/howard" consulta="teste=Howard" rotuloData="feito em" />);
+    expect(await screen.findByText(/2 leituras com o filtro da tela · 1 acima do limite/)).toBeInTheDocument();
+    expect(screen.getByText(/Acima do limite \(linha tracejada\)/)).toBeInTheDocument();
+  });
+});
+
 describe("TAB positivos no ano", () => {
   const POSITIVOS: TabPositivo[] = [
     { data: "2026-03-04", fabrica: "AQA", origem: "Recebimento", referencia: "43100" },
@@ -94,7 +119,7 @@ describe("TAB positivos no ano", () => {
   });
 
   it("empilha por fábrica, filtra por fábrica e lista os positivos do mês", async () => {
-    const urls = servir({ "/paginas/tab/positivos": POSITIVOS });
+    const urls = servir({ "/paginas/testes/positivos": POSITIVOS });
     render(<TabPositivos />);
     const grafico = await screen.findByRole("img", { name: /TAB positivos por mês/ });
     expect(JSON.parse(grafico.getAttribute("data-series")!)).toEqual([["AQA", 12], ["CON", 12], ["Sem fábrica", 12]]);
@@ -103,6 +128,6 @@ describe("TAB positivos no ano", () => {
     const lista = screen.getByRole("heading", { name: "Março · 2 positivos" }).parentElement!;
     expect(within(lista).getByText("NAVIO EXEMPLO 1 F2")).toBeInTheDocument();
     await u.selectOptions(screen.getByLabelText("Fábrica"), "AQA");
-    expect(urls[urls.length - 1]).toMatch(/\/paginas\/tab\/positivos\?ano=\d{4}&fabrica=AQA$/);
+    expect(urls[urls.length - 1]).toMatch(/\/paginas\/testes\/positivos\?teste=TAB&ano=\d{4}&fabrica=AQA$/);
   });
 });

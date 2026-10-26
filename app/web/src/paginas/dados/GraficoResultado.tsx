@@ -42,10 +42,14 @@ export interface PontoResultado {
   navio: string | null;
   lido: string | null;
   diluicao: string | null;
+  ref?: string | null; // tanque, ponto da água, composta: quando o ponto não é de um load
 }
 
 interface Dados {
   alertas: Record<string, number>;
+  rotulo_limite?: "Alerta" | "Limite"; // Alerta (laranja): FCOJ; Limite (vermelho): tanques e Howard, das tabelas com vigência
+  escala?: "log" | "linear";
+  unidade?: string;
   pontos: PontoResultado[];
   cortado: boolean;
 }
@@ -54,12 +58,17 @@ export type Estado = "acima" | "fora" | "menor" | "normal";
 
 const DIA_MS = 86_400_000;
 // cores bem diferentes entre si (e do laranja do alerta e do amarelo de fora da faixa), legíveis no claro e no escuro
-const CORES_ANALISE: [string, string][] = [
-  ["C.T", "#2563eb"],
-  ["B.L 72h", "#db2777"],
-  ["B.L 120h", "#16a34a"],
-];
+const CORES_ANALISE: Record<string, string> = {
+  "C.T": "#2563eb",
+  "C.T 48h": "#2563eb",
+  "B.L": "#db2777",
+  "B.L 72h": "#db2777",
+  "B.L 120h": "#16a34a",
+};
+// as outras séries (pré-leitura, Psicrotróficos, Howard) pegam a próxima cor livre desta lista
+const OUTRAS_CORES = ["#7c3aed", "#0891b2", "#65a30d", "#c2410c", "#0f766e", "#be185d", "#4b5563"];
 const LARANJA = "#e8590c";
+const VERMELHO = "#d92d20";
 const AMARELO = "#f5b301";
 const AMARELO_BORDA = "#6b4e00";
 
@@ -95,9 +104,10 @@ function token(nome: string, reserva: string): string {
   return getComputedStyle(document.documentElement).getPropertyValue(nome).trim() || reserva;
 }
 
-function corDaAnalise(analise: string, i: number): string {
-  const achada = CORES_ANALISE.find(([prefixo]) => analise.startsWith(prefixo));
-  return achada?.[1] ?? ["#7c3aed", "#0891b2", "#65a30d"][i % 3];
+/** Uma cor diferente para cada série: C.T, B.L 72h e B.L 120h fixas; as outras na ordem, sem repetir. */
+export function coresDasSeries(nomes: string[]): string[] {
+  let proxima = 0;
+  return nomes.map((nome) => CORES_ANALISE[nome] ?? OUTRAS_CORES[proxima++ % OUTRAS_CORES.length]);
 }
 
 function transparente(cor: string, alfa: number): string {
@@ -150,10 +160,11 @@ export default function GraficoResultado({
   const series = useMemo(() => {
     if (!dados) return [];
     const nomes = [...new Set(dados.pontos.map((p) => p.analise))].sort((a, b) => a.localeCompare(b, "pt-BR"));
+    const cores = coresDasSeries(nomes);
     return nomes.map((nome, i) => {
       const pontos = dados.pontos.filter((p) => p.analise === nome);
       const faixa = faixaNormal(pontos);
-      return { nome, cor: corDaAnalise(nome, i), pontos, faixa, estados: pontos.map((p) => estadoDo(p, faixa)), alerta: dados.alertas[nome] };
+      return { nome, cor: cores[i], pontos, faixa, estados: pontos.map((p) => estadoDo(p, faixa)), alerta: dados.alertas[nome] };
     });
   }, [dados]);
 
@@ -168,6 +179,9 @@ export default function GraficoResultado({
   const secundario = token("--texto-secundario", "#4a5565");
   const borda = token("--borda", "#e6eaf0");
   const cartao = token("--cartao", "#ffffff");
+  const ehLimite = dados.rotulo_limite === "Limite";
+  const corDaLinha = ehLimite ? VERMELHO : LARANJA;
+  const nomeDaLinha = ehLimite ? "limite" : "alerta";
   const fora = series.reduce((n, s) => n + s.estados.filter((e) => e === "fora").length, 0);
   const acima = series.reduce((n, s) => n + s.estados.filter((e) => e === "acima").length, 0);
 
@@ -175,11 +189,11 @@ export default function GraficoResultado({
     datasets: series.map((s) => {
       const cor = (i: number) => {
         const e = s.estados[i];
-        return e === "acima" ? LARANJA : e === "fora" ? AMARELO : e === "menor" ? cartao : s.cor;
+        return e === "acima" ? corDaLinha : e === "fora" ? AMARELO : e === "menor" ? cartao : s.cor;
       };
       return {
         label: s.nome,
-        data: s.pontos.map((p) => ({ x: diaDe(p.data), y: Math.max(p.valor, 1) })),
+        data: s.pontos.map((p) => ({ x: diaDe(p.data), y: dados.escala === "linear" ? p.valor : Math.max(p.valor, 1) })),
         borderColor: forma === "line" ? s.cor : cartao,
         backgroundColor: (c: { dataIndex: number }) => cor(c.dataIndex),
         pointBackgroundColor: (c: { dataIndex: number }) => cor(c.dataIndex),
@@ -223,9 +237,9 @@ export default function GraficoResultado({
   porAlerta.forEach((indices, valor) => {
     const nomes = indices.map((i) => series[i].nome).join(", ");
     anotacoes[`alerta${valor}`] = {
-      type: "line", yMin: valor, yMax: valor, borderColor: LARANJA, borderWidth: 2, borderDash: [6, 4],
+      type: "line", yMin: valor, yMax: valor, borderColor: corDaLinha, borderWidth: 2, borderDash: [6, 4],
       display: (c: { chart: ChartJS }) => indices.some((i) => c.chart.isDatasetVisible(i)),
-      label: { display: true, content: `Alerta ${nomes} · ${valor}`, position: "start", backgroundColor: cartao, color: LARANJA, font: { size: 11, weight: "bold" }, padding: 3 },
+      label: { display: true, content: `${dados.rotulo_limite ?? "Alerta"} ${nomes} · ${valor.toLocaleString("pt-BR")}`, position: "start", backgroundColor: cartao, color: corDaLinha, font: { size: 11, weight: "bold" }, padding: 3 },
     };
   });
 
@@ -239,11 +253,14 @@ export default function GraficoResultado({
     interaction: { mode: "nearest", intersect: true },
     scales: {
       x: { type: "linear", grid: { display: false }, ticks: { color: secundario, stepSize: 1, maxRotation: 0, autoSkipPadding: 16, callback: (v) => textoDoDia(Number(v)) } },
-      y: {
-        type: "logarithmic", min: inicioDoEixo, grid: { color: borda },
-        title: { display: true, text: "UFC/mL (com diluição)", color: secundario },
-        ticks: { color: secundario, callback: (v) => (POTENCIAS.has(Number(v)) ? rotuloLog(Number(v)) : "") },
-      },
+      y:
+        dados.escala === "linear"
+          ? { type: "linear", beginAtZero: true, grid: { color: borda }, title: { display: true, text: dados.unidade ?? "", color: secundario }, ticks: { color: secundario } }
+          : {
+              type: "logarithmic", min: inicioDoEixo, grid: { color: borda },
+              title: { display: true, text: dados.unidade ?? "UFC/mL (com diluição)", color: secundario },
+              ticks: { color: secundario, callback: (v) => (POTENCIAS.has(Number(v)) ? rotuloLog(Number(v)) : "") },
+            },
     },
     plugins: {
       legend: {
@@ -271,11 +288,11 @@ export default function GraficoResultado({
           label: (item) => {
             const s = series[item.datasetIndex];
             const p = s.pontos[item.dataIndex];
-            const estado = { acima: "Acima do alerta", fora: "Fora da faixa normal", menor: "Abaixo do detectável", normal: "Normal" }[s.estados[item.dataIndex]];
+            const estado = { acima: `Acima do ${nomeDaLinha}`, fora: "Fora da faixa normal", menor: "Abaixo do detectável", normal: "Normal" }[s.estados[item.dataIndex]];
             const valor = `${p.menor ? "<" : ""}${p.valor.toLocaleString("pt-BR")}`;
             return [
               `Com diluição: ${valor} · ${estado}`,
-              [p.navio && `Navio ${p.navio}`, p.load && `Load ${p.load}`, p.lote && `lote ${p.lote}`].filter(Boolean).join(" · "),
+              [p.ref, p.navio && `Navio ${p.navio}`, p.load && `Load ${p.load}`, p.lote && (p.load ? `lote ${p.lote}` : p.lote)].filter(Boolean).join(" · "),
               `Lido ${p.lido ?? "-"}${p.diluicao ? ` · diluição ${p.diluicao}` : ""}`,
             ];
           },
@@ -291,7 +308,7 @@ export default function GraficoResultado({
           <h2>Tendência do resultado</h2>
           <span className="texto-secundario">
             {dados.pontos.length} leituras com o filtro da tela
-            {acima > 0 && ` · ${acima} acima do alerta`}
+            {acima > 0 && ` · ${acima} acima do ${nomeDaLinha}`}
             {fora > 0 && ` · ${fora} fora da faixa normal`}
           </span>
         </div>
@@ -321,7 +338,7 @@ export default function GraficoResultado({
           <ul className="legenda-resultado" aria-label="Como ler o gráfico">
             {series.some((s) => s.alerta) && (
               <li>
-                <i className="bola" style={{ background: LARANJA }} /> Acima do alerta (linha tracejada)
+                <i className="bola" style={{ background: corDaLinha }} /> Acima do {nomeDaLinha} (linha tracejada)
               </li>
             )}
             <li>
