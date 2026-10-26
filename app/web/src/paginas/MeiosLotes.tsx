@@ -94,7 +94,7 @@ export default function MeiosLotes() {
   return (
     <section>
       <p className="voltar">
-        <Link to="/registros-diarios">← Registros diários</Link>
+        <Link to="/paginas">← Análises</Link>
       </p>
       <h1>Meios de cultura (lotes)</h1>
       {erro && (

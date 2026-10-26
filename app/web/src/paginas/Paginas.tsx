@@ -42,7 +42,7 @@ const GRUPOS: { grupo: Grupo; titulo: string }[] = [
   { grupo: "FCOJ", titulo: "FCOJ (concentrado)" },
   { grupo: "Testes", titulo: "TAB, Coliformes e Howard" },
   { grupo: "Aguas", titulo: "Águas e superfícies" },
-  { grupo: "Rotina", titulo: "Rotina do laboratório" },
+  { grupo: "Rotina", titulo: "Registros diários" },
 ];
 
 /** Ícone e cor (da família) de cada página; o resto vem de definicoes.ts. */

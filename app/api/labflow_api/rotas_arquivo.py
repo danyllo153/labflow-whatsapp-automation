@@ -10,7 +10,7 @@ from datetime import date
 from typing import Literal
 
 import psycopg
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
 from labflow_api.dependencias import PessoaLogada, obter_conexao
@@ -42,16 +42,27 @@ class Arquivo(BaseModel):
     pode_gravar: bool
 
 
+# A caixa do recebimento só vai para "Para descartar" quando TODOS os loads dela venceram (pedido do Danyllo, 26/10): um
+# load vencido sozinho não avisa nada. A data da caixa passa a ser a do último load a vencer.
+CAIXAS_SQL = """
+SELECT c.tipo, c.numero, c.familia, c.navio, c.viagem, c.itens_arquivados, c.amostras,
+       CASE WHEN c.tipo = 'recebimento' THEN r.ultimo ELSE c.descarte_em END,
+       CASE WHEN c.tipo = 'recebimento' AND c.situacao = 'Vencida' AND c.itens_vencidos < c.itens_arquivados THEN 'Em uso'
+            ELSE c.situacao END,
+       c.itens_vencidos
+FROM vw_arquivo_caixas c
+LEFT JOIN LATERAL (SELECT max(i.data_descarte) AS ultimo FROM vw_arquivo_itens i
+                   WHERE i.caixa_tipo = 'recebimento' AND i.caixa = c.numero AND i.situacao <> 'Descartado') r ON c.tipo = 'recebimento'
+"""
+
+
 @roteador.get("", response_model=Arquivo)
 def arquivo(pessoa: PessoaLogada = Depends(exigir("ver_paginas")), con: psycopg.Connection = Depends(obter_conexao)) -> Arquivo:
     """Todas as caixas, com a situação de cada uma (as vencidas primeiro na tela)."""
     caixas = [
         Caixa(tipo=t, numero=n, familia=f, navio=nv, viagem=v, itens=i, amostras=a, descarte_em=d, situacao=s, itens_vencidos=iv)
         for t, n, f, nv, v, i, a, d, s, iv in con.execute(
-            """
-            SELECT tipo, numero, familia, navio, viagem, itens_arquivados, amostras, descarte_em, situacao, itens_vencidos
-            FROM vw_arquivo_caixas ORDER BY CASE tipo WHEN 'navio' THEN 1 WHEN 'recebimento' THEN 2 ELSE 3 END, numero
-            """
+            CAIXAS_SQL + " ORDER BY CASE c.tipo WHEN 'navio' THEN 1 WHEN 'recebimento' THEN 2 ELSE 3 END, c.numero"
         ).fetchall()
     ]
     sugerida = con.execute("SELECT arquivo_caixa_recebimento_sugerida()").fetchone()[0]
@@ -85,10 +96,7 @@ def caixa(
 ) -> ConteudoDaCaixa:
     """O que tem numa caixa (o vencido primeiro); com `descartados`, também o histórico do que já saiu."""
     linha = con.execute(
-        """
-        SELECT tipo, numero, familia, navio, viagem, itens_arquivados, amostras, descarte_em, situacao, itens_vencidos
-        FROM vw_arquivo_caixas WHERE tipo = %s AND numero = %s
-        """,
+        CAIXAS_SQL + " WHERE c.tipo = %s AND c.numero = %s",
         (tipo, numero),
     ).fetchone()
     if not linha:
@@ -114,6 +122,36 @@ def caixa(
         )
     ]
     return ConteudoDaCaixa(caixa=cx, itens=itens)
+
+
+class Achado(BaseModel):
+    tipo: str
+    caixa: int
+    load: str
+    lotes: str | None
+    data_ref: date | None
+    data_descarte: date | None
+    situacao: str
+
+
+@roteador.get("/busca", response_model=list[Achado])
+def buscar_load(
+    load: str = Query(min_length=1, max_length=20),
+    pessoa: PessoaLogada = Depends(exigir("ver_paginas")),
+    con: psycopg.Connection = Depends(obter_conexao),
+) -> list[Achado]:
+    """Em qual caixa está um load (o que ainda não foi descartado; recebimento e embarque)."""
+    return [
+        Achado(tipo=t, caixa=c, load=lo, lotes=lt, data_ref=dr, data_descarte=dd, situacao=si)
+        for t, c, lo, lt, dr, dd, si in con.execute(
+            """
+            SELECT caixa_tipo, caixa, load, lotes, data_ref, data_descarte, situacao FROM vw_arquivo_itens
+            WHERE load ILIKE %s AND situacao <> 'Descartado' AND caixa IS NOT NULL
+            ORDER BY data_ref DESC NULLS LAST, caixa LIMIT 50
+            """,
+            (f"%{load.strip()}%",),
+        )
+    ]
 
 
 class Arquivar(BaseModel):

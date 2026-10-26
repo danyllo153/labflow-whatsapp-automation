@@ -32,6 +32,7 @@ function abrir() {
       corpo: { caixa: ARQUIVO.caixas[1], itens: [{ item: "recebimento", descricao: "load 98801", navio: null, viagem: null, tanque: null, load: "98801", lotes: "1-3", quantidade: 3, data_ref: "2026-10-11", data_descarte: "2026-10-18", situacao: "Vencido", descartado_em: null }] },
     }),
     "POST /arquivo/descartar": () => ({ status: 200, corpo: { ok: true, previa: true, texto: "Caixa 121 (recebimento): load 98801 lotes 1-3 (11/10/2026). A caixa fica disponível.", dados: {} } }),
+    "GET /arquivo/busca?load=98801": () => ({ status: 200, corpo: [{ tipo: "recebimento", caixa: 121, load: "98801", lotes: "1-3", data_ref: "2026-10-11", data_descarte: "2026-10-18", situacao: "Vencido" }] }),
     "POST /arquivo/arquivar": () => ({ status: 200, corpo: { ok: true, previa: true, texto: "Caixa 122 (recebimento): load 98802 lotes 1-5", dados: {} } }),
   });
   render(
@@ -60,11 +61,20 @@ describe("Arquivo de contra-amostras (PB21)", () => {
     expect(await screen.findByText(/A caixa fica disponível/)).toBeInTheDocument();
   });
 
-  it("Recebimento tem o arquivar com a caixa sugerida", async () => {
+  it("a busca mostra em qual caixa está o load", async () => {
+    abrir();
+    const busca = await screen.findByRole("search", { name: "Procurar load no arquivo" });
+    await userEvent.type(within(busca).getByLabelText("Em qual caixa está o load?"), "98801");
+    await userEvent.click(within(busca).getByRole("button", { name: "Procurar" }));
+    expect(await within(busca).findByRole("list", { name: "Caixas do load" })).toHaveTextContent("Caixa 121 (Recebimento) · load 98801 · lotes 1-3");
+  });
+
+  it("Recebimento tem o arquivar com a caixa sugerida e sem o Item", async () => {
     const api = abrir();
     await userEvent.click(await screen.findByRole("button", { name: "Recebimento" }));
     const form = screen.getByRole("form", { name: "Arquivar recebimento" });
     expect(within(form).getByLabelText("Caixa")).toHaveValue("122");
+    expect(within(form).queryByLabelText(/Item/)).toBeNull();
     await userEvent.type(within(form).getByLabelText("Load"), "98802");
     await userEvent.type(within(form).getByLabelText("Lotes"), "1-5");
     await userEvent.click(within(form).getByRole("button", { name: "Ver o que vai ser arquivado" }));

@@ -72,7 +72,7 @@ export default function BrancoDoDia() {
   return (
     <section className="pagina-material">
       <p className="voltar">
-        <Link to="/registros-diarios">← Registros diários</Link>
+        <Link to="/paginas">← Análises</Link>
       </p>
       <h1>Meio de cultura e fluxo laminar</h1>
       <p className="texto-secundario">

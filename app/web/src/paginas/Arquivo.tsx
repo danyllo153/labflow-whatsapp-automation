@@ -113,6 +113,7 @@ export default function ArquivoDeContraAmostras() {
               { rotulo: "Livres", valor: dados.caixas.filter((c) => c.situacao === "Disponível").length, tom: "hoje" },
             ]}
           />
+          <BuscaDeLoad />
           <div className="dias-material" role="group" aria-label="Arquivo">
             {ABAS.map((a) => (
               <button
@@ -251,10 +252,64 @@ function ConteudoDaCaixa({ caixa, pode, aoFechar, aoMudar }: { caixa: Caixa; pod
   );
 }
 
+interface Achado {
+  tipo: Tipo;
+  caixa: number;
+  load: string;
+  lotes: string | null;
+  data_ref: string | null;
+  data_descarte: string | null;
+  situacao: string;
+}
+
+/** Em qual caixa está um load (26/10): digita o número e vê a caixa, os lotes e quando vence. */
+function BuscaDeLoad() {
+  const [load, setLoad] = useState("");
+  const [achados, setAchados] = useState<Achado[] | null>(null);
+  const [erro, setErro] = useState("");
+
+  async function buscar(evento: FormEvent) {
+    evento.preventDefault();
+    if (!load.trim()) return;
+    try {
+      setAchados(await lerJson<Achado[]>(`/arquivo/busca?load=${encodeURIComponent(load.trim())}`));
+      setErro("");
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Não foi possível procurar.");
+    }
+  }
+
+  return (
+    <form className="cartao busca-arquivo" onSubmit={buscar} role="search" aria-label="Procurar load no arquivo">
+      <div className="campos-linha">
+        <label className="campo">
+          Em qual caixa está o load?
+          <input inputMode="numeric" maxLength={20} placeholder="Número do load" value={load} onChange={(e) => setLoad(e.target.value)} />
+        </label>
+        <button type="submit" className="botao botao-principal">
+          Procurar
+        </button>
+      </div>
+      {erro && <p className="mensagem-erro">{erro}</p>}
+      {achados && achados.length === 0 && <p className="texto-secundario">Nenhuma caixa com o load {load.trim()} (ou já foi descartado).</p>}
+      {achados && achados.length > 0 && (
+        <ul className="lista-simples" aria-label="Caixas do load">
+          {achados.map((a, i) => (
+            <li key={i}>
+              <strong>Caixa {a.caixa}</strong> ({NOME_DO_TIPO[a.tipo]}) · load {a.load}
+              {a.lotes ? ` · lotes ${a.lotes}` : ""} · arquivado {dataBr(a.data_ref)} · vence {dataBr(a.data_descarte)}
+            </li>
+          ))}
+        </ul>
+      )}
+    </form>
+  );
+}
+
 function ArquivarRecebimento({ sugerida, aoGravar }: { sugerida: number | null; aoGravar: () => void }) {
-  const [campos, setCampos] = useState({ load: "", item: "", lotes: "", caixa: sugerida ? String(sugerida) : "", data: hojeEmSaoPaulo() });
+  const [campos, setCampos] = useState({ load: "", lotes: "", caixa: sugerida ? String(sugerida) : "", data: hojeEmSaoPaulo() });
   const g = useGravacao("/arquivo/arquivar", () => {
-    setCampos((c) => ({ ...c, load: "", item: "", lotes: "" }));
+    setCampos((c) => ({ ...c, load: "", lotes: "" }));
     aoGravar();
   });
   const muda = (k: keyof typeof campos) => (e: { target: { value: string } }) => setCampos((c) => ({ ...c, [k]: e.target.value }));
@@ -268,16 +323,12 @@ function ArquivarRecebimento({ sugerida, aoGravar }: { sugerida: number | null; 
     <form className="cartao arquivar-recebimento" onSubmit={ver} aria-label="Arquivar recebimento">
       <h2>Arquivar recebimento</h2>
       <p className="texto-secundario">
-        Load e lotes numa caixa de 121 a 145 (a sugerida é a {sugerida ?? "-"}). Vence 7 dias depois de arquivado.
+        Load e lotes na caixa (a sugerida é a {sugerida ?? "-"}). A caixa fica para descarte quando todos os loads dela vencem (7 dias depois de arquivados).
       </p>
       <div className="campos-linha">
         <label className="campo">
           Load
           <input inputMode="numeric" required maxLength={20} value={campos.load} onChange={muda("load")} />
-        </label>
-        <label className="campo">
-          Item (se houver dois)
-          <input maxLength={20} value={campos.item} onChange={muda("item")} />
         </label>
         <label className="campo">
           Lotes

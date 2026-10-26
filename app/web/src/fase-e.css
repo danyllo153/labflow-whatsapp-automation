@@ -812,3 +812,4 @@ button.numero-app {
 .botao-material { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-width: 96px; min-height: 72px; padding: 8px 10px; border-left: 4px solid var(--cor-material); }
 .botao-material[aria-pressed="true"] { background: color-mix(in srgb, var(--cor-material) 16%, var(--cartao, #fff)); border-color: var(--cor-material); color: var(--texto); }
 .botao-material[aria-pressed="true"] .icone-material { color: var(--cor-material); }
+.busca-arquivo .campos-linha { align-items: end; margin-bottom: 0; } .busca-arquivo .botao { flex: 0 0 auto; }
