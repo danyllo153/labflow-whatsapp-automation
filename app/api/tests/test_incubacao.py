@@ -124,3 +124,36 @@ def test_dia_com_muitas_amostras_ocupa_mais_de_um_bloco(cliente, dados, conexao)
     d9 = cliente.get("/incubacao", params={"dia": "2031-03-09"}).json()
     assert len(d9["amostras"]) > 4
     assert paginas[0]["linhas"] == 2 + -(-len(d9["amostras"]) // 4)  # 10 e 11 com 1 bloco cada, e o 09 com vários
+
+
+def _lugares(conexao):
+    return {d.isoformat(): (p, b, n) for d, p, b, n in conexao.execute("SELECT dia, pagina_id, bloco, blocos FROM app.incubacao_dias ORDER BY dia")}
+
+
+def test_dia_que_cresce_ganha_blocos_e_o_que_nao_cabe_vai_inteiro_para_a_proxima_folha(cliente, dados, conexao):
+    """26/10: a letra da descrição nunca diminui; o dia ocupa os blocos que precisar e, se não couber no resto da folha,
+    vai inteiro para a próxima. Folha impressa não muda."""
+    cliente.get("/laudos/incubacao")
+    antes = _lugares(conexao)
+    assert antes["2031-03-10"][1:] == (0, 1) and antes["2031-03-11"][1:] == (1, 1)
+
+    for t in range(200, 240):  # o dia 10 cresce depois de entrar na folha
+        _tanque(conexao, dados, str(t), "Normal", DIA, ("CT",))
+    cliente.get("/laudos/incubacao")
+    depois = _lugares(conexao)
+    blocos_10 = depois["2031-03-10"][2]
+    assert blocos_10 > 1 and depois["2031-03-11"][1] == blocos_10  # o 11 vem logo depois, na mesma folha
+    linhas = len(cliente.get("/incubacao", params={"dia": "2031-03-10"}).json()["amostras"])
+    assert blocos_10 == -(-linhas // 4)
+
+    for t in range(1001, 1600, 3):  # cresce (tanques não seguidos) até não caber o 11 junto: o 11 vai para a próxima folha
+        _tanque(conexao, dados, str(t), "Normal", DIA, ("CT",))
+    cliente.get("/laudos/incubacao")
+    fim = _lugares(conexao)
+    assert fim["2031-03-10"][2] == 7 and fim["2031-03-11"][0] != fim["2031-03-10"][0] and fim["2031-03-11"][1] == 0
+
+    folha = fim["2031-03-10"][0]
+    assert cliente.post(f"/laudos/incubacao/{folha}/impresso").status_code == 200
+    with pytest.raises(Exception, match="já foi impressa"):
+        with conexao.transaction():
+            conexao.execute("UPDATE app.incubacao_dias SET bloco = 0 WHERE dia = %s", (DIA,))

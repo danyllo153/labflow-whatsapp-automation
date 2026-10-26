@@ -54,6 +54,7 @@ class Celula:
     centro: bool = True
     tamanho: float = 8.5  # o mínimo pedido; sai em Times 11 quando a linha comporta
     fonte: str = FONTE
+    fixo: bool = False  # True: sai exatamente no tamanho pedido (ex.: a descrição da incubação, já quebrada nessa medida)
 
 
 @dataclass(frozen=True)
@@ -81,7 +82,7 @@ class Tabela:
 
 
 def _desenhar(c: canvas.Canvas, cel: Celula, altura: float = ALTURA) -> None:
-    inicio = tamanho_inicial(cel.tamanho, cel.base - cel.topo)
+    inicio = cel.tamanho if cel.fixo else tamanho_inicial(cel.tamanho, cel.base - cel.topo)
     tamanho = laudo_esterilizacao._caber(c, cel.texto, cel.x1 - cel.x0 - 4, inicio, fonte=cel.fonte)
     c.setFont(cel.fonte, tamanho)
     base = altura - (cel.topo + cel.base) / 2 - tamanho / 3  # altura da folha: A4 em pé ou deitado
