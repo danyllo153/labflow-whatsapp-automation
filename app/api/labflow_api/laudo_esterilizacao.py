@@ -116,8 +116,8 @@ def _modelo_de_demonstracao() -> bytes:
     return saida.getvalue()
 
 
-def _caber(c: canvas.Canvas, texto: str, largura: float, tamanho: float = 9.0, minimo: float = 5.0) -> float:
-    while tamanho > minimo and c.stringWidth(texto, "Helvetica", tamanho) > largura:
+def _caber(c: canvas.Canvas, texto: str, largura: float, tamanho: float = 9.0, minimo: float = 5.0, fonte: str = "Helvetica") -> float:
+    while tamanho > minimo and c.stringWidth(texto, fonte, tamanho) > largura:
         tamanho -= 0.5
     return tamanho
 
@@ -125,8 +125,8 @@ def _caber(c: canvas.Canvas, texto: str, largura: float, tamanho: float = 9.0, m
 def _escrever(c: canvas.Canvas, texto: str, coluna: int, linha: int, centro: bool = True) -> None:
     esquerda, direita = COLUNAS_X[coluna], COLUNAS_X[coluna + 1]
     largura = direita - esquerda - 4
-    tamanho = _caber(c, texto, largura)
-    c.setFont("Helvetica", tamanho)
+    tamanho = _caber(c, texto, largura, min(10.0, ALTURA_DA_LINHA * 0.78), fonte="Times-Roman")  # a letra do papel (25/10)
+    c.setFont("Times-Roman", tamanho)
     base = ALTURA - (TOPO_DAS_LINHAS + (linha + 1) * ALTURA_DA_LINHA) + (ALTURA_DA_LINHA - tamanho) / 2 + 0.8
     if centro:
         c.drawCentredString((esquerda + direita) / 2, base, texto)
