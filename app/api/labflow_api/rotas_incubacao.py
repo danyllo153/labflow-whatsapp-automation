@@ -47,8 +47,7 @@ roteador = APIRouter(prefix="/incubacao", tags=["incubação"])
 NOME = "incubacao"
 BLOCOS_POR_FOLHA = 7
 LINHAS_POR_BLOCO = 4
-FONTE_DA_DESCRICAO = 10.0  # Times 10 em todas as linhas da descrição (pedido de 26/10); o que não cabe vai para a de baixo
-MENOR_DESCRICAO = 6.0  # dia que cresceu depois de entrar na folha: o dia inteiro diminui junto até caber nas suas linhas
+FONTE_DA_DESCRICAO = 10.0  # Times 10 em todas as linhas da descrição, sempre (pedido de 26/10); o que não cabe vai para a de baixo
 LARGURA_DA_DESCRICAO = 170  # pontos úteis da coluna "Descrição das amostras" (176 menos as margens)
 DIAS_PARA_TRAS = 7  # na primeira vez, a folha começa uma semana antes de hoje (o que veio antes já está no papel)
 MEIOS = ("OSA", "PDA", "PCA", "Wort")
@@ -59,7 +58,6 @@ PONTOS_DA_AGUA = (("manifold", "MN"), ("camara4", "C4"), ("camara5", "C5"), ("ca
 class DiaDeIncubacao(BaseModel):
     dia: date
     amostras: list[str]  # as linhas da descrição, como saem no laudo
-    descricao: str = ""  # o texto inteiro (o laudo quebra de novo, menor, se o dia não couber nas linhas que já tem)
     meios: dict[str, str | None]  # meio -> lote em uso no dia ("-" quando o meio não foi usado; None = sem lote marcado)
     leituras: dict[str, date | None]  # "48h", "72h", "120h", "240h" -> dia da leitura (None = "-")
     na_folha: bool  # o dia já tem lugar numa folha do laudo
@@ -223,11 +221,19 @@ def montar_dia(con: psycopg.Connection, dia: date, na_folha: bool | None = None)
     leituras = {rotulo: (dia + timedelta(days=d) if any(m in usados for m in quais) else None) for rotulo, d, quais in LEITURAS}
     if na_folha is None:
         na_folha = con.execute("SELECT 1 FROM app.incubacao_dias WHERE dia = %s", (dia,)).fetchone() is not None
-    return DiaDeIncubacao(dia=dia, amostras=_linhas(texto), descricao=texto, meios=meios, leituras=leituras, na_folha=na_folha)
+    return DiaDeIncubacao(dia=dia, amostras=_linhas(texto), meios=meios, leituras=leituras, na_folha=na_folha)
+
+
+def _blocos(con: psycopg.Connection, dia: date) -> int:
+    """Quantos blocos o dia precisa: as linhas da descrição em Times 10, 4 por bloco (no máximo uma folha)."""
+    return min(BLOCOS_POR_FOLHA, max(1, math.ceil(len(montar_dia(con, dia, True).amostras) / LINHAS_POR_BLOCO)))
 
 
 def distribuir(con: psycopg.Connection) -> None:
-    """Põe nas folhas, na ordem, os dias que já fecharam e ainda não têm lugar. Trava para duas telas não dividirem um bloco."""
+    """Põe nas folhas, na ordem, os dias que já fecharam. Regra de 26/10: a letra da descrição não diminui; o dia ocupa os
+    blocos que precisar e, se não couber no resto da folha, vai inteiro para a próxima. Um dia que cresceu depois (amostra
+    registrada atrasada) faz o app refazer os lugares das folhas ainda não impressas (075); a folha impressa não muda.
+    Trava para duas telas não dividirem um bloco."""
     con.execute("SELECT pg_advisory_xact_lock(60, hashtext(%s))", (NOME,))
     hoje = _hoje(con)
     inicio = con.execute("SELECT min(dia) FROM app.incubacao_dias").fetchone()[0] or hoje - timedelta(days=DIAS_PARA_TRAS)
@@ -246,23 +252,31 @@ def distribuir(con: psycopg.Connection) -> None:
             {"inicio": inicio, "hoje": hoje},
         )
     ]
-    for dia in novos:
-        blocos = min(BLOCOS_POR_FOLHA, max(1, math.ceil(len(montar_dia(con, dia, True).amostras) / LINHAS_POR_BLOCO)))
-        ultima = con.execute(
-            """
-            SELECT p.id, coalesce(sum(d.blocos), 0) FROM app.paginas_laudo p LEFT JOIN app.incubacao_dias d ON d.pagina_id = p.id
-            WHERE p.laudo = %s AND p.impresso_em IS NULL GROUP BY p.id ORDER BY p.id DESC LIMIT 1
-            """,
-            (NOME,),
-        ).fetchone()
-        if ultima and ultima[1] + blocos <= BLOCOS_POR_FOLHA:
-            pagina_id, bloco = ultima
-        else:
-            pagina_id = con.execute("INSERT INTO app.paginas_laudo (laudo) VALUES (%s) RETURNING id", (NOME,)).fetchone()[0]
-            bloco = 0
+    # o que está nas folhas abertas (não impressas), na ordem das folhas e dos blocos
+    abertos = con.execute(
+        """
+        SELECT d.dia, d.pagina_id, d.bloco, d.blocos FROM app.incubacao_dias d
+        JOIN app.paginas_laudo p ON p.id = d.pagina_id AND p.impresso_em IS NULL
+        ORDER BY d.pagina_id, d.bloco
+        """
+    ).fetchall()
+    precisa = {dia: _blocos(con, dia) for dia in [a[0] for a in abertos] + novos}
+    if not novos and all(precisa[dia] == blocos for dia, _, _, blocos in abertos):
+        return
+    paginas = list(dict.fromkeys(pagina for _, pagina, _, _ in abertos))  # as folhas abertas, reaproveitadas na ordem
+    con.execute("DELETE FROM app.incubacao_dias WHERE dia = ANY(%s)", ([a[0] for a in abertos],))
+    pagina_id, usado = None, BLOCOS_POR_FOLHA
+    for dia in sorted(precisa):
+        blocos = precisa[dia]
+        if usado + blocos > BLOCOS_POR_FOLHA:  # não cabe no resto da folha: o dia inteiro vai para a próxima
+            pagina_id = paginas.pop(0) if paginas else con.execute(
+                "INSERT INTO app.paginas_laudo (laudo) VALUES (%s) RETURNING id", (NOME,)
+            ).fetchone()[0]
+            usado = 0
         con.execute(
-            "INSERT INTO app.incubacao_dias (dia, pagina_id, bloco, blocos) VALUES (%s, %s, %s, %s)", (dia, pagina_id, bloco, blocos)
+            "INSERT INTO app.incubacao_dias (dia, pagina_id, bloco, blocos) VALUES (%s, %s, %s, %s)", (dia, pagina_id, usado, blocos)
         )
+        usado += blocos
 
 
 @roteador.get("", response_model=DiaDeIncubacao)
@@ -289,12 +303,10 @@ DEMONSTRACAO = laudos.demonstracao(
 def _celulas_do_dia(dia: DiaDeIncubacao, bloco: int, blocos: int) -> list[laudos.Celula]:
     """O texto corre pelas linhas dos blocos do dia; cada bloco repete a data, os lotes e as leituras (continuação)."""
     cabem = blocos * LINHAS_POR_BLOCO
-    # um tamanho só para o dia inteiro: Times 10; se o dia cresceu depois de entrar na folha, diminui tudo junto até caber
+    # a descrição sai sempre em Times 10 (26/10): o dia já tem os blocos de que precisa (distribuir); só um dia maior que
+    # uma folha inteira (mais de 28 linhas) não cabe, e a última linha avisa o que ficou de fora
     tamanho, amostras = FONTE_DA_DESCRICAO, dia.amostras
-    while len(amostras) > cabem and tamanho > MENOR_DESCRICAO:
-        tamanho -= 0.5
-        amostras = _linhas(dia.descricao, tamanho)
-    if len(amostras) > cabem:  # nem no menor tamanho: a última linha avisa quanto ficou de fora
+    if len(amostras) > cabem:
         amostras = amostras[: cabem - 1] + [f"(+{len(amostras) - cabem + 1} linhas: ver o app)"]
     celulas = [
         dataclasses.replace(TABELA.celula(texto, bloco * LINHAS_POR_BLOCO + i, 0, centro=False, tamanho=tamanho), fixo=True)
