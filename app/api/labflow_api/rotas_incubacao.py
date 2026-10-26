@@ -26,6 +26,7 @@ Regras (PB10 e o padrão de escrita do Danyllo, 24/10):
   ganha linha a mais). Nome e Visto do responsável ficam em branco (à mão).
 """
 
+import dataclasses
 import math
 import re
 from datetime import date, timedelta
@@ -46,7 +47,8 @@ roteador = APIRouter(prefix="/incubacao", tags=["incubação"])
 NOME = "incubacao"
 BLOCOS_POR_FOLHA = 7
 LINHAS_POR_BLOCO = 4
-FONTE_DA_DESCRICAO = 7
+FONTE_DA_DESCRICAO = 10.0  # Times 10 em todas as linhas da descrição (pedido de 26/10); o que não cabe vai para a de baixo
+MENOR_DESCRICAO = 6.0  # dia que cresceu depois de entrar na folha: o dia inteiro diminui junto até caber nas suas linhas
 LARGURA_DA_DESCRICAO = 170  # pontos úteis da coluna "Descrição das amostras" (176 menos as margens)
 DIAS_PARA_TRAS = 7  # na primeira vez, a folha começa uma semana antes de hoje (o que veio antes já está no papel)
 MEIOS = ("OSA", "PDA", "PCA", "Wort")
@@ -57,6 +59,7 @@ PONTOS_DA_AGUA = (("manifold", "MN"), ("camara4", "C4"), ("camara5", "C5"), ("ca
 class DiaDeIncubacao(BaseModel):
     dia: date
     amostras: list[str]  # as linhas da descrição, como saem no laudo
+    descricao: str = ""  # o texto inteiro (o laudo quebra de novo, menor, se o dia não couber nas linhas que já tem)
     meios: dict[str, str | None]  # meio -> lote em uso no dia ("-" quando o meio não foi usado; None = sem lote marcado)
     leituras: dict[str, date | None]  # "48h", "72h", "120h", "240h" -> dia da leitura (None = "-")
     na_folha: bool  # o dia já tem lugar numa folha do laudo
@@ -189,12 +192,12 @@ def _amostras(con: psycopg.Connection, dia: date) -> tuple[str, set[str]]:
     return ("; ".join(grupos) + ".") if grupos else "", meios
 
 
-def _linhas(texto: str) -> list[str]:
-    """O texto em linhas que cabem na coluna da descrição (medidas na fonte do laudo), quebrando nos espaços; uma lista
-    sem espaço que não cabe ("Linhas: 1,2,3,...") quebra depois de uma vírgula."""
+def _linhas(texto: str, tamanho: float = FONTE_DA_DESCRICAO) -> list[str]:
+    """O texto em linhas que cabem na coluna da descrição (medidas na fonte e no tamanho do laudo), quebrando nos
+    espaços; uma lista sem espaço que não cabe ("Linhas: 1,2,3,...") quebra depois de uma vírgula."""
 
     def cabe(t: str) -> bool:
-        return stringWidth(t, "Helvetica", FONTE_DA_DESCRICAO) <= LARGURA_DA_DESCRICAO
+        return stringWidth(t, laudos.FONTE, tamanho) <= LARGURA_DA_DESCRICAO
 
     pedacos: list[tuple[str, bool]] = []  # (texto, vai colado no anterior)
     for palavra in texto.split():
@@ -220,7 +223,7 @@ def montar_dia(con: psycopg.Connection, dia: date, na_folha: bool | None = None)
     leituras = {rotulo: (dia + timedelta(days=d) if any(m in usados for m in quais) else None) for rotulo, d, quais in LEITURAS}
     if na_folha is None:
         na_folha = con.execute("SELECT 1 FROM app.incubacao_dias WHERE dia = %s", (dia,)).fetchone() is not None
-    return DiaDeIncubacao(dia=dia, amostras=_linhas(texto), meios=meios, leituras=leituras, na_folha=na_folha)
+    return DiaDeIncubacao(dia=dia, amostras=_linhas(texto), descricao=texto, meios=meios, leituras=leituras, na_folha=na_folha)
 
 
 def distribuir(con: psycopg.Connection) -> None:
@@ -286,11 +289,15 @@ DEMONSTRACAO = laudos.demonstracao(
 def _celulas_do_dia(dia: DiaDeIncubacao, bloco: int, blocos: int) -> list[laudos.Celula]:
     """O texto corre pelas linhas dos blocos do dia; cada bloco repete a data, os lotes e as leituras (continuação)."""
     cabem = blocos * LINHAS_POR_BLOCO
-    amostras = dia.amostras
-    if len(amostras) > cabem:  # o dia cresceu depois de entrar na folha: a última linha avisa quanto ficou de fora
+    # um tamanho só para o dia inteiro: Times 10; se o dia cresceu depois de entrar na folha, diminui tudo junto até caber
+    tamanho, amostras = FONTE_DA_DESCRICAO, dia.amostras
+    while len(amostras) > cabem and tamanho > MENOR_DESCRICAO:
+        tamanho -= 0.5
+        amostras = _linhas(dia.descricao, tamanho)
+    if len(amostras) > cabem:  # nem no menor tamanho: a última linha avisa quanto ficou de fora
         amostras = amostras[: cabem - 1] + [f"(+{len(amostras) - cabem + 1} linhas: ver o app)"]
     celulas = [
-        TABELA.celula(texto, bloco * LINHAS_POR_BLOCO + i, 0, centro=False, tamanho=FONTE_DA_DESCRICAO)
+        dataclasses.replace(TABELA.celula(texto, bloco * LINHAS_POR_BLOCO + i, 0, centro=False, tamanho=tamanho), fixo=True)
         for i, texto in enumerate(amostras)
     ]
     textos = [
