@@ -114,47 +114,45 @@ export default function Inicio() {
             )}
           </div>
 
-          {/* duas colunas no computador (26/10): o dia à esquerda; estufas, semana e atividades à direita */}
-          <div className="inicio-grade">
-            <div className="inicio-principal">
-              <CartaoAgora turno={turno} estufas={estufas} itens={dados.itens} />
-              {estufas && <AlertasEstufas alertas={estufas.alertas} />}
+          {/* em linhas (26/10): cada linha com as duas colunas da mesma altura, para não sobrar buraco na tela */}
+          <div className="inicio-linha inicio-linha-agora">
+            <CartaoAgora turno={turno} estufas={estufas} itens={dados.itens} />
+            <GraficoSemana />
+          </div>
+          {estufas && <AlertasEstufas alertas={estufas.alertas} />}
 
-              {filtro !== "todos" && (
-                <p className="filtro-ativo">
-                  Mostrando: <strong>{filtro === "Vence hoje" ? "para hoje" : filtro === "Atrasado" ? "atrasados" : "desvios"}</strong>{" "}
-                  <button type="button" className="link-botao" onClick={() => setFiltro("todos")}>
-                    Ver tudo
-                  </button>
-                </p>
-              )}
+          {filtro !== "todos" && (
+            <p className="filtro-ativo">
+              Mostrando: <strong>{filtro === "Vence hoje" ? "para hoje" : filtro === "Atrasado" ? "atrasados" : "desvios"}</strong>{" "}
+              <button type="button" className="link-botao" onClick={() => setFiltro("todos")}>
+                Ver tudo
+              </button>
+            </p>
+          )}
 
-              <BlocosDePendencias
-                itens={itens}
-                vazio={
-                  <>
-                    <p>{dados.itens.length === 0 ? "Nada vencendo hoje e nada atrasado." : "Nada neste filtro."}</p>
-                    {pessoa?.cargo === "Coletor" && <p className="texto-secundario">O Coletor vê aqui só as pendências de coleta.</p>}
-                  </>
-                }
-              />
-            </div>
+          <BlocosDePendencias
+            itens={itens}
+            vazio={
+              <>
+                <p>{dados.itens.length === 0 ? "Nada vencendo hoje e nada atrasado." : "Nada neste filtro."}</p>
+                {pessoa?.cargo === "Coletor" && <p className="texto-secundario">O Coletor vê aqui só as pendências de coleta.</p>}
+              </>
+            }
+          />
 
-            <div className="inicio-lado">
-              {estufas && (
-                <div className="cartao" aria-label="Estufas do turno" id="estufas">
-                  <h2>
-                    Estufas do turno{" "}
-                    <span className="contador">
-                      {estufas.resumo.conferidas} de {estufas.resumo.total}
-                    </span>
-                  </h2>
-                  <ConferenciaEstufas embutida aoMudar={setEstufas} />
-                </div>
-              )}
-              <GraficoSemana />
-              {turno && <AtividadesDoTurno />}
-            </div>
+          <div className="inicio-linha inicio-linha-turno">
+            {turno && <AtividadesDoTurno />}
+            {estufas && (
+              <div className="cartao estufas-do-turno" aria-label="Estufas do turno" id="estufas">
+                <h2>
+                  Estufas do turno{" "}
+                  <span className="contador">
+                    {estufas.resumo.conferidas} de {estufas.resumo.total}
+                  </span>
+                </h2>
+                <ConferenciaEstufas embutida dados={estufas} aoMudar={setEstufas} />
+              </div>
+            )}
           </div>
         </>
       )}

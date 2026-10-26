@@ -91,7 +91,7 @@ function Marca() {
           <path d="M9 3h6M10 3v6.5L4.6 18.2A1.8 1.8 0 0 0 6.1 21h11.8a1.8 1.8 0 0 0 1.5-2.8L14 9.5V3M7.5 15h9" />
         </svg>
       </span>
-      LabFlow
+      <span className="marca-nome">LabFlow</span>
     </div>
   );
 }

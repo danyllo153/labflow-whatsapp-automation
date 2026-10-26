@@ -35,6 +35,7 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 - **Ok e Não ok em ícone redondo** (25/10): nas estufas, os botões viraram o círculo verde com visto e o vermelho com X (cheio quando escolhido, contorno cinza quando não); a temperatura do Não ok fica ao lado. Nas Leituras, as marcas de lido e de fora do limite usam os mesmos ícones.
 
 ### Corrigido
+- **Início alinhado, sem buraco no meio** (26/10): a tela agora é montada em linhas, cada uma com as duas colunas da mesma altura: o cartão **Agora** ao lado do gráfico **Concluído na semana** (título e legenda em cima, colunas com a largura toda, sem rótulo torto); os blocos de pendências em duas colunas que se enchem por igual (no celular, uma só, na ordem de sempre); **Para fazer agora** ao lado das **Estufas do turno**, com linhas mais baixas e as atividades em duas colunas. As estufas não são lidas duas vezes. **TAB/Coliformes positivos no ano**: gráfico mais baixo e a lista do mês com cada load uma vez só (com quantas vezes deu positivo), rolando por dentro. No celular, o topo não passa mais da tela, e o avatar mostra as iniciais certas ("Vis (teste)" → VT)
 - **Leituras do dia: texto para o WhatsApp sem emoji** (25/10): o ✅ e o 🚨 chegavam como "�" ao compartilhar. O texto copiado e enviado leva só os números (as faixas juntas, `77001 (4-7)`) e o que fugiu do normal vai para **Atenção**, no fim da mensagem. Na tela as marcas continuam, e **cada bloco tem a cor da família** (Recebimento laranja, Embarque laranja-escuro, Tank farm verde-água, Navio azul).
 
 ### Adicionado

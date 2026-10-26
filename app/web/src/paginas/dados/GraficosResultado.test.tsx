@@ -3,7 +3,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import GraficoResultado, { coresDasSeries, estadoDo, faixaNormal, type PontoResultado } from "./GraficoResultado";
-import TabPositivos, { contarPorMes, type TabPositivo } from "./TabPositivos";
+import TabPositivos, { agruparPorReferencia, contarPorMes, type TabPositivo } from "./TabPositivos";
 
 function ponto(dia: number, valor: number, extra: Partial<PontoResultado> = {}): PontoResultado {
   return {
@@ -116,6 +116,19 @@ describe("TAB positivos no ano", () => {
     const c = contarPorMes(POSITIVOS);
     expect(c.get("AQA")![2]).toBe(1);
     expect(c.get("Sem fábrica")![6]).toBe(1);
+  });
+
+  it("o mesmo load aparece uma vez na lista do mês, com quantas vezes deu positivo", () => {
+    const mesmo = { fabrica: "AQA", origem: "Recebimento", referencia: "43100" };
+    const g = agruparPorReferencia([
+      { ...mesmo, data: "2026-03-09" },
+      { ...mesmo, data: "2026-03-04" },
+      { data: "2026-03-20", fabrica: "CON", origem: "Embarque", referencia: "NAVIO EXEMPLO 1 F2" },
+    ]);
+    expect(g.map((p) => [p.referencia, p.vezes, p.data, p.ultima])).toEqual([
+      ["43100", 2, "2026-03-04", "2026-03-09"],
+      ["NAVIO EXEMPLO 1 F2", 1, "2026-03-20", "2026-03-20"],
+    ]);
   });
 
   it("empilha por fábrica, filtra por fábrica e lista os positivos do mês", async () => {

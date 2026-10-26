@@ -8,5 +8,6 @@ describe("iniciais do avatar (APP-049)", () => {
     expect(iniciais("ana maria de souza")).toBe("AS");
     expect(iniciais("operador")).toBe("O");
     expect(iniciais(undefined)).toBe("?");
+    expect(iniciais("Vis (teste)")).toBe("VT");
   });
 });

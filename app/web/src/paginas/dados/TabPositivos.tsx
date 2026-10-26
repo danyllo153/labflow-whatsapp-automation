@@ -25,6 +25,21 @@ const MESES_EXTENSO = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho
 const CORES = ["#1f6fb5", "#e08a00", "#0f8b8d", "#7d5ba6", "#c2410c", "#5a6677", "#8a9a2b"];
 const SEM_FABRICA = "Sem fábrica";
 
+/** Os positivos do mês, um por load ou navio (o mesmo load com várias compostas positivas aparece uma vez, com o total). */
+export function agruparPorReferencia(positivos: TabPositivo[]): (TabPositivo & { vezes: number; ultima: string })[] {
+  const grupos = new Map<string, TabPositivo & { vezes: number; ultima: string }>();
+  for (const p of positivos) {
+    const chave = `${p.referencia}|${p.fabrica ?? ""}|${p.origem}`;
+    const g = grupos.get(chave);
+    if (g) {
+      g.vezes += 1;
+      if (p.data < g.data) g.data = p.data;
+      if (p.data > g.ultima) g.ultima = p.data;
+    } else grupos.set(chave, { ...p, vezes: 1, ultima: p.data });
+  }
+  return [...grupos.values()].sort((a, b) => b.vezes - a.vezes || a.data.localeCompare(b.data));
+}
+
 /** Quantos positivos por mês (0 a 11) e fábrica. */
 export function contarPorMes(positivos: TabPositivo[]): Map<string, number[]> {
   const contagem = new Map<string, number[]>();
@@ -177,15 +192,17 @@ export default function TabPositivos({
               <p className="texto-secundario">Nenhum {teste} positivo neste mês.</p>
             ) : (
               <ul>
-                {doMes.map((p, i) => (
-                  <li key={i}>
+                {agruparPorReferencia(doMes).map((p) => (
+                  <li key={`${p.referencia}|${p.fabrica}|${p.origem}`}>
                     <i className="quadrado" style={{ background: CORES[(FABRICAS.indexOf(p.fabrica ?? SEM_FABRICA) + CORES.length) % CORES.length] }} />
-                    <span>
+                    <span className="tab-positivo-texto">
                       <strong>{p.referencia}</strong>
                       <small>
-                        {formatar(p.data, "data")} · {p.fabrica ?? SEM_FABRICA} · {p.origem}
+                        {formatar(p.data, "data")}
+                        {p.ultima !== p.data && ` a ${formatar(p.ultima, "data")}`} · {p.fabrica ?? SEM_FABRICA} · {p.origem}
                       </small>
                     </span>
+                    {p.vezes > 1 && <span className="etiqueta etiqueta-nao-ok">{p.vezes}×</span>}
                   </li>
                 ))}
               </ul>

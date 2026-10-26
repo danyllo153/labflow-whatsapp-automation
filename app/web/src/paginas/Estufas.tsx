@@ -83,10 +83,18 @@ function nomeDaEstufa(id: number): string {
 /**
  * A conferência das estufas do turno, compacta (25/10): uma linha por estufa, com Ok / Não ok das duas leituras, e
  * "Todas as pendentes Ok" com um Confirmar. Fica no Início e no Turno; `embutida` não mostra erro nem os alertas
- * (a tela já mostra), só some se a lista não carregar.
+ * (a tela já mostra), só some se a lista não carregar. Com `dados` (o Início já leu as estufas), não lê de novo.
  */
-export function ConferenciaEstufas({ embutida = false, aoMudar }: { embutida?: boolean; aoMudar?: (d: DadosEstufas) => void }) {
-  const [dados, setDados] = useState<DadosEstufas | null>(null);
+export function ConferenciaEstufas({
+  embutida = false,
+  aoMudar,
+  dados: lidos,
+}: {
+  embutida?: boolean;
+  aoMudar?: (d: DadosEstufas) => void;
+  dados?: DadosEstufas;
+}) {
+  const [dados, setDados] = useState<DadosEstufas | null>(lidos ?? null);
   const [erro, setErro] = useState("");
 
   const mudar = useCallback(
@@ -107,8 +115,9 @@ export function ConferenciaEstufas({ embutida = false, aoMudar }: { embutida?: b
   }, []);
 
   useEffect(() => {
-    void carregar();
-  }, [carregar]);
+    if (lidos) setDados(lidos);
+    else void carregar();
+  }, [carregar, lidos]);
 
   if (embutida && erro) return null;
 
