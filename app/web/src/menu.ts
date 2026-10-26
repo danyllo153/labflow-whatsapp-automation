@@ -13,7 +13,8 @@ export const MENU: ItemDoMenu[] = [
   { caminho: "/turno", rotulo: "Turno", pronto: true },
   { caminho: "/paginas", rotulo: "Análises", pronto: true },
   { caminho: "/esterilizacao", rotulo: "Esterilização", pronto: true },
-  { caminho: "/relatorio-do-dia", rotulo: "Leituras", pronto: true, pode: "ver_paginas" }, // o relatório do dia, na barra do celular
+  { caminho: "/relatorio-do-dia", rotulo: "Leituras", pronto: true, pode: "ver_paginas" },
+  { caminho: "/paginas/coletas", rotulo: "Coletas", pronto: true, soNoMenuLateral: true }, // página própria (26/10), também do Coletor // o relatório do dia, na barra do celular
   { caminho: "/arquivo", rotulo: "Arquivo", pronto: true, pode: "ver_paginas", soNoMenuLateral: true }, // contra-amostras (PB21)
   { caminho: "/assistente", rotulo: "Assistente", pronto: false, tarefa: "Fase D", soNoMenuLateral: true },
   { caminho: "/admin/turnos", rotulo: "Turnos e estufas", pronto: true, pode: "configurar_turnos", soNoMenuLateral: true },

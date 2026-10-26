@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
 
 import { lerJson } from "../api";
 import { useSessao } from "../sessao";
@@ -14,7 +14,6 @@ import { ABAS_TANQUES } from "./analises/Tanques";
 import { ABAS_HOWARD, ABAS_TESTES } from "./analises/Testes";
 import { PAGINAS, VISUAL_DAS_PAGINAS, type DefinicaoDePagina } from "./dados/definicoes";
 import PaginaDeDados from "./dados/PaginaDeDados";
-import VisaoGeral from "./dados/VisaoGeral";
 
 /**
  * Páginas como tela de apps (Fase E, E1; rumo-do-app.md): cada análise é um "app" com o ícone, o nome e o estado do
@@ -67,8 +66,6 @@ const APPS_DA_FASE_E: Record<string, { caminho: string; atalhos: { aba: string; 
 };
 
 const APPS_FIXOS: App[] = [
-  { caminho: "/paginas/visao-geral", titulo: "Visão geral", icone: "visao-geral", cor: "geral", grupo: "Geral", semColetor: true,
-    descricao: "Números do período, pendências por bloco e os Não ok mais recentes." },
   { caminho: "/paginas/agua-processo", titulo: "Água do processo", icone: "agua", cor: "agua", grupo: "Aguas",
     descricao: "Manifold e Câmaras 4, 5 e 6: coleta, C.T. e B.L., e o laudo." },
   { caminho: "/paginas/baias", titulo: "Baias", icone: "baias", cor: "baias", grupo: "Aguas", semColetor: true,
@@ -271,7 +268,7 @@ export function ListaDePaginas() {
 /** /paginas/:pagina abre a página certa (a chave remonta a tela ao trocar de página). */
 export function PaginaEscolhida() {
   const { pagina } = useParams();
-  if (pagina === "visao-geral") return <VisaoGeral />;
+  if (pagina === "visao-geral") return <Navigate to="/" replace />; // a Visão geral saiu: o Início já mostra o dia (26/10)
   const def = PAGINAS.find((p) => p.caminho === pagina);
   if (!def) return <NaoEncontrada />;
   return <PaginaDeDados key={def.caminho} def={def} />;

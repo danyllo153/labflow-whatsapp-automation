@@ -27,8 +27,8 @@ describe("Painel do Início (APP-055)", () => {
   it("o gráfico mostra os 7 dias e os totais por tipo", async () => {
     servidorFalso({ "GET /painel/semana": () => ({ status: 200, corpo: SEMANA }) });
     emRota(<GraficoSemana />);
-    expect(await screen.findByRole("img", { name: /Concluído por dia na semana/ })).toBeInTheDocument();
-    expect(screen.getByText("sáb 24")).toBeInTheDocument();
+    const grafico = await screen.findByRole("img", { name: /Concluído por dia na semana/ });
+    expect(grafico.getAttribute("aria-label")).toContain("sáb 24");
     expect(screen.getByText("Total").nextSibling).toHaveTextContent("42");
   });
 

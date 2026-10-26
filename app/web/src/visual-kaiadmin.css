@@ -499,3 +499,190 @@ body {
     display: none;
   }
 }
+
+/* ---------- aba Resultados: a tabela dentro do app (26/10) ---------- */
+.barra-da-tabela {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 10px;
+}
+
+.barra-da-tabela h2 {
+  margin: 0;
+}
+
+.seletor-de-tabela {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.seletor-de-tabela button {
+  padding: 6px 14px;
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  background: var(--cartao);
+  color: var(--texto);
+  font: inherit;
+  font-size: 0.88rem;
+  cursor: pointer;
+}
+
+.seletor-de-tabela button[aria-pressed="true"] {
+  border-color: var(--acao);
+  background: var(--acao-fundo);
+  color: var(--acao);
+  font-weight: 600;
+}
+
+/* =================== compactar e aproveitar a tela (26/10, modelos InApp e kaiadmin) =================== */
+h1 {
+  font-size: 1.5rem;
+}
+
+.cartao {
+  padding: 14px 18px;
+  margin-bottom: 14px;
+}
+
+.faixa-pagina {
+  padding-top: 14px;
+  padding-bottom: 54px;
+}
+
+/* Início: os quatro números numa linha, em tom pastel, com o ícone num quadrado */
+.cartoes-numeros {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.cartoes-numeros .cartao-numero {
+  display: grid;
+  grid-template-columns: 42px 1fr;
+  grid-template-rows: auto auto;
+  column-gap: 12px;
+  align-items: center;
+  padding: 14px 16px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  text-align: left;
+  box-shadow: none;
+}
+
+.cartao-numero-icone {
+  grid-row: 1 / span 2;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 10px;
+  color: #fff;
+}
+
+.cartoes-numeros .cartao-numero .rotulo {
+  font-size: 0.85rem;
+  color: var(--texto);
+}
+
+.cartoes-numeros .cartao-numero .numero {
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.cartao-numero.bloco-azul { background: #eaf2fe; border-color: #cfe0fb; }
+.cartao-numero.bloco-azul .cartao-numero-icone { background: #1572e8; }
+.cartao-numero.bloco-laranja { background: #fdeeea; border-color: #f8d3c8; }
+.cartao-numero.bloco-laranja .cartao-numero-icone { background: #e8590c; }
+.cartao-numero.bloco-roxo { background: #f0eefc; border-color: #dcd7f6; }
+.cartao-numero.bloco-roxo .cartao-numero-icone { background: #6861ce; }
+.cartao-numero.bloco-verde { background: #e7f8ee; border-color: #c6ecd5; }
+.cartao-numero.bloco-verde .cartao-numero-icone { background: #1f9d55; }
+
+:root[data-tema="escuro"] .cartao-numero.bloco-azul,
+:root[data-tema="escuro"] .cartao-numero.bloco-laranja,
+:root[data-tema="escuro"] .cartao-numero.bloco-roxo,
+:root[data-tema="escuro"] .cartao-numero.bloco-verde {
+  background: var(--cartao);
+  border-color: var(--borda);
+}
+
+.cartoes-numeros .cartao-numero.ativo {
+  box-shadow: 0 0 0 2px var(--acao);
+}
+
+/* Início: duas colunas no computador */
+.inicio-grade {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+@media (min-width: 1180px) {
+  .inicio-grade {
+    grid-template-columns: minmax(0, 1.7fr) minmax(320px, 1fr);
+  }
+}
+
+/* pendências: os blocos lado a lado quando cabe, e linhas baixas, com os itens visíveis sem abrir */
+.grade-blocos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr));
+  gap: 14px;
+  align-items: start;
+}
+
+.grade-blocos > .cartao {
+  margin-bottom: 0;
+}
+
+.grupo-pendencia {
+  min-height: 38px;
+  padding: 6px 8px;
+}
+
+.grupo-nome {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.grupo-refs {
+  font-size: 0.78rem;
+  font-weight: 400;
+  color: var(--texto-secundario);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* listas de marcar (TAB, tanques, drops): em colunas no computador, para não rolar a tela */
+@media (min-width: 1100px) {
+  .lista-marcavel {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    column-gap: 18px;
+  }
+}
+
+.lista-marcavel li {
+  padding-top: 4px;
+  padding-bottom: 4px;
+}
+
+/* a barra de confirmar presa embaixo da tela também com o visual novo */
+.barra-acoes-fixa {
+  margin: 8px -18px -14px;
+  border-radius: 0 0 12px 12px;
+}
+
+.moldura .topo-celular .marca {
+  color: #fff;
+}

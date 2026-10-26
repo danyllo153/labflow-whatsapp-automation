@@ -14,7 +14,7 @@ import IconeApp from "./IconeApp";
  * a pessoa abriu ou fechou fica lembrado neste aparelho. No celular é o mesmo menu, numa gaveta.
  */
 
-const NO_TOPO = ["/", "/turno", "/relatorio-do-dia"];
+const NO_TOPO = ["/", "/turno", "/relatorio-do-dia", "/paginas/coletas"];
 const ICONE_DO_GRUPO: Record<Grupo, string> = {
   Geral: "visao-geral",
   NFC: "tanques",

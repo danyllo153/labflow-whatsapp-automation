@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 
 import { lerJson } from "../api";
 
@@ -13,7 +13,10 @@ export interface Semana {
   totais: Record<string, number>;
 }
 
-const CLASSE: Record<string, string> = { TAB: "serie-azul", Coliformes: "serie-laranja", NFC: "serie-verde", "C.T/B.L": "serie-marinho" };
+// as mesmas cores da legenda (classes serie-*), para o gráfico de colunas do Chart.js (26/10)
+const COR: Record<string, string> = { TAB: "#1572e8", Coliformes: "#f3802b", NFC: "#1aa39a", "C.T/B.L": "#6861ce" };
+const OUTRAS = ["#48abf7", "#f25961", "#ffad46"];
+const BarrasEmpilhadas = lazy(() => import("./BarrasEmpilhadas"));
 const DIAS = ["dom", "seg", "ter", "qua", "qui", "sex", "sáb"];
 
 function rotulo(dia: string): string {
@@ -30,33 +33,27 @@ export default function GraficoSemana() {
 
   if (!semana) return null;
   const total = semana.tipos.reduce((s, t) => s + semana.totais[t], 0);
-  const maior = Math.max(1, ...semana.dias.map((d) => semana.tipos.reduce((s, t) => s + d.contagens[t], 0)));
-  const descricao = semana.dias
+    const descricao = semana.dias
     .map((d) => `${rotulo(d.dia)}: ${semana.tipos.map((t) => `${d.contagens[t]} ${t}`).join(", ")}`)
     .join("; ");
 
   return (
     <section className="cartao grafico-semana" aria-label="Concluído na semana">
       <div className="grafico-semana-corpo">
-        <div className="grafico-semana-colunas" role="img" aria-label={`Concluído por dia na semana. ${descricao}`}>
-          {semana.dias.map((d) => (
-            <div key={d.dia} className="coluna-dia">
-              <div className="pilha" aria-hidden="true">
-                {[...semana.tipos].reverse().map((t) =>
-                  d.contagens[t] > 0 ? (
-                    <div key={t} className={`fatia ${CLASSE[t] ?? ""}`} style={{ height: `${(d.contagens[t] / maior) * 100}%` }} />
-                  ) : null,
-                )}
-              </div>
-              <span className="dia-rotulo">{rotulo(d.dia)}</span>
-            </div>
-          ))}
+        <div className="grafico-semana-colunas">
+          <Suspense fallback={<p className="carregando">Montando o gráfico...</p>}>
+            <BarrasEmpilhadas
+              rotulos={semana.dias.map((d) => rotulo(d.dia))}
+              series={semana.tipos.map((t, n) => ({ nome: t, cor: COR[t] ?? OUTRAS[n % OUTRAS.length], valores: semana.dias.map((d) => d.contagens[t]) }))}
+              descricao={`Concluído por dia na semana. ${descricao}`}
+            />
+          </Suspense>
         </div>
         <ul className="grafico-semana-legenda">
           <li className="legenda-titulo">Concluído nos últimos 7 dias</li>
-          {semana.tipos.map((t) => (
+          {semana.tipos.map((t, n) => (
             <li key={t}>
-              <span className={`ponto-legenda ${CLASSE[t] ?? ""}`} aria-hidden="true" />
+              <span className="ponto-legenda" style={{ background: COR[t] ?? OUTRAS[n % OUTRAS.length] }} aria-hidden="true" />
               <span className="legenda-nome">{t}</span>
               <span className="legenda-valor">{semana.totais[t]}</span>
             </li>

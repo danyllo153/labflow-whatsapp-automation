@@ -30,6 +30,12 @@ function dia(data: string | null): string {
   return `${d}/${mes}`;
 }
 
+/** Os primeiros tanques, lotes ou compostas do grupo numa linha, para ver sem precisar abrir (26/10). */
+function resumoDos(itens: Pendencia[]): string {
+  const nomes = [...new Set(itens.map((i) => i.item ?? i.referencia))];
+  return nomes.length > 4 ? `${nomes.slice(0, 4).join(", ")} e mais ${nomes.length - 4}` : nomes.join(", ");
+}
+
 function agrupar(lista: Pendencia[]): Grupo[] {
   const grupos = new Map<string, Grupo>();
   for (const p of lista) {
@@ -54,7 +60,7 @@ export default function BlocosDePendencias({ itens, vazio }: { itens: Pendencia[
   if (itens.length === 0) return <div className="cartao">{vazio}</div>;
 
   return (
-    <>
+    <div className="grade-blocos">
       {Object.entries(blocos).map(([bloco, lista]) => (
         <div className="cartao bloco-pendencias" key={bloco}>
           <h2>
@@ -73,7 +79,10 @@ export default function BlocosDePendencias({ itens, vazio }: { itens: Pendencia[
                     onClick={() => setAbertos({ ...abertos, [chave]: !aberto })}
                   >
                     <span className="grupo-numero">{g.itens.length}</span>
-                    <span className="grupo-nome">{g.nome}</span>
+                    <span className="grupo-nome">
+                      {g.nome}
+                      {!aberto && <span className="grupo-refs">{resumoDos(g.itens)}</span>}
+                    </span>
                     <span className="grupo-situacoes">
                       {g.atrasados > 0 && <span className="etiqueta etiqueta-nao-ok">{g.atrasados} atrasado{g.atrasados > 1 ? "s" : ""}</span>}
                       {g.hoje > 0 && <span className="etiqueta etiqueta-pendente">{g.hoje} para hoje</span>}
@@ -105,6 +114,6 @@ export default function BlocosDePendencias({ itens, vazio }: { itens: Pendencia[
           </ul>
         </div>
       ))}
-    </>
+    </div>
   );
 }

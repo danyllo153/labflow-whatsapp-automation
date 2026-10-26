@@ -49,34 +49,15 @@ function abrir(caminho: string, pessoa: any = ANA, extra: Record<string, unknown
 
 afterEach(() => vi.unstubAllGlobals());
 
-const VISAO = {
-  data_de: "2026-09-24",
-  data_ate: "2026-10-23",
-  numeros: [
-    { chave: "coletas", rotulo: "Coletas", valor: 66 },
-    { chave: "recebimento_nao_ok", rotulo: "Recebimento Não ok", valor: 12 },
-    { chave: "desvios_abertos", rotulo: "Desvios abertos (agora)", valor: 0 },
-  ],
-  pendencias: [
-    { bloco: "FCOJ Recebimento", vence_hoje: 2, atrasados: 23 },
-    { bloco: "Desvios", vence_hoje: 0, atrasados: 0 },
-  ],
-  serie: [
-    { dia: "2026-10-19", registradas: 4, nao_ok: 1 },
-    { dia: "2026-10-20", registradas: 9, nao_ok: 0 },
-    { dia: "2026-10-21", registradas: 2, nao_ok: 3 },
-  ],
-  alertas: [{ pagina: "tanques", caminho: "/paginas/tanques-terra/5", referencia: "Tanque 92", analise: "B.L Normal · Leitura final", resultado: "<1, 3, 12", data: "2026-10-20" }],
-};
 
 describe("todas as páginas do Power BI no app (APP-019)", () => {
   it("a lista agrupa em Geral, NFC e FCOJ, sem a página antiga de Tanques", async () => {
     abrir("/paginas");
     const principal = (await screen.findByRole("heading", { level: 1, name: "Análises" })).closest("section") as HTMLElement;
-    expect(within(principal).getAllByRole("heading", { level: 2 }).map((h) => h.textContent)).toEqual(["Geral", "NFC", "FCOJ (concentrado)", "TAB, Coliformes e Howard", "Águas e superfícies", "Registros diários"]);
+    expect(within(principal).getAllByRole("heading", { level: 2 }).map((h) => h.textContent)).toEqual(["NFC", "FCOJ (concentrado)", "TAB, Coliformes e Howard", "Águas e superfícies", "Registros diários"]);
     const grupo = (nome: string) => within(within(principal).getByRole("heading", { level: 2, name: nome }).parentElement as HTMLElement);
     const hrefs = (nome: string) => grupo(nome).getAllByRole("link").map((l) => l.getAttribute("href"));
-    expect(hrefs("Geral")).toEqual(["/paginas/visao-geral", "/paginas/coletas"]);
+    expect(within(principal).queryByRole("link", { name: /Visão geral|^Coletas/ })).toBeNull(); // a Visão geral saiu e Coletas está no menu (26/10)
     expect(hrefs("NFC")).toEqual(expect.arrayContaining(["/analises/tanques", "/analises/drops", "/analises/desvios", "/analises/recebimento-nfc"])); // apps da Fase E
     expect(hrefs("NFC").filter((h) => h === "/analises/tanques")).toHaveLength(1); // terra e navio num app só (25/10)
     expect(hrefs("FCOJ (concentrado)")).toEqual(["/analises/recebimento-fcoj", "/analises/embarque-fcoj"]); // viraram apps (Fase E)
@@ -87,11 +68,11 @@ describe("todas as páginas do Power BI no app (APP-019)", () => {
     expect(hrefs("Registros diários")).toEqual(["/esterilizacao", "/material-asseptico", "/meios-lotes", "/fluxo-laminar", "/arquivo", "/incubacao"]);
   });
 
-  it("o Coletor só vê Coletas e a água do processo (baias e linhas são análise, 25/10)", async () => {
+  it("o Coletor só vê a água do processo na grade (Coletas está no menu; baias e linhas são análise, 25/10)", async () => {
     abrir("/paginas", { ...ANA, cargo: "Coletor" });
     const principal = (await screen.findByRole("heading", { level: 1, name: "Análises" })).closest("section") as HTMLElement;
     expect(within(principal).getAllByRole("link").map((l) => l.getAttribute("href"))).toEqual([
-      "/paginas/coletas", "/paginas/agua-processo",
+      "/paginas/agua-processo",
     ]);
   });
 
@@ -130,50 +111,6 @@ describe("todas as páginas do Power BI no app (APP-019)", () => {
     });
     expect(await screen.findByText("Positivo")).toHaveClass("etiqueta-nao-ok");
     expect(screen.getByText("Negativo")).toHaveClass("etiqueta-ok");
-  });
-});
-
-describe("Visão geral (APP-019)", () => {
-  it("mostra os números, as pendências por bloco e os Não ok com link para a página", async () => {
-    abrir("/paginas/visao-geral", ANA, { "/paginas/visao-geral": VISAO });
-    expect(await screen.findByText("Período: 24/09/2026 a 23/10/2026 (últimos 30 dias)")).toBeInTheDocument();
-    expect(screen.getByText("66").closest(".cartao-numero")).toHaveTextContent("Coletas");
-    expect(screen.getByText("12").closest(".cartao-numero")).toHaveClass("alerta");
-    expect(screen.getByText("0", { selector: ".numero" }).closest(".cartao-numero")).not.toHaveClass("alerta");
-    expect(screen.getByRole("row", { name: "FCOJ Recebimento 2 23" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Tanque 92" })).toHaveAttribute("href", "/paginas/tanques-terra/5");
-  });
-
-  it("escolher o período põe no endereço e manda para a API", async () => {
-    const urls = abrir("/paginas/visao-geral", ANA, { "/paginas/visao-geral": VISAO });
-    const u = userEvent.setup();
-    await screen.findByText(/Período:/);
-    const form = screen.getByRole("form", { name: "Período" });
-    await u.type(within(form).getByLabelText("De"), "2026-10-01");
-    await u.type(within(form).getByLabelText("Até"), "2026-10-15");
-    await u.click(within(form).getByRole("button", { name: "Ver período" }));
-    expect(endereco).toBe("/paginas/visao-geral?data_de=2026-10-01&data_ate=2026-10-15");
-    expect(urls[urls.length - 1]).toBe("/paginas/visao-geral?data_de=2026-10-01&data_ate=2026-10-15");
-  });
-
-  it("sem Não ok no período diz isso", async () => {
-    abrir("/paginas/visao-geral", ANA, { "/paginas/visao-geral": { ...VISAO, alertas: [] } });
-    expect(await screen.findByText("Nenhum Não ok no período.")).toBeInTheDocument();
-  });
-
-  it("tem os gráficos de análises por dia e de Não ok por dia, como os painéis de LIMS (APP-032)", async () => {
-    abrir("/paginas/visao-geral", ANA, { "/paginas/visao-geral": VISAO });
-    const colunas = await screen.findByRole("region", { name: "Análises registradas por dia" });
-    expect(within(colunas).getByRole("img", { name: "Análises registradas por dia: 15 no período" })).toBeInTheDocument();
-    const linha = screen.getByRole("region", { name: "Não ok por dia" });
-    expect(within(linha).getByRole("img", { name: "Não ok por dia: 4 no período" })).toBeInTheDocument();
-  });
-
-  it("sem a série (resposta antiga), a Visão geral abre sem os gráficos", async () => {
-    const { serie: _, ...semSerie } = VISAO;
-    abrir("/paginas/visao-geral", ANA, { "/paginas/visao-geral": semSerie });
-    await screen.findByText(/^Período:/);
-    expect(screen.queryByRole("region", { name: "Não ok por dia" })).not.toBeInTheDocument();
   });
 });
 
