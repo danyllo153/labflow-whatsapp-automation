@@ -51,6 +51,8 @@ CASOS = [
     ("embarque", "SELECT count(*) FROM bi.contagens WHERE origem = 'Embarque' AND analise = 'C.T 48h'", {"analise": "C.T 48h"}),
     ("embarque", "SELECT count(*) FROM bi.contagens WHERE origem = 'Embarque' AND lido AND alarme", {"situacao": "Não ok"}),
     ("embarque", "SELECT count(*) FROM bi.contagens WHERE origem = 'Embarque' AND NOT lido AND situacao = 'Atrasado'", {"situacao": "Atrasado"}),
+    ("embarque", "SELECT count(*) FROM bi.contagens WHERE origem = 'Embarque' AND fabrica = 'AQA'", {"fabrica": "aqa"}),
+    ("recebimento-nfc", "SELECT count(*) FROM bi.recebimento_nfc WHERE fabrica = 'AQA'", {"fabrica": "AQA"}),
     ("testes", "SELECT count(*) FROM bi.testes", {}),
     ("testes", "SELECT count(*) FROM bi.testes WHERE teste = 'TAB' AND origem = 'Recebimento'", {"teste": "TAB", "origem": "Recebimento"}),
     ("testes", "SELECT count(*) FROM bi.testes WHERE resultado = 'Positivo'", {"resultado": "Positivo"}),
