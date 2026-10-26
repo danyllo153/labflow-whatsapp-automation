@@ -44,13 +44,18 @@
 - [ ] Se as pendências do piloto voltarem a acumular: `C:\Dev\estudos\ia\em-dia-2026-10-23.sql` (ensaio com `-v fim=ROLLBACK`; o `COMMIT` em massa o Danyllo roda no servidor)
 
 ### 📱 App (sessão da nuvem)
+- [ ] **▶ Padronizar as telas** (revisão de 26/10, o Danyllo escolhe a ordem): (1) cabeçalho único com ícone colorido, título, subtítulo e "← Análises" também nos Registros diários, Esterilização, Leituras, Arquivo e páginas de dados; (2) gráfico de resultado em Tanques (placas, limite da `limites_nfc`), Coliformes/Howard e Água/Baias/Linhas, tirando o Dashboard de contagem; (3) painel igual em todos os apps (Embarque abre no painel; "Não ok por fábrica/tanque"); (4) laudo sempre numa aba "Laudo"; (5) Imprimir/Excel sempre em ícone, ações da lista como botão ("abrir desvio" igual em Drops e Desvios), abas sublinhadas, cor dos números com regra (vermelho atrasado, laranja atenção, verde ok)
+- [ ] Mesclar e publicar o **#322** (cores do gráfico de resultado) quando o Danyllo pedir
+- [ ] Limites por análise para o gráfico (NFC recebido, tanques...): o Danyllo passa os valores; tabela com vigência no banco, valores fora do Git
+- [x] **Gráficos de resultado com Chart.js** (26/10, #320, no ar): Tendência no Recebimento FCOJ, Embarque e Recebimento NFC; TAB positivos no ano
+- [x] **Laudos que faltavam e contra-amostras** (26/10, #316, migration 076, no ar) e **Registros diários só em Análises, busca de load no Arquivo** (#315, no ar)
 - [ ] **"Análises a fazer hoje" com as pendências**, não só as leituras: TAB/Coliformes no caldo para espalhar/estriar, confirmatório, composta esperando TAB/Coliformes (obrigatório da 104), Stress de tanque e o atrasado de outro turno em vermelho (pedido de 25/10, detalhe no rumo)
-- [ ] **Esterilização com ícone e cor** em cada material (ponteira, meio, frasco, água de diluição, descarte, outro; pedido de 25/10)
-- [ ] **Página Arquivo** (caixas, vencido em vermelho, arquivar e descartar) e os **laudos por caixa**, pela migration 105 do bot
+- [x] **Esterilização com ícone e cor** em cada material (ponteira, meio, frasco, água de diluição, descarte, outro; pedido de 25/10)
+- [x] **Página Arquivo** (caixas, vencido em vermelho, arquivar e descartar) e os **laudos por caixa** (25 e 26/10, #305 e #316), pela migration 105 do bot
 - [x] **Pedidos de 25/10 (29 itens) e o visual novo** (APP-065 a APP-067, #282, #283 e a leva 3): menu escuro com ícones, Análises com ícone e cor
   por família, Excel/Imprimir em ícone, IT, atividades com a caixa, TAB/Coliformes/Howard separados, Wort numa linha, compostas no Registrar,
   sininho, <10 no FCOJ, Relatório do dia, Dashboard, branco automático, incubação sem lotes; no ar em 25/10 (`6c041c3`, com o #285)
-- [ ] **Laudos novos** (modelos recebidos em 25/10; detalhe na tabela "Laudos automáticos" do rumo): Recebimento NFC (mesmo modelo do FCOJ, item 129), NFC de tanques e navios, Embarque, TAB, Coliformes e Howard; drops e estufas não têm laudo
+- [x] **Laudos novos** (26/10, #316, migration 076; modelos recebidos em 25/10; detalhe na tabela "Laudos automáticos" do rumo): Recebimento NFC (mesmo modelo do FCOJ, item 129), NFC de tanques e navios, Embarque, TAB, Coliformes e Howard; drops e estufas não têm laudo
 - [ ] Mostrar como pendência só o **Coliformes obrigatório** (`vw_coliformes_pendentes.obrigatorio`, migration 104 do bot)
 - [ ] **Recuperar lote apagado do recebimento** pelo Admin (`recuperar_recebimento`, 036)
 - [ ] Botões **Criar TAB** e **Criar Howard** na composta do embarque, quando o bot fizer o PB20
