@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 
 import { enviarJson, lerJson } from "../../api";
 import { AbasDaPagina, CabecalhoDaPagina, useAba } from "../../componentes/CabecalhoDaPagina";
 import Instrucao, { type AppComInstrucao } from "./Instrucao";
+import { PAGINAS, type DefinicaoDePagina } from "../dados/definicoes";
+import PaginaDeDados from "../dados/PaginaDeDados";
 
 /**
  * Base dos apps de análise da Fase E (APP-061): a moldura com as abas, a prévia com o Confirmar e as listas marcáveis.
@@ -352,19 +354,34 @@ export function useMarcados<K>() {
   };
 }
 
+/** A aba Resultados (26/10): a tabela completa ali mesmo, com busca, filtros, gráfico, Excel e impressão; quando o app
+ * tem mais de uma tabela, pílulas escolhem qual (?tabela= no endereço, junto com a aba). */
 export function Resultados({ paginas }: { paginas: { caminho: string; titulo: string; descricao: string }[] }) {
+  const [params, setParams] = useSearchParams();
+  const defs = paginas
+    .map((p) => ({ ...p, def: PAGINAS.find((d) => `/paginas/${d.caminho}` === p.caminho) }))
+    .filter((p): p is typeof p & { def: DefinicaoDePagina } => !!p.def);
+  if (defs.length === 0) return null;
+  const escolhida = defs.find((p) => p.def.caminho === params.get("tabela")) ?? defs[0];
   return (
-    <div className="cartao">
-      <h2>Resultados</h2>
-      <p className="texto-secundario">As tabelas completas, com pesquisa, filtros, Excel e impressão.</p>
-      <ul className="lista-links-app">
-        {paginas.map((p) => (
-          <li key={p.caminho}>
-            <Link to={p.caminho}>{p.titulo}</Link> <span className="texto-secundario">· {p.descricao}</span>
-          </li>
-        ))}
-      </ul>
-    </div>
+    <>
+      {defs.length > 1 && (
+        <div className="seletor-de-tabela" role="group" aria-label="Qual tabela">
+          {defs.map((p) => (
+            <button
+              key={p.caminho}
+              type="button"
+              aria-pressed={p === escolhida}
+              title={p.descricao}
+              onClick={() => setParams({ aba: params.get("aba") ?? "resultados", tabela: p.def.caminho })}
+            >
+              {p.titulo}
+            </button>
+          ))}
+        </div>
+      )}
+      <PaginaDeDados key={escolhida.def.caminho} def={escolhida.def} embutida />
+    </>
   );
 }
 

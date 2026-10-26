@@ -50,7 +50,6 @@ export const VISUAL_DAS_PAGINAS: Record<string, { icone: string; cor: string; ti
   tanques: { icone: "tanques", cor: "nfc" },
   navios: { icone: "tanques", cor: "nfc" },
   testes: { icone: "tab", cor: "tab" },
-  "visao-geral": { icone: "visao-geral", cor: "geral" },
 };
 
 export const FABRICAS = ["AQA", "CON", "COL", "UCH", "ITA", "TMG"]; // fábricas travadas (decisão de 14/10)
@@ -58,6 +57,7 @@ export const FABRICAS = ["AQA", "CON", "COL", "UCH", "ITA", "TMG"]; // fábricas
 export const PAGINAS: DefinicaoDePagina[] = [
   {
     caminho: "coletas",
+    oculta: true, // tem item próprio no menu lateral (26/10), fora dos grupos de análise
     grupo: "Geral",
     titulo: "Coletas",
     descricao: "Coletas de tanques de terra e de navio, com quem coletou e quem digitou.",

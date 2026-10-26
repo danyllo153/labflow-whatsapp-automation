@@ -233,7 +233,7 @@ export default function RelatorioDoDia() {
         </>
       )}
       {ehHoje && pend && (
-        <details className="cartao" open={pend.atrasados > 0}>
+        <details className="cartao" open>
           <summary>
             O que falta ler: {pend.vence_hoje} para hoje, {pend.atrasados} atrasado{pend.atrasados === 1 ? "" : "s"}
           </summary>

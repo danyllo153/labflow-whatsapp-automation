@@ -141,6 +141,21 @@ describe("apps de análise da Fase E (E3 a E8)", () => {
     expect(screen.queryByRole("form", { name: "Registrar embarque" })).toBeNull();
   });
 
+  it("Resultados mostra a tabela ali mesmo, com pílulas quando o app tem mais de uma (26/10)", async () => {
+    const pagina = (linhas: object[]) => () => ({ status: 200, corpo: { total: linhas.length, pagina: 1, por_pagina: 50, linhas } });
+    abrir("/analises/drops?aba=resultados", {
+      "GET /analises/drops/abertos": () => ({ status: 200, corpo: [] }),
+      "GET /analises/drops/desvios": () => ({ status: 200, corpo: [] }),
+      "GET /paginas/drops?pagina=1&por_pagina=50": pagina([{ tanque: "T85", drop: "D5", situacao: "Concluído" }]),
+      "GET /paginas/desvios?pagina=1&por_pagina=50": pagina([]),
+    });
+    expect(await screen.findByRole("columnheader", { name: "Drop" })).toBeInTheDocument();
+    expect(screen.getByText("T85")).toBeInTheDocument();
+    expect(within(screen.getByRole("main")).queryByRole("link", { name: "Drops" })).toBeNull(); // não é mais um link para outra página
+    await userEvent.click(screen.getByRole("button", { name: "Desvios" }));
+    expect(await screen.findByText("Nenhum registro com esses filtros.")).toBeInTheDocument();
+  });
+
   it("Embarque abre no painel, como o Recebimento FCOJ: números e Não ok por navio", async () => {
     abrir("/analises/embarque-fcoj", {
       "GET /analises/embarque/amostras": () => ({ status: 200, corpo: [] }),

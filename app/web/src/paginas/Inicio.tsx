@@ -98,28 +98,14 @@ export default function Inicio() {
 
       {dados && (
         <>
-          <CartaoAgora turno={turno} estufas={estufas} itens={dados.itens} />
-
-          {estufas && <AlertasEstufas alertas={estufas.alertas} />}
-          {estufas && (
-            <div className="cartao" aria-label="Estufas do turno" id="estufas">
-              <h2>
-                Estufas do turno{" "}
-                <span className="contador">
-                  {estufas.resumo.conferidas} de {estufas.resumo.total}
-                </span>
-              </h2>
-              <ConferenciaEstufas embutida aoMudar={setEstufas} />
-            </div>
-          )}
-
           <div className="cartoes-numeros">
-            <CartaoNumero cor="azul" rotulo="Para hoje" valor={dados.vence_hoje} ativo={filtro === "Vence hoje"} onClick={() => escolher("Vence hoje")} />
-            <CartaoNumero cor="laranja" rotulo="Atrasados" valor={dados.atrasados} ativo={filtro === "Atrasado"} alerta={dados.atrasados > 0} onClick={() => escolher("Atrasado")} />
-            <CartaoNumero rotulo="Desvios abertos" valor={dados.desvios_abertos} ativo={filtro === "Desvios"} onClick={() => escolher("Desvios")} />
+            <CartaoNumero cor="azul" icone="hoje" rotulo="Para hoje" valor={dados.vence_hoje} ativo={filtro === "Vence hoje"} onClick={() => escolher("Vence hoje")} />
+            <CartaoNumero cor="laranja" icone="atrasado" rotulo="Atrasados" valor={dados.atrasados} ativo={filtro === "Atrasado"} alerta={dados.atrasados > 0} onClick={() => escolher("Atrasado")} />
+            <CartaoNumero cor="roxo" icone="desvio" rotulo="Desvios abertos" valor={dados.desvios_abertos} ativo={filtro === "Desvios"} onClick={() => escolher("Desvios")} />
             {turno && (
               <CartaoNumero
                 cor="verde"
+                icone="feito"
                 rotulo="Feito no turno"
                 valor={turno.feito_no_turno.total}
                 ativo={false}
@@ -128,28 +114,48 @@ export default function Inicio() {
             )}
           </div>
 
-          <GraficoSemana />
+          {/* duas colunas no computador (26/10): o dia à esquerda; estufas, semana e atividades à direita */}
+          <div className="inicio-grade">
+            <div className="inicio-principal">
+              <CartaoAgora turno={turno} estufas={estufas} itens={dados.itens} />
+              {estufas && <AlertasEstufas alertas={estufas.alertas} />}
 
-          {turno && <AtividadesDoTurno />}
+              {filtro !== "todos" && (
+                <p className="filtro-ativo">
+                  Mostrando: <strong>{filtro === "Vence hoje" ? "para hoje" : filtro === "Atrasado" ? "atrasados" : "desvios"}</strong>{" "}
+                  <button type="button" className="link-botao" onClick={() => setFiltro("todos")}>
+                    Ver tudo
+                  </button>
+                </p>
+              )}
 
-          {filtro !== "todos" && (
-            <p className="filtro-ativo">
-              Mostrando: <strong>{filtro === "Vence hoje" ? "para hoje" : filtro === "Atrasado" ? "atrasados" : "desvios"}</strong>{" "}
-              <button type="button" className="link-botao" onClick={() => setFiltro("todos")}>
-                Ver tudo
-              </button>
-            </p>
-          )}
+              <BlocosDePendencias
+                itens={itens}
+                vazio={
+                  <>
+                    <p>{dados.itens.length === 0 ? "Nada vencendo hoje e nada atrasado." : "Nada neste filtro."}</p>
+                    {pessoa?.cargo === "Coletor" && <p className="texto-secundario">O Coletor vê aqui só as pendências de coleta.</p>}
+                  </>
+                }
+              />
+            </div>
 
-          <BlocosDePendencias
-            itens={itens}
-            vazio={
-              <>
-                <p>{dados.itens.length === 0 ? "Nada vencendo hoje e nada atrasado." : "Nada neste filtro."}</p>
-                {pessoa?.cargo === "Coletor" && <p className="texto-secundario">O Coletor vê aqui só as pendências de coleta.</p>}
-              </>
-            }
-          />
+            <div className="inicio-lado">
+              {estufas && (
+                <div className="cartao" aria-label="Estufas do turno" id="estufas">
+                  <h2>
+                    Estufas do turno{" "}
+                    <span className="contador">
+                      {estufas.resumo.conferidas} de {estufas.resumo.total}
+                    </span>
+                  </h2>
+                  <ConferenciaEstufas embutida aoMudar={setEstufas} />
+                </div>
+              )}
+              <GraficoSemana />
+              {turno && <AtividadesDoTurno />}
+            </div>
+          </div>
         </>
       )}
 
@@ -157,13 +163,21 @@ export default function Inicio() {
   );
 }
 
-// cor: os blocos coloridos do visual repaginado (24/10); sem cor, o cartão é branco
+const ICONES_DO_NUMERO = {
+  hoje: "M4 5h16v16H4zM8 3v4M16 3v4M4 10h16",
+  atrasado: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v5l3 2",
+  desvio: "M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01",
+  feito: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM8 12l3 3 5-6",
+};
+
+// cor: cartões em tom pastel com o ícone num quadrado (visual de 26/10, modelo InApp)
 function CartaoNumero(props: {
   rotulo: string;
   valor: number;
   ativo: boolean;
   alerta?: boolean;
-  cor?: "azul" | "laranja" | "verde";
+  cor?: "azul" | "laranja" | "verde" | "roxo";
+  icone: keyof typeof ICONES_DO_NUMERO;
   onClick: () => void;
 }) {
   return (
@@ -171,10 +185,16 @@ function CartaoNumero(props: {
       type="button"
       className={`cartao-numero${props.cor ? ` bloco-${props.cor}` : ""}${props.ativo ? " ativo" : ""}${props.alerta ? " alerta" : ""}`}
       aria-pressed={props.ativo}
+      aria-label={`${props.valor} ${props.rotulo}`}
       onClick={props.onClick}
     >
-      <span className="numero">{props.valor}</span>
+      <span className="cartao-numero-icone" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d={ICONES_DO_NUMERO[props.icone]} />
+        </svg>
+      </span>
       <span className="rotulo">{props.rotulo}</span>
+      <span className="numero">{props.valor}</span>
     </button>
   );
 }
