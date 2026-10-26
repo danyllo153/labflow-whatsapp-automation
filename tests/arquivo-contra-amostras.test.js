@@ -1,7 +1,7 @@
 'use strict';
 
 // Arquivo de contra-amostras (PB21, migration 105, spec docs/specs/lims/11-arquivo-contra-amostras.md): consultas, arquivar o
-// recebimento numa caixa (121 a 145) e descartar (Admin e Analista, com sim). As regras moram nas funções do banco, ensaiadas
+// recebimento numa caixa (121 a 153 desde a 108, PB23) e descartar (Admin e Analista, com sim). As regras moram nas funções do banco, ensaiadas
 // no servidor em bloco desfeito (com a carga inicial da planilha, fora do Git). Aqui o comando, a resposta e a migration.
 
 const test = require('node:test');
@@ -102,4 +102,32 @@ test('migration 105: caixas, reserva do navio, prazos, descarte por Admin e Anal
   const d = mig('105_arquivo_contra_amostras_desfazer.sql');
   assert.match(d, /DROP TRIGGER IF EXISTS arquivo_reservar_caixa ON navios;/);
   assert.match(d, /DROP TABLE IF EXISTS arquivo_recebimento, arquivo_navios, arquivo_caixas, arquivo_familias;/);
+});
+
+test('PB23 (108): caixas do recebimento de 121 a 153; de 154 em diante é navio', () => {
+  for (const n of ['121', '146', '150', '153']) {
+    assert.deepEqual(dados(interpretar(`caixa ${n}`)), { acao: 'arquivo_consulta', consulta: 'caixa', tipo: 'recebimento', numero: n }, n);
+  }
+  for (const n of ['120', '154', '165']) {
+    assert.deepEqual(dados(interpretar(`caixa ${n}`)), { acao: 'arquivo_consulta', consulta: 'caixa', tipo: 'navio', numero: n }, n);
+  }
+  assert.equal(dados(interpretar('arquivei load 43599 lotes 1-3 caixa 153', { cargo: 'Analista' })).caixa, '153');
+  assert.doesNotMatch(JSON.stringify(workflow), /121 a 145/);
+
+  const m = mig('108_caixas_recebimento_153.sql');
+  assert.match(m, /DELETE FROM arquivo_caixas WHERE tipo = 'navio' AND numero BETWEEN 146 AND 153;/);
+  assert.match(m, /UPDATE arquivo_familias SET caixa_de = 154 WHERE caixa_de BETWEEN 146 AND 153 AND caixa_ate >= 154;/);
+  assert.match(m, /generate_series\(146, 153\)/);
+  assert.match(m, /IF EXISTS \(SELECT 1 FROM arquivo_navios WHERE caixa BETWEEN 146 AND 153\) THEN/, 'nada guardado se perde');
+  assert.match(m, /v_num BETWEEN 121 AND 153 THEN 'recebimento'/);
+  assert.equal((m.match(/121 a 153/g) || []).length, 4, 'título, comentário e as duas mensagens');
+  assert.doesNotMatch(m.slice(m.indexOf('CREATE OR REPLACE')), /145/, 'as funções sem o número antigo');
+  assert.doesNotMatch(m, /O\.(SEA|WAVE|SUN|STAR|OCEAN|BLOSSOM)/, 'as famílias reais ficam fora do Git');
+  for (const f of ['arquivo_arquivar_recebimento', 'arquivo_descartar', 'arquivo_consulta']) {
+    assert.ok(m.includes(`CREATE OR REPLACE FUNCTION ${f}(`), f);
+  }
+  assert.match(m, /^BEGIN;[\s\S]*COMMIT;\s*$/m);
+  const d = mig('108_caixas_recebimento_153_desfazer.sql');
+  assert.match(d, /IF EXISTS \(SELECT 1 FROM arquivo_recebimento WHERE caixa BETWEEN 146 AND 153\) THEN/);
+  assert.match(d, /UPDATE arquivo_familias SET caixa_de = 146 WHERE caixa_de = 154;/);
 });

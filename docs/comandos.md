@@ -988,7 +988,7 @@ Pedido PB21 (spec [`specs/lims/11-arquivo-contra-amostras.md`](specs/lims/11-arq
 
 - **Tanque terra:** o bag de cada coleta vai para a caixa com o **número do tanque** (34 a 49) e vence em **1 ano**.
 - **Navio:** cada navio e viagem tem **uma caixa**, reservada sozinha (a próxima livre da família do navio) quando o navio é cadastrado pela primeira coleta ou embarque. Nela ficam os **potes de NFC** (um por tanque do navio, 1 ano) e as **amostras de FCOJ do embarque** (uma linha por linha e fase, com os loads e a quantidade, **2 anos**). A caixa só é descartada **inteira**, quando tudo venceu (a maior data).
-- **Recebimento de FCOJ:** caixas **121 a 145**, informadas pelo analista; vence **7 dias** depois de arquivado. A sugestão é a caixa em uso mais recente ou a primeira livre desde a 121.
+- **Recebimento de FCOJ:** caixas **121 a 153** (eram 121 a 145 até a migration `108`, PB23), informadas pelo analista; vence **7 dias** depois de arquivado. A sugestão é a caixa em uso mais recente ou a primeira livre desde a 121.
 
 ```
 o que posso descartar hoje?
@@ -1004,8 +1004,8 @@ descartei bags do tanque 35
 ```
 
 - As consultas respondem direto (também para o Consultor). **Arquivar** e **descartar** mostram o que vai mudar e pedem **sim** (Admin e Analista). Nada é apagado: o item fica como descartado, com quem e quando, e a caixa volta a ficar disponível.
-- Caixa de **121 a 145** é do recebimento; outro número é de navio; o tanque sempre com a palavra `tanque`.
-- Recusas: lote não recebido, lote que já está em outra caixa, caixa fora de 121-145, caixa do navio que ainda não venceu (`libera em dd/mm/aaaa`), nada vencido na caixa.
+- Caixa de **121 a 153** é do recebimento; outro número é de navio; o tanque sempre com a palavra `tanque`.
+- Recusas: lote não recebido, lote que já está em outra caixa, caixa fora de 121-153, caixa do navio que ainda não venceu (`libera em dd/mm/aaaa`), nada vencido na caixa.
 - `quais bags posso descartar hoje` agora mostra também os bags que venceram antes de hoje.
 - Para o app: views `vw_arquivo_caixas` (situação Disponível / Em uso / **Vencida**) e `vw_arquivo_itens` (situação Arquivado / **Vencido** / Descartado), funções `arquivo_arquivar_recebimento(quem, load, item, lotes, caixa, data, previa)`, `arquivo_descartar(quem, tipo, numero, previa)` e `arquivo_caixa_recebimento_sugerida()`.
 - As famílias de navio e as faixas reais entram pela **carga inicial** (gerada da planilha do laboratório, fora do Git); o que já tinha vencido na planilha entra como descartado. Exemplo fictício: `db/seeds/arquivo_exemplo.sql`.
