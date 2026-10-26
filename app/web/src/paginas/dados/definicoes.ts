@@ -27,7 +27,7 @@ export interface DefinicaoDePagina {
   filtros: Filtro[];
   impressao: "em pé" | "deitado"; // 07: em pé para listas estreitas, deitado para tabelas largas
   semColetor?: boolean; // 07: o Coletor não vê esta página
-  grafico?: "g2"; // 07 §6: gráfico da página (G2 no Recebimento)
+  resultado?: { tipo: "tendencia"; data: string } | { tipo: "tab" }; // gráfico de resultado no lugar do Dashboard (26/10)
   grupo: "Geral" | "NFC" | "FCOJ" | "Testes"; // como a lista de páginas agrupa (pedidos de 23 e 24/10)
   oculta?: boolean; // não aparece na lista, mas o endereço continua abrindo (links antigos)
   linkDaLinha?: (linha: Record<string, unknown>) => string; // tocar na linha abre a página do item
@@ -73,7 +73,7 @@ export const PAGINAS: DefinicaoDePagina[] = [
     api: "/paginas/recebimento",
     impressao: "deitado",
     semColetor: true,
-    grafico: "g2",
+    resultado: { tipo: "tendencia", data: "data da leitura" },
     colunas: [
       { chave: "load", rotulo: "Load", principal: true },
       { chave: "lote", rotulo: "Lote" },
@@ -205,6 +205,7 @@ export const PAGINAS: DefinicaoDePagina[] = [
     titulo: "Embarque FCOJ",
     descricao: "Concentrado embarcado: C.T e B.L das amostras por navio, linha e fase.",
     api: "/paginas/embarque",
+    resultado: { tipo: "tendencia", data: "data da leitura" },
     impressao: "deitado",
     semColetor: true,
     colunas: [
@@ -236,6 +237,7 @@ export const PAGINAS: DefinicaoDePagina[] = [
     grupo: "Testes",
     titulo: "TAB",
     fixos: { teste: "TAB" },
+    resultado: { tipo: "tab" },
     descricao: "TAB por composta, lote e tanque: no caldo, estriado, incubado, em confirmação, resultado e próxima etapa.",
     api: "/paginas/testes",
     impressao: "deitado",
@@ -365,6 +367,7 @@ export const PAGINAS: DefinicaoDePagina[] = [
     titulo: "Recebimento NFC",
     descricao: "Lotes de NFC recebidos: fresh e pasteurizado, diluição e C.T/B.L já multiplicados.",
     api: "/paginas/recebimento-nfc",
+    resultado: { tipo: "tendencia", data: "recebido em" },
     impressao: "deitado",
     semColetor: true,
     colunas: [
