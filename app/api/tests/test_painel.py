@@ -1,6 +1,6 @@
 """APP-055: o gráfico da semana e o cartão das folhas dos laudos (visual repaginado). Dados fictícios."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import pytest
 
@@ -40,7 +40,10 @@ def test_semana_conta_o_que_foi_concluido_no_dia(cliente, logado):
 
 def test_folhas_mostra_a_folha_em_preenchimento_com_o_caminho(cliente, logado):
     logado()
-    cliente.post("/aguas/superficies", json={"tipo": "Linha", "pontos": ["4", "6"], "dia": datetime.now(FUSO).date().isoformat(), "hora": "07:10"})
+    # ontem: hoje às 07:10 ainda é futuro quando o teste roda de madrugada (o app recusa a hora no futuro)
+    ontem = (datetime.now(FUSO) - timedelta(days=1)).date().isoformat()
+    r = cliente.post("/aguas/superficies", json={"tipo": "Linha", "pontos": ["4", "6"], "dia": ontem, "hora": "07:10"})
+    assert r.status_code in (200, 201), r.text
     folhas = {f["laudo"]: f for f in cliente.get("/painel/folhas").json()}
     linha = folhas["superficies-Linha"]
     assert (linha["caminho"], linha["capacidade"], linha["cheias"]) == ("/paginas/linhas", 31, 0)
