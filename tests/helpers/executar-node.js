@@ -35,6 +35,7 @@ function interpretar(texto, opcoes = {}) {
     audio = null, // segundos: simula um audio do WhatsApp (sem texto)
     imagem = null, // { caption }: simula uma foto do WhatsApp (sem texto)
     transcrito = false, // texto que voltou da transcricao de um audio (labflowAudio)
+    apelidos = null, // { apelido: nome oficial } da navio_apelidos (106), como vem do BD · Buscar usuários
   } = opcoes;
 
   const webhook = {
@@ -50,7 +51,7 @@ function interpretar(texto, opcoes = {}) {
     },
   };
 
-  const usuarios = cadastrado ? [{ Numero: numero, Nome: nome, Nivel: cargo }] : [];
+  const usuarios = cadastrado ? [{ Numero: numero, Nome: nome, Nivel: cargo, ...(apelidos ? { _apelidosNavio: apelidos } : {}) }] : [];
 
   const $ = (nomeDoNode) => {
     if (nomeDoNode !== 'Webhook WhatsApp') {

@@ -785,3 +785,16 @@ button.numero-app {
   .pagina-arquivo .numeros-app, .pagina-arquivo .dias-material, .pagina-arquivo .grade-caixas, .pagina-arquivo .arquivar-recebimento, .acoes-caixa { display: none; }
 }
 .acoes-caixa > * { flex: 0 0 auto; }
+/* Esterilização (25/10): cada material com o seu ícone e a sua cor (as mesmas do gráfico, --g4-0 a --g4-5) */
+.material-cor-0 { --cor-material: var(--g4-0); }
+.material-cor-1 { --cor-material: var(--g4-1); }
+.material-cor-2 { --cor-material: var(--g4-2); }
+.material-cor-3 { --cor-material: var(--g4-3); }
+.material-cor-4 { --cor-material: var(--g4-4); }
+.material-cor-5 { --cor-material: var(--g4-5); }
+.icone-material { color: var(--cor-material); flex: none; vertical-align: -4px; }
+.icone-material .icone-liquido { fill: currentColor; stroke: none; opacity: 0.55; }
+.icone-material circle { fill: currentColor; }
+.botao-material { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-width: 96px; min-height: 72px; padding: 8px 10px; border-left: 4px solid var(--cor-material); }
+.botao-material[aria-pressed="true"] { background: color-mix(in srgb, var(--cor-material) 16%, var(--cartao, #fff)); border-color: var(--cor-material); color: var(--texto); }
+.botao-material[aria-pressed="true"] .icone-material { color: var(--cor-material); }
