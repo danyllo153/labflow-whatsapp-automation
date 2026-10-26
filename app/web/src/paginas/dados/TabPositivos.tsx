@@ -9,7 +9,7 @@ import { formatar } from "./formatos";
 ChartJS.register(BarController, CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
 /**
- * TAB positivos no ano (pedido de 26/10): colunas por mês, empilhadas por fábrica (cada uma com a sua cor).
+ * TAB e Coliformes positivos no ano (pedido de 26/10): colunas por mês, empilhadas por fábrica (cada uma com a sua cor).
  * Tocar na coluna lista os positivos do mês (load ou navio, data e fábrica). Filtro por ano e por fábrica.
  */
 
@@ -37,7 +37,13 @@ export function contarPorMes(positivos: TabPositivo[]): Map<string, number[]> {
   return contagem;
 }
 
-export default function TabPositivos({ aoDesenhar }: { aoDesenhar?: (canvas: HTMLCanvasElement | null) => void }) {
+export default function TabPositivos({
+  teste = "TAB",
+  aoDesenhar,
+}: {
+  teste?: "TAB" | "Coliformes";
+  aoDesenhar?: (canvas: HTMLCanvasElement | null) => void;
+}) {
   const esteAno = new Date().getFullYear();
   const [ano, setAno] = useState(esteAno);
   const [fabrica, setFabrica] = useState("");
@@ -49,7 +55,7 @@ export default function TabPositivos({ aoDesenhar }: { aoDesenhar?: (canvas: HTM
   useEffect(() => {
     let vivo = true;
     setPositivos(null);
-    lerJson<TabPositivo[]>(`/paginas/tab/positivos?ano=${ano}${fabrica ? `&fabrica=${fabrica}` : ""}`).then(
+    lerJson<TabPositivo[]>(`/paginas/testes/positivos?teste=${teste}&ano=${ano}${fabrica ? `&fabrica=${fabrica}` : ""}`).then(
       (d) => {
         if (vivo) {
           setPositivos(d);
@@ -61,7 +67,7 @@ export default function TabPositivos({ aoDesenhar }: { aoDesenhar?: (canvas: HTM
     return () => {
       vivo = false;
     };
-  }, [ano, fabrica]);
+  }, [ano, fabrica, teste]);
 
   useEffect(() => {
     aoDesenhar?.(grafico.current?.canvas ?? null);
@@ -94,10 +100,10 @@ export default function TabPositivos({ aoDesenhar }: { aoDesenhar?: (canvas: HTM
   };
 
   return (
-    <section className="cartao grafico-resultado" aria-label="TAB positivos no ano">
+    <section className="cartao grafico-resultado" aria-label={`${teste} positivos no ano`}>
       <div className="dashboard-topo">
         <div>
-          <h2>TAB positivos no ano</h2>
+          <h2>{teste} positivos no ano</h2>
           <span className="texto-secundario">
             {positivos ? `${positivos.length} ${positivos.length === 1 ? "positivo" : "positivos"} em ${ano}` : "..."} · toque numa coluna
           </span>
@@ -147,7 +153,7 @@ export default function TabPositivos({ aoDesenhar }: { aoDesenhar?: (canvas: HTM
                 })),
               }}
               options={opcoes}
-              aria-label={`TAB positivos por mês em ${ano}: ${positivos.length}`}
+              aria-label={`${teste} positivos por mês em ${ano}: ${positivos.length}`}
               role="img"
             />
           </div>
@@ -168,7 +174,7 @@ export default function TabPositivos({ aoDesenhar }: { aoDesenhar?: (canvas: HTM
               {MESES_EXTENSO[mes]} · {doMes.length} {doMes.length === 1 ? "positivo" : "positivos"}
             </h3>
             {doMes.length === 0 ? (
-              <p className="texto-secundario">Nenhum TAB positivo neste mês.</p>
+              <p className="texto-secundario">Nenhum {teste} positivo neste mês.</p>
             ) : (
               <ul>
                 {doMes.map((p, i) => (
