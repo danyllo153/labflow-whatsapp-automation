@@ -220,15 +220,13 @@ def _gerar(con: psycopg.Connection, pagina_id: int, modelo: bytes | None) -> byt
                   laudo_esterilizacao.primeiro_nome(quem)]
         for i, texto in enumerate(textos):
             celulas.append(TABELA.celula(texto, n, i, tamanho=11))
-    impressa = con.execute("SELECT impresso_em IS NOT NULL FROM app.paginas_laudo WHERE id = %s", (pagina_id,)).fetchone()[0]
-    traco = TABELA.traco_das_vazias(len(linhas)) if impressa else None
-    return laudos.preencher(modelo, DEMONSTRACAO, celulas, riscos=[traco] if traco else None)
+    return laudos.preencher(modelo, DEMONSTRACAO, celulas)  # o traço da folha impressa é do motor (laudos.baixar_pdf)
 
 
 laudos.registrar(
     laudos.Laudo(
         nome="fluxo-laminar", titulo="Controle de meio de cultura e fluxo laminar", modelo="fluxo-laminar", capacidade=TABELA.linhas,
         contar_sql="SELECT count(*), min(dia), max(dia) FROM app.fluxo_laminar WHERE pagina_id = %s",
-        gerar=_gerar,
+        gerar=_gerar, traco=TABELA,
     )
 )

@@ -539,6 +539,6 @@ for _tipo in ("Baia", "Linha"):
             nome=f"superficies-{_tipo}", titulo=f"Limpeza de superfícies · {'baias' if _tipo == 'Baia' else 'linhas'}",
             modelo="limpeza-superficies", capacidade=TABELA_SUPERFICIE.linhas,
             contar_sql="SELECT count(*), min(coletada_em), max(coletada_em) FROM app.coletas_superficie WHERE pagina_id = %s AND excluida_em IS NULL",
-            gerar=_gerar_superficie,
+            gerar=_gerar_superficie, traco=TABELA_SUPERFICIE,
         )
     )

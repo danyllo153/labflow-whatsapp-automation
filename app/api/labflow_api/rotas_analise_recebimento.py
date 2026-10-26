@@ -651,7 +651,7 @@ laudos.registrar(
             SELECT count(*), min(r.data_recebimento), max(r.data_recebimento)
             FROM app.recebimento_laudo x JOIN recebimento_lotes r ON r.id = x.recebimento_lote_id WHERE x.pagina_id = %s
         """,
-        gerar=_gerar_laudo, aceitar_modelo=modelo_deitado_valido, preparar=distribuir_lotes,
+        gerar=_gerar_laudo, aceitar_modelo=modelo_deitado_valido, preparar=distribuir_lotes, traco=TABELA,
     )
 )
 
@@ -732,6 +732,6 @@ laudos.registrar(
             SELECT count(*), min(r.data_recebimento), max(r.data_recebimento)
             FROM app.recebimento_nfc_laudo x JOIN recebimento_nfc r ON r.id = x.recebimento_nfc_id WHERE x.pagina_id = %s
         """,
-        gerar=_gerar_laudo_nfc, aceitar_modelo=modelo_deitado_valido, preparar=distribuir_lotes_nfc,
+        gerar=_gerar_laudo_nfc, aceitar_modelo=modelo_deitado_valido, preparar=distribuir_lotes_nfc, traco=TABELA,
     )
 )

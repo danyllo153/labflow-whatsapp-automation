@@ -4,6 +4,23 @@ import { lerJson } from "../api";
 import { useSessao } from "../sessao";
 import { dm } from "../componentes/SeletorDeDias";
 import { hojeEmSaoPaulo, Numeros, PreviaDaGravacao, SoQuemGrava, useGravacao } from "./analises/comum";
+import LaudoEsterilizacao from "./LaudoEsterilizacao";
+
+// Os laudos da contra-amostra (26/10), como o papel: a folha impressa fecha com o traço nas linhas vazias.
+const LAUDO_CONTRA_EMBARQUE = {
+  base: "/laudos/contra-embarque",
+  titulo: "Laudo da contra-amostra do embarque",
+  rotulo: "Laudo da contra-amostra do embarque",
+  explicacao: "Uma folha por caixa de navio: os loads de FCOJ (com a quantidade de amostras) e os potes de NFC dos tanques, com a data de descarte; o navio vai em letra grande na Observação.",
+  unidade: "linhas",
+};
+const LAUDO_CONTRA_RECEBIMENTO = {
+  base: "/laudos/contra-recebimento",
+  titulo: "Laudo da contra-amostra do recebimento",
+  rotulo: "Laudo da contra-amostra do recebimento",
+  explicacao: "Uma folha corrida, na ordem em que os loads foram arquivados: caixa, load, lotes e a data de descarte.",
+  unidade: "loads",
+};
 
 /**
  * Arquivo de contra-amostras (PB21, migration 105 do bot; spec 11): as caixas de navio, do recebimento (121 a 145) e dos
@@ -134,8 +151,10 @@ export default function ArquivoDeContraAmostras() {
           {aba === "recebimento" && (
             <SoQuemGrava pode={pode}>
               <ArquivarRecebimento sugerida={dados.sugerida_recebimento} aoGravar={() => void carregar()} />
+              <LaudoEsterilizacao versao={0} config={LAUDO_CONTRA_RECEBIMENTO} />
             </SoQuemGrava>
           )}
+          {aba === "navio" && pode && <LaudoEsterilizacao versao={0} config={LAUDO_CONTRA_EMBARQUE} />}
           {escolhida && <ConteudoDaCaixa caixa={escolhida} pode={pode} aoFechar={() => setEscolhida(null)} aoMudar={() => void carregar()} />}
           {daAba.length === 0 ? (
             <p className="texto-secundario">{aba === "vencidas" ? "Nada vencido: nenhuma caixa para descartar." : "Nenhuma caixa cadastrada."}</p>

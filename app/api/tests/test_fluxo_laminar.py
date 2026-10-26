@@ -75,11 +75,11 @@ def test_laudo_le_cada_placa_no_seu_dia_e_fecha_a_folha_com_o_traco(cliente, log
 
     pagina = cliente.get("/laudos/fluxo-laminar").json()["paginas"][0]
     riscos = []
-    original = laudos.preencher
-    monkeypatch.setattr(laudos, "preencher", lambda *a, **k: riscos.append(k.get("riscos")) or original(*a, **k))
+    original = laudos.riscar  # o traço da folha impressa é do motor (26/10: regra de todo documento)
+    monkeypatch.setattr(laudos, "riscar", lambda pdf, r: riscos.append(r) or original(pdf, r))
     cliente.get(f"/laudos/fluxo-laminar/{pagina['id']}/pdf")
-    assert riscos[-1] is None  # folha aberta: sem traço
+    assert riscos == []  # folha aberta: sem traço
     cliente.post(f"/laudos/fluxo-laminar/{pagina['id']}/impresso")
     texto = PdfReader(io.BytesIO(cliente.get(f"/laudos/fluxo-laminar/{pagina['id']}/pdf").content)).pages[0].extract_text()
-    assert riscos[-1] and len(riscos[-1]) == 1  # impressa: o traço que fecha as linhas vazias
+    assert len(riscos) == 1 and len(riscos[0]) == 1  # impressa: o traço que fecha as linhas vazias
     assert "19.10.2026" in texto and "<1|<1" in texto

@@ -18,6 +18,7 @@ import {
   useMarcados,
 } from "./comum";
 import { ABAS_FINAIS } from "./Instrucao";
+import { ABA_LAUDO, AbaLaudo } from "./LaudoDoApp";
 
 /**
  * TAB, Coliformes e Howard (Fase E, E4; funções da 043), desde 25/10 (APP-066) em três apps, um para cada (pedido do
@@ -49,12 +50,14 @@ export const ABAS_TESTES = [
   { aba: "para-fazer", rotulo: "Para fazer" },
   { aba: "caldo", rotulo: "Caldo" },
   { aba: "resultados", rotulo: "Resultados" },
+  ABA_LAUDO,
   ...ABAS_FINAIS,
 ];
 
 export const ABAS_HOWARD = [
   { aba: "howard", rotulo: "Lançar" },
   { aba: "resultados", rotulo: "Resultados" },
+  ABA_LAUDO,
   ...ABAS_FINAIS,
 ];
 
@@ -155,6 +158,7 @@ export default function Testes({ qual }: { qual: QualTeste }) {
             </SoQuemGrava>
           )}
           {aba === "resultados" && <Resultados paginas={[app.pagina]} />}
+          {aba === "laudo" && <AbaLaudo laudo={howard ? "howard" : qual === "TAB" ? "tab" : "coliformes"} />}
         </>
       )}
     </AppDeAnalise>
