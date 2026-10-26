@@ -1,0 +1,218 @@
+/*
+ * Menu lateral por análise (26/10), inspirado nos modelos kaiadmin e Dash UI (licença MIT): seções em letra pequena,
+ * grupos que abrem e fecham, cada análise com o seu ícone na cor da família. No celular, o mesmo menu numa gaveta.
+ * As cores definitivas ficam para a leva das cores.
+ */
+.menu-lateral-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.menu-navegacao {
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  padding-bottom: 12px;
+}
+
+.menu-navegacao .item-menu {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 8px 10px;
+  margin-bottom: 2px;
+  border: none;
+  border-radius: 6px;
+  background: none;
+  color: #eaf2fb;
+  font: inherit;
+  font-size: 0.93rem;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.menu-navegacao .item-menu:hover,
+.menu-filho:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.menu-navegacao .item-menu.active {
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+  font-weight: 600;
+}
+
+.menu-navegacao .item-rotulo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.menu-grupo-botao .icone svg {
+  width: 18px;
+  height: 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.menu-grupo.com-ativo > .menu-grupo-botao {
+  color: #fff;
+  font-weight: 600;
+}
+
+.menu-seta {
+  transition: transform 0.15s;
+  opacity: 0.7;
+}
+
+.menu-grupo-botao[aria-expanded="true"] .menu-seta {
+  transform: rotate(180deg);
+}
+
+.menu-secao {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin: 16px 10px 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+.menu-secao-link {
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.menu-filhos {
+  list-style: none;
+  margin: 0 0 6px;
+  padding: 2px 0 2px 14px;
+}
+
+.menu-filho {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  color: #d5dde8;
+  font-size: 0.88rem;
+  text-decoration: none;
+}
+
+.menu-filho.active {
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  font-weight: 600;
+}
+
+.menu-filho-icone {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 7px;
+  color: #fff;
+}
+
+.menu-filho-icone svg {
+  width: 14px;
+  height: 14px;
+}
+
+.fechar-gaveta {
+  display: none;
+}
+
+.barra-baixo button.item-barra {
+  border: none;
+  background: none;
+  font: inherit;
+  cursor: pointer;
+}
+
+/* celular e tablet pequeno: o menu vira uma gaveta que entra pela esquerda */
+@media (max-width: 899px) {
+  .menu-lateral {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    inset: 0 auto 0 0;
+    z-index: 60;
+    width: min(300px, 86vw);
+    padding: max(14px, env(safe-area-inset-top, 0px)) 8px 14px max(8px, env(safe-area-inset-left, 0px));
+    background: var(--menu-fundo);
+    color: #fff;
+    transform: translateX(-105%);
+    visibility: hidden;
+    transition: transform 0.2s ease, visibility 0.2s;
+    overflow: hidden;
+  }
+
+  .menu-lateral.aberta {
+    transform: none;
+    visibility: visible;
+  }
+
+  .menu-lateral .marca {
+    padding: 2px 10px 12px;
+    color: #fff;
+  }
+
+  .fechar-gaveta {
+    display: inline-flex;
+    color: #fff;
+  }
+
+  .gaveta-fundo {
+    position: fixed;
+    inset: 0;
+    z-index: 55;
+    background: rgba(10, 16, 28, 0.5);
+  }
+
+  .menu-navegacao .item-menu,
+  .menu-filho {
+    min-height: 44px; /* do tamanho do dedo */
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .menu-lateral,
+  .menu-seta {
+    transition: none;
+  }
+}
+
+/* o botão de abrir a gaveta só existe no celular; no computador o menu está sempre à vista */
+@media (min-width: 900px) {
+  .topo-celular > .botao-icone[aria-controls="menu-lateral"] {
+    display: none;
+  }
+}
+
+@media (max-width: 899px) {
+  .fechar-gaveta {
+    background: transparent;
+    border-color: rgba(255, 255, 255, 0.25);
+  }
+
+  /* na gaveta o espaço é do menu (o cartão da "Próxima folha" fica só no computador, como antes) */
+  .menu-lateral .cartao-folhas {
+    display: none;
+  }
+}
