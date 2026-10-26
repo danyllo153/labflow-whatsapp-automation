@@ -62,7 +62,7 @@ export default function IncubacaoLeitura() {
   return (
     <section className="pagina-material">
       <p className="voltar">
-        <Link to="/registros-diarios">← Registros diários</Link>
+        <Link to="/paginas">← Análises</Link>
       </p>
       <h1>Incubação e leitura</h1>
       <p className="texto-secundario">

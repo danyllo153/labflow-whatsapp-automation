@@ -62,7 +62,7 @@
 - [x] **Aviso de amostra pulada** (24/10, APP-059): na prévia do registro e no Painel do Recebimento, até o lote chegar; sem "finalizar load" (decisão de 24/10)
 - [x] **Fase E, E3 a E8** (24/10, APP-061): apps de Tanques, TAB/Coliformes/Howard, Drops, Embarque, Recebimento NFC e Desvios, pelas funções da 042 a 047
 - [x] **E9, Instrução e vídeo** (24/10, APP-062, migration 071): abas Instrução e Vídeo em todos os apps; o Admin escreve a instrução e cola o link do vídeo (versões no banco)
-- [ ] Escrever a instrução de cada app no app, como Admin (precisa do Danyllo); os vídeos serão feitos depois por IA a partir dela
+- [ ] Escrever a instrução de cada app no app, como Admin (o Danyllo vai escrever, combinado em 26/10); os vídeos serão feitos depois por IA a partir dela
 - [x] Botões dos destaques do Início ligados aos apps novos (24/10): "Espalhei todos", "Lançar leituras" etc. abrem o app na aba certa, com a lista marcada e o Confirmar
 - [x] **Fase E, E1 e E2** (24/10, APP-057, migration 068): Páginas como tela de apps e o Recebimento FCOJ como app (painel, registrar e lançar pelas funções da 040). Próximo: E3 em diante, um app por análise, conforme o bot entregar PB12 a PB17
 - [x] **Marcos 3 e 4 mesclados** (23/10): turno com atividades fixas, relatório e encerrar (#181, #183, #185), esterilização com o G4 (#188), estufas (#189), Admin de turnos/atividades/estufas (#190) e **corrigir/excluir/recuperar coleta pelo app** (APP-029, #191)
@@ -89,7 +89,7 @@
 - [ ] Foto de **embarque com resultados** (grava só se o embarque existe; riscado não vale)
 - [ ] Foto de **NFC com placa acima do limite** (ver o 🚨 e o comando de desvio)
 - [ ] Testar o **Coletor** com um celular real
-- [ ] **Perguntar ao laboratório** se "10 x 3" ou outra notação aparece na diluição (hoje não é aceita)
+- [x] **Perguntar ao laboratório** se "10 x 3" ou outra notação aparece na diluição: não escrevem (Danyllo, 26/10); nada a fazer
 
 ### 🛠️ Infra e piloto
 - [ ] **Power BI online com gateway** (decidido 16/10, precisa do Danyllo): no desktop, publicar o `.pbip` em "Meu workspace" (conta da faculdade), instalar o gateway em modo pessoal, credenciais do `labflow_leitura` e atualização agendada (até 8/dia); ver pelo app.powerbi.com e pelo app do celular. Não compartilhar nem "Publicar na Web". Na migração para a empresa, apagar o painel e o modelo publicados junto com a limpeza dos dados. **Não salvar** o `.pbip` depois de abrir (o Desktop tira o `$schema` dos arquivos)
