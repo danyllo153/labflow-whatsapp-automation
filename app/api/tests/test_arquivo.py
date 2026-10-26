@@ -72,3 +72,18 @@ def test_arquivar_recebimento_previa_confirmar_e_descartar(cliente, logado, hoje
 def test_caixa_que_nao_existe(cliente, logado):
     logado()
     assert cliente.get("/arquivo/recebimento/999").status_code == 404
+
+
+def test_caixa_do_recebimento_so_vence_inteira_e_a_busca_pelo_load(cliente, logado, hoje):
+    """26/10: um load vencido sozinho não põe a caixa em "Para descartar"; só quando todos venceram. A busca acha o load."""
+    logado()
+    _receber(cliente, "98811", "1-3", hoje - timedelta(days=9))
+    _receber(cliente, "98812", "1-3", hoje - timedelta(days=1))
+    for load, dias in (("98811", 8), ("98812", 1)):
+        r = cliente.post("/arquivo/arquivar", json={"load": load, "lotes": "1-3", "caixa": 143, "data": str(hoje - timedelta(days=dias)), "previa": False})
+        assert r.status_code == 200, r.text
+    caixa = next(c for c in cliente.get("/arquivo").json()["caixas"] if c["tipo"] == "recebimento" and c["numero"] == 143)
+    assert caixa["situacao"] == "Em uso" and caixa["itens_vencidos"] == 1
+    assert caixa["descarte_em"] == str(hoje + timedelta(days=6))  # a data do último load a vencer
+    achados = cliente.get("/arquivo/busca", params={"load": "98812"}).json()
+    assert [(a["tipo"], a["caixa"], a["lotes"]) for a in achados] == [("recebimento", 143, "1-3")]
