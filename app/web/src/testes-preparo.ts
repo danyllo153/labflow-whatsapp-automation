@@ -12,4 +12,4 @@ function graficoFalso(props: { data: { datasets: { label?: string; data: unknown
     "data-series": JSON.stringify(props.data.datasets.map((d) => [d.label, d.data.length])),
   });
 }
-vi.mock("react-chartjs-2", () => ({ Chart: graficoFalso, Bar: graficoFalso, Line: graficoFalso }));
+vi.mock("react-chartjs-2", () => ({ Chart: graficoFalso, Bar: graficoFalso, Line: graficoFalso, Doughnut: graficoFalso }));

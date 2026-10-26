@@ -86,7 +86,8 @@ describe("entrar (APP-013)", () => {
     await u.type(await screen.findByLabelText("Usuário"), "  Ana.Souza ");
     await u.type(screen.getByLabelText("Senha"), "Senha-certa-1");
     await u.click(screen.getByRole("button", { name: "Entrar" }));
-    expect(await screen.findByText(/Olá, Ana Souza/)).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Início" })).toBeInTheDocument();
+    expect(screen.getByText("Ana", { selector: ".saudacao-topo b" })).toBeInTheDocument();
     expect(api.chamadas.find((c) => c.rota === "POST /login")?.corpo).toEqual({ usuario: "Ana.Souza", senha: "Senha-certa-1" });
   });
 
@@ -205,7 +206,8 @@ describe("criar a senha depois da provisória (APP-013)", () => {
     await u.type(await screen.findByLabelText("Senha nova"), "Senha-nova-123");
     await u.type(screen.getByLabelText("Repita a senha nova"), "Senha-nova-123");
     await u.click(screen.getByRole("button", { name: "Salvar a senha" }));
-    expect(await screen.findByText(/Olá, Ana Souza/)).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Início" })).toBeInTheDocument();
+    expect(screen.getByText("Ana", { selector: ".saudacao-topo b" })).toBeInTheDocument();
     expect(api.chamadas.find((c) => c.rota === "POST /trocar-senha")?.corpo).toEqual({ nova_senha: "Senha-nova-123", senha_atual: null });
   });
 

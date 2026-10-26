@@ -48,3 +48,25 @@ def test_folhas_mostra_a_folha_em_preenchimento_com_o_caminho(cliente, logado):
     linha = folhas["superficies-Linha"]
     assert (linha["caminho"], linha["capacidade"], linha["cheias"]) == ("/paginas/linhas", 31, 0)
     assert linha["linhas"] >= 2
+
+
+def test_turnos_mostra_os_3_turnos_com_a_media_e_o_de_hoje(cliente, logado, monkeypatch):
+    monkeypatch.setattr(rotas_turno, "_agora", lambda con: datetime(2031, 3, 10, 10, tzinfo=FUSO))  # Manhã, sem dados
+    logado("Consultor")
+    m = cliente.get("/painel/turnos").json()
+    assert m["dias"] == 30
+    assert [(t["turno"], t["agora"]) for t in m["turnos"]] == [("Manhã", True), ("Tarde", False), ("Madrugada", False)]
+    assert all(t["analises"] == 0 and t["hoje_analises"] == 0 and t["esterilizacoes"] == 0 for t in m["turnos"])
+
+
+def test_turnos_conta_a_esterilizacao_de_hoje_no_turno_dela(cliente, logado):
+    logado()
+    antes = {t["turno"]: t for t in cliente.get("/painel/turnos").json()["turnos"]}
+    agora = next(t for t in antes.values() if t["agora"])
+    assert cliente.post("/turno/entrar", json={"turno_id": 1}).status_code in (200, 201, 409)
+    r = cliente.post("/esterilizacao", json={"tipo": "Ponteira", "ciclo": "990"})
+    if r.status_code >= 400:
+        pytest.skip(f"esterilização fora do turno neste horário: {r.text}")
+    depois = {t["turno"]: t for t in cliente.get("/painel/turnos").json()["turnos"]}
+    assert sum(t["hoje_esterilizacoes"] for t in depois.values()) == sum(t["hoje_esterilizacoes"] for t in antes.values()) + 1
+    assert depois[agora["turno"]]["agora"]

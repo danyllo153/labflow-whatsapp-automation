@@ -4,8 +4,9 @@ import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import App from "../App";
+import { tipoDa } from "../componentes/TabelaDePendencias";
 import { ProvedorDeSessao } from "../sessao";
-import { ANA, servidorFalso } from "../testes-servidor";
+import { ANA, ATIVIDADES_VAZIAS, servidorFalso } from "../testes-servidor";
 import type { Pendencia } from "./Inicio";
 
 function item(bloco: string, referencia: string, situacao: Pendencia["situacao"], analise = "B.L 72h", tipo = "C.T/B.L"): Pendencia {
@@ -16,13 +17,31 @@ const ITENS: Pendencia[] = [
   item("FCOJ Recebimento", "Load 90008 · lote 4", "Atrasado"),
   item("FCOJ Recebimento", "Load 90009 · lote 1", "Vence hoje"),
   item("NFC Tank farm", "Tanque 41 (coleta 17/10)", "Vence hoje", "D5", "Drop"),
+  item("FCOJ Embarque", "Load 90013 · Composta #8", "Atrasado", "TAB · para espalhar", "TAB"),
   item("Desvios", "Tanque 12", "Atrasado", "D10", "Desvio de drop"),
 ];
 
-function abrir(pendencias: unknown = { vence_hoje: 2, atrasados: 2, desvios_abertos: 3, itens: ITENS }) {
+const HERDADAS = {
+  ...ATIVIDADES_VAZIAS,
+  herdadas: [{ atividade_id: 9, texto: "Calibração", turno: "Madrugada", dia: "2026-10-22", quem: "Bruno Lima" }],
+  recados: [{ texto: "Refazer meio X", turno: "Madrugada", dia: "2026-10-22", por: "Bruno Lima" }],
+};
+
+const TURNOS = {
+  dias: 30,
+  turnos: [
+    { turno: "Manhã", inicio: "08:00", fim: "16:00", analises: 12.5, esterilizacoes: 2, hoje_analises: 4, hoje_esterilizacoes: 1, agora: true },
+    { turno: "Tarde", inicio: "16:00", fim: "00:00", analises: 8, esterilizacoes: 1.5, hoje_analises: 0, hoje_esterilizacoes: 0, agora: false },
+    { turno: "Madrugada", inicio: "00:00", fim: "08:00", analises: 3, esterilizacoes: 0, hoje_analises: 2, hoje_esterilizacoes: 0, agora: false },
+  ],
+};
+
+function abrir(pendencias: unknown = { vence_hoje: 2, atrasados: 3, desvios_abertos: 3, itens: ITENS }, rotas: Parameters<typeof servidorFalso>[0] = {}) {
   const api = servidorFalso({
     "GET /me": () => ({ status: 200, corpo: ANA }),
     "GET /pendencias-hoje": () => ({ status: 200, corpo: pendencias }),
+    "GET /painel/turnos": () => ({ status: 200, corpo: TURNOS }),
+    ...rotas,
   });
   render(
     <MemoryRouter initialEntries={["/"]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
@@ -39,102 +58,100 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe("Início: pendências de hoje (APP-014)", () => {
-  it("mostra os três cartões com os números da API", async () => {
-    abrir();
-    expect(await screen.findByRole("button", { name: /2\s*Para hoje/ })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /2\s*Atrasados/ })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /3\s*Desvios abertos/ })).toBeInTheDocument();
+describe("Início no modelo StarAdmin (26/10)", () => {
+  it("separa o que é para analisar do que é para ler; desvio fica de fora das duas", () => {
+    expect(ITENS.map(tipoDa)).toEqual(["ler", "ler", "analisar", "analisar", "desvio"]);
+    expect(tipoDa(item("NFC Tank farm", "Tanque 5", "Vence hoje", "TAB · para ler", "TAB"))).toBe("ler");
+    expect(tipoDa(item("Águas e superfícies", "Coleta 21/10", "Vence hoje", "C.T 48h", "Água do processo"))).toBe("ler");
   });
 
-  it("agrupa por bloco e, dentro dele, mostra o número de cada grupo; tocar abre a lista (24/10)", async () => {
+  it("mostra os números do dia", async () => {
     abrir();
-    const u = userEvent.setup();
-    const blocos = await screen.findAllByRole("heading", { level: 2 });
-    // duas colunas (26/10): o bloco vai para a coluna mais curta, então a ordem na tela é coluna a coluna
-    expect(blocos.map((h) => h.textContent)).toEqual(["FCOJ Recebimento 2", "Desvios 1", "NFC Tank farm 1"]);
-    expect(blocos.map((h) => (h.closest(".cartao") as HTMLElement).style.order)).toEqual(["0", "2", "1"]);
-    const recebimento = blocos[0].closest(".cartao") as HTMLElement;
-    const grupo = within(recebimento).getByRole("button", { name: /^2\s*C\.T\/B\.L · B\.L 72h/ });
-    expect(grupo).toHaveTextContent("1 atrasado");
-    expect(grupo).toHaveTextContent("1 para hoje");
-    expect(within(recebimento).queryByText("Load 90008 · lote 4")).not.toBeInTheDocument(); // fechado: só o número
-    await u.click(grupo);
-    expect(grupo).toHaveAttribute("aria-expanded", "true");
-    expect(within(recebimento).getByText("Load 90008 · lote 4")).toBeInTheDocument();
-    expect(within(recebimento).getByText("20/10")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Drop · D5/ })).toBeInTheDocument();
+    expect(await screen.findByRole("listitem", { name: /^2\s*Para analisar/ })).toHaveTextContent("1 para hoje");
+    expect(screen.getByRole("listitem", { name: /^2\s*Ler hoje/ })).toHaveTextContent("1 atrasadas");
+    expect(screen.getByRole("listitem", { name: /^3\s*Atrasados/ })).toBeInTheDocument();
+    expect(screen.getByRole("listitem", { name: /^3\s*Desvios abertos/ })).toHaveAttribute("href", "/analises/desvios?aba=abertos");
   });
 
-  it("usa o grupo e o item que vêm da API (navio com os tanques dentro)", async () => {
-    const navio = (tanque: string): Pendencia => ({
-      ...item("NFC Navio", `O.SKY 189 · tanque ${tanque} (coleta 13/10)`, "Vence hoje", "Psicrotróficos Normal · Leitura final", "Leitura de NFC"),
-      grupo: "O.SKY 189 · Psicrotróficos Normal · Leitura final",
-      item: `tanque ${tanque} (coleta 13/10)`,
+  it("Para analisar e Ler hoje são tabelas com o grupo, quantos, a situação e o atalho para o app", async () => {
+    abrir();
+    const analisar = await screen.findByRole("region", { name: "Para analisar agora" });
+    const linhas = within(analisar).getAllByRole("row").slice(1);
+    expect(linhas.map((l) => within(l).getAllByRole("cell")[0].textContent)).toEqual(["TAB · para espalharFCOJ Embarque", "Drop · D5NFC Tank farm"]);
+    expect(within(linhas[0]).getByText("1 atrasado")).toBeInTheDocument();
+    expect(within(linhas[0]).getByRole("link", { name: "TAB · para espalhar" })).toHaveAttribute("href", "/analises/tab");
+
+    const ler = screen.getByRole("region", { name: "Ler hoje" });
+    const linha = within(ler).getAllByRole("row")[1];
+    expect(linha).toHaveTextContent("B.L 72h");
+    expect(linha).toHaveTextContent("Load 90008 · lote 4, Load 90009 · lote 1");
+    expect(within(linha).getByText("1 atrasado")).toBeInTheDocument();
+    expect(within(linha).getByText("1 para hoje")).toBeInTheDocument();
+    expect(within(linha).getByRole("link", { name: /^Abrir .*B\.L 72h$/ })).toHaveAttribute("href", "/analises/recebimento-fcoj?aba=resultados&analise=BL72");
+  });
+
+  it("as estufas e as atividades fixas não ficam mais no Início", async () => {
+    abrir();
+    await screen.findByRole("region", { name: "Para analisar agora" });
+    expect(screen.queryByRole("region", { name: "Atividades do turno" })).not.toBeInTheDocument();
+    expect(screen.queryByText(/Estufas do turno/)).not.toBeInTheDocument();
+  });
+
+  it("do turno anterior: o que ficou sem fazer e os recados, para marcar", async () => {
+    const api = abrir(undefined, {
+      "GET /turno/atividades": () => ({ status: 200, corpo: HERDADAS }),
+      "PUT /turno/atividades/9": () => ({ status: 200, corpo: { ...HERDADAS, herdadas: [] } }),
     });
-    abrir({ vence_hoje: 2, atrasados: 0, desvios_abertos: 0, itens: [navio("1C"), navio("2P")] });
-    const u = userEvent.setup();
-    await u.click(await screen.findByRole("button", { name: /^2\s*O\.SKY 189 · Psicrotróficos Normal · Leitura final/ }));
-    expect(screen.getByText("tanque 1C (coleta 13/10)")).toBeInTheDocument();
-    expect(screen.getByText("tanque 2P (coleta 13/10)")).toBeInTheDocument();
+    const cartao = await screen.findByRole("region", { name: "Do turno anterior" });
+    expect(await within(cartao).findByRole("checkbox", { name: /Calibração/ })).not.toBeChecked();
+    expect(cartao).toHaveTextContent("Recado do turno Madrugada de 22/10 · Bruno Lima");
+    expect(screen.getByRole("listitem", { name: /^2\s*Turno anterior/ })).toBeInTheDocument();
+    await userEvent.click(within(cartao).getByRole("checkbox", { name: /Calibração/ }));
+    expect(api.chamadas.find((c) => c.rota === "PUT /turno/atividades/9")?.corpo).toEqual({ feito: true });
+    await vi.waitFor(() => expect(within(cartao).queryByText("Calibração")).not.toBeInTheDocument());
   });
 
-  it("tocar num cartão filtra a lista; tocar de novo volta a mostrar tudo", async () => {
+  it("a média por turno mostra cada turno, o de agora marcado", async () => {
+    abrir();
+    const cartao = await screen.findByRole("region", { name: "Média por turno" });
+    expect(await within(cartao).findByRole("img", { name: /Manhã: média de 12,5 análises e 2 esterilizações/ })).toBeInTheDocument();
+    expect(within(cartao).getByText("agora")).toBeInTheDocument();
+    expect(cartao).toHaveTextContent("hoje: 2 análises, 0 esterilizações");
+  });
+
+  it("as abas mostram a lista toda de cada parte", async () => {
     abrir();
     const u = userEvent.setup();
-    await u.click(await screen.findByRole("button", { name: /Atrasados/ }));
-    expect(screen.getByRole("button", { name: /Atrasados/ })).toHaveAttribute("aria-pressed", "true");
-    expect(screen.getByRole("button", { name: /^1\s*C\.T\/B\.L · B\.L 72h/ })).toHaveTextContent("1 atrasado");
-    expect(screen.queryByRole("button", { name: /Drop · D5/ })).not.toBeInTheDocument();
-
-    await u.click(screen.getByRole("button", { name: /Desvios abertos/ }));
-    const blocos = screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent ?? "");
-    expect(blocos.filter((t) => !t.startsWith("Para fazer agora"))).toEqual(["Desvios 1"]);
-
-    await u.click(screen.getByRole("button", { name: /Desvios abertos/ }));
-    expect(screen.getByRole("button", { name: /^2\s*C\.T\/B\.L · B\.L 72h/ })).toBeInTheDocument();
-  });
-
-  it("muitos itens iguais viram um grupo com o número", async () => {
-    const muitos = Array.from({ length: 12 }, (_, n) => item("FCOJ Embarque", `Navio X · lote ${n + 1}`, "Atrasado", "TAB · para espalhar", "TAB"));
-    abrir({ vence_hoje: 0, atrasados: 12, desvios_abertos: 0, itens: muitos });
-    const u = userEvent.setup();
-    const grupo = await screen.findByRole("button", { name: /^12\s*TAB · para espalhar/ });
-    expect(screen.queryByText("Navio X · lote 1")).not.toBeInTheDocument();
-    await u.click(grupo);
-    expect(screen.getByText("Navio X · lote 12")).toBeInTheDocument();
+    await u.click(await screen.findByRole("button", { name: "Ler hoje" }));
+    expect(screen.getByRole("region", { name: "Ler hoje" })).toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "Para analisar agora" })).not.toBeInTheDocument();
+    await u.click(screen.getByRole("listitem", { name: /Para analisar/ }));
+    expect(screen.getByRole("region", { name: "Para analisar" })).toBeInTheDocument();
   });
 
   it("sem nada pendente diz isso em português", async () => {
     abrir({ vence_hoje: 0, atrasados: 0, desvios_abertos: 0, itens: [] });
-    expect(await screen.findByText("Nada vencendo hoje e nada atrasado.")).toBeInTheDocument();
+    expect(await screen.findByText("Nada para analisar hoje.")).toBeInTheDocument();
+    expect(screen.getByText("Nenhuma placa para ler hoje.")).toBeInTheDocument();
   });
 
   it("erro mostra a mensagem e o botão Tentar de novo", async () => {
     let falhar = true;
-    servidorFalso({
-      "GET /me": () => ({ status: 200, corpo: ANA }),
+    abrir(undefined, {
       "GET /pendencias-hoje": () =>
         falhar ? { status: 500, corpo: { detail: "Erro no servidor." } } : { status: 200, corpo: { vence_hoje: 1, atrasados: 0, desvios_abertos: 0, itens: [ITENS[1]] } },
     });
-    render(
-      <MemoryRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <ProvedorDeSessao>
-          <App />
-        </ProvedorDeSessao>
-      </MemoryRouter>,
-    );
     const u = userEvent.setup();
     expect(await screen.findByText("Erro no servidor.")).toBeInTheDocument();
     falhar = false;
     await u.click(screen.getByRole("button", { name: "Tentar de novo" }));
-    expect(await screen.findByRole("button", { name: /C\.T\/B\.L · B\.L 72h/ })).toBeInTheDocument();
+    expect(await screen.findByRole("link", { name: /^Abrir .*B\.L 72h$/ })).toBeInTheDocument();
   });
 
   it("atualiza sozinho a cada minuto", async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     const api = abrir();
-    await screen.findByRole("button", { name: /C\.T\/B\.L · B\.L 72h/ });
+    await screen.findByRole("region", { name: "Para analisar agora" });
     const antes = api.vezes("GET /pendencias-hoje"); // o Início e o número de atrasados do menu lateral
     await act(async () => {
       await vi.advanceTimersByTimeAsync(60_000);

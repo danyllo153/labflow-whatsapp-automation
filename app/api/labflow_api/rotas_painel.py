@@ -4,11 +4,15 @@ Spec: 07-app-pwa.md (v1.0), §3 Início e "Visual repaginado". Só leitura, pela
 
 - Semana: o que foi CONCLUÍDO em cada um dos últimos 7 dias (hoje incluído), por tipo: TAB e Coliformes (resultado),
   NFC (leituras de tanque e drops concluídos) e C.T/B.L (leituras de recebimento, embarque e NFC recebido).
+- Turnos (26/10): a média de análises e de esterilizações por turno (Manhã, Tarde, Madrugada) nos últimos 30 dias, e o
+  que o turno de hoje já fez. Análise é o que tem a hora gravada: leitura de C.T/B.L (recebimento, embarque e NFC
+  recebido), leitura de tanque, drop concluído e TAB/Coliformes espalhado. Cada uma vai para o turno da hora em que foi
+  gravada (o horário padrão de app.turnos); a esterilização já guarda o turno.
 - Folhas: de cada laudo, a folha em preenchimento (a mais cheia que ainda não foi impressa) e quantas folhas cheias esperam
   impressão. O menu mostra a que está mais perto de encher, com o atalho para o laudo.
 """
 
-from datetime import date, timedelta
+from datetime import date, datetime, time, timedelta
 
 import psycopg
 from fastapi import APIRouter, Depends
@@ -55,6 +59,77 @@ def semana(pessoa: PessoaLogada = Depends(exigir("ver_paginas")), con: psycopg.C
         for d, *valores in con.execute(SEMANA_SQL, {"de": hoje - timedelta(days=6), "ate": hoje})
     ]
     return Semana(tipos=list(TIPOS), dias=dias, totais={t: sum(d.contagens[t] for d in dias) for t in TIPOS})
+
+
+DIAS_DA_MEDIA = 30
+
+ANALISES_COM_HORA_SQL = """
+SELECT lido_em FROM contagens WHERE lido_em >= %(de)s
+UNION ALL SELECT lida_em FROM bi.leituras_nfc WHERE lida AND lida_em >= %(de)s
+UNION ALL SELECT concluido_em FROM bi.drops WHERE concluido AND concluido_em >= %(de)s
+UNION ALL SELECT espalhado_em FROM bi.testes WHERE espalhado_em >= %(de)s
+"""
+
+ESTERILIZACOES_SQL = """
+SELECT turno_id, dia, count(*) FROM app.esterilizacoes
+WHERE excluida_em IS NULL AND dia >= %(de)s::date
+GROUP BY turno_id, dia
+"""
+
+
+class MediaDoTurno(BaseModel):
+    turno: str
+    inicio: str  # HH:MM
+    fim: str
+    analises: float  # média por turno nos últimos 30 dias (sem contar hoje)
+    esterilizacoes: float
+    hoje_analises: int  # o turno de hoje (ou o de agora, se ainda está correndo)
+    hoje_esterilizacoes: int
+    agora: bool  # é o turno em andamento
+
+
+class MediasPorTurno(BaseModel):
+    dias: int
+    turnos: list[MediaDoTurno]
+
+
+@roteador.get("/turnos", response_model=MediasPorTurno)
+def medias_por_turno(
+    pessoa: PessoaLogada = Depends(exigir("ver_paginas")), con: psycopg.Connection = Depends(obter_conexao)
+) -> MediasPorTurno:
+    turnos = rotas_turno._turnos(con)
+    agora = rotas_turno._agora(con)
+    turno_de_agora, dia_de_agora = rotas_turno.turno_agora(turnos, agora)
+    hoje = agora.astimezone(FUSO).date()
+    de = datetime.combine(hoje - timedelta(days=DIAS_DA_MEDIA), time(0), FUSO)
+    passado = {t.id: 0 for t in turnos}
+    do_dia = {t.id: 0 for t in turnos}
+    for (quando,) in con.execute(ANALISES_COM_HORA_SQL, {"de": de}):
+        turno, dia = rotas_turno.turno_agora(turnos, quando)
+        if dia == hoje or (turno.id == turno_de_agora.id and dia == dia_de_agora):
+            do_dia[turno.id] += 1
+        elif dia < hoje:
+            passado[turno.id] += 1
+    est_passado = {t.id: 0 for t in turnos}
+    est_do_dia = {t.id: 0 for t in turnos}
+    for turno_id, dia, n in con.execute(ESTERILIZACOES_SQL, {"de": de}):
+        if turno_id not in passado:
+            continue
+        if dia == hoje or (turno_id == turno_de_agora.id and dia == dia_de_agora):
+            est_do_dia[turno_id] += n
+        elif dia < hoje:
+            est_passado[turno_id] += n
+    return MediasPorTurno(
+        dias=DIAS_DA_MEDIA,
+        turnos=[
+            MediaDoTurno(
+                turno=t.nome, inicio=t.inicio.strftime("%H:%M"), fim=t.fim.strftime("%H:%M"),
+                analises=round(passado[t.id] / DIAS_DA_MEDIA, 1), esterilizacoes=round(est_passado[t.id] / DIAS_DA_MEDIA, 1),
+                hoje_analises=do_dia[t.id], hoje_esterilizacoes=est_do_dia[t.id], agora=t.id == turno_de_agora.id,
+            )
+            for t in turnos
+        ],
+    )
 
 
 class Folha(BaseModel):

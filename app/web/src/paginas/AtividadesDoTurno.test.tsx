@@ -29,7 +29,7 @@ function abrir(inicial: DadosAtividades = BASE, cargo = "Operador", rotas: Param
     ...rotas,
   });
   render(
-    <MemoryRouter initialEntries={["/"]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+    <MemoryRouter initialEntries={["/turno"]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <ProvedorDeSessao>
         <App />
       </ProvedorDeSessao>
@@ -40,7 +40,7 @@ function abrir(inicial: DadosAtividades = BASE, cargo = "Operador", rotas: Param
 
 afterEach(() => vi.unstubAllGlobals());
 
-describe("Início: atividades fixas do turno (APP-023)", () => {
+describe("Turno: atividades fixas do turno (APP-023; no Turno desde 26/10)", () => {
   it("mostra a lista do turno com quem e quando, e quantas estão feitas", async () => {
     abrir();
     const cartao = await screen.findByRole("region", { name: "Atividades do turno" });

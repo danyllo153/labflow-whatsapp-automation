@@ -1,19 +1,22 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 import { lerJson } from "../api";
+import { type Pendencia } from "../componentes/BlocosDePendencias";
+import { AbasDaPagina, useAba } from "../componentes/CabecalhoDaPagina";
 import GraficoSemana from "../componentes/GraficoSemana";
+import MediaPorTurno from "../componentes/MediaPorTurno";
+import TabelaDePendencias, { tipoDa } from "../componentes/TabelaDePendencias";
 import { useSessao } from "../sessao";
-import BlocosDePendencias, { type Pendencia } from "../componentes/BlocosDePendencias";
-import CartaoAgora from "../componentes/CartaoAgora";
-import AtividadesDoTurno from "./AtividadesDoTurno";
-import { AlertasEstufas, ConferenciaEstufas, type DadosEstufas } from "./Estufas";
+import { useAtividades } from "./AtividadesDoTurno";
 import type { EstadoDoTurno } from "./Turno";
 
 /**
- * Início: pendências de hoje (07 §3; APP-014). Lê GET /pendencias-hoje, que conta pelas views do Power BI.
- * O cartão "Feito no turno" e o aviso para entrar no turno vêm de GET /turno (APP-022). Layout do canvas (APP-056): o
- * cartão "Agora" no topo (relógio do turno, registro livre e os destaques do dia), os números, o gráfico e a lista.
+ * Início no modelo StarAdmin (26/10, pedido do Danyllo): só o que importa para o dia. Em cima os números (para analisar,
+ * ler hoje, atrasados, do turno anterior, desvios e o feito no turno); depois o que é para ANALISAR, o que é para LER no
+ * dia, as pendências do TURNO ANTERIOR (para marcar) e a MÉDIA de análises e esterilizações por turno. As estufas e as
+ * atividades fixas ficam na tela do Turno. Lê GET /pendencias-hoje (views do Power BI), /turno, /turno/atividades,
+ * /painel/semana e /painel/turnos; atualiza sozinho a cada minuto.
  */
 
 export type { Pendencia };
@@ -25,9 +28,13 @@ interface Pendencias {
   itens: Pendencia[];
 }
 
-type Filtro = "todos" | "Vence hoje" | "Atrasado" | "Desvios";
-
 const ATUALIZAR_A_CADA_MS = 60_000; // rumo, Fase C: as páginas se atualizam sozinhas a cada minuto
+const ABAS = [
+  { aba: "dia", rotulo: "Visão do dia" },
+  { aba: "analisar", rotulo: "Para analisar" },
+  { aba: "ler", rotulo: "Ler hoje" },
+  { aba: "anterior", rotulo: "Turno anterior" },
+];
 
 function hora(quando: Date): string {
   return quando.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" });
@@ -38,10 +45,9 @@ export default function Inicio() {
   const [dados, setDados] = useState<Pendencias | null>(null);
   const [erro, setErro] = useState("");
   const [atualizadoEm, setAtualizadoEm] = useState<Date | null>(null);
-  const [filtro, setFiltro] = useState<Filtro>("todos");
   const [turno, setTurno] = useState<EstadoDoTurno | null>(null);
-  const [estufas, setEstufas] = useState<DadosEstufas | null>(null);
-  const navegar = useNavigate();
+  const [aba, irPara] = useAba(ABAS);
+  const atividades = useAtividades();
 
   const carregar = useCallback(async () => {
     try {
@@ -53,7 +59,6 @@ export default function Inicio() {
     }
     // o turno é um extra: se falhar, o Início continua com as pendências
     lerJson<EstadoDoTurno>("/turno").then(setTurno, () => setTurno(null));
-    lerJson<DadosEstufas>("/estufas").then(setEstufas, () => setEstufas(null));
   }, []);
 
   useEffect(() => {
@@ -62,20 +67,34 @@ export default function Inicio() {
     return () => window.clearInterval(relogio);
   }, [carregar]);
 
-  const nome = pessoa?.nome || pessoa?.usuario;
-  const itens = (dados?.itens ?? []).filter((i) =>
-    filtro === "todos" ? true : filtro === "Desvios" ? i.bloco === "Desvios" : i.situacao === filtro,
-  );
-  function escolher(f: Filtro) {
-    setFiltro((atual) => (atual === f ? "todos" : f));
-  }
+  const itens = dados?.itens ?? [];
+  const analisar = itens.filter((i) => tipoDa(i) === "analisar");
+  const ler = itens.filter((i) => tipoDa(i) === "ler");
+  const herdadas = atividades.dados ? atividades.dados.herdadas.length + atividades.dados.recados.length : null;
+  const coletor = pessoa?.cargo === "Coletor";
 
   return (
-    <section>
-      <h1>Início</h1>
-      <p className="texto-secundario saudacao">
-        Olá, {nome}.{atualizadoEm && <> Atualizado às {hora(atualizadoEm)}.</>}
-      </p>
+    <section className="inicio-star">
+      <h1 className="so-leitor">Início</h1>
+
+      {turno?.pode_entrar && !turno.no_turno && (
+        <div className="aviso-turno-faixa">
+          Você ainda não entrou no turno. <Link to="/turno">Entrar no turno</Link>
+        </div>
+      )}
+
+      <div className="abas-com-acoes">
+        <AbasDaPagina titulo="Início" abas={ABAS} aba={aba} irPara={irPara} />
+        <div className="acoes-das-abas">
+          {atualizadoEm && <span className="texto-secundario atualizado">Atualizado às {hora(atualizadoEm)}</span>}
+          <button type="button" className="botao botao-simples botao-pequeno" onClick={() => window.print()}>
+            Imprimir
+          </button>
+          <Link className="botao botao-principal botao-pequeno" to="/turno">
+            + Registrar
+          </Link>
+        </div>
+      </div>
 
       {erro && (
         <div className="cartao" role="alert">
@@ -86,113 +105,174 @@ export default function Inicio() {
         </div>
       )}
 
-      {turno?.pode_entrar && !turno.no_turno && (
-        <div className="cartao aviso-turno">
-          <p>
-            Você ainda não entrou no turno. <Link to="/turno">Entrar no turno</Link>
-          </p>
-        </div>
-      )}
-
       {!dados && !erro && <p className="carregando">Carregando as pendências...</p>}
 
       {dados && (
         <>
-          <div className="cartoes-numeros">
-            <CartaoNumero cor="azul" icone="hoje" rotulo="Para hoje" valor={dados.vence_hoje} ativo={filtro === "Vence hoje"} onClick={() => escolher("Vence hoje")} />
-            <CartaoNumero cor="laranja" icone="atrasado" rotulo="Atrasados" valor={dados.atrasados} ativo={filtro === "Atrasado"} alerta={dados.atrasados > 0} onClick={() => escolher("Atrasado")} />
-            <CartaoNumero cor="roxo" icone="desvio" rotulo="Desvios abertos" valor={dados.desvios_abertos} ativo={filtro === "Desvios"} onClick={() => escolher("Desvios")} />
-            {turno && (
-              <CartaoNumero
-                cor="verde"
-                icone="feito"
-                rotulo="Feito no turno"
-                valor={turno.feito_no_turno.total}
-                ativo={false}
-                onClick={() => navegar("/turno")}
-              />
-            )}
+          <div className="estatisticas" role="list" aria-label="O dia em números">
+            <Numero
+              rotulo="Para analisar"
+              valor={analisar.length}
+              detalhe={`${analisar.filter((i) => i.situacao === "Vence hoje").length} para hoje`}
+              tom="pendente"
+              onClick={() => irPara("analisar")}
+            />
+            <Numero
+              rotulo="Ler hoje"
+              valor={ler.length}
+              detalhe={`${ler.filter((i) => i.situacao === "Atrasado").length} atrasadas`}
+              onClick={() => irPara("ler")}
+            />
+            <Numero rotulo="Atrasados" valor={dados.atrasados} detalhe="analisar e ler" tom={dados.atrasados > 0 ? "nao-ok" : undefined} />
+            <Numero
+              rotulo="Turno anterior"
+              valor={herdadas ?? 0}
+              detalhe={herdadas ? "não feitas" : "nada herdado"}
+              tom={herdadas ? "pendente" : undefined}
+              onClick={() => irPara("anterior")}
+            />
+            <Numero rotulo="Desvios abertos" valor={dados.desvios_abertos} detalhe="ver em Desvios" para="/analises/desvios?aba=abertos" />
+            {turno && <Numero rotulo="Feito no turno" valor={turno.feito_no_turno.total} detalhe={turno.feito_no_turno.turno} tom="ok" para="/turno" />}
           </div>
 
-          {/* em linhas (26/10): cada linha com as duas colunas da mesma altura, para não sobrar buraco na tela */}
-          <div className="inicio-linha inicio-linha-agora">
-            <CartaoAgora turno={turno} estufas={estufas} itens={dados.itens} />
-            <GraficoSemana />
-          </div>
-          {estufas && <AlertasEstufas alertas={estufas.alertas} />}
+          {coletor && <p className="texto-secundario">O Coletor vê aqui só as pendências de coleta.</p>}
 
-          {filtro !== "todos" && (
-            <p className="filtro-ativo">
-              Mostrando: <strong>{filtro === "Vence hoje" ? "para hoje" : filtro === "Atrasado" ? "atrasados" : "desvios"}</strong>{" "}
-              <button type="button" className="link-botao" onClick={() => setFiltro("todos")}>
-                Ver tudo
-              </button>
-            </p>
-          )}
-
-          <BlocosDePendencias
-            itens={itens}
-            vazio={
-              <>
-                <p>{dados.itens.length === 0 ? "Nada vencendo hoje e nada atrasado." : "Nada neste filtro."}</p>
-                {pessoa?.cargo === "Coletor" && <p className="texto-secundario">O Coletor vê aqui só as pendências de coleta.</p>}
-              </>
-            }
-          />
-
-          <div className="inicio-linha inicio-linha-turno">
-            {turno && <AtividadesDoTurno />}
-            {estufas && (
-              <div className="cartao estufas-do-turno" aria-label="Estufas do turno" id="estufas">
-                <h2>
-                  Estufas do turno{" "}
-                  <span className="contador">
-                    {estufas.resumo.conferidas} de {estufas.resumo.total}
-                  </span>
-                </h2>
-                <ConferenciaEstufas embutida dados={estufas} aoMudar={setEstufas} />
+          {aba === "dia" && (
+            <>
+              <div className="inicio-linha-star">
+                <TabelaDePendencias
+                  titulo="Para analisar agora"
+                  subtitulo="O que precisa de mão: plaquear, espalhar, confirmar, drops"
+                  itens={analisar}
+                  limite={6}
+                  verTudo={() => irPara("analisar")}
+                  vazio="Nada para analisar hoje."
+                />
+                <GraficoSemana />
               </div>
-            )}
-          </div>
+              <div className="inicio-linha-star">
+                <TabelaDePendencias
+                  titulo="Ler hoje"
+                  subtitulo="Placas que vencem hoje (e as atrasadas), por análise"
+                  itens={ler}
+                  limite={6}
+                  verTudo={() => irPara("ler")}
+                  vazio="Nenhuma placa para ler hoje."
+                />
+                <TurnoAnterior atividades={atividades} />
+              </div>
+              <MediaPorTurno />
+            </>
+          )}
+          {aba === "analisar" && (
+            <TabelaDePendencias titulo="Para analisar" subtitulo="Tudo o que vence hoje ou está atrasado" itens={analisar} vazio="Nada para analisar hoje." />
+          )}
+          {aba === "ler" && <TabelaDePendencias titulo="Ler hoje" subtitulo="Todas as placas de hoje e as atrasadas" itens={ler} vazio="Nenhuma placa para ler hoje." />}
+          {aba === "anterior" && <TurnoAnterior atividades={atividades} />}
         </>
       )}
-
     </section>
   );
 }
 
-const ICONES_DO_NUMERO = {
-  hoje: "M4 5h16v16H4zM8 3v4M16 3v4M4 10h16",
-  atrasado: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM12 7v5l3 2",
-  desvio: "M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0zM12 9v4M12 17h.01",
-  feito: "M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18zM8 12l3 3 5-6",
-};
-
-// cor: cartões em tom pastel com o ícone num quadrado (visual de 26/10, modelo InApp)
-function CartaoNumero(props: {
+function Numero(props: {
   rotulo: string;
   valor: number;
-  ativo: boolean;
-  alerta?: boolean;
-  cor?: "azul" | "laranja" | "verde" | "roxo";
-  icone: keyof typeof ICONES_DO_NUMERO;
-  onClick: () => void;
+  detalhe: string;
+  tom?: "ok" | "nao-ok" | "pendente";
+  onClick?: () => void;
+  para?: string;
 }) {
+  const conteudo = (
+    <>
+      <span className="estatistica-titulo">{props.rotulo}</span>
+      <strong className={`estatistica-numero${props.tom === "nao-ok" ? " tom-nao-ok" : ""}`}>{props.valor}</strong>
+      <span className={`estatistica-detalhe${props.tom ? ` tom-${props.tom}` : ""}`}>{props.detalhe}</span>
+    </>
+  );
+  const rotulo = `${props.valor} ${props.rotulo}`;
+  if (props.para)
+    return (
+      <Link role="listitem" className="estatistica" to={props.para} aria-label={rotulo}>
+        {conteudo}
+      </Link>
+    );
+  if (props.onClick)
+    return (
+      <button role="listitem" type="button" className="estatistica" onClick={props.onClick} aria-label={rotulo}>
+        {conteudo}
+      </button>
+    );
   return (
-    <button
-      type="button"
-      className={`cartao-numero${props.cor ? ` bloco-${props.cor}` : ""}${props.ativo ? " ativo" : ""}${props.alerta ? " alerta" : ""}`}
-      aria-pressed={props.ativo}
-      aria-label={`${props.valor} ${props.rotulo}`}
-      onClick={props.onClick}
-    >
-      <span className="cartao-numero-icone" aria-hidden="true">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d={ICONES_DO_NUMERO[props.icone]} />
-        </svg>
-      </span>
-      <span className="rotulo">{props.rotulo}</span>
-      <span className="numero">{props.valor}</span>
-    </button>
+    <div role="listitem" className="estatistica" aria-label={rotulo}>
+      {conteudo}
+    </div>
+  );
+}
+
+function diaMes(data: string): string {
+  const [, mes, d] = data.split("-");
+  return `${d}/${mes}`;
+}
+
+/** O que o turno anterior não fez (e os recados): uma lista de marcar, no jeito do "To do list" do modelo. */
+function TurnoAnterior({ atividades }: { atividades: ReturnType<typeof useAtividades> }) {
+  const { dados, erro, gravando, marcar, marcarRecado } = atividades;
+  const total = dados ? dados.herdadas.length + dados.recados.length : 0;
+  return (
+    <section className="cartao turno-anterior" aria-label="Do turno anterior">
+      <div className="cabeca-cartao">
+        <div>
+          <h2>
+            Do turno anterior <span className="contador">{total}</span>
+          </h2>
+          <p className="texto-secundario">O que ficou sem fazer e os recados, para este turno</p>
+        </div>
+      </div>
+      {erro && (
+        <p className="mensagem-erro" role="alert">
+          {erro}
+        </p>
+      )}
+      {!dados && !erro && <p className="carregando">Carregando...</p>}
+      {dados && total === 0 && <p className="texto-secundario vazio-tabela">Nada herdado: o turno anterior fechou tudo.</p>}
+      {dados && total > 0 && (
+        <ul className="lista-tarefas">
+          {dados.recados.map((r) => (
+            <li key={`r-${r.texto}`}>
+              <label>
+                <input type="checkbox" checked={false} disabled={!dados.pode_marcar || gravando === -1} onChange={() => void marcarRecado(r.texto)} />
+                <span>
+                  {r.texto}
+                  <small>
+                    Recado do turno {r.turno} de {diaMes(r.dia)}
+                    {r.por && ` · ${r.por}`} <span className="etiqueta etiqueta-no-prazo">recado</span>
+                  </small>
+                </span>
+              </label>
+            </li>
+          ))}
+          {dados.herdadas.map((h) => (
+            <li key={h.atividade_id}>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={false}
+                  disabled={!dados.pode_marcar || gravando === h.atividade_id}
+                  onChange={() => void marcar(h.atividade_id, true)}
+                />
+                <span>
+                  {h.texto}
+                  <small>
+                    {h.turno} de {diaMes(h.dia)}
+                    {h.quem && ` · ${h.quem}`} <span className="etiqueta etiqueta-pendente">pendente</span>
+                  </small>
+                </span>
+              </label>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
   );
 }
