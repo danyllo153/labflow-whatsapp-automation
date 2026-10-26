@@ -3717,81 +3717,7 @@ h2 {
   background: var(--serie-marinho);
 }
 
-/* gráfico da semana: colunas empilhadas e a legenda com os totais à direita */
-.grafico-semana {
-  padding: 0;
-}
-
-.grafico-semana-corpo {
-  display: flex;
-  flex-wrap: wrap;
-}
-
-.grafico-semana-colunas {
-  flex: 999 1 420px;
-  min-width: 0;
-  display: grid;
-  grid-template-columns: repeat(7, minmax(0, 1fr));
-  gap: 6px;
-  height: 200px;
-  padding: 18px 18px 12px;
-  background-image: linear-gradient(var(--linha-suave) 1px, transparent 1px);
-  background-size: 100% 40px;
-  background-position: 0 18px;
-}
-
-.coluna-dia {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-}
-
-.pilha {
-  flex: 1;
-  width: 60%;
-  max-width: 64px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  border-radius: 6px 6px 0 0;
-  overflow: hidden;
-}
-
-.fatia {
-  width: 100%;
-  min-height: 2px;
-}
-
-.dia-rotulo {
-  font-size: 0.78rem;
-  color: var(--texto-secundario);
-  white-space: nowrap;
-}
-
-.grafico-semana-legenda {
-  flex: 1 1 220px;
-  list-style: none;
-  margin: 0;
-  padding: 18px 20px;
-  border-left: 1px solid var(--linha-suave);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.grafico-semana-legenda li {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.legenda-titulo {
-  font-size: 0.82rem;
-  color: var(--texto-secundario);
-}
-
+/* gráfico da semana (o desenho todo em visual-kaiadmin.css): a bolinha e o total de cada tipo */
 .ponto-legenda {
   width: 8px;
   height: 8px;
@@ -3799,34 +3725,9 @@ h2 {
   flex: none;
 }
 
-.legenda-nome {
-  flex: 1;
-}
-
 .legenda-valor {
   color: var(--texto-secundario);
   font-variant-numeric: tabular-nums;
-}
-
-.legenda-total {
-  font-weight: 600;
-  padding-top: 8px;
-  border-top: 1px solid var(--linha-suave);
-}
-
-.legenda-total .legenda-nome {
-  padding-left: 18px;
-}
-
-.legenda-total .legenda-valor {
-  color: var(--texto);
-}
-
-@media (max-width: 640px) {
-  .grafico-semana-legenda {
-    border-left: 0;
-    border-top: 1px solid var(--linha-suave);
-  }
 }
 
 /* cartão das folhas no pé do menu lateral */

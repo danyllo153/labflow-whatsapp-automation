@@ -51,7 +51,9 @@ describe("Início: pendências de hoje (APP-014)", () => {
     abrir();
     const u = userEvent.setup();
     const blocos = await screen.findAllByRole("heading", { level: 2 });
-    expect(blocos.map((h) => h.textContent)).toEqual(["FCOJ Recebimento 2", "NFC Tank farm 1", "Desvios 1"]);
+    // duas colunas (26/10): o bloco vai para a coluna mais curta, então a ordem na tela é coluna a coluna
+    expect(blocos.map((h) => h.textContent)).toEqual(["FCOJ Recebimento 2", "Desvios 1", "NFC Tank farm 1"]);
+    expect(blocos.map((h) => (h.closest(".cartao") as HTMLElement).style.order)).toEqual(["0", "2", "1"]);
     const recebimento = blocos[0].closest(".cartao") as HTMLElement;
     const grupo = within(recebimento).getByRole("button", { name: /^2\s*C\.T\/B\.L · B\.L 72h/ });
     expect(grupo).toHaveTextContent("1 atrasado");

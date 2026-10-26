@@ -259,6 +259,24 @@ body {
     display: none;
   }
 
+  /* no celular estreito o topo não pode passar da tela: some o nome (fica o frasco) e os ícones encolhem */
+  .moldura .topo-celular .topo-icones {
+    gap: 2px;
+    min-width: 0;
+  }
+}
+
+@media (max-width: 420px) {
+  .moldura .topo-celular .marca-nome {
+    display: none;
+  }
+
+  .moldura .topo-celular .topo-icones .icone-topo,
+  .moldura .topo-celular .botao-tema {
+    width: 36px;
+    height: 36px;
+  }
+
   .moldura .conteudo {
     padding: 14px 14px calc(var(--altura-barra) + 24px);
   }
@@ -617,30 +635,55 @@ h1 {
   box-shadow: 0 0 0 2px var(--acao);
 }
 
-/* Início: duas colunas no computador */
-.inicio-grade {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
+/* Início em linhas (26/10): cada linha estica as duas colunas até a mesma altura; se só uma aparece, ocupa tudo */
+.inicio-linha {
+  display: flex;
+  flex-wrap: wrap;
   gap: 16px;
-  align-items: start;
+  align-items: stretch;
+  margin-bottom: 16px;
 }
 
-@media (min-width: 1180px) {
-  .inicio-grade {
-    grid-template-columns: minmax(0, 1.7fr) minmax(320px, 1fr);
-  }
+.inicio-linha > * {
+  min-width: 0;
+  margin: 0;
 }
 
-/* pendências: os blocos lado a lado quando cabe, e linhas baixas, com os itens visíveis sem abrir */
+.inicio-linha-agora > :first-child { flex: 2 1 560px; }
+.inicio-linha-agora > :last-child { flex: 1 1 340px; }
+.inicio-linha-turno > * { flex: 1 1 420px; }
+.inicio-linha > :only-child { flex-basis: 100%; }
+
+/* pendências: duas colunas que se enchem por igual (o bloco vai para a mais curta); no celular, uma só, na ordem */
 .grade-blocos {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr));
-  gap: 14px;
-  align-items: start;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 16px;
 }
 
-.grade-blocos > .cartao {
-  margin-bottom: 0;
+.grade-blocos-coluna {
+  flex: 1 1 440px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.grade-blocos-coluna > .cartao {
+  margin: 0;
+}
+
+@media (max-width: 979px) {
+  .grade-blocos {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .grade-blocos-coluna {
+    display: contents;
+  }
 }
 
 .grupo-pendencia {
@@ -685,4 +728,170 @@ h1 {
 
 .moldura .topo-celular .marca {
   color: #fff;
+}
+
+/* gráfico da semana: título, legenda em pílulas e as colunas com a largura toda */
+.grafico-semana {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 18px;
+}
+
+.grafico-semana-topo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.grafico-semana-topo h2 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.grafico-semana-legenda {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.grafico-semana-legenda li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 10px;
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  font-size: 0.8rem;
+}
+
+.grafico-semana .legenda-valor {
+  font-weight: 700;
+  color: var(--texto);
+}
+
+.grafico-semana-colunas {
+  flex: 1 1 190px;
+  min-width: 0;
+  min-height: 190px;
+  display: flex;
+  flex-direction: column;
+}
+
+.grafico-semana-colunas > div {
+  flex: 1 1 auto;
+}
+
+/* atividades do turno: linhas baixas, em duas colunas quando o cartão é largo */
+.atividades-turno .lista-atividades {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+  column-gap: 16px;
+}
+
+.atividades-turno .atividade {
+  padding: 2px 0;
+}
+
+.atividades-turno .atividade-caixa {
+  min-height: 36px;
+  gap: 10px;
+}
+
+.atividades-turno .atividade-caixa input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+}
+
+.atividades-turno .atividade-texto {
+  font-size: 0.9rem;
+  line-height: 1.25;
+}
+
+.atividades-turno .herdadas {
+  padding: 6px 10px;
+}
+
+.atividades-turno .herdadas .lista-atividades {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.atividades-turno .marcar-feito {
+  align-items: center;
+  gap: 10px;
+  padding: 3px 0;
+  font-size: 0.88rem;
+  line-height: 1.25;
+}
+
+.atividades-turno .marcar-feito input {
+  width: 18px;
+  height: 18px;
+}
+
+.atividades-turno .atividades-dica {
+  margin: 8px 0 0;
+  font-size: 0.8rem;
+}
+
+/* TAB e Coliformes positivos: gráfico mais baixo e a lista do mês do lado, rolando por dentro */
+.tab-positivos .grafico-resultado-area {
+  height: 250px;
+}
+
+.tab-positivos-lista {
+  max-height: 290px;
+  overflow-y: auto;
+  padding: 8px 12px;
+}
+
+.tab-positivos-lista li {
+  padding: 5px 0;
+}
+
+.tab-positivos-lista .tab-positivo-texto {
+  flex: 1;
+  min-width: 0;
+}
+
+.tab-positivos-lista li small {
+  font-size: 0.75rem;
+}
+
+/* pendências no celular: nome em cima, etiquetas embaixo, sem espremer o nome */
+@media (max-width: 600px) {
+  .grupo-pendencia {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    grid-template-areas: "num nome seta" "num sit seta";
+    column-gap: 10px;
+    row-gap: 4px;
+    align-items: center;
+  }
+
+  .grupo-pendencia .grupo-numero { grid-area: num; }
+  .grupo-pendencia .grupo-nome { grid-area: nome; }
+  .grupo-pendencia .grupo-situacoes { grid-area: sit; justify-content: flex-start; }
+  .grupo-pendencia .grupo-seta { grid-area: seta; }
+}
+
+/* estufas no Início, no computador: linhas mais baixas (no celular o botão continua grande para o dedo) */
+@media (min-width: 900px) {
+  .estufas-do-turno .estufa-linha {
+    padding-top: 1px;
+    padding-bottom: 1px;
+  }
+
+  .estufas-do-turno .botao-icone-ok {
+    width: 32px;
+    height: 32px;
+  }
+
+  .estufas-do-turno .botao-icone-ok svg {
+    width: 24px;
+    height: 24px;
+  }
 }

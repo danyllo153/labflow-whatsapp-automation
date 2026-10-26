@@ -79,9 +79,13 @@ export default function MenuConta() {
   );
 }
 
-/** "Ana Souza" → "AS"; "ana" → "A". */
+/** "Ana Souza" → "AS"; "ana" → "A"; "Vis (teste)" → "VT" (só as palavras com letra). */
 export function iniciais(nome: string | undefined): string {
-  const partes = (nome ?? "").trim().split(/\s+/).filter(Boolean);
+  const partes = (nome ?? "")
+    .replace(/[^\p{L}\s]/gu, "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
   if (partes.length === 0) return "?";
   const letras = partes.length === 1 ? partes[0][0] : partes[0][0] + partes[partes.length - 1][0];
   return letras.toUpperCase();

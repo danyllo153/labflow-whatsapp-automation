@@ -16,13 +16,13 @@ export default function BarrasEmpilhadas({
   rotulos: string[];
   series: { nome: string; cor: string; valores: number[] }[];
   descricao: string;
-  altura?: number;
+  altura?: number | string; // "100%": ocupa a altura que o cartão sobrar
 }) {
   const css = typeof window === "undefined" ? null : getComputedStyle(document.documentElement);
   const secundario = css?.getPropertyValue("--texto-secundario").trim() || "#6c7293";
   const borda = css?.getPropertyValue("--borda").trim() || "#ebedf2";
   return (
-    <div style={{ position: "relative", height: altura }}>
+    <div style={{ position: "relative", height: altura, minHeight: 180 }}>
       <Bar
         data={{
           labels: rotulos,
@@ -39,7 +39,7 @@ export default function BarrasEmpilhadas({
           maintainAspectRatio: false,
           animation: false,
           scales: {
-            x: { stacked: true, grid: { display: false }, ticks: { color: secundario } },
+            x: { stacked: true, grid: { display: false }, ticks: { color: secundario, maxRotation: 0, autoSkip: false, font: { size: 11 } } },
             y: { stacked: true, beginAtZero: true, grid: { color: borda }, ticks: { color: secundario, precision: 0 } },
           },
           plugins: { legend: { display: false }, tooltip: { mode: "index", intersect: false } },
