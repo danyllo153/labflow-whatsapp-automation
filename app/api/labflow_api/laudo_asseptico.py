@@ -54,7 +54,7 @@ def modelo_de_demonstracao() -> bytes:
 
 def _escrever(c: canvas.Canvas, texto: str, coluna: int, topo: float, altura: float, centro: bool = True) -> None:
     esquerda, direita = COLUNAS_X[coluna], COLUNAS_X[coluna + 1]
-    tamanho = _caber(c, texto, direita - esquerda - 4, max(8.5, min(10.0, altura * 0.78)), fonte="Times-Roman")  # a letra do papel (25/10)
+    tamanho = _caber(c, texto, direita - esquerda - 4, max(8.5, min(11.0, altura * 0.85)), fonte="Times-Roman")  # a letra do papel (25/10)
     c.setFont("Times-Roman", tamanho)
     base = topo - altura / 2 - tamanho / 3
     if centro:

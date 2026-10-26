@@ -28,14 +28,15 @@ from labflow_api.rotas_turno import FUSO
 
 LARGURA, ALTURA = A4
 
-# A letra dos laudos (25/10, pedido do Danyllo com o laudo do fluxo laminar como referência): a do papel, Times 10. Se o
-# texto não cabe na célula, diminui até caber; numa linha baixa, começa do que a altura da linha comporta.
+# A letra dos laudos (pedido do Danyllo, 25 e 26/10, com o laudo do fluxo laminar preenchido como referência): a do papel,
+# Times 11 (medida no PDF original: Times New Roman 11,04 nas linhas). Se o texto não cabe na célula, diminui até caber;
+# numa linha baixa, começa do que a altura da linha comporta.
 FONTE = "Times-Roman"
-TAMANHO = 10.0
+TAMANHO = 11.0
 
 
 def tamanho_inicial(pedido: float, altura_da_linha: float) -> float:
-    return max(pedido, min(TAMANHO, altura_da_linha * 0.78))
+    return max(pedido, min(TAMANHO, altura_da_linha * 0.85))
 
 
 # --- escrever nas células ------------------------------------------------------------------------------------------
@@ -51,7 +52,7 @@ class Celula:
     topo: float
     base: float
     centro: bool = True
-    tamanho: float = 8.5  # o mínimo pedido; sai em Times 10 quando a linha comporta
+    tamanho: float = 8.5  # o mínimo pedido; sai em Times 11 quando a linha comporta
     fonte: str = FONTE
 
 
