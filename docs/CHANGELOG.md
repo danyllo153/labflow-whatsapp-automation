@@ -13,6 +13,7 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 ## [Não lançado]
 
 ### Adicionado
+- **Página Arquivo** (25/10, PB21): as caixas de contra-amostras do navio, do recebimento (121 a 145) e dos tanques de terra, com o que tem em cada uma e quando vence; **Para descartar** abre primeiro, com o vencido em vermelho (ninguém é avisado). Arquivar o recebimento (caixa sugerida) e descartar com a prévia e um Confirmar, pelas funções do bot (105). Rotas `GET /arquivo`, `GET /arquivo/{tipo}/{numero}`, `POST /arquivo/arquivar` e `/arquivo/descartar`.
 - **Laudo do Recebimento NFC** (25/10, migration 073 do app): aba **Laudo** no app Recebimento NFC, no mesmo papel e modelo do laudo do Recebimento FCOJ, em folhas próprias: uma linha por lote e tipo, C.T/B.L como lidos na placa e, na Observação, o tipo e a diluição (`past 10¹`, `fresh 10³`).
 
 ### Alterado
