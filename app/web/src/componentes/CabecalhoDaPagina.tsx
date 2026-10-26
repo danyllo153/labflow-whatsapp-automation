@@ -4,8 +4,9 @@ import { Link, useSearchParams } from "react-router-dom";
 import IconeApp from "./IconeApp";
 
 /**
- * Cabeçalho único das telas (padronização de 26/10): "← Análises", ícone na cor da família, título e subtítulo, e as
- * ações (Gráfico, Excel, Imprimir) à direita. É o mesmo dos apps de análise, agora também nos Registros diários, na
+ * Cabeçalho único das telas (padronização de 26/10): "← Análises", ícone, título e subtítulo, e as ações (Gráfico,
+ * Excel, Imprimir) à direita, numa faixa na cor da família (visual novo de 26/10, modelo Dash UI): o que vem logo
+ * depois (abas, números, primeiro cartão) sobe um pouco sobre a faixa. É o mesmo dos apps de análise, agora também nos Registros diários, na
  * Esterilização, nas Leituras, no Arquivo e nas páginas de dados.
  */
 export function CabecalhoDaPagina({
@@ -26,7 +27,7 @@ export function CabecalhoDaPagina({
   conteudoDoIcone?: ReactNode; // a sigla, quando o app ainda não tem desenho
 }) {
   return (
-    <>
+    <div className={`faixa-pagina faixa-${cor}`}>
       {voltar && (
         <p className="voltar">
           <Link to="/paginas">← Análises</Link>
@@ -42,7 +43,7 @@ export function CabecalhoDaPagina({
         </div>
         {acoes && <div className="acoes-icone">{acoes}</div>}
       </div>
-    </>
+    </div>
   );
 }
 

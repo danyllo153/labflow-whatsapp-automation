@@ -12,6 +12,7 @@ import "./estilos.css";
 import "./fase-e.css";
 import "./visual-novo.css";
 import "./navegacao.css";
+import "./visual-kaiadmin.css";
 import { aplicarTema } from "./tema";
 
 aplicarTema(); // antes de desenhar a tela, para não piscar claro e depois escuro

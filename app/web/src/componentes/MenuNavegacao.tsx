@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 
 import { MENU } from "../menu";
-import { APPS, GRUPOS, type Grupo } from "../paginas/Paginas";
+import { APPS, GRUPOS, useContagensDosApps, type Grupo } from "../paginas/Paginas";
 import { useSessao } from "../sessao";
 import Icone from "./Icone";
 import IconeApp from "./IconeApp";
@@ -59,11 +59,16 @@ export default function MenuNavegacao() {
   const grupos = GRUPOS.map((g) => ({ ...g, apps: apps.filter((a) => a.grupo === g.grupo) })).filter((g) => g.apps.length > 0);
   const grupoDaTela = grupos.find((g) => g.apps.some((a) => semConsulta(a.caminho) === pathname))?.grupo;
 
+  const contagens = useContagensDosApps(pathname); // o número vermelho de atrasados, de novo a cada tela
   const [abertos, setAbertos] = useState<Grupo[]>(() => lerAbertos());
   useEffect(() => {
     if (grupoDaTela && !abertos.includes(grupoDaTela)) setAbertos((a) => [...a, grupoDaTela]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [grupoDaTela]);
+
+  function atrasadosDo(lista: typeof apps): number {
+    return lista.reduce((n, a) => n + (contagens?.[a.chave ?? a.caminho]?.atrasados ?? 0), 0);
+  }
 
   function alternar(grupo: Grupo) {
     const novos = abertos.includes(grupo) ? abertos.filter((g) => g !== grupo) : [...abertos, grupo];
@@ -100,6 +105,7 @@ export default function MenuNavegacao() {
                 </span>
                 {g.titulo}
               </span>
+              {!aberto && atrasadosDo(g.apps) > 0 && <span className="menu-contador" title="Atrasados">{atrasadosDo(g.apps)}</span>}
               <svg className="menu-seta" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
                 <path d="m6 9 6 6 6-6" />
               </svg>
@@ -109,10 +115,13 @@ export default function MenuNavegacao() {
                 {g.apps.map((a) => (
                   <li key={a.caminho}>
                     <NavLink to={a.caminho} className={({ isActive }) => `menu-filho${isActive || semConsulta(a.caminho) === pathname ? " active" : ""}`}>
-                      <span className={`menu-filho-icone app-cor-${a.cor}`} aria-hidden="true">
-                        <IconeApp nome={a.icone} />
-                      </span>
-                      {a.titulo}
+                      <span className={`menu-bolinha app-cor-${a.cor}`} aria-hidden="true" />
+                      <span className="menu-filho-nome">{a.titulo}</span>
+                      {!!contagens?.[a.chave ?? a.caminho]?.atrasados && (
+                        <span className="menu-contador" aria-label={`${contagens[a.chave ?? a.caminho].atrasados} atrasados`}>
+                          {contagens[a.chave ?? a.caminho].atrasados}
+                        </span>
+                      )}
                     </NavLink>
                   </li>
                 ))}

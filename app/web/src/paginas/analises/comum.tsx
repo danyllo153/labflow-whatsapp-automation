@@ -281,6 +281,41 @@ export function Busca({ valor, aoMudar, rotulo, dica }: { valor: string; aoMudar
 }
 
 /** Os três números do topo (atrasados, para hoje, outro), como no Recebimento. */
+const traco = { fill: "none", stroke: "currentColor", strokeWidth: 2, strokeLinecap: "round" as const, strokeLinejoin: "round" as const };
+/** O ícone do cartão de número (visual novo de 26/10, modelo kaiadmin): relógio, calendário, x, certo ou i. */
+const ICONE_DO_TOM: Record<"atrasado" | "hoje" | "nao-ok" | "ok" | "neutro", JSX.Element> = {
+  atrasado: (
+    <svg width="20" height="20" viewBox="0 0 24 24" {...traco}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5l3 2" />
+    </svg>
+  ),
+  hoje: (
+    <svg width="20" height="20" viewBox="0 0 24 24" {...traco}>
+      <rect x="4" y="5" width="16" height="16" rx="2" />
+      <path d="M8 3v4M16 3v4M4 10h16" />
+    </svg>
+  ),
+  "nao-ok": (
+    <svg width="20" height="20" viewBox="0 0 24 24" {...traco}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="m9 9 6 6M15 9l-6 6" />
+    </svg>
+  ),
+  ok: (
+    <svg width="20" height="20" viewBox="0 0 24 24" {...traco}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="m8 12 3 3 5-6" />
+    </svg>
+  ),
+  neutro: (
+    <svg width="20" height="20" viewBox="0 0 24 24" {...traco}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 11v5M12 8h.01" />
+    </svg>
+  ),
+};
+
 /** Os números do topo. A cor tem regra (26/10): vermelho = atrasado ou não ok, laranja = atenção (hoje), verde = ok,
  * e o zero (ou o que é só informação) fica neutro. */
 export function Numeros({ itens }: { itens: { rotulo: string; valor: number; tom: "atrasado" | "hoje" | "nao-ok" | "ok" | "neutro" }[] }) {
@@ -288,6 +323,9 @@ export function Numeros({ itens }: { itens: { rotulo: string; valor: number; tom
     <div className="numeros-app">
       {itens.map((n) => (
         <div key={n.rotulo} className={`numero-app numero-${n.valor === 0 ? "neutro" : n.tom}`}>
+          <span className="numero-icone" aria-hidden="true">
+            {ICONE_DO_TOM[n.valor === 0 ? "neutro" : n.tom]}
+          </span>
           <strong>{n.valor}</strong>
           <span>{n.rotulo}</span>
         </div>
