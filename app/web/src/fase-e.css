@@ -761,6 +761,20 @@ button.numero-app {
 .dias-material .botao-secundario[aria-pressed="true"]:hover,
 .dias-material .botao-secundario[aria-pressed="true"]:focus { background: var(--acao-escura, #1d4ed8); border-color: var(--acao-escura, #1d4ed8); color: #fff; }
 
+/* Turno (25/10): a equipe virou uma faixa fina com as pessoas lado a lado, em cima; as estufas ocupam a largura toda */
+.turno-topo { display: flex; flex-direction: column; gap: 12px; }
+.turno-topo > .cartao { height: auto; margin-bottom: 0; }
+.turno-topo .equipe-turno { padding-top: 12px; padding-bottom: 12px; }
+.turno-topo .equipe-turno h2 { margin-bottom: 8px; }
+.turno-topo .lista-equipe { display: flex; flex-wrap: wrap; gap: 8px; }
+.turno-topo .lista-equipe li { border-top: 0; padding: 4px 12px 4px 4px; gap: 8px; border: 1px solid var(--borda, #e5e7eb); border-radius: 999px; background: var(--fundo, #f5f6fa); }
+.turno-topo .equipe-nome { flex: none; gap: 4px 6px; }
+.turno-topo .equipe-desde { flex-basis: auto; }
+.turno-topo .equipe-registros::before { content: "· "; }
+@media (max-width: 600px) {
+  .turno-topo .equipe-registros { display: none; }
+  .turno-topo .lista-equipe li { padding-right: 10px; }
+}
 /* Arquivo de contra-amostras (PB21): uma caixa por botão; vermelho = venceu, azul = em uso, cinza = livre */
 .grade-caixas { list-style: none; margin: 12px 0 0; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 8px; }
 .caixa-arquivo { width: 100%; display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 8px 10px; min-height: 72px; border: 1px solid var(--borda, #e5e7eb); border-left: 5px solid var(--borda-forte, #d5dbe4); border-radius: 8px; background: var(--cartao, #fff); color: var(--texto); font: inherit; text-align: left; cursor: pointer; }
