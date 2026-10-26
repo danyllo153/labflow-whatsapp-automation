@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 
+import { AbasDaPagina, CabecalhoDaPagina, useAba } from "../componentes/CabecalhoDaPagina";
 import { enviarJson, lerJson } from "../api";
 import IconeMaterial, { corDoMaterial, TIPOS_DE_MATERIAL } from "../componentes/IconeMaterial";
 import LaudoEsterilizacao from "./LaudoEsterilizacao";
@@ -82,9 +83,17 @@ export default function Esterilizacao() {
     setVersao((v) => v + 1);
   }
 
+  const abas = [{ aba: "principal", rotulo: "Ciclos" }, ...(dados?.pode_registrar ? [{ aba: "laudo", rotulo: "Laudo" }] : [])];
+  const [aba, irPara] = useAba(abas);
   return (
     <section className="pagina-esterilizacao">
-      <h1>Esterilização</h1>
+      <CabecalhoDaPagina
+        icone="esterilizacao"
+        cor="rotina"
+        titulo="Esterilização"
+        descricao="Os ciclos da autoclave de cada turno: o que foi junto, o número do ciclo e se foi eficiente."
+      />
+      <AbasDaPagina titulo="Esterilização" abas={abas} aba={aba} irPara={irPara} />
       {erro && (
         <div className="cartao" role="alert">
           <p className="mensagem-erro">{erro}</p>
@@ -94,7 +103,7 @@ export default function Esterilizacao() {
         </div>
       )}
       {!dados && !erro && <p className="carregando">Carregando...</p>}
-      {dados && (
+      {dados && aba === "principal" && (
         <>
           {dados.pode_registrar ? (
             <Registrar tipos={dados.tipos} aoRegistrar={atualizado} />
@@ -116,12 +125,12 @@ export default function Esterilizacao() {
                 ))}
               </ul>
             )}
-            <p className="texto-secundario">O laudo impresso (abaixo) é gerado a partir destes registros.</p>
+            <p className="texto-secundario">O laudo impresso (aba Laudo) é gerado a partir destes registros.</p>
           </div>
         </>
       )}
-      {dados?.pode_registrar && <LaudoEsterilizacao versao={versao} />}
-      <GraficoG4 versao={versao} />
+      {aba === "laudo" && dados?.pode_registrar && <LaudoEsterilizacao versao={versao} />}
+      {aba === "principal" && <GraficoG4 versao={versao} />}
     </section>
   );
 }

@@ -504,6 +504,43 @@ def amostras_do_embarque(
     ]
 
 
+class NavioNaoOk(BaseModel):
+    navio: str
+    lidos: int
+    nao_ok: int
+
+
+class PainelDoEmbarque(BaseModel):
+    atrasados: int
+    para_hoje: int
+    nao_ok_semana: int
+    navios: list[NavioNaoOk]  # últimos 30 dias, os com Não ok primeiro
+
+
+@roteador.get("/embarque/painel", response_model=PainelDoEmbarque)
+def painel_do_embarque(pessoa: PessoaLogada = Depends(exigir("ver_paginas")), con: psycopg.Connection = Depends(obter_conexao)) -> PainelDoEmbarque:
+    """Painel do Embarque igual ao do Recebimento FCOJ (padronização de 26/10), pela bi.contagens (o mesmo alarme do bot)."""
+    hoje = _hoje(con)
+    a, h, n = con.execute(
+        """
+        SELECT count(*) FILTER (WHERE situacao = 'Atrasado'), count(*) FILTER (WHERE situacao = 'Vence hoje'),
+               count(*) FILTER (WHERE lido AND alarme AND data_leitura > %(hoje)s - 7)
+        FROM bi.contagens WHERE origem = 'Embarque'
+        """,
+        {"hoje": hoje},
+    ).fetchone()
+    navios = con.execute(
+        """
+        SELECT navio, count(*), count(*) FILTER (WHERE alarme)
+        FROM bi.contagens WHERE origem = 'Embarque' AND lido AND data_leitura > %(hoje)s - 30
+        GROUP BY navio ORDER BY 3 DESC, 2 DESC, 1 LIMIT 8
+        """,
+        {"hoje": hoje},
+    ).fetchall()
+    return PainelDoEmbarque(atrasados=a, para_hoje=h, nao_ok_semana=n,
+                            navios=[NavioNaoOk(navio=nv or "-", lidos=l, nao_ok=no) for nv, l, no in navios])
+
+
 class LancarNoEmbarque(BaseModel):
     analise: Literal["CT", "BL72", "BL120"]
     itens: list[dict] = Field(min_length=1, max_length=200)  # [{embarque_amostra_id, resultado "<1"}]

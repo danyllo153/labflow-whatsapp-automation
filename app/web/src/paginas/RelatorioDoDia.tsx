@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 
+import { BotaoImprimir, CabecalhoDaPagina } from "../componentes/CabecalhoDaPagina";
 import { lerJson } from "../api";
 import IconeOk from "../componentes/IconeOk";
 import BlocosDePendencias, { type Pendencia } from "../componentes/BlocosDePendencias";
@@ -136,22 +137,25 @@ export default function RelatorioDoDia() {
 
   return (
     <section className="relatorio-do-dia">
-      <h1>Leituras do dia</h1>
-      <p className="texto-secundario">
-        O relatório do dia, igual ao do bot: o que sai em cada análise, com lido e fora do limite. "Só o lido" é o relatório completo,
-        com ok e não ok.
-      </p>
+      <CabecalhoDaPagina
+        icone="leituras"
+        cor="geral"
+        voltar={false}
+        titulo="Leituras do dia"
+        descricao='O relatório do dia, igual ao do bot: o que sai em cada análise, com lido e fora do limite. "Só o lido" é o relatório completo, com ok e não ok.'
+        acoes={<BotaoImprimir aoClicar={() => window.print()} />}
+      />
       {erro && (
         <p className="mensagem-erro" role="alert">
           {erro}
         </p>
       )}
       {rel && <SeletorDeDias hoje={rel.hoje} escolhido={rel.dia} preenchidos={[]} aoEscolher={setDia} />}
-      <div className="dias-material" role="group" aria-label="O que mostrar">
-        <button type="button" className="botao-secundario" aria-pressed={!completo} onClick={() => setCompleto(false)}>
+      <div className="seletor-segmentado" role="group" aria-label="O que mostrar">
+        <button type="button" aria-pressed={!completo} onClick={() => setCompleto(false)}>
           Tudo o que sai
         </button>
-        <button type="button" className="botao-secundario" aria-pressed={completo} onClick={() => setCompleto(true)}>
+        <button type="button" aria-pressed={completo} onClick={() => setCompleto(true)}>
           Só o lido (completo)
         </button>
       </div>
@@ -160,7 +164,7 @@ export default function RelatorioDoDia() {
         <>
           <Numeros
             itens={[
-              { rotulo: "Lidas", valor: rel.lidos, tom: "hoje" },
+              { rotulo: "Lidas", valor: rel.lidos, tom: "ok" },
               { rotulo: "Faltam", valor: rel.total - rel.lidos, tom: rel.total > rel.lidos ? "atrasado" : "hoje" },
               { rotulo: "Alertas", valor: rel.alertas, tom: rel.alertas ? "nao-ok" : "hoje" },
             ]}
@@ -178,9 +182,6 @@ export default function RelatorioDoDia() {
             >
               Enviar no WhatsApp
             </a>
-            <button type="button" className="botao-secundario" onClick={() => window.print()}>
-              Imprimir
-            </button>
           </div>
           {rel.blocos.length === 0 && <p className="texto-secundario">Nenhuma leitura prevista em {dm(rel.dia)}.</p>}
           {rel.blocos.map((b) => (

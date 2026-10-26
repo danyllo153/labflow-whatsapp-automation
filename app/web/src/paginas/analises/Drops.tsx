@@ -134,7 +134,7 @@ function Pendentes({ drops, pode, aoGravar }: { drops: Drop[]; pode: boolean; ao
             {pode && (
               <button
                 type="button"
-                className="botao-link"
+                className="botao-secundario botao-da-linha"
                 onClick={() =>
                   acao.perguntar(
                     "/analises/drops/desvio",
@@ -143,7 +143,7 @@ function Pendentes({ drops, pode, aoGravar }: { drops: Drop[]; pode: boolean; ao
                   )
                 }
               >
-                Não ok: abrir desvio
+                Abrir desvio
               </button>
             )}
           </li>

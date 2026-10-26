@@ -33,6 +33,7 @@ interface Amostra {
 }
 
 export const ABAS_EMBARQUE = [
+  { aba: "painel", rotulo: "Painel" },
   { aba: "registrar", rotulo: "Registrar" },
   { aba: "compostas", rotulo: "Compostas" },
   { aba: "resultados", rotulo: "C.T e B.L" },
@@ -61,8 +62,9 @@ export default function Embarque() {
       descricao="Amostras de cada navio, linha e fase, as compostas e o C.T/B.L de cada amostra."
       abas={ABAS_EMBARQUE}
     >
-      {(aba) => (
+      {(aba, irPara) => (
         <>
+          {aba === "painel" && <PainelDoEmbarque irPara={irPara} />}
           {aba === "registrar" && (
             <SoQuemGrava pode={pode}>
               <Registrar aoGravar={lista.recarregar} />
@@ -93,6 +95,61 @@ export default function Embarque() {
         </>
       )}
     </AppDeAnalise>
+  );
+}
+
+interface Painel {
+  atrasados: number;
+  para_hoje: number;
+  nao_ok_semana: number;
+  navios: { navio: string; lidos: number; nao_ok: number }[];
+}
+
+/** O painel do Embarque, igual ao do Recebimento FCOJ (padronização de 26/10): os números e o Não ok por navio. */
+function PainelDoEmbarque({ irPara }: { irPara: (aba: string) => void }) {
+  const painel = useLista<Painel>("/analises/embarque/painel");
+  if (painel.erro) return <p className="mensagem-erro">{painel.erro}</p>;
+  if (!painel.dados) return <p className="carregando">Carregando...</p>;
+  const p = painel.dados;
+  const maior = Math.max(1, ...p.navios.map((n) => n.nao_ok));
+  return (
+    <>
+      <div className="numeros-app">
+        <button type="button" className={`numero-app numero-${p.atrasados ? "atrasado" : "neutro"}`} onClick={() => irPara("resultados")}>
+          <strong>{p.atrasados}</strong>
+          <span>Atrasados</span>
+        </button>
+        <button type="button" className={`numero-app numero-${p.para_hoje ? "hoje" : "neutro"}`} onClick={() => irPara("resultados")}>
+          <strong>{p.para_hoje}</strong>
+          <span>Para hoje</span>
+        </button>
+        <div className={`numero-app numero-${p.nao_ok_semana ? "nao-ok" : "neutro"}`}>
+          <strong>{p.nao_ok_semana}</strong>
+          <span>Não ok na semana</span>
+        </div>
+      </div>
+      <div className="cartao">
+        <h2>Não ok por navio</h2>
+        <p className="texto-secundario">Últimos 30 dias.</p>
+        {p.navios.length === 0 ? (
+          <p className="texto-secundario">Nenhuma leitura no período.</p>
+        ) : (
+          <ul className="barras-fabrica">
+            {p.navios.map((n) => (
+              <li key={n.navio}>
+                <span className="fabrica-rotulo">{n.navio}</span>
+                <span className="fabrica-trilho">
+                  <span className="fabrica-valor" style={{ width: `${(n.nao_ok / maior) * 100}%` }} />
+                </span>
+                <span className="fabrica-numero">
+                  {n.nao_ok} de {n.lidos}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </>
   );
 }
 

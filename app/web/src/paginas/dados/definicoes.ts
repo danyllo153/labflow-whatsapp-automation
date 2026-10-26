@@ -35,6 +35,24 @@ export interface DefinicaoDePagina {
   dashboard?: { tipo: "colunas" | "tendencia"; coluna: string; aberto?: boolean }; // gráfico que o Dashboard mostra primeiro (25/10)
 }
 
+/** Ícone e cor (da família) de cada página; o resto vem de definicoes.ts. */
+export const VISUAL_DAS_PAGINAS: Record<string, { icone: string; cor: string; titulo?: string }> = {
+  coletas: { icone: "coletas", cor: "geral" },
+  recebimento: { icone: "recebimento-fcoj", cor: "fcoj" },
+  embarque: { icone: "embarque-fcoj", cor: "embarque" },
+  "tanques-terra": { icone: "tanques", cor: "nfc", titulo: "Análise de tanques" },
+  drops: { icone: "drops", cor: "drops" },
+  desvios: { icone: "desvios", cor: "desvios" },
+  "recebimento-nfc": { icone: "recebimento-nfc", cor: "nfc-receb" },
+  tab: { icone: "tab", cor: "tab" },
+  coliformes: { icone: "coliformes", cor: "coli" },
+  howard: { icone: "howard", cor: "howard" },
+  tanques: { icone: "tanques", cor: "nfc" },
+  navios: { icone: "tanques", cor: "nfc" },
+  testes: { icone: "tab", cor: "tab" },
+  "visao-geral": { icone: "visao-geral", cor: "geral" },
+};
+
 export const FABRICAS = ["AQA", "CON", "COL", "UCH", "ITA", "TMG"]; // fábricas travadas (decisão de 14/10)
 
 export const PAGINAS: DefinicaoDePagina[] = [

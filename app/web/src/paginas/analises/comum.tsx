@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 
 import { enviarJson, lerJson } from "../../api";
-import IconeApp from "../../componentes/IconeApp";
+import { AbasDaPagina, CabecalhoDaPagina, useAba } from "../../componentes/CabecalhoDaPagina";
 import Instrucao, { type AppComInstrucao } from "./Instrucao";
 
 /**
@@ -79,31 +79,17 @@ export function AppDeAnalise({
   abas: Aba[];
   children: (aba: string, irPara: (aba: string) => void) => ReactNode;
 }) {
-  const [params, setParams] = useSearchParams();
-  const aba = abas.some((a) => a.aba === params.get("aba")) ? (params.get("aba") as string) : abas[0].aba;
-  const irPara = (nova: string) => setParams({ aba: nova });
+  const [aba, irPara] = useAba(abas);
   return (
     <section className="app-analise">
-      <p className="voltar">
-        <Link to="/paginas">← Análises</Link>
-      </p>
-      <div className="app-analise-topo">
-        <span className={`app-icone app-cor-${icone ? cor : COR_DO_APP[app] ?? cor}`} aria-hidden="true">
-          {icone || ICONE_DO_APP[app] ? <IconeApp nome={icone ?? ICONE_DO_APP[app] ?? ""} /> : sigla}
-        </span>
-        <div>
-          <h1>{titulo}</h1>
-          <p className="texto-secundario">{descricao}</p>
-        </div>
-      </div>
-      <nav className="abas-app" aria-label={`Partes de ${titulo}`}>
-        {abas.map((a) => (
-          <button key={a.aba} type="button" aria-current={aba === a.aba ? "page" : undefined} onClick={() => irPara(a.aba)}>
-            {a.rotulo}
-            {!!a.contador && <span className="abas-contador">{a.contador}</span>}
-          </button>
-        ))}
-      </nav>
+      <CabecalhoDaPagina
+        icone={icone ?? ICONE_DO_APP[app] ?? ""}
+        cor={icone ? cor : COR_DO_APP[app] ?? cor}
+        titulo={titulo}
+        descricao={descricao}
+        conteudoDoIcone={icone || ICONE_DO_APP[app] ? undefined : sigla}
+      />
+      <AbasDaPagina titulo={titulo} abas={abas} aba={aba} irPara={irPara} />
       {aba === "instrucao" || aba === "video" ? <Instrucao app={app} parte={aba} /> : children(aba, irPara)}
     </section>
   );
@@ -295,11 +281,13 @@ export function Busca({ valor, aoMudar, rotulo, dica }: { valor: string; aoMudar
 }
 
 /** Os três números do topo (atrasados, para hoje, outro), como no Recebimento. */
-export function Numeros({ itens }: { itens: { rotulo: string; valor: number; tom: "atrasado" | "hoje" | "nao-ok" }[] }) {
+/** Os números do topo. A cor tem regra (26/10): vermelho = atrasado ou não ok, laranja = atenção (hoje), verde = ok,
+ * e o zero (ou o que é só informação) fica neutro. */
+export function Numeros({ itens }: { itens: { rotulo: string; valor: number; tom: "atrasado" | "hoje" | "nao-ok" | "ok" | "neutro" }[] }) {
   return (
     <div className="numeros-app">
       {itens.map((n) => (
-        <div key={n.rotulo} className={`numero-app numero-${n.tom}`}>
+        <div key={n.rotulo} className={`numero-app numero-${n.valor === 0 ? "neutro" : n.tom}`}>
           <strong>{n.valor}</strong>
           <span>{n.rotulo}</span>
         </div>

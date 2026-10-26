@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { AbasDaPagina, CabecalhoDaPagina, useAba } from "../componentes/CabecalhoDaPagina";
 import { Link } from "react-router-dom";
 
 import { enviarJson, lerJson } from "../api";
@@ -70,29 +71,39 @@ export default function MaterialAsseptico() {
     void carregar(dia);
   }, [carregar, dia]);
 
+  const abas = [{ aba: "principal", rotulo: "Material do dia" }, ...(dados?.pode_preencher ? [{ aba: "laudo", rotulo: "Laudo" }] : [])];
+  const [aba, irPara] = useAba(abas);
   return (
     <section className="pagina-material">
-      <p className="voltar">
-        <Link to="/paginas">← Análises</Link>
-      </p>
-      <h1>Material asséptico</h1>
-      <p className="texto-secundario">
-        O que foi usado nas análises do dia: os ciclos vêm da <Link to="/esterilizacao">Esterilização</Link>, e você pode
-        acrescentar o que saiu do roteiro.
-      </p>
-      {erro && (
-        <div className="cartao" role="alert">
-          <p className="mensagem-erro">{erro}</p>
-        </div>
-      )}
-      {!dados && !erro && <p className="carregando">Carregando...</p>}
-      {dados && hoje && (
+      <CabecalhoDaPagina
+        icone="material"
+        cor="rotina"
+        titulo="Material asséptico"
+        descricao={
+          <>
+            O que foi usado nas análises do dia: os ciclos vêm da <Link to="/esterilizacao">Esterilização</Link>, e você pode
+            acrescentar o que saiu do roteiro.
+          </>
+        }
+      />
+      <AbasDaPagina titulo="Material asséptico" abas={abas} aba={aba} irPara={irPara} />
+      {aba === "principal" && (
         <>
-          <SeletorDeDias hoje={hoje} escolhido={dados.dia} preenchidos={dados.recentes} aoEscolher={setDia} />
-          <Formulario key={dados.dia} dados={dados} aoSalvar={(d) => (setDados(d), setVersao((v) => v + 1))} />
+          {erro && (
+            <div className="cartao" role="alert">
+              <p className="mensagem-erro">{erro}</p>
+            </div>
+          )}
+          {!dados && !erro && <p className="carregando">Carregando...</p>}
+          {dados && hoje && (
+            <>
+              <SeletorDeDias hoje={hoje} escolhido={dados.dia} preenchidos={dados.recentes} aoEscolher={setDia} />
+              <Formulario key={dados.dia} dados={dados} aoSalvar={(d) => (setDados(d), setVersao((v) => v + 1))} />
+            </>
+          )}
         </>
       )}
-      {dados?.pode_preencher && <LaudoEsterilizacao versao={versao} config={LAUDO} />}
+      {aba === "laudo" && dados?.pode_preencher && <LaudoEsterilizacao versao={versao} config={LAUDO} />}
     </section>
   );
 }

@@ -12,7 +12,7 @@ import { ABAS_NFC } from "./analises/RecebimentoNfc";
 import { ATALHOS_DO_APP } from "./analises/RecebimentoFcoj";
 import { ABAS_TANQUES } from "./analises/Tanques";
 import { ABAS_HOWARD, ABAS_TESTES } from "./analises/Testes";
-import { PAGINAS, type DefinicaoDePagina } from "./dados/definicoes";
+import { PAGINAS, VISUAL_DAS_PAGINAS, type DefinicaoDePagina } from "./dados/definicoes";
 import PaginaDeDados from "./dados/PaginaDeDados";
 import VisaoGeral from "./dados/VisaoGeral";
 
@@ -45,19 +45,6 @@ const GRUPOS: { grupo: Grupo; titulo: string }[] = [
   { grupo: "Rotina", titulo: "Registros diários" },
 ];
 
-/** Ícone e cor (da família) de cada página; o resto vem de definicoes.ts. */
-const VISUAL: Record<string, Pick<App, "icone" | "cor"> & { titulo?: string }> = {
-  coletas: { icone: "coletas", cor: "geral" },
-  recebimento: { icone: "recebimento-fcoj", cor: "fcoj" },
-  embarque: { icone: "embarque-fcoj", cor: "embarque" },
-  "tanques-terra": { icone: "tanques", cor: "nfc", titulo: "Análise de tanques" },
-  drops: { icone: "drops", cor: "drops" },
-  desvios: { icone: "desvios", cor: "desvios" },
-  "recebimento-nfc": { icone: "recebimento-nfc", cor: "nfc-receb" },
-  tab: { icone: "tab", cor: "tab" },
-  coliformes: { icone: "coliformes", cor: "coli" },
-  howard: { icone: "howard", cor: "howard" },
-};
 
 /** Tanques terra e navios são um app só ("Análise de tanques", com a pesquisa por navio): a página de navios não
  * aparece na grade, e as pendências dela contam no app de tanques. */
@@ -108,13 +95,13 @@ export const APPS: App[] = [
     (p): App => ({
       caminho: APPS_DA_FASE_E[p.caminho]?.caminho ?? `/paginas/${p.caminho}`,
       chave: `/paginas/${p.caminho}`,
-      titulo: VISUAL[p.caminho]?.titulo ?? p.titulo,
+      titulo: VISUAL_DAS_PAGINAS[p.caminho]?.titulo ?? p.titulo,
       grupo: p.grupo,
       descricao: p.descricao,
       semColetor: p.semColetor,
       atalhos: APPS_DA_FASE_E[p.caminho]?.atalhos,
-      icone: VISUAL[p.caminho]?.icone ?? p.caminho,
-      cor: VISUAL[p.caminho]?.cor ?? "geral",
+      icone: VISUAL_DAS_PAGINAS[p.caminho]?.icone ?? p.caminho,
+      cor: VISUAL_DAS_PAGINAS[p.caminho]?.cor ?? "geral",
     }),
   ),
   ...APPS_FIXOS.filter((a) => a.grupo !== "Geral"),

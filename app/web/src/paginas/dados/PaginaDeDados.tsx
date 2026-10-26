@@ -2,7 +2,8 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type
 import { Link, useSearchParams } from "react-router-dom";
 
 import { lerJson } from "../../api";
-import type { Coluna, DefinicaoDePagina, Filtro } from "./definicoes";
+import { VISUAL_DAS_PAGINAS, type Coluna, type DefinicaoDePagina, type Filtro } from "./definicoes";
+import { CabecalhoDaPagina } from "../../componentes/CabecalhoDaPagina";
 import { classeDaSituacao, formatar } from "./formatos";
 import Dashboard, { type Linha } from "./Dashboard";
 import { BarrasPorSituacao, type ItemDeSituacao } from "../../componentes/Graficos";
@@ -189,72 +190,74 @@ export default function PaginaDeDados({ def }: { def: DefinicaoDePagina }) {
   return (
     <section className="pagina-dados">
       <div className="so-tela">
-        <p className="trilha">
-          <Link to="/paginas">Análises</Link> / {def.titulo}
-        </p>
-        <div className="titulo-com-acoes">
-          <h1>{def.titulo}</h1>
-          <div className="acoes-icone">
-            <button
-              type="button"
-              className="botao-icone"
-              aria-pressed={dashboardAberto}
-              title={def.resultado ? "Gráfico do resultado com o filtro da tela" : "Gráfico com o filtro da tela: colunas ou tendência"}
-              onClick={() => setDashboardAberto(!dashboardAberto)}
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-                <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
-              </svg>
-              {def.resultado ? "Gráfico" : "Dashboard"}
-            </button>
-            <a
-              className="botao-icone"
-              aria-label="Exportar Excel"
-              title="Exportar para o Excel (só o que está filtrado)"
-              href={`${def.api}/excel?${consulta({ ...comBusca, ...def.fixos })}`}
-              download
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-                <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
-                <path d="M14 3v6h6M9 13l6 6M15 13l-6 6" />
-              </svg>
-            </a>
-            <div className="menu-imprimir">
+        <CabecalhoDaPagina
+          icone={VISUAL_DAS_PAGINAS[def.caminho]?.icone ?? "coletas"}
+          cor={VISUAL_DAS_PAGINAS[def.caminho]?.cor ?? "geral"}
+          titulo={def.titulo}
+          descricao={def.descricao}
+          acoes={
+            <>
               <button
                 type="button"
                 className="botao-icone"
-                aria-label="Imprimir"
-                aria-expanded={menuImprimir}
-                title="Imprimir (escolha o papel)"
-                onClick={() => setMenuImprimir(!menuImprimir)}
-                disabled={preparando || !dados}
+                aria-pressed={dashboardAberto}
+                title={def.resultado ? "Gráfico do resultado com o filtro da tela" : "Gráfico com o filtro da tela: colunas ou tendência"}
+                onClick={() => setDashboardAberto(!dashboardAberto)}
               >
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-                  <path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
-                  <rect x="6" y="14" width="12" height="7" />
+                  <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
                 </svg>
+                {def.resultado ? "Gráfico" : "Dashboard"}
               </button>
-              {menuImprimir && (
-                <div className="menu-imprimir-opcoes" role="group" aria-label="Papel">
-                  {(["em pé", "deitado"] as const).map((o) => (
-                    <button
-                      key={o}
-                      type="button"
-                      aria-pressed={orientacao === o}
-                      onClick={() => {
-                        setOrientacao(o);
-                        setMenuImprimir(false);
-                        void imprimir();
-                      }}
-                    >
-                      A4 {o}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+              <a
+                className="botao-icone"
+                aria-label="Exportar Excel"
+                title="Exportar para o Excel (só o que está filtrado)"
+                href={`${def.api}/excel?${consulta({ ...comBusca, ...def.fixos })}`}
+                download
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                  <path d="M14 3H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V9z" />
+                  <path d="M14 3v6h6M9 13l6 6M15 13l-6 6" />
+                </svg>
+              </a>
+              <div className="menu-imprimir">
+                <button
+                  type="button"
+                  className="botao-icone"
+                  aria-label="Imprimir"
+                  aria-expanded={menuImprimir}
+                  title="Imprimir (escolha o papel)"
+                  onClick={() => setMenuImprimir(!menuImprimir)}
+                  disabled={preparando || !dados}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                    <path d="M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" />
+                    <rect x="6" y="14" width="12" height="7" />
+                  </svg>
+                </button>
+                {menuImprimir && (
+                  <div className="menu-imprimir-opcoes" role="group" aria-label="Papel">
+                    {(["em pé", "deitado"] as const).map((o) => (
+                      <button
+                        key={o}
+                        type="button"
+                        aria-pressed={orientacao === o}
+                        onClick={() => {
+                          setOrientacao(o);
+                          setMenuImprimir(false);
+                          void imprimir();
+                        }}
+                      >
+                        A4 {o}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </>
+          }
+        />
         {preparando && <p className="texto-secundario">Preparando a impressão...</p>}
 
         <div className="busca-com-filtro">

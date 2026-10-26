@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { AbasDaPagina, CabecalhoDaPagina, useAba } from "../componentes/CabecalhoDaPagina";
 
 import { enviarJson, lerJson } from "../api";
 import SeletorDeDias, { dm } from "../componentes/SeletorDeDias";
@@ -69,29 +69,39 @@ export default function BrancoDoDia() {
     void carregar(dia);
   }, [carregar, dia]);
 
+  const abas = [{ aba: "principal", rotulo: "Branco do dia" }, ...(dados?.pode_preencher ? [{ aba: "laudo", rotulo: "Laudo" }] : [])];
+  const [aba, irPara] = useAba(abas);
   return (
     <section className="pagina-material">
-      <p className="voltar">
-        <Link to="/paginas">← Análises</Link>
-      </p>
-      <h1>Meio de cultura e fluxo laminar</h1>
-      <p className="texto-secundario">
-        O branco do dia: as placas da capela e de cada meio em uso, sem amostra. O normal é &lt;1. Todo dia que teve análise entra
-        sozinho no dia seguinte, já preenchido; só corrija se algo crescer.
-      </p>
-      {erro && (
-        <div className="cartao" role="alert">
-          <p className="mensagem-erro">{erro}</p>
-        </div>
-      )}
-      {!dados && !erro && <p className="carregando">Carregando...</p>}
-      {dados && hoje && (
+      <CabecalhoDaPagina
+        icone="branco"
+        cor="rotina"
+        titulo="Meio de cultura e fluxo laminar"
+        descricao={
+          <>
+            O branco do dia: as placas da capela e de cada meio em uso, sem amostra. O normal é &lt;1. Todo dia que teve análise entra
+            sozinho no dia seguinte, já preenchido; só corrija se algo crescer.
+          </>
+        }
+      />
+      <AbasDaPagina titulo="Meio de cultura e fluxo laminar" abas={abas} aba={aba} irPara={irPara} />
+      {aba === "principal" && (
         <>
-          <SeletorDeDias hoje={hoje} escolhido={dados.dia} preenchidos={dados.recentes} aoEscolher={setDia} />
-          <Formulario key={dados.dia} dados={dados} aoSalvar={(d) => (setDados(d), setVersao((v) => v + 1))} />
+          {erro && (
+            <div className="cartao" role="alert">
+              <p className="mensagem-erro">{erro}</p>
+            </div>
+          )}
+          {!dados && !erro && <p className="carregando">Carregando...</p>}
+          {dados && hoje && (
+            <>
+              <SeletorDeDias hoje={hoje} escolhido={dados.dia} preenchidos={dados.recentes} aoEscolher={setDia} />
+              <Formulario key={dados.dia} dados={dados} aoSalvar={(d) => (setDados(d), setVersao((v) => v + 1))} />
+            </>
+          )}
         </>
       )}
-      {dados?.pode_preencher && <LaudoEsterilizacao versao={versao} config={LAUDO} />}
+      {aba === "laudo" && dados?.pode_preencher && <LaudoEsterilizacao versao={versao} config={LAUDO} />}
     </section>
   );
 }
