@@ -133,10 +133,10 @@ describe("Início: pendências de hoje (APP-014)", () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     const api = abrir();
     await screen.findByRole("button", { name: /C\.T\/B\.L · B\.L 72h/ });
-    expect(api.vezes("GET /pendencias-hoje")).toBe(1);
+    const antes = api.vezes("GET /pendencias-hoje"); // o Início e o número de atrasados do menu lateral
     await act(async () => {
       await vi.advanceTimersByTimeAsync(60_000);
     });
-    expect(api.vezes("GET /pendencias-hoje")).toBe(2);
+    expect(api.vezes("GET /pendencias-hoje")).toBe(antes + 1); // só o Início recarrega a cada minuto
   });
 });

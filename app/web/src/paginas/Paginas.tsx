@@ -137,26 +137,12 @@ function appDaPendencia(p: Pendencia): string | null {
   }
 }
 
-type Contagem = { atrasados: number; hoje: number };
+export type Contagem = { atrasados: number; hoje: number };
 
-function estadoDoApp(c: Contagem | undefined): { texto: string; classe: string } | null {
-  if (!c) return { texto: "Em dia", classe: "app-estado-ok" };
-  const partes = [c.atrasados && `${c.atrasados} atrasado${c.atrasados > 1 ? "s" : ""}`, c.hoje && `${c.hoje} para hoje`];
-  return { texto: partes.filter(Boolean).join(" · "), classe: c.atrasados ? "app-estado-atrasado" : "app-estado-hoje" };
-}
-
-function celular() {
-  return typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(max-width: 899px)").matches;
-}
-
-export function ListaDePaginas() {
-  const { pessoa } = useSessao();
-  const navegar = useNavigate();
-  const coletor = pessoa?.cargo === "Coletor";
-  const [busca, setBusca] = useState("");
+/** Atrasados e para hoje de cada app (pelo endereço da página antiga, `chave`), de /pendencias-hoje; usado na grade de
+ * Análises e no menu lateral. `recarregar` muda quando a tela muda (o menu recarrega ao trocar de página). */
+export function useContagensDosApps(recarregar?: unknown): Record<string, Contagem> | null {
   const [contagens, setContagens] = useState<Record<string, Contagem> | null>(null);
-  const [aberto, setAberto] = useState<App | null>(null);
-
   useEffect(() => {
     let vivo = true;
     lerJson<{ itens: Pendencia[] }>("/pendencias-hoje").then(
@@ -176,7 +162,27 @@ export function ListaDePaginas() {
     return () => {
       vivo = false;
     };
-  }, []);
+  }, [recarregar]);
+  return contagens;
+}
+
+function estadoDoApp(c: Contagem | undefined): { texto: string; classe: string } | null {
+  if (!c) return { texto: "Em dia", classe: "app-estado-ok" };
+  const partes = [c.atrasados && `${c.atrasados} atrasado${c.atrasados > 1 ? "s" : ""}`, c.hoje && `${c.hoje} para hoje`];
+  return { texto: partes.filter(Boolean).join(" · "), classe: c.atrasados ? "app-estado-atrasado" : "app-estado-hoje" };
+}
+
+function celular() {
+  return typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(max-width: 899px)").matches;
+}
+
+export function ListaDePaginas() {
+  const { pessoa } = useSessao();
+  const navegar = useNavigate();
+  const coletor = pessoa?.cargo === "Coletor";
+  const [busca, setBusca] = useState("");
+  const contagens = useContagensDosApps();
+  const [aberto, setAberto] = useState<App | null>(null);
 
   const termo = busca.trim().toLowerCase();
   const visiveis = APPS.filter((a) => !(a.semColetor && coletor) && (!termo || a.titulo.toLowerCase().includes(termo)));

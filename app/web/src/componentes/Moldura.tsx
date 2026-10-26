@@ -3,6 +3,8 @@ import { NavLink, Outlet, useLocation } from "react-router-dom";
 
 import { MENU } from "../menu";
 import { useSessao } from "../sessao";
+import BotaoTema from "./BotaoTema";
+import BuscaRapida from "./BuscaRapida";
 import CartaoFolhas from "./CartaoFolhas";
 import ChipEquipe from "./ChipEquipe";
 import FaixaDemonstracao from "./FaixaDemonstracao";
@@ -49,7 +51,10 @@ export default function Moldura() {
             </svg>
           </button>
           <Marca />
+          <BuscaRapida />
+          <span className="topo-espaco" />
           <ChipEquipe />
+          <BotaoTema />
           <MenuConta />
         </header>
 
