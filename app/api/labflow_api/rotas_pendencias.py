@@ -43,7 +43,8 @@ SELECT * FROM (
                 THEN 'Load ' || load_ou_tanque || coalesce(' · ' || nullif(alvo, ''), '')
                 ELSE coalesce(nullif(alvo, ''), load_ou_tanque) END,
            -- a próxima ação do teste (24/10): "TAB · para espalhar", "Coliformes · para ler"
-           teste || CASE WHEN status = 'No caldo' THEN ' · para espalhar'
+           teste || CASE WHEN status = 'No caldo' AND teste = 'Coliformes' THEN ' · para estriar'
+                         WHEN status = 'No caldo' THEN ' · para espalhar'
                          WHEN status IN ('Estriado', 'Incubado') THEN ' · para ler'
                          WHEN position('confirma' in status) > 0 THEN ' · para confirmar' ELSE '' END,
            proxima_etapa,
@@ -63,6 +64,23 @@ SELECT * FROM (
              || ' (coleta ' || to_char(data_coleta, 'DD/MM') || ')',
            analise || ' ' || frasco || ' · ' || etapa, prevista, situacao
     FROM bi.leituras_nfc
+    UNION ALL
+    -- o que a lista do bot traz além das leituras e dos testes (PB22, migration 106 do bot): o Stress de tanque por fazer
+    -- e a composta esperando o Coliformes obrigatório ou o TAB. TAB e Coliformes em andamento já vêm de bi.testes.
+    SELECT CASE WHEN p.grupo = 'Tanques' THEN CASE c.origem WHEN 'terra' THEN 'NFC Tank farm' ELSE 'NFC Navio' END
+                ELSE CASE v.origem WHEN 'embarque' THEN 'FCOJ Embarque' ELSE 'FCOJ Recebimento' END END,
+           CASE p.grupo WHEN 'Tanques' THEN 'Análise Stress' ELSE 'Composta' END,
+           CASE WHEN p.grupo <> 'Tanques' THEN p.alvo
+                WHEN c.origem = 'terra' THEN 'Tanque ' || c.tanque || ' (coleta ' || to_char(c.data_coleta, 'DD/MM') || ')'
+                ELSE n.nome || ' ' || n.viagem || ' · tanque ' || c.tanque || ' (coleta ' || to_char(c.data_coleta, 'DD/MM') || ')' END,
+           CASE p.grupo WHEN 'Tanques' THEN 'Stress · para analisar' ELSE p.etapa END,
+           p.prevista,
+           CASE WHEN p.atrasado THEN 'Atrasado' ELSE 'Vence hoje' END
+    FROM vw_pendencias_do_dia p
+    LEFT JOIN coletas c ON p.tabela = 'coletas' AND c.id = p.ref_id
+    LEFT JOIN navios n ON n.id = c.navio_id
+    LEFT JOIN vw_compostas v ON p.tabela = 'compostas' AND v.id = p.ref_id
+    WHERE p.grupo IN ('Tanques', 'Compostas')
     UNION ALL
     SELECT 'Recebimento NFC', 'C.T/B.L', 'Load ' || load || ' · lote ' || lote, analise, prevista, situacao
     FROM bi.recebimento_nfc

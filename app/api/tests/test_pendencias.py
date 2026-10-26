@@ -27,8 +27,10 @@ def _nas_views(conexao, situacao):
 def test_totais_batem_com_as_views_do_power_bi(cliente, logado, conexao):
     logado()
     corpo = cliente.get("/pendencias-hoje").json()
-    assert corpo["vence_hoje"] == _nas_views(conexao, "Vence hoje") > 0
-    assert corpo["atrasados"] == _nas_views(conexao, "Atrasado") > 0
+    # fora das views bi.*: o Stress por fazer e as compostas esperando análise vêm da vw_pendencias_do_dia (PB22)
+    extras = lambda sit: sum(1 for i in corpo["itens"] if i["situacao"] == sit and i["tipo"] in ("Análise Stress", "Composta"))  # noqa: E731
+    assert corpo["vence_hoje"] - extras("Vence hoje") == _nas_views(conexao, "Vence hoje") > 0
+    assert corpo["atrasados"] - extras("Atrasado") == _nas_views(conexao, "Atrasado") > 0
     assert len(corpo["itens"]) == corpo["vence_hoje"] + corpo["atrasados"]
     assert {i["situacao"] for i in corpo["itens"]} == {"Vence hoje", "Atrasado"}
 
@@ -76,7 +78,8 @@ def test_filtro_por_bloco_e_situacao(cliente, logado, conexao):
         conexao.execute(f"SELECT count(*) FROM {v} WHERE situacao = 'Atrasado' AND origem = 'Terra'").fetchone()[0]
         for v in ["bi.drops", "bi.leituras_nfc"]
     ) + conexao.execute("SELECT count(*) FROM bi.testes WHERE situacao = 'Atrasado' AND origem = 'Tank farm'").fetchone()[0]
-    assert so_drops_terra["atrasados"] == esperado
+    stress = sum(1 for i in so_drops_terra["itens"] if i["tipo"] == "Análise Stress")  # da vw_pendencias_do_dia (PB22)
+    assert so_drops_terra["atrasados"] - stress == esperado
 
 
 def test_bloco_invalido_da_422(cliente, logado):
@@ -123,3 +126,17 @@ def test_agrupar_pendencias_para_o_inicio(bloco, tipo, referencia, analise, grup
     from labflow_api.rotas_pendencias import agrupar
 
     assert agrupar(bloco, tipo, referencia, analise) == (grupo, item)
+
+
+def test_stress_por_fazer_e_coliformes_para_estriar(cliente, logado, conexao):
+    """25/10: a coleta com o Normal analisado e sem o Stress aparece como pendência; Coliformes no caldo é "para estriar"."""
+    logado()
+    hoje = conexao.execute("SELECT (now() AT TIME ZONE 'America/Sao_Paulo')::date").fetchone()[0]
+    coleta = {"origem": "terra", "tanques": "9961", "data": str(hoje - __import__("datetime").timedelta(days=3))}
+    for url, extra in (("/analises/tanques/coleta", {}), ("/analises/tanques/analise", {"frasco": "Normal"})):
+        r = cliente.post(url, json={**coleta, **extra, "data": str(hoje - __import__("datetime").timedelta(days=3)), "previa": False})
+        assert r.status_code == 200, r.text
+    itens = cliente.get("/pendencias-hoje").json()["itens"]
+    stress = [i for i in itens if i["tipo"] == "Análise Stress" and "9961" in i["referencia"]]
+    assert len(stress) == 1 and stress[0]["situacao"] == "Atrasado" and stress[0]["bloco"] == "NFC Tank farm"
+    assert not any("Coliformes · para espalhar" in i["analise"] for i in itens)  # o Coliformes no caldo é estriado

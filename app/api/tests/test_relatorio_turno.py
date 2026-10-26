@@ -111,6 +111,12 @@ def test_pendentes_batem_com_as_views(cliente, logado, agora, conexao):
     logado()
     vistas = ["bi.contagens", "bi.testes", "bi.drops", "bi.leituras_nfc", "bi.recebimento_nfc", "bi.desvios"]
     atrasados = sum(conexao.execute(f"SELECT count(*) FROM {v} WHERE situacao = 'Atrasado'").fetchone()[0] for v in vistas)
+    from labflow_api.rotas_pendencias import PENDENCIAS_SQL
+
+    # fora das views bi.* (PB22): o Stress por fazer e as compostas esperando análise, da vw_pendencias_do_dia
+    atrasados += conexao.execute(
+        f"SELECT count(*) FROM ({PENDENCIAS_SQL}) q WHERE situacao = 'Atrasado' AND tipo IN ('Análise Stress', 'Composta')"
+    ).fetchone()[0]
     pend = cliente.get("/turno/relatorio").json()["pendentes"]
     assert pend["atrasados"] == atrasados > 0
     assert pend["atrasados"] == sum(b["atrasados"] for b in pend["por_bloco"])
