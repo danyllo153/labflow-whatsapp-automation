@@ -35,9 +35,9 @@ def test_caixas_e_sugerida(cliente, logado):
     assert r.status_code == 200, r.text
     dados = r.json()
     rec = [c for c in dados["caixas"] if c["tipo"] == "recebimento"]
-    assert [c["numero"] for c in rec][:1] == [121] and rec[-1]["numero"] == 145
+    assert [c["numero"] for c in rec][:1] == [121] and rec[-1]["numero"] == 153
     assert {c["numero"] for c in dados["caixas"] if c["tipo"] == "tanque"} >= {34, 49}
-    assert 121 <= dados["sugerida_recebimento"] <= 145 and dados["pode_gravar"] is False
+    assert 121 <= dados["sugerida_recebimento"] <= 153 and dados["pode_gravar"] is False
     assert cliente.post("/arquivo/descartar", json={"tipo": "recebimento", "numero": 121}).status_code == 403
 
 
@@ -54,7 +54,7 @@ def test_arquivar_recebimento_previa_confirmar_e_descartar(cliente, logado, hoje
     r = cliente.post("/arquivo/arquivar", json={**pedido, "lotes": "3-4", "previa": True})
     assert r.status_code == 422 and "já está na caixa 144" in r.json()["detail"]  # a mesma recusa do bot
     r = cliente.post("/arquivo/arquivar", json={**pedido, "caixa": 99, "previa": True})
-    assert r.status_code == 422 and "121 a 145" in r.json()["detail"]
+    assert r.status_code == 422 and "121 a 153" in r.json()["detail"]
 
     caixa = cliente.get("/arquivo/recebimento/144").json()
     assert caixa["caixa"]["situacao"] == "Vencida" and caixa["itens"][0]["situacao"] == "Vencido"
@@ -72,3 +72,18 @@ def test_arquivar_recebimento_previa_confirmar_e_descartar(cliente, logado, hoje
 def test_caixa_que_nao_existe(cliente, logado):
     logado()
     assert cliente.get("/arquivo/recebimento/999").status_code == 404
+
+
+def test_caixa_do_recebimento_so_vence_inteira_e_a_busca_pelo_load(cliente, logado, hoje):
+    """26/10: um load vencido sozinho não põe a caixa em "Para descartar"; só quando todos venceram. A busca acha o load."""
+    logado()
+    _receber(cliente, "98811", "1-3", hoje - timedelta(days=9))
+    _receber(cliente, "98812", "1-3", hoje - timedelta(days=1))
+    for load, dias in (("98811", 8), ("98812", 1)):
+        r = cliente.post("/arquivo/arquivar", json={"load": load, "lotes": "1-3", "caixa": 143, "data": str(hoje - timedelta(days=dias)), "previa": False})
+        assert r.status_code == 200, r.text
+    caixa = next(c for c in cliente.get("/arquivo").json()["caixas"] if c["tipo"] == "recebimento" and c["numero"] == 143)
+    assert caixa["situacao"] == "Em uso" and caixa["itens_vencidos"] == 1
+    assert caixa["descarte_em"] == str(hoje + timedelta(days=6))  # a data do último load a vencer
+    achados = cliente.get("/arquivo/busca", params={"load": "98812"}).json()
+    assert [(a["tipo"], a["caixa"], a["lotes"]) for a in achados] == [("recebimento", 143, "1-3")]

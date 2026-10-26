@@ -73,7 +73,7 @@ describe("todas as páginas do Power BI no app (APP-019)", () => {
   it("a lista agrupa em Geral, NFC e FCOJ, sem a página antiga de Tanques", async () => {
     abrir("/paginas");
     const principal = (await screen.findByRole("heading", { level: 1, name: "Análises" })).closest("section") as HTMLElement;
-    expect(within(principal).getAllByRole("heading", { level: 2 }).map((h) => h.textContent)).toEqual(["Geral", "NFC", "FCOJ (concentrado)", "TAB, Coliformes e Howard", "Águas e superfícies", "Rotina do laboratório"]);
+    expect(within(principal).getAllByRole("heading", { level: 2 }).map((h) => h.textContent)).toEqual(["Geral", "NFC", "FCOJ (concentrado)", "TAB, Coliformes e Howard", "Águas e superfícies", "Registros diários"]);
     const grupo = (nome: string) => within(within(principal).getByRole("heading", { level: 2, name: nome }).parentElement as HTMLElement);
     const hrefs = (nome: string) => grupo(nome).getAllByRole("link").map((l) => l.getAttribute("href"));
     expect(hrefs("Geral")).toEqual(["/paginas/visao-geral", "/paginas/coletas"]);
@@ -84,7 +84,7 @@ describe("todas as páginas do Power BI no app (APP-019)", () => {
     expect(within(principal).queryByRole("link", { name: /^Tanques Leituras/ })).toBeNull();
     expect(within(principal).queryByText("Em breve")).toBeNull();
     expect(hrefs("Águas e superfícies")).toEqual(["/paginas/agua-processo", "/paginas/baias", "/paginas/linhas"]); // APP-037
-    expect(hrefs("Rotina do laboratório")).toEqual(["/esterilizacao", "/material-asseptico", "/meios-lotes", "/fluxo-laminar", "/arquivo", "/incubacao"]);
+    expect(hrefs("Registros diários")).toEqual(["/esterilizacao", "/material-asseptico", "/meios-lotes", "/fluxo-laminar", "/arquivo", "/incubacao"]);
   });
 
   it("o Coletor só vê Coletas e a água do processo (baias e linhas são análise, 25/10)", async () => {

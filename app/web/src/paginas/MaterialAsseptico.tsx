@@ -73,7 +73,7 @@ export default function MaterialAsseptico() {
   return (
     <section className="pagina-material">
       <p className="voltar">
-        <Link to="/registros-diarios">← Registros diários</Link>
+        <Link to="/paginas">← Análises</Link>
       </p>
       <h1>Material asséptico</h1>
       <p className="texto-secundario">
