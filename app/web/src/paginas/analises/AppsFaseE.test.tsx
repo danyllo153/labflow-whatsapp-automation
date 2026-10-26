@@ -136,8 +136,22 @@ describe("apps de análise da Fase E (E3 a E8)", () => {
   });
 
   it("Embarque: o Consultor vê, mas não registra", async () => {
-    abrir("/analises/embarque-fcoj", { "GET /analises/embarque/amostras": () => ({ status: 200, corpo: [] }) }, { ...ANA, cargo: "Consultor" });
+    abrir("/analises/embarque-fcoj?aba=registrar", { "GET /analises/embarque/amostras": () => ({ status: 200, corpo: [] }) }, { ...ANA, cargo: "Consultor" });
     expect(await screen.findByText(/Só Analista e Admin gravam aqui/)).toBeInTheDocument();
     expect(screen.queryByRole("form", { name: "Registrar embarque" })).toBeNull();
+  });
+
+  it("Embarque abre no painel, como o Recebimento FCOJ: números e Não ok por navio", async () => {
+    abrir("/analises/embarque-fcoj", {
+      "GET /analises/embarque/amostras": () => ({ status: 200, corpo: [] }),
+      "GET /analises/embarque/painel": () => ({
+        status: 200,
+        corpo: { atrasados: 2, para_hoje: 0, nao_ok_semana: 1, navios: [{ navio: "NAVIO EXEMPLO 1", lidos: 12, nao_ok: 1 }] },
+      }),
+    });
+    expect(await screen.findByText("Não ok por navio")).toBeInTheDocument();
+    expect(screen.getByText("NAVIO EXEMPLO 1")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /2\s*Atrasados/ })).toHaveClass("numero-atrasado");
+    expect(screen.getByRole("button", { name: /0\s*Para hoje/ })).toHaveClass("numero-neutro");
   });
 });

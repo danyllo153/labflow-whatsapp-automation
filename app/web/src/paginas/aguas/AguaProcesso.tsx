@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { AbasDaPagina, CabecalhoDaPagina, useAba } from "../../componentes/CabecalhoDaPagina";
 
 import { enviarJson, lerJson } from "../../api";
 import LaudoEsterilizacao from "../LaudoEsterilizacao";
@@ -72,57 +72,69 @@ export default function AguaProcesso() {
     setVersao((v) => v + 1);
   }
 
+  const abas = [{ aba: "principal", rotulo: "Coletas" }, ...(dados?.pode_lancar ? [{ aba: "laudo", rotulo: "Laudo" }] : [])];
+  const [aba, irPara] = useAba(abas);
   return (
     <section>
-      <p className="voltar">
-        <Link to="/paginas">← Análises</Link>
-      </p>
-      <h1>Água do processo</h1>
-      <p className="texto-secundario">Anéis de água estéril do Manifold e das linhas de carregamento das Câmaras 4, 5 e 6.</p>
-      {erro && (
-        <div className="cartao" role="alert">
-          <p className="mensagem-erro">{erro}</p>
-        </div>
-      )}
-      {!dados && !erro && <p className="carregando">Carregando...</p>}
-      {dados?.pode_coletar && <NovaColeta aoGravar={mudou} />}
-      {dados && (
-        <div className="cartao" aria-label="Coletas da água do processo">
-          <h2>
-            Coletas dos últimos 30 dias <span className="contador">{dados.coletas.length}</span>
-          </h2>
-          {dados.coletas.length === 0 ? (
-            <p className="texto-secundario">Nenhuma coleta registrada.</p>
-          ) : (
-            <div className="tabela-rolagem">
-              <table className="tabela">
-                <thead>
-                  <tr>
-                    <th scope="col">Coleta</th>
-                    {PONTOS.map((p) => (
-                      <th key={p.chave} scope="col">
-                        {p.nome}
-                        <br />
-                        <span className="texto-secundario">C.T. / B.L.</span>
-                      </th>
-                    ))}
-                    <th scope="col">Observação</th>
-                    <th scope="col">Quem</th>
-                    <th scope="col">Situação</th>
-                    {dados.pode_lancar && <th scope="col">Ações</th>}
-                  </tr>
-                </thead>
-                <tbody>
-                  {dados.coletas.map((c) => (
-                    <LinhaDaColeta key={`${c.id}-${versao}`} coleta={c} pode={dados.pode_lancar} aoMudar={mudou} />
-                  ))}
-                </tbody>
-              </table>
+      <CabecalhoDaPagina
+        icone="agua"
+        cor="agua"
+        titulo="Água do processo"
+        descricao={
+          <>
+            Anéis de água estéril do Manifold e das linhas de carregamento das Câmaras 4, 5 e 6.
+          </>
+        }
+      />
+      <AbasDaPagina titulo="Água do processo" abas={abas} aba={aba} irPara={irPara} />
+      {aba === "principal" && (
+        <>
+          {erro && (
+            <div className="cartao" role="alert">
+              <p className="mensagem-erro">{erro}</p>
             </div>
           )}
-        </div>
+          {!dados && !erro && <p className="carregando">Carregando...</p>}
+          {dados?.pode_coletar && <NovaColeta aoGravar={mudou} />}
+          {dados && (
+            <div className="cartao" aria-label="Coletas da água do processo">
+              <h2>
+                Coletas dos últimos 30 dias <span className="contador">{dados.coletas.length}</span>
+              </h2>
+              {dados.coletas.length === 0 ? (
+                <p className="texto-secundario">Nenhuma coleta registrada.</p>
+              ) : (
+                <div className="tabela-rolagem">
+                  <table className="tabela">
+                    <thead>
+                      <tr>
+                        <th scope="col">Coleta</th>
+                        {PONTOS.map((p) => (
+                          <th key={p.chave} scope="col">
+                            {p.nome}
+                            <br />
+                            <span className="texto-secundario">C.T. / B.L.</span>
+                          </th>
+                        ))}
+                        <th scope="col">Observação</th>
+                        <th scope="col">Quem</th>
+                        <th scope="col">Situação</th>
+                        {dados.pode_lancar && <th scope="col">Ações</th>}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {dados.coletas.map((c) => (
+                        <LinhaDaColeta key={`${c.id}-${versao}`} coleta={c} pode={dados.pode_lancar} aoMudar={mudou} />
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
+        </>
       )}
-      {dados?.pode_lancar && <LaudoEsterilizacao versao={versao} config={LAUDO} />}
+      {aba === "laudo" && dados?.pode_lancar && <LaudoEsterilizacao versao={versao} config={LAUDO} />}
     </section>
   );
 }

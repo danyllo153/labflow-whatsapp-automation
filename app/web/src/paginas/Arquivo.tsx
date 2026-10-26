@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 
+import { AbasDaPagina, CabecalhoDaPagina } from "../componentes/CabecalhoDaPagina";
 import { lerJson } from "../api";
 import { useSessao } from "../sessao";
 import { dm } from "../componentes/SeletorDeDias";
@@ -64,13 +65,14 @@ interface Item {
   descartado_em: string | null;
 }
 
-type Aba = "vencidas" | Tipo;
+type Aba = "vencidas" | Tipo | "laudo";
 
 const ABAS: { aba: Aba; rotulo: string }[] = [
   { aba: "vencidas", rotulo: "Para descartar" },
   { aba: "navio", rotulo: "Navios" },
   { aba: "recebimento", rotulo: "Recebimento" },
   { aba: "tanque", rotulo: "Tanques terra" },
+  { aba: "laudo", rotulo: "Laudo" },
 ];
 
 const NOME_DO_TIPO: Record<Tipo, string> = { navio: "Navio", recebimento: "Recebimento", tanque: "Tanque terra" };
@@ -111,10 +113,12 @@ export default function ArquivoDeContraAmostras() {
 
   return (
     <section className="pagina-arquivo">
-      <h1>Arquivo de contra-amostras</h1>
-      <p className="texto-secundario">
-        As caixas de navio, do recebimento e dos tanques de terra, o que tem em cada uma e quando vence. O que venceu fica em vermelho.
-      </p>
+      <CabecalhoDaPagina
+        icone="arquivo"
+        cor="rotina"
+        titulo="Arquivo de contra-amostras"
+        descricao="As caixas de navio, do recebimento e dos tanques de terra, o que tem em cada uma e quando vence. O que venceu fica em vermelho."
+      />
       {erro && (
         <p className="mensagem-erro" role="alert">
           {erro}
@@ -126,37 +130,33 @@ export default function ArquivoDeContraAmostras() {
           <Numeros
             itens={[
               { rotulo: "Para descartar", valor: vencidas.length, tom: vencidas.length ? "nao-ok" : "hoje" },
-              { rotulo: "Em uso", valor: dados.caixas.filter((c) => c.situacao === "Em uso").length, tom: "hoje" },
-              { rotulo: "Livres", valor: dados.caixas.filter((c) => c.situacao === "Disponível").length, tom: "hoje" },
+              { rotulo: "Em uso", valor: dados.caixas.filter((c) => c.situacao === "Em uso").length, tom: "neutro" },
+              { rotulo: "Livres", valor: dados.caixas.filter((c) => c.situacao === "Disponível").length, tom: "ok" },
             ]}
           />
           <BuscaDeLoad />
-          <div className="dias-material" role="group" aria-label="Arquivo">
-            {ABAS.map((a) => (
-              <button
-                key={a.aba}
-                type="button"
-                className="botao-secundario"
-                aria-pressed={aba === a.aba}
-                onClick={() => {
-                  setAba(a.aba);
-                  setEscolhida(null);
-                }}
-              >
-                {a.rotulo}
-                {a.aba === "vencidas" && vencidas.length > 0 ? ` (${vencidas.length})` : ""}
-              </button>
-            ))}
-          </div>
+          <AbasDaPagina
+            titulo="Arquivo"
+            abas={ABAS.filter((a) => a.aba !== "laudo" || pode).map((a) => ({ ...a, contador: a.aba === "vencidas" ? vencidas.length : undefined }))}
+            aba={aba}
+            irPara={(a) => {
+              setAba(a as Aba);
+              setEscolhida(null);
+            }}
+          />
           {aba === "recebimento" && (
             <SoQuemGrava pode={pode}>
               <ArquivarRecebimento sugerida={dados.sugerida_recebimento} aoGravar={() => void carregar()} />
-              <LaudoEsterilizacao versao={0} config={LAUDO_CONTRA_RECEBIMENTO} />
             </SoQuemGrava>
           )}
-          {aba === "navio" && pode && <LaudoEsterilizacao versao={0} config={LAUDO_CONTRA_EMBARQUE} />}
+          {aba === "laudo" && pode && (
+            <>
+              <LaudoEsterilizacao versao={0} config={LAUDO_CONTRA_RECEBIMENTO} />
+              <LaudoEsterilizacao versao={0} config={LAUDO_CONTRA_EMBARQUE} />
+            </>
+          )}
           {escolhida && <ConteudoDaCaixa caixa={escolhida} pode={pode} aoFechar={() => setEscolhida(null)} aoMudar={() => void carregar()} />}
-          {daAba.length === 0 ? (
+          {aba === "laudo" ? null : daAba.length === 0 ? (
             <p className="texto-secundario">{aba === "vencidas" ? "Nada vencido: nenhuma caixa para descartar." : "Nenhuma caixa cadastrada."}</p>
           ) : (
             <ul className="grade-caixas" aria-label="Caixas">

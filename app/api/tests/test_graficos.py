@@ -84,3 +84,11 @@ def test_tab_positivos_do_ano_batem_com_a_view(cliente, logado, conexao):
 def test_coletor_nao_ve(cliente, logado, url):
     logado("Coletor")
     assert cliente.get(url).status_code == 403
+
+
+def test_painel_do_embarque_bate_com_a_view(cliente, logado, conexao):
+    logado()
+    p = cliente.get("/analises/embarque/painel").json()
+    assert p["atrasados"] == _conta(conexao, "SELECT count(*) FROM bi.contagens WHERE origem = 'Embarque' AND situacao = 'Atrasado'")
+    assert p["para_hoje"] == _conta(conexao, "SELECT count(*) FROM bi.contagens WHERE origem = 'Embarque' AND situacao = 'Vence hoje'")
+    assert all(n["nao_ok"] <= n["lidos"] for n in p["navios"])

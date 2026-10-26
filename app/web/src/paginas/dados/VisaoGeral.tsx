@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { BotaoImprimir, CabecalhoDaPagina } from "../../componentes/CabecalhoDaPagina";
 import { Link, useSearchParams } from "react-router-dom";
 
 import { lerJson } from "../../api";
@@ -57,10 +58,13 @@ export default function VisaoGeral() {
 
   return (
     <section>
-      <p className="trilha">
-        <Link to="/paginas">Análises</Link> / Visão geral
-      </p>
-      <h1>Visão geral</h1>
+      <CabecalhoDaPagina
+        icone="visao-geral"
+        cor="geral"
+        titulo="Visão geral"
+        descricao="Os números do período e o que pede atenção, em todas as análises."
+        acoes={<BotaoImprimir aoClicar={() => window.print()} />}
+      />
 
       <form className="periodo" onSubmit={aplicar} aria-label="Período">
         <label className="campo">
@@ -73,9 +77,6 @@ export default function VisaoGeral() {
         </label>
         <button type="submit" className="botao-secundario">
           Ver período
-        </button>
-        <button type="button" className="botao-secundario" onClick={() => window.print()}>
-          Imprimir
         </button>
       </form>
 

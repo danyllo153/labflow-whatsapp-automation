@@ -88,6 +88,15 @@ const FORMAS: Record<string, JSX.Element> = {
       <path d="M9 4V3h6v1M9 10h6M9 14h6M9 18h3" />
     </>
   ),
+  leituras: (
+    <>
+      <circle cx="12" cy="12" r="8.5" />
+      <circle cx="9" cy="10" r="1.3" />
+      <circle cx="14.5" cy="9.5" r="1" />
+      <circle cx="13" cy="14.5" r="1.4" />
+      <circle cx="9.5" cy="15" r="0.8" />
+    </>
+  ),
 };
 
 export const ICONES_DE_APP = Object.keys(FORMAS);

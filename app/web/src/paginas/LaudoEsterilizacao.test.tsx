@@ -30,7 +30,7 @@ const LAUDOS: DadosLaudos = {
   ],
 };
 
-function abrir(rotas: Parameters<typeof servidorFalso>[0] = {}) {
+function abrir(rotas: Parameters<typeof servidorFalso>[0] = {}, entrada = "/esterilizacao?aba=laudo") {
   const api = servidorFalso({
     "GET /me": () => ({ status: 200, corpo: { ...ANA, cargo: "Analista" } }),
     "GET /esterilizacao": () => ({ status: 200, corpo: BASE }),
@@ -39,7 +39,7 @@ function abrir(rotas: Parameters<typeof servidorFalso>[0] = {}) {
     ...rotas,
   });
   render(
-    <MemoryRouter initialEntries={["/esterilizacao"]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+    <MemoryRouter initialEntries={[entrada]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <ProvedorDeSessao>
         <App />
       </ProvedorDeSessao>
@@ -75,7 +75,7 @@ describe("Laudo de esterilização (APP-035)", () => {
   });
 
   it("avisa, sem bloquear, quando o ciclo digitado já tem material", async () => {
-    abrir({ "GET /esterilizacao/ciclo?ciclo=A1092%2F26": () => ({ status: 200, corpo: [{ tipo: "Meio", quem: "Ana Souza", quando: "09:40" }] }) });
+    abrir({ "GET /esterilizacao/ciclo?ciclo=A1092%2F26": () => ({ status: 200, corpo: [{ tipo: "Meio", quem: "Ana Souza", quando: "09:40" }] }) }, "/esterilizacao");
     await userEvent.click(await screen.findByRole("button", { name: "Frasco" }));
     const campo = screen.getByLabelText("Número do ciclo");
     await userEvent.type(campo, "A1092/26");
@@ -92,7 +92,7 @@ describe("Laudo de esterilização (APP-035)", () => {
         item = { ...item, eficiente: corpo.eficiente };
         return { status: 200, corpo: { ...BASE, itens: [item] } };
       },
-    });
+    }, "/esterilizacao");
     expect(await screen.findByText("Eficiente: Sim")).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: /Marcar não eficiente/ }));
     await userEvent.click(screen.getByRole("button", { name: "Marcar Não eficiente" }));
@@ -122,7 +122,7 @@ describe("Laudo de esterilização (APP-035)", () => {
   });
 
   it("vários materiais no mesmo ciclo: um toque em cada e um Registrar só", async () => {
-    const api = abrir({ "POST /esterilizacao": () => ({ status: 201, corpo: BASE }) });
+    const api = abrir({ "POST /esterilizacao": () => ({ status: 201, corpo: BASE }) }, "/esterilizacao");
     const form = await screen.findByRole("form", { name: "Registrar esterilização" });
     await userEvent.click(within(form).getByRole("button", { name: "Ponteira" }));
     await userEvent.click(within(form).getByRole("button", { name: "Meio" }));

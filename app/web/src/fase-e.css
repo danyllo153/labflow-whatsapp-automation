@@ -263,6 +263,8 @@ button.numero-app {
 .numero-atrasado strong { color: var(--nao-ok-texto, #a02d20); }
 .numero-hoje strong { color: var(--pendente-texto, #7a5800); }
 .numero-nao-ok strong { color: var(--nao-ok); }
+.numero-ok strong { color: var(--ok-texto, #1e7a46); }
+.numero-neutro strong { color: var(--texto); }
 
 .painel-app-grade {
   display: grid;
@@ -813,3 +815,24 @@ button.numero-app {
 .botao-material[aria-pressed="true"] { background: color-mix(in srgb, var(--cor-material) 16%, var(--cartao, #fff)); border-color: var(--cor-material); color: var(--texto); }
 .botao-material[aria-pressed="true"] .icone-material { color: var(--cor-material); }
 .busca-arquivo .campos-linha { align-items: end; margin-bottom: 0; } .busca-arquivo .botao { flex: 0 0 auto; }
+
+/* cabeçalho único (26/10): as ações (Gráfico, Excel, Imprimir) à direita do título; no celular descem para a linha de baixo */
+.app-analise-topo {
+  flex-wrap: wrap;
+}
+
+.app-analise-titulo {
+  flex: 1 1 260px;
+  min-width: 0;
+}
+
+.app-analise-topo .acoes-icone {
+  margin-left: auto;
+}
+
+/* ação de uma linha da lista (26/10): sempre botão, pequeno, nunca link de texto */
+.botao-da-linha {
+  min-height: 36px;
+  padding: 4px 12px;
+  font-size: 0.9rem;
+}

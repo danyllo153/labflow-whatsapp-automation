@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { BotaoImprimir } from "../componentes/CabecalhoDaPagina";
 import { Link, useSearchParams } from "react-router-dom";
 
 import { enviarJson, lerJson } from "../api";
@@ -142,9 +143,7 @@ export default function RelatorioDoTurno() {
             Próximo turno ({r.proximo.turno} {dm(r.proximo.dia)})
           </Link>
         )}
-        <button type="button" className="botao-secundario" onClick={() => window.print()}>
-          Imprimir
-        </button>
+        <BotaoImprimir aoClicar={() => window.print()} />
       </div>
 
       <div className="cartao">

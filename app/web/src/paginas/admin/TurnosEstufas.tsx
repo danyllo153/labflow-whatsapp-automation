@@ -266,18 +266,22 @@ function LinhaAtividade({ atividade: a, pedir }: { atividade: Atividade; pedir: 
           {a.texto} <span className="texto-secundario">· {quando(a.dias_semana)}{!a.ativa && " · desativada"}</span>
         </span>
         <span className="acoes-linha">
-          <button type="button" className="link-botao" aria-label={`Subir ${a.texto}`} onClick={() => void pedir(() => enviarJson(`/admin/turnos/atividades/${a.id}/mover`, { direcao: "cima" }))}>
-            Subir
+          <button type="button" className="botao-icone" title="Subir" aria-label={`Subir ${a.texto}`} onClick={() => void pedir(() => enviarJson(`/admin/turnos/atividades/${a.id}/mover`, { direcao: "cima" }))}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+              <path d="M12 19V5M5 12l7-7 7 7" />
+            </svg>
           </button>
-          <button type="button" className="link-botao" aria-label={`Descer ${a.texto}`} onClick={() => void pedir(() => enviarJson(`/admin/turnos/atividades/${a.id}/mover`, { direcao: "baixo" }))}>
-            Descer
+          <button type="button" className="botao-icone" title="Descer" aria-label={`Descer ${a.texto}`} onClick={() => void pedir(() => enviarJson(`/admin/turnos/atividades/${a.id}/mover`, { direcao: "baixo" }))}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+              <path d="M12 5v14M5 12l7 7 7-7" />
+            </svg>
           </button>
-          <button type="button" className="link-botao" aria-label={`Editar ${a.texto}`} onClick={() => setEditando(true)}>
+          <button type="button" className="botao-secundario botao-da-linha" aria-label={`Editar ${a.texto}`} onClick={() => setEditando(true)}>
             Editar
           </button>
           <button
             type="button"
-            className="link-botao"
+            className="botao-secundario botao-da-linha"
             aria-label={`${a.ativa ? "Desativar" : "Reativar"} ${a.texto}`}
             onClick={() => void pedir(() => enviarJson(`/admin/turnos/atividades/${a.id}`, { texto: a.texto, dias_semana: a.dias_semana, ativa: !a.ativa }, "PUT"))}
           >
@@ -413,7 +417,7 @@ function LinhaEstufa({ estufa: e, aoMudar }: { estufa: EstufaAdmin; aoMudar: Mud
               Faixa
             </button>
           )}
-          <button type="button" className="link-botao" aria-label={`${e.ativa ? "Desativar" : "Reativar"} a ${nome}`} onClick={() => void ativar(!e.ativa)}>
+          <button type="button" className="botao-secundario botao-da-linha" aria-label={`${e.ativa ? "Desativar" : "Reativar"} a ${nome}`} onClick={() => void ativar(!e.ativa)}>
             {e.ativa ? "Desativar" : "Reativar"}
           </button>
         </span>

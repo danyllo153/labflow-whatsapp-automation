@@ -388,7 +388,7 @@ export default function Pessoas() {
             </div>
             <button
               type="button"
-              className="link-botao"
+              className="botao-secundario botao-da-linha"
               aria-expanded={aberta === p.id}
               onClick={() => setAberta(aberta === p.id ? null : p.id)}
             >

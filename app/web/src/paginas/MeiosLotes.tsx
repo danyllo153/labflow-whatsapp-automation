@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type ChangeEvent, type FormEvent } from "react";
-import { Link } from "react-router-dom";
+import { AbasDaPagina, CabecalhoDaPagina, useAba } from "../componentes/CabecalhoDaPagina";
 
 import { enviarArquivo, enviarJson, lerJson } from "../api";
 import LaudoEsterilizacao from "./LaudoEsterilizacao";
@@ -91,12 +91,12 @@ export default function MeiosLotes() {
   }
 
   const atual = dados?.meios.find((m) => m.meio === meio);
+  const abas = [{ aba: "principal", rotulo: "Lotes" }, ...(dados?.pode_registrar ? [{ aba: "laudo", rotulo: "Laudo" }] : [])];
+  const [aba, irPara] = useAba(abas);
   return (
     <section>
-      <p className="voltar">
-        <Link to="/paginas">← Análises</Link>
-      </p>
-      <h1>Meios de cultura (lotes)</h1>
+      <CabecalhoDaPagina icone="meios" cor="rotina" titulo="Meios de cultura (lotes)" descricao="O lote em uso de cada meio, os lotes recebidos e o laudo de cada meio." />
+      <AbasDaPagina titulo="Meios de cultura" abas={abas} aba={aba} irPara={irPara} />
       {erro && (
         <div className="cartao" role="alert">
           <p className="mensagem-erro">{erro}</p>
@@ -124,7 +124,7 @@ export default function MeiosLotes() {
               </button>
             ))}
           </div>
-          {atual && (
+          {atual && aba === "principal" && (
             <>
               <section className="cartao" aria-label={`Lote em uso de ${atual.meio}`}>
                 <h2>{atual.meio} · lote em uso</h2>
@@ -142,6 +142,10 @@ export default function MeiosLotes() {
               </section>
               {dados.pode_registrar && <NovoLote meio={atual.meio} aoGravar={mudou} />}
               <ListaDeLotes doMeio={atual} pode={dados.pode_registrar} aoMudar={mudou} />
+            </>
+          )}
+          {atual && aba === "laudo" && (
+            <>
               {dados.pode_registrar && (
                 <LaudoEsterilizacao
                   versao={versao}
@@ -156,7 +160,7 @@ export default function MeiosLotes() {
               )}
             </>
           )}
-          {dados.pode_importar && <Importar aoImportar={() => void carregar()} />}
+          {aba === "principal" && dados.pode_importar && <Importar aoImportar={() => void carregar()} />}
         </>
       )}
     </section>

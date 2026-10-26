@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { AbasDaPagina, CabecalhoDaPagina, useAba } from "../componentes/CabecalhoDaPagina";
 import { Link } from "react-router-dom";
 
 import { lerJson } from "../api";
@@ -59,56 +60,66 @@ export default function IncubacaoLeitura() {
     void carregar(dia);
   }, [carregar, dia]);
 
+  const abas = [{ aba: "principal", rotulo: "Incubação" }, ...(pessoa?.pode.includes("registrar_analise") ? [{ aba: "laudo", rotulo: "Laudo" }] : [])];
+  const [aba, irPara] = useAba(abas);
   return (
     <section className="pagina-material">
-      <p className="voltar">
-        <Link to="/paginas">← Análises</Link>
-      </p>
-      <h1>Incubação e leitura</h1>
-      <p className="texto-secundario">
-        O que foi plaqueado em cada dia e quando ler. Vem do que foi registrado no bot e no app; TAB e Coliformes não entram. Os
-        lotes dos meios saem sozinhos no laudo (o lote em uso de cada meio, em Meios e lotes).
-      </p>
-      {erro && (
-        <div className="cartao" role="alert">
-          <p className="mensagem-erro">{erro}</p>
-        </div>
+      <CabecalhoDaPagina
+        icone="incubacao"
+        cor="rotina"
+        titulo="Incubação e leitura"
+        descricao={
+          <>
+            O que foi plaqueado em cada dia e quando ler. Vem do que foi registrado no bot e no app; TAB e Coliformes não entram. Os
+            lotes dos meios saem sozinhos no laudo (o lote em uso de cada meio, em Meios e lotes).
+          </>
+        }
+      />
+      <AbasDaPagina titulo="Incubação e leitura" abas={abas} aba={aba} irPara={irPara} />
+      {aba === "principal" && (
+        <>
+          {erro && (
+            <div className="cartao" role="alert">
+              <p className="mensagem-erro">{erro}</p>
+            </div>
+          )}
+          {!dados && !erro && <p className="carregando">Carregando...</p>}
+          {hoje && <SeletorDeDias hoje={hoje} escolhido={dados?.dia ?? hoje} preenchidos={[]} aoEscolher={setDia} />}
+          {dados && (
+            <div className="cartao" aria-label={`Incubação de ${dm(dados.dia)}`}>
+              <h2>
+                Incubação de {dm(dados.dia)}{" "}
+                <span className={dados.na_folha ? "etiqueta etiqueta-ok" : "etiqueta etiqueta-neutra"}>
+                  {dados.na_folha ? "Na folha" : dados.dia === hoje ? "Entra na folha amanhã" : "Ainda fora da folha"}
+                </span>
+              </h2>
+              {dados.amostras.length === 0 ? (
+                <p className="texto-secundario">Nada plaqueado neste dia (fora TAB e Coliformes).</p>
+              ) : (
+                <ul className="lista-simples" aria-label="Amostras">
+                  {dados.amostras.map((linha) => (
+                    <li key={linha}>{linha}</li>
+                  ))}
+                </ul>
+              )}
+              {LEITURAS.some(([chave]) => dados.leituras[chave]) && (
+                <p className="texto-secundario leituras-do-dia">
+                  Ler em:{" "}
+                  {LEITURAS.filter(([chave]) => dados.leituras[chave])
+                    .map(([chave, rotulo]) => `${rotulo} ${dm(dados.leituras[chave] as string)}`)
+                    .join(" · ")}
+                </p>
+              )}
+              {MEIOS.some((m) => dados.meios[m] === null) && (
+                <p className="texto-secundario">
+                  Meio usado sem nenhum lote recebido até este dia: cadastre o lote em <Link to="/meios-lotes">Meios e lotes</Link>.
+                </p>
+              )}
+            </div>
+          )}
+        </>
       )}
-      {!dados && !erro && <p className="carregando">Carregando...</p>}
-      {hoje && <SeletorDeDias hoje={hoje} escolhido={dados?.dia ?? hoje} preenchidos={[]} aoEscolher={setDia} />}
-      {dados && (
-        <div className="cartao" aria-label={`Incubação de ${dm(dados.dia)}`}>
-          <h2>
-            Incubação de {dm(dados.dia)}{" "}
-            <span className={dados.na_folha ? "etiqueta etiqueta-ok" : "etiqueta etiqueta-neutra"}>
-              {dados.na_folha ? "Na folha" : dados.dia === hoje ? "Entra na folha amanhã" : "Ainda fora da folha"}
-            </span>
-          </h2>
-          {dados.amostras.length === 0 ? (
-            <p className="texto-secundario">Nada plaqueado neste dia (fora TAB e Coliformes).</p>
-          ) : (
-            <ul className="lista-simples" aria-label="Amostras">
-              {dados.amostras.map((linha) => (
-                <li key={linha}>{linha}</li>
-              ))}
-            </ul>
-          )}
-          {LEITURAS.some(([chave]) => dados.leituras[chave]) && (
-            <p className="texto-secundario leituras-do-dia">
-              Ler em:{" "}
-              {LEITURAS.filter(([chave]) => dados.leituras[chave])
-                .map(([chave, rotulo]) => `${rotulo} ${dm(dados.leituras[chave] as string)}`)
-                .join(" · ")}
-            </p>
-          )}
-          {MEIOS.some((m) => dados.meios[m] === null) && (
-            <p className="texto-secundario">
-              Meio usado sem nenhum lote recebido até este dia: cadastre o lote em <Link to="/meios-lotes">Meios e lotes</Link>.
-            </p>
-          )}
-        </div>
-      )}
-      {pessoa?.pode.includes("registrar_analise") && <LaudoEsterilizacao versao={0} config={LAUDO} />}
+      {aba === "laudo" && pessoa?.pode.includes("registrar_analise") && <LaudoEsterilizacao versao={0} config={LAUDO} />}
     </section>
   );
 }
