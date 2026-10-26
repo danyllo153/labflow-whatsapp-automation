@@ -35,9 +35,9 @@ def test_caixas_e_sugerida(cliente, logado):
     assert r.status_code == 200, r.text
     dados = r.json()
     rec = [c for c in dados["caixas"] if c["tipo"] == "recebimento"]
-    assert [c["numero"] for c in rec][:1] == [121] and rec[-1]["numero"] == 145
+    assert [c["numero"] for c in rec][:1] == [121] and rec[-1]["numero"] == 153
     assert {c["numero"] for c in dados["caixas"] if c["tipo"] == "tanque"} >= {34, 49}
-    assert 121 <= dados["sugerida_recebimento"] <= 145 and dados["pode_gravar"] is False
+    assert 121 <= dados["sugerida_recebimento"] <= 153 and dados["pode_gravar"] is False
     assert cliente.post("/arquivo/descartar", json={"tipo": "recebimento", "numero": 121}).status_code == 403
 
 
@@ -54,7 +54,7 @@ def test_arquivar_recebimento_previa_confirmar_e_descartar(cliente, logado, hoje
     r = cliente.post("/arquivo/arquivar", json={**pedido, "lotes": "3-4", "previa": True})
     assert r.status_code == 422 and "já está na caixa 144" in r.json()["detail"]  # a mesma recusa do bot
     r = cliente.post("/arquivo/arquivar", json={**pedido, "caixa": 99, "previa": True})
-    assert r.status_code == 422 and "121 a 145" in r.json()["detail"]
+    assert r.status_code == 422 and "121 a 153" in r.json()["detail"]
 
     caixa = cliente.get("/arquivo/recebimento/144").json()
     assert caixa["caixa"]["situacao"] == "Vencida" and caixa["itens"][0]["situacao"] == "Vencido"

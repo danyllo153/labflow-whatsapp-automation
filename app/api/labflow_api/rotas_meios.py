@@ -363,6 +363,6 @@ for _meio in MEIOS:
         laudos.Laudo(
             nome=f"meios-{_meio}", titulo=f"Meios de cultura · {_meio}", modelo=MODELO, capacidade=LINHAS_POR_FOLHA,
             contar_sql="SELECT count(*), min(recebido_em), max(recebido_em) FROM app.lotes_meio WHERE pagina_id = %s AND excluido_em IS NULL",
-            gerar=_gerar(_meio),
+            gerar=_gerar(_meio), traco=TABELA,
         )
     )
