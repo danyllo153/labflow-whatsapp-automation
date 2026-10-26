@@ -338,6 +338,6 @@ laudos.registrar(
     laudos.Laudo(
         nome=NOME, titulo="Controle de incubação e leitura", modelo="incubacao", capacidade=BLOCOS_POR_FOLHA,
         contar_sql="SELECT coalesce(sum(blocos), 0), min(dia), max(dia) FROM app.incubacao_dias WHERE pagina_id = %s",
-        gerar=_gerar, preparar=distribuir,
+        gerar=_gerar, preparar=distribuir, traco=TABELA, linhas_por_unidade=LINHAS_POR_BLOCO,
     )
 )

@@ -13,6 +13,7 @@ import {
   useLista,
 } from "./comum";
 import { ABAS_FINAIS } from "./Instrucao";
+import { ABA_LAUDO, AbaLaudo } from "./LaudoDoApp";
 
 /**
  * Embarque FCOJ (Fase E, E6): amostras A1, A2... do navio, linha e fase e as compostas (045), e o C.T/B.L de cada amostra
@@ -36,6 +37,7 @@ export const ABAS_EMBARQUE = [
   { aba: "compostas", rotulo: "Compostas" },
   { aba: "resultados", rotulo: "C.T e B.L" },
   { aba: "tabelas", rotulo: "Resultados" },
+  ABA_LAUDO,
   ...ABAS_FINAIS,
 ];
 
@@ -79,6 +81,7 @@ export default function Embarque() {
               {lista.dados && <Lancar amostras={lista.dados} pode={pode} aoGravar={lista.recarregar} />}
             </>
           )}
+          {aba === "laudo" && <AbaLaudo laudo="embarque-fcoj" />}
           {aba === "tabelas" && (
             <Resultados
               paginas={[

@@ -22,6 +22,7 @@ from labflow_api.rotas_esterilizacao import roteador as roteador_esterilizacao
 from labflow_api.rotas_laudo import roteador as roteador_laudo
 from labflow_api.rotas_login import roteador as roteador_login
 from labflow_api.rotas_paginas import roteador as roteador_paginas
+from labflow_api import laudos_analises  # noqa: F401 (registra os laudos de TAB, Coliformes, Howard, NFC, Embarque e contra-amostra)
 from labflow_api.laudos import roteador as roteador_laudos
 from labflow_api.rotas_aguas import roteador as roteador_aguas
 from labflow_api.rotas_fluxo_laminar import roteador as roteador_fluxo_laminar

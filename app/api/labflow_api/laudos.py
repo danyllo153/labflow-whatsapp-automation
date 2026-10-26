@@ -139,12 +139,75 @@ def preencher(
     return saida.getvalue()
 
 
-def demonstracao(titulo: str, tabela: Tabela, cabecalhos: tuple[str, ...]) -> Callable[[], bytes]:
-    """Modelo de demonstração: título, os nomes das colunas e a grade, na mesma geometria do oficial."""
+def riscar(pdf: bytes, riscos: list[tuple[float, float, float, float]]) -> bytes:
+    """Linhas por cima de um PDF pronto (origem em cima à esquerda), como o traço que fecha as linhas vazias da folha."""
+    escritor = PdfWriter(clone_from=io.BytesIO(pdf))
+    folha = escritor.pages[0]
+    largura, altura = float(folha.mediabox.width), float(folha.mediabox.height)
+    camada = io.BytesIO()
+    c = canvas.Canvas(camada, pagesize=(largura, altura))
+    c.setLineWidth(0.8)
+    for x0, y0, x1, y1 in riscos:
+        c.line(x0, altura - y0, x1, altura - y1)
+    c.showPage()
+    c.save()
+    folha.merge_page(PdfReader(io.BytesIO(camada.getvalue())).pages[0])
+    saida = io.BytesIO()
+    escritor.write(saida)
+    return saida.getvalue()
+
+
+def TABELA_CELULA(tabela: Tabela, texto: str, linha: int, coluna: int, centro: bool = True) -> Celula:  # noqa: N802
+    """A célula de uma tabela, com o texto à esquerda quando não é centralizado (Times 11, o papel)."""
+    return tabela.celula(texto, linha, coluna, centro=centro)
+
+
+CONTAR_LINHAS = "SELECT count(*), min(dia), max(dia) FROM app.laudo_linhas WHERE pagina_id = %s"
+
+
+def distribuir_linhas(con: psycopg.Connection, nome: str, itens: list[tuple[str, str, date | None]], capacidade: int) -> None:
+    """Põe nas folhas (app.laudo_linhas, 076), na ordem dada, as linhas que ainda não têm lugar: (ref, chave, dia). Uma folha
+    não mistura chaves (o dia do TAB, o tanque do NFC, o navio do embarque, a caixa da contra-amostra); cheia ou impressa,
+    abre outra. Trava para duas telas não dividirem uma vaga."""
+    con.execute("SELECT pg_advisory_xact_lock(60, hashtext(%s))", (nome,))
+    ja = {r for (r,) in con.execute("SELECT ref FROM app.laudo_linhas WHERE laudo = %s", (nome,))}
+    for ref, chave, dia in itens:
+        if ref in ja:
+            continue
+        pagina = con.execute(
+            """
+            SELECT p.id FROM app.paginas_laudo p
+            WHERE p.laudo = %(n)s AND p.impresso_em IS NULL
+              AND NOT EXISTS (SELECT 1 FROM app.laudo_linhas l WHERE l.pagina_id = p.id AND l.chave <> %(c)s)
+              AND (SELECT count(*) FROM app.laudo_linhas l WHERE l.pagina_id = p.id) < %(cap)s
+            ORDER BY p.id LIMIT 1
+            """,
+            {"n": nome, "c": chave, "cap": capacidade},
+        ).fetchone()
+        pagina_id = pagina[0] if pagina else con.execute(
+            "INSERT INTO app.paginas_laudo (laudo) VALUES (%s) RETURNING id", (nome,)
+        ).fetchone()[0]
+        con.execute(
+            "INSERT INTO app.laudo_linhas (laudo, ref, chave, dia, pagina_id) VALUES (%s, %s, %s, %s, %s)",
+            (nome, ref, chave, dia, pagina_id),
+        )
+        ja.add(ref)
+
+
+def linhas_da_pagina(con: psycopg.Connection, pagina_id: int) -> list[tuple[str, str]]:
+    """(ref, chave) das linhas de uma folha, na ordem em que entraram."""
+    return con.execute(
+        "SELECT ref, chave FROM app.laudo_linhas WHERE pagina_id = %s ORDER BY incluido_em, ref", (pagina_id,)
+    ).fetchall()
+
+
+def demonstracao(titulo: str, tabela: Tabela, cabecalhos: tuple[str, ...], deitada: bool = False) -> Callable[[], bytes]:
+    """Modelo de demonstração: título, os nomes das colunas e a grade, na mesma geometria do oficial (A4 em pé ou deitada)."""
 
     def _gerar() -> bytes:
+        LARGURA, ALTURA = (A4[1], A4[0]) if deitada else A4  # noqa: N806 (a folha desta demonstração)
         saida = io.BytesIO()
-        c = canvas.Canvas(saida, pagesize=A4)
+        c = canvas.Canvas(saida, pagesize=(LARGURA, ALTURA))
         c.setFont("Helvetica-Bold", 11)
         c.drawCentredString(LARGURA / 2, ALTURA - tabela.topo + 40, f"{titulo} (modelo de demonstração)")
         c.setFont("Helvetica", 7)
@@ -178,6 +241,10 @@ class Laudo:
     aceitar_modelo: Callable[[bytes], None] = field(default=laudo_esterilizacao.modelo_valido)
     # laudo cujas linhas vêm de outras tabelas (ex.: incubação, que lê o bot): põe as novas nas páginas antes de mostrar
     preparar: Callable[[psycopg.Connection], None] | None = None
+    # a folha marcada como impressa sai com o traço que fecha as linhas vazias (regra de todo documento, 26/10): a tabela do
+    # papel e quantas linhas dela cada unidade do contar_sql ocupa (a incubação conta blocos de 4 linhas)
+    traco: "Tabela | None" = None
+    linhas_por_unidade: int = 1
 
 
 LAUDOS: dict[str, Laudo] = {}
@@ -324,6 +391,13 @@ def baixar_pdf(
     laudo = _laudo(nome)
     _da_pagina(con, laudo, pagina_id)
     pdf = laudo.gerar(con, pagina_id, modelo_do_banco(con, laudo.modelo))
+    if laudo.traco is not None:
+        impressa = con.execute("SELECT impresso_em IS NOT NULL FROM app.paginas_laudo WHERE id = %s", (pagina_id,)).fetchone()[0]
+        if impressa:
+            usadas = con.execute(laudo.contar_sql, (pagina_id,)).fetchone()[0] * laudo.linhas_por_unidade
+            risco = laudo.traco.traco_das_vazias(usadas)
+            if risco:
+                pdf = riscar(pdf, [risco])
     return Response(pdf, media_type="application/pdf", headers={"Content-Disposition": f'inline; filename="{nome}-{pagina_id}.pdf"'})
 
 

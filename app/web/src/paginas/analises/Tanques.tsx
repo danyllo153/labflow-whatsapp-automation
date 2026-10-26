@@ -16,6 +16,7 @@ import {
   useMarcados,
 } from "./comum";
 import { ABAS_FINAIS } from "./Instrucao";
+import { ABA_LAUDO, AbaLaudo } from "./LaudoDoApp";
 
 /** Tanques de terra e de navio (Fase E, E3; funções da 042): leituras do dia, coleta e análise, como o bot. */
 
@@ -36,6 +37,7 @@ export const ABAS_TANQUES = [
   { aba: "coleta", rotulo: "Coleta" },
   { aba: "analise", rotulo: "Análise" },
   { aba: "resultados", rotulo: "Resultados" },
+  ABA_LAUDO,
   ...ABAS_FINAIS,
 ];
 
@@ -81,6 +83,7 @@ export default function Tanques() {
               <Analise aoGravar={lista.recarregar} />
             </SoQuemGrava>
           )}
+          {aba === "laudo" && <AbaLaudo laudo="nfc-tanques" />}
           {aba === "resultados" && (
             <Resultados
               paginas={[
