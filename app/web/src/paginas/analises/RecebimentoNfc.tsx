@@ -15,6 +15,7 @@ import {
   useGravacao,
   useLista,
 } from "./comum";
+import LaudoEsterilizacao from "../LaudoEsterilizacao";
 import { ABAS_FINAIS } from "./Instrucao";
 
 /**
@@ -45,8 +46,19 @@ export const ABAS_NFC = [
   { aba: "resultados", rotulo: "Para lançar" },
   { aba: "registrar", rotulo: "Registrar" },
   { aba: "tabelas", rotulo: "Resultados" },
+  { aba: "laudo", rotulo: "Laudo" },
   ...ABAS_FINAIS,
 ];
+
+// O mesmo papel e o mesmo modelo do laudo do Recebimento FCOJ (decidido em 25/10), em folhas próprias do item 129.
+const LAUDO = {
+  base: "/laudos/recebimento-nfc",
+  titulo: "Laudo do recebimento de NFC",
+  rotulo: "Laudo do recebimento de NFC",
+  explicacao:
+    "O mesmo papel do recebimento de FCOJ (A4 deitado, 15 linhas), em folhas só do NFC: uma linha por lote e tipo, com o C.T/B.L como lido na placa e, na Observação, o tipo e a diluição (past 10¹, fresh 10³). Entra sozinho quando o lote é registrado. O modelo é o mesmo do FCOJ: enviar aqui atualiza os dois.",
+  unidade: "linhas",
+};
 
 const ROTULO = { CT: "C.T 48h", BL72: "B.L 72h", BL120: "B.L 120h" };
 
@@ -84,6 +96,11 @@ export default function RecebimentoNfc() {
           {aba === "registrar" && (
             <SoQuemGrava pode={pode}>
               <Registrar aoGravar={lista.recarregar} />
+            </SoQuemGrava>
+          )}
+          {aba === "laudo" && (
+            <SoQuemGrava pode={pode}>
+              <LaudoEsterilizacao versao={0} config={LAUDO} />
             </SoQuemGrava>
           )}
           {aba === "tabelas" && (

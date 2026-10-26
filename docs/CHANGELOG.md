@@ -12,6 +12,9 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 
 ## [Não lançado]
 
+### Adicionado
+- **Laudo do Recebimento NFC** (25/10, migration 073 do app): aba **Laudo** no app Recebimento NFC, no mesmo papel e modelo do laudo do Recebimento FCOJ, em folhas próprias: uma linha por lote e tipo, C.T/B.L como lidos na placa e, na Observação, o tipo e a diluição (`past 10¹`, `fresh 10³`).
+
 ### Alterado
 - **Esterilização com ícone e cor por material** (25/10): Ponteira, Meio (frasco com líquido), Frasco (grande, vazio), Água de diluição (garrafinhas), Descarte (saco com placas) e Outro (reticências), cada um na cor do gráfico; no botão e na lista do turno.
 - **Laudos com a letra do papel** (25/10): todos os laudos saem em **Times 10** (diminui só se não couber na célula). **Fluxo laminar** igual ao modelo: data `dd.mm.aaaa`, capela **`<1|<1`** (as duas placas), cada placa só aparece **depois do dia da leitura** (OSA/PCA e C.T. da capela 48 h, PDA e B.L. da capela 120 h, Wort 240 h) e a folha **marcada como impressa** ganha o **traço** que fecha as linhas vazias.

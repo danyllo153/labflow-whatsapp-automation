@@ -654,3 +654,84 @@ laudos.registrar(
         gerar=_gerar_laudo, aceitar_modelo=modelo_deitado_valido, preparar=distribuir_lotes,
     )
 )
+
+
+# --- Laudo do Recebimento NFC (073): o mesmo papel e o mesmo modelo do FCOJ, em folhas próprias ----------------------
+# Decidido pelo Danyllo em 25/10 (rumo-do-app.md, "Laudos automáticos"): o que muda é o item 129. Uma linha por lote e tipo
+# (fresh/past); a data de cada linha; C.T e B.L como lidos na placa (o multiplicado fica no banco); na Observação o tipo e
+# a diluição ("past 10¹", "fresh 10³").
+
+NOME_DO_LAUDO_NFC = "recebimento-nfc"
+SOBRESCRITO = {1: "¹", 2: "²", 3: "³"}  # os que a fonte do PDF tem; os outros saem como 10^n
+
+
+def _diluicao(n: int) -> str:
+    return f"10{SOBRESCRITO[n]}" if n in SOBRESCRITO else f"10^{n}"
+
+
+def distribuir_lotes_nfc(con: psycopg.Connection) -> None:
+    """Põe nas folhas, na ordem do recebimento, as linhas do NFC que ainda não têm lugar (a mesma trava do FCOJ)."""
+    con.execute("SELECT pg_advisory_xact_lock(60, hashtext(%s))", (NOME_DO_LAUDO_NFC,))
+    inicio = con.execute(
+        "SELECT min(r.data_recebimento) FROM app.recebimento_nfc_laudo x JOIN recebimento_nfc r ON r.id = x.recebimento_nfc_id"
+    ).fetchone()[0] or _hoje(con) - timedelta(days=DIAS_PARA_TRAS)
+    for (linha_id,) in con.execute(
+        """
+        SELECT r.id FROM recebimento_nfc r
+        WHERE r.data_recebimento >= %s AND NOT EXISTS (SELECT 1 FROM app.recebimento_nfc_laudo x WHERE x.recebimento_nfc_id = r.id)
+        ORDER BY r.data_recebimento, r.load_id, r.lote, r.amostra DESC, r.id
+        """,
+        (inicio,),
+    ).fetchall():
+        con.execute(
+            "INSERT INTO app.recebimento_nfc_laudo (recebimento_nfc_id, pagina_id) VALUES (%s, %s)",
+            (linha_id, laudos.pagina_com_vaga(con, NOME_DO_LAUDO_NFC)),
+        )
+
+
+def _gerar_laudo_nfc(con: psycopg.Connection, pagina_id: int, modelo: bytes | None) -> bytes:
+    linhas = con.execute(
+        """
+        SELECT l.id, l.numero, f.nome, i.codigo, r.lote, r.amostra, r.diluicao, r.data_recebimento,
+               (SELECT jsonb_object_agg(c.analise, jsonb_build_object('sinal', c.sinal, 'valor', c.valor_lido))
+                FROM contagens_nfc c WHERE c.recebimento_nfc_id = r.id),
+               coalesce(u.nome, cr.usuario)
+        FROM app.recebimento_nfc_laudo x JOIN recebimento_nfc r ON r.id = x.recebimento_nfc_id
+        JOIN loads l ON l.id = r.load_id JOIN itens i ON i.id = l.item_id LEFT JOIN fabricas f ON f.id = l.fabrica_id
+        LEFT JOIN usuarios u ON u.id = r.registrado_por LEFT JOIN app.credenciais cr ON cr.usuario_id = r.registrado_por
+        WHERE x.pagina_id = %s ORDER BY x.incluido_em, r.data_recebimento, l.numero, r.lote, r.amostra DESC
+        """,
+        (pagina_id,),
+    ).fetchall()
+    celulas, anterior, analistas = [], None, []
+    for n, (load_id, load, fab, item, lote, amostra, diluicao, recebido, leituras, quem) in enumerate(linhas):
+        primeira = load_id != anterior
+        leituras = leituras or {}
+        textos = [
+            load if primeira else "", (fab or "") if primeira else "", item if primeira else "", str(lote),
+            recebido.strftime("%d.%m.%y"),
+            *(_texto(leituras.get(cod)) or "" for cod in ANALISES),
+            f"{amostra} {_diluicao(diluicao)}",
+        ]
+        for i, texto in enumerate(textos):
+            celulas.append(TABELA.celula(texto, n, i, centro=i != 8, tamanho=8.5))
+        anterior = load_id
+        nome = laudo_esterilizacao.primeiro_nome(quem) if quem else ""
+        if nome and nome not in analistas:
+            analistas.append(nome)
+    if analistas:
+        x0, x1, topo, base = LINHA_DO_ANALISTA
+        celulas.append(laudos.Celula(", ".join(analistas), x0, x1, topo, base, centro=False, tamanho=10))
+    return laudos.preencher(modelo, _demonstracao, celulas)
+
+
+laudos.registrar(
+    laudos.Laudo(
+        nome=NOME_DO_LAUDO_NFC, titulo="Recebimento NFC", modelo=NOME_DO_LAUDO, capacidade=TABELA.linhas,
+        contar_sql="""
+            SELECT count(*), min(r.data_recebimento), max(r.data_recebimento)
+            FROM app.recebimento_nfc_laudo x JOIN recebimento_nfc r ON r.id = x.recebimento_nfc_id WHERE x.pagina_id = %s
+        """,
+        gerar=_gerar_laudo_nfc, aceitar_modelo=modelo_deitado_valido, preparar=distribuir_lotes_nfc,
+    )
+)
