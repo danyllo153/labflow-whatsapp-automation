@@ -24,15 +24,22 @@ afterEach(() => {
 });
 
 describe("moldura do app (APP-012)", () => {
-  it("mostra os cinco itens do menu no computador e no celular", async () => {
+  it("menu por análise: dia a dia em cima, análises em grupos que abrem; no celular, barra e gaveta", async () => {
     servidorFalso({ "GET /me": logada });
     abrir("/");
     const lateral = await screen.findByRole("complementary", { name: "Menu" });
     const barra = screen.getByRole("navigation", { name: "Menu do celular" });
-    for (const rotulo of ["Início", "Turno", "Análises", "Esterilização", "Leituras"]) {
+    for (const rotulo of ["Início", "Turno", "Leituras"]) {
       expect(within(lateral).getByRole("link", { name: new RegExp(rotulo) })).toBeInTheDocument();
       expect(within(barra).getByRole("link", { name: rotulo })).toBeInTheDocument();
     }
+    expect(within(barra).getByRole("link", { name: "Esterilização" })).toBeInTheDocument();
+    const nfc = within(lateral).getByRole("button", { name: /NFC/ });
+    expect(nfc).toHaveAttribute("aria-expanded", "false");
+    await userEvent.click(nfc);
+    expect(within(lateral).getByRole("link", { name: /Drops/ })).toHaveAttribute("href", "/analises/drops");
+    await userEvent.click(within(barra).getByRole("button", { name: "Análises" }));
+    expect(lateral).toHaveClass("aberta");
   });
 
   it("mostra a faixa de demonstração quando o servidor é de demonstração", async () => {

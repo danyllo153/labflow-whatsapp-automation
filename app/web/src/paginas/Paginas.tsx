@@ -22,9 +22,9 @@ import VisaoGeral from "./dados/VisaoGeral";
  * de baixo (Painel, Registrar, Resultados, Laudo, Instrução, Vídeo); no computador, abre direto a página dele.
  */
 
-type Grupo = DefinicaoDePagina["grupo"] | "Aguas" | "Rotina";
+export type Grupo = DefinicaoDePagina["grupo"] | "Aguas" | "Rotina";
 
-interface App {
+export interface App {
   caminho: string; // endereço que o app abre
   chave?: string; // de onde vem a contagem do dia (a página antiga); sem ela, o próprio caminho
   titulo: string;
@@ -36,7 +36,7 @@ interface App {
   atalhos?: { aba: string; rotulo: string }[]; // o app tem página própria com abas (Fase E: E2 a E8)
 }
 
-const GRUPOS: { grupo: Grupo; titulo: string }[] = [
+export const GRUPOS: { grupo: Grupo; titulo: string }[] = [
   { grupo: "Geral", titulo: "Geral" },
   { grupo: "NFC", titulo: "NFC" },
   { grupo: "FCOJ", titulo: "FCOJ (concentrado)" },
