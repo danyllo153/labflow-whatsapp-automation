@@ -1,11 +1,10 @@
-import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
 import { lerJson } from "../../api";
 import type { Coluna, DefinicaoDePagina, Filtro } from "./definicoes";
 import { classeDaSituacao, formatar } from "./formatos";
 import Dashboard, { type Linha } from "./Dashboard";
-import GraficoG2 from "./GraficoG2";
 import { BarrasPorSituacao, type ItemDeSituacao } from "../../componentes/Graficos";
 
 /**
@@ -21,6 +20,10 @@ interface Pagina {
   resumo?: ItemDeSituacao[] | null;
   resumo_coluna?: string | null;
 }
+
+// o Chart.js só é baixado nas páginas com gráfico de resultado (26/10)
+const GraficoResultado = lazy(() => import("./GraficoResultado"));
+const TabPositivos = lazy(() => import("./TabPositivos"));
 
 const POR_PAGINA = 50;
 const POR_PAGINA_IMPRESSAO = 200; // máximo da API
@@ -73,7 +76,10 @@ export default function PaginaDeDados({ def }: { def: DefinicaoDePagina }) {
   const [avisoImpressao, setAvisoImpressao] = useState("");
   const [menuImprimir, setMenuImprimir] = useState(false);
   const [dashboard, setDashboard] = useState<{ linhas: Linha[]; total: number } | null>(null);
-  const [dashboardAberto, setDashboardAberto] = useState(!!def.dashboard?.aberto);
+  const [dashboardAberto, setDashboardAberto] = useState(!!def.resultado || !!def.dashboard?.aberto);
+  // o gráfico de resultado vai para a impressão como imagem, em cima da tabela (26/10)
+  const canvasDoGrafico = useRef<HTMLCanvasElement | null>(null);
+  const [imagemDoGrafico, setImagemDoGrafico] = useState<string | null>(null);
 
   useEffect(() => setRascunho(aplicados), [aplicados]);
   useEffect(() => setTexto(termo), [termo]);
@@ -131,7 +137,7 @@ export default function PaginaDeDados({ def }: { def: DefinicaoDePagina }) {
 
   // o Dashboard acompanha o filtro da tela (pedido de 25/10)
   useEffect(() => {
-    if (!dashboardAberto) return;
+    if (!dashboardAberto || def.resultado) return;
     let vivo = true;
     buscarTodas(LIMITE_IMPRESSAO).then(
       (r) => vivo && setDashboard(r),
@@ -140,7 +146,7 @@ export default function PaginaDeDados({ def }: { def: DefinicaoDePagina }) {
     return () => {
       vivo = false;
     };
-  }, [dashboardAberto, buscarTodas]);
+  }, [dashboardAberto, buscarTodas, def.resultado]);
 
   async function imprimir() {
     setAvisoImpressao("");
@@ -151,6 +157,13 @@ export default function PaginaDeDados({ def }: { def: DefinicaoDePagina }) {
     setPreparando(true);
     try {
       const { linhas: todas } = await buscarTodas();
+      let imagem: string | null = null;
+      try {
+        imagem = dashboardAberto && canvasDoGrafico.current ? canvasDoGrafico.current.toDataURL("image/png") : null;
+      } catch {
+        imagem = null; // sem o desenho (ex.: navegador sem canvas), imprime só a tabela
+      }
+      setImagemDoGrafico(imagem);
       setParaImprimir(todas);
     } catch (e) {
       setAvisoImpressao(e instanceof Error ? e.message : "Não foi possível preparar a impressão.");
@@ -186,13 +199,13 @@ export default function PaginaDeDados({ def }: { def: DefinicaoDePagina }) {
               type="button"
               className="botao-icone"
               aria-pressed={dashboardAberto}
-              title="Gráfico com o filtro da tela: colunas ou tendência"
+              title={def.resultado ? "Gráfico do resultado com o filtro da tela" : "Gráfico com o filtro da tela: colunas ou tendência"}
               onClick={() => setDashboardAberto(!dashboardAberto)}
             >
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
                 <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
               </svg>
-              Dashboard
+              {def.resultado ? "Gráfico" : "Dashboard"}
             </button>
             <a
               className="botao-icone"
@@ -359,13 +372,27 @@ export default function PaginaDeDados({ def }: { def: DefinicaoDePagina }) {
           </section>
         )}
 
+        {dashboardAberto && def.resultado && (
+          <Suspense fallback={<p className="carregando">Montando o gráfico...</p>}>
+            {def.resultado.tipo === "tab" ? (
+              <TabPositivos aoDesenhar={(c) => (canvasDoGrafico.current = c)} />
+            ) : (
+              <GraficoResultado
+                api={def.api}
+                consulta={consulta(comBusca)}
+                rotuloData={def.resultado.data}
+                aoDesenhar={(c) => (canvasDoGrafico.current = c)}
+              />
+            )}
+          </Suspense>
+        )}
         {dashboardAberto &&
+          !def.resultado &&
           (dashboard ? (
             <Dashboard def={def} linhas={dashboard.linhas} total={dashboard.total} inicial={def.dashboard} aoFechar={() => setDashboardAberto(false)} />
           ) : (
             <p className="carregando">Montando o dashboard...</p>
           ))}
-        {def.grafico === "g2" && <GraficoG2 consulta={consulta(comBusca)} aoEscolherLoad={(load) => irPara({ ...aplicados, load })} />}
 
         {dados && !erro && (
           <>
@@ -408,6 +435,7 @@ export default function PaginaDeDados({ def }: { def: DefinicaoDePagina }) {
             {paraImprimir.length} registros · impresso em{" "}
             {formatar(new Date().toISOString(), "dataHora")}
           </p>
+          {imagemDoGrafico && <img className="grafico-impressao" src={imagemDoGrafico} alt="Gráfico do resultado com o filtro da tela" />}
           <Tabela colunas={def.colunas} linhas={paraImprimir} />
         </div>
       )}
