@@ -801,7 +801,10 @@ h2 {
   width: 22px;
   height: 12px;
   border-radius: 3px;
-  background: color-mix(in srgb, var(--g4-0) 18%, transparent);
+  background: rgba(37, 99, 235, 0.14);
+  border-top: 1px dotted #2563eb;
+  border-bottom: 1px dotted #2563eb;
+  box-sizing: border-box;
 }
 
 .tab-positivos {

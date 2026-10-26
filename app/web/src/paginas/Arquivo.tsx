@@ -23,7 +23,7 @@ const LAUDO_CONTRA_RECEBIMENTO = {
 };
 
 /**
- * Arquivo de contra-amostras (PB21, migration 105 do bot; spec 11): as caixas de navio, do recebimento (121 a 145) e dos
+ * Arquivo de contra-amostras (PB21, migration 105 do bot; spec 11): as caixas de navio, do recebimento (121 a 153) e dos
  * tanques de terra (caixa = número do tanque), o que tem em cada uma e quando vence. O vencido fica em vermelho (ninguém é
  * avisado). Arquivar o recebimento e descartar usam as mesmas funções do bot, com a prévia e um Confirmar.
  */

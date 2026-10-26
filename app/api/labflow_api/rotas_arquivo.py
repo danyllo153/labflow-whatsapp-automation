@@ -167,7 +167,7 @@ class Arquivar(BaseModel):
 def arquivar(
     pedido: Arquivar, pessoa: PessoaLogada = Depends(exigir("registrar_analise")), con: psycopg.Connection = Depends(obter_conexao)
 ) -> Gravacao:
-    """Load e lotes do recebimento numa caixa (121 a 145); descarte em 7 dias."""
+    """Load e lotes do recebimento numa caixa (121 a 153); descarte em 7 dias."""
     r = _chamar(
         con, "SELECT arquivo_arquivar_recebimento(%s, %s, %s, %s, %s, %s, %s)",
         (pessoa.usuario_id, pedido.load.strip(), pedido.item.strip(), _lotes(pedido.lotes), pedido.caixa, pedido.data, pedido.previa),

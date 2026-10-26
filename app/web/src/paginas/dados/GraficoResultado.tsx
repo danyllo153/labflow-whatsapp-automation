@@ -53,10 +53,11 @@ interface Dados {
 export type Estado = "acima" | "fora" | "menor" | "normal";
 
 const DIA_MS = 86_400_000;
+// cores bem diferentes entre si (e do laranja do alerta e do amarelo de fora da faixa), legíveis no claro e no escuro
 const CORES_ANALISE: [string, string][] = [
-  ["C.T", "--g4-0"],
-  ["B.L 72h", "--g4-3"],
-  ["B.L 120h", "--g4-5"],
+  ["C.T", "#2563eb"],
+  ["B.L 72h", "#db2777"],
+  ["B.L 120h", "#16a34a"],
 ];
 const LARANJA = "#e8590c";
 const AMARELO = "#f5b301";
@@ -96,7 +97,7 @@ function token(nome: string, reserva: string): string {
 
 function corDaAnalise(analise: string, i: number): string {
   const achada = CORES_ANALISE.find(([prefixo]) => analise.startsWith(prefixo));
-  return token(achada?.[1] ?? `--g4-${i % 6}`, "#1f6fb5");
+  return achada?.[1] ?? ["#7c3aed", "#0891b2", "#65a30d"][i % 3];
 }
 
 function transparente(cor: string, alfa: number): string {
@@ -187,9 +188,9 @@ export default function GraficoResultado({
           return e === "fora" ? AMARELO_BORDA : e === "acima" ? cartao : s.cor;
         },
         pointBorderWidth: 2,
-        pointRadius: (c: { dataIndex: number }) => (s.estados[c.dataIndex] === "normal" ? 3 : 6),
+        pointRadius: (c: { dataIndex: number }) => (s.estados[c.dataIndex] === "normal" ? 4 : 6),
         pointHoverRadius: 8,
-        borderWidth: forma === "line" ? 1.5 : 1,
+        borderWidth: forma === "line" ? 2.5 : 1,
         tension: 0,
         barThickness: 6,
         clip: 8, // o ponto no começo do eixo (ex.: <10) aparece inteiro
@@ -200,9 +201,19 @@ export default function GraficoResultado({
   const anotacoes: Record<string, object> = {};
   series.forEach((s, i) => {
     const visivel = (c: { chart: ChartJS }) => c.chart.isDatasetVisible(i);
-    if (s.faixa)
+    if (!s.faixa) return;
       anotacoes[`faixa${i}`] = {
-        type: "box", yMin: s.faixa.de, yMax: s.faixa.ate, backgroundColor: transparente(s.cor, 0.12), borderWidth: 0,
+        // com uma análise só, a faixa é pintada; com várias, só as bordas pontilhadas na cor de cada uma (não embaralha)
+        type: "box", yMin: s.faixa.de, yMax: s.faixa.ate, borderWidth: 0,
+        backgroundColor: (c: { chart: ChartJS }) => (series.filter((_, j) => c.chart.isDatasetVisible(j)).length === 1 ? transparente(s.cor, 0.12) : "transparent"),
+        drawTime: "beforeDatasetsDraw", display: visivel,
+      };
+      anotacoes[`faixaDe${i}`] = {
+        type: "line", yMin: s.faixa.de, yMax: s.faixa.de, borderColor: transparente(s.cor, 0.6), borderWidth: 1, borderDash: [2, 3],
+        drawTime: "beforeDatasetsDraw", display: visivel,
+      };
+      anotacoes[`faixaAte${i}`] = {
+        type: "line", yMin: s.faixa.ate, yMax: s.faixa.ate, borderColor: transparente(s.cor, 0.6), borderWidth: 1, borderDash: [2, 3],
         drawTime: "beforeDatasetsDraw", display: visivel,
       };
   });
@@ -320,7 +331,7 @@ export default function GraficoResultado({
               <i className="bola vazada" /> Menor que (&lt;10, &lt;1), no próprio valor
             </li>
             <li>
-              <i className="faixa" /> Faixa normal: média dos últimos 30 dias ± 2 desvios
+              <i className="faixa" /> Faixa normal: média dos últimos 30 dias ± 2 desvios (pintada com uma análise; com várias, só as bordas)
             </li>
           </ul>
           {dados.cortado && <p className="texto-secundario">Mostrando as últimas leituras: filtre um período menor para ver tudo.</p>}
