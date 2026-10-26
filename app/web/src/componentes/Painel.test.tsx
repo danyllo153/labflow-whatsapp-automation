@@ -29,7 +29,7 @@ describe("Painel do Início (APP-055)", () => {
     emRota(<GraficoSemana />);
     const grafico = await screen.findByRole("img", { name: /Concluído por dia na semana/ });
     expect(grafico.getAttribute("aria-label")).toContain("sáb 24");
-    expect(screen.getByText("Total 42")).toBeInTheDocument();
+    expect(screen.getByText("42", { selector: ".cartao-azul-numero" })).toBeInTheDocument();
   });
 
   it("o cartão mostra a folha mais perto de encher, ou as cheias para imprimir", async () => {

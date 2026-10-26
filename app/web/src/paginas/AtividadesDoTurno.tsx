@@ -48,7 +48,8 @@ function diaMes(data: string): string {
   return `${d}/${mes}`;
 }
 
-export default function AtividadesDoTurno() {
+/** Lê as atividades do turno e marca Feito (a atividade, a herdada ou o recado); usado aqui e no Início (26/10). */
+export function useAtividades() {
   const [dados, setDados] = useState<DadosAtividades | null>(null);
   const [erro, setErro] = useState("");
   const [gravando, setGravando] = useState<number | null>(null);
@@ -89,6 +90,12 @@ export default function AtividadesDoTurno() {
       setGravando(null);
     }
   }
+
+  return { dados, erro, gravando, marcar, marcarRecado };
+}
+
+export default function AtividadesDoTurno() {
+  const { dados, erro, gravando, marcar, marcarRecado } = useAtividades();
 
   if (!dados) return erro ? <p className="mensagem-erro">{erro}</p> : null;
 

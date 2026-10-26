@@ -59,7 +59,7 @@ class GraficoResultado(BaseModel):
 
 
 EMBARQUE_GRAFICO_BASE = """
-    SELECT navio, linha, fase, load, lote_amostra AS amostra, analise, prevista, sinal, valor, alarme,
+    SELECT navio, linha, fase, load, fabrica, lote_amostra AS amostra, analise, prevista, sinal, valor, alarme,
            lido, lido_por, data_leitura,
            CASE WHEN lido AND alarme THEN 'Não ok' WHEN lido THEN 'Ok' ELSE situacao END AS situacao
     FROM bi.contagens
@@ -67,7 +67,7 @@ EMBARQUE_GRAFICO_BASE = """
 """
 
 NFC_GRAFICO_BASE = """
-    SELECT load, lote, amostra, diluicao_texto, data_recebimento, analise, prevista, sinal, valor_lido, valor_final,
+    SELECT load, fabrica, lote, amostra, diluicao_texto, data_recebimento, analise, prevista, sinal, valor_lido, valor_final,
            lido, lido_por, situacao
     FROM bi.recebimento_nfc
 """

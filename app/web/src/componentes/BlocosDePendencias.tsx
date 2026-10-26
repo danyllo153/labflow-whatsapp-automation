@@ -17,7 +17,7 @@ export interface Pendencia {
   item?: string;
 }
 
-interface Grupo {
+export interface Grupo {
   nome: string;
   itens: Pendencia[];
   atrasados: number;
@@ -31,14 +31,14 @@ function dia(data: string | null): string {
 }
 
 /** Os primeiros tanques, lotes ou compostas do grupo numa linha, para ver sem precisar abrir (26/10). */
-function resumoDos(itens: Pendencia[]): string {
+export function resumoDos(itens: Pendencia[]): string {
   const nomes = [...new Set(itens.map((i) => i.item ?? i.referencia))];
   return nomes.length > 4
     ? `${nomes.slice(0, 4).join(", ")} e mais ${nomes.length - 4}`
     : nomes.join(", ");
 }
 
-function agrupar(lista: Pendencia[]): Grupo[] {
+export function agrupar(lista: Pendencia[]): Grupo[] {
   const grupos = new Map<string, Grupo>();
   for (const p of lista) {
     const nome =

@@ -50,12 +50,13 @@ class FiltrosEmbarque:
         linha: int | None = None,
         fase: int | None = None,
         load: str | None = None,
+        fabrica: str | None = Query(default=None, description="Sigla, ex.: AQA"),
         analise: Literal["C.T 48h", "B.L 72h", "B.L 120h"] | None = None,
         situacao: Literal["Ok", "Não ok", "Atrasado", "Vence hoje", "No prazo"] | None = None,
         quem: str | None = Query(default=None, description="Parte do nome de quem leu"),
     ) -> None:
         self.data_de, self.data_ate, self.navio, self.linha, self.fase = data_de, data_ate, navio, linha, fase
-        self.load, self.analise, self.situacao, self.quem = load, analise, situacao, quem
+        self.load, self.fabrica, self.analise, self.situacao, self.quem = load, fabrica, analise, situacao, quem
 
     def montar(self) -> _Filtro:
         f = _Filtro()
@@ -64,6 +65,7 @@ class FiltrosEmbarque:
         f.igual("linha", self.linha)
         f.igual("fase", self.fase)
         f.igual("load", self.load.strip() if self.load else None)
+        f.igual("fabrica", self.fabrica.strip().upper() if self.fabrica else None)
         f.igual("analise", self.analise)
         f.igual("situacao", self.situacao)
         f.contem("lido_por", self.quem)
@@ -71,7 +73,8 @@ class FiltrosEmbarque:
 
     def descricao(self) -> list[tuple[str, Any]]:
         return [("Prevista de", self.data_de), ("Prevista até", self.data_ate), ("Navio", self.navio),
-                ("Linha", self.linha), ("Fase", self.fase), ("Load", self.load), ("Análise", self.analise),
+                ("Linha", self.linha), ("Fase", self.fase), ("Load", self.load), ("Fábrica", self.fabrica),
+                ("Análise", self.analise),
                 ("Situação", self.situacao), ("Quem leu", self.quem)]
 
 
@@ -150,12 +153,13 @@ class FiltrosRecebimentoNfc:
         data_ate: date | None = None,
         load: str | None = None,
         lote: int | None = None,
+        fabrica: str | None = Query(default=None, description="Sigla, ex.: AQA"),
         amostra: Literal["Fresh", "Pasteurizado"] | None = None,
         analise: Literal["C.T 48h", "B.L 72h", "B.L 120h"] | None = None,
         situacao: Literal["Lido", "Atrasado", "Vence hoje", "No prazo"] | None = None,
         quem: str | None = Query(default=None, description="Parte do nome de quem leu"),
     ) -> None:
-        self.data_de, self.data_ate, self.load, self.lote = data_de, data_ate, load, lote
+        self.data_de, self.data_ate, self.load, self.lote, self.fabrica = data_de, data_ate, load, lote, fabrica
         self.amostra, self.analise, self.situacao, self.quem = amostra, analise, situacao, quem
 
     def montar(self) -> _Filtro:
@@ -163,6 +167,7 @@ class FiltrosRecebimentoNfc:
         _periodo(f, "data_recebimento", self.data_de, self.data_ate)
         f.igual("load", self.load.strip() if self.load else None)
         f.igual("lote", self.lote)
+        f.igual("fabrica", self.fabrica.strip().upper() if self.fabrica else None)
         f.igual("amostra", self.amostra)
         f.igual("analise", self.analise)
         f.igual("situacao", self.situacao)
@@ -171,7 +176,7 @@ class FiltrosRecebimentoNfc:
 
     def descricao(self) -> list[tuple[str, Any]]:
         return [("Recebido de", self.data_de), ("Recebido até", self.data_ate), ("Load", self.load), ("Lote", self.lote),
-                ("Amostra", self.amostra), ("Análise", self.analise), ("Situação", self.situacao), ("Quem leu", self.quem)]
+                ("Fábrica", self.fabrica), ("Amostra", self.amostra), ("Análise", self.analise), ("Situação", self.situacao), ("Quem leu", self.quem)]
 
 
 COLUNAS_RECEBIMENTO_NFC = [

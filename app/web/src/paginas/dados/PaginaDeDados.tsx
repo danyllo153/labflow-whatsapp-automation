@@ -186,6 +186,8 @@ export default function PaginaDeDados({ def, embutida = false }: { def: Definica
 
   const totalPaginas = dados ? Math.max(1, Math.ceil(dados.total / POR_PAGINA)) : 1;
   const etiquetas = def.filtros.filter((f) => aplicados[f.chave]);
+  // a fábrica à vista, em pílulas (26/10): o filtro mais usado no recebimento e no embarque, sem abrir o funil
+  const filtroFabrica = def.filtros.find((f) => f.chave === "fabrica" && f.tipo === "opcoes");
   const descritos = [...(termo ? [`Busca: ${termo}`] : []), ...etiquetas.map((f) => `${f.rotulo}: ${valorDoFiltro(f, aplicados[f.chave])}`)];
   const textoDosFiltros = descritos.length ? descritos.join(" · ") : "Sem filtro (todos os registros)";
 
@@ -301,6 +303,20 @@ export default function PaginaDeDados({ def, embutida = false }: { def: Definica
             {etiquetas.length > 0 && <span className="abas-contador">{etiquetas.length}</span>}
           </button>
         </div>
+        {filtroFabrica && (
+          <div className="seletor-de-tabela pilulas-fabrica" role="group" aria-label="Fábrica">
+            {["", ...(filtroFabrica.opcoes ?? [])].map((f) => (
+              <button
+                key={f || "todas"}
+                type="button"
+                aria-pressed={(aplicados.fabrica ?? "") === f}
+                onClick={() => irPara({ ...aplicados, fabrica: f })}
+              >
+                {f || "Todas as fábricas"}
+              </button>
+            ))}
+          </div>
+        )}
         {avisoImpressao && (
           <p className="mensagem-erro" role="alert">
             {avisoImpressao}

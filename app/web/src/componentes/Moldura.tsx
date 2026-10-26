@@ -51,8 +51,9 @@ export default function Moldura() {
             </svg>
           </button>
           <Marca />
-          <BuscaRapida />
+          <Saudacao nome={pessoa?.nome || pessoa?.usuario} />
           <span className="topo-espaco" />
+          <BuscaRapida />
           <ChipEquipe />
           <BotaoTema />
           <MenuConta />
@@ -78,6 +79,27 @@ export default function Moldura() {
           <span>Análises</span>
         </button>
       </nav>
+    </div>
+  );
+}
+
+/** "Bom dia, Ana" e o dia no topo do computador (visual StarAdmin, 26/10); "hoje" é sempre o de São Paulo. */
+function Saudacao({ nome }: { nome?: string }) {
+  const agora = new Date();
+  const hora = Number(agora.toLocaleString("pt-BR", { hour: "2-digit", hour12: false, timeZone: "America/Sao_Paulo" }));
+  const ola = hora < 12 ? "Bom dia" : hora < 18 ? "Boa tarde" : "Boa noite";
+  const dia = agora.toLocaleDateString("pt-BR", { weekday: "long", day: "2-digit", month: "2-digit", timeZone: "America/Sao_Paulo" });
+  return (
+    <div className="saudacao-topo">
+      <strong>
+        {ola}
+        {nome && (
+          <>
+            , <b>{nome.split(" ")[0]}</b>
+          </>
+        )}
+      </strong>
+      <span>{dia.charAt(0).toUpperCase() + dia.slice(1)}</span>
     </div>
   );
 }

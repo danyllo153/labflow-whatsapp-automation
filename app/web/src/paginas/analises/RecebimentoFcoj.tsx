@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { lazy, Suspense, useCallback, useEffect, useState, type FormEvent } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 
 import { enviarJson, lerJson } from "../../api";
@@ -8,6 +8,8 @@ import { FABRICAS } from "../dados/definicoes";
 import { classeDaSituacao } from "../dados/formatos";
 import LaudoEsterilizacao from "../LaudoEsterilizacao";
 import Instrucao from "./Instrucao";
+
+const GraficoResultado = lazy(() => import("../dados/GraficoResultado"));
 
 /**
  * Recebimento FCOJ como um app (Fase E, E2; APP-057): Painel, Registrar, Resultados, Laudo, Instrução e Vídeo numa
@@ -217,18 +219,11 @@ export default function RecebimentoFcoj() {
       {aba === "laudo" && painel?.pode_registrar && <LaudoEsterilizacao versao={0} config={LAUDO} />}
       {aba === "laudo" && (
         <div className="cartao">
-          <h2>Tabela e correções</h2>
-          <p className="texto-secundario">
-            A página do Recebimento FCOJ tem a tabela para imprimir e exportar para o Excel, com o gráfico por fábrica.
-          </p>
-          <div className="botoes-lado">
-            <Link className="botao botao-principal" to="/paginas/recebimento">
-              Abrir a página para imprimir
-            </Link>
-            <Link className="botao botao-simples" to="/paginas/recebimento/corrigir">
-              Corrigir ou excluir um lote
-            </Link>
-          </div>
+          <h2>Correções</h2>
+          <p className="texto-secundario">Lote com número, fábrica ou item errado: corrija ou exclua antes de imprimir a folha.</p>
+          <Link className="botao botao-simples" to="/paginas/recebimento/corrigir">
+            Corrigir ou excluir um lote
+          </Link>
         </div>
       )}
       {(aba === "instrucao" || aba === "video") && <Instrucao app="recebimento-fcoj" parte={aba} />}
@@ -594,10 +589,41 @@ function Resultados({
     }
   }
 
-  const filtrosAtivos = [filtros.fabrica, filtros.so_pendentes && "Só pendentes", filtros.dias !== "30" && `${filtros.dias} dias`].filter(Boolean);
+  const filtrosAtivos = [filtros.so_pendentes && "Só pendentes", filtros.dias !== "30" && `${filtros.dias} dias`].filter(Boolean);
+  // o gráfico do resultado (26/10) acompanha a fábrica, o período e a busca da tabela
+  const [comGrafico, setComGrafico] = useState(true);
+  const desde = new Date(`${hoje}T12:00:00`);
+  desde.setDate(desde.getDate() - Number(filtros.dias));
+  const consultaDoGrafico = new URLSearchParams({
+    data_de: desde.toISOString().slice(0, 10),
+    ...(filtros.fabrica ? { fabrica: filtros.fabrica } : {}),
+    ...(busca.trim() ? { busca: busca.trim() } : {}),
+  }).toString();
 
   return (
     <div className="cartao">
+      <div className="barra-da-tabela">
+        <div className="seletor-de-tabela pilulas-fabrica" role="group" aria-label="Fábrica">
+          {["", ...FABRICAS].map((f) => (
+            <button key={f || "todas"} type="button" aria-pressed={filtros.fabrica === f} onClick={() => setFiltros({ ...filtros, fabrica: f })}>
+              {f || "Todas as fábricas"}
+            </button>
+          ))}
+        </div>
+        <div className="acoes-icone">
+          <button type="button" className="botao-icone" aria-pressed={comGrafico} title="Gráfico do resultado" onClick={() => setComGrafico(!comGrafico)}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+              <path d="M4 20V10M10 20V4M16 20v-7M22 20H2" />
+            </svg>
+            Gráfico
+          </button>
+        </div>
+      </div>
+      {comGrafico && (
+        <Suspense fallback={<p className="carregando">Montando o gráfico...</p>}>
+          <GraficoResultado api="/paginas/recebimento" consulta={consultaDoGrafico} rotuloData="data da leitura" />
+        </Suspense>
+      )}
       <div className="busca-com-filtro">
         <label className="busca-redonda">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
@@ -622,20 +648,12 @@ function Resultados({
       {mostrarFiltros && (
         <div className="filtros-app" role="group" aria-label="Filtros dos resultados">
           <label className="campo">
-            Fábrica
-            <select value={filtros.fabrica} onChange={(e) => setFiltros({ ...filtros, fabrica: e.target.value })}>
-              <option value="">Todas</option>
-              {FABRICAS.map((f) => (
-                <option key={f}>{f}</option>
-              ))}
-            </select>
-          </label>
-          <label className="campo">
             Período
             <select value={filtros.dias} onChange={(e) => setFiltros({ ...filtros, dias: e.target.value })}>
               <option value="7">7 dias</option>
               <option value="30">30 dias</option>
               <option value="90">90 dias</option>
+              <option value="365">1 ano</option>
             </select>
           </label>
           <label className="campo-marcar">
@@ -677,7 +695,16 @@ function Resultados({
           {erro}
         </p>
       )}
-      {lotes && lotes.length === 0 && <p className="texto-secundario">Nenhum lote encontrado.</p>}
+      {lotes && lotes.length === 0 && (
+        <p className="texto-secundario">
+          Nenhum lote{filtros.fabrica && ` da ${filtros.fabrica}`} nos últimos {filtros.dias === "365" ? "12 meses" : `${filtros.dias} dias`}.{" "}
+          {filtros.dias !== "365" && (
+            <button type="button" className="link-botao" onClick={() => setFiltros({ ...filtros, dias: "365" })}>
+              Ver o último ano
+            </button>
+          )}
+        </p>
+      )}
       {lotes && lotes.length > 0 && (
         <div className="tabela-rolavel">
           <table className="tabela-dados">

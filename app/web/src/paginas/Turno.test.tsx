@@ -132,20 +132,20 @@ describe("Turno: entrar e sair (APP-022)", () => {
 describe("Início com o turno (APP-022)", () => {
   it("tem o cartão Feito no turno e o aviso para entrar", async () => {
     abrir("/");
-    expect(await screen.findByRole("button", { name: /7\s*Feito no turno/ })).toBeInTheDocument();
+    expect(await screen.findByRole("listitem", { name: /7\s*Feito no turno/ })).toHaveAttribute("href", "/turno");
     expect(screen.getByRole("link", { name: "Entrar no turno" })).toHaveAttribute("href", "/turno");
   });
 
   it("sem aviso para quem já está no turno", async () => {
     abrir("/", { "GET /turno": () => ({ status: 200, corpo: { ...ESTADO_TURNO, no_turno: NA_TARDE } }) });
-    await screen.findByRole("button", { name: /Feito no turno/ });
+    await screen.findByRole("listitem", { name: /Feito no turno/ });
     expect(screen.queryByRole("link", { name: "Entrar no turno" })).not.toBeInTheDocument();
   });
 
   it("o Início funciona mesmo se o turno falhar", async () => {
     abrir("/", { "GET /turno": () => ({ status: 500, corpo: { detail: "erro" } }) });
-    expect(await screen.findByRole("button", { name: /Para hoje/ })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: /Feito no turno/ })).not.toBeInTheDocument();
+    expect(await screen.findByRole("listitem", { name: /Para analisar/ })).toBeInTheDocument();
+    expect(screen.queryByRole("listitem", { name: /Feito no turno/ })).not.toBeInTheDocument();
   });
 });
 
