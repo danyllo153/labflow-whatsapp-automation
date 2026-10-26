@@ -27,8 +27,8 @@ def _nas_views(conexao, situacao):
 def test_totais_batem_com_as_views_do_power_bi(cliente, logado, conexao):
     logado()
     corpo = cliente.get("/pendencias-hoje").json()
-    # fora das views: o Stress por fazer e o Coliformes obrigatório (25/10) saem das tabelas do bot
-    extras = lambda sit: sum(1 for i in corpo["itens"] if i["situacao"] == sit and (i["tipo"] == "Análise Stress" or "obrigatório" in i["analise"]))  # noqa: E731
+    # fora das views bi.*: o Stress por fazer e as compostas esperando análise vêm da vw_pendencias_do_dia (PB22)
+    extras = lambda sit: sum(1 for i in corpo["itens"] if i["situacao"] == sit and i["tipo"] in ("Análise Stress", "Composta"))  # noqa: E731
     assert corpo["vence_hoje"] - extras("Vence hoje") == _nas_views(conexao, "Vence hoje") > 0
     assert corpo["atrasados"] - extras("Atrasado") == _nas_views(conexao, "Atrasado") > 0
     assert len(corpo["itens"]) == corpo["vence_hoje"] + corpo["atrasados"]
@@ -78,7 +78,7 @@ def test_filtro_por_bloco_e_situacao(cliente, logado, conexao):
         conexao.execute(f"SELECT count(*) FROM {v} WHERE situacao = 'Atrasado' AND origem = 'Terra'").fetchone()[0]
         for v in ["bi.drops", "bi.leituras_nfc"]
     ) + conexao.execute("SELECT count(*) FROM bi.testes WHERE situacao = 'Atrasado' AND origem = 'Tank farm'").fetchone()[0]
-    stress = sum(1 for i in so_drops_terra["itens"] if i["tipo"] == "Análise Stress")  # fora das views (25/10)
+    stress = sum(1 for i in so_drops_terra["itens"] if i["tipo"] == "Análise Stress")  # da vw_pendencias_do_dia (PB22)
     assert so_drops_terra["atrasados"] - stress == esperado
 
 

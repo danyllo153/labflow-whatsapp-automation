@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 
 import { enviarJson, lerJson } from "../api";
+import IconeMaterial, { corDoMaterial, TIPOS_DE_MATERIAL } from "../componentes/IconeMaterial";
 import LaudoEsterilizacao from "./LaudoEsterilizacao";
 
 /**
@@ -187,11 +188,12 @@ function Registrar({ tipos, aoRegistrar }: { tipos: string[]; aoRegistrar: (d: D
           <button
             key={t}
             type="button"
-            className="botao-secundario botao-tipo"
+            className={`botao-secundario botao-tipo botao-material ${corDoMaterial(t)}`}
             aria-pressed={escolhidos.includes(t)}
             onClick={() => setEscolhidos((atual) => (atual.includes(t) ? atual.filter((x) => x !== t) : [...atual, t]))}
           >
-            {t}
+            <IconeMaterial tipo={t} tamanho={32} />
+            <span>{t}</span>
           </button>
         ))}
       </div>
@@ -269,7 +271,7 @@ function Linha({ item, podeMexer, aoMudar }: { item: ItemEsterilizacao; podeMexe
     <li>
       <div className="linha-turno">
         <span>
-          <strong>{resumo(item)}</strong> · {item.quem} às {item.quando} ·{" "}
+          <IconeMaterial tipo={item.tipo} tamanho={20} /> <strong>{resumo(item)}</strong> · {item.quem} às {item.quando} ·{" "}
           <span className={item.eficiente ? "etiqueta etiqueta-ok" : "etiqueta etiqueta-nao-ok"}>{item.eficiente ? "Eficiente: Sim" : "Eficiente: Não"}</span>
         </span>
         {podeMexer && !modo && (
@@ -357,7 +359,7 @@ function Linha({ item, podeMexer, aoMudar }: { item: ItemEsterilizacao; podeMexe
   );
 }
 
-const TIPOS_G4 = ["Ponteira", "Meio", "Frasco", "Descarte", "Outro", "Água de diluição"]; // a cor de cada um vem do CSS (.g4-0 a .g4-5), claro e escuro
+const TIPOS_G4 = TIPOS_DE_MATERIAL; // a cor de cada um vem do CSS (.g4-0 a .g4-5), claro e escuro; a mesma do ícone do material
 const L = 320;
 const A = 170;
 const M = { esq: 28, dir: 8, cima: 14, baixo: 26 };

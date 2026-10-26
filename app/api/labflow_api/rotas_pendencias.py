@@ -65,31 +65,22 @@ SELECT * FROM (
            analise || ' ' || frasco || ' · ' || etapa, prevista, situacao
     FROM bi.leituras_nfc
     UNION ALL
-    -- Stress do tanque ainda por fazer (25/10): coleta com o frasco Normal analisado e sem o Stress (plaqueado 24 h depois)
-    SELECT CASE c.origem WHEN 'terra' THEN 'NFC Tank farm' ELSE 'NFC Navio' END,
-           'Análise Stress',
-           CASE WHEN c.origem = 'terra' THEN 'Tanque ' || c.tanque ELSE n.nome || ' ' || n.viagem || ' · tanque ' || c.tanque END
-             || ' (coleta ' || to_char(c.data_coleta, 'DD/MM') || ')',
-           'Stress · para analisar', s.prevista,
-           CASE WHEN s.prevista < (now() AT TIME ZONE 'America/Sao_Paulo')::date THEN 'Atrasado' ELSE 'Vence hoje' END
-    FROM coletas c
+    -- o que a lista do bot traz além das leituras e dos testes (PB22, migration 106 do bot): o Stress de tanque por fazer
+    -- e a composta esperando o Coliformes obrigatório ou o TAB. TAB e Coliformes em andamento já vêm de bi.testes.
+    SELECT CASE WHEN p.grupo = 'Tanques' THEN CASE c.origem WHEN 'terra' THEN 'NFC Tank farm' ELSE 'NFC Navio' END
+                ELSE CASE v.origem WHEN 'embarque' THEN 'FCOJ Embarque' ELSE 'FCOJ Recebimento' END END,
+           CASE p.grupo WHEN 'Tanques' THEN 'Análise Stress' ELSE 'Composta' END,
+           CASE WHEN p.grupo <> 'Tanques' THEN p.alvo
+                WHEN c.origem = 'terra' THEN 'Tanque ' || c.tanque || ' (coleta ' || to_char(c.data_coleta, 'DD/MM') || ')'
+                ELSE n.nome || ' ' || n.viagem || ' · tanque ' || c.tanque || ' (coleta ' || to_char(c.data_coleta, 'DD/MM') || ')' END,
+           CASE p.grupo WHEN 'Tanques' THEN 'Stress · para analisar' ELSE p.etapa END,
+           p.prevista,
+           CASE WHEN p.atrasado THEN 'Atrasado' ELSE 'Vence hoje' END
+    FROM vw_pendencias_do_dia p
+    LEFT JOIN coletas c ON p.tabela = 'coletas' AND c.id = p.ref_id
     LEFT JOIN navios n ON n.id = c.navio_id
-    JOIN LATERAL (SELECT min(a.data_analise) + 1 AS prevista FROM analises a
-                  WHERE a.coleta_id = c.id AND a.frasco = 'Normal' AND a.repeticao_de IS NULL) s ON s.prevista IS NOT NULL
-    WHERE c.data_coleta >= (now() AT TIME ZONE 'America/Sao_Paulo')::date - 20
-      AND s.prevista <= (now() AT TIME ZONE 'America/Sao_Paulo')::date
-      AND NOT EXISTS (SELECT 1 FROM analises a WHERE a.coleta_id = c.id AND a.frasco = 'Stress')
-    UNION ALL
-    -- composta esperando o Coliformes obrigatório (migration 104 do bot): a primeira do load, toda da COL e do embarque
-    SELECT CASE v.origem WHEN 'embarque' THEN 'FCOJ Embarque' ELSE 'FCOJ Recebimento' END,
-           'Coliformes',
-           CASE WHEN v.origem = 'embarque' THEN v.rotulo || ' · load ' || v.load ELSE 'Load ' || v.load END
-             || ' · Composta #' || v.composta_id,
-           'Coliformes · para fazer (obrigatório)', (v.criada_em AT TIME ZONE 'America/Sao_Paulo')::date,
-           CASE WHEN (v.criada_em AT TIME ZONE 'America/Sao_Paulo')::date < (now() AT TIME ZONE 'America/Sao_Paulo')::date
-                THEN 'Atrasado' ELSE 'Vence hoje' END
-    FROM vw_coliformes_pendentes v
-    WHERE v.obrigatorio
+    LEFT JOIN vw_compostas v ON p.tabela = 'compostas' AND v.id = p.ref_id
+    WHERE p.grupo IN ('Tanques', 'Compostas')
     UNION ALL
     SELECT 'Recebimento NFC', 'C.T/B.L', 'Load ' || load || ' · lote ' || lote, analise, prevista, situacao
     FROM bi.recebimento_nfc
