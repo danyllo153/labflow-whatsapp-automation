@@ -13,6 +13,7 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 ## [Não lançado]
 
 ### Alterado
+- **Esterilização com ícone e cor por material** (25/10): Ponteira, Meio (frasco com líquido), Frasco (grande, vazio), Água de diluição (garrafinhas), Descarte (saco com placas) e Outro (reticências), cada um na cor do gráfico; no botão e na lista do turno.
 - **Laudos com a letra do papel** (25/10): todos os laudos saem em **Times 10** (diminui só se não couber na célula). **Fluxo laminar** igual ao modelo: data `dd.mm.aaaa`, capela **`<1|<1`** (as duas placas), cada placa só aparece **depois do dia da leitura** (OSA/PCA e C.T. da capela 48 h, PDA e B.L. da capela 120 h, Wort 240 h) e a folha **marcada como impressa** ganha o **traço** que fecha as linhas vazias.
 - **Ok e Não ok em ícone redondo** (25/10): nas estufas, os botões viraram o círculo verde com visto e o vermelho com X (cheio quando escolhido, contorno cinza quando não); a temperatura do Não ok fica ao lado. Nas Leituras, as marcas de lido e de fora do limite usam os mesmos ícones.
 
