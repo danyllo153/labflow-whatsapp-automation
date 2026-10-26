@@ -32,6 +32,9 @@
 - [ ] **Relatório do dia numa função do banco** para o bot e o app, contando também água do processo, baias, linhas e esterilização (hoje o bot não conta)
 - [ ] **Corrigir resultado (039) numa função geral** (`corrigir_resultado(quem, ...)`) para o app também chamar
 - [ ] Registrar por frase o que hoje só o app faz: material asséptico, lote de meio (receber e trocar o em uso) e temperatura das estufas (funções do app)
+- [x] **PB21, arquivo de contra-amostras** (25/10, migration 105): caixas, reserva do navio, arquivar o recebimento, descartar com sim, consultas; carga inicial da planilha fora do Git (`C:\Dev\estudos\ia\arquivo`)
+- [ ] **PB21 parte 2:** a caixa do recebimento lida pela **foto** da folha e `caixa N` no próprio comando de recebimento
+- [x] **PB22, pendências do dia** e **apelidos de navio** (25/10, migration 106): `pendências do dia` no bot, `vw_pendencias_do_dia` para o app; O.BLOSSOM vira o nome oficial (apelido fora do Git)
 - [ ] **PB6:** canal `app` no webhook (assistente do app pelo mesmo workflow), só na Fase D do app
 - [x] **C.T/B.L do recebimento de FCOJ pela foto** (25/10): lê o resultado de cada lote, traço por cima = já digitado (ignora sem comentar), só o novo, um sim; no ar (#280, `pre83`); o traço marca um bloco; falta testar ao vivo com a folha do load 43599 (lotes 9-20)
 - [ ] **Fase seguinte da foto:** o "+" da confirmação (legenda com `confirmação`); TAB/Coliformes de embarque
@@ -41,6 +44,9 @@
 - [ ] Se as pendências do piloto voltarem a acumular: `C:\Dev\estudos\ia\em-dia-2026-10-23.sql` (ensaio com `-v fim=ROLLBACK`; o `COMMIT` em massa o Danyllo roda no servidor)
 
 ### 📱 App (sessão da nuvem)
+- [ ] **"Análises a fazer hoje" com as pendências**, não só as leituras: TAB/Coliformes no caldo para espalhar/estriar, confirmatório, composta esperando TAB/Coliformes (obrigatório da 104), Stress de tanque e o atrasado de outro turno em vermelho (pedido de 25/10, detalhe no rumo)
+- [ ] **Esterilização com ícone e cor** em cada material (ponteira, meio, frasco, água de diluição, descarte, outro; pedido de 25/10)
+- [ ] **Página Arquivo** (caixas, vencido em vermelho, arquivar e descartar) e os **laudos por caixa**, pela migration 105 do bot
 - [x] **Pedidos de 25/10 (29 itens) e o visual novo** (APP-065 a APP-067, #282, #283 e a leva 3): menu escuro com ícones, Análises com ícone e cor
   por família, Excel/Imprimir em ícone, IT, atividades com a caixa, TAB/Coliformes/Howard separados, Wort numa linha, compostas no Registrar,
   sininho, <10 no FCOJ, Relatório do dia, Dashboard, branco automático, incubação sem lotes; no ar em 25/10 (`6c041c3`, com o #285)

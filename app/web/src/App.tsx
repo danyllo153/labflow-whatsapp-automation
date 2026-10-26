@@ -5,6 +5,7 @@ import { lerJson } from "./api";
 
 import Moldura from "./componentes/Moldura";
 import { MENU } from "./menu";
+import ArquivoDeContraAmostras from "./paginas/Arquivo";
 import ColetasExcluidas from "./paginas/admin/ColetasExcluidas";
 import Pessoas from "./paginas/admin/Pessoas";
 import TurnosEstufas from "./paginas/admin/TurnosEstufas";
@@ -97,6 +98,7 @@ export default function App() {
         <Route path="/material-asseptico" element={<MaterialAsseptico />} />
         <Route path="/turno/relatorio" element={<RelatorioDoTurno />} />
         <Route path="/relatorio-do-dia" element={<RelatorioDoDia />} />
+        <Route path="/arquivo" element={<ArquivoDeContraAmostras />} />
         <Route path="/paginas" element={<ListaDePaginas />} />
         <Route path="/analises/recebimento-fcoj" element={<RecebimentoFcoj />} />
         <Route path="/analises/tanques" element={<Tanques />} />

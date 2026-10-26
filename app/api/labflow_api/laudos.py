@@ -28,6 +28,15 @@ from labflow_api.rotas_turno import FUSO
 
 LARGURA, ALTURA = A4
 
+# A letra dos laudos (25/10, pedido do Danyllo com o laudo do fluxo laminar como referência): a do papel, Times 10. Se o
+# texto não cabe na célula, diminui até caber; numa linha baixa, começa do que a altura da linha comporta.
+FONTE = "Times-Roman"
+TAMANHO = 10.0
+
+
+def tamanho_inicial(pedido: float, altura_da_linha: float) -> float:
+    return max(pedido, min(TAMANHO, altura_da_linha * 0.78))
+
 
 # --- escrever nas células ------------------------------------------------------------------------------------------
 
@@ -42,7 +51,8 @@ class Celula:
     topo: float
     base: float
     centro: bool = True
-    tamanho: float = 8.5
+    tamanho: float = 8.5  # o mínimo pedido; sai em Times 10 quando a linha comporta
+    fonte: str = FONTE
 
 
 @dataclass(frozen=True)
@@ -58,14 +68,21 @@ class Tabela:
     def altura(self) -> float:
         return (self.base - self.topo) / self.linhas
 
-    def celula(self, texto: str, linha: int, coluna: int, centro: bool = True, tamanho: float = 8.5) -> Celula:
+    def celula(self, texto: str, linha: int, coluna: int, centro: bool = True, tamanho: float = 8.5, fonte: str = FONTE) -> Celula:
         topo = self.topo + linha * self.altura
-        return Celula(texto, self.colunas[coluna], self.colunas[coluna + 1], topo, topo + self.altura, centro, tamanho)
+        return Celula(texto, self.colunas[coluna], self.colunas[coluna + 1], topo, topo + self.altura, centro, tamanho, fonte)
+
+    def traco_das_vazias(self, usadas: int) -> tuple[float, float, float, float] | None:
+        """O traço que fecha a folha (como no papel): do canto de baixo à esquerda até o de cima à direita das linhas vazias."""
+        if usadas >= self.linhas:
+            return None
+        return (self.colunas[0], self.base, self.colunas[-1], self.topo + usadas * self.altura)
 
 
 def _desenhar(c: canvas.Canvas, cel: Celula, altura: float = ALTURA) -> None:
-    tamanho = laudo_esterilizacao._caber(c, cel.texto, cel.x1 - cel.x0 - 4, cel.tamanho)
-    c.setFont("Helvetica", tamanho)
+    inicio = tamanho_inicial(cel.tamanho, cel.base - cel.topo)
+    tamanho = laudo_esterilizacao._caber(c, cel.texto, cel.x1 - cel.x0 - 4, inicio, fonte=cel.fonte)
+    c.setFont(cel.fonte, tamanho)
     base = altura - (cel.topo + cel.base) / 2 - tamanho / 3  # altura da folha: A4 em pé ou deitado
     if cel.centro:
         c.drawCentredString((cel.x0 + cel.x1) / 2, base, cel.texto)
@@ -77,13 +94,13 @@ def _desenhar_deitada(c: canvas.Canvas, cel: Celula, escala: float, altura_da_fo
     """Célula de uma tabela deitada na folha (modelo digitalizado): as medidas vêm em pixels da imagem, com o x da
     tabela descendo a folha; o texto sai girado para ler com a folha deitada."""
     largura = (cel.x1 - cel.x0) * escala - 4
-    tamanho = laudo_esterilizacao._caber(c, cel.texto, largura, cel.tamanho)
+    tamanho = laudo_esterilizacao._caber(c, cel.texto, largura, tamanho_inicial(cel.tamanho, (cel.base - cel.topo) * escala), fonte=cel.fonte)
     c.saveState()
     centro_y = altura_da_folha - (cel.x0 + cel.x1) / 2 * escala  # ao longo da tabela = de cima para baixo na folha
     centro_x = (cel.topo + cel.base) / 2 * escala  # linhas da tabela = da direita para a esquerda na folha
     c.translate(centro_x - tamanho / 3, centro_y)
     c.rotate(-90)
-    c.setFont("Helvetica", tamanho)
+    c.setFont(cel.fonte, tamanho)
     if cel.centro:
         c.drawCentredString(0, 0, cel.texto)
     else:
@@ -91,8 +108,12 @@ def _desenhar_deitada(c: canvas.Canvas, cel: Celula, escala: float, altura_da_fo
     c.restoreState()
 
 
-def preencher(modelo: bytes | None, demonstracao: Callable[[], bytes], celulas: list[Celula], deitada: dict | None = None) -> bytes:
-    """O modelo (ou o de demonstração) com o texto nas células. `deitada`: {"escala", "altura"} para modelo girado."""
+def preencher(
+    modelo: bytes | None, demonstracao: Callable[[], bytes], celulas: list[Celula], deitada: dict | None = None,
+    riscos: list[tuple[float, float, float, float]] | None = None,
+) -> bytes:
+    """O modelo (ou o de demonstração) com o texto nas células. `deitada`: {"escala", "altura"} para modelo girado.
+    `riscos`: linhas (x0, y0, x1, y1, origem em cima à esquerda), como o traço que fecha as linhas vazias da folha."""
     escritor = PdfWriter(clone_from=io.BytesIO(modelo or demonstracao()))
     folha = escritor.pages[0]
     camada = io.BytesIO()
@@ -104,6 +125,10 @@ def preencher(modelo: bytes | None, demonstracao: Callable[[], bytes], celulas: 
             _desenhar_deitada(c, cel, deitada["escala"], deitada["altura"])
         else:
             _desenhar(c, cel, float(folha.mediabox.height))
+    altura = float(folha.mediabox.height)
+    c.setLineWidth(0.8)
+    for x0, y0, x1, y1 in riscos or []:
+        c.line(x0, altura - y0, x1, altura - y1)
     c.showPage()
     c.save()
     folha.merge_page(PdfReader(io.BytesIO(camada.getvalue())).pages[0])
