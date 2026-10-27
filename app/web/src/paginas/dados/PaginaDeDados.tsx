@@ -25,6 +25,7 @@ interface Pagina {
 
 // o Chart.js só é baixado nas páginas com gráfico de resultado (26/10)
 const GraficoResultado = lazy(() => import("./GraficoResultado"));
+const GraficoLotes = lazy(() => import("./GraficoLotes"));
 const TabPositivos = lazy(() => import("./TabPositivos"));
 
 const POR_PAGINA = 50;
@@ -424,6 +425,8 @@ export default function PaginaDeDados({ def, embutida = false }: { def: Definica
           <Suspense fallback={<p className="carregando">Montando o gráfico...</p>}>
             {def.resultado.tipo === "positivos" ? (
               <TabPositivos teste={def.resultado.teste} aoDesenhar={(c) => (canvasDoGrafico.current = c)} />
+            ) : def.resultado.tipo === "lotes" ? (
+              <GraficoLotes api={def.api} consulta={consulta({ ...comBusca, ...def.fixos })} aoDesenhar={(c) => (canvasDoGrafico.current = c)} />
             ) : (
               <GraficoResultado
                 api={def.resultado.api ?? def.api}

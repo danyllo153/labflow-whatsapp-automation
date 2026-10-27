@@ -1609,3 +1609,42 @@ button.numero-app.numero-clicavel:hover {
   color: var(--nao-ok-texto, #a02d20);
   font-weight: 700;
 }
+
+/* o gráfico dos lotes (Recebimento FCOJ e Embarque, 27/10): mais baixo, e a lista dos lotes da coluna tocada */
+.grafico-lotes-area {
+  height: 260px;
+}
+
+.lotes-da-coluna {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--borda);
+}
+
+.lotes-da-coluna h3 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+}
+
+.lotes-da-coluna ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 260px;
+  overflow-y: auto;
+}
+
+.lotes-da-coluna li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--borda);
+}
+
+.lotes-da-coluna li .etiqueta {
+  margin-left: auto;
+}
