@@ -18,7 +18,7 @@ const AGUA = {
   pontos: { Santos: { mensal: pontos(2), semanal: pontos(2) }, TMG: { mensal: pontos(8), semanal: pontos(8) } },
   pontos_do_navio: { TEC: "Água técnica", COZ: "Água da cozinha" },
   limites: { ct: 500, bl: 50, ph_min: 6, ph_max: 9.5, cloro_min: 0.2, cloro_max: 5 },
-  coletas: [COLETA], navios: [],
+  coletas: [COLETA], navios: [], pessoas: ["Ana Souza", "Bia Souza"],
 };
 const QUEM_LANCA = { ...ANA, pode: ["ver_paginas", "registrar_analise", "registrar_coleta"] };
 
@@ -106,7 +106,7 @@ describe("Água de consumo (27/10)", () => {
     expect(within(cartao).getByRole("textbox", { name: "C.T 48h de Ponto 2" })).toBeInTheDocument();
     await userEvent.type(within(cartao).getByRole("textbox", { name: "pH de Ponto 1" }), "7");
     await userEvent.click(within(cartao).getByRole("button", { name: "Ver o que vai ser gravado (1)" }));
-    expect(api.chamadas.find((c) => c.rota === "PUT /aguas/consumo/coletas/9/resultados")?.corpo).toEqual({ previa: true, itens: [{ ordem: 1, ph: "7" }] });
+    expect(api.chamadas.find((c) => c.rota === "PUT /aguas/consumo/coletas/9/resultados")?.corpo).toMatchObject({ previa: true, itens: [{ ordem: 1, ph: "7" }] });
   });
 
   it("na aba Leituras: Ausente em todos, a prévia com o que passou do limite e o Confirmar", async () => {
@@ -118,6 +118,7 @@ describe("Água de consumo (27/10)", () => {
     });
     const cartao = await screen.findByRole("region", { name: /TMG \(Guarujá\) mensal · coleta 26\/10 08:30/ });
     await userEvent.click(within(cartao).getByRole("button", { name: /Ausente em todos/ }));
+    await userEvent.type(within(cartao).getByRole("combobox", { name: "Analisado por" }), "Bia Souza");
     const coli2 = within(cartao).getByRole("textbox", { name: "Coliformes (P/A) de Ponto 2" });
     await userEvent.clear(coli2);
     await userEvent.type(coli2, "P");
@@ -126,7 +127,12 @@ describe("Água de consumo (27/10)", () => {
     await userEvent.click(within(cartao).getByRole("button", { name: "Confirmar" }));
     expect(await screen.findByText("Nenhuma leitura pendente.")).toBeInTheDocument();
     const enviados = api.chamadas.filter((c) => c.rota === "PUT /aguas/consumo/coletas/9/resultados").map((c) => c.corpo);
-    expect(enviados[0]).toEqual({ previa: true, itens: [{ ordem: 1, coliformes: "A", ecoli: "A" }, { ordem: 2, coliformes: "P", ecoli: "A" }] });
+    expect(enviados[0]).toMatchObject({
+      previa: true,
+      itens: [{ ordem: 1, coliformes: "A", ecoli: "A" }, { ordem: 2, coliformes: "P", ecoli: "A" }],
+      coletado_por: "", // não mudou: fica quem registrou a coleta
+      analisado_por: "Bia Souza",
+    });
     expect(enviados[1].previa).toBe(false);
   });
 });

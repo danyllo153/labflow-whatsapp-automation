@@ -62,7 +62,7 @@ def test_mensal_cria_um_resultado_por_ponto_e_segue_o_bag_o_ct_e_o_bl(cliente, l
     assert c["situacao"] == "Aguardando Coliformes e E.coli (23/10)"
     url = f"/aguas/consumo/coletas/{c['id']}/resultados"
     previa = cliente.put(url, json={"itens": [{"ordem": 1, "coliformes": "a", "ecoli": "P"}]}).json()
-    assert previa["previa"] and previa["texto"] == "Ponto 1: Coliformes A, E.coli P"
+    assert previa["previa"] and previa["texto"].split("\n")[0] == "Ponto 1: Coliformes A, E.coli P"
     assert previa["fora"] == ["Ponto 1: E.coli fora do limite"]
     assert cliente.get("/aguas/consumo").json()["coletas"][0]["resultados"][0]["ecoli"] is None  # a prévia não grava
     itens = [{"ordem": n, "coliformes": "A", "ecoli": "A"} for n in range(1, 9)]
@@ -86,7 +86,8 @@ def test_semanal_ph_e_cloro_na_hora_e_a_primeira_analise_vai_para_o_cabecalho(cl
     r = cliente.put(url, json={"itens": [{"ordem": 1, "ph": "7,2", "cloro": "9"}, {"ordem": 2, "ph": "5,1", "cloro": "1"}], "previa": False}).json()
     assert r["fora"] == ["Ponto 1: Cloro fora do limite", "Ponto 2: pH fora do limite"]
     coleta = r["agua"]["coletas"][0]
-    assert coleta["resultados"][0]["ph"] == 7.2 and coleta["analisada_em"] and coleta["analisada_por"]
+    assert coleta["resultados"][0]["ph"] == 7.2 and coleta["fq_analisada_em"] and coleta["fq_analisada_por"]
+    assert coleta["micro_analisada_em"] is None  # só a físico-química foi lançada
     assert coleta["situacao"] == "Aguardando Coliformes e E.coli (23/10)"
     assert cliente.put(url, json={"itens": [{"ordem": 1, "ph": "15"}]}).status_code == 422
 
@@ -203,3 +204,73 @@ def test_mensal_com_os_pontos_do_semanal_mede_ph_e_cloro_e_entra_nos_laudos_sema
     assert [p["linhas"] for p in fq] == [1] and len(micro) == 1
     texto = PdfReader(io.BytesIO(cliente.get(f"/laudos/agua-consumo-fq-TMG/{fq[0]['id']}/pdf").content)).pages[0].extract_text()
     assert "7,10" in texto and "9,90" in texto and "Ponto 2" in texto and "Ponto 3" not in texto
+
+
+def _modelo_fq_tmg() -> bytes:
+    """Um modelo FICTÍCIO no formato do papel: os dois blocos com o cabeçalho de barras e dois-pontos, as linhas da
+    tabela e o "-" impresso nas observações de toda linha."""
+    from reportlab.lib.pagesizes import A4
+    from reportlab.pdfgen import canvas
+
+    from labflow_api import rotas_agua_consumo as rac
+
+    saida = io.BytesIO()
+    c = canvas.Canvas(saida, pagesize=A4)
+    altura = A4[1]
+    for y, topo, base, n in rac.SEMANAL[("fq", "TMG")]["blocos"]:
+        c.setFont("Times-Roman", 11)
+        c.drawString(40, altura - (y + 8), "Data/ Hora da Coleta: _____/_____/__________:_____")
+        c.drawString(300, altura - (y + 8), "Responsável pela Coleta: _______________")
+        c.drawString(40, altura - (y + 36), "Data/ Hora da Análise: _____/_____/__________:_____")
+        c.drawString(300, altura - (y + 36), "Responsável pela Análise: _______________")
+        colunas = rac.SEMANAL[("fq", "TMG")]["colunas"]
+        passo = (base - topo) / n
+        for k in range(n + 1):
+            c.line(colunas[0], altura - (topo + k * passo), colunas[-1], altura - (topo + k * passo))
+        for x in colunas:
+            c.line(x, altura - topo, x, altura - base)
+        for k in range(n):
+            c.drawCentredString((colunas[3] + colunas[4]) / 2, altura - (topo + (k + 0.7) * passo), "-")
+    c.showPage()
+    c.save()
+    return saida.getvalue()
+
+
+def test_laudo_semanal_escreve_o_cabecalho_nos_espacos_do_modelo_e_quem_foi_escolhido(cliente, conexao, logado, agora):
+    """27/10: data e hora em cada espaço (dia, mês, ano, hora, minuto), quem coletou e quem analisou escolhidos na leitura,
+    e a folha finalizada com o traço das linhas vazias de cada bloco (o bloco sem coleta, inteiro)."""
+    from labflow_api import laudos
+    from labflow_api import rotas_agua_consumo as rac
+
+    logado("Admin")
+    assert cliente.put("/laudos/agua-consumo-fq-TMG/modelo", content=_modelo_fq_tmg()).status_code == 200
+    c = _coleta(cliente, tipo="semanal", pontos=[])
+    url = f"/aguas/consumo/coletas/{c['id']}/resultados"
+    corpo = {"itens": [{"ordem": 1, "ph": "7", "cloro": "1"}, {"ordem": 2, "ph": "7", "cloro": "1"}], "coletado_por": "Bia Coletora",
+             "analisado_por": "Caio Analista", "analise_dia": "2026-10-22", "analise_hora": "09:15"}
+    previa = cliente.put(url, json=corpo).json()
+    assert "Análise: 22/10/2026 09:15, por Caio Analista · coletado por Bia Coletora" in previa["texto"]
+    r = cliente.put(url, json={**corpo, "previa": False}).json()
+    coleta = next(x for x in r["agua"]["coletas"] if x["id"] == c["id"])
+    assert (coleta["quem"], coleta["fq_analisada_por"], coleta["fq_analisada_em"]) == ("Bia Coletora", "Caio Analista", "22/10/2026 09:15")
+    folha = cliente.get("/laudos/agua-consumo-fq-TMG").json()["paginas"][0]
+    pdf = cliente.get(f"/laudos/agua-consumo-fq-TMG/{folha['id']}/pdf").content
+    linhas = laudos.letras_do_modelo(pdf)
+    # a linha da coleta do 1º bloco: "22" entre o rótulo e a 1ª barra, "10" entre as barras, "30" depois dos dois-pontos
+    rotulo = next(le for le in linhas if laudos.achar(le, "Data/ Hora da Coleta:"))
+    escrito = next(le for le in linhas if 0.5 < rotulo[0].y - le[0].y < 4)  # o que o app escreveu, 1,5 pt acima do traço
+    assert laudos.achar(escrito, "Bia Coletora")
+    barras = [le for le in rotulo if le.letra == "/" and le.x0 > laudos.achar(rotulo, "Coleta:")[1].x1]
+    coleta_linha = escrito
+    dia, mes = laudos.achar(coleta_linha, "22"), laudos.achar(coleta_linha, "10", barras[0].x1)
+    assert dia[1].x1 <= barras[0].x0 and barras[0].x1 <= mes[0].x0 and mes[1].x1 <= barras[1].x0
+    assert laudos.achar(coleta_linha, "2026") and laudos.achar(coleta_linha, "30", barras[1].x1)
+    assert any(laudos.achar(le, "Caio Analista") for le in linhas)
+    # finalizada: o 1º bloco riscado depois dos pontos da coleta e o 2º (sem coleta) inteiro
+    cliente.post(f"/laudos/agua-consumo-fq-TMG/{folha['id']}/finalizar")
+    modelo = _modelo_fq_tmg()
+    riscos = rac._riscos_semanal("fq", "TMG")
+    blocos = rac._tabelas_semanal("fq", "TMG", modelo)
+    feitos = riscos(conexao, folha["id"], modelo)
+    assert feitos == [blocos[0][1].traco_das_vazias(len(c["resultados"])), blocos[1][1].traco_das_vazias(0)]
+    assert cliente.get(f"/laudos/agua-consumo-fq-TMG/{folha['id']}/pdf").status_code == 200

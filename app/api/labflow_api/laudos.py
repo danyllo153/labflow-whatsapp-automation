@@ -116,14 +116,20 @@ def _desenhar_deitada(c: canvas.Canvas, cel: Celula, escala: float, altura_da_fo
 
 def preencher(
     modelo: bytes | None, demonstracao: Callable[[], bytes], celulas: list[Celula], deitada: dict | None = None,
-    riscos: list[tuple[float, float, float, float]] | None = None,
+    riscos: list[tuple[float, float, float, float]] | None = None, brancos: list[tuple[float, float, float, float]] | None = None,
 ) -> bytes:
     """O modelo (ou o de demonstração) com o texto nas células. `deitada`: {"escala", "altura"} para modelo girado.
-    `riscos`: linhas (x0, y0, x1, y1, origem em cima à esquerda), como o traço que fecha as linhas vazias da folha."""
+    `riscos`: linhas (x0, y0, x1, y1, origem em cima à esquerda), como o traço que fecha as linhas vazias da folha.
+    `brancos`: retângulos (x0, y0, x1, y1) pintados de branco antes do texto, para cobrir o que o papel já traz impresso
+    numa linha vazia (o "-" das observações da físico-química da água, 27/10)."""
     escritor = PdfWriter(clone_from=io.BytesIO(modelo or demonstracao()))
     folha = escritor.pages[0]
     camada = io.BytesIO()
     c = canvas.Canvas(camada, pagesize=(float(folha.mediabox.width), float(folha.mediabox.height)))
+    c.setFillColorRGB(1, 1, 1)
+    for x0, y0, x1, y1 in brancos or []:
+        c.rect(x0, float(folha.mediabox.height) - y1, x1 - x0, y1 - y0, stroke=0, fill=1)
+    c.setFillColorRGB(0, 0, 0)
     for cel in celulas:
         if not cel.texto:
             continue
@@ -252,6 +258,105 @@ def _encaixar(tabela: Tabela, modelo: bytes) -> Tabela:
     return melhor
 
 
+def linhas_verticais(pdf: bytes) -> list[tuple[float, float, float]]:
+    """(x, topo, base) de cada traço vertical da 1ª folha (y medido do alto da folha): retângulos finos e segmentos."""
+    folha = PdfReader(io.BytesIO(pdf)).pages[0]
+    altura = float(folha.mediabox.height)
+    m, pilha, atual, saida = [1.0, 0.0, 0.0, 1.0, 0.0, 0.0], [], None, []
+    for ops, op in ContentStream(folha.get_contents(), folha.pdf).operations:
+        if op == b"q":
+            pilha.append(m[:])
+        elif op == b"Q":
+            m = pilha.pop() if pilha else [1.0, 0.0, 0.0, 1.0, 0.0, 0.0]
+        elif op == b"cm":
+            m = _mult([float(v) for v in ops], m)
+        elif op == b"re":
+            x, y, w, h = (float(v) for v in ops)
+            (ax, ay), (bx, by) = _ponto(m, x, y), _ponto(m, x + w, y + h)
+            if abs(bx - ax) < 2.5 and abs(by - ay) > 3:
+                saida.append(((ax + bx) / 2, altura - max(ay, by), altura - min(ay, by)))
+        elif op == b"m":
+            atual = _ponto(m, float(ops[0]), float(ops[1]))
+        elif op == b"l" and atual is not None:
+            p = _ponto(m, float(ops[0]), float(ops[1]))
+            if abs(p[0] - atual[0]) < 0.5 and abs(p[1] - atual[1]) > 3:
+                saida.append((p[0], altura - max(p[1], atual[1]), altura - min(p[1], atual[1])))
+            atual = p
+    return saida
+
+
+def encaixar_colunas(tabela: Tabela, modelo: bytes | None) -> Tabela:
+    """A tabela encaixada nas linhas do modelo (`encaixar`) e, além disso, cada divisa das colunas na linha vertical do
+    modelo mais perto (até 12 pt) que desce pela metade da tabela ou mais (27/10: no microbiológico da água de consumo o
+    ponto de coleta saía por cima da borda)."""
+    tabela = encaixar(tabela, modelo)
+    if not modelo:
+        return tabela
+    try:
+        verticais = linhas_verticais(modelo)
+    except Exception:
+        return tabela
+    altura = tabela.base - tabela.topo
+    candidatas = [x for x, t, b in verticais if min(b, tabela.base) - max(t, tabela.topo) >= 0.5 * altura]
+    colunas = []
+    for c in tabela.colunas:
+        perto = min(candidatas, key=lambda x: abs(x - c), default=None)
+        colunas.append(perto if perto is not None and abs(perto - c) <= 12 else c)
+    return Tabela(tuple(colunas), tabela.topo, tabela.base, tabela.linhas)
+
+
+# --- textos do modelo (27/10) --------------------------------------------------------------------------------------------
+# O cabeçalho dos laudos semanais da água ("Data/ Hora da Coleta: ___/___/______ __:__   Responsável pela Coleta: ____")
+# não é tabela: o app procura essas frases no modelo enviado e escreve cada parte (dia, mês, ano, hora, minuto, nome) no
+# espaço dela, entre as barras e os dois-pontos do papel. A posição de cada letra sai do começo do trecho de texto (pypdf)
+# mais a largura das letras em Times (a letra dos modelos do laboratório).
+
+
+@dataclass(frozen=True)
+class Letra:
+    letra: str
+    x0: float
+    x1: float
+    y: float  # a linha de base, medida do alto da folha
+    tamanho: float
+
+
+def letras_do_modelo(pdf: bytes) -> list[list[Letra]]:
+    """As linhas de texto da 1ª folha (de cima para baixo), cada uma com as letras da esquerda para a direita."""
+    from reportlab.pdfbase.pdfmetrics import stringWidth
+
+    folha = PdfReader(io.BytesIO(pdf)).pages[0]
+    altura = float(folha.mediabox.height)
+    trechos: list[tuple[str, float, float, float]] = []
+
+    def visitar(texto, cm, tm, _fonte, tamanho):
+        if not texto or not texto.strip("\n") or not tamanho:
+            return
+        m = _mult([float(v) for v in tm], [float(v) for v in cm])
+        x, y = m[4], m[5]
+        trechos.append((texto.replace("\n", ""), x, altura - y, float(tamanho) * (m[2] ** 2 + m[3] ** 2) ** 0.5))
+
+    folha.extract_text(visitor_text=visitar)
+    linhas: dict[float, list[Letra]] = {}
+    for texto, x, y, tamanho in trechos:
+        if tamanho <= 0:
+            continue
+        chave = next((k for k in linhas if abs(k - y) < 1.5), y)
+        for i, letra in enumerate(texto):
+            x0 = x + stringWidth(texto[:i], "Times-Roman", tamanho)
+            linhas.setdefault(chave, []).append(Letra(letra, x0, x0 + stringWidth(letra, "Times-Roman", tamanho), y, tamanho))
+    return [sorted(linhas[k], key=lambda le: le.x0) for k in sorted(linhas)]
+
+
+def achar(linha: list[Letra], frase: str, depois: float = -1.0) -> tuple[Letra, Letra] | None:
+    """A primeira e a última letra da frase na linha (sem contar espaços), começando depois de x = `depois`."""
+    letras = [le for le in linha if not le.letra.isspace() and le.x0 > depois]
+    alvo = "".join(frase.split())
+    texto = "".join(le.letra for le in letras)
+    i = texto.find(alvo)
+    return (letras[i], letras[i + len(alvo) - 1]) if i >= 0 else None
+
+
 def TABELA_CELULA(tabela: Tabela, texto: str, linha: int, coluna: int, centro: bool = True) -> Celula:  # noqa: N802
     """A célula de uma tabela, com o texto à esquerda quando não é centralizado (Times 11, o papel)."""
     return tabela.celula(texto, linha, coluna, centro=centro)
@@ -340,6 +445,8 @@ class Laudo:
     # papel e quantas linhas dela cada unidade do contar_sql ocupa (a incubação conta blocos de 4 linhas)
     traco: "Tabela | None" = None
     linhas_por_unidade: int = 1
+    # folha com mais de uma tabela (os blocos dos laudos semanais da água): os traços da folha finalizada, um por bloco
+    riscos: Callable[[psycopg.Connection, int, bytes | None], list[tuple[float, float, float, float]]] | None = None
 
 
 LAUDOS: dict[str, Laudo] = {}
@@ -489,9 +596,13 @@ def baixar_pdf(
     _da_pagina(con, laudo, pagina_id)
     modelo = modelo_do_banco(con, laudo.modelo)
     pdf = laudo.gerar(con, pagina_id, modelo)
-    if laudo.traco is not None:
+    if laudo.traco is not None or laudo.riscos is not None:
         impressa = con.execute("SELECT impresso_em IS NOT NULL FROM app.paginas_laudo WHERE id = %s", (pagina_id,)).fetchone()[0]
-        if impressa:
+        if impressa and laudo.riscos is not None:
+            riscos = laudo.riscos(con, pagina_id, modelo)
+            if riscos:
+                pdf = riscar(pdf, riscos)
+        elif impressa:
             usadas = con.execute(laudo.contar_sql, (pagina_id,)).fetchone()[0] * laudo.linhas_por_unidade
             risco = encaixar(laudo.traco, modelo).traco_das_vazias(usadas)
             if risco:

@@ -47,8 +47,11 @@ interface Coleta {
   dia: string;
   hora: string;
   quem: string;
-  analisada_em: string | null;
-  analisada_por: string | null;
+  // a análise de cada laudo semanal (080): "dd/mm/aaaa HH:MM" e quem foi escolhido na leitura
+  fq_analisada_em?: string | null;
+  fq_analisada_por?: string | null;
+  micro_analisada_em?: string | null;
+  micro_analisada_por?: string | null;
   resultados: Resultado[];
   faltas: string[];
   situacao: string;
@@ -73,6 +76,7 @@ export interface AguaDeConsumo {
   limites: Limites;
   coletas: Coleta[];
   navios: string[];
+  pessoas?: string[]; // para escolher quem coletou e quem analisou
 }
 
 const NOME: Record<Escolha, string> = { Santos: "Santos", TMG: "TMG (Guarujá)", Navio: "Navios" };
@@ -625,7 +629,13 @@ export function LeituraDaAguaDeConsumo() {
       </h2>
       {abertas.length === 0 && <p className="texto-secundario">Nenhuma leitura pendente.</p>}
       {abertas.map((c) => (
-        <LeituraDaColeta key={`${c.id}-${versao}`} coleta={c} pode={dados.pode_lancar} aoGravar={(d) => (setDados(d), setVersao((v) => v + 1))} />
+        <LeituraDaColeta
+          key={`${c.id}-${versao}`}
+          coleta={c}
+          pode={dados.pode_lancar}
+          pessoas={dados.pessoas ?? []}
+          aoGravar={(d) => (setDados(d), setVersao((v) => v + 1))}
+        />
       ))}
     </div>
   );
@@ -636,13 +646,28 @@ const FQ: [Campo, string][] = [["ph", "pH"], ["cloro", "Cloro livre"], ["observa
 /** No mensal, pH, cloro e observação só nos pontos que valem também como semanal (080). */
 const doPonto = (r: Resultado, tipo: Tipo, c: Campo) => tipo === "semanal" || !!r.semanal || !FQ.some(([f]) => f === c);
 
-function LeituraDaColeta({ coleta, pode, aoGravar }: { coleta: Coleta; pode: boolean; aoGravar: (d: AguaDeConsumo) => void }) {
+function LeituraDaColeta({
+  coleta,
+  pode,
+  pessoas,
+  aoGravar,
+}: {
+  coleta: Coleta;
+  pode: boolean;
+  pessoas: string[];
+  aoGravar: (d: AguaDeConsumo) => void;
+}) {
   const campos = coleta.tipo === "mensal" && coleta.resultados.some((r) => r.semanal) ? [...FQ, ...CAMPOS.mensal] : CAMPOS[coleta.tipo];
   const inicial = () => Object.fromEntries(coleta.resultados.map((r) => [r.ordem, Object.fromEntries(campos.map(([c]) => [c, valorInicial(r, c)]))]));
   const [valores, setValores] = useState<Record<number, Record<string, string>>>(inicial);
   const [previa, setPrevia] = useState<{ texto: string; fora: string[] } | null>(null);
   const [erro, setErro] = useState("");
   const [enviando, setEnviando] = useState(false);
+  // quem coletou, quem analisou e quando (vão para o cabeçalho do laudo semanal); vazio = quem está lançando
+  const [coletadoPor, setColetadoPor] = useState(coleta.quem);
+  const [analisadoPor, setAnalisadoPor] = useState("");
+  const [analiseDia, setAnaliseDia] = useState(hojeSP());
+  const [analiseHora, setAnaliseHora] = useState(agoraSP());
   const titulo = `${coleta.navio ?? NOME[coleta.unidade]}${coleta.navio ? "" : ` ${coleta.tipo}`} · coleta ${dm(coleta.dia)} ${coleta.hora}`;
 
   const itens = () =>
@@ -664,7 +689,14 @@ function LeituraDaColeta({ coleta, pode, aoGravar }: { coleta: Coleta; pode: boo
     try {
       const r = await enviarJson<{ previa: boolean; texto: string; fora: string[]; agua: AguaDeConsumo | null }>(
         `/aguas/consumo/coletas/${coleta.id}/resultados`,
-        { itens: itens(), previa: !confirmar },
+        {
+          itens: itens(),
+          previa: !confirmar,
+          coletado_por: coletadoPor.trim() === coleta.quem ? "" : coletadoPor,
+          analisado_por: analisadoPor,
+          analise_dia: analiseDia,
+          analise_hora: analiseHora,
+        },
         "PUT",
       );
       if (confirmar && r.agua) aoGravar(r.agua);
@@ -681,6 +713,43 @@ function LeituraDaColeta({ coleta, pode, aoGravar }: { coleta: Coleta; pode: boo
       <h3>
         {titulo} <span className={classeDaSituacao(coleta.situacao)}>{coleta.situacao}</span>
       </h3>
+      {(coleta.fq_analisada_em || coleta.micro_analisada_em) && (
+        <p className="texto-secundario">
+          {coleta.fq_analisada_em && `Físico-química: ${coleta.fq_analisada_em}, ${coleta.fq_analisada_por ?? ""}. `}
+          {coleta.micro_analisada_em && `Microbiológica: ${coleta.micro_analisada_em}, ${coleta.micro_analisada_por ?? ""}.`}
+        </p>
+      )}
+      {pode && (
+        <div className="linha-formulario" role="group" aria-label="Quem coletou e quem analisou">
+          <label className="campo">
+            Coletado por
+            <input list={`pessoas-${coleta.id}`} maxLength={60} value={coletadoPor} onChange={(e) => (setPrevia(null), setColetadoPor(e.target.value))} />
+          </label>
+          <label className="campo">
+            Analisado por
+            <input
+              list={`pessoas-${coleta.id}`}
+              maxLength={60}
+              placeholder="você"
+              value={analisadoPor}
+              onChange={(e) => (setPrevia(null), setAnalisadoPor(e.target.value))}
+            />
+          </label>
+          <label className="campo campo-hora">
+            Data da análise
+            <input type="date" max={hojeSP()} value={analiseDia} onChange={(e) => (setPrevia(null), setAnaliseDia(e.target.value))} />
+          </label>
+          <label className="campo campo-hora">
+            Hora
+            <input type="time" value={analiseHora} onChange={(e) => (setPrevia(null), setAnaliseHora(e.target.value))} />
+          </label>
+          <datalist id={`pessoas-${coleta.id}`}>
+            {pessoas.map((p) => (
+              <option key={p} value={p} />
+            ))}
+          </datalist>
+        </div>
+      )}
       <div className="tabela-rolagem">
         <table className="tabela">
           <thead>
