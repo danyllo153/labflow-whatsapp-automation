@@ -98,13 +98,13 @@ describe("Admin → Turnos e estufas (APP-028)", () => {
     await userEvent.type(within(nova).getByLabelText("Nova atividade neste turno"), "Conferir o freezer");
     await userEvent.click(within(nova).getByRole("checkbox", { name: "sex" }));
     await userEvent.click(within(nova).getByRole("button", { name: "Adicionar atividade" }));
-    expect(api.chamadas.find((c) => c.rota === "POST /admin/turnos/atividades")?.corpo).toEqual({ turno_id: 1, texto: "Conferir o freezer", dias_semana: [5] });
+    expect(api.chamadas.find((c) => c.rota === "POST /admin/turnos/atividades")?.corpo).toEqual({ turno_id: 1, texto: "Conferir o freezer", dias_semana: [5], opcional: false });
 
     await userEvent.click(within(grupo).getByRole("button", { name: "Subir Leitura de placa" }));
     expect(api.chamadas.find((c) => c.rota === "POST /admin/turnos/atividades/1/mover")?.corpo).toEqual({ direcao: "cima" });
 
     await userEvent.click(within(grupo).getByRole("button", { name: "Desativar Leitura de placa" }));
-    expect(api.chamadas.filter((c) => c.rota === "PUT /admin/turnos/atividades/1").slice(-1)[0]?.corpo).toEqual({ texto: "Leitura de placa", dias_semana: null, ativa: false });
+    expect(api.chamadas.filter((c) => c.rota === "PUT /admin/turnos/atividades/1").slice(-1)[0]?.corpo).toEqual({ texto: "Leitura de placa", dias_semana: null, ativa: false, opcional: false });
 
     await userEvent.click(within(grupo).getByRole("button", { name: "Editar Leitura de placa" }));
     const form = within(grupo).getByRole("form", { name: "Editar Leitura de placa" });
@@ -112,7 +112,17 @@ describe("Admin → Turnos e estufas (APP-028)", () => {
     await userEvent.type(within(form).getByLabelText("Atividade"), "Leitura das placas");
     await userEvent.click(within(form).getByRole("checkbox", { name: "seg" }));
     await userEvent.click(within(form).getByRole("button", { name: "Salvar" }));
-    expect(api.chamadas.filter((c) => c.rota === "PUT /admin/turnos/atividades/1").slice(-1)[0]?.corpo).toEqual({ texto: "Leitura das placas", dias_semana: [1], ativa: true });
+    expect(api.chamadas.filter((c) => c.rota === "PUT /admin/turnos/atividades/1").slice(-1)[0]?.corpo).toEqual({ texto: "Leitura das placas", dias_semana: [1], ativa: true, opcional: false });
+  });
+
+  it("atividade opcional: esconde os dias e manda opcional (27/10)", async () => {
+    const api = abrir({ "POST /admin/turnos/atividades": () => ({ status: 201, corpo: BASE }) });
+    const nova = await screen.findByRole("form", { name: "Nova atividade" });
+    await userEvent.type(within(nova).getByLabelText("Nova atividade neste turno"), "Limpar a geladeira");
+    await userEvent.click(within(nova).getByRole("checkbox", { name: /Opcional/ }));
+    expect(within(nova).queryByRole("group", { name: /Só nestes dias/ })).toBeNull();
+    await userEvent.click(within(nova).getByRole("button", { name: "Adicionar atividade" }));
+    expect(api.chamadas.find((c) => c.rota === "POST /admin/turnos/atividades")?.corpo).toMatchObject({ texto: "Limpar a geladeira", opcional: true });
   });
 
   it("estufas: mostra a faixa vigente, grava faixa nova com data e desativa", async () => {

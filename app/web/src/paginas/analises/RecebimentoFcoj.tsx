@@ -2,6 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useState, type FormEvent } from
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 import { enviarJson, lerJson } from "../../api";
+import { alternarFabrica, fabricasDe } from "../dados/fabricas";
 import { useSessao } from "../../sessao";
 import IconeApp from "../../componentes/IconeApp";
 import { dm } from "../../componentes/SeletorDeDias";
@@ -622,7 +623,12 @@ function Resultados({
       <div className="barra-da-tabela">
         <div className="seletor-de-tabela pilulas-fabrica" role="group" aria-label="Fábrica">
           {["", ...FABRICAS].map((f) => (
-            <button key={f || "todas"} type="button" aria-pressed={filtros.fabrica === f} onClick={() => setFiltros({ ...filtros, fabrica: f })}>
+            <button
+              key={f || "todas"}
+              type="button"
+              aria-pressed={f ? fabricasDe(filtros.fabrica).includes(f) : !filtros.fabrica}
+              onClick={() => setFiltros({ ...filtros, fabrica: alternarFabrica(filtros.fabrica, f) })}
+            >
               {f || "Todas as fábricas"}
             </button>
           ))}
@@ -714,7 +720,7 @@ function Resultados({
       )}
       {lotes && lotes.length === 0 && (
         <p className="texto-secundario">
-          Nenhum lote{filtros.fabrica && ` da ${filtros.fabrica}`} nos últimos {filtros.dias === "365" ? "12 meses" : `${filtros.dias} dias`}.{" "}
+          Nenhum lote{filtros.fabrica && ` da ${fabricasDe(filtros.fabrica).join(", ")}`} nos últimos {filtros.dias === "365" ? "12 meses" : `${filtros.dias} dias`}.{" "}
           {filtros.dias !== "365" && (
             <button type="button" className="link-botao" onClick={() => setFiltros({ ...filtros, dias: "365" })}>
               Ver o último ano

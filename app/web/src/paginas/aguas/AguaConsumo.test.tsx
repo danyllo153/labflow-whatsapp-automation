@@ -18,7 +18,7 @@ const AGUA = {
   pontos: { Santos: { mensal: pontos(2), semanal: pontos(2) }, TMG: { mensal: pontos(8), semanal: pontos(8) } },
   pontos_do_navio: { TEC: "Água técnica", COZ: "Água da cozinha" },
   limites: { ct: 500, bl: 50, ph_min: 6, ph_max: 9.5, cloro_min: 0.2, cloro_max: 5 },
-  coletas: [COLETA], navios: [],
+  coletas: [COLETA], navios: [], pessoas: ["Ana Souza", "Bia Souza"],
 };
 const QUEM_LANCA = { ...ANA, pode: ["ver_paginas", "registrar_analise", "registrar_coleta"] };
 
@@ -60,6 +60,55 @@ describe("Água de consumo (27/10)", () => {
     expect(screen.getByText("Histórico dos navios")).toBeInTheDocument();
   });
 
+  it("trocar de aba fica na água do navio (antes voltava para o TMG)", async () => {
+    abrir("/paginas/agua-consumo?unidade=Navio&tipo=mensal");
+    expect(await screen.findByLabelText("Navio e viagem")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Coletas" }));
+    expect(screen.getByRole("button", { name: "Registrar água do navio" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("heading", { name: "Navios" })).toBeInTheDocument();
+  });
+
+  it("pontos: o disquete salva o nome limpo e some a mudança pendente", async () => {
+    const renomeado = { ...AGUA, pode_configurar: true, pontos: { ...AGUA.pontos, TMG: { ...AGUA.pontos.TMG, mensal: [{ ...pontos(8)[0], nome: "Cavalete" }, ...pontos(8).slice(1)] } } };
+    const api = servidorFalso({
+      "GET /me": () => ({ status: 200, corpo: { ...ANA, pode: [...QUEM_LANCA.pode, "configurar_turnos"] } }),
+      "GET /aguas/consumo": () => ({ status: 200, corpo: { ...AGUA, pode_configurar: true } }),
+      "PUT /aguas/consumo/pontos/1": () => ({ status: 200, corpo: renomeado }),
+    });
+    render(
+      <MemoryRouter initialEntries={["/paginas/agua-consumo?aba=pontos"]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <ProvedorDeSessao>
+          <App />
+        </ProvedorDeSessao>
+      </MemoryRouter>,
+    );
+    const salvar = await screen.findByRole("button", { name: "Salvar o nome do ponto 1" });
+    expect(salvar).toBeDisabled();
+    const nome = screen.getByRole("textbox", { name: "Nome do ponto 1" });
+    await userEvent.clear(nome);
+    await userEvent.type(nome, "  Cavalete  ");
+    await userEvent.click(salvar);
+    expect(api.chamadas.find((c) => c.rota === "PUT /aguas/consumo/pontos/1")?.corpo).toEqual({ nome: "Cavalete" });
+    expect(await screen.findByRole("textbox", { name: "Nome do ponto 1" })).toHaveValue("Cavalete");
+    expect(screen.getByRole("button", { name: "Salvar o nome do ponto 1" })).toBeDisabled();
+  });
+
+  it("mensal com pontos do semanal: pH e cloro só neles, na leitura (080)", async () => {
+    const linha = (ordem: number, semanal: boolean) => ({ ...vazio(ordem), semanal });
+    const mensal = { ...COLETA, resultados: [linha(1, true), linha(2, false)], situacao: "Vence hoje: pH e cloro" };
+    const api = abrir("/leituras?aba=agua-consumo", {
+      "GET /aguas/consumo": () => ({ status: 200, corpo: { ...AGUA, coletas: [mensal] } }),
+      "PUT /aguas/consumo/coletas/9/resultados": () => ({ status: 200, corpo: { previa: true, texto: "Ponto 1: pH 7,00", fora: [] } }),
+    });
+    const cartao = await screen.findByRole("region", { name: /TMG \(Guarujá\) mensal/ });
+    expect(within(cartao).getByRole("textbox", { name: "pH de Ponto 1" })).toBeInTheDocument();
+    expect(within(cartao).queryByRole("textbox", { name: "pH de Ponto 2" })).toBeNull();
+    expect(within(cartao).getByRole("textbox", { name: "C.T 48h de Ponto 2" })).toBeInTheDocument();
+    await userEvent.type(within(cartao).getByRole("textbox", { name: "pH de Ponto 1" }), "7");
+    await userEvent.click(within(cartao).getByRole("button", { name: "Ver o que vai ser gravado (1)" }));
+    expect(api.chamadas.find((c) => c.rota === "PUT /aguas/consumo/coletas/9/resultados")?.corpo).toMatchObject({ previa: true, itens: [{ ordem: 1, ph: "7" }] });
+  });
+
   it("na aba Leituras: Ausente em todos, a prévia com o que passou do limite e o Confirmar", async () => {
     const api = abrir("/leituras?aba=agua-consumo", {
       "PUT /aguas/consumo/coletas/9/resultados": (c) => ({
@@ -69,6 +118,7 @@ describe("Água de consumo (27/10)", () => {
     });
     const cartao = await screen.findByRole("region", { name: /TMG \(Guarujá\) mensal · coleta 26\/10 08:30/ });
     await userEvent.click(within(cartao).getByRole("button", { name: /Ausente em todos/ }));
+    await userEvent.type(within(cartao).getByRole("combobox", { name: "Analisado por" }), "Bia Souza");
     const coli2 = within(cartao).getByRole("textbox", { name: "Coliformes (P/A) de Ponto 2" });
     await userEvent.clear(coli2);
     await userEvent.type(coli2, "P");
@@ -77,7 +127,12 @@ describe("Água de consumo (27/10)", () => {
     await userEvent.click(within(cartao).getByRole("button", { name: "Confirmar" }));
     expect(await screen.findByText("Nenhuma leitura pendente.")).toBeInTheDocument();
     const enviados = api.chamadas.filter((c) => c.rota === "PUT /aguas/consumo/coletas/9/resultados").map((c) => c.corpo);
-    expect(enviados[0]).toEqual({ previa: true, itens: [{ ordem: 1, coliformes: "A", ecoli: "A" }, { ordem: 2, coliformes: "P", ecoli: "A" }] });
+    expect(enviados[0]).toMatchObject({
+      previa: true,
+      itens: [{ ordem: 1, coliformes: "A", ecoli: "A" }, { ordem: 2, coliformes: "P", ecoli: "A" }],
+      coletado_por: "", // não mudou: fica quem registrou a coleta
+      analisado_por: "Bia Souza",
+    });
     expect(enviados[1].previa).toBe(false);
   });
 });

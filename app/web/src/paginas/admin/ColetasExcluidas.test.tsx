@@ -53,6 +53,34 @@ describe("Admin → Coletas excluídas (APP-029)", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("Para recuperar, escreva o motivo.");
   });
 
+  it("o Admin apaga de vez, com motivo e o aviso de que não tem volta (27/10)", async () => {
+    const api = servidorFalso({
+      "GET /me": () => ({ status: 200, corpo: { ...ADMIN, pode: [...ADMIN.pode, "gerenciar_pessoas"] } }),
+      "GET /coletas/excluidas": () => ({ status: 200, corpo: [EXCLUIDA] }),
+      "POST /coletas/excluidas/5/apagar": () => ({ status: 204, corpo: null }),
+    });
+    render(
+      <MemoryRouter initialEntries={["/admin/coletas-excluidas"]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <ProvedorDeSessao>
+          <App />
+        </ProvedorDeSessao>
+      </MemoryRouter>,
+    );
+    await userEvent.click(await screen.findByRole("button", { name: "Apagar de vez" }));
+    const form = screen.getByRole("form", { name: /^Apagar de vez Tanque T91/ });
+    expect(form).toHaveTextContent("não tem volta");
+    await userEvent.type(within(form).getByLabelText("Motivo para apagar de vez"), "Teste antigo");
+    await userEvent.click(within(form).getByRole("button", { name: "Apagar de vez" }));
+    expect(api.chamadas.find((c) => c.rota === "POST /coletas/excluidas/5/apagar")?.corpo).toEqual({ motivo: "Teste antigo" });
+    expect(await screen.findByText(/apagada de vez/)).toBeInTheDocument();
+  });
+
+  it("sem gerenciar pessoas (não é Admin), não aparece o Apagar de vez", async () => {
+    abrir();
+    expect(await screen.findByRole("button", { name: "Recuperar" })).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Apagar de vez" })).toBeNull();
+  });
+
   it("sem nenhuma excluída, avisa", async () => {
     abrir([]);
     expect(await screen.findByText("Nenhuma coleta excluída.")).toBeInTheDocument();

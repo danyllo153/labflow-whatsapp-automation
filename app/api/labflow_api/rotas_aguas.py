@@ -250,6 +250,105 @@ def excluir_agua(
     return _agua(con, pessoa)
 
 
+# --- desvios da água do processo (081): a coleta com crescimento, aberta até alguém encerrar -----------------------------
+
+
+def cresceu(valor: str | None) -> bool:
+    """Crescimento: um número maior que zero ("<1", "0" e "-" não são)."""
+    texto = (valor or "").strip()
+    if not texto or texto.startswith("<") or texto == "-":
+        return False
+    try:
+        return float(texto.lstrip(">").replace(",", ".")) > 0
+    except ValueError:
+        return False
+
+
+class PontoComCrescimento(BaseModel):
+    ponto: str  # "Câmara 5"
+    ct: str | None
+    bl: str | None
+
+
+class DesvioDaAgua(BaseModel):
+    coleta_id: int
+    dia: date
+    hora: str
+    quem: str
+    pontos: list[PontoComCrescimento]  # só os que cresceram
+    aberto: bool
+    encerrado_em: str | None  # "dd/mm/aaaa HH:MM"
+    encerrado_por: str | None
+    nota: str | None
+
+
+class DesviosDaAgua(BaseModel):
+    pode_encerrar: bool
+    desvios: list[DesvioDaAgua]  # os abertos primeiro, depois os encerrados do último ano; o mais novo primeiro
+
+
+# as colunas da AGUA_SQL (para a _coleta_agua) e, no fim, o encerramento do desvio
+DESVIOS_AGUA_SQL = """
+SELECT c.id, c.coletada_em, c.manifold, c.camara4, c.camara5, c.camara6,
+       c.ct_manifold, c.bl_manifold, c.ct_camara4, c.bl_camara4, c.ct_camara5, c.bl_camara5, c.ct_camara6, c.bl_camara6,
+       c.observacao, coalesce(u.nome, cu.usuario), coalesce(r.nome, cr.usuario),
+       c.desvio_encerrado_em, coalesce(e.nome, ce.usuario), c.desvio_nota
+FROM app.coletas_agua_processo c JOIN usuarios u ON u.id = c.coletada_por LEFT JOIN app.credenciais cu ON cu.usuario_id = c.coletada_por
+LEFT JOIN usuarios r ON r.id = c.resultado_por LEFT JOIN app.credenciais cr ON cr.usuario_id = c.resultado_por
+LEFT JOIN usuarios e ON e.id = c.desvio_encerrado_por LEFT JOIN app.credenciais ce ON ce.usuario_id = c.desvio_encerrado_por
+WHERE c.excluida_em IS NULL AND c.coletada_em >= %s
+ORDER BY c.coletada_em DESC
+"""
+
+
+def _desvios_agua(con: psycopg.Connection, pessoa: PessoaLogada) -> DesviosDaAgua:
+    desde = datetime.combine(_hoje(con) - timedelta(days=365), time.min, FUSO)
+    linhas = con.execute(DESVIOS_AGUA_SQL, (desde,)).fetchall()
+    hoje, desvios = _hoje(con), []
+    for linha in linhas:
+        coleta = _coleta_agua(linha[:17], hoje)
+        encerrado_em, encerrado_por, nota = linha[17:]
+        pontos = [PontoComCrescimento(ponto=NOME_DO_PONTO[p], ct=l.ct, bl=l.bl) for p, l in coleta.pontos.items()
+                  if l.coletado and (cresceu(l.ct) or cresceu(l.bl))]
+        if pontos:
+            desvios.append(DesvioDaAgua(
+                coleta_id=coleta.id, dia=coleta.dia, hora=coleta.hora, quem=coleta.quem, pontos=pontos, aberto=encerrado_em is None,
+                encerrado_em=encerrado_em.astimezone(FUSO).strftime("%d/%m/%Y %H:%M") if encerrado_em else None,
+                encerrado_por=encerrado_por, nota=nota,
+            ))
+    desvios.sort(key=lambda d: not d.aberto)  # estável: dentro de cada parte, o mais novo primeiro
+    return DesviosDaAgua(pode_encerrar=pode(pessoa.cargo, "registrar_analise"), desvios=desvios)
+
+
+@roteador.get("/processo/desvios", response_model=DesviosDaAgua)
+def ver_desvios_agua(
+    pessoa: PessoaLogada = Depends(exigir("ver_paginas")), con: psycopg.Connection = Depends(obter_conexao)
+) -> DesviosDaAgua:
+    return _desvios_agua(con, pessoa)
+
+
+class Encerramento(BaseModel):
+    nota: str = Field(max_length=300)
+
+
+@roteador.post("/processo/{coleta_id}/encerrar-desvio", response_model=DesviosDaAgua)
+def encerrar_desvio_agua(
+    coleta_id: int, pedido: Encerramento, pessoa: PessoaLogada = Depends(exigir("registrar_analise")),
+    con: psycopg.Connection = Depends(obter_conexao),
+) -> DesviosDaAgua:
+    nota = " ".join(pedido.nota.split())
+    if len(nota) < 3:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Escreva o que foi feito (a ação do desvio).")
+    feito = con.execute(
+        """UPDATE app.coletas_agua_processo SET desvio_encerrado_em = clock_timestamp(), desvio_encerrado_por = %s, desvio_nota = %s
+           WHERE id = %s AND excluida_em IS NULL AND desvio_encerrado_em IS NULL""",
+        (pessoa.usuario_id, nota, coleta_id),
+    ).rowcount
+    if not feito:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Desvio não encontrado ou já encerrado.")
+    return _desvios_agua(con, pessoa)
+
+
 # --- baias e linhas (limpeza de superfícies) ---------------------------------------------------------------------------
 
 TipoSuperficie = Literal["Baia", "Linha"]

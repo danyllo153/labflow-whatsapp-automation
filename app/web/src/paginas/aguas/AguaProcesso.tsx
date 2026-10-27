@@ -1,16 +1,15 @@
-import { Suspense, lazy, useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { AbasDaPagina, CabecalhoDaPagina, useAba } from "../../componentes/CabecalhoDaPagina";
 
 import { enviarJson, lerJson } from "../../api";
 import LaudoEsterilizacao from "../LaudoEsterilizacao";
 import { agoraSP, classeDaSituacao, dm, hojeSP, mensagem } from "./comum";
 
-// o Chart.js só é baixado quando a aba Gráfico abre (26/10)
-const GraficoResultado = lazy(() => import("../dados/GraficoResultado"));
-
 /**
  * Água do processo (07 §5.1; APP-037): coleta nos anéis de água estéril (Manifold e Câmaras 4, 5 e 6), C.T. (48 h) e
  * B.L. (120 h) de cada ponto. Ponto não coletado sai "-" no laudo. As leituras que faltam viram pendência no Início.
+ * Desde 27/10: o resultado se lança só na página Leituras; aqui ficam as coletas dos últimos 30 dias, os desvios (a coleta
+ * com crescimento, aberta até alguém encerrar com a ação feita, 081) e o laudo.
  */
 
 const PONTOS = [
@@ -36,6 +35,23 @@ interface Coleta {
   quem: string;
   resultado_por: string | null;
   situacao: string;
+}
+
+interface DesvioDaAgua {
+  coleta_id: number;
+  dia: string;
+  hora: string;
+  quem: string;
+  pontos: { ponto: string; ct: string | null; bl: string | null }[];
+  aberto: boolean;
+  encerrado_em: string | null;
+  encerrado_por: string | null;
+  nota: string | null;
+}
+
+interface DesviosDaAgua {
+  pode_encerrar: boolean;
+  desvios: DesvioDaAgua[];
 }
 
 export interface AguaDoProcesso {
@@ -94,7 +110,7 @@ export function LeituraDaAguaDoProcesso() {
             </thead>
             <tbody>
               {pendentes.map((c) => (
-                <LinhaDaColeta key={`${c.id}-${versao}`} coleta={c} pode={dados.pode_lancar} aoMudar={(d) => (setDados(d), setVersao((v) => v + 1))} />
+                <LinhaDaColeta key={`${c.id}-${versao}`} coleta={c} pode={dados.pode_lancar} lancar aoMudar={(d) => (setDados(d), setVersao((v) => v + 1))} />
               ))}
             </tbody>
           </table>
@@ -127,7 +143,16 @@ export default function AguaProcesso() {
     setVersao((v) => v + 1);
   }
 
-  const abas = [{ aba: "principal", rotulo: "Coletas" }, { aba: "grafico", rotulo: "Gráfico" }, ...(dados?.pode_lancar ? [{ aba: "laudo", rotulo: "Laudo" }] : [])];
+  const [desvios, setDesvios] = useState<DesviosDaAgua | null>(null);
+  useEffect(() => {
+    lerJson<DesviosDaAgua>("/aguas/processo/desvios").then(setDesvios, () => setDesvios(null));
+  }, [versao]);
+  const abertos = (desvios?.desvios ?? []).filter((d) => d.aberto).length;
+  const abas = [
+    { aba: "principal", rotulo: "Coletas" },
+    { aba: "desvios", rotulo: "Desvios", contador: abertos || undefined },
+    ...(dados?.pode_lancar ? [{ aba: "laudo", rotulo: "Laudo" }] : []),
+  ];
   const [aba, irPara] = useAba(abas);
   return (
     <section>
@@ -189,11 +214,7 @@ export default function AguaProcesso() {
           )}
         </>
       )}
-      {aba === "grafico" && (
-        <Suspense fallback={<p className="carregando">Montando o gráfico...</p>}>
-          <GraficoResultado api="/paginas/agua-processo" consulta="" rotuloData="coleta" />
-        </Suspense>
-      )}
+      {aba === "desvios" && <Desvios dados={desvios} aoMudar={setDesvios} />}
       {aba === "laudo" && dados?.pode_lancar && <LaudoEsterilizacao versao={versao} config={LAUDO} />}
     </section>
   );
@@ -264,7 +285,9 @@ function NovaColeta({ aoGravar }: { aoGravar: (d: AguaDoProcesso) => void }) {
   );
 }
 
-function LinhaDaColeta({ coleta, pode, aoMudar }: { coleta: Coleta; pode: boolean; aoMudar: (d: AguaDoProcesso) => void }) {
+/** `lancar`: o Editar traz também o C.T. e o B.L. (a leitura), só na página Leituras (27/10); na página da água do
+ * processo, o Editar corrige só a coleta. */
+function LinhaDaColeta({ coleta, pode, lancar = false, aoMudar }: { coleta: Coleta; pode: boolean; lancar?: boolean; aoMudar: (d: AguaDoProcesso) => void }) {
   const [modo, setModo] = useState<"editar" | "excluir" | null>(null);
   const [dia, setDia] = useState(coleta.dia);
   const [hora, setHora] = useState(coleta.hora);
@@ -279,7 +302,12 @@ function LinhaDaColeta({ coleta, pode, aoMudar }: { coleta: Coleta; pode: boolea
   async function salvar() {
     setErro("");
     try {
-      await enviarJson<AguaDoProcesso>(`/aguas/processo/${coleta.id}`, { dia, hora, pontos, observacao }, "PUT");
+      const corrigida = await enviarJson<AguaDoProcesso>(`/aguas/processo/${coleta.id}`, { dia, hora, pontos, observacao }, "PUT");
+      if (!lancar) {
+        aoMudar(corrigida);
+        setModo(null);
+        return;
+      }
       const so = (v: Record<string, string>) => Object.fromEntries(pontos.map((p) => [p, v[p] ?? ""]));
       aoMudar(await enviarJson<AguaDoProcesso>(`/aguas/processo/${coleta.id}/resultados`, { ct: so(ct), bl: so(bl) }, "PUT"));
       setModo(null);
@@ -361,8 +389,10 @@ function LinhaDaColeta({ coleta, pode, aoMudar }: { coleta: Coleta; pode: boolea
                       </button>
                     ))}
                   </div>
-                  <p className="texto-secundario">C.T. em 48 h, B.L. em 120 h. Apague o número para tirar um resultado.</p>
-                  {PONTOS.filter((p) => pontos.includes(p.chave)).map((p) => (
+                  {lancar && (
+                    <p className="texto-secundario">C.T. em 48 h, B.L. em 120 h. Apague o número para tirar um resultado.</p>
+                  )}
+                  {lancar && PONTOS.filter((p) => pontos.includes(p.chave)).map((p) => (
                     <div key={p.chave} className="linha-formulario">
                       <label className="campo campo-hora">
                         {p.nome} C.T.
@@ -374,6 +404,7 @@ function LinhaDaColeta({ coleta, pode, aoMudar }: { coleta: Coleta; pode: boolea
                       </label>
                     </div>
                   ))}
+                  {lancar && (
                   <div className="botoes-lado">
                     <button type="button" className="botao botao-simples" onClick={() => menorQue1("ct")}>
                       C.T. &lt;1 em todos
@@ -382,6 +413,7 @@ function LinhaDaColeta({ coleta, pode, aoMudar }: { coleta: Coleta; pode: boolea
                       B.L. &lt;1 em todos
                     </button>
                   </div>
+                  )}
                 </>
               ) : (
                 <label className="campo">
@@ -413,5 +445,87 @@ function LinhaDaColeta({ coleta, pode, aoMudar }: { coleta: Coleta; pode: boolea
         </tr>
       )}
     </>
+  );
+}
+
+/** Os desvios da água do processo: a coleta com crescimento, com a data e os pontos que cresceram (081). */
+function Desvios({ dados, aoMudar }: { dados: DesviosDaAgua | null; aoMudar: (d: DesviosDaAgua) => void }) {
+  if (!dados) return <p className="carregando">Carregando...</p>;
+  const abertos = dados.desvios.filter((d) => d.aberto);
+  return (
+    <div className="cartao" aria-label="Desvios da água do processo">
+      <h2>
+        Desvios abertos <span className="contador">{abertos.length}</span>
+      </h2>
+      <p className="texto-secundario">Coleta com crescimento: C.T. ou B.L. com número (o &lt;1 não conta). Toque para ver os pontos e encerrar.</p>
+      {dados.desvios.length === 0 && <p className="texto-secundario">Nenhum desvio no último ano.</p>}
+      {dados.desvios.map((d) => (
+        <CartaoDoDesvio key={d.coleta_id} desvio={d} pode={dados.pode_encerrar} aoMudar={aoMudar} />
+      ))}
+    </div>
+  );
+}
+
+function CartaoDoDesvio({ desvio: d, pode, aoMudar }: { desvio: DesvioDaAgua; pode: boolean; aoMudar: (d: DesviosDaAgua) => void }) {
+  const [nota, setNota] = useState("");
+  const [erro, setErro] = useState("");
+  const quando = `${dm(d.dia)} ${d.hora}`;
+  async function encerrar() {
+    setErro("");
+    try {
+      aoMudar(await enviarJson<DesviosDaAgua>(`/aguas/processo/${d.coleta_id}/encerrar-desvio`, { nota }));
+    } catch (e) {
+      setErro(mensagem(e, "Não foi possível encerrar."));
+    }
+  }
+  return (
+    <details className="coleta-agua" open={d.aberto}>
+      <summary>
+        <strong>Coleta de {quando}</strong> · {d.pontos.map((p) => p.ponto).join(", ")}{" "}
+        <span className={d.aberto ? "etiqueta etiqueta-nao-ok" : "etiqueta etiqueta-ok"}>{d.aberto ? "Aberto" : "Encerrado"}</span>
+      </summary>
+      <div className="tabela-rolagem">
+        <table className="tabela">
+          <thead>
+            <tr>
+              <th scope="col">Ponto</th>
+              <th scope="col">C.T. 48h</th>
+              <th scope="col">B.L. 120h</th>
+            </tr>
+          </thead>
+          <tbody>
+            {d.pontos.map((p) => (
+              <tr key={p.ponto}>
+                <th scope="row">{p.ponto}</th>
+                <td>{p.ct ?? "…"}</td>
+                <td>{p.bl ?? "…"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="texto-secundario">Coletado por {d.quem}.</p>
+      {!d.aberto && (
+        <p className="texto-secundario">
+          Encerrado em {d.encerrado_em} por {d.encerrado_por}: {d.nota}
+        </p>
+      )}
+      {d.aberto && pode && (
+        <div className="corrigir-horario" role="group" aria-label={`Encerrar o desvio de ${quando}`}>
+          <label className="campo">
+            O que foi feito (a ação do desvio)
+            <input maxLength={300} value={nota} onChange={(e) => setNota(e.target.value)} />
+          </label>
+          {erro && (
+            <p className="mensagem-erro" role="alert">
+              {erro}
+            </p>
+          )}
+          <button type="button" className="botao botao-principal" disabled={nota.trim().length < 3} onClick={() => void encerrar()}>
+            Encerrar o desvio
+          </button>
+        </div>
+      )}
+    </details>
   );
 }

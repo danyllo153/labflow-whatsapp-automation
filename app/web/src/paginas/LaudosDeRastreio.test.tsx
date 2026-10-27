@@ -128,7 +128,7 @@ const AGUA: AguaDoProcesso = {
 };
 
 describe("Água do processo (APP-037)", () => {
-  it("registra a coleta com os pontos, edita data e resultados e exclui com motivo", async () => {
+  it("registra a coleta com os pontos, edita a coleta (sem o resultado: é na página Leituras) e exclui com motivo", async () => {
     const api = abrir("/paginas/agua-processo", {
       "GET /aguas/processo": () => ({ status: 200, corpo: AGUA }),
       "POST /aguas/processo": () => ({ status: 201, corpo: AGUA }),
@@ -147,12 +147,10 @@ describe("Água do processo (APP-037)", () => {
     const edicao = screen.getByRole("group", { name: "Editar a coleta de 22/10 09:30" });
     await userEvent.clear(within(edicao).getByLabelText("Hora"));
     await userEvent.type(within(edicao).getByLabelText("Hora"), "10:15");
-    await userEvent.click(within(edicao).getByRole("button", { name: "C.T. <1 em todos" }));
+    expect(within(edicao).queryByRole("button", { name: "C.T. <1 em todos" })).toBeNull();
     await userEvent.click(within(edicao).getByRole("button", { name: "Salvar" }));
     expect(api.chamadas.find((c) => c.rota === "PUT /aguas/processo/7")?.corpo).toMatchObject({ hora: "10:15", pontos: ["manifold", "camara6"] });
-    expect(api.chamadas.find((c) => c.rota === "PUT /aguas/processo/7/resultados")?.corpo).toEqual({
-      ct: { manifold: "<1", camara6: "<1" }, bl: { manifold: "", camara6: "" },
-    });
+    expect(api.chamadas.some((c) => c.rota === "PUT /aguas/processo/7/resultados")).toBe(false);
 
     await userEvent.click(screen.getByRole("button", { name: "Excluir a coleta de 22/10 09:30" }));
     const exclusao = screen.getByRole("group", { name: "Excluir a coleta de 22/10 09:30" });
@@ -160,6 +158,39 @@ describe("Água do processo (APP-037)", () => {
     await userEvent.click(within(exclusao).getByRole("button", { name: "Excluir a coleta" }));
     expect(api.chamadas.find((c) => c.rota === "POST /aguas/processo/7/excluir")?.corpo).toEqual({ motivo: "coleta de teste" });
     expect(await screen.findByText("Nenhuma coleta registrada.")).toBeInTheDocument();
+  });
+
+  it("Desvios: a coleta com crescimento, os pontos e o encerrar com o que foi feito (081)", async () => {
+    const desvio = { coleta_id: 7, dia: "2026-10-22", hora: "09:30", quem: "Ana Souza", pontos: [{ ponto: "Câmara 5", ct: "12", bl: null }],
+      aberto: true, encerrado_em: null, encerrado_por: null, nota: null };
+    const api = abrir("/paginas/agua-processo?aba=desvios", {
+      "GET /aguas/processo": () => ({ status: 200, corpo: AGUA }),
+      "GET /aguas/processo/desvios": () => ({ status: 200, corpo: { pode_encerrar: true, desvios: [desvio] } }),
+      "POST /aguas/processo/7/encerrar-desvio": () => ({ status: 200, corpo: { pode_encerrar: true, desvios: [{ ...desvio, aberto: false, encerrado_em: "22/10/2026 11:00", encerrado_por: "Ana Souza", nota: "Recoletado" }] } }),
+    });
+    expect(await screen.findByRole("cell", { name: "12" })).toBeInTheDocument();
+    const grupo = screen.getByRole("group", { name: "Encerrar o desvio de 22/10 09:30" });
+    await userEvent.type(within(grupo).getByLabelText(/O que foi feito/), "Recoletado");
+    await userEvent.click(within(grupo).getByRole("button", { name: "Encerrar o desvio" }));
+    expect(await screen.findByText(/Encerrado em 22\/10\/2026 11:00 por Ana Souza: Recoletado/)).toBeInTheDocument();
+    expect(api.chamadas.find((c) => c.rota === "POST /aguas/processo/7/encerrar-desvio")?.corpo).toEqual({ nota: "Recoletado" });
+  });
+
+  it("na página Leituras: o Editar traz o C.T. e o B.L.", async () => {
+    const atrasada = { ...AGUA, coletas: AGUA.coletas.map((c) => ({ ...c, situacao: "Atrasado: C.T 48h" })) };
+    const api = abrir("/leituras?aba=agua-processo", {
+      "GET /aguas/processo": () => ({ status: 200, corpo: atrasada }),
+      "PUT /aguas/processo/7": () => ({ status: 200, corpo: atrasada }),
+      "PUT /aguas/processo/7/resultados": () => ({ status: 200, corpo: AGUA }),
+    });
+    await userEvent.click(await screen.findByRole("button", { name: "Editar a coleta de 22/10 09:30" }));
+    const edicao = screen.getByRole("group", { name: "Editar a coleta de 22/10 09:30" });
+    await userEvent.click(within(edicao).getByRole("button", { name: "C.T. <1 em todos" }));
+    await userEvent.click(within(edicao).getByRole("button", { name: "Salvar" }));
+    expect(await screen.findByText("Nenhuma leitura pendente.")).toBeInTheDocument();
+    expect(api.chamadas.find((c) => c.rota === "PUT /aguas/processo/7/resultados")?.corpo).toEqual({
+      ct: { manifold: "<1", camara6: "<1" }, bl: { manifold: "", camara6: "" },
+    });
   });
 });
 
@@ -176,7 +207,7 @@ const BAIAS: Superficies = {
 };
 
 describe("Baias e linhas (APP-037)", () => {
-  it("registra várias baias de uma vez e lança o C.T. na tabela", async () => {
+  it("registra várias baias de uma vez e corrige a coleta; o C.T. se lança na página Leituras", async () => {
     const api = abrir("/paginas/baias", {
       "GET /aguas/superficies?tipo=Baia": () => ({ status: 200, corpo: BAIAS }),
       "POST /aguas/superficies": () => ({ status: 201, corpo: BAIAS }),
@@ -187,15 +218,24 @@ describe("Baias e linhas (APP-037)", () => {
     await userEvent.type(within(form).getByLabelText("Baias (uma ou mais)"), "08, 10");
     await userEvent.click(within(form).getByRole("button", { name: "Registrar coleta" }));
     expect(api.chamadas.find((c) => c.rota === "POST /aguas/superficies")?.corpo).toMatchObject({ tipo: "Baia", pontos: ["08", "10"] });
-    await userEvent.type(screen.getByLabelText("C.T. 48h da Baia 08 de 22/10"), "<1");
-    await userEvent.click(screen.getByRole("button", { name: "Salvar Baia 08 de 22/10" }));
-    expect(api.chamadas.find((c) => c.rota === "PUT /aguas/superficies/9/resultados")?.corpo).toEqual({ ct_48: "<1", bl_72: "", bl_120: "" });
+    expect(screen.queryByLabelText("C.T. 48h da Baia 08 de 22/10")).toBeNull(); // o resultado é na página Leituras
     await userEvent.click(screen.getByRole("button", { name: "Editar a coleta da Baia 08 de 22/10" }));
     const edicao = screen.getByRole("group", { name: "Editar a coleta da Baia 08" });
     await userEvent.clear(within(edicao).getByLabelText("Baia"));
     await userEvent.type(within(edicao).getByLabelText("Baia"), "09");
     await userEvent.click(within(edicao).getByRole("button", { name: "Salvar" }));
     expect(api.chamadas.find((c) => c.rota === "PUT /aguas/superficies/9")?.corpo).toMatchObject({ ponto: "09", dia: "2026-10-22", hora: "07:10" });
+  });
+
+  it("na página Leituras: lança o C.T. na tabela", async () => {
+    const vence = { ...BAIAS, coletas: BAIAS.coletas.map((c) => ({ ...c, situacao: "Vence hoje: C.T 48h" })) };
+    const api = abrir("/leituras?aba=cip-baia", {
+      "GET /aguas/superficies?tipo=Baia": () => ({ status: 200, corpo: vence }),
+      "PUT /aguas/superficies/9/resultados": () => ({ status: 200, corpo: vence }),
+    });
+    await userEvent.type(await screen.findByLabelText("C.T. 48h da Baia 08 de 22/10"), "<1");
+    await userEvent.click(screen.getByRole("button", { name: "Salvar Baia 08 de 22/10" }));
+    expect(api.chamadas.find((c) => c.rota === "PUT /aguas/superficies/9/resultados")?.corpo).toEqual({ ct_48: "<1", bl_72: "", bl_120: "" });
   });
 });
 

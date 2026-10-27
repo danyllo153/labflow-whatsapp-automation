@@ -85,7 +85,7 @@ export function LeituraDasSuperficies({ tipo }: { tipo: Tipo }) {
             </thead>
             <tbody>
               {pendentes.map((c) => (
-                <LinhaDaColeta key={`${c.id}-${versao}`} coleta={c} pode={dados.pode_lancar} aoMudar={(d) => (setDados(d), setVersao((v) => v + 1))} />
+                <LinhaDaColeta key={`${c.id}-${versao}`} coleta={c} pode={dados.pode_lancar} lancar aoMudar={(d) => (setDados(d), setVersao((v) => v + 1))} />
               ))}
             </tbody>
           </table>
@@ -269,7 +269,8 @@ function NovaColeta({ tipo, aoGravar }: { tipo: Tipo; aoGravar: (d: Superficies)
   );
 }
 
-function LinhaDaColeta({ coleta: c, pode, aoMudar }: { coleta: Coleta; pode: boolean; aoMudar: (d: Superficies) => void }) {
+/** `lancar`: digitar o resultado na linha, só na página Leituras (27/10); na página das baias e linhas, só a coleta. */
+function LinhaDaColeta({ coleta: c, pode, lancar = false, aoMudar }: { coleta: Coleta; pode: boolean; lancar?: boolean; aoMudar: (d: Superficies) => void }) {
   const [valores, setValores] = useState({ ct_48: c.ct_48 ?? "", bl_72: c.bl_72 ?? "", bl_120: c.bl_120 ?? "" });
   const [modo, setModo] = useState<"editar" | "excluir" | null>(null);
   const [ponto, setPonto] = useState(c.ponto);
@@ -320,7 +321,7 @@ function LinhaDaColeta({ coleta: c, pode, aoMudar }: { coleta: Coleta; pode: boo
         <td>{dm(c.analisada_em)}</td>
         {(["ct_48", "bl_72", "bl_120"] as const).map((campo) => (
           <td key={campo}>
-            {pode ? (
+            {pode && lancar ? (
               <input
                 className="entrada-celula"
                 maxLength={10}
@@ -335,7 +336,7 @@ function LinhaDaColeta({ coleta: c, pode, aoMudar }: { coleta: Coleta; pode: boo
         ))}
         <td>
           <span className={classeDaSituacao(c.situacao)}>{c.situacao}</span>
-          {pode && mudou && (
+          {pode && lancar && mudou && (
             <button type="button" className="link-botao" aria-label={`Salvar ${nome} de ${dm(c.dia)}`} onClick={() => void salvarResultados()}>
               Salvar
             </button>

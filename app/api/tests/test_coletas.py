@@ -118,6 +118,26 @@ def test_admin_ve_as_excluidas_e_recupera_com_motivo(cliente, pessoa_logada, nov
     assert cliente.post(f"/coletas/excluidas/{achada['id']}/recuperar", json={"motivo": "de novo"}).status_code == 422
 
 
+def test_admin_apaga_de_vez_com_motivo_e_o_rastro_fica(cliente, pessoa_logada, nova_coleta, conexao):
+    """27/10 (081): só o Admin; sai da lista das excluídas e o histórico guarda quem, quando e os dados da coleta."""
+    pessoa_logada("Admin", "chefe.teste")
+    uid = conexao.execute("SELECT id FROM usuarios WHERE cargo = 'Admin' ORDER BY id DESC LIMIT 1").fetchone()[0]
+    cid = nova_coleta(uid)
+    cliente.post(f"/coletas/{cid}/excluir", json={"motivo": "Registrei em duplicidade"})
+    achada = next(e for e in cliente.get("/coletas/excluidas").json() if e["coleta_id"] == cid)
+    assert cliente.post(f"/coletas/excluidas/{achada['id']}/apagar", json={"motivo": "x"}).status_code == 422
+    assert cliente.post(f"/coletas/excluidas/{achada['id']}/apagar", json={"motivo": "Teste antigo, sem valor"}).status_code == 204
+    assert not [e for e in cliente.get("/coletas/excluidas").json() if e["coleta_id"] == cid]
+    rastro = conexao.execute(
+        "SELECT motivo, quem, antes IS NOT NULL FROM historico_alteracoes WHERE tabela = 'coletas' AND registro_id = %s ORDER BY id DESC LIMIT 1",
+        (cid,),
+    ).fetchone()
+    assert rastro == ("Apagada de vez: Teste antigo, sem valor", uid, True)
+    assert cliente.post(f"/coletas/excluidas/{achada['id']}/apagar", json={"motivo": "de novo de novo"}).status_code == 422
+    pessoa_logada("Analista")
+    assert cliente.post("/coletas/excluidas/1/apagar", json={"motivo": "teste teste"}).status_code == 403
+
+
 def test_so_o_admin_ve_e_recupera_as_excluidas(cliente, pessoa_logada):
     for cargo in ("Operador", "Consultor", "Coletor"):
         pessoa_logada(cargo)

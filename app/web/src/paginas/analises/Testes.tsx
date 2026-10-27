@@ -42,13 +42,17 @@ interface Composta {
   composta_id: number;
   alvo: string;
   criada_em: string;
+  pede?: boolean; // a composta pede esse teste (recebimento pela regra do banco; navio pelo que foi marcado)
 }
 
 export type QualTeste = "TAB" | "COLIFORMES" | "HOWARD";
 
+// 27/10: "Para fazer" (os números e o espalhar/estriar), "Iniciar análise" (as compostas que vão para o caldo) e "No caldo e
+// incubados" (o que está na estufa); a leitura fica na página Leituras
 export const ABAS_TESTES = [
   { aba: "para-fazer", rotulo: "Para fazer" },
-  { aba: "caldo", rotulo: "Caldo" },
+  { aba: "iniciar", rotulo: "Iniciar análise" },
+  { aba: "andamento", rotulo: "No caldo e incubados" },
   { aba: "resultados", rotulo: "Resultados" },
   ABA_LAUDO,
   ...ABAS_FINAIS,
@@ -136,8 +140,11 @@ export default function Testes({ qual }: { qual: QualTeste }) {
   const howard = qual === "HOWARD";
   const lista = useLista<Teste[]>("/analises/testes/pendentes", busca);
   const doTeste = (lista.dados ?? []).filter((t) => (qual === "TAB" ? t.teste === "Tab" : t.teste !== "Tab"));
-  const atrasados = doTeste.filter((t) => t.situacao === "Atrasado").length;
+  // as compostas que pedem o teste e ainda não foram para o caldo (o "atrasado" do laboratório)
+  const esperando = useLista<Composta[]>(`/analises/testes/compostas?tipo=${qual}`);
+  const paraEspalhar = doTeste.filter((t) => t.proxima === "espalhar");
   const app = APP_DO_TESTE[qual];
+  const recarregar = () => (lista.recarregar(), esperando.recarregar());
 
   return (
     <AppDeAnalise
@@ -147,30 +154,37 @@ export default function Testes({ qual }: { qual: QualTeste }) {
       cor={app.cor}
       titulo={app.titulo}
       descricao={app.descricao}
-      abas={howard ? ABAS_HOWARD : ABAS_TESTES.map((a) => (a.aba === "para-fazer" ? { ...a, contador: atrasados } : a))}
+      abas={
+        howard
+          ? ABAS_HOWARD
+          : ABAS_TESTES.map((a) => (a.aba === "para-fazer" ? { ...a, contador: (esperando.dados?.length ?? 0) + paraEspalhar.length || undefined } : a))
+      }
     >
-      {(aba) => (
+      {(aba, irPara) => (
         <>
           {aba === "para-fazer" && !howard && (
             <>
               <Numeros
                 itens={[
-                  { rotulo: "Atrasados", valor: atrasados, tom: "atrasado" },
-                  { rotulo: "Em andamento", valor: doTeste.length - atrasados, tom: "hoje" },
+                  { rotulo: "Atrasados (esperando o caldo)", valor: esperando.dados?.length ?? 0, tom: "atrasado", aoClicar: () => irPara("iniciar") },
+                  { rotulo: "Em andamento", valor: doTeste.length, tom: "hoje", aoClicar: () => irPara("andamento") },
                 ]}
               />
               <Busca valor={busca} aoMudar={setBusca} rotulo="Procurar load, tanque ou composta" dica="Load, tanque ou nº da composta" />
               {lista.erro && <p className="mensagem-erro">{lista.erro}</p>}
               {!lista.dados && !lista.erro && <p className="carregando">Carregando...</p>}
-              {lista.dados && doTeste.length === 0 && <p className="texto-secundario">Nenhum {app.titulo} em andamento.</p>}
-              {lista.dados && <Grupos testes={doTeste} pode={pode} aoGravar={lista.recarregar} />}
+              {lista.dados && paraEspalhar.length === 0 && (
+                <p className="texto-secundario">Nada para {qual === "TAB" ? "espalhar" : "estriar"} agora. A leitura fica na página Leituras.</p>
+              )}
+              {lista.dados && <Grupos testes={paraEspalhar} pode={pode} aoGravar={recarregar} />}
             </>
           )}
-          {aba === "caldo" && !howard && (
+          {aba === "iniciar" && !howard && (
             <SoQuemGrava pode={pode}>
-              <Caldo tipo={qual as "TAB" | "COLIFORMES"} aoGravar={lista.recarregar} />
+              <Caldo tipo={qual as "TAB" | "COLIFORMES"} aoGravar={recarregar} />
             </SoQuemGrava>
           )}
+          {aba === "andamento" && !howard && <EmAndamento testes={doTeste} carregando={!lista.dados} nome={app.titulo} />}
           {aba === "howard" && howard && (
             <SoQuemGrava pode={pode}>
               <Howard />
@@ -231,9 +245,14 @@ function Grupo({ itens, pode, aoGravar }: { itens: Teste[]; pode: boolean; aoGra
           <li key={t.teste_id}>
             <label>
               {pode && <input type="checkbox" checked={m.tem(t.teste_id)} onChange={() => m.alternar(t.teste_id)} />}
-              <span>{t.alvo}</span>
-              <span className="texto-secundario">{t.prevista ? ` · ${dm(t.prevista)}` : ""}</span>{" "}
-              <span className={classeDaSituacao(t.situacao)}>{t.situacao}</span>
+              {/* a situação ("Vence hoje") embaixo do nome, em todas as linhas (27/10: estava ora ao lado, ora embaixo) */}
+              <span className="alvo-e-situacao">
+                <span>
+                  {t.alvo}
+                  <span className="texto-secundario">{t.prevista ? ` · ${dm(t.prevista)}` : ""}</span>
+                </span>
+                {t.situacao && <span className={classeDaSituacao(t.situacao)}>{t.situacao}</span>}
+              </span>
             </label>
           </li>
         ))}
@@ -258,26 +277,68 @@ function Grupo({ itens, pode, aoGravar }: { itens: Teste[]; pode: boolean; aoGra
   );
 }
 
+/** O que está no caldo, incubado, estriado ou em confirmação, por etapa (só para ver: a leitura é na página Leituras). */
+function EmAndamento({ testes, carregando, nome }: { testes: Teste[]; carregando: boolean; nome: string }) {
+  if (carregando) return <p className="carregando">Carregando...</p>;
+  const etapas = [...testes.reduce((g, t) => g.set(t.status, [...(g.get(t.status) ?? []), t]), new Map<string, Teste[]>())];
+  return (
+    <div className="cartao" aria-label={`${nome} no caldo e incubados`}>
+      <h2>
+        No caldo e incubados <span className="contador">{testes.length}</span>
+      </h2>
+      {testes.length === 0 && <p className="texto-secundario">Nenhum {nome} na estufa.</p>}
+      {etapas.map(([status, itens]) => (
+        <section key={status} aria-label={status}>
+          <h3>
+            {status} <span className="contador">{itens.length}</span>
+          </h3>
+          <ul className="lista-marcavel">
+            {itens.map((t) => (
+              <li key={t.teste_id}>
+                <span className="alvo-e-situacao">
+                  <span>
+                    {t.alvo}
+                    <span className="texto-secundario">{t.prevista ? ` · ${NOME_DA_ETAPA[t.proxima] ?? t.proxima} · ${dm(t.prevista)}` : ""}</span>
+                  </span>
+                  {t.situacao && <span className={classeDaSituacao(t.situacao)}>{t.situacao}</span>}
+                </span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ))}
+    </div>
+  );
+}
+
 function Caldo({ tipo, aoGravar }: { tipo: "TAB" | "COLIFORMES"; aoGravar: () => void }) {
   const [data, setData] = useState(hojeEmSaoPaulo());
-  const lista = useLista<Composta[]>(`/analises/testes/compostas?tipo=${tipo}`);
+  const [todas, setTodas] = useState(false);
+  const lista = useLista<Composta[]>(`/analises/testes/compostas?tipo=${tipo}${todas ? "&todas=true" : ""}`);
   const m = useMarcados<number>();
   const g = useGravacao("/analises/testes/feito", () => (m.limpar(), lista.recarregar(), aoGravar()));
   const marcadas = (lista.dados ?? []).filter((c) => m.tem(c.composta_id));
   return (
     <div className="cartao">
-      <h2>Compostas no caldo</h2>
+      <h2>Compostas que vão para o caldo</h2>
       <p className="texto-secundario">
         Marque as compostas que entraram no caldo.{" "}
-        {tipo === "TAB" ? "O TAB é espalhado em 5 dias." : "Os Coliformes são estriados no dia seguinte."}
+        {tipo === "TAB" ? "O TAB é espalhado em 5 dias." : "Os Coliformes são estriados no dia seguinte."}{" "}
+        {tipo === "TAB"
+          ? "Pedem TAB: toda composta do recebimento e as do navio marcadas com TAB."
+          : "Pedem Coliformes: a primeira composta de cada load (na COL, todas) e as do navio marcadas com Coliformes."}
       </p>
+      <label className="marca-ponto">
+        <input type="checkbox" checked={todas} onChange={(e) => (setTodas(e.target.checked), m.limpar(), g.voltar())} /> mostrar também as que
+        não pedem (exceção)
+      </label>
       <div className="linha-formulario">
         <label className="campo">
           Data
           <input type="date" max={hojeEmSaoPaulo()} value={data} onChange={(e) => (setData(e.target.value), g.voltar())} />
         </label>
       </div>
-      {lista.dados && lista.dados.length === 0 && <p className="texto-secundario">Todas as compostas dos últimos 60 dias já têm esse teste.</p>}
+      {lista.dados && lista.dados.length === 0 && <p className="texto-secundario">Nenhuma composta esperando o caldo (últimos 60 dias).</p>}
       {lista.dados && lista.dados.length > 0 && (
         <ul className="lista-marcavel">
           <li>
@@ -290,6 +351,7 @@ function Caldo({ tipo, aoGravar }: { tipo: "TAB" | "COLIFORMES"; aoGravar: () =>
               <label>
                 <input type="checkbox" checked={m.tem(c.composta_id)} onChange={() => (m.alternar(c.composta_id), g.voltar())} /> {c.alvo}
                 <span className="texto-secundario"> · criada {dm(c.criada_em)}</span>
+                {c.pede === false && <span className="etiqueta etiqueta-pendente">não pede</span>}
               </label>
             </li>
           ))}

@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 
-import { lerJson } from "../../api";
+import { enviarJson, lerJson } from "../../api";
 
 import { useSessao } from "../../sessao";
 import {
@@ -9,6 +9,7 @@ import {
   Busca,
   dm,
   hojeEmSaoPaulo,
+  mensagem,
   PreviaDaGravacao,
   Resultados,
   SoQuemGrava,
@@ -39,7 +40,6 @@ export const ABAS_EMBARQUE = [
   { aba: "painel", rotulo: "Painel" },
   { aba: "registrar", rotulo: "Registrar" },
   { aba: "compostas", rotulo: "Compostas" },
-  { aba: "resultados", rotulo: "C.T e B.L" },
   { aba: "tabelas", rotulo: "Resultados" },
   ABA_LAUDO,
   ...ABAS_FINAIS,
@@ -93,7 +93,6 @@ export default function Embarque() {
               <Compostas aoGravar={lista.recarregar} />
             </SoQuemGrava>
           )}
-          {aba === "resultados" && <LeituraDoEmbarque />}
           {aba === "laudo" && <AbaLaudo laudo="embarque-fcoj" />}
           {aba === "tabelas" && (
             <Resultados
@@ -154,28 +153,36 @@ interface NavioEmbarcado {
 const POR_PAGINA_NAVIOS = 10;
 
 /** Últimos navios embarcados (pedido de 27/10): 5 à vista, "Ver mais" até 10 e páginas para os mais antigos; tocar no
- * navio abre a página dele, com todas as análises do FCOJ. */
-export function UltimosNavios() {
+ * navio abre a página dele, com todas as análises do FCOJ. Os Tanques navio usam o mesmo, com os tanques coletados. */
+export function UltimosNavios({
+  url = "/analises/embarque/navios",
+  titulo = "Últimos navios embarcados",
+  unidade = ["amostra", "amostras"],
+}: {
+  url?: string;
+  titulo?: string;
+  unidade?: [string, string];
+}) {
   const [pagina, setPagina] = useState(1);
   const [todos, setTodos] = useState(false);
   const [dados, setDados] = useState<{ total: number; navios: NavioEmbarcado[] } | null>(null);
   const [erro, setErro] = useState("");
   useEffect(() => {
     let vivo = true;
-    lerJson<{ total: number; navios: NavioEmbarcado[] }>(`/analises/embarque/navios?pagina=${pagina}&por_pagina=${POR_PAGINA_NAVIOS}`).then(
+    lerJson<{ total: number; navios: NavioEmbarcado[] }>(`${url}?pagina=${pagina}&por_pagina=${POR_PAGINA_NAVIOS}`).then(
       (d) => vivo && (setDados(d), setErro("")),
       (e) => vivo && setErro(e instanceof Error ? e.message : "Não foi possível carregar os navios."),
     );
     return () => {
       vivo = false;
     };
-  }, [pagina]);
+  }, [pagina, url]);
   const paginas = dados ? Math.max(1, Math.ceil(dados.total / POR_PAGINA_NAVIOS)) : 1;
   const visiveis = dados ? (todos ? dados.navios : dados.navios.slice(0, 5)) : [];
   return (
     <div className="cartao">
       <h2>
-        Últimos navios embarcados {dados && <span className="contador">{dados.total}</span>}
+        {titulo} {dados && <span className="contador">{dados.total}</span>}
       </h2>
       {erro && <p className="mensagem-erro">{erro}</p>}
       {!dados && !erro && <p className="carregando">Carregando...</p>}
@@ -187,7 +194,7 @@ export function UltimosNavios() {
               <Link to={`/paginas/navios/${encodeURIComponent(n.navio)}`}>
                 <strong>{n.navio}</strong>
                 <span className="texto-secundario">
-                  {n.ultima_data ? dm(n.ultima_data) : "-"} · {n.amostras} {n.amostras === 1 ? "amostra" : "amostras"}
+                  {n.ultima_data ? dm(n.ultima_data) : "-"} · {n.amostras} {n.amostras === 1 ? unidade[0] : unidade[1]}
                   {n.pendentes > 0 && ` · ${n.pendentes} a ler`}
                 </span>
               </Link>
@@ -290,33 +297,113 @@ function Registrar({ aoGravar }: { aoGravar: () => void }) {
   );
 }
 
+const TESTES_DA_COMPOSTA = [
+  { chave: "tab", rotulo: "TAB" },
+  { chave: "coliformes", rotulo: "Coliformes" },
+  { chave: "howard", rotulo: "Howard" },
+] as const;
+type Marcas = Record<(typeof TESTES_DA_COMPOSTA)[number]["chave"], boolean>;
+
+interface TestesDaComposta extends Marcas {
+  composta_id: number;
+  alvo: string;
+  criada_em: string;
+  feitos: string[];
+}
+
+/** Os três cartões marcáveis (TAB, Coliformes, Howard): a composta fica esperando o que estiver marcado (27/10). */
+function MarcasDeTeste({ marcas, mudar, rotulo, travados = [] }: { marcas: Marcas; mudar: (m: Marcas) => void; rotulo: string; travados?: string[] }) {
+  return (
+    <div className="marcas-de-teste" role="group" aria-label={rotulo}>
+      {TESTES_DA_COMPOSTA.map((t) => (
+        <button
+          key={t.chave}
+          type="button"
+          className="botao-secundario botao-tipo"
+          aria-pressed={marcas[t.chave]}
+          disabled={travados.includes(t.rotulo)}
+          title={travados.includes(t.rotulo) ? "Já começou" : undefined}
+          onClick={() => mudar({ ...marcas, [t.chave]: !marcas[t.chave] })}
+        >
+          {t.rotulo}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function Compostas({ aoGravar }: { aoGravar: () => void }) {
   const [campos, setCampos] = useState({ navio: "", linha: "", fase: "", grupos: "" });
-  const g = useGravacao("/analises/embarque/compostas", () => (setCampos({ ...campos, grupos: "" }), aoGravar()));
+  const [marcas, setMarcas] = useState<Marcas>({ tab: false, coliformes: true, howard: false });
+  const recentes = useLista<TestesDaComposta[]>("/analises/embarque/compostas-recentes");
+  const g = useGravacao("/analises/embarque/compostas", () => (setCampos({ ...campos, grupos: "" }), recentes.recarregar(), aoGravar()));
   const mudar = (c: Partial<typeof campos>) => (setCampos({ ...campos, ...c }), g.voltar());
   return (
-    <form
-      className="cartao"
-      aria-label="Compostas do embarque"
-      onSubmit={(e: FormEvent) => {
-        e.preventDefault();
-        void g.ver({ ...campos, linha: Number(campos.linha), fase: Number(campos.fase) });
-      }}
-    >
-      <h2>Compostas do embarque</h2>
-      <p className="texto-secundario">Uma composta por grupo de amostras, ex.: (1-3)(4-6) junta A1 a A3 e A4 a A6.</p>
-      <CamposDoEmbarque campos={campos} mudar={mudar} />
-      <label className="campo">
-        Compostas
-        <input required maxLength={300} value={campos.grupos} placeholder="ex.: (1-3)(4-6)" onChange={(e) => mudar({ grupos: e.target.value })} />
-      </label>
-      {!g.previa && (
-        <button type="submit" className="botao botao-principal" disabled={g.enviando}>
-          Ver o que vai ser criado
-        </button>
+    <>
+      <form
+        className="cartao"
+        aria-label="Compostas do embarque"
+        onSubmit={(e: FormEvent) => {
+          e.preventDefault();
+          void g.ver({ ...campos, linha: Number(campos.linha), fase: Number(campos.fase), ...marcas });
+        }}
+      >
+        <h2>Compostas do embarque</h2>
+        <p className="texto-secundario">Uma composta por grupo de amostras, ex.: (1-3)(4-6) junta A1 a A3 e A4 a A6.</p>
+        <CamposDoEmbarque campos={campos} mudar={mudar} />
+        <label className="campo">
+          Compostas
+          <input required maxLength={300} value={campos.grupos} placeholder="ex.: (1-3)(4-6)" onChange={(e) => mudar({ grupos: e.target.value })} />
+        </label>
+        <p className="texto-secundario">O que essas compostas vão fazer (ficam esperando no TAB, no Coliformes e no Howard):</p>
+        <MarcasDeTeste marcas={marcas} mudar={(m) => (setMarcas(m), g.voltar())} rotulo="Análises das compostas novas" />
+        {!g.previa && (
+          <button type="submit" className="botao botao-principal" disabled={g.enviando}>
+            Ver o que vai ser criado
+          </button>
+        )}
+        <PreviaDaGravacao g={g} />
+      </form>
+      <CompostasRecentes lista={recentes} />
+    </>
+  );
+}
+
+/** As compostas do embarque dos últimos 30 dias, cada uma com os cartões para marcar ou desmarcar o que vai fazer. */
+function CompostasRecentes({ lista }: { lista: ReturnType<typeof useLista<TestesDaComposta[]>> }) {
+  const [erro, setErro] = useState("");
+  async function marcar(c: TestesDaComposta, m: Marcas) {
+    setErro("");
+    try {
+      await enviarJson(`/analises/compostas/${c.composta_id}/testes`, m, "PUT");
+      lista.recarregar();
+    } catch (e) {
+      setErro(mensagem(e, "Não foi possível marcar."));
+    }
+  }
+  if (!lista.dados?.length) return null;
+  return (
+    <div className="cartao" aria-label="Compostas do embarque e o que cada uma faz">
+      <h2>
+        Compostas do embarque (30 dias) <span className="contador">{lista.dados.length}</span>
+      </h2>
+      {erro && (
+        <p className="mensagem-erro" role="alert">
+          {erro}
+        </p>
       )}
-      <PreviaDaGravacao g={g} />
-    </form>
+      <ul className="lista-compostas-testes">
+        {lista.dados.map((c) => (
+          <li key={c.composta_id}>
+            <span className="alvo-e-situacao">
+              <strong>{c.alvo}</strong>
+              <span className="texto-secundario">criada {dm(c.criada_em)}{c.feitos.length ? ` · já começou: ${c.feitos.join(", ")}` : ""}</span>
+            </span>
+            <MarcasDeTeste marcas={{ tab: c.tab, coliformes: c.coliformes, howard: c.howard }} mudar={(m) => void marcar(c, m)} rotulo={`Análises da composta ${c.composta_id}`} travados={c.feitos} />
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
 

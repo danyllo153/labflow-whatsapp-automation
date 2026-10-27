@@ -21,6 +21,7 @@ interface Atividade {
   dias_semana: number[] | null;
   ordem: number;
   ativa: boolean;
+  opcional?: boolean; // a pessoa escolhe o dia; não passa para o turno seguinte (081)
 }
 
 interface Faixa {
@@ -66,7 +67,8 @@ function virgula(valor: string): string {
   return Number(valor).toFixed(1).replace(".", ",");
 }
 
-function quando(dias: number[] | null): string {
+function quando(dias: number[] | null, opcional = false): string {
+  if (opcional) return "opcional (a pessoa escolhe o dia; não passa para o turno seguinte)";
   if (!dias) return "todos os dias";
   return DIAS.filter(([n]) => dias.includes(n))
     .map(([, nome]) => nome)
@@ -219,6 +221,7 @@ function LinhaAtividade({ atividade: a, pedir }: { atividade: Atividade; pedir: 
   const [editando, setEditando] = useState(false);
   const [texto, setTexto] = useState(a.texto);
   const [dias, setDias] = useState<number[]>(a.dias_semana ?? []);
+  const [opcional, setOpcional] = useState(!!a.opcional);
 
   function alternar(n: number) {
     setDias(dias.includes(n) ? dias.filter((d) => d !== n) : [...dias, n]);
@@ -226,7 +229,7 @@ function LinhaAtividade({ atividade: a, pedir }: { atividade: Atividade; pedir: 
 
   async function salvar(evento: FormEvent) {
     evento.preventDefault();
-    await pedir(() => enviarJson(`/admin/turnos/atividades/${a.id}`, { texto, dias_semana: dias, ativa: a.ativa }, "PUT"));
+    await pedir(() => enviarJson(`/admin/turnos/atividades/${a.id}`, { texto, dias_semana: dias, ativa: a.ativa, opcional }, "PUT"));
     setEditando(false);
   }
 
@@ -238,15 +241,18 @@ function LinhaAtividade({ atividade: a, pedir }: { atividade: Atividade; pedir: 
             Atividade
             <input maxLength={120} value={texto} onChange={(e) => setTexto(e.target.value)} />
           </label>
-          <fieldset className="dias-semana">
-            <legend>Dias da semana (nenhum marcado = todos os dias)</legend>
-            {DIAS.map(([n, nome]) => (
-              <label key={n} className="marcar-feito">
-                <input type="checkbox" checked={dias.includes(n)} onChange={() => alternar(n)} />
-                <span>{nome}</span>
-              </label>
-            ))}
-          </fieldset>
+          <MarcaOpcional opcional={opcional} mudar={setOpcional} />
+          {!opcional && (
+            <fieldset className="dias-semana">
+              <legend>Dias da semana (nenhum marcado = todos os dias)</legend>
+              {DIAS.map(([n, nome]) => (
+                <label key={n} className="marcar-feito">
+                  <input type="checkbox" checked={dias.includes(n)} onChange={() => alternar(n)} />
+                  <span>{nome}</span>
+                </label>
+              ))}
+            </fieldset>
+          )}
           <div className="botoes-lado">
             <button type="submit" className="botao botao-principal">
               Salvar
@@ -263,7 +269,7 @@ function LinhaAtividade({ atividade: a, pedir }: { atividade: Atividade; pedir: 
     <li className={a.ativa ? undefined : "desativada"}>
       <div className="linha-turno">
         <span>
-          {a.texto} <span className="texto-secundario">· {quando(a.dias_semana)}{!a.ativa && " · desativada"}</span>
+          {a.texto} <span className="texto-secundario">· {quando(a.dias_semana, a.opcional)}{!a.ativa && " · desativada"}</span>
         </span>
         <span className="acoes-linha">
           <button type="button" className="botao-icone" title="Subir" aria-label={`Subir ${a.texto}`} onClick={() => void pedir(() => enviarJson(`/admin/turnos/atividades/${a.id}/mover`, { direcao: "cima" }))}>
@@ -283,7 +289,11 @@ function LinhaAtividade({ atividade: a, pedir }: { atividade: Atividade; pedir: 
             type="button"
             className="botao-secundario botao-da-linha"
             aria-label={`${a.ativa ? "Desativar" : "Reativar"} ${a.texto}`}
-            onClick={() => void pedir(() => enviarJson(`/admin/turnos/atividades/${a.id}`, { texto: a.texto, dias_semana: a.dias_semana, ativa: !a.ativa }, "PUT"))}
+            onClick={() =>
+              void pedir(() =>
+                enviarJson(`/admin/turnos/atividades/${a.id}`, { texto: a.texto, dias_semana: a.dias_semana, ativa: !a.ativa, opcional: !!a.opcional }, "PUT"),
+              )
+            }
           >
             {a.ativa ? "Desativar" : "Reativar"}
           </button>
@@ -293,15 +303,27 @@ function LinhaAtividade({ atividade: a, pedir }: { atividade: Atividade; pedir: 
   );
 }
 
+/** A atividade opcional (27/10): a pessoa escolhe o dia em que faz; se não fizer, não passa para o turno seguinte. */
+function MarcaOpcional({ opcional, mudar }: { opcional: boolean; mudar: (v: boolean) => void }) {
+  return (
+    <label className="marcar-feito">
+      <input type="checkbox" checked={opcional} onChange={(e) => mudar(e.target.checked)} />
+      <span>Opcional: a pessoa escolhe o dia em que faz (não passa para o turno seguinte)</span>
+    </label>
+  );
+}
+
 function NovaAtividade({ turnoId, pedir }: { turnoId: number; pedir: <T>(c: () => Promise<T>) => Promise<void> }) {
   const [texto, setTexto] = useState("");
   const [dias, setDias] = useState<number[]>([]);
+  const [opcional, setOpcional] = useState(false);
 
   async function adicionar(evento: FormEvent) {
     evento.preventDefault();
-    await pedir(() => enviarJson("/admin/turnos/atividades", { turno_id: turnoId, texto, dias_semana: dias }));
+    await pedir(() => enviarJson("/admin/turnos/atividades", { turno_id: turnoId, texto, dias_semana: dias, opcional }));
     setTexto("");
     setDias([]);
+    setOpcional(false);
   }
 
   return (
@@ -310,15 +332,18 @@ function NovaAtividade({ turnoId, pedir }: { turnoId: number; pedir: <T>(c: () =
         Nova atividade neste turno
         <input maxLength={120} value={texto} onChange={(e) => setTexto(e.target.value)} />
       </label>
-      <fieldset className="dias-semana">
-        <legend>Só nestes dias (nenhum marcado = todos)</legend>
-        {DIAS.map(([n, nome]) => (
-          <label key={n} className="marcar-feito">
-            <input type="checkbox" checked={dias.includes(n)} onChange={() => setDias(dias.includes(n) ? dias.filter((d) => d !== n) : [...dias, n])} />
-            <span>{nome}</span>
-          </label>
-        ))}
-      </fieldset>
+      <MarcaOpcional opcional={opcional} mudar={setOpcional} />
+      {!opcional && (
+        <fieldset className="dias-semana">
+          <legend>Só nestes dias (nenhum marcado = todos)</legend>
+          {DIAS.map(([n, nome]) => (
+            <label key={n} className="marcar-feito">
+              <input type="checkbox" checked={dias.includes(n)} onChange={() => setDias(dias.includes(n) ? dias.filter((d) => d !== n) : [...dias, n])} />
+              <span>{nome}</span>
+            </label>
+          ))}
+        </fieldset>
+      )}
       <button type="submit" className="botao botao-principal">
         Adicionar atividade
       </button>
@@ -347,9 +372,12 @@ function Estufas({ estufas, aoMudar }: { estufas: EstufaAdmin[]; aoMudar: Muda }
     <div className="cartao" role="group" aria-label="Estufas e faixas">
       <h2>Estufas e faixas de trabalho</h2>
       <p className="texto-secundario">As faixas ficam só no banco de dados, nunca no repositório. Uma faixa nova vale a partir da data e encerra a anterior.</p>
-      {estufas.map((e) => (
-        <LinhaEstufa key={`${e.id}-${e.ativa}-${e.faixa?.id}`} estufa={e} aoMudar={aoMudar} />
-      ))}
+      {/* uma estufa por cartão, na grade (27/10: as linhas estavam soltas e fora do padrão do app) */}
+      <div className="estufas-admin-grade">
+        {estufas.map((e) => (
+          <LinhaEstufa key={`${e.id}-${e.ativa}-${e.faixa?.id}`} estufa={e} aoMudar={aoMudar} />
+        ))}
+      </div>
       <form className="linha-formulario" onSubmit={adicionar} aria-label="Nova estufa">
         <label className="campo campo-hora">
           Número da nova estufa
@@ -403,24 +431,24 @@ function LinhaEstufa({ estufa: e, aoMudar }: { estufa: EstufaAdmin; aoMudar: Mud
 
   return (
     <div className={e.ativa ? "estufa-admin" : "estufa-admin desativada"} role="group" aria-label={nome}>
-      <div className="linha-turno">
-        <span>
-          <strong>{nome}</strong>{" "}
-          <span className="texto-secundario">
-            {e.auxiliar ? "auxiliar, sem faixa" : e.faixa ? `faixa ${virgula(e.faixa.minimo)} a ${virgula(e.faixa.maximo)} °C desde ${dm(e.faixa.desde)}` : "sem faixa cadastrada"}
-            {!e.ativa && " · desativada"}
-          </span>
+      <div className="estufa-admin-topo">
+        <strong className="estufa-admin-nome">{nome}</strong>
+        <span className={`etiqueta ${!e.ativa ? "etiqueta-neutra" : e.auxiliar ? "etiqueta-pendente" : "etiqueta-ok"}`}>
+          {!e.ativa ? "Desativada" : e.auxiliar ? "Auxiliar" : "Ativa"}
         </span>
-        <span className="acoes-linha">
-          {!e.auxiliar && (
-            <button type="button" className="link-botao" aria-label={`Faixa da ${nome}`} onClick={() => setAberto(!aberto)}>
-              Faixa
-            </button>
-          )}
-          <button type="button" className="botao-secundario botao-da-linha" aria-label={`${e.ativa ? "Desativar" : "Reativar"} a ${nome}`} onClick={() => void ativar(!e.ativa)}>
-            {e.ativa ? "Desativar" : "Reativar"}
+      </div>
+      <p className="estufa-admin-faixa">
+        {e.auxiliar ? "auxiliar, sem faixa" : e.faixa ? `faixa ${virgula(e.faixa.minimo)} a ${virgula(e.faixa.maximo)} °C desde ${dm(e.faixa.desde)}` : "sem faixa cadastrada"}
+      </p>
+      <div className="botoes-lado">
+        {!e.auxiliar && (
+          <button type="button" className="botao-secundario botao-da-linha" aria-label={`Faixa da ${nome}`} aria-expanded={aberto} onClick={() => setAberto(!aberto)}>
+            Faixa
           </button>
-        </span>
+        )}
+        <button type="button" className="botao-secundario botao-da-linha" aria-label={`${e.ativa ? "Desativar" : "Reativar"} a ${nome}`} onClick={() => void ativar(!e.ativa)}>
+          {e.ativa ? "Desativar" : "Reativar"}
+        </button>
       </div>
       {aberto && (
         <form className="corrigir-horario" onSubmit={gravarFaixa} aria-label={`Nova faixa da ${nome}`}>

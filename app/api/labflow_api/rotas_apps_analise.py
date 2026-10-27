@@ -145,6 +145,7 @@ class Concluir(BaseModel):
 class ColetasDoDia(BaseModel):
     data: date
     pessoa: str
+    alvo: str = ""  # o tanque (terra) ou o navio (navio): o painel empilha as barras por ele (27/10)
     n: int
 
 
@@ -154,17 +155,18 @@ def coletas_dos_tanques(
     pessoa: PessoaLogada = Depends(exigir("ver_paginas")),
     con: psycopg.Connection = Depends(obter_conexao),
 ) -> list[ColetasDoDia]:
-    """Coletas do último ano por dia e por quem coletou: o painel agrupa por semana, mês ou pessoa (pedido de 27/10)."""
+    """Coletas do último ano por dia, quem coletou e tanque (terra) ou navio: o painel agrupa por semana, mês ou pessoa e
+    empilha por tanque ou navio (pedido de 27/10)."""
     linhas = con.execute(
         """
-        SELECT data_coleta, coalesce(registrado_por, '-'), count(*)
+        SELECT data_coleta, coalesce(registrado_por, '-'), CASE WHEN origem = 'Navio' THEN coalesce(navio, '-') ELSE tanque END, count(*)
         FROM bi.coletas
         WHERE origem = %s AND data_coleta > %s
-        GROUP BY 1, 2 ORDER BY 1, 2
+        GROUP BY 1, 2, 3 ORDER BY 1, 2, 3
         """,
         ["Terra" if origem == "terra" else "Navio", _hoje(con) - timedelta(days=365)],
     ).fetchall()
-    return [ColetasDoDia(data=d, pessoa=p, n=n) for d, p, n in linhas]
+    return [ColetasDoDia(data=d, pessoa=p, alvo=a, n=n) for d, p, a, n in linhas]
 
 
 @roteador.post("/tanques/leituras/concluir", response_model=Gravacao)
@@ -272,32 +274,56 @@ class CompostaSemTeste(BaseModel):
     composta_id: int
     alvo: str
     criada_em: date
+    pede: bool = True  # a composta pede esse teste (a regra abaixo); com todas=true vêm também as que não pedem
+
+
+# O que cada composta pede (27/10): o recebimento segue a regra do banco (104: TAB em toda composta; Coliformes na primeira
+# composta de cada load, já que feito o de uma as outras não pedem, e em toda composta da COL); o embarque, o que o analista
+# marcou ao criar a composta (app.compostas_testes, 081). Composta do embarque sem marca (as de antes): Coliformes pela 104,
+# Howard sim, TAB não.
+PEDE_O_TESTE = {
+    "TAB": "(c.embarque_id IS NULL OR coalesce(p.tab, false))",
+    "COLIFORMES": """(CASE WHEN c.embarque_id IS NOT NULL THEN coalesce(p.coliformes, c.coliformes_obrigatorio)
+                           ELSE c.coliformes_obrigatorio AND (coalesce(fb.nome, '') = 'COL' OR NOT EXISTS (
+                               SELECT 1 FROM compostas c2 JOIN testes t2 ON t2.composta_id = c2.id AND t2.tipo = 'COLIFORMES'
+                               WHERE c2.load_id = c.load_id)) END)""",
+    "HOWARD": "(c.embarque_id IS NOT NULL AND coalesce(p.howard, true))",
+}
+
+COMPOSTAS_SEM_TESTE_SQL = """
+SELECT c.id, coalesce('Load ' || l.numero, n.nome || ' ' || n.viagem || ' L' || e.linha || ' F' || e.fase),
+       (c.criada_em AT TIME ZONE 'America/Sao_Paulo')::date,
+       (SELECT array_agg(coalesce(r.lote, a.numero) ORDER BY coalesce(r.lote, a.numero)) FROM composta_lotes cl
+        LEFT JOIN recebimento_lotes r ON r.id = cl.recebimento_lote_id
+        LEFT JOIN embarque_amostras a ON a.id = cl.embarque_amostra_id WHERE cl.composta_id = c.id),
+       {pede}
+FROM compostas c LEFT JOIN loads l ON l.id = c.load_id LEFT JOIN fabricas fb ON fb.id = l.fabrica_id
+LEFT JOIN embarques e ON e.id = c.embarque_id LEFT JOIN navios n ON n.id = e.navio_id
+LEFT JOIN app.compostas_testes p ON p.composta_id = c.id
+WHERE c.criada_em >= now() - interval '60 days' AND (%(tipo)s <> 'HOWARD' OR c.embarque_id IS NOT NULL)
+  AND NOT EXISTS (SELECT 1 FROM testes t WHERE t.composta_id = c.id AND t.tipo = %(tipo)s)
+  AND (%(todas)s OR {pede})
+ORDER BY c.id DESC LIMIT 200
+"""
+
+
+def compostas_a_fazer(con: psycopg.Connection, tipo: str, todas: bool = False) -> list[CompostaSemTeste]:
+    pede = PEDE_O_TESTE[tipo]
+    linhas = con.execute(COMPOSTAS_SEM_TESTE_SQL.format(pede=pede), {"tipo": tipo, "todas": todas}).fetchall()
+    return [CompostaSemTeste(composta_id=i, alvo=f"{alvo} · #{i}" + (f" ({_faixas(lotes)})" if lotes else ""), criada_em=d, pede=pd)
+            for i, alvo, d, lotes, pd in linhas]
 
 
 @roteador.get("/testes/compostas", response_model=list[CompostaSemTeste])
 def compostas_sem_teste(
     tipo: Literal["TAB", "COLIFORMES", "HOWARD"] = Query(...),
+    todas: bool = Query(default=False),
     pessoa: PessoaLogada = Depends(exigir("ver_paginas")),
     con: psycopg.Connection = Depends(obter_conexao),
 ) -> list[CompostaSemTeste]:
-    """Compostas dos últimos 60 dias sem esse teste (Howard: só as do embarque)."""
-    linhas = con.execute(
-        """
-        SELECT c.id, coalesce('Load ' || l.numero, n.nome || ' ' || n.viagem || ' L' || e.linha || ' F' || e.fase),
-               (c.criada_em AT TIME ZONE 'America/Sao_Paulo')::date,
-               (SELECT array_agg(coalesce(r.lote, a.numero) ORDER BY coalesce(r.lote, a.numero)) FROM composta_lotes cl
-                LEFT JOIN recebimento_lotes r ON r.id = cl.recebimento_lote_id
-                LEFT JOIN embarque_amostras a ON a.id = cl.embarque_amostra_id WHERE cl.composta_id = c.id)
-        FROM compostas c LEFT JOIN loads l ON l.id = c.load_id
-        LEFT JOIN embarques e ON e.id = c.embarque_id LEFT JOIN navios n ON n.id = e.navio_id
-        WHERE c.criada_em >= now() - interval '60 days' AND (%(tipo)s <> 'HOWARD' OR c.embarque_id IS NOT NULL)
-          AND NOT EXISTS (SELECT 1 FROM testes t WHERE t.composta_id = c.id AND t.tipo = %(tipo)s)
-        ORDER BY c.id DESC LIMIT 200
-        """,
-        {"tipo": tipo},
-    ).fetchall()
-    return [CompostaSemTeste(composta_id=i, alvo=f"{alvo} · #{i}" + (f" ({_faixas(lotes)})" if lotes else ""), criada_em=d)
-            for i, alvo, d, lotes in linhas]
+    """Compostas dos últimos 60 dias sem esse teste que PEDEM o teste (Howard: só as do embarque); todas=true traz também
+    as que não pedem (para uma exceção), com pede=false."""
+    return compostas_a_fazer(con, tipo, todas)
 
 
 class TesteFeito(BaseModel):
@@ -474,6 +500,10 @@ class CompostasDoEmbarque(BaseModel):
     fase: int = Field(ge=1, le=99)
     grupos: str = Field(max_length=300)  # "(1-3)(4-5)"
     previa: bool = True
+    # o que as compostas novas vão fazer (27/10; app.compostas_testes): ficam esperando essas análises
+    tab: bool = False
+    coliformes: bool = True
+    howard: bool = False
 
 
 @roteador.post("/embarque/compostas", response_model=Gravacao)
@@ -485,7 +515,74 @@ def compostas_do_embarque(
         con, "SELECT criar_compostas_embarque(%s, %s, %s, %s, %s, %s)",
         (pessoa.usuario_id, pedido.navio, pedido.linha, pedido.fase, Jsonb(_grupos(pedido.grupos)), pedido.previa),
     )
-    return _resposta(r, pedido.previa)
+    marcas = [nome for nome, sim in (("TAB", pedido.tab), ("Coliformes", pedido.coliformes), ("Howard", pedido.howard)) if sim]
+    texto = r.get("texto", "") + f"\nVão esperar: {', '.join(marcas) if marcas else 'nenhuma análise'}."
+    if not pedido.previa:
+        for cid in r.get("ids") or []:
+            _marcar_testes(con, cid, pedido.tab, pedido.coliformes, pedido.howard, pessoa.usuario_id)
+    return _resposta(r, pedido.previa, texto)
+
+
+def _marcar_testes(con: psycopg.Connection, composta_id: int, tab: bool, coliformes: bool, howard: bool, quem: int) -> None:
+    con.execute(
+        """INSERT INTO app.compostas_testes (composta_id, tab, coliformes, howard, marcado_por) VALUES (%s, %s, %s, %s, %s)
+           ON CONFLICT (composta_id) DO UPDATE SET tab = EXCLUDED.tab, coliformes = EXCLUDED.coliformes, howard = EXCLUDED.howard,
+               marcado_por = EXCLUDED.marcado_por, marcado_em = clock_timestamp()""",
+        (composta_id, tab, coliformes, howard, quem),
+    )
+
+
+class TestesDaComposta(BaseModel):
+    composta_id: int
+    alvo: str  # "O.SKY 189 L1 F2 · #12 (1-3)"
+    criada_em: date
+    tab: bool
+    coliformes: bool
+    howard: bool
+    feitos: list[str]  # os testes que já começaram: "TAB", "Coliformes", "Howard"
+
+
+@roteador.get("/embarque/compostas-recentes", response_model=list[TestesDaComposta])
+def compostas_recentes_do_embarque(
+    pessoa: PessoaLogada = Depends(exigir("ver_paginas")), con: psycopg.Connection = Depends(obter_conexao)
+) -> list[TestesDaComposta]:
+    """As compostas do embarque dos últimos 30 dias, com o que cada uma vai fazer (para marcar ou desmarcar)."""
+    linhas = con.execute(
+        """
+        SELECT c.id, n.nome || ' ' || n.viagem || ' L' || e.linha || ' F' || e.fase, (c.criada_em AT TIME ZONE 'America/Sao_Paulo')::date,
+               (SELECT array_agg(a.numero ORDER BY a.numero) FROM composta_lotes cl JOIN embarque_amostras a ON a.id = cl.embarque_amostra_id
+                WHERE cl.composta_id = c.id),
+               coalesce(p.tab, false), coalesce(p.coliformes, c.coliformes_obrigatorio), coalesce(p.howard, true),
+               (SELECT array_agg(DISTINCT t.tipo) FROM testes t WHERE t.composta_id = c.id)
+        FROM compostas c JOIN embarques e ON e.id = c.embarque_id JOIN navios n ON n.id = e.navio_id
+        LEFT JOIN app.compostas_testes p ON p.composta_id = c.id
+        WHERE c.criada_em >= now() - interval '30 days'
+        ORDER BY c.id DESC LIMIT 100
+        """
+    ).fetchall()
+    nomes = {"TAB": "TAB", "COLIFORMES": "Coliformes", "HOWARD": "Howard"}
+    return [
+        TestesDaComposta(composta_id=i, alvo=f"{alvo} · #{i}" + (f" ({_faixas(am)})" if am else ""), criada_em=d, tab=tab,
+                         coliformes=col, howard=how, feitos=[nomes.get(t, t) for t in (feitos or [])])
+        for i, alvo, d, am, tab, col, how, feitos in linhas
+    ]
+
+
+class MarcasDaComposta(BaseModel):
+    tab: bool
+    coliformes: bool
+    howard: bool
+
+
+@roteador.put("/compostas/{composta_id}/testes", response_model=list[TestesDaComposta])
+def marcar_testes_da_composta(
+    composta_id: int, pedido: MarcasDaComposta, pessoa: PessoaLogada = Depends(exigir("registrar_analise")),
+    con: psycopg.Connection = Depends(obter_conexao),
+) -> list[TestesDaComposta]:
+    if con.execute("SELECT 1 FROM compostas WHERE id = %s AND embarque_id IS NOT NULL", (composta_id,)).fetchone() is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Composta do embarque não encontrada.")
+    _marcar_testes(con, composta_id, pedido.tab, pedido.coliformes, pedido.howard, pessoa.usuario_id)
+    return compostas_recentes_do_embarque(pessoa, con)
 
 
 class AmostraDoEmbarque(BaseModel):
@@ -593,6 +690,30 @@ def navios_embarcados(
         SELECT navio, max(prevista), count(DISTINCT (linha, fase, lote_amostra)), count(*) FILTER (WHERE lido),
                count(*) FILTER (WHERE NOT lido), count(*) FILTER (WHERE lido AND alarme), count(*) OVER ()
         FROM bi.contagens WHERE origem = 'Embarque' AND navio IS NOT NULL
+        GROUP BY navio ORDER BY 2 DESC NULLS LAST, 1 LIMIT %s OFFSET %s
+        """,
+        [por_pagina, (pagina - 1) * por_pagina],
+    ).fetchall()
+    total = linhas[0][6] if linhas else 0
+    return NaviosEmbarcados(total=total, navios=[
+        NavioEmbarcado(navio=n, ultima_data=d, amostras=a, lidos=l, pendentes=p, nao_ok=no) for n, d, a, l, p, no, _ in linhas
+    ])
+
+
+@roteador.get("/tanques/navios", response_model=NaviosEmbarcados)
+def navios_dos_tanques(
+    pagina: int = Query(default=1, ge=1),
+    por_pagina: int = Query(default=10, ge=1, le=50),
+    pessoa: PessoaLogada = Depends(exigir("ver_paginas")),
+    con: psycopg.Connection = Depends(obter_conexao),
+) -> NaviosEmbarcados:
+    """Últimos navios com tanques coletados (27/10, igual aos últimos navios do embarque): os tanques, as leituras que
+    faltam e os tanques não ok; tocar no navio abre a página dele."""
+    linhas = con.execute(
+        """
+        SELECT navio, max(data_coleta), count(DISTINCT coleta_id), count(*) FILTER (WHERE lida), count(*) FILTER (WHERE NOT lida),
+               count(DISTINCT coleta_id) FILTER (WHERE resultado = 'Não ok'), count(*) OVER ()
+        FROM bi.leituras_nfc WHERE origem = 'Navio' AND navio IS NOT NULL
         GROUP BY navio ORDER BY 2 DESC NULLS LAST, 1 LIMIT %s OFFSET %s
         """,
         [por_pagina, (pagina - 1) * por_pagina],

@@ -57,7 +57,8 @@ export interface Aba {
 export function useAba(abas: Aba[]): [string, (aba: string) => void] {
   const [params, setParams] = useSearchParams();
   const aba = abas.some((a) => a.aba === params.get("aba")) ? (params.get("aba") as string) : abas[0].aba;
-  return [aba, (nova: string) => setParams({ aba: nova })];
+  // Troca só a aba: o resto da URL (a unidade da água de consumo, a tabela escolhida) fica (bug de 27/10).
+  return [aba, (nova: string) => setParams((p) => (p.set("aba", nova), p))];
 }
 
 export function AbasDaPagina({ titulo, abas, aba, irPara }: { titulo: string; abas: Aba[]; aba: string; irPara: (aba: string) => void }) {

@@ -31,7 +31,7 @@ const LEITURA = {
 
 describe("apps de análise da Fase E (E3 a E8)", () => {
   it("Tanques: digita as 3 placas, vê a prévia do banco e confirma", async () => {
-    const { posts } = abrir("/analises/tanques?aba=leituras", { // o endereço antigo abre o Tanques terra (27/10)
+    const { posts } = abrir("/leituras?aba=tanques-terra", { // a leitura fica só na página Leituras (27/10)
       "GET /analises/tanques/leituras": () => ({ status: 200, corpo: [LEITURA] }),
       "POST /analises/tanques/placas": (c) => gravacao(c.previa ? "Placas:\ntanque 44 normal CT = <1,<1,2" : "Placas:\ntanque 44 normal CT = <1,<1,2", c.previa),
     });
@@ -47,7 +47,7 @@ describe("apps de análise da Fase E (E3 a E8)", () => {
 
   it("Tanques: o Wort (profundidade e superfície) é uma linha só por frasco e <1 em todas grava as duas", async () => {
     const wort = { ...LEITURA, analise: "Psicrotróficos 240h", tanque: "41", situacao: "Vence hoje", prevista: "2026-10-25" };
-    const { posts } = abrir("/analises/tanques-terra?aba=leituras", {
+    const { posts } = abrir("/leituras?aba=tanques-terra", {
       "GET /analises/tanques/leituras": () => ({ status: 200, corpo: [{ ...wort, analise_id: 7 }, { ...wort, analise_id: 8 }] }),
       "POST /analises/tanques/placas": (c) => gravacao("Placas:\ntanque 41 normal Wort = <1,<1,<1", c.previa),
     });
@@ -96,6 +96,41 @@ describe("apps de análise da Fase E (E3 a E8)", () => {
     expect(await screen.findByText(/2 testes atualizados/)).toBeInTheDocument();
   });
 
+  it("Coliformes: os atrasados são as compostas esperando o caldo; os cartões abrem Iniciar análise e No caldo e incubados (27/10)", async () => {
+    const col = { teste_id: 3, teste: "Coliformes", alvo: "Load 43669 · #87 (1-5)", status: "Incubada", proxima: "ler", prevista: "2026-10-24", situacao: "Vence hoje", lote_aberto: false };
+    abrir("/analises/coliformes", {
+      "GET /analises/testes/pendentes": () => ({ status: 200, corpo: [col] }),
+      "GET /analises/testes/compostas?tipo=COLIFORMES": () => ({
+        status: 200, corpo: [{ composta_id: 90, alvo: "Load 43700 · #90 (1-5)", criada_em: "2026-10-26", pede: true }],
+      }),
+    });
+    await userEvent.click(await screen.findByRole("button", { name: "Atrasados (esperando o caldo): 1" }));
+    expect(await screen.findByRole("heading", { name: "Compostas que vão para o caldo" })).toBeInTheDocument();
+    expect(await screen.findByRole("checkbox", { name: /Load 43700 · #90/ })).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: /^Para fazer/ }));
+    await userEvent.click(await screen.findByRole("button", { name: "Em andamento: 1" }));
+    const estufa = await screen.findByRole("region", { name: "Incubada" });
+    expect(within(estufa).getByText(/Load 43669 · #87/)).toBeInTheDocument();
+  });
+
+  it("Embarque: as compostas novas levam o que foi marcado e as recentes se marcam ali mesmo (27/10)", async () => {
+    const recente = { composta_id: 12, alvo: "O.SKY 189 L1 F2 · #12 (1-3)", criada_em: "2026-10-26", tab: false, coliformes: true, howard: false, feitos: [] };
+    const { posts, api } = abrir("/analises/embarque-fcoj?aba=compostas", {
+      "GET /analises/embarque/amostras": () => ({ status: 200, corpo: [] }),
+      "GET /analises/embarque/compostas-recentes": () => ({ status: 200, corpo: [recente] }),
+      "POST /analises/embarque/compostas": (c) => gravacao("2 compostas.\nVão esperar: TAB, Coliformes.", c.previa),
+      "PUT /analises/compostas/12/testes": () => ({ status: 200, corpo: [{ ...recente, howard: true }] }),
+    });
+    const form = await screen.findByRole("form", { name: "Compostas do embarque" });
+    await userEvent.type(within(form).getByLabelText("Compostas"), "(1-3)(4-6)");
+    await userEvent.click(within(within(form).getByRole("group", { name: "Análises das compostas novas" })).getByRole("button", { name: "TAB" }));
+    expect(within(form).getByRole("button", { name: "TAB" })).toHaveAttribute("aria-pressed", "true");
+    const linha = await screen.findByRole("group", { name: "Análises da composta 12" });
+    await userEvent.click(within(linha).getByRole("button", { name: "Howard" }));
+    expect(api.chamadas.find((c) => c.rota === "PUT /analises/compostas/12/testes")?.corpo).toEqual({ tab: false, coliformes: true, howard: true });
+    expect(posts("POST /analises/embarque/compostas")).toEqual([]);
+  });
+
   it("Drops: vêm todos marcados, vê a prévia e conclui", async () => {
     const drop = { drop_id: 5, drop: "D10", origem: "Terra", tanque: "44", navio: null, data_coleta: "2026-10-14", prevista: "2026-10-24", situacao: "Vence hoje" };
     const { posts } = abrir("/analises/drops", {
@@ -124,7 +159,7 @@ describe("apps de análise da Fase E (E3 a E8)", () => {
 
   it("NFC: lança o lido e mostra o final da prévia", async () => {
     const pendente = { id: 9, load: "43777", fabrica: "UCH", lote: 123, amostra: "fresh", diluicao: 1, recebido_em: "2026-10-21", analise: "CT", prevista: "2026-10-23", situacao: "Atrasado" };
-    const { posts } = abrir("/analises/recebimento-nfc", {
+    const { posts } = abrir("/leituras?aba=recebimento-nfc", {
       "GET /analises/recebimento-nfc/pendentes": () => ({ status: 200, corpo: [pendente] }),
       "POST /analises/recebimento-nfc/lancar": (c) => gravacao("load 43777 lote 123 fresh · C.T 48h: lido 12 → 120 (10^1)", c.previa),
     });

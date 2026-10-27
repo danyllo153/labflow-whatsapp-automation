@@ -2,6 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type
 import { Link, useSearchParams } from "react-router-dom";
 
 import { lerJson } from "../../api";
+import { alternarFabrica, fabricasDe } from "./fabricas";
 import { corDaFabrica, VISUAL_DAS_PAGINAS, type Coluna, type DefinicaoDePagina, type Filtro } from "./definicoes";
 import { CabecalhoDaPagina } from "../../componentes/CabecalhoDaPagina";
 import { classeDaSituacao, formatar } from "./formatos";
@@ -318,8 +319,8 @@ export default function PaginaDeDados({ def, embutida = false }: { def: Definica
               <button
                 key={f || "todas"}
                 type="button"
-                aria-pressed={(aplicados.fabrica ?? "") === f}
-                onClick={() => irPara({ ...aplicados, fabrica: f })}
+                aria-pressed={f ? fabricasDe(aplicados.fabrica).includes(f) : !aplicados.fabrica}
+                onClick={() => irPara({ ...aplicados, fabrica: alternarFabrica(aplicados.fabrica, f) })}
               >
                 {f || "Todas as fábricas"}
               </button>

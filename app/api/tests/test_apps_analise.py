@@ -143,7 +143,7 @@ def test_embarque_amostras_compostas_resultados_e_howard(cliente, logado, hoje):
     amostras = [a for a in cliente.get("/analises/embarque/amostras", params={"busca": "NAVIO TESTE 902"}).json()]
     assert [a["amostra"] for a in amostras] == ["A1", "A2", "A3", "A4"] and all(a["ct"] is None for a in amostras)
 
-    _confirmar(cliente, "/analises/embarque/compostas", {"navio": "NAVIO TESTE 902", "linha": 1, "fase": 2, "grupos": "(1-2)(3-4)"})
+    _confirmar(cliente, "/analises/embarque/compostas", {"navio": "NAVIO TESTE 902", "linha": 1, "fase": 2, "grupos": "(1-2)(3-4)", "howard": True})
     _confirmar(cliente, "/analises/embarque/lancar", {
         "analise": "CT", "itens": [{"embarque_amostra_id": a["id"], "resultado": "<1"} for a in amostras]})
     amostras = cliente.get("/analises/embarque/amostras", params={"busca": "NAVIO TESTE 902"}).json()
@@ -155,6 +155,38 @@ def test_embarque_amostras_compostas_resultados_e_howard(cliente, logado, hoje):
     r = cliente.post("/analises/testes/howard", json={"composta_id": howard[0]["composta_id"], "percentual": 30})
     assert r.status_code == 200 and "15 campos positivos de 50" in r.json()["texto"]
 
+
+
+def test_o_que_cada_composta_pede_recebimento_pela_regra_e_navio_pelo_que_foi_marcado(cliente, logado, hoje):
+    """27/10: recebimento, TAB em toda composta e Coliformes na primeira do load (COL: em todas); navio, o que foi marcado."""
+    logado()
+    url = "/analises/recebimento-fcoj"
+    for load, fabrica in (("98730", "AQA"), ("98731", "COL")):
+        cliente.post(f"{url}/registrar", json={"load": load, "item": "99902", "fabrica": fabrica, "lotes": "1-6", "data": str(hoje), "previa": False, "compostas": ""})
+        cliente.post(f"{url}/compostas", json={"load": load, "item": "99902", "grupos": "(1-3)(4-6)", "previa": False})
+
+    def a_fazer(tipo, termo, todas=False):
+        return [c for c in cliente.get("/analises/testes/compostas", params={"tipo": tipo, "todas": todas}).json() if termo in c["alvo"]]
+
+    assert len(a_fazer("TAB", "Load 98730")) == 2 and len(a_fazer("TAB", "Load 98731")) == 2
+    assert len(a_fazer("COLIFORMES", "Load 98730")) == 1  # só a primeira composta do load
+    assert len(a_fazer("COLIFORMES", "Load 98731")) == 2  # COL: toda composta
+    assert [c["pede"] for c in a_fazer("COLIFORMES", "Load 98730", todas=True)] == [False, True]
+
+    embarque = {"navio": "NAVIO TESTE 903", "linha": 1, "fase": 1, "load": "98732", "item": "99902", "amostras": "1-4", "data": str(hoje)}
+    _confirmar(cliente, "/analises/embarque/registrar", embarque)
+    previa, _ = _confirmar(cliente, "/analises/embarque/compostas", {"navio": "NAVIO TESTE 903", "linha": 1, "fase": 1, "grupos": "(1-2)(3-4)",
+                                                                       "tab": True, "coliformes": False, "howard": False})
+    assert "Vão esperar: TAB." in previa["texto"]
+    assert len(a_fazer("TAB", "NAVIO TESTE 903")) == 2
+    assert not a_fazer("COLIFORMES", "NAVIO TESTE 903") and not a_fazer("HOWARD", "NAVIO TESTE 903")
+    recentes = [c for c in cliente.get("/analises/embarque/compostas-recentes").json() if "NAVIO TESTE 903" in c["alvo"]]
+    assert [(c["tab"], c["coliformes"], c["howard"]) for c in recentes] == [(True, False, False)] * 2
+    r = cliente.put(f"/analises/compostas/{recentes[0]['composta_id']}/testes", json={"tab": True, "coliformes": True, "howard": True})
+    assert r.status_code == 200
+    assert len(a_fazer("COLIFORMES", "NAVIO TESTE 903")) == 1 and len(a_fazer("HOWARD", "NAVIO TESTE 903")) == 1
+    composta_do_recebimento = a_fazer("TAB", "Load 98730")[0]["composta_id"]
+    assert cliente.put(f"/analises/compostas/{composta_do_recebimento}/testes", json={"tab": True, "coliformes": True, "howard": False}).status_code == 404
 
 # --- E7 NFC recebido ------------------------------------------------------------------------------------------------
 

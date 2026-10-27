@@ -15,6 +15,7 @@ import {
   useLista,
   useMarcados,
 } from "./comum";
+import { UltimosNavios } from "./Embarque";
 import { ABAS_FINAIS } from "./Instrucao";
 import { ABA_LAUDO, AbaLaudo } from "./LaudoDoApp";
 
@@ -39,7 +40,6 @@ interface Leitura {
 
 export const ABAS_TANQUES = [
   { aba: "painel", rotulo: "Painel" },
-  { aba: "leituras", rotulo: "Leituras" },
   { aba: "coleta", rotulo: "Coleta" },
   { aba: "analise", rotulo: "Análise" },
   { aba: "resultados", rotulo: "Resultados" },
@@ -48,7 +48,7 @@ export const ABAS_TANQUES = [
 ];
 
 
-/** As leituras dos tanques (pré-leitura e leitura final): aqui e na aba Leituras (27/10), de terra, de navio ou de um navio. */
+/** As leituras dos tanques (pré-leitura e leitura final), na página Leituras (27/10): de terra, de navio ou de um navio. */
 export function LeituraDosTanques({ origem, navio, buscaInicial = "" }: { origem?: "terra" | "navio"; navio?: string; buscaInicial?: string }) {
   const { pessoa } = useSessao();
   const pode = !!pessoa?.pode.includes("registrar_analise");
@@ -91,8 +91,8 @@ export default function Tanques({ origem }: { origem: Origem }) {
   const { pessoa } = useSessao();
   const pode = !!pessoa?.pode.includes("registrar_analise");
   const podeColetar = !!pessoa?.pode.includes("registrar_coleta");
+  // a leitura dos tanques fica só na página Leituras (27/10); aqui, coleta, análise e o histórico
   const lista = useLista<Leitura[]>("/analises/tanques/leituras", "");
-  const atrasadas = (lista.dados ?? []).filter((l) => l.situacao === "Atrasado" && (origem === "navio" ? !!l.navio : !l.navio)).length;
   const t = TEXTOS[origem];
 
   return (
@@ -103,7 +103,7 @@ export default function Tanques({ origem }: { origem: Origem }) {
       cor="verde"
       titulo={t.titulo}
       descricao={t.descricao}
-      abas={ABAS_TANQUES.map((a) => (a.aba === "leituras" ? { ...a, contador: atrasadas } : a))}
+      abas={ABAS_TANQUES}
     >
       {(aba) => (
         <>
@@ -112,10 +112,10 @@ export default function Tanques({ origem }: { origem: Origem }) {
               <Suspense fallback={<p className="carregando">Montando o gráfico...</p>}>
                 <ColetasDosTanques origem={origem} />
               </Suspense>
-              {origem === "navio" && <Resultados paginas={[{ ...RESULTADOS.navio[1], titulo: "Histórico dos navios" }]} />}
+              {/* 27/10: como o rastreio do Embarque FCOJ, só os últimos navios; tocar abre a página do navio */}
+              {origem === "navio" && <UltimosNavios url="/analises/tanques/navios" titulo="Últimos navios" unidade={["tanque", "tanques"]} />}
             </>
           )}
-          {aba === "leituras" && <LeituraDosTanques origem={origem} />}
           {aba === "coleta" && (
             <SoQuemGrava pode={podeColetar}>
               <Coleta origem={origem} aoGravar={lista.recarregar} coletor={pessoa?.cargo === "Coletor"} />

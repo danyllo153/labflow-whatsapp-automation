@@ -274,19 +274,11 @@ describe("sair, trocar a senha por vontade própria e sessão expirada (APP-013)
     expect(await screen.findByRole("heading", { name: "Entrar" })).toBeInTheDocument();
   });
 
-  it("Minha conta deixa escolher a aparência (Automático, Claro ou Escuro) e guarda neste aparelho", async () => {
-    window.localStorage.clear();
+  it("Minha conta não tem mais a escolha de aparência: o claro/escuro é o sol e a lua do topo (27/10)", async () => {
     servidorFalso({ "GET /me": logada });
     abrir("/conta");
     expect(await screen.findByRole("heading", { level: 1, name: "Minha conta" })).toBeInTheDocument();
-    const grupo = screen.getByRole("group", { name: "Aparência" });
-    expect(within(grupo).getByRole("radio", { name: "Automático (segue o aparelho)" })).toBeChecked();
-    await userEvent.click(within(grupo).getByRole("radio", { name: "Escuro" }));
-    expect(document.documentElement.getAttribute("data-tema")).toBe("escuro");
-    expect(window.localStorage.getItem("labflow:tema")).toBe("escuro");
-    await userEvent.click(within(grupo).getByRole("radio", { name: "Automático (segue o aparelho)" }));
-    expect(document.documentElement.hasAttribute("data-tema")).toBe(false);
-    expect(window.localStorage.getItem("labflow:tema")).toBeNull();
+    expect(screen.queryByRole("group", { name: "Aparência" })).toBeNull();
   });
 
   it("o canto direito do topo tem só dois símbolos: configurações e conta (APP-032)", async () => {

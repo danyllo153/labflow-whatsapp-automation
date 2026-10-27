@@ -34,6 +34,7 @@ const ABAS = [
   { aba: "dia", rotulo: "Visão do dia" },
   { aba: "analisar", rotulo: "Para analisar" },
   { aba: "ler", rotulo: "Ler hoje" },
+  { aba: "atrasados", rotulo: "Atrasados" },
   { aba: "anterior", rotulo: "Turno anterior" },
 ];
 
@@ -124,7 +125,13 @@ export default function Inicio() {
               detalhe={`${ler.filter((i) => i.situacao === "Atrasado").length} atrasadas`}
               onClick={() => irPara("ler")}
             />
-            <Numero rotulo="Atrasados" valor={dados.atrasados} detalhe="analisar e ler" tom={dados.atrasados > 0 ? "nao-ok" : undefined} />
+            <Numero
+              rotulo="Atrasados"
+              valor={dados.atrasados}
+              detalhe="analisar e ler"
+              tom={dados.atrasados > 0 ? "nao-ok" : undefined}
+              onClick={() => irPara("atrasados")}
+            />
             <Numero
               rotulo="Turno anterior"
               valor={herdadas ?? 0}
@@ -169,6 +176,14 @@ export default function Inicio() {
             <TabelaDePendencias titulo="Para analisar" subtitulo="Tudo o que vence hoje ou está atrasado" itens={analisar} vazio="Nada para analisar hoje." />
           )}
           {aba === "ler" && <TabelaDePendencias titulo="Ler hoje" subtitulo="Todas as placas de hoje e as atrasadas" itens={ler} vazio="Nenhuma placa para ler hoje." />}
+          {aba === "atrasados" && (
+            <TabelaDePendencias
+              titulo="Atrasados"
+              subtitulo="O que passou do dia: analisar e ler"
+              itens={[...analisar, ...ler].filter((i) => i.situacao === "Atrasado")}
+              vazio="Nada atrasado."
+            />
+          )}
           {aba === "anterior" && <TurnoAnterior atividades={atividades} />}
         </>
       )}

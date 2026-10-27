@@ -59,6 +59,14 @@ class _Filtro:
         if valor not in (None, ""):
             self.add(f"{coluna} = %s", valor)
 
+    def uma_de(self, coluna: str, valor: str | None) -> None:
+        """Uma ou várias, separadas por vírgula ("AQA,COL"): para comparar fábricas no gráfico (27/10)."""
+        valores = [v.strip().upper() for v in (valor or "").split(",") if v.strip()]
+        if len(valores) == 1:
+            self.add(f"{coluna} = %s", valores[0])
+        elif valores:
+            self.add(f"{coluna} = ANY(%s)", valores)
+
     def contem(self, coluna: str, valor: str | None) -> None:
         if valor and valor.strip():
             self.add(f"{coluna} ILIKE %s", f"%{valor.strip()}%")
@@ -196,7 +204,7 @@ def filtro_recebimento(
         f.add("prevista <= %s", data_ate)
     f.igual("load", load.strip() if load else None)
     f.igual("lote", lote)
-    f.igual("fabrica", fabrica.strip().upper() if fabrica else None)
+    f.uma_de("fabrica", fabrica)
     f.igual("analise", analise)
     f.igual("situacao", situacao)
     f.contem("lido_por", quem)
@@ -212,7 +220,7 @@ class FiltrosRecebimento:
         data_ate: date | None = None,
         load: str | None = None,
         lote: int | None = None,
-        fabrica: str | None = Query(default=None, description="Sigla, ex.: AQA"),
+        fabrica: str | None = Query(default=None, description="Sigla ou várias, separadas por vírgula: AQA ou AQA,COL"),
         analise: Literal["C.T 48h", "B.L 72h", "B.L 120h"] | None = None,
         situacao: Literal["Ok", "Não ok", "Atrasado", "Vence hoje", "No prazo"] | None = None,
         quem: str | None = Query(default=None, description="Parte do nome de quem leu"),
