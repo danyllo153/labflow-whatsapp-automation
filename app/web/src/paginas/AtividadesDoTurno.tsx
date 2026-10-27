@@ -11,6 +11,7 @@ import { enviarJson, lerJson } from "../api";
 export interface AtividadeDoTurno {
   id: number;
   texto: string;
+  opcional?: boolean; // a pessoa escolhe o dia; não passa para o turno seguinte (081)
   estado: "feito" | "nao_feito" | null;
   quem: string | null;
   quando: string | null;
@@ -172,7 +173,10 @@ export default function AtividadesDoTurno() {
                 onChange={() => void marcar(a.id, a.estado === "feito" ? null : true)}
               />
               <span className="atividade-texto">
-                <span>{a.texto}</span>
+                <span>
+                  {a.texto}
+                  {a.opcional && <span className="etiqueta etiqueta-neutra"> opcional</span>}
+                </span>
                 {a.estado && (
                   <span className="texto-secundario">
                     {a.estado === "feito" ? "Feito" : "Não feito"}

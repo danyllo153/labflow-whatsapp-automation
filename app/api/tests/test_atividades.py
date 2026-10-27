@@ -195,3 +195,30 @@ def test_nao_marcada_ate_o_fim_do_turno_passa_como_nao_feita_so_para_o_seguinte(
 
     agora(em(23, 1))  # Madrugada: a Manhã não é mais o turno anterior; nada da Manhã sem marcação
     assert all(h["turno"] != "Manhã" for h in cliente.get("/turno/atividades").json()["herdadas"])
+
+
+def test_atividade_opcional_aparece_todo_dia_nao_conta_no_total_e_nao_passa_para_o_seguinte(cliente, logado, agora, conexao):
+    """27/10 (081): a pessoa escolhe o dia em que faz a opcional; não feita, ela não vira pendência do turno seguinte."""
+    conexao.execute("UPDATE app.atividades_fixas SET opcional = true, dias_semana = NULL WHERE texto = 'Planilhas' AND turno_id = 1")
+    logado()
+    agora(em(22, 15))  # Manhã de quinta
+    manha = cliente.get("/turno/atividades").json()
+    planilhas = _por_texto(manha, "Planilhas")
+    assert planilhas["opcional"] and manha["total"] == 10
+    assert manha["atividades"][-1]["texto"] == "Planilhas"  # as opcionais vêm no fim da lista
+    cliente.put(f"/turno/atividades/{planilhas['id']}", json={"feito": False})  # marcada Não feito
+    agora(em(22, 17))  # Tarde: nem a marcada Não feito nem a sem marcação chegam como herdada
+    tarde = cliente.get("/turno/atividades").json()
+    assert planilhas["id"] not in {h["atividade_id"] for h in tarde["herdadas"]}
+    agora(em(24, 9))  # Manhã de sábado: continua aparecendo
+    assert _por_texto(cliente.get("/turno/atividades").json(), "Planilhas")["opcional"]
+
+
+def test_admin_marca_a_atividade_como_opcional(cliente, logado):
+    logado("Admin")
+    config = cliente.get("/admin/turnos").json()
+    a = next(x for x in config["atividades"] if x["texto"] == "Materiais")
+    r = cliente.put(f"/admin/turnos/atividades/{a['id']}", json={"texto": a["texto"], "dias_semana": [5], "ativa": True, "opcional": True})
+    assert r.status_code == 200
+    mudada = next(x for x in r.json()["atividades"] if x["id"] == a["id"])
+    assert mudada["opcional"] and mudada["dias_semana"] is None  # na opcional, os dias da semana não valem

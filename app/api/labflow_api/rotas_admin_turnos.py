@@ -36,6 +36,7 @@ class AtividadeFixa(BaseModel):
     dias_semana: list[int] | None
     ordem: int
     ativa: bool
+    opcional: bool = False  # a pessoa escolhe o dia; não passa para o turno seguinte (081)
 
 
 class FaixaVigente(BaseModel):
@@ -78,9 +79,9 @@ def _configuracao(con: psycopg.Connection) -> Configuracao:
             for t in rotas_turno._turnos(con)
         ],
         atividades=[
-            AtividadeFixa(id=i, turno_id=t, texto=x, dias_semana=sorted(d) if d else None, ordem=o, ativa=a)
-            for i, t, x, d, o, a in con.execute(
-                "SELECT id, turno_id, texto, dias_semana, ordem, ativa FROM app.atividades_fixas ORDER BY turno_id, ordem"
+            AtividadeFixa(id=i, turno_id=t, texto=x, dias_semana=sorted(d) if d else None, ordem=o, ativa=a, opcional=op)
+            for i, t, x, d, o, a, op in con.execute(
+                "SELECT id, turno_id, texto, dias_semana, ordem, ativa, opcional FROM app.atividades_fixas ORDER BY turno_id, ordem"
             )
         ],
         estufas=[
@@ -153,6 +154,7 @@ class NovaAtividade(BaseModel):
     turno_id: int
     texto: str = Field(max_length=120)
     dias_semana: list[int] | None = None  # 1 = segunda ... 7 = domingo; vazio = todos os dias
+    opcional: bool = False  # a pessoa escolhe o dia (os dias da semana não valem); não é herdada
 
 
 def _dias(dias: list[int] | None) -> list[int] | None:
@@ -180,10 +182,11 @@ def nova_atividade(
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Turno não encontrado.")
     con.execute(
         """
-        INSERT INTO app.atividades_fixas (turno_id, texto, dias_semana, ordem, criada_por)
-        VALUES (%s, %s, %s, (SELECT coalesce(max(ordem), 0) + 1 FROM app.atividades_fixas WHERE turno_id = %s), %s)
+        INSERT INTO app.atividades_fixas (turno_id, texto, dias_semana, opcional, ordem, criada_por)
+        VALUES (%s, %s, %s, %s, (SELECT coalesce(max(ordem), 0) + 1 FROM app.atividades_fixas WHERE turno_id = %s), %s)
         """,
-        (pedido.turno_id, _texto(pedido.texto), _dias(pedido.dias_semana), pedido.turno_id, admin.usuario_id),
+        (pedido.turno_id, _texto(pedido.texto), None if pedido.opcional else _dias(pedido.dias_semana), pedido.opcional,
+         pedido.turno_id, admin.usuario_id),
     )
     return _configuracao(con)
 
@@ -192,6 +195,7 @@ class MudancaAtividade(BaseModel):
     texto: str = Field(max_length=120)
     dias_semana: list[int] | None = None
     ativa: bool = True
+    opcional: bool = False
 
 
 @roteador.put("/atividades/{atividade_id}", response_model=Configuracao)
@@ -203,8 +207,8 @@ def mudar_atividade(
 ) -> Configuracao:
     """Muda o texto, os dias ou desativa/reativa (desativar não apaga: o que já foi marcado continua)."""
     feito = con.execute(
-        "UPDATE app.atividades_fixas SET texto = %s, dias_semana = %s, ativa = %s WHERE id = %s",
-        (_texto(mudanca.texto), _dias(mudanca.dias_semana), mudanca.ativa, atividade_id),
+        "UPDATE app.atividades_fixas SET texto = %s, dias_semana = %s, ativa = %s, opcional = %s WHERE id = %s",
+        (_texto(mudanca.texto), None if mudanca.opcional else _dias(mudanca.dias_semana), mudanca.ativa, mudanca.opcional, atividade_id),
     ).rowcount
     if not feito:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Atividade não encontrada.")

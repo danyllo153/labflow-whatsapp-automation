@@ -10,7 +10,8 @@ Regras:
 - "Não feito" vira pendência do turno seguinte: aparece em "Pendências herdadas" (com a caixa de Feito) até alguém
   marcar a atividade como feita ou passarem 3 dias;
 - (25/10, APP-065) a tela tem só a caixa de Feito: a atividade que ninguém marcou até o fim do turno também passa como
-  não feita para o turno seguinte (só para o turno logo depois), até alguém marcá-la.
+  não feita para o turno seguinte (só para o turno logo depois), até alguém marcá-la;
+- (27/10, 081) a atividade opcional aparece em qualquer dia (a pessoa escolhe quando faz) e nunca passa para o turno seguinte.
 """
 
 from datetime import date, timedelta
@@ -33,6 +34,7 @@ DIAS_DE_HERANCA = 3
 class Atividade(BaseModel):
     id: int
     texto: str
+    opcional: bool = False
     estado: Literal["feito", "nao_feito"] | None
     quem: str | None
     quando: str | None  # HH:MM
@@ -68,15 +70,15 @@ class AtividadesDoTurno(BaseModel):
 
 
 LISTA_SQL = """
-SELECT a.id, a.texto, f.feito, coalesce(u.nome, c.usuario), f.marcado_em
+SELECT a.id, a.texto, f.feito, coalesce(u.nome, c.usuario), f.marcado_em, a.opcional
 FROM app.atividades_fixas a
 LEFT JOIN app.atividades_feitas f
        ON f.atividade_fixa_id = a.id AND f.turno_id = a.turno_id AND f.dia = %(dia)s
 LEFT JOIN usuarios u ON u.id = f.marcado_por
 LEFT JOIN app.credenciais c ON c.usuario_id = f.marcado_por
 WHERE a.turno_id = %(turno)s AND a.ativa
-  AND (a.dias_semana IS NULL OR %(dia_semana)s = ANY (a.dias_semana))
-ORDER BY a.ordem
+  AND (a.opcional OR a.dias_semana IS NULL OR %(dia_semana)s = ANY (a.dias_semana))
+ORDER BY a.opcional, a.ordem
 """
 
 # O "Não feito" mais recente de cada atividade (de outro turno) que ninguém marcou como feita depois.
@@ -88,7 +90,7 @@ SELECT * FROM (
     JOIN app.turnos t ON t.id = n.turno_id
     LEFT JOIN usuarios u ON u.id = n.marcado_por
     LEFT JOIN app.credenciais c ON c.usuario_id = n.marcado_por
-    WHERE NOT n.feito AND n.atividade_fixa_id IS NOT NULL AND n.turno_id <> %(turno)s
+    WHERE NOT n.feito AND n.atividade_fixa_id IS NOT NULL AND n.turno_id <> %(turno)s AND NOT a.opcional
       AND n.marcado_em > now() - make_interval(days => %(dias)s)
       AND NOT EXISTS (
           SELECT 1 FROM app.atividades_feitas r
@@ -111,12 +113,12 @@ def _turno_da_pessoa(con: psycopg.Connection, pessoa: PessoaLogada) -> tuple[Tur
 
 def _lista(con: psycopg.Connection, turno: Turno, dia: date) -> list[Atividade]:
     itens = []
-    for id_, texto, feito, quem, quando in con.execute(
+    for id_, texto, feito, quem, quando, opcional in con.execute(
         LISTA_SQL, {"turno": turno.id, "dia": dia, "dia_semana": dia.isoweekday()}
     ):
         itens.append(
             Atividade(
-                id=id_, texto=texto, estado=None if feito is None else ("feito" if feito else "nao_feito"),
+                id=id_, texto=texto, opcional=opcional, estado=None if feito is None else ("feito" if feito else "nao_feito"),
                 quem=quem if feito is not None else None, quando=rotas_turno._hhmm(quando) if feito is not None else None,
             )
         )
@@ -127,7 +129,7 @@ def _lista(con: psycopg.Connection, turno: Turno, dia: date) -> list[Atividade]:
 NAO_MARCADAS_SQL = """
 SELECT a.id, a.texto
 FROM app.atividades_fixas a
-WHERE a.turno_id = %(ant)s AND a.ativa
+WHERE a.turno_id = %(ant)s AND a.ativa AND NOT a.opcional
   AND (a.dias_semana IS NULL OR %(dia_semana)s = ANY (a.dias_semana))
   AND NOT EXISTS (
       SELECT 1 FROM app.atividades_feitas f WHERE f.atividade_fixa_id = a.id AND f.turno_id = %(ant)s AND f.dia = %(dia_ant)s
@@ -189,7 +191,8 @@ def _resposta(con: psycopg.Connection, pessoa: PessoaLogada, turno: Turno, dia: 
     atividades = _lista(con, turno, dia)
     return AtividadesDoTurno(
         turno_id=turno.id, turno=turno.nome, dia=dia, pode_marcar=pode(pessoa.cargo, "registrar_analise"),
-        total=len(atividades), feitas=sum(a.estado == "feito" for a in atividades),
+        # a opcional não conta no "x de y feitas" do turno: ela é feita no dia que a pessoa escolher
+        total=sum(not a.opcional for a in atividades), feitas=sum(a.estado == "feito" and not a.opcional for a in atividades),
         atividades=atividades, herdadas=_herdadas(con, turno, dia), recados=_recados(con, turno, dia),
     )
 

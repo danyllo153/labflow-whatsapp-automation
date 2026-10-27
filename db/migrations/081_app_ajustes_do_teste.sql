@@ -12,6 +12,8 @@
 -- - apagar_coleta_excluida(registro, quem, motivo): o Admin apaga DE VEZ uma coleta que está na lixeira (registros_excluidos,
 --   033). Só Admin, com motivo; o rastro (quem, quando, motivo e os dados da coleta) fica no historico_alteracoes. Como as
 --   funções da 033: SECURITY DEFINER, dona labflow_app (o papel do app não grava nas tabelas do bot).
+-- - atividades_fixas.opcional: a atividade que a pessoa faz no dia que escolher. Aparece no turno em qualquer dia (os dias
+--   da semana não valem para ela) e, se não for feita, NÃO passa para o turno seguinte.
 
 BEGIN;
 
@@ -20,6 +22,8 @@ ALTER TABLE app.coletas_agua_processo
     ADD COLUMN desvio_encerrado_por bigint REFERENCES usuarios (id),
     ADD COLUMN desvio_nota          text CHECK (desvio_nota IS NULL OR length(trim(desvio_nota)) BETWEEN 1 AND 300),
     ADD CONSTRAINT coletas_agua_processo_desvio_encerrado CHECK ((desvio_encerrado_em IS NULL) = (desvio_encerrado_por IS NULL));
+
+ALTER TABLE app.atividades_fixas ADD COLUMN opcional boolean NOT NULL DEFAULT false;
 
 CREATE TABLE app.compostas_testes (
     composta_id bigint PRIMARY KEY REFERENCES compostas (id) ON DELETE CASCADE,

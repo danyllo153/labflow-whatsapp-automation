@@ -1559,3 +1559,47 @@ button.numero-app.numero-clicavel:hover {
 .meio-wort .nome-do-meio {
   color: #2f9e44;
 }
+
+/* Admin → Turnos e estufas (27/10): uma estufa por cartão, na grade, com a letra e os botões do app */
+.estufas-admin-grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+  margin: 12px 0 16px;
+}
+
+.estufas-admin-grade .estufa-admin {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--borda);
+  border-radius: var(--raio);
+  background: var(--cartao);
+}
+
+.estufas-admin-grade .estufa-admin.desativada {
+  opacity: 0.7;
+}
+
+.estufa-admin-topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.estufa-admin-nome {
+  font-size: 1.05rem;
+}
+
+.estufa-admin-faixa {
+  margin: 0;
+  color: var(--texto-secundario, #6b7280);
+  font-size: 0.9rem;
+}
+
+.estufas-admin-grade .estufa-admin .linha-formulario {
+  flex-wrap: wrap;
+}
