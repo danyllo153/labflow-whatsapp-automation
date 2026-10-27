@@ -46,12 +46,28 @@ def _conta(conexao, sql, *params):
     return conexao.execute(sql, params).fetchone()[0]
 
 
+# 27/10: a tabela tem uma linha por lote (no embarque, por amostra); a situação do lote é a pior das três análises
+SITUACAO_DO_LOTE = """
+CASE WHEN bool_or(lido AND alarme) THEN 'Não ok' WHEN bool_or(NOT lido AND situacao = 'Atrasado') THEN 'Atrasado'
+     WHEN bool_or(NOT lido AND situacao = 'Vence hoje') THEN 'Vence hoje' WHEN bool_or(NOT lido AND situacao = 'No prazo') THEN 'No prazo'
+     ELSE 'Ok' END
+"""
+CHAVES = {"Recebimento": "load, item, fabrica, numero", "Embarque": "navio, linha, fase, load, item, fabrica, lote_amostra"}
+
+
+def lotes_sql(origem: str, onde: str = "true", ter: str = "true") -> str:
+    """Quantos lotes (amostras) da origem: `onde` filtra as linhas; `ter` filtra o lote (ex.: a situação dele)."""
+    return (f"SELECT count(*) FROM (SELECT {SITUACAO_DO_LOTE} AS situacao_do_lote, bool_or(analise = 'C.T 48h' AND lido) AS ct_lido "
+            f"FROM bi.contagens WHERE origem = '{origem}' AND {onde} GROUP BY {CHAVES[origem]}) s WHERE {ter}")
+
+
 CASOS = [
-    ("embarque", "SELECT count(*) FROM bi.contagens WHERE origem = 'Embarque'", {}),
-    ("embarque", "SELECT count(*) FROM bi.contagens WHERE origem = 'Embarque' AND analise = 'C.T 48h'", {"analise": "C.T 48h"}),
-    ("embarque", "SELECT count(*) FROM bi.contagens WHERE origem = 'Embarque' AND lido AND alarme", {"situacao": "Não ok"}),
-    ("embarque", "SELECT count(*) FROM bi.contagens WHERE origem = 'Embarque' AND NOT lido AND situacao = 'Atrasado'", {"situacao": "Atrasado"}),
-    ("embarque", "SELECT count(*) FROM bi.contagens WHERE origem = 'Embarque' AND fabrica = 'AQA'", {"fabrica": "aqa"}),
+    # uma linha por amostra (27/10): a análise sozinha traz a amostra com ela lida; a situação é a pior das três
+    ("embarque", lotes_sql("Embarque"), {}),
+    ("embarque", lotes_sql("Embarque", ter="ct_lido"), {"analise": "C.T 48h"}),
+    ("embarque", lotes_sql("Embarque", ter="situacao_do_lote = 'Não ok'"), {"situacao": "Não ok"}),
+    ("embarque", lotes_sql("Embarque", ter="situacao_do_lote = 'Atrasado'"), {"situacao": "Atrasado"}),
+    ("embarque", lotes_sql("Embarque", "fabrica = 'AQA'"), {"fabrica": "aqa"}),
     ("recebimento-nfc", "SELECT count(*) FROM bi.recebimento_nfc WHERE fabrica = 'AQA'", {"fabrica": "AQA"}),
     ("testes", "SELECT count(*) FROM bi.testes", {}),
     ("testes", "SELECT count(*) FROM bi.testes WHERE teste = 'TAB' AND origem = 'Recebimento'", {"teste": "TAB", "origem": "Recebimento"}),
@@ -222,8 +238,8 @@ def test_paginas_trazem_o_resumo_por_situacao_do_que_esta_filtrado(cliente, cone
     assert sum(por_situacao.values()) == corpo["total"]
     esperado = dict(
         conexao.execute(
-            "SELECT CASE WHEN lido AND alarme THEN 'Não ok' WHEN lido THEN 'Ok' ELSE situacao END, count(*) "
-            "FROM bi.contagens WHERE origem = 'Recebimento' GROUP BY 1"
+            f"SELECT situacao_do_lote, count(*) FROM (SELECT {SITUACAO_DO_LOTE} AS situacao_do_lote FROM bi.contagens "
+            f"WHERE origem = 'Recebimento' GROUP BY {CHAVES['Recebimento']}) s GROUP BY 1"
         ).fetchall()
     )
     assert por_situacao == {k: v for k, v in esperado.items()}

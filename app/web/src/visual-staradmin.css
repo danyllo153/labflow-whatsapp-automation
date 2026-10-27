@@ -1603,3 +1603,9 @@ button.numero-app.numero-clicavel:hover {
 .estufas-admin-grade .estufa-admin .linha-formulario {
   flex-wrap: wrap;
 }
+
+/* o resultado Não ok na linha do lote (Recebimento FCOJ e Embarque, 27/10) */
+.contagem-nao-ok {
+  color: var(--nao-ok-texto, #a02d20);
+  font-weight: 700;
+}
