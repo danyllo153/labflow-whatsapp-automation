@@ -28,6 +28,7 @@ from labflow_api.rotas_aguas import roteador as roteador_aguas
 from labflow_api.rotas_fluxo_laminar import roteador as roteador_fluxo_laminar
 from labflow_api.rotas_incubacao import roteador as roteador_incubacao
 from labflow_api.rotas_painel import roteador as roteador_painel
+from labflow_api.rotas_leituras import roteador as roteador_leituras
 from labflow_api.rotas_meios import roteador as roteador_meios
 from labflow_api.rotas_material_asseptico import roteador as roteador_material_asseptico
 from labflow_api.rotas_recebimento import roteador as roteador_recebimento
@@ -82,6 +83,7 @@ app.include_router(roteador_aguas)
 app.include_router(roteador_fluxo_laminar)
 app.include_router(roteador_incubacao)
 app.include_router(roteador_painel)
+app.include_router(roteador_leituras)
 app.include_router(roteador_recebimento)
 app.include_router(roteador_analise_recebimento)
 app.include_router(roteador_instrucoes)  # antes dos apps: /analises/instrucoes

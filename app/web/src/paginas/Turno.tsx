@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Link } from "react-router-dom";
 
 import { enviarJson, lerJson } from "../api";
-import BlocosDePendencias, { type Pendencia } from "../componentes/BlocosDePendencias";
+import BlocosDoDia from "../componentes/BlocosDoDia";
 import ResumoEstufas from "../componentes/ResumoEstufas";
 import AtividadesDoTurno from "./AtividadesDoTurno";
 import EquipeDoTurno from "./EquipeDoTurno";
@@ -408,30 +408,21 @@ function FeitoNoTurnoCartao({ feito }: { feito: FeitoNoTurno }) {
   );
 }
 
-/** O que o turno tem para fazer e já fez: atividades, estufas, análises a fazer hoje e a linha do tempo (APP-033). */
+/** O que o turno tem para fazer e já fez: atividades, estufas, as leituras e as análises pendentes (dois blocos, 27/10) e
+ * a linha do tempo (APP-033). */
 function CentralDoTurno() {
-  const [pendencias, setPendencias] = useState<Pendencia[] | null>(null);
   const [estufas, setEstufas] = useState<DadosEstufas | null>(null);
 
   useEffect(() => {
     lerJson<DadosEstufas>("/estufas").then(setEstufas, () => setEstufas(null));
-    lerJson<{ itens: Pendencia[] }>("/pendencias-hoje").then(
-      (p) => setPendencias(p.itens),
-      () => setPendencias(null),
-    );
   }, []);
 
   return (
     <>
       <AlertasEstufas alertas={estufas?.alertas} />
+      <BlocosDoDia />
       <AtividadesDoTurno />
       <RegistrosDoTurnoCartao />
-      {pendencias && (
-        <details className="recolhivel">
-          <summary>Análises a fazer hoje ({pendencias.length})</summary>
-          <BlocosDePendencias itens={pendencias} vazio={<p>Nada vencendo hoje e nada atrasado.</p>} />
-        </details>
-      )}
       <p className="links-do-turno">
         <Link to="/esterilizacao">Registrar esterilização</Link> · <Link to="/material-asseptico">Material asséptico do dia</Link> · <Link to="/paginas">Registros diários</Link>
       </p>

@@ -1177,3 +1177,77 @@ div.estatistica {
   border-color: var(--acao-botao);
   color: #fff;
 }
+
+/* os dois blocos do dia no Turno (27/10): leituras e análises pendentes, lado a lado no computador */
+.blocos-do-dia {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  gap: 16px;
+  align-items: start;
+  margin-bottom: 16px;
+}
+
+.blocos-do-dia > .cartao {
+  margin: 0;
+}
+
+.grupos-do-dia {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.grupos-do-dia li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--linha-suave);
+}
+
+.grupos-do-dia li:last-child {
+  border-bottom: 0;
+}
+
+.grupo-do-dia-nome {
+  flex: 0 0 190px;
+  min-width: 0;
+}
+
+.itens-do-dia {
+  flex: 1 1 240px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pilula-do-dia {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 3px 10px;
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  color: var(--texto);
+  font-size: 0.8rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.pilula-do-dia b {
+  color: var(--texto-titulo);
+}
+
+.pilula-do-dia:hover {
+  border-color: var(--acao);
+  color: var(--link);
+}
+
+.pilula-do-dia.com-atraso {
+  border-color: var(--nao-ok);
+}
+
+.pilula-do-dia.com-atraso b {
+  color: var(--nao-ok-texto);
+}
