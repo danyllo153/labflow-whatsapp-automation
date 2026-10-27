@@ -125,6 +125,21 @@ def recuperar(
     return _detalhe(con, admin, coleta[0])
 
 
+@roteador.post("/excluidas/{registro_id}/apagar", status_code=status.HTTP_204_NO_CONTENT)
+def apagar_de_vez(
+    registro_id: int,
+    pedido: Recuperacao,
+    admin: PessoaLogada = Depends(exigir("gerenciar_pessoas")),
+    con: psycopg.Connection = Depends(obter_conexao),
+) -> None:
+    """Só o Admin, com motivo (27/10): a coleta sai da lixeira de vez; o rastro fica no histórico de alterações (081)."""
+    try:
+        with con.transaction():
+            con.execute("SELECT apagar_coleta_excluida(%s, %s, %s)", (registro_id, admin.usuario_id, pedido.motivo))
+    except psycopg.errors.RaiseException as erro:
+        raise _recusa_do_banco(erro) from None
+
+
 @roteador.get("/{coleta_id}", response_model=ColetaDetalhe)
 def coleta(
     coleta_id: int,
