@@ -140,3 +140,22 @@ def test_corrigir_coleta_de_baia(cliente, logado, agora):
     assert r.status_code == 200, r.text
     c = r.json()["coletas"][0]
     assert (c["ponto"], c["dia"], c["hora"], c["analisada_em"]) == ("09", "2026-10-21", "23:12", "2026-10-22")
+
+
+def test_desvios_da_agua_do_processo_so_com_crescimento_e_encerrar_com_nota(cliente, logado, agora):
+    """081: desvio é a coleta com C.T. ou B.L. maior que zero ("<1" não conta); fica aberto até encerrar com a nota."""
+    logado()
+    cliente.post("/aguas/processo", json={"dia": "2026-10-22", "hora": "09:30", "pontos": ["manifold", "camara5"]})
+    cliente.post("/aguas/processo", json={"dia": "2026-10-22", "hora": "08:30", "pontos": ["manifold"]})
+    coletas = cliente.get("/aguas/processo").json()["coletas"]  # a mais nova primeiro
+    com, sem = coletas[0]["id"], coletas[1]["id"]
+    cliente.put(f"/aguas/processo/{com}/resultados", json={"ct": {"manifold": "<1", "camara5": "12"}, "bl": {"manifold": "3"}})
+    cliente.put(f"/aguas/processo/{sem}/resultados", json={"ct": {"manifold": "<1"}, "bl": {"manifold": "0"}})
+    d = cliente.get("/aguas/processo/desvios").json()
+    assert [x["coleta_id"] for x in d["desvios"]] == [com]
+    assert d["desvios"][0]["pontos"] == [{"ponto": "Manifold", "ct": "<1", "bl": "3"}, {"ponto": "Câmara 5", "ct": "12", "bl": None}]
+    assert d["desvios"][0]["aberto"] and d["pode_encerrar"]
+    assert cliente.post(f"/aguas/processo/{com}/encerrar-desvio", json={"nota": "x"}).status_code == 422
+    r = cliente.post(f"/aguas/processo/{com}/encerrar-desvio", json={"nota": "Anel esterilizado e recoletado"}).json()
+    assert not r["desvios"][0]["aberto"] and r["desvios"][0]["nota"] == "Anel esterilizado e recoletado" and r["desvios"][0]["encerrado_por"]
+    assert cliente.post(f"/aguas/processo/{com}/encerrar-desvio", json={"nota": "de novo"}).status_code == 404

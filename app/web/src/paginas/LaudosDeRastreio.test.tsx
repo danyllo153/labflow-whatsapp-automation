@@ -160,6 +160,22 @@ describe("Água do processo (APP-037)", () => {
     expect(await screen.findByText("Nenhuma coleta registrada.")).toBeInTheDocument();
   });
 
+  it("Desvios: a coleta com crescimento, os pontos e o encerrar com o que foi feito (081)", async () => {
+    const desvio = { coleta_id: 7, dia: "2026-10-22", hora: "09:30", quem: "Ana Souza", pontos: [{ ponto: "Câmara 5", ct: "12", bl: null }],
+      aberto: true, encerrado_em: null, encerrado_por: null, nota: null };
+    const api = abrir("/paginas/agua-processo?aba=desvios", {
+      "GET /aguas/processo": () => ({ status: 200, corpo: AGUA }),
+      "GET /aguas/processo/desvios": () => ({ status: 200, corpo: { pode_encerrar: true, desvios: [desvio] } }),
+      "POST /aguas/processo/7/encerrar-desvio": () => ({ status: 200, corpo: { pode_encerrar: true, desvios: [{ ...desvio, aberto: false, encerrado_em: "22/10/2026 11:00", encerrado_por: "Ana Souza", nota: "Recoletado" }] } }),
+    });
+    expect(await screen.findByRole("cell", { name: "12" })).toBeInTheDocument();
+    const grupo = screen.getByRole("group", { name: "Encerrar o desvio de 22/10 09:30" });
+    await userEvent.type(within(grupo).getByLabelText(/O que foi feito/), "Recoletado");
+    await userEvent.click(within(grupo).getByRole("button", { name: "Encerrar o desvio" }));
+    expect(await screen.findByText(/Encerrado em 22\/10\/2026 11:00 por Ana Souza: Recoletado/)).toBeInTheDocument();
+    expect(api.chamadas.find((c) => c.rota === "POST /aguas/processo/7/encerrar-desvio")?.corpo).toEqual({ nota: "Recoletado" });
+  });
+
   it("na página Leituras: o Editar traz o C.T. e o B.L.", async () => {
     const atrasada = { ...AGUA, coletas: AGUA.coletas.map((c) => ({ ...c, situacao: "Atrasado: C.T 48h" })) };
     const api = abrir("/leituras?aba=agua-processo", {
