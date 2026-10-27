@@ -101,8 +101,8 @@ export default function ColetasDosTanques({ origem }: { origem: "terra" | "navio
   const total = coletas.reduce((s, c) => s + c.n, 0);
   const datasets =
     grupos.tipo === "pessoa"
-      ? grupos.series.map((s) => ({ label: s.nome, data: s.valores, backgroundColor: s.cor, borderRadius: 4, stack: "meses" }))
-      : [{ label: "Coletas", data: grupos.valores, backgroundColor: grupos.cores, borderRadius: 4 }];
+      ? grupos.series.map((s) => ({ label: s.nome, data: s.valores, backgroundColor: s.cor, borderRadius: 4, stack: "meses", maxBarThickness: 56 }))
+      : [{ label: "Coletas", data: grupos.valores, backgroundColor: grupos.cores, borderRadius: 4, maxBarThickness: 56 }];
   const legenda = grupos.tipo === "pessoa" ? grupos.series.map((s) => [s.nome, s.cor]) : grupos.meses.map((m) => [rotuloDoMes(m), corDoMes(m)]);
 
   return (

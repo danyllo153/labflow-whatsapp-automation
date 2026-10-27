@@ -1388,3 +1388,9 @@ div.estatistica {
   font-family: inherit;
   margin: 0 0 8px;
 }
+
+.cartao-agua .botao[aria-pressed="true"] {
+  background: var(--primaria, #1f3bb3);
+  border-color: var(--primaria, #1f3bb3);
+  color: #fff;
+}
