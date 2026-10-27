@@ -153,28 +153,36 @@ interface NavioEmbarcado {
 const POR_PAGINA_NAVIOS = 10;
 
 /** Últimos navios embarcados (pedido de 27/10): 5 à vista, "Ver mais" até 10 e páginas para os mais antigos; tocar no
- * navio abre a página dele, com todas as análises do FCOJ. */
-export function UltimosNavios() {
+ * navio abre a página dele, com todas as análises do FCOJ. Os Tanques navio usam o mesmo, com os tanques coletados. */
+export function UltimosNavios({
+  url = "/analises/embarque/navios",
+  titulo = "Últimos navios embarcados",
+  unidade = ["amostra", "amostras"],
+}: {
+  url?: string;
+  titulo?: string;
+  unidade?: [string, string];
+}) {
   const [pagina, setPagina] = useState(1);
   const [todos, setTodos] = useState(false);
   const [dados, setDados] = useState<{ total: number; navios: NavioEmbarcado[] } | null>(null);
   const [erro, setErro] = useState("");
   useEffect(() => {
     let vivo = true;
-    lerJson<{ total: number; navios: NavioEmbarcado[] }>(`/analises/embarque/navios?pagina=${pagina}&por_pagina=${POR_PAGINA_NAVIOS}`).then(
+    lerJson<{ total: number; navios: NavioEmbarcado[] }>(`${url}?pagina=${pagina}&por_pagina=${POR_PAGINA_NAVIOS}`).then(
       (d) => vivo && (setDados(d), setErro("")),
       (e) => vivo && setErro(e instanceof Error ? e.message : "Não foi possível carregar os navios."),
     );
     return () => {
       vivo = false;
     };
-  }, [pagina]);
+  }, [pagina, url]);
   const paginas = dados ? Math.max(1, Math.ceil(dados.total / POR_PAGINA_NAVIOS)) : 1;
   const visiveis = dados ? (todos ? dados.navios : dados.navios.slice(0, 5)) : [];
   return (
     <div className="cartao">
       <h2>
-        Últimos navios embarcados {dados && <span className="contador">{dados.total}</span>}
+        {titulo} {dados && <span className="contador">{dados.total}</span>}
       </h2>
       {erro && <p className="mensagem-erro">{erro}</p>}
       {!dados && !erro && <p className="carregando">Carregando...</p>}
@@ -186,7 +194,7 @@ export function UltimosNavios() {
               <Link to={`/paginas/navios/${encodeURIComponent(n.navio)}`}>
                 <strong>{n.navio}</strong>
                 <span className="texto-secundario">
-                  {n.ultima_data ? dm(n.ultima_data) : "-"} · {n.amostras} {n.amostras === 1 ? "amostra" : "amostras"}
+                  {n.ultima_data ? dm(n.ultima_data) : "-"} · {n.amostras} {n.amostras === 1 ? unidade[0] : unidade[1]}
                   {n.pendentes > 0 && ` · ${n.pendentes} a ler`}
                 </span>
               </Link>

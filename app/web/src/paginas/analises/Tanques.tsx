@@ -15,6 +15,7 @@ import {
   useLista,
   useMarcados,
 } from "./comum";
+import { UltimosNavios } from "./Embarque";
 import { ABAS_FINAIS } from "./Instrucao";
 import { ABA_LAUDO, AbaLaudo } from "./LaudoDoApp";
 
@@ -111,7 +112,8 @@ export default function Tanques({ origem }: { origem: Origem }) {
               <Suspense fallback={<p className="carregando">Montando o gráfico...</p>}>
                 <ColetasDosTanques origem={origem} />
               </Suspense>
-              {origem === "navio" && <Resultados paginas={[{ ...RESULTADOS.navio[1], titulo: "Histórico dos navios" }]} />}
+              {/* 27/10: como o rastreio do Embarque FCOJ, só os últimos navios; tocar abre a página do navio */}
+              {origem === "navio" && <UltimosNavios url="/analises/tanques/navios" titulo="Últimos navios" unidade={["tanque", "tanques"]} />}
             </>
           )}
           {aba === "coleta" && (

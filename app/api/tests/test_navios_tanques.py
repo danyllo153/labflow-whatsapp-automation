@@ -172,7 +172,16 @@ def test_coletas_dos_tanques_por_dia_e_pessoa(cliente, logado, conexao, origem):
         "Terra" if origem == "terra" else "Navio",
     )
     assert sum(c["n"] for c in coletas) <= total  # o "hoje" da API é o do relógio do laboratório (pode ser um dia antes)
-    assert all(c["pessoa"] for c in coletas)
+    assert all(c["pessoa"] and c["alvo"] for c in coletas)  # o tanque (terra) ou o navio: as barras empilham por ele
+
+
+def test_ultimos_navios_dos_tanques(cliente, logado, conexao):
+    """27/10: a página dos Tanques navio mostra os últimos navios com tanque coletado, como o rastreio do embarque."""
+    logado()
+    d = cliente.get("/analises/tanques/navios", params={"por_pagina": 3}).json()
+    assert d["total"] == _um(conexao, "SELECT count(DISTINCT navio) FROM bi.leituras_nfc WHERE origem = 'Navio' AND navio IS NOT NULL")
+    datas = [n["ultima_data"] for n in d["navios"]]
+    assert datas == sorted(datas, reverse=True) and all(n["amostras"] >= 1 for n in d["navios"])
 
 
 def test_navio_nfc_traz_os_tanques_do_navio(cliente, logado, conexao):

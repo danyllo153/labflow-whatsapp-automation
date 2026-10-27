@@ -7,25 +7,28 @@ import { lerJson } from "../../api";
 ChartJS.register(BarController, BarElement, CategoryScale, LinearScale, Tooltip, Legend);
 
 /**
- * Painel dos tanques (pedido de 27/10): quantas coletas por semana, por mês ou por pessoa, com uma cor para cada mês
- * (a semana pega a cor do mês em que começa; por pessoa, as colunas empilham os meses). Lê GET /analises/tanques/coletas.
+ * Painel dos tanques (pedido de 27/10): quantas coletas por semana, por mês ou por pessoa, e cada coluna empilhada por
+ * tanque (terra) ou navio, uma cor clara para cada (o 43 coletado 4 vezes na semana sobe 4). Os 10 que mais aparecem têm
+ * cor própria; o resto vai para "Outros". Lê GET /analises/tanques/coletas.
  */
 
 interface ColetasDoDia {
   data: string; // AAAA-MM-DD
   pessoa: string;
+  alvo?: string; // o tanque ou o navio
   n: number;
 }
 
 type Forma = "semana" | "mes" | "pessoa";
 
 const MESES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
-// uma cor por mês do ano, legíveis no claro e no escuro
-export const COR_DO_MES = ["#1f6fb5", "#e08a00", "#0f8b8d", "#7d5ba6", "#c2410c", "#2f9e44", "#d6336c", "#5a6677", "#1098ad", "#a07c00", "#6741d9", "#e8590c"];
+// tons claros (pedido de 27/10: nada de marrom; começa no verde claro), legíveis no claro e no escuro
+export const CORES_CLARAS = ["#7fd3a8", "#8cc8f2", "#f6c97f", "#b9a8ef", "#f3a6b8", "#86d4d6", "#bfe08a", "#f4b993", "#a8bff2", "#dcb1e6"];
+const COR_DOS_OUTROS = "#c8d0da";
+const MAX_SERIES = 10;
 
 const mesDe = (data: string) => data.slice(0, 7); // AAAA-MM
 const rotuloDoMes = (mes: string) => `${MESES[Number(mes.slice(5, 7)) - 1]}/${mes.slice(2, 4)}`;
-const corDoMes = (mes: string) => COR_DO_MES[Number(mes.slice(5, 7)) - 1];
 
 /** Segunda-feira da semana da data (AAAA-MM-DD). */
 export function inicioDaSemana(data: string): string {
@@ -34,39 +37,42 @@ export function inicioDaSemana(data: string): string {
   return d.toISOString().slice(0, 10);
 }
 
-/** As barras de cada forma: rótulos e uma série por mês (semana e mês: uma cor por barra; pessoa: empilhado). */
-type Grupos =
-  | { tipo: "pessoa"; rotulos: string[]; series: { nome: string; cor: string; valores: number[] }[] }
-  | { tipo: "periodo"; rotulos: string[]; cores: string[]; meses: string[]; valores: number[] };
+/** As colunas (semana, mês ou pessoa) e uma série por tanque ou navio, empilhadas. */
+export interface Grupos {
+  rotulos: string[];
+  series: { nome: string; cor: string; valores: number[] }[];
+}
 
 export function agrupar(coletas: ColetasDoDia[], forma: Forma): Grupos {
+  let chaves: string[];
+  let chave: (c: ColetasDoDia) => string;
+  let rotulo: (k: string) => string;
+  let dados = coletas;
   if (forma === "pessoa") {
     const meses = [...new Set(coletas.map((c) => mesDe(c.data)))].sort().slice(-6);
-    const doPeriodo = coletas.filter((c) => meses.includes(mesDe(c.data)));
+    dados = coletas.filter((c) => meses.includes(mesDe(c.data)));
     const total = new Map<string, number>();
-    doPeriodo.forEach((c) => total.set(c.pessoa, (total.get(c.pessoa) ?? 0) + c.n));
-    const pessoas = [...total.keys()].sort((a, b) => (total.get(b) ?? 0) - (total.get(a) ?? 0) || a.localeCompare(b, "pt-BR"));
-    return {
-      tipo: "pessoa",
-      rotulos: pessoas,
-      series: meses.map((m) => ({
-        nome: rotuloDoMes(m),
-        cor: corDoMes(m),
-        valores: pessoas.map((p) => doPeriodo.filter((c) => c.pessoa === p && mesDe(c.data) === m).reduce((s, c) => s + c.n, 0)),
-      })),
-    };
+    dados.forEach((c) => total.set(c.pessoa, (total.get(c.pessoa) ?? 0) + c.n));
+    chaves = [...total.keys()].sort((a, b) => (total.get(b) ?? 0) - (total.get(a) ?? 0) || a.localeCompare(b, "pt-BR"));
+    chave = (c) => c.pessoa;
+    rotulo = (k) => k;
+  } else {
+    chave = forma === "semana" ? (c) => inicioDaSemana(c.data) : (c) => mesDe(c.data);
+    chaves = [...new Set(coletas.map(chave))].sort().slice(-12);
+    dados = coletas.filter((c) => chaves.includes(chave(c)));
+    rotulo = forma === "semana" ? (k) => `${k.slice(8, 10)}/${k.slice(5, 7)}` : rotuloDoMes;
   }
-  const chave = forma === "semana" ? (c: ColetasDoDia) => inicioDaSemana(c.data) : (c: ColetasDoDia) => mesDe(c.data);
-  const soma = new Map<string, number>();
-  coletas.forEach((c) => soma.set(chave(c), (soma.get(chave(c)) ?? 0) + c.n));
-  const chaves = [...soma.keys()].sort().slice(-12);
-  return {
-    tipo: "periodo",
-    rotulos: chaves.map((k) => (forma === "semana" ? `${k.slice(8, 10)}/${k.slice(5, 7)}` : rotuloDoMes(k))),
-    cores: chaves.map((k) => corDoMes(mesDe(k))),
-    meses: [...new Set(chaves.map((k) => mesDe(k)))],
-    valores: chaves.map((k) => soma.get(k) ?? 0),
-  };
+  const porAlvo = new Map<string, number>();
+  dados.forEach((c) => porAlvo.set(c.alvo || "-", (porAlvo.get(c.alvo || "-") ?? 0) + c.n));
+  const alvos = [...porAlvo.keys()].sort(
+    (a, b) => (porAlvo.get(b) ?? 0) - (porAlvo.get(a) ?? 0) || a.localeCompare(b, "pt-BR", { numeric: true }),
+  );
+  const proprios = alvos.slice(0, MAX_SERIES);
+  const somar = (filtro: (c: ColetasDoDia) => boolean) =>
+    chaves.map((k) => dados.filter((c) => chave(c) === k && filtro(c)).reduce((s, c) => s + c.n, 0));
+  const series = proprios.map((a, i) => ({ nome: a, cor: CORES_CLARAS[i % CORES_CLARAS.length], valores: somar((c) => (c.alvo || "-") === a) }));
+  if (alvos.length > MAX_SERIES) series.push({ nome: "Outros", cor: COR_DOS_OUTROS, valores: somar((c) => !proprios.includes(c.alvo || "-")) });
+  return { rotulos: chaves.map(rotulo), series };
 }
 
 function token(nome: string, reserva: string): string {
@@ -99,20 +105,17 @@ export default function ColetasDosTanques({ origem }: { origem: "terra" | "navio
   const borda = token("--borda", "#e6eaf0");
   const texto = token("--texto", "#1d2733");
   const total = coletas.reduce((s, c) => s + c.n, 0);
-  const datasets =
-    grupos.tipo === "pessoa"
-      ? grupos.series.map((s) => ({ label: s.nome, data: s.valores, backgroundColor: s.cor, borderRadius: 4, stack: "meses", maxBarThickness: 56 }))
-      : [{ label: "Coletas", data: grupos.valores, backgroundColor: grupos.cores, borderRadius: 4, maxBarThickness: 56 }];
-  const legenda = grupos.tipo === "pessoa" ? grupos.series.map((s) => [s.nome, s.cor]) : grupos.meses.map((m) => [rotuloDoMes(m), corDoMes(m)]);
+  const datasets = grupos.series.map((s) => ({ label: s.nome, data: s.valores, backgroundColor: s.cor, borderRadius: 3, stack: "alvos", maxBarThickness: 44 }));
+  const quem = origem === "terra" ? "tanque" : "navio";
 
   return (
-    <section className="cartao grafico-resultado" aria-label="Coletas dos tanques">
+    <section className="cartao grafico-resultado grafico-compacto" aria-label="Coletas dos tanques">
       <div className="dashboard-topo">
         <div>
           <h2>Coletas de tanques {origem === "terra" ? "terra" : "de navio"}</h2>
           <span className="texto-secundario">
             {total} {total === 1 ? "coleta" : "coletas"} no último ano ·{" "}
-            {forma === "semana" ? "últimas 12 semanas" : forma === "mes" ? "últimos 12 meses" : "últimos 6 meses, por quem coletou"}
+            {forma === "semana" ? "últimas 12 semanas" : forma === "mes" ? "últimos 12 meses" : "últimos 6 meses, por quem coletou"} · uma cor por {quem}
           </span>
         </div>
         <div role="group" aria-label="Agrupar por" className="seletor-segmentado">
@@ -139,7 +142,7 @@ export default function ColetasDosTanques({ origem }: { origem: "terra" | "navio
               options={{
                 maintainAspectRatio: false,
                 animation: false,
-                plugins: { legend: { display: false } },
+                plugins: { legend: { display: false }, tooltip: { callbacks: { label: (c) => `${quem === "tanque" ? "Tanque " : ""}${c.dataset.label}: ${c.parsed.y}` } } },
                 scales: {
                   x: { stacked: true, grid: { display: false }, ticks: { color: secundario } },
                   y: { stacked: true, beginAtZero: true, grid: { color: borda }, ticks: { color: secundario, precision: 0 } },
@@ -149,10 +152,10 @@ export default function ColetasDosTanques({ origem }: { origem: "terra" | "navio
               aria-label={`Coletas por ${forma === "mes" ? "mês" : forma}: ${grupos.rotulos.length} colunas`}
             />
           </div>
-          <ul className="legenda-resultado" aria-label="Cor de cada mês" style={{ color: texto }}>
-            {legenda.map(([nome, cor]) => (
-              <li key={nome}>
-                <i className="bola" style={{ background: cor }} /> {nome}
+          <ul className="legenda-resultado" aria-label={`Cor de cada ${quem}`} style={{ color: texto }}>
+            {grupos.series.map((s) => (
+              <li key={s.nome}>
+                <i className="bola" style={{ background: s.cor }} /> {quem === "tanque" && s.nome !== "Outros" ? `Tanque ${s.nome}` : s.nome}
               </li>
             ))}
           </ul>

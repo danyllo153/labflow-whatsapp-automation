@@ -145,6 +145,7 @@ class Concluir(BaseModel):
 class ColetasDoDia(BaseModel):
     data: date
     pessoa: str
+    alvo: str = ""  # o tanque (terra) ou o navio (navio): o painel empilha as barras por ele (27/10)
     n: int
 
 
@@ -154,17 +155,18 @@ def coletas_dos_tanques(
     pessoa: PessoaLogada = Depends(exigir("ver_paginas")),
     con: psycopg.Connection = Depends(obter_conexao),
 ) -> list[ColetasDoDia]:
-    """Coletas do último ano por dia e por quem coletou: o painel agrupa por semana, mês ou pessoa (pedido de 27/10)."""
+    """Coletas do último ano por dia, quem coletou e tanque (terra) ou navio: o painel agrupa por semana, mês ou pessoa e
+    empilha por tanque ou navio (pedido de 27/10)."""
     linhas = con.execute(
         """
-        SELECT data_coleta, coalesce(registrado_por, '-'), count(*)
+        SELECT data_coleta, coalesce(registrado_por, '-'), CASE WHEN origem = 'Navio' THEN coalesce(navio, '-') ELSE tanque END, count(*)
         FROM bi.coletas
         WHERE origem = %s AND data_coleta > %s
-        GROUP BY 1, 2 ORDER BY 1, 2
+        GROUP BY 1, 2, 3 ORDER BY 1, 2, 3
         """,
         ["Terra" if origem == "terra" else "Navio", _hoje(con) - timedelta(days=365)],
     ).fetchall()
-    return [ColetasDoDia(data=d, pessoa=p, n=n) for d, p, n in linhas]
+    return [ColetasDoDia(data=d, pessoa=p, alvo=a, n=n) for d, p, a, n in linhas]
 
 
 @roteador.post("/tanques/leituras/concluir", response_model=Gravacao)
@@ -688,6 +690,30 @@ def navios_embarcados(
         SELECT navio, max(prevista), count(DISTINCT (linha, fase, lote_amostra)), count(*) FILTER (WHERE lido),
                count(*) FILTER (WHERE NOT lido), count(*) FILTER (WHERE lido AND alarme), count(*) OVER ()
         FROM bi.contagens WHERE origem = 'Embarque' AND navio IS NOT NULL
+        GROUP BY navio ORDER BY 2 DESC NULLS LAST, 1 LIMIT %s OFFSET %s
+        """,
+        [por_pagina, (pagina - 1) * por_pagina],
+    ).fetchall()
+    total = linhas[0][6] if linhas else 0
+    return NaviosEmbarcados(total=total, navios=[
+        NavioEmbarcado(navio=n, ultima_data=d, amostras=a, lidos=l, pendentes=p, nao_ok=no) for n, d, a, l, p, no, _ in linhas
+    ])
+
+
+@roteador.get("/tanques/navios", response_model=NaviosEmbarcados)
+def navios_dos_tanques(
+    pagina: int = Query(default=1, ge=1),
+    por_pagina: int = Query(default=10, ge=1, le=50),
+    pessoa: PessoaLogada = Depends(exigir("ver_paginas")),
+    con: psycopg.Connection = Depends(obter_conexao),
+) -> NaviosEmbarcados:
+    """Últimos navios com tanques coletados (27/10, igual aos últimos navios do embarque): os tanques, as leituras que
+    faltam e os tanques não ok; tocar no navio abre a página dele."""
+    linhas = con.execute(
+        """
+        SELECT navio, max(data_coleta), count(DISTINCT coleta_id), count(*) FILTER (WHERE lida), count(*) FILTER (WHERE NOT lida),
+               count(DISTINCT coleta_id) FILTER (WHERE resultado = 'Não ok'), count(*) OVER ()
+        FROM bi.leituras_nfc WHERE origem = 'Navio' AND navio IS NOT NULL
         GROUP BY navio ORDER BY 2 DESC NULLS LAST, 1 LIMIT %s OFFSET %s
         """,
         [por_pagina, (pagina - 1) * por_pagina],
