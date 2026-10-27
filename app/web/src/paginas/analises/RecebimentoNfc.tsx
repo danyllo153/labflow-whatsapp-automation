@@ -43,7 +43,6 @@ interface LinhaDeLote {
 }
 
 export const ABAS_NFC = [
-  { aba: "resultados", rotulo: "Para lançar" },
   { aba: "registrar", rotulo: "Registrar" },
   { aba: "tabelas", rotulo: "Resultados" },
   { aba: "laudo", rotulo: "Laudo" },
@@ -88,8 +87,8 @@ export function LeituraDoNfc() {
 export default function RecebimentoNfc() {
   const { pessoa } = useSessao();
   const pode = !!pessoa?.pode.includes("registrar_analise");
+  // a leitura (o C.T/B.L lido na placa) fica só na página Leituras (27/10)
   const lista = useLista<Pendente[]>("/analises/recebimento-nfc/pendentes", "");
-  const atrasados = (lista.dados ?? []).filter((p) => p.situacao === "Atrasado").length;
   return (
     <AppDeAnalise
       app="recebimento-nfc"
@@ -97,11 +96,10 @@ export default function RecebimentoNfc() {
       cor="verde"
       titulo="Recebimento NFC"
       descricao="Lotes fresh e past do item 129, com a diluição, e o C.T/B.L lido na placa."
-      abas={ABAS_NFC.map((a) => (a.aba === "resultados" ? { ...a, contador: atrasados } : a))}
+      abas={ABAS_NFC}
     >
       {(aba) => (
         <>
-          {aba === "resultados" && <LeituraDoNfc />}
           {aba === "registrar" && (
             <SoQuemGrava pode={pode}>
               <Registrar aoGravar={lista.recarregar} />

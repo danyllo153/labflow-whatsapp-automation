@@ -39,7 +39,6 @@ export const ABAS_EMBARQUE = [
   { aba: "painel", rotulo: "Painel" },
   { aba: "registrar", rotulo: "Registrar" },
   { aba: "compostas", rotulo: "Compostas" },
-  { aba: "resultados", rotulo: "C.T e B.L" },
   { aba: "tabelas", rotulo: "Resultados" },
   ABA_LAUDO,
   ...ABAS_FINAIS,
@@ -93,7 +92,6 @@ export default function Embarque() {
               <Compostas aoGravar={lista.recarregar} />
             </SoQuemGrava>
           )}
-          {aba === "resultados" && <LeituraDoEmbarque />}
           {aba === "laudo" && <AbaLaudo laudo="embarque-fcoj" />}
           {aba === "tabelas" && (
             <Resultados

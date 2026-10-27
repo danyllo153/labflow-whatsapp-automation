@@ -94,7 +94,7 @@ export function LeituraDaAguaDoProcesso() {
             </thead>
             <tbody>
               {pendentes.map((c) => (
-                <LinhaDaColeta key={`${c.id}-${versao}`} coleta={c} pode={dados.pode_lancar} aoMudar={(d) => (setDados(d), setVersao((v) => v + 1))} />
+                <LinhaDaColeta key={`${c.id}-${versao}`} coleta={c} pode={dados.pode_lancar} lancar aoMudar={(d) => (setDados(d), setVersao((v) => v + 1))} />
               ))}
             </tbody>
           </table>
@@ -264,7 +264,9 @@ function NovaColeta({ aoGravar }: { aoGravar: (d: AguaDoProcesso) => void }) {
   );
 }
 
-function LinhaDaColeta({ coleta, pode, aoMudar }: { coleta: Coleta; pode: boolean; aoMudar: (d: AguaDoProcesso) => void }) {
+/** `lancar`: o Editar traz também o C.T. e o B.L. (a leitura), só na página Leituras (27/10); na página da água do
+ * processo, o Editar corrige só a coleta. */
+function LinhaDaColeta({ coleta, pode, lancar = false, aoMudar }: { coleta: Coleta; pode: boolean; lancar?: boolean; aoMudar: (d: AguaDoProcesso) => void }) {
   const [modo, setModo] = useState<"editar" | "excluir" | null>(null);
   const [dia, setDia] = useState(coleta.dia);
   const [hora, setHora] = useState(coleta.hora);
@@ -279,7 +281,12 @@ function LinhaDaColeta({ coleta, pode, aoMudar }: { coleta: Coleta; pode: boolea
   async function salvar() {
     setErro("");
     try {
-      await enviarJson<AguaDoProcesso>(`/aguas/processo/${coleta.id}`, { dia, hora, pontos, observacao }, "PUT");
+      const corrigida = await enviarJson<AguaDoProcesso>(`/aguas/processo/${coleta.id}`, { dia, hora, pontos, observacao }, "PUT");
+      if (!lancar) {
+        aoMudar(corrigida);
+        setModo(null);
+        return;
+      }
       const so = (v: Record<string, string>) => Object.fromEntries(pontos.map((p) => [p, v[p] ?? ""]));
       aoMudar(await enviarJson<AguaDoProcesso>(`/aguas/processo/${coleta.id}/resultados`, { ct: so(ct), bl: so(bl) }, "PUT"));
       setModo(null);
@@ -361,8 +368,10 @@ function LinhaDaColeta({ coleta, pode, aoMudar }: { coleta: Coleta; pode: boolea
                       </button>
                     ))}
                   </div>
-                  <p className="texto-secundario">C.T. em 48 h, B.L. em 120 h. Apague o número para tirar um resultado.</p>
-                  {PONTOS.filter((p) => pontos.includes(p.chave)).map((p) => (
+                  {lancar && (
+                    <p className="texto-secundario">C.T. em 48 h, B.L. em 120 h. Apague o número para tirar um resultado.</p>
+                  )}
+                  {lancar && PONTOS.filter((p) => pontos.includes(p.chave)).map((p) => (
                     <div key={p.chave} className="linha-formulario">
                       <label className="campo campo-hora">
                         {p.nome} C.T.
@@ -374,6 +383,7 @@ function LinhaDaColeta({ coleta, pode, aoMudar }: { coleta: Coleta; pode: boolea
                       </label>
                     </div>
                   ))}
+                  {lancar && (
                   <div className="botoes-lado">
                     <button type="button" className="botao botao-simples" onClick={() => menorQue1("ct")}>
                       C.T. &lt;1 em todos
@@ -382,6 +392,7 @@ function LinhaDaColeta({ coleta, pode, aoMudar }: { coleta: Coleta; pode: boolea
                       B.L. &lt;1 em todos
                     </button>
                   </div>
+                  )}
                 </>
               ) : (
                 <label className="campo">

@@ -31,7 +31,7 @@ const LEITURA = {
 
 describe("apps de análise da Fase E (E3 a E8)", () => {
   it("Tanques: digita as 3 placas, vê a prévia do banco e confirma", async () => {
-    const { posts } = abrir("/analises/tanques?aba=leituras", { // o endereço antigo abre o Tanques terra (27/10)
+    const { posts } = abrir("/leituras?aba=tanques-terra", { // a leitura fica só na página Leituras (27/10)
       "GET /analises/tanques/leituras": () => ({ status: 200, corpo: [LEITURA] }),
       "POST /analises/tanques/placas": (c) => gravacao(c.previa ? "Placas:\ntanque 44 normal CT = <1,<1,2" : "Placas:\ntanque 44 normal CT = <1,<1,2", c.previa),
     });
@@ -47,7 +47,7 @@ describe("apps de análise da Fase E (E3 a E8)", () => {
 
   it("Tanques: o Wort (profundidade e superfície) é uma linha só por frasco e <1 em todas grava as duas", async () => {
     const wort = { ...LEITURA, analise: "Psicrotróficos 240h", tanque: "41", situacao: "Vence hoje", prevista: "2026-10-25" };
-    const { posts } = abrir("/analises/tanques-terra?aba=leituras", {
+    const { posts } = abrir("/leituras?aba=tanques-terra", {
       "GET /analises/tanques/leituras": () => ({ status: 200, corpo: [{ ...wort, analise_id: 7 }, { ...wort, analise_id: 8 }] }),
       "POST /analises/tanques/placas": (c) => gravacao("Placas:\ntanque 41 normal Wort = <1,<1,<1", c.previa),
     });
@@ -124,7 +124,7 @@ describe("apps de análise da Fase E (E3 a E8)", () => {
 
   it("NFC: lança o lido e mostra o final da prévia", async () => {
     const pendente = { id: 9, load: "43777", fabrica: "UCH", lote: 123, amostra: "fresh", diluicao: 1, recebido_em: "2026-10-21", analise: "CT", prevista: "2026-10-23", situacao: "Atrasado" };
-    const { posts } = abrir("/analises/recebimento-nfc", {
+    const { posts } = abrir("/leituras?aba=recebimento-nfc", {
       "GET /analises/recebimento-nfc/pendentes": () => ({ status: 200, corpo: [pendente] }),
       "POST /analises/recebimento-nfc/lancar": (c) => gravacao("load 43777 lote 123 fresh · C.T 48h: lido 12 → 120 (10^1)", c.previa),
     });
