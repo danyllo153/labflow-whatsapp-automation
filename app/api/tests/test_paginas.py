@@ -129,6 +129,15 @@ def test_recebimento_por_load_fabrica_e_analise(cliente, logado, conexao):
     )
 
 
+def test_recebimento_de_varias_fabricas_para_comparar(cliente, logado, conexao):
+    """27/10: "AQA,COL" traz as duas fábricas (o gráfico compara uma com a outra)."""
+    logado()
+    corpo = cliente.get("/paginas/recebimento", params={"fabrica": "aqa, col"}).json()
+    assert corpo["total"] == _conta(
+        conexao, "SELECT count(*) FROM bi.contagens WHERE origem = 'Recebimento' AND fabrica IN ('AQA', 'COL')"
+    )
+
+
 def test_sem_login_nao_ve_paginas(cliente):
     assert cliente.get("/paginas/coletas").status_code == 401
     assert cliente.get("/paginas/recebimento").status_code == 401

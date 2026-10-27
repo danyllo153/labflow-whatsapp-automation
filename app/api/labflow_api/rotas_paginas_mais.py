@@ -50,7 +50,7 @@ class FiltrosEmbarque:
         linha: int | None = None,
         fase: int | None = None,
         load: str | None = None,
-        fabrica: str | None = Query(default=None, description="Sigla, ex.: AQA"),
+        fabrica: str | None = Query(default=None, description="Sigla ou várias, separadas por vírgula: AQA ou AQA,COL"),
         analise: Literal["C.T 48h", "B.L 72h", "B.L 120h"] | None = None,
         situacao: Literal["Ok", "Não ok", "Atrasado", "Vence hoje", "No prazo"] | None = None,
         quem: str | None = Query(default=None, description="Parte do nome de quem leu"),
@@ -65,7 +65,7 @@ class FiltrosEmbarque:
         f.igual("linha", self.linha)
         f.igual("fase", self.fase)
         f.igual("load", self.load.strip() if self.load else None)
-        f.igual("fabrica", self.fabrica.strip().upper() if self.fabrica else None)
+        f.uma_de("fabrica", self.fabrica)
         f.igual("analise", self.analise)
         f.igual("situacao", self.situacao)
         f.contem("lido_por", self.quem)
@@ -153,7 +153,7 @@ class FiltrosRecebimentoNfc:
         data_ate: date | None = None,
         load: str | None = None,
         lote: int | None = None,
-        fabrica: str | None = Query(default=None, description="Sigla, ex.: AQA"),
+        fabrica: str | None = Query(default=None, description="Sigla ou várias, separadas por vírgula: AQA ou AQA,COL"),
         amostra: Literal["Fresh", "Pasteurizado"] | None = None,
         analise: Literal["C.T 48h", "B.L 72h", "B.L 120h"] | None = None,
         situacao: Literal["Lido", "Atrasado", "Vence hoje", "No prazo"] | None = None,
@@ -167,7 +167,7 @@ class FiltrosRecebimentoNfc:
         _periodo(f, "data_recebimento", self.data_de, self.data_ate)
         f.igual("load", self.load.strip() if self.load else None)
         f.igual("lote", self.lote)
-        f.igual("fabrica", self.fabrica.strip().upper() if self.fabrica else None)
+        f.uma_de("fabrica", self.fabrica)
         f.igual("amostra", self.amostra)
         f.igual("analise", self.analise)
         f.igual("situacao", self.situacao)

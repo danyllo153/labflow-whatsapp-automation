@@ -221,7 +221,7 @@ SELECT r.id, l.numero, i.codigo, f.nome, r.lote, r.data_recebimento,
 FROM recebimento_lotes r JOIN loads l ON l.id = r.load_id JOIN itens i ON i.id = l.item_id LEFT JOIN fabricas f ON f.id = l.fabrica_id
 WHERE i.codigo <> '129' AND r.data_recebimento >= %(desde)s
   AND (%(busca)s = '' OR l.numero ILIKE %(parecido)s OR f.nome ILIKE %(parecido)s OR i.codigo = %(busca)s)
-  AND (%(fabrica)s = '' OR f.nome = %(fabrica)s)
+  AND (%(fabrica)s = '' OR f.nome = ANY(string_to_array(%(fabrica)s, ',')))  -- uma ou várias ("AQA,COL"), 27/10
 ORDER BY r.data_recebimento DESC, l.numero, r.lote
 LIMIT 400
 """
@@ -238,7 +238,7 @@ def _texto(c: dict | None) -> str | None:
 @roteador.get("/resultados", response_model=Resultados)
 def resultados(
     busca: str = Query(default="", max_length=30),
-    fabrica: str = Query(default="", max_length=10),
+    fabrica: str = Query(default="", max_length=60),  # uma ou várias, separadas por vírgula
     so_pendentes: bool = Query(default=False),
     dias: int = Query(default=30, ge=1, le=365),
     pessoa: PessoaLogada = Depends(exigir("ver_paginas")),
@@ -250,7 +250,7 @@ def resultados(
     lotes = []
     for id_, load, item, fab, lote, recebido, contagens in con.execute(
         RESULTADOS_SQL,
-        {"desde": hoje - timedelta(days=dias), "busca": termo, "parecido": f"%{termo}%", "fabrica": fabrica.strip().upper()},
+        {"desde": hoje - timedelta(days=dias), "busca": termo, "parecido": f"%{termo}%", "fabrica": ",".join(f.strip() for f in fabrica.upper().split(",") if f.strip())},
     ):
         contagens = contagens or {}
         leituras = {}
