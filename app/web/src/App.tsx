@@ -18,6 +18,7 @@ import RegistrosDiarios from "./paginas/RegistrosDiarios";
 import BrancoDoDia from "./paginas/BrancoDoDia";
 import IncubacaoLeitura from "./paginas/IncubacaoLeitura";
 import MeiosLotes from "./paginas/MeiosLotes";
+import AguaConsumo from "./paginas/aguas/AguaConsumo";
 import AguaProcesso from "./paginas/aguas/AguaProcesso";
 import SuperficiesPagina from "./paginas/aguas/Superficies";
 import CorrigirRecebimento from "./paginas/dados/CorrigirRecebimento";
@@ -114,6 +115,7 @@ export default function App() {
         <Route path="/analises/recebimento-nfc" element={<RecebimentoNfc />} />
         <Route path="/analises/desvios" element={<Desvios />} />
         <Route path="/paginas/agua-processo" element={<AguaProcesso />} />
+        <Route path="/paginas/agua-consumo" element={<AguaConsumo />} />
         <Route path="/paginas/baias" element={<SuperficiesPagina key="Baia" tipo="Baia" />} />
         <Route path="/paginas/linhas" element={<SuperficiesPagina key="Linha" tipo="Linha" />} />
         <Route path="/paginas/recebimento/corrigir" element={<CorrigirRecebimento />} />

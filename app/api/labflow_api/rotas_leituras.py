@@ -18,6 +18,7 @@ from pydantic import BaseModel, Field
 from labflow_api import rotas_turno
 from labflow_api.dependencias import PessoaLogada, obter_conexao
 from labflow_api.permissoes import exigir, pode
+from labflow_api import rotas_agua_consumo
 from labflow_api.rotas_aguas import PENDENCIAS_AGUAS_SQL
 from labflow_api.rotas_analise_recebimento import _chamar
 from labflow_api.rotas_turno import FUSO
@@ -149,6 +150,11 @@ def leituras_pendentes(con: psycopg.Connection, hoje: date) -> list[Grupo]:
         if doTipo:
             grupos.append(Grupo(grupo=nome, itens=_somar(doTipo, "coletas", lambda r, a=aba: f"/leituras?aba={a}",
                                                          ["C.T 48h", "B.L 72h", "B.L 120h"])))
+
+    # água de consumo (079): o bag em 24 h, o C.T em 48 h, o B.L em 120 h; pH e cloro do semanal na hora
+    consumo = [(f"{rotulo} · {etapa}", n, at) for rotulo, etapa, n, at in rotas_agua_consumo.pendencias(con)]
+    if consumo:
+        grupos.append(Grupo(grupo="Água de consumo", itens=_somar(consumo, "coletas", lambda r: "/leituras?aba=agua-consumo")))
 
     # TAB e Coliformes: ler (incubado/estriado) e confirmar no PCA
     testes = con.execute(

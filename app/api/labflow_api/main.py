@@ -24,6 +24,7 @@ from labflow_api.rotas_login import roteador as roteador_login
 from labflow_api.rotas_paginas import roteador as roteador_paginas
 from labflow_api import laudos_analises  # noqa: F401 (registra os laudos de TAB, Coliformes, Howard, NFC, Embarque e contra-amostra)
 from labflow_api.laudos import roteador as roteador_laudos
+from labflow_api.rotas_agua_consumo import roteador as roteador_agua_consumo
 from labflow_api.rotas_aguas import roteador as roteador_aguas
 from labflow_api.rotas_fluxo_laminar import roteador as roteador_fluxo_laminar
 from labflow_api.rotas_incubacao import roteador as roteador_incubacao
@@ -79,6 +80,7 @@ app.include_router(roteador_relatorio_dia)
 app.include_router(roteador_estufas)
 app.include_router(roteador_laudos)
 app.include_router(roteador_meios)
+app.include_router(roteador_agua_consumo)  # antes de /aguas
 app.include_router(roteador_aguas)
 app.include_router(roteador_fluxo_laminar)
 app.include_router(roteador_incubacao)

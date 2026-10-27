@@ -67,6 +67,8 @@ const APPS_DA_FASE_E: Record<string, { caminho: string; atalhos: { aba: string; 
 const APPS_FIXOS: App[] = [
   { caminho: "/paginas/agua-processo", titulo: "Água do processo", icone: "agua", cor: "agua", grupo: "Aguas",
     descricao: "Manifold e Câmaras 4, 5 e 6: coleta, C.T. e B.L., e o laudo." },
+  { caminho: "/paginas/agua-consumo", titulo: "Água de consumo", icone: "agua", cor: "agua", grupo: "Aguas",
+    descricao: "Santos e TMG (Guarujá), mensal e semanal, e a água dos navios (TEC e COZ), com os laudos." },
   { caminho: "/paginas/baias", titulo: "CIP baia", icone: "baias", cor: "baias", grupo: "Aguas", semColetor: true,
     descricao: "CIP dos mangotes do recebimento: C.T. 48 h, B.L. 72 h e 120 h, e o laudo." },
   { caminho: "/paginas/linhas", titulo: "CIP linha de embarque", icone: "linhas", cor: "linhas", grupo: "Aguas", semColetor: true,

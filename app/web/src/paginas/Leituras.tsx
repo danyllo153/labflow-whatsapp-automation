@@ -3,6 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import { usePendentes } from "../componentes/BlocosDoDia";
 import { AbasDaPagina, BotaoImprimir, CabecalhoDaPagina } from "../componentes/CabecalhoDaPagina";
 import { LeituraDasSuperficies } from "./aguas/Superficies";
+import { LeituraDaAguaDeConsumo } from "./aguas/AguaConsumo";
 import { LeituraDaAguaDoProcesso } from "./aguas/AguaProcesso";
 import { LeituraDoEmbarque } from "./analises/Embarque";
 import { LeituraDoNfc } from "./analises/RecebimentoNfc";
@@ -32,6 +33,7 @@ const ABAS = [
   { aba: "cip-baia", rotulo: "CIP baia", grupo: "CIP baia" },
   { aba: "tab", rotulo: "TAB", grupo: "TAB" },
   { aba: "coliformes", rotulo: "Coliformes", grupo: "Coliformes" },
+  { aba: "agua-consumo", rotulo: "Água de consumo", grupo: "Água de consumo" },
 ];
 
 // os grupos da API que não são das abas fixas são os navios
@@ -71,6 +73,7 @@ export default function Leituras() {
       {aba === "cip-baia" && <LeituraDasSuperficies tipo="Baia" />}
       {aba === "tab" && <LeituraDoTeste qual="TAB" />}
       {aba === "coliformes" && <LeituraDoTeste qual="COLIFORMES" />}
+      {aba === "agua-consumo" && <LeituraDaAguaDeConsumo />}
     </section>
   );
 }

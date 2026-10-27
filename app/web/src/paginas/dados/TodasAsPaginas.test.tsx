@@ -65,15 +65,16 @@ describe("todas as páginas do Power BI no app (APP-019)", () => {
     expect(hrefs("TAB, Coliformes e Howard")).toEqual(["/analises/tab", "/analises/coliformes", "/analises/howard"]); // um app para cada (25/10)
     expect(within(principal).queryByRole("link", { name: /^Tanques Leituras/ })).toBeNull();
     expect(within(principal).queryByText("Em breve")).toBeNull();
-    expect(hrefs("Águas e superfícies")).toEqual(["/paginas/agua-processo", "/paginas/baias", "/paginas/linhas"]); // APP-037
+    expect(hrefs("Águas e superfícies")).toEqual(["/paginas/agua-processo", "/paginas/agua-consumo", "/paginas/baias", "/paginas/linhas"]); // APP-037; consumo 27/10
     expect(hrefs("Registros diários")).toEqual(["/esterilizacao", "/material-asseptico", "/meios-lotes", "/fluxo-laminar", "/arquivo", "/incubacao"]);
   });
 
-  it("o Coletor só vê a água do processo na grade (Coletas está no menu; baias e linhas são análise, 25/10)", async () => {
+  it("o Coletor só vê as águas na grade (Coletas está no menu; baias e linhas são análise, 25/10)", async () => {
     abrir("/paginas", { ...ANA, cargo: "Coletor" });
     const principal = (await screen.findByRole("heading", { level: 1, name: "Análises" })).closest("section") as HTMLElement;
     expect(within(principal).getAllByRole("link").map((l) => l.getAttribute("href"))).toEqual([
       "/paginas/agua-processo",
+      "/paginas/agua-consumo",
     ]);
   });
 

@@ -1322,3 +1322,69 @@ div.estatistica {
 .lista-navios a strong {
   color: var(--primaria, #1f3bb3);
 }
+
+/* ---------- água de consumo (27/10) ---------- */
+.cartoes-agua {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.cartao-agua {
+  margin: 0;
+}
+
+.cartao-agua.escolhido {
+  outline: 2px solid var(--primaria, #1f3bb3);
+}
+
+.cartao-agua h2 {
+  margin-top: 0;
+}
+
+.titulo-da-escolha {
+  margin: 8px 0 4px;
+}
+
+.coleta-agua {
+  border-bottom: 1px solid var(--borda);
+  padding: 10px 0;
+}
+
+.coleta-agua summary {
+  cursor: pointer;
+}
+
+.resultados-agua,
+.lista-pontos {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0;
+}
+
+.resultados-agua li,
+.lista-pontos li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.lista-pontos input {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.campo-curto {
+  width: 100%;
+  min-width: 64px;
+  max-width: 140px;
+}
+
+.texto-previa {
+  white-space: pre-wrap;
+  font-family: inherit;
+  margin: 0 0 8px;
+}
