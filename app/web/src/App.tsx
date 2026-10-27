@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 
 import { lerJson } from "./api";
 
@@ -24,7 +24,7 @@ import CorrigirRecebimento from "./paginas/dados/CorrigirRecebimento";
 import Inicio from "./paginas/Inicio";
 import NaoEncontrada from "./paginas/NaoEncontrada";
 import DetalheColeta from "./paginas/dados/DetalheColeta";
-import { DetalheNavio, DetalheTanque } from "./paginas/dados/Detalhes";
+import { DetalheLoad, DetalheNavio, DetalheTanque } from "./paginas/dados/Detalhes";
 import { ListaDePaginas, PaginaEscolhida } from "./paginas/Paginas";
 import RecebimentoFcoj from "./paginas/analises/RecebimentoFcoj";
 import Desvios from "./paginas/analises/Desvios";
@@ -102,7 +102,9 @@ export default function App() {
         <Route path="/arquivo" element={<ArquivoDeContraAmostras />} />
         <Route path="/paginas" element={<ListaDePaginas />} />
         <Route path="/analises/recebimento-fcoj" element={<RecebimentoFcoj />} />
-        <Route path="/analises/tanques" element={<Tanques />} />
+        <Route path="/analises/tanques" element={<ParaTanquesTerra />} />  {/* virou dois apps (27/10) */}
+        <Route path="/analises/tanques-terra" element={<Tanques key="terra" origem="terra" />} />
+        <Route path="/analises/tanques-navio" element={<Tanques key="navio" origem="navio" />} />
         <Route path="/analises/tab" element={<Testes key="TAB" qual="TAB" />} />
         <Route path="/analises/coliformes" element={<Testes key="COLIFORMES" qual="COLIFORMES" />} />
         <Route path="/analises/howard" element={<Testes key="HOWARD" qual="HOWARD" />} />
@@ -118,6 +120,7 @@ export default function App() {
         <Route path="/paginas/coletas/:id" element={<DetalheColeta />} />
         <Route path="/paginas/tanques-terra/:id" element={<DetalheTanque />} />
         <Route path="/paginas/navios/:navio" element={<DetalheNavio />} />
+        <Route path="/paginas/loads/:load" element={<DetalheLoad />} />
         <Route path="/paginas/:pagina" element={<PaginaEscolhida />} />
         {MENU.filter((item) => !item.pronto).map((item) => (
           <Route key={item.caminho} path={item.caminho} element={<EmBreve item={item} />} />
@@ -131,4 +134,10 @@ export default function App() {
       </Route>
     </Routes>
   );
+}
+
+/** O endereço antigo do app de tanques (links e favoritos) abre o Tanques terra, com a mesma aba. */
+function ParaTanquesTerra() {
+  const { search } = useLocation();
+  return <Navigate to={`/analises/tanques-terra${search}`} replace />;
 }

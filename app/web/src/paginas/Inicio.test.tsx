@@ -87,7 +87,7 @@ describe("Início no modelo StarAdmin (26/10)", () => {
     expect(linha).toHaveTextContent("Load 90008 · lote 4, Load 90009 · lote 1");
     expect(within(linha).getByText("1 atrasado")).toBeInTheDocument();
     expect(within(linha).getByText("1 para hoje")).toBeInTheDocument();
-    expect(within(linha).getByRole("link", { name: /^Abrir .*B\.L 72h$/ })).toHaveAttribute("href", "/analises/recebimento-fcoj?aba=resultados&analise=BL72");
+    expect(within(linha).getByRole("link", { name: /^Abrir .*B\.L 72h$/ })).toHaveAttribute("href", "/leituras?aba=recebimento&analise=BL72");
   });
 
   it("as estufas e as atividades fixas não ficam mais no Início", async () => {

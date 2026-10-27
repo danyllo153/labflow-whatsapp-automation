@@ -117,6 +117,64 @@ def test_navio_fcoj_soma_amostras_e_tab_do_embarque(cliente, logado, conexao):
         assert e["status"] == _status_esperado(atras, e["pendentes"] + abertos)
 
 
+def test_navio_traz_cada_amostra_do_fcoj_com_o_ct_e_o_bl(cliente, logado, conexao):
+    """Pedido de 27/10: tocar no navio mostra todas as análises do FCOJ embarcado, com os resultados."""
+    logado()
+    nome = _um(conexao, "SELECT navio FROM bi.contagens WHERE origem = 'Embarque' ORDER BY navio LIMIT 1")
+    amostras = cliente.get(f"/paginas/navios/{quote(nome)}").json()["amostras"]
+    assert len(amostras) == _um(
+        conexao,
+        "SELECT count(DISTINCT (linha, fase, load, lote_amostra)) FROM bi.contagens WHERE origem = 'Embarque' AND navio = %s",
+        nome,
+    )
+    a = amostras[0]
+    assert {"linha", "fase", "load", "amostra", "ct", "bl72", "bl120", "situacao"} <= set(a)
+    ct = _um(
+        conexao,
+        "SELECT max(resultado) FROM bi.contagens WHERE origem = 'Embarque' AND navio = %s AND linha = %s AND fase = %s "
+        "AND load IS NOT DISTINCT FROM %s AND lote_amostra = %s AND analise = 'C.T 48h'",
+        nome, a["linha"], a["fase"], a["load"], a["amostra"],
+    )
+    assert a["ct"] == ct
+
+
+def test_pagina_do_load_traz_os_lotes_e_as_compostas(cliente, logado, conexao):
+    logado()
+    load = _um(conexao, "SELECT load FROM bi.contagens WHERE origem = 'Recebimento' ORDER BY load LIMIT 1")
+    d = cliente.get(f"/paginas/loads/{quote(load)}").json()
+    assert d["resumo"]["load"] == load
+    assert len(d["lotes"]) == _um(
+        conexao, "SELECT count(DISTINCT (item, numero)) FROM bi.contagens WHERE origem = 'Recebimento' AND load = %s", load
+    )
+    assert len(d["testes"]) == _um(conexao, "SELECT count(*) FROM bi.testes WHERE origem = 'Recebimento' AND load_ou_tanque = %s", load)
+    assert [l["lote"] for l in d["lotes"]] == sorted(l["lote"] for l in d["lotes"])
+    assert cliente.get("/paginas/loads/NAO-EXISTE").status_code == 404
+
+
+def test_ultimos_navios_embarcados_do_mais_novo_ao_mais_antigo(cliente, logado, conexao):
+    logado()
+    d = cliente.get("/analises/embarque/navios", params={"por_pagina": 2}).json()
+    assert d["total"] == _um(conexao, "SELECT count(DISTINCT navio) FROM bi.contagens WHERE origem = 'Embarque' AND navio IS NOT NULL")
+    datas = [n["ultima_data"] for n in d["navios"]]
+    assert datas == sorted(datas, reverse=True) and len(datas) <= 2
+    if d["total"] > 2:
+        seguinte = cliente.get("/analises/embarque/navios", params={"por_pagina": 2, "pagina": 2}).json()["navios"]
+        assert seguinte and seguinte[0]["navio"] not in {n["navio"] for n in d["navios"]}
+
+
+@pytest.mark.parametrize("origem", ["terra", "navio"])
+def test_coletas_dos_tanques_por_dia_e_pessoa(cliente, logado, conexao, origem):
+    logado()
+    coletas = cliente.get("/analises/tanques/coletas", params={"origem": origem}).json()
+    total = _um(
+        conexao,
+        "SELECT count(*) FROM bi.coletas WHERE origem = %s AND data_coleta > current_date - 366",
+        "Terra" if origem == "terra" else "Navio",
+    )
+    assert sum(c["n"] for c in coletas) <= total  # o "hoje" da API é o do relógio do laboratório (pode ser um dia antes)
+    assert all(c["pessoa"] for c in coletas)
+
+
 def test_navio_nfc_traz_os_tanques_do_navio(cliente, logado, conexao):
     logado()
     nome = _um(conexao, "SELECT navio FROM bi.coletas WHERE origem = 'Navio' LIMIT 1")
@@ -140,7 +198,8 @@ def test_navio_que_nao_existe_da_404(cliente, logado):
     assert cliente.get("/paginas/navios/NAO%20EXISTE%20999").status_code == 404
 
 
-@pytest.mark.parametrize("caminho", ["/paginas/tanques-terra", "/paginas/navios", "/paginas/navios/D.SKY%20123", "/paginas/tanques-terra/1"])
+@pytest.mark.parametrize("caminho", ["/paginas/tanques-terra", "/paginas/navios", "/paginas/navios/D.SKY%20123", "/paginas/tanques-terra/1",
+                                     "/paginas/loads/90001"])
 def test_coletor_nao_ve(cliente, logado, caminho):
     logado("Coletor")
     assert cliente.get(caminho).status_code == 403

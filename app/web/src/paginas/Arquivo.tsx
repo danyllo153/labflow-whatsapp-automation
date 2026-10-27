@@ -5,7 +5,7 @@ import { lerJson } from "../api";
 import { useSessao } from "../sessao";
 import { dm } from "../componentes/SeletorDeDias";
 import { hojeEmSaoPaulo, Numeros, PreviaDaGravacao, SoQuemGrava, useGravacao } from "./analises/comum";
-import LaudoEsterilizacao from "./LaudoEsterilizacao";
+import LaudoEsterilizacao, { IconeAcao } from "./LaudoEsterilizacao";
 
 // Os laudos da contra-amostra (26/10), como o papel: a folha impressa fecha com o traço nas linhas vazias.
 const LAUDO_CONTRA_EMBARQUE = {
@@ -260,7 +260,7 @@ function ConteudoDaCaixa({ caixa, pode, aoFechar, aoMudar }: { caixa: Caixa; pod
           {historico ? "Esconder descartados" : "Ver descartados"}
         </button>
         <button type="button" className="botao-secundario" onClick={() => window.print()}>
-          Imprimir
+          <IconeAcao nome="imprimir" /> Imprimir
         </button>
         <button type="button" className="botao botao-simples" onClick={aoFechar}>
           Fechar

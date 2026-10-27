@@ -356,10 +356,24 @@ export function useMarcados<K>() {
 
 /** A aba Resultados (26/10): a tabela completa ali mesmo, com busca, filtros, gráfico, Excel e impressão; quando o app
  * tem mais de uma tabela, pílulas escolhem qual (?tabela= no endereço, junto com a aba). */
-export function Resultados({ paginas }: { paginas: { caminho: string; titulo: string; descricao: string }[] }) {
+/** A aba Resultados dos apps: as páginas de dados embutidas. `fixos`: filtro sempre aplicado e fora do funil (ex.: a
+ * origem Terra no app Tanques terra, 27/10). */
+export function Resultados({
+  paginas,
+}: {
+  paginas: { caminho: string; titulo: string; descricao: string; fixos?: Record<string, string> }[];
+}) {
   const [params, setParams] = useSearchParams();
   const defs = paginas
-    .map((p) => ({ ...p, def: PAGINAS.find((d) => `/paginas/${d.caminho}` === p.caminho) }))
+    .map((p) => {
+      const def = PAGINAS.find((d) => `/paginas/${d.caminho}` === p.caminho);
+      return {
+        ...p,
+        def: def && p.fixos
+          ? { ...def, fixos: { ...def.fixos, ...p.fixos }, filtros: def.filtros.filter((f) => !(f.chave in (p.fixos ?? {}))) }
+          : def,
+      };
+    })
     .filter((p): p is typeof p & { def: DefinicaoDePagina } => !!p.def);
   if (defs.length === 0) return null;
   const escolhida = defs.find((p) => p.def.caminho === params.get("tabela")) ?? defs[0];
@@ -380,7 +394,7 @@ export function Resultados({ paginas }: { paginas: { caminho: string; titulo: st
           ))}
         </div>
       )}
-      <PaginaDeDados key={escolhida.def.caminho} def={escolhida.def} embutida />
+      <PaginaDeDados key={`${escolhida.def.caminho}-${JSON.stringify(escolhida.fixos ?? {})}`} def={escolhida.def} embutida />
     </>
   );
 }

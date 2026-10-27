@@ -93,3 +93,22 @@ describe("página de um navio (APP-019b)", () => {
     expect(await screen.findByText("Navio não encontrado.")).toBeInTheDocument();
   });
 });
+
+describe("Página do load do recebimento (rastreável, 27/10)", () => {
+  it("mostra os lotes com o C.T e o B.L, a fábrica e as compostas", async () => {
+    abrir("/paginas/loads/90001", {
+      "/paginas/loads/90001": {
+        resumo: { load: "90001", itens: "9100", fabricas: "AQA", lotes: 2, nao_ok: 1, testes: 1, positivos: 0, primeira_data: "2026-10-20", status: "Concluído" },
+        lotes: [
+          { lote: 1, item: "9100", fabrica: "AQA", prevista: "2026-10-20", ct: "<10", bl72: "<10", bl120: "<10", situacao: "Ok" },
+          { lote: 2, item: "9100", fabrica: "AQA", prevista: "2026-10-20", ct: "210", bl72: "<10", bl120: "<10", situacao: "Não ok" },
+        ],
+        testes: [{ teste: "TAB", alvo: "Composta #10", data_feito: "2026-10-21", status: "Concluído", resultado: "Negativo", situacao: "Concluído" }],
+      },
+    });
+    expect(await screen.findByRole("heading", { name: /Load 90001/ })).toBeInTheDocument();
+    expect(screen.getByText("210")).toBeInTheDocument();
+    expect(screen.getAllByText("AQA").length).toBeGreaterThan(0);
+    expect(screen.getByRole("link", { name: "TAB" })).toHaveAttribute("href", "/paginas/tab?referencia=90001");
+  });
+});

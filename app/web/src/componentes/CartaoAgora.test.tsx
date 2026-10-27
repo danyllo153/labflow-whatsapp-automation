@@ -30,9 +30,9 @@ describe("Cartão Agora (APP-056)", () => {
     ];
     const d = destaquesDoDia(itens);
     expect(d.map((x) => [x.nome, x.n, x.caminho])).toEqual([
-      ["Recebimento · B.L 72h", 2, "/analises/recebimento-fcoj?aba=resultados&analise=BL72"],
+      ["Recebimento · B.L 72h", 2, "/leituras?aba=recebimento&analise=BL72"],
       ["Recebimento · TAB · para espalhar", 5, "/analises/tab"],
-      ["O.SKY 189 · Normal", 3, "/analises/tanques?aba=leituras"],
+      ["O.SKY 189 · Normal", 3, "/leituras?aba=tanques-navio"],
     ]);
   });
 
@@ -42,10 +42,10 @@ describe("Cartão Agora (APP-056)", () => {
     expect(d("FCOJ Recebimento", "Coliformes", "Coliformes · para espalhar")).toEqual({ caminho: "/analises/coliformes", acao: "Estriei todos" });
     expect(d("FCOJ Embarque", "TAB", "TAB · para ler")).toEqual({ caminho: "/analises/tab", acao: null });
     expect(d("FCOJ Embarque", "Howard", "Howard")).toEqual({ caminho: "/analises/howard", acao: null });
-    expect(d("NFC Tank farm", "Leitura de NFC", "Psicrotróficos Normal · Leitura final")).toEqual({ caminho: "/analises/tanques?aba=leituras", acao: "Ler as placas" });
+    expect(d("NFC Tank farm", "Leitura de NFC", "Psicrotróficos Normal · Leitura final")).toEqual({ caminho: "/leituras?aba=tanques-terra", acao: "Ler as placas" });
     expect(d("NFC Navio", "Drop", "O.SKY 189 · Drops")).toEqual({ caminho: "/analises/drops", acao: "Concluir drops" });
-    expect(d("FCOJ Embarque", "C.T/B.L", "C.T 48h")).toEqual({ caminho: "/analises/embarque-fcoj?aba=resultados", acao: "Lançar resultados" });
-    expect(d("Recebimento NFC", "C.T/B.L", "B.L 72h")).toEqual({ caminho: "/analises/recebimento-nfc?aba=resultados", acao: "Lançar resultados" });
+    expect(d("FCOJ Embarque", "C.T/B.L", "C.T 48h")).toEqual({ caminho: "/leituras?aba=embarque", acao: "Lançar resultados" });
+    expect(d("Recebimento NFC", "C.T/B.L", "B.L 72h")).toEqual({ caminho: "/leituras?aba=recebimento-nfc", acao: "Lançar resultados" });
     expect(d("Desvios", "Desvio de tanque", "Desvio de tanque · C.T")).toEqual({ caminho: "/analises/desvios?aba=abertos", acao: null });
     expect(d("Águas e superfícies", "Baia", "Baia 3")).toEqual({ caminho: "/paginas/baias", acao: null });
   });

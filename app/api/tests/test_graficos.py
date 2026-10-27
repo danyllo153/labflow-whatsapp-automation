@@ -110,8 +110,11 @@ def test_tanques_e_howard_trazem_o_limite_do_banco(cliente, logado, conexao, pag
 def test_tanques_contam_as_leituras_lidas_da_view(cliente, logado, conexao):
     logado()
     pontos = cliente.get("/paginas/tanques/resultados", params={"analise": "C.T"}).json()["pontos"]
-    assert len(pontos) == _conta(conexao, "SELECT count(*) FROM bi.leituras_nfc WHERE lida AND maior IS NOT NULL AND analise = 'C.T'")
+    assert len(pontos) == _conta(conexao, "SELECT count(*) FROM bi.leituras_nfc WHERE lida AND maior IS NOT NULL AND analise = 'C.T' AND etapa = 'Leitura final'")
     assert all(p["ref"].startswith("Tanque ") for p in pontos)
+    # só três séries (27/10): C.T, B.L e Wort (os psicrotróficos), sem a pré-leitura
+    todas = cliente.get("/paginas/tanques/resultados").json()["pontos"]
+    assert {p["analise"] for p in todas} <= {"C.T", "B.L", "Wort"}
 
 
 def test_agua_baias_e_linhas_viram_numero(cliente, logado, monkeypatch):

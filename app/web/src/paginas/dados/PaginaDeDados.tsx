@@ -2,7 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState, type
 import { Link, useSearchParams } from "react-router-dom";
 
 import { lerJson } from "../../api";
-import { VISUAL_DAS_PAGINAS, type Coluna, type DefinicaoDePagina, type Filtro } from "./definicoes";
+import { corDaFabrica, VISUAL_DAS_PAGINAS, type Coluna, type DefinicaoDePagina, type Filtro } from "./definicoes";
 import { CabecalhoDaPagina } from "../../componentes/CabecalhoDaPagina";
 import { classeDaSituacao, formatar } from "./formatos";
 import Dashboard, { type Linha } from "./Dashboard";
@@ -52,9 +52,18 @@ function valorDoFiltro(filtro: Filtro, valor: string): string {
   return filtro.rotulos?.[valor] ?? valor;
 }
 
-function Celula({ coluna, linha }: { coluna: Coluna; linha: Record<string, unknown> }) {
+export function Celula({ coluna, linha }: { coluna: Coluna; linha: Record<string, unknown> }) {
   const texto = formatar(linha[coluna.chave], coluna.formato);
   if (coluna.formato === "situacao" && texto) return <span className={classeDaSituacao(texto)}>{texto}</span>;
+  // fábrica com a cor dos gráficos; fresh e pasteurizado com cor própria (27/10), sempre com o texto
+  if (coluna.formato === "fabrica" && texto)
+    return (
+      <span className="chip-fabrica">
+        <i className="quadrado" style={{ background: corDaFabrica(texto) }} aria-hidden="true" />
+        {texto}
+      </span>
+    );
+  if (coluna.formato === "amostra" && texto) return <span className={`etiqueta ${texto === "Fresh" ? "etiqueta-fresh" : "etiqueta-past"}`}>{texto}</span>;
   return <>{texto}</>;
 }
 
@@ -326,7 +335,7 @@ export default function PaginaDeDados({ def, embutida = false }: { def: Definica
         {filtrosAbertos && (
           <form className="cartao formulario-filtros" onSubmit={aplicar} aria-label="Filtros">
             <div className="grade-filtros">
-              {def.filtros.map((f) => (
+              {def.filtros.filter((f) => f !== filtroFabrica).map((f) => (
                 <label key={f.chave} className="campo">
                   {f.rotulo}
                   {f.tipo === "opcoes" ? (

@@ -40,8 +40,8 @@ export interface Superficies {
 }
 
 const TEXTOS: Record<Tipo, { titulo: string; descricao: string; plural: string }> = {
-  Baia: { titulo: "Baias", descricao: "CIP dos mangotes do recebimento.", plural: "baias" },
-  Linha: { titulo: "Linhas", descricao: "CIP das linhas de embarque.", plural: "linhas" },
+  Baia: { titulo: "CIP baia", descricao: "CIP dos mangotes do recebimento.", plural: "baias" },
+  Linha: { titulo: "CIP linha de embarque", descricao: "CIP das linhas de embarque.", plural: "linhas" },
 };
 
 const ROTULO = { ct_48: "C.T. 48h", bl_72: "B.L. 72h", bl_120: "B.L. 120h" } as const;

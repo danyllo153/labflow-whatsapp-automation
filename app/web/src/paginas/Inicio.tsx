@@ -9,6 +9,7 @@ import MediaPorTurno from "../componentes/MediaPorTurno";
 import TabelaDePendencias, { tipoDa } from "../componentes/TabelaDePendencias";
 import { useSessao } from "../sessao";
 import { useAtividades } from "./AtividadesDoTurno";
+import { IconeAcao } from "./LaudoEsterilizacao";
 import type { EstadoDoTurno } from "./Turno";
 
 /**
@@ -88,7 +89,7 @@ export default function Inicio() {
         <div className="acoes-das-abas">
           {atualizadoEm && <span className="texto-secundario atualizado">Atualizado às {hora(atualizadoEm)}</span>}
           <button type="button" className="botao botao-simples botao-pequeno" onClick={() => window.print()}>
-            Imprimir
+            <IconeAcao nome="imprimir" /> Imprimir
           </button>
           <Link className="botao botao-principal botao-pequeno" to="/turno">
             + Registrar

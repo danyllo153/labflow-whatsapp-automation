@@ -56,13 +56,15 @@ export function destinoDe(p: Pendencia): { caminho: string; acao: string | null 
     return { caminho: coli ? "/analises/coliformes" : "/analises/tab", acao: espalhar ? (coli ? "Estriei todos" : "Espalhei todos") : null };
   }
   if (p.tipo === "Drop") return { caminho: "/analises/drops", acao: "Concluir drops" };
-  if (p.tipo === "Leitura de NFC") return { caminho: "/analises/tanques?aba=leituras", acao: "Ler as placas" };
+  // o que é para ler vai para a aba da análise na página Leituras (27/10)
+  if (p.tipo === "Leitura de NFC")
+    return { caminho: `/leituras?aba=${p.bloco === "NFC Navio" ? "tanques-navio" : "tanques-terra"}`, acao: "Ler as placas" };
   if (p.bloco === "FCOJ Recebimento") {
     const cod = COD_DA_ANALISE[p.analise];
-    return { caminho: `/analises/recebimento-fcoj?aba=resultados${cod ? `&analise=${cod}` : ""}`, acao: "Lançar resultados" };
+    return { caminho: `/leituras?aba=recebimento${cod ? `&analise=${cod}` : ""}`, acao: "Lançar resultados" };
   }
-  if (p.bloco === "FCOJ Embarque") return { caminho: "/analises/embarque-fcoj?aba=resultados", acao: "Lançar resultados" };
-  if (p.bloco === "Recebimento NFC") return { caminho: "/analises/recebimento-nfc?aba=resultados", acao: "Lançar resultados" };
+  if (p.bloco === "FCOJ Embarque") return { caminho: "/leituras?aba=embarque", acao: "Lançar resultados" };
+  if (p.bloco === "Recebimento NFC") return { caminho: "/leituras?aba=recebimento-nfc", acao: "Lançar resultados" };
   if (p.bloco === "Desvios") return { caminho: "/analises/desvios?aba=abertos", acao: null };
   if (p.bloco === "Águas e superfícies")
     return { caminho: /baia/i.test(texto) ? "/paginas/baias" : /linha/i.test(texto) ? "/paginas/linhas" : "/paginas/agua-processo", acao: null };

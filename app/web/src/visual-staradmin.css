@@ -1251,3 +1251,74 @@ div.estatistica {
 .pilula-do-dia.com-atraso b {
   color: var(--nao-ok-texto);
 }
+
+/* ---------- fábrica com a cor dos gráficos; fresh e pasteurizado (27/10) ---------- */
+.chip-fabrica {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.chip-fabrica .quadrado {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex: none;
+}
+
+.etiqueta-fresh { color: #0f7a3d; background: transparent; }
+.etiqueta-past { color: #a35200; background: transparent; }
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema="claro"]) .etiqueta-fresh { color: #5fd08f; }
+  :root:not([data-tema="claro"]) .etiqueta-past { color: #f0a35a; }
+}
+:root[data-tema="escuro"] .etiqueta-fresh { color: #5fd08f; }
+:root[data-tema="escuro"] .etiqueta-past { color: #f0a35a; }
+
+.campo.campo-em-linha {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.grafico-resultado .dashboard-topo {
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+
+/* ---------- últimos navios embarcados (27/10) ---------- */
+.lista-navios {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+}
+
+.lista-navios li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--borda);
+}
+
+.lista-navios li:last-child {
+  border-bottom: 0;
+}
+
+.lista-navios a {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: inherit;
+  text-decoration: none;
+  min-width: 0;
+}
+
+.lista-navios a strong {
+  color: var(--primaria, #1f3bb3);
+}

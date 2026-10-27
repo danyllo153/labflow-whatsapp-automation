@@ -79,6 +79,23 @@ describe("Tendência do resultado", () => {
     expect(screen.getByRole("img", { name: /Tendência/ })).toHaveAttribute("data-tipo", "bar");
   });
 
+  it("compara as fábricas: uma série por fábrica, na análise escolhida (27/10)", async () => {
+    const pontos = [
+      ponto(1, 40, { fabrica: "AQA" }),
+      ponto(2, 60, { fabrica: "CON" }),
+      ponto(3, 30, { fabrica: "AQA" }),
+      ponto(4, 12, { analise: "B.L 72h", fabrica: "CON" }),
+    ];
+    servir({ "/paginas/recebimento/resultados": { alertas: { "C.T 48h": 200 }, pontos, cortado: false } });
+    render(<GraficoResultado api="/paginas/recebimento" consulta="" rotuloData="data da leitura" />);
+    await screen.findByRole("img", { name: /Tendência/ });
+    await userEvent.setup().click(screen.getByRole("button", { name: "Por fábrica" }));
+    const grafico = screen.getByRole("img", { name: /Tendência de AQA, CON/ });
+    expect(JSON.parse(grafico.getAttribute("data-series")!)).toEqual([["AQA", 2], ["CON", 1]]);
+    await userEvent.setup().selectOptions(screen.getByRole("combobox", { name: "Análise" }), "B.L 72h");
+    expect(JSON.parse(screen.getByRole("img", { name: /Tendência de CON/ }).getAttribute("data-series")!)).toEqual([["CON", 1]]);
+  });
+
   it("sem alerta (NFC) não mostra a legenda do alerta; sem leitura avisa", async () => {
     servir({ "/paginas/recebimento-nfc/resultados": { alertas: {}, pontos: [ponto(1, 14000, { diluicao: "10⁻³" })], cortado: false } });
     render(<GraficoResultado api="/paginas/recebimento-nfc" consulta="" rotuloData="recebido em" />);

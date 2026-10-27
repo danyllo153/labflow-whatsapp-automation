@@ -31,7 +31,7 @@ const LEITURA = {
 
 describe("apps de análise da Fase E (E3 a E8)", () => {
   it("Tanques: digita as 3 placas, vê a prévia do banco e confirma", async () => {
-    const { posts } = abrir("/analises/tanques", {
+    const { posts } = abrir("/analises/tanques?aba=leituras", { // o endereço antigo abre o Tanques terra (27/10)
       "GET /analises/tanques/leituras": () => ({ status: 200, corpo: [LEITURA] }),
       "POST /analises/tanques/placas": (c) => gravacao(c.previa ? "Placas:\ntanque 44 normal CT = <1,<1,2" : "Placas:\ntanque 44 normal CT = <1,<1,2", c.previa),
     });
@@ -47,7 +47,7 @@ describe("apps de análise da Fase E (E3 a E8)", () => {
 
   it("Tanques: o Wort (profundidade e superfície) é uma linha só por frasco e <1 em todas grava as duas", async () => {
     const wort = { ...LEITURA, analise: "Psicrotróficos 240h", tanque: "41", situacao: "Vence hoje", prevista: "2026-10-25" };
-    const { posts } = abrir("/analises/tanques", {
+    const { posts } = abrir("/analises/tanques-terra?aba=leituras", {
       "GET /analises/tanques/leituras": () => ({ status: 200, corpo: [{ ...wort, analise_id: 7 }, { ...wort, analise_id: 8 }] }),
       "POST /analises/tanques/placas": (c) => gravacao("Placas:\ntanque 41 normal Wort = <1,<1,<1", c.previa),
     });
@@ -65,12 +65,12 @@ describe("apps de análise da Fase E (E3 a E8)", () => {
   });
 
   it("Tanques: registrar coleta de navio com a prévia", async () => {
-    const { posts } = abrir("/analises/tanques?aba=coleta", {
+    const { posts } = abrir("/analises/tanques-navio?aba=coleta", {
       "GET /analises/tanques/leituras": () => ({ status: 200, corpo: [] }),
       "POST /analises/tanques/coleta": (c) => gravacao("Coleta do navio O.SKY 189: 1C, 2P (2 tanques, 6 drops).", c.previa),
     });
     const form = await screen.findByRole("form", { name: "Registrar coleta" });
-    await userEvent.selectOptions(within(form).getByLabelText("Origem"), "navio");
+    expect(within(form).queryByLabelText("Origem")).toBeNull(); // cada app tem a sua origem (27/10)
     await userEvent.type(within(form).getByLabelText("Navio e viagem"), "O.SKY 189");
     await userEvent.type(within(form).getByLabelText("Tanques"), "1C, 2P");
     await userEvent.click(within(form).getByRole("button", { name: "Ver o que vai ser criado" }));
@@ -156,16 +156,29 @@ describe("apps de análise da Fase E (E3 a E8)", () => {
     expect(await screen.findByText("Nenhum registro com esses filtros.")).toBeInTheDocument();
   });
 
-  it("Embarque abre no painel, como o Recebimento FCOJ: números e Não ok por navio", async () => {
+  it("Embarque abre no painel: números e os últimos navios embarcados, que abrem a página do navio", async () => {
     abrir("/analises/embarque-fcoj", {
+      "GET /analises/embarque/navios?pagina=1&por_pagina=10": () => ({
+        status: 200,
+        corpo: {
+          total: 7,
+          navios: Array.from({ length: 7 }, (_, i) => ({
+            navio: `NAVIO EXEMPLO ${i + 1}`, ultima_data: "2026-10-2" + (7 - i), amostras: 5, lidos: 15, pendentes: 0, nao_ok: i === 0 ? 1 : 0,
+          })),
+        },
+      }),
       "GET /analises/embarque/amostras": () => ({ status: 200, corpo: [] }),
       "GET /analises/embarque/painel": () => ({
         status: 200,
         corpo: { atrasados: 2, para_hoje: 0, nao_ok_semana: 1, navios: [{ navio: "NAVIO EXEMPLO 1", lidos: 12, nao_ok: 1 }] },
       }),
     });
-    expect(await screen.findByText("Não ok por navio")).toBeInTheDocument();
-    expect(screen.getByText("NAVIO EXEMPLO 1")).toBeInTheDocument();
+    expect(await screen.findByText("NAVIO EXEMPLO 1")).toBeInTheDocument();
+    expect(screen.getByText(/Últimos navios embarcados/)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: /NAVIO EXEMPLO 1/ })).toHaveAttribute("href", "/paginas/navios/NAVIO%20EXEMPLO%201");
+    expect(screen.queryByText("NAVIO EXEMPLO 6")).toBeNull(); // 5 à vista
+    await userEvent.click(screen.getByRole("button", { name: "Ver mais" }));
+    expect(screen.getByText("NAVIO EXEMPLO 7")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /2\s*Atrasados/ })).toHaveClass("numero-atrasado");
     expect(screen.getByRole("button", { name: /0\s*Para hoje/ })).toHaveClass("numero-neutro");
   });

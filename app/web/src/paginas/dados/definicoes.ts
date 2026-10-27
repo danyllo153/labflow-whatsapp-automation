@@ -1,6 +1,6 @@
 /** Páginas do laboratório (07 §5): o que cada uma mostra e filtra. A API já filtra pelas views do Power BI. */
 
-export type Formato = "texto" | "data" | "dataHora" | "situacao";
+export type Formato = "texto" | "data" | "dataHora" | "situacao" | "fabrica" | "amostra";
 
 export interface Coluna {
   chave: string;
@@ -40,7 +40,7 @@ export const VISUAL_DAS_PAGINAS: Record<string, { icone: string; cor: string; ti
   coletas: { icone: "coletas", cor: "geral" },
   recebimento: { icone: "recebimento-fcoj", cor: "fcoj" },
   embarque: { icone: "embarque-fcoj", cor: "embarque" },
-  "tanques-terra": { icone: "tanques", cor: "nfc", titulo: "Análise de tanques" },
+  "tanques-terra": { icone: "tanques", cor: "nfc", titulo: "Tanques terra" },
   drops: { icone: "drops", cor: "drops" },
   desvios: { icone: "desvios", cor: "desvios" },
   "recebimento-nfc": { icone: "recebimento-nfc", cor: "nfc-receb" },
@@ -48,11 +48,19 @@ export const VISUAL_DAS_PAGINAS: Record<string, { icone: string; cor: string; ti
   coliformes: { icone: "coliformes", cor: "coli" },
   howard: { icone: "howard", cor: "howard" },
   tanques: { icone: "tanques", cor: "nfc" },
-  navios: { icone: "tanques", cor: "nfc" },
+  navios: { icone: "tanques", cor: "nfc", titulo: "Tanques navio" },
   testes: { icone: "tab", cor: "tab" },
 };
 
 export const FABRICAS = ["AQA", "CON", "COL", "UCH", "ITA", "TMG"]; // fábricas travadas (decisão de 14/10)
+
+// uma cor por fábrica, a mesma na tabela e nos gráficos (pedido de 27/10)
+const CORES_DAS_FABRICAS = ["#1f6fb5", "#e08a00", "#0f8b8d", "#7d5ba6", "#c2410c", "#5a6677"];
+export const COR_SEM_FABRICA = "#8a9a2b";
+export function corDaFabrica(fabrica: string | null | undefined): string {
+  const i = FABRICAS.indexOf(fabrica ?? "");
+  return i < 0 ? COR_SEM_FABRICA : CORES_DAS_FABRICAS[i];
+}
 
 export const PAGINAS: DefinicaoDePagina[] = [
   {
@@ -92,10 +100,11 @@ export const PAGINAS: DefinicaoDePagina[] = [
     impressao: "deitado",
     semColetor: true,
     resultado: { tipo: "tendencia", data: "data da leitura" },
+    linkDaLinha: (l) => `/paginas/loads/${encodeURIComponent(String(l.load))}`, // o load com os lotes e as compostas (27/10)
     colunas: [
       { chave: "load", rotulo: "Load", principal: true },
       { chave: "lote", rotulo: "Lote" },
-      { chave: "fabrica", rotulo: "Fábrica" },
+      { chave: "fabrica", rotulo: "Fábrica", formato: "fabrica" },
       { chave: "item", rotulo: "Item" },
       { chave: "analise", rotulo: "Análise" },
       { chave: "prevista", rotulo: "Leitura prevista", formato: "data" },
@@ -227,11 +236,13 @@ export const PAGINAS: DefinicaoDePagina[] = [
     resultado: { tipo: "tendencia", data: "data da leitura" },
     impressao: "deitado",
     semColetor: true,
+    linkDaLinha: (l) => `/paginas/navios/${encodeURIComponent(String(l.navio))}`, // o navio com todas as análises (27/10)
     colunas: [
       { chave: "navio", rotulo: "Navio", principal: true },
       { chave: "linha", rotulo: "Linha" },
       { chave: "fase", rotulo: "Fase" },
       { chave: "load", rotulo: "Load" },
+      { chave: "fabrica", rotulo: "Fábrica", formato: "fabrica" },
       { chave: "amostra", rotulo: "Amostra" },
       { chave: "analise", rotulo: "Análise" },
       { chave: "prevista", rotulo: "Leitura prevista", formato: "data" },
@@ -395,7 +406,8 @@ export const PAGINAS: DefinicaoDePagina[] = [
     colunas: [
       { chave: "load", rotulo: "Load", principal: true },
       { chave: "lote", rotulo: "Lote" },
-      { chave: "amostra", rotulo: "Amostra" },
+      { chave: "fabrica", rotulo: "Fábrica", formato: "fabrica" },
+      { chave: "amostra", rotulo: "Amostra", formato: "amostra" },
       { chave: "diluicao", rotulo: "Diluição" },
       { chave: "data_recebimento", rotulo: "Recebido em", formato: "data" },
       { chave: "analise", rotulo: "Análise" },

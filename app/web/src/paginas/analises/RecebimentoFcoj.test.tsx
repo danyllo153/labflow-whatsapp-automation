@@ -47,6 +47,8 @@ function abrir(caminho: string, rotas: Parameters<typeof servidorFalso>[0] = {},
 
 afterEach(() => vi.unstubAllGlobals());
 
+const QUEM_LANCA = { ...ANA, pode: ["ver_paginas", "registrar_analise"] };
+
 describe("Páginas como apps (Fase E, E1)", () => {
   it("cada análise é um app com o estado do dia, e a busca filtra pelo nome", async () => {
     abrir("/paginas", {
@@ -65,8 +67,8 @@ describe("Páginas como apps (Fase E, E1)", () => {
     const recebimento = await screen.findByRole("link", { name: /^Recebimento FCOJ/ });
     expect(recebimento).toHaveAttribute("href", "/analises/recebimento-fcoj");
     expect(await within(recebimento).findByText("2 atrasados")).toBeInTheDocument();
-    expect(within(screen.getByRole("link", { name: /^Baias/ })).getByText("1 para hoje")).toBeInTheDocument();
-    expect(within(screen.getByRole("link", { name: /^Linhas/ })).getByText("Em dia")).toBeInTheDocument();
+    expect(within(screen.getByRole("link", { name: /^CIP baia/ })).getByText("1 para hoje")).toBeInTheDocument();
+    expect(within(screen.getByRole("link", { name: /^CIP linha de embarque/ })).getByText("Em dia")).toBeInTheDocument();
 
     await userEvent.type(screen.getByRole("searchbox", { name: "Procurar análise" }), "água");
     expect(screen.getByRole("link", { name: /^Água do processo/ })).toBeInTheDocument();
@@ -121,13 +123,13 @@ describe("Recebimento FCOJ como app (Fase E, E2)", () => {
     expect(enviado).toMatchObject({ load: "98701", item: "99902", fabrica: "AQA", lotes: "1-3", compostas: "(1-3)", previa: false });
   });
 
-  it("resultados: <10 em todos os vazios, prévia com o alarme e Confirmar", async () => {
-    const api = abrir("/analises/recebimento-fcoj?aba=resultados&analise=CT", {
+  it("a leitura (aba Leituras): <10 em todos os vazios, prévia com o alarme e Confirmar", async () => {
+    const api = abrir("/leituras?aba=recebimento&analise=CT", {
       "POST /analises/recebimento-fcoj/lancar": (corpo) => ({
         status: 200,
         corpo: { ok: true, previa: corpo.previa, texto: "C.T 48h:\nload 98704 lote 1 = <1\nload 98704 lote 2 = 210\n🚨 Acima do limite", gravados: corpo.previa ? 0 : 2, alarmes: 1 },
       }),
-    });
+    }, QUEM_LANCA);
     expect(await screen.findByRole("textbox", { name: "C.T 48h do load 98704 lote 1" })).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: "<10 em todos os vazios (2)" }));
     const lote2 = screen.getByRole("textbox", { name: "C.T 48h do load 98704 lote 2" });
@@ -144,13 +146,20 @@ describe("Recebimento FCOJ como app (Fase E, E2)", () => {
     ]);
   });
 
-  it("o Coletor vê os resultados, mas não lança nem registra", async () => {
-    abrir("/analises/recebimento-fcoj?aba=resultados", {
-      "GET /analises/recebimento-fcoj/painel": () => ({ status: 200, corpo: { ...PAINEL, pode_registrar: false } }),
-    }, { ...ANA, cargo: "Coletor" });
-    expect(await screen.findAllByText("98704", { exact: false })).not.toHaveLength(0);
-    expect(screen.queryByRole("textbox")).toBeNull();
-    expect(screen.queryByRole("button", { name: /em todos/ })).toBeNull();
+  it("a aba Resultados é a tabela com os filtros completos, e o painel leva o que é para ler à aba Leituras", async () => {
+    const api = abrir("/analises/recebimento-fcoj?aba=resultados", {
+      "GET /paginas/recebimento?pagina=1&por_pagina=50": () => ({
+        status: 200,
+        corpo: { total: 1, pagina: 1, por_pagina: 50, linhas: [{ load: "98704", lote: 1, fabrica: "COL", analise: "C.T 48h", situacao: "Ok" }] },
+      }),
+    }, QUEM_LANCA);
+    expect(await screen.findByText("98704")).toBeInTheDocument();
+    expect(screen.getByRole("group", { name: "Fábrica" })).toBeInTheDocument();
+    expect(screen.queryByRole("textbox", { name: /C.T 48h do load/ })).toBeNull();
+    await userEvent.click(screen.getByRole("button", { name: /^Painel/ }));
+    await userEvent.click(await screen.findByRole("button", { name: /Atrasados/ }));
+    expect(await screen.findByRole("textbox", { name: "C.T 48h do load 98704 lote 1" })).toBeInTheDocument();
+    expect(api.chamadas.some((c) => c.rota.startsWith("GET /analises/recebimento-fcoj/resultados"))).toBe(true);
   });
 
   it("compostas de load antigo (dentro do Registrar): usa o recomendado, mostra a prévia e cria no Confirmar", async () => {

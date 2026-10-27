@@ -17,6 +17,7 @@ import annotationPlugin from "chartjs-plugin-annotation";
 import { Chart } from "react-chartjs-2";
 
 import { lerJson } from "../../api";
+import { corDaFabrica, FABRICAS } from "./definicoes";
 import { formatar } from "./formatos";
 
 ChartJS.register(LineController, BarController, LinearScale, LogarithmicScale, PointElement, LineElement, BarElement, Tooltip, Legend, annotationPlugin);
@@ -43,6 +44,7 @@ export interface PontoResultado {
   lido: string | null;
   diluicao: string | null;
   ref?: string | null; // tanque, ponto da água, composta: quando o ponto não é de um load
+  fabrica?: string | null; // recebimento, embarque e NFC: para comparar as fábricas (27/10)
 }
 
 interface Dados {
@@ -138,6 +140,9 @@ export default function GraficoResultado({
   const [dados, setDados] = useState<Dados | null>(null);
   const [erro, setErro] = useState("");
   const [forma, setForma] = useState<"line" | "bar">("line");
+  // comparar fábricas (27/10): uma série por fábrica, na cor dela, para a análise escolhida
+  const [porFabrica, setPorFabrica] = useState(false);
+  const [analiseEscolhida, setAnaliseEscolhida] = useState("");
   const grafico = useRef<ChartJS<"line" | "bar"> | null>(null);
 
   useEffect(() => {
@@ -157,16 +162,33 @@ export default function GraficoResultado({
     };
   }, [api, consulta]);
 
+  const analises = useMemo(
+    () => (dados ? [...new Set(dados.pontos.map((p) => p.analise))].sort((a, b) => a.localeCompare(b, "pt-BR")) : []),
+    [dados],
+  );
+  const temFabrica = !!dados?.pontos.some((p) => p.fabrica);
+  const comparando = porFabrica && temFabrica;
+  const analiseDaComparacao = analises.includes(analiseEscolhida) ? analiseEscolhida : analises.find((n) => n.startsWith("C.T")) ?? analises[0] ?? "";
+
   const series = useMemo(() => {
     if (!dados) return [];
-    const nomes = [...new Set(dados.pontos.map((p) => p.analise))].sort((a, b) => a.localeCompare(b, "pt-BR"));
-    const cores = coresDasSeries(nomes);
-    return nomes.map((nome, i) => {
+    if (comparando) {
+      const daAnalise = dados.pontos.filter((p) => p.analise === analiseDaComparacao);
+      const presentes = new Set(daAnalise.map((p) => p.fabrica ?? "Sem fábrica"));
+      const nomes = [...FABRICAS, "Sem fábrica"].filter((f) => presentes.has(f));
+      return nomes.map((nome) => {
+        const pontos = daAnalise.filter((p) => (p.fabrica ?? "Sem fábrica") === nome);
+        const faixa = faixaNormal(pontos);
+        return { nome, cor: corDaFabrica(nome), pontos, faixa, estados: pontos.map((p) => estadoDo(p, faixa)), alerta: dados.alertas[analiseDaComparacao] };
+      });
+    }
+    const cores = coresDasSeries(analises);
+    return analises.map((nome, i) => {
       const pontos = dados.pontos.filter((p) => p.analise === nome);
       const faixa = faixaNormal(pontos);
       return { nome, cor: cores[i], pontos, faixa, estados: pontos.map((p) => estadoDo(p, faixa)), alerta: dados.alertas[nome] };
     });
-  }, [dados]);
+  }, [dados, analises, comparando, analiseDaComparacao]);
 
   useEffect(() => {
     aoDesenhar?.(grafico.current?.canvas ?? null);
@@ -235,7 +257,7 @@ export default function GraficoResultado({
   const porAlerta = new Map<number, number[]>();
   series.forEach((s, i) => s.alerta && porAlerta.set(s.alerta, [...(porAlerta.get(s.alerta) ?? []), i]));
   porAlerta.forEach((indices, valor) => {
-    const nomes = indices.map((i) => series[i].nome).join(", ");
+    const nomes = comparando ? analiseDaComparacao : indices.map((i) => series[i].nome).join(", ");
     anotacoes[`alerta${valor}`] = {
       type: "line", yMin: valor, yMax: valor, borderColor: corDaLinha, borderWidth: 2, borderDash: [6, 4],
       display: (c: { chart: ChartJS }) => indices.some((i) => c.chart.isDatasetVisible(i)),
@@ -283,7 +305,7 @@ export default function GraficoResultado({
         callbacks: {
           title: (itens) => {
             const p = series[itens[0].datasetIndex].pontos[itens[0].dataIndex];
-            return `${p.analise} · ${formatar(p.data, "data")} (${rotuloData})`;
+            return `${p.analise}${p.fabrica ? ` · ${p.fabrica}` : ""} · ${formatar(p.data, "data")} (${rotuloData})`;
           },
           label: (item) => {
             const s = series[item.datasetIndex];
@@ -307,11 +329,33 @@ export default function GraficoResultado({
         <div>
           <h2>Tendência do resultado</h2>
           <span className="texto-secundario">
-            {dados.pontos.length} leituras com o filtro da tela
+            {series.reduce((n, s) => n + s.pontos.length, 0)} leituras com o filtro da tela
             {acima > 0 && ` · ${acima} acima do ${nomeDaLinha}`}
             {fora > 0 && ` · ${fora} fora da faixa normal`}
           </span>
         </div>
+        {temFabrica && (
+          <div role="group" aria-label="Séries do gráfico" className="seletor-segmentado">
+            <button type="button" aria-pressed={!porFabrica} onClick={() => setPorFabrica(false)}>
+              Por análise
+            </button>
+            <button type="button" aria-pressed={porFabrica} onClick={() => setPorFabrica(true)}>
+              Por fábrica
+            </button>
+          </div>
+        )}
+        {comparando && (
+          <label className="campo campo-em-linha">
+            Análise
+            <select value={analiseDaComparacao} onChange={(e) => setAnaliseEscolhida(e.target.value)}>
+              {analises.map((a) => (
+                <option key={a} value={a}>
+                  {a}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
         <div role="group" aria-label="Forma do gráfico" className="seletor-segmentado">
           <button type="button" aria-pressed={forma === "line"} onClick={() => setForma("line")}>
             Linha
@@ -331,7 +375,7 @@ export default function GraficoResultado({
               type={forma}
               data={data as ChartData<"line" | "bar">}
               options={opcoes}
-              aria-label={`Tendência de ${series.map((s) => s.nome).join(", ")}: ${dados.pontos.length} leituras`}
+              aria-label={`Tendência de ${series.map((s) => s.nome).join(", ")}: ${series.reduce((n, s) => n + s.pontos.length, 0)} leituras`}
               role="img"
             />
           </div>

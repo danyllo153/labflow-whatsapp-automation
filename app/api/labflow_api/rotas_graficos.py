@@ -47,6 +47,7 @@ class PontoResultado(BaseModel):
     lido: str | None
     diluicao: str | None
     ref: str | None = None  # o que identifica o ponto quando não é load (tanque, ponto da água, composta)
+    fabrica: str | None = None  # para comparar uma fábrica com outra no gráfico (27/10)
 
 
 class GraficoResultado(BaseModel):
@@ -117,23 +118,24 @@ _COLUNAS_TEXTO = f"serie, data, {_VALOR}, txt LIKE '<%%', false, NULL, NULL, NUL
 GRAFICOS: dict[str, tuple] = {
     "recebimento": (
         GRAFICO_RECEBIMENTO_BASE, FiltrosRecebimento, "lido",
-        "analise, data_leitura, valor, sinal = '<', alarme, load, lote::text, NULL, trim_scale(valor)::text, NULL, NULL, NULL",
+        "analise, data_leitura, valor, sinal = '<', alarme, load, lote::text, NULL, trim_scale(valor)::text, NULL, NULL, NULL, fabrica",
         LIMITES_RECEBIMENTO, "Alerta", "log", "UFC/mL",
     ),
     "embarque": (
         EMBARQUE_GRAFICO_BASE, FiltrosEmbarque, "lido",
-        "analise, data_leitura, valor, sinal = '<', alarme, load, amostra, navio, trim_scale(valor)::text, NULL, NULL, NULL",
+        "analise, data_leitura, valor, sinal = '<', alarme, load, amostra, navio, trim_scale(valor)::text, NULL, NULL, NULL, fabrica",
         LIMITES_RECEBIMENTO, "Alerta", "log", "UFC/mL",
     ),
     "recebimento-nfc": (
         NFC_GRAFICO_BASE, FiltrosRecebimentoNfc, "lido",
         "analise, data_recebimento, valor_final, sinal = '<', false, load, lote::text, NULL, trim_scale(valor_lido)::text, "
-        "diluicao_texto, NULL, NULL",
+        "diluicao_texto, NULL, NULL, fabrica",
         {}, "Alerta", "log", "UFC/mL (com diluição)",
     ),
     "tanques": (
-        TANQUES_GRAFICO_BASE, FiltrosTanques, "lida AND maior IS NOT NULL",
-        "analise || CASE etapa WHEN 'Pré-leitura' THEN ' pré' ELSE '' END || CASE WHEN metodo = 'Superficie' THEN ' sup.' ELSE '' END, "
+        # só a leitura final, em três séries: C.T, B.L e Wort (os psicrotróficos), pedido de 27/10
+        TANQUES_GRAFICO_BASE, FiltrosTanques, "lida AND maior IS NOT NULL AND etapa = 'Leitura final'",
+        "CASE analise WHEN 'Psicrotróficos' THEN 'Wort' ELSE analise END, "
         "data_coleta, greatest(maior, 1), maior = 0, limite IS NOT NULL AND maior > limite, NULL, frasco, navio, contagem, NULL, "
         "'Tanque ' || tanque, limite",
         None, "Limite", "log", "Maior placa (UFC)",
@@ -162,6 +164,8 @@ def _sem_filtro() -> _Filtro:
 
 def _registrar(caminho: str) -> None:
     base, Filtros, lido, colunas, alertas_fixos, rotulo, escala, unidade = GRAFICOS[caminho]
+    if not colunas.rstrip().endswith("fabrica"):  # sem a coluna da fábrica (tanques, Howard, águas): NULL
+        colunas += ", NULL"
 
     def montar(con: psycopg.Connection, filtro: _Filtro) -> GraficoResultado:
         filtro.add(lido)
@@ -170,12 +174,12 @@ def _registrar(caminho: str) -> None:
             [*filtro.valores, PONTOS_MAX + 1],
         ).fetchall()
         pontos, alertas = [], dict(alertas_fixos or {})
-        for a, d, v, m, ac, ld, lt, nv, li, dl, rf, lim in linhas[:PONTOS_MAX]:
+        for a, d, v, m, ac, ld, lt, nv, li, dl, rf, lim, fab in linhas[:PONTOS_MAX]:
             if d is None or v is None:
                 continue
             pontos.append(PontoResultado(analise=a, data=d, valor=float(v), menor=bool(m), acima=bool(ac), load=ld, lote=lt,
                                          navio=nv, lido=("<" if m and li and not li.startswith("<") else "") + (li or ""),
-                                         diluicao=dl, ref=rf))
+                                         diluicao=dl, ref=rf, fabrica=fab))
             if alertas_fixos is None and lim is not None and a not in alertas:
                 alertas[a] = float(lim)  # o limite em vigor na leitura mais nova da série
         pontos.reverse()  # do mais antigo ao mais novo
