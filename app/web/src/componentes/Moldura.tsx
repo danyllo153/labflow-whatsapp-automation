@@ -18,7 +18,7 @@ import MenuNavegacao from "./MenuNavegacao";
  * com o dia a dia.
  */
 
-const BARRA_DO_CELULAR = ["/", "/turno", "/relatorio-do-dia", "/esterilizacao"];
+const BARRA_DO_CELULAR = ["/", "/turno", "/leituras", "/esterilizacao"];
 export default function Moldura() {
   const { pessoa } = useSessao();
   const { pathname } = useLocation();

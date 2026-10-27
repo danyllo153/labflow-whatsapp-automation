@@ -48,11 +48,26 @@ const ANALISES = [
   { cod: "BL120", chave: "bl120", rotulo: "B.L 120h" },
 ] as const;
 
-export default function Embarque() {
+/** A leitura do C.T/B.L das amostras do embarque: aqui e na aba Leituras (27/10). */
+export function LeituraDoEmbarque() {
   const { pessoa } = useSessao();
   const pode = !!pessoa?.pode.includes("registrar_analise");
   const [busca, setBusca] = useState("");
   const lista = useLista<Amostra[]>("/analises/embarque/amostras", busca);
+  return (
+    <>
+      <Busca valor={busca} aoMudar={setBusca} rotulo="Procurar navio ou load" dica="Navio ou load (ex.: O.SKY 189)" />
+      {lista.erro && <p className="mensagem-erro">{lista.erro}</p>}
+      {!lista.dados && !lista.erro && <p className="carregando">Carregando...</p>}
+      {lista.dados && <Lancar amostras={lista.dados} pode={pode} aoGravar={lista.recarregar} />}
+    </>
+  );
+}
+
+export default function Embarque() {
+  const { pessoa } = useSessao();
+  const pode = !!pessoa?.pode.includes("registrar_analise");
+  const lista = useLista<Amostra[]>("/analises/embarque/amostras", "");
   return (
     <AppDeAnalise
       app="embarque-fcoj"
@@ -75,14 +90,7 @@ export default function Embarque() {
               <Compostas aoGravar={lista.recarregar} />
             </SoQuemGrava>
           )}
-          {aba === "resultados" && (
-            <>
-              <Busca valor={busca} aoMudar={setBusca} rotulo="Procurar navio ou load" dica="Navio ou load (ex.: O.SKY 189)" />
-              {lista.erro && <p className="mensagem-erro">{lista.erro}</p>}
-              {!lista.dados && !lista.erro && <p className="carregando">Carregando...</p>}
-              {lista.dados && <Lancar amostras={lista.dados} pode={pode} aoGravar={lista.recarregar} />}
-            </>
-          )}
+          {aba === "resultados" && <LeituraDoEmbarque />}
           {aba === "laudo" && <AbaLaudo laudo="embarque-fcoj" />}
           {aba === "tabelas" && (
             <Resultados

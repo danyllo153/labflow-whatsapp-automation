@@ -46,6 +46,55 @@ const TEXTOS: Record<Tipo, { titulo: string; descricao: string; plural: string }
 
 const ROTULO = { ct_48: "C.T. 48h", bl_72: "B.L. 72h", bl_120: "B.L. 120h" } as const;
 
+// para ler hoje: a situação da coleta diz "Atrasado: ..." ou "Vence hoje: ..." (rotas_aguas._situacao)
+const PARA_LER = (situacao: string) => situacao.startsWith("Atrasado") || situacao.startsWith("Vence hoje");
+
+/** A leitura das baias ou das linhas (CIP): só as coletas com resultado por lançar; aqui e na aba Leituras (27/10). */
+export function LeituraDasSuperficies({ tipo }: { tipo: Tipo }) {
+  const [dados, setDados] = useState<Superficies | null>(null);
+  const [erro, setErro] = useState("");
+  const [versao, setVersao] = useState(0);
+  useEffect(() => {
+    lerJson<Superficies>(`/aguas/superficies?tipo=${tipo}`).then(setDados, (e) => setErro(mensagem(e, "Não foi possível carregar as coletas.")));
+  }, [tipo]);
+  const pendentes = (dados?.coletas ?? []).filter((c) => PARA_LER(c.situacao));
+  const t = TEXTOS[tipo];
+  if (erro) return <p className="mensagem-erro">{erro}</p>;
+  if (!dados) return <p className="carregando">Carregando...</p>;
+  return (
+    <div className="cartao" aria-label={`Leituras de ${t.plural}`}>
+      <h2>
+        {t.titulo}: resultados por lançar <span className="contador">{pendentes.length}</span>
+      </h2>
+      {pendentes.length === 0 ? (
+        <p className="texto-secundario">Nenhuma leitura pendente.</p>
+      ) : (
+        <div className="tabela-rolagem">
+          <table className="tabela">
+            <thead>
+              <tr>
+                <th scope="col">Coleta</th>
+                <th scope="col">Ponto</th>
+                <th scope="col">Análise</th>
+                <th scope="col">C.T. 48h</th>
+                <th scope="col">B.L. 72h</th>
+                <th scope="col">B.L. 120h</th>
+                <th scope="col">Situação</th>
+                {dados.pode_lancar && <th scope="col">Ações</th>}
+              </tr>
+            </thead>
+            <tbody>
+              {pendentes.map((c) => (
+                <LinhaDaColeta key={`${c.id}-${versao}`} coleta={c} pode={dados.pode_lancar} aoMudar={(d) => (setDados(d), setVersao((v) => v + 1))} />
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function SuperficiesPagina({ tipo }: { tipo: Tipo }) {
   const [dados, setDados] = useState<Superficies | null>(null);
   const [erro, setErro] = useState("");

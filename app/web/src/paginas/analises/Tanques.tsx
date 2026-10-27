@@ -42,12 +42,33 @@ export const ABAS_TANQUES = [
 ];
 
 
+/** As leituras dos tanques (pré-leitura e leitura final): aqui e na aba Leituras (27/10), de terra, de navio ou de um navio. */
+export function LeituraDosTanques({ origem, navio, buscaInicial = "" }: { origem?: "terra" | "navio"; navio?: string; buscaInicial?: string }) {
+  const { pessoa } = useSessao();
+  const pode = !!pessoa?.pode.includes("registrar_analise");
+  const [busca, setBusca] = useState(buscaInicial || navio || "");
+  const lista = useLista<Leitura[]>("/analises/tanques/leituras", busca);
+  const dados = lista.dados?.filter((l) => !origem || (origem === "navio" ? !!l.navio : !l.navio)) ?? null;
+  const atrasadas = (dados ?? []).filter((l) => l.situacao === "Atrasado").length;
+  return (
+    <>
+      <Numeros
+        itens={[
+          { rotulo: "Atrasadas", valor: atrasadas, tom: "atrasado" },
+          { rotulo: "Vencem hoje", valor: (dados ?? []).length - atrasadas, tom: "hoje" },
+        ]}
+      />
+      <Busca valor={busca} aoMudar={setBusca} rotulo="Procurar tanque ou navio" dica="Tanque ou navio (ex.: 44, O.SKY)" />
+      <Leituras leituras={dados} erro={lista.erro} pode={pode} aoGravar={lista.recarregar} />
+    </>
+  );
+}
+
 export default function Tanques() {
   const { pessoa } = useSessao();
   const pode = !!pessoa?.pode.includes("registrar_analise");
   const podeColetar = !!pessoa?.pode.includes("registrar_coleta");
-  const [busca, setBusca] = useState("");
-  const lista = useLista<Leitura[]>("/analises/tanques/leituras", busca);
+  const lista = useLista<Leitura[]>("/analises/tanques/leituras", "");
   const atrasadas = (lista.dados ?? []).filter((l) => l.situacao === "Atrasado").length;
 
   return (
@@ -61,18 +82,7 @@ export default function Tanques() {
     >
       {(aba) => (
         <>
-          {aba === "leituras" && (
-            <>
-              <Numeros
-                itens={[
-                  { rotulo: "Atrasadas", valor: atrasadas, tom: "atrasado" },
-                  { rotulo: "Vencem hoje", valor: (lista.dados ?? []).length - atrasadas, tom: "hoje" },
-                ]}
-              />
-              <Busca valor={busca} aoMudar={setBusca} rotulo="Procurar tanque ou navio" dica="Tanque ou navio (ex.: 44, O.SKY)" />
-              <Leituras leituras={lista.dados} erro={lista.erro} pode={pode} aoGravar={lista.recarregar} />
-            </>
-          )}
+          {aba === "leituras" && <LeituraDosTanques />}
           {aba === "coleta" && (
             <SoQuemGrava pode={podeColetar}>
               <Coleta aoGravar={lista.recarregar} coletor={pessoa?.cargo === "Coletor"} />

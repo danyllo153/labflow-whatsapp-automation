@@ -34,7 +34,7 @@ import RecebimentoNfc from "./paginas/analises/RecebimentoNfc";
 import Tanques from "./paginas/analises/Tanques";
 import Testes from "./paginas/analises/Testes";
 import TrocarSenha from "./paginas/TrocarSenha";
-import RelatorioDoDia from "./paginas/RelatorioDoDia";
+import Leituras from "./paginas/Leituras";
 import RelatorioDoTurno from "./paginas/RelatorioDoTurno";
 import Turno, { TURNO_MUDOU, type EstadoDoTurno } from "./paginas/Turno";
 import { useSessao } from "./sessao";
@@ -97,7 +97,8 @@ export default function App() {
         <Route path="/meios-lotes" element={<MeiosLotes />} />
         <Route path="/material-asseptico" element={<MaterialAsseptico />} />
         <Route path="/turno/relatorio" element={<RelatorioDoTurno />} />
-        <Route path="/relatorio-do-dia" element={<RelatorioDoDia />} />
+        <Route path="/leituras" element={<Leituras />} />
+        <Route path="/relatorio-do-dia" element={<Navigate to="/leituras" replace />} />  {/* Leituras virou página com abas (27/10) */}
         <Route path="/arquivo" element={<ArquivoDeContraAmostras />} />
         <Route path="/paginas" element={<ListaDePaginas />} />
         <Route path="/analises/recebimento-fcoj" element={<RecebimentoFcoj />} />

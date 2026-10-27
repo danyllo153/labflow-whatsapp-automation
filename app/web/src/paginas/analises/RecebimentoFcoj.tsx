@@ -2,6 +2,7 @@ import { lazy, Suspense, useCallback, useEffect, useState, type FormEvent } from
 import { Link, useSearchParams } from "react-router-dom";
 
 import { enviarJson, lerJson } from "../../api";
+import { useSessao } from "../../sessao";
 import IconeApp from "../../componentes/IconeApp";
 import { dm } from "../../componentes/SeletorDeDias";
 import { FABRICAS } from "../dados/definicoes";
@@ -522,18 +523,35 @@ function Registrar({ pode, aoGravar }: { pode: boolean; aoGravar: () => void }) 
   );
 }
 
+/** A leitura do C.T/B.L dos lotes do recebimento: aqui e na aba Leituras (27/10), já com só os pendentes. */
+export function LeituraDoRecebimento({ analiseInicial = "" }: { analiseInicial?: string }) {
+  const { pessoa } = useSessao();
+  return (
+    <Resultados
+      pode={!!pessoa?.pode.includes("registrar_analise")}
+      buscaInicial=""
+      analiseInicial={analiseInicial}
+      pendentesInicial
+      aoGravar={() => undefined}
+      comGraficoInicial={false}
+    />
+  );
+}
+
 function Resultados({
   pode,
   buscaInicial,
   analiseInicial,
   pendentesInicial,
   aoGravar,
+  comGraficoInicial = true,
 }: {
   pode: boolean;
   buscaInicial: string;
   analiseInicial: string;
   pendentesInicial: boolean;
   aoGravar: () => void;
+  comGraficoInicial?: boolean;
 }) {
   const [busca, setBusca] = useState(buscaInicial);
   const [filtros, setFiltros] = useState({ fabrica: "", so_pendentes: pendentesInicial, dias: "30" });
@@ -591,7 +609,7 @@ function Resultados({
 
   const filtrosAtivos = [filtros.so_pendentes && "Só pendentes", filtros.dias !== "30" && `${filtros.dias} dias`].filter(Boolean);
   // o gráfico do resultado (26/10) acompanha a fábrica, o período e a busca da tabela
-  const [comGrafico, setComGrafico] = useState(true);
+  const [comGrafico, setComGrafico] = useState(comGraficoInicial);
   const desde = new Date(`${hoje}T12:00:00`);
   desde.setDate(desde.getDate() - Number(filtros.dias));
   const consultaDoGrafico = new URLSearchParams({
