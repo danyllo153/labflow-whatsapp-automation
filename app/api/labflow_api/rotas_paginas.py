@@ -176,6 +176,45 @@ def coletas(
     return resultado
 
 
+# ---------------------------------------------------------------- Uma linha por lote (27/10)
+# As páginas de Recebimento FCOJ e Embarque mostravam uma linha por lote E por análise: o resultado do lote ficava espalhado
+# em três linhas. A tabela agora tem uma linha por lote (no embarque, por amostra), com as colunas C.T 48h, B.L 72h e
+# B.L 120h; o gráfico continua lendo uma linha por análise (montar()). Filtro de análise com situação: a situação daquela
+# análise; análise sozinha: o lote com aquela análise lida; resultado ("<10"): em qualquer das três (ou na análise escolhida).
+ANALISES_DA_TABELA = (("C.T 48h", "ct_48"), ("B.L 72h", "bl_72"), ("B.L 120h", "bl_120"))
+
+
+def por_lote(base: str, chaves: str) -> str:
+    colunas = ",\n".join(
+        f"max(resultado) FILTER (WHERE analise = '{a}') AS {c}, max(situacao) FILTER (WHERE analise = '{a}') AS situacao_{c}"
+        for a, c in ANALISES_DA_TABELA
+    )
+    return f"""
+    SELECT {chaves}, min(prevista) AS prevista,
+           {colunas},
+           CASE WHEN bool_or(situacao = 'Não ok') THEN 'Não ok' WHEN bool_or(situacao = 'Atrasado') THEN 'Atrasado'
+                WHEN bool_or(situacao = 'Vence hoje') THEN 'Vence hoje' WHEN bool_or(situacao = 'No prazo') THEN 'No prazo'
+                ELSE 'Ok' END AS situacao,
+           string_agg(DISTINCT lido_por, ', ') AS lido_por, max(data_leitura) AS data_leitura
+    FROM ({base}) x
+    GROUP BY {chaves}
+    """
+
+
+def filtro_por_lote(f: _Filtro, analise: str | None, situacao: str | None, resultado: str | None) -> None:
+    coluna = dict(ANALISES_DA_TABELA).get(analise or "")
+    if coluna and situacao:
+        f.add(f"situacao_{coluna} = %s", situacao)
+    elif situacao:
+        f.add("situacao = %s", situacao)
+    elif coluna:
+        f.add(f"{coluna} IS NOT NULL")
+    texto = "".join((resultado or "").split())
+    if texto:
+        alvo = [coluna] if coluna else [c for _, c in ANALISES_DA_TABELA]
+        f.add("(" + " OR ".join(f"{c} = %s" for c in alvo) + ")", *([texto] * len(alvo)))
+
+
 # ---------------------------------------------------------------- Recebimento (bi.contagens, origem Recebimento)
 RECEBIMENTO_BASE = """
     SELECT load, item, fabrica, numero AS lote, analise, prevista, lido, resultado, alarme,
@@ -196,6 +235,8 @@ def filtro_recebimento(
     analise: str | None,
     situacao: str | None,
     quem: str | None,
+    por_lote: bool = False,
+    resultado: str | None = None,
 ) -> _Filtro:
     f = _Filtro()
     if data_de:
@@ -205,8 +246,12 @@ def filtro_recebimento(
     f.igual("load", load.strip() if load else None)
     f.igual("lote", lote)
     f.uma_de("fabrica", fabrica)
-    f.igual("analise", analise)
-    f.igual("situacao", situacao)
+    if por_lote:
+        filtro_por_lote(f, analise, situacao, resultado)
+    else:
+        f.igual("analise", analise)
+        f.igual("situacao", situacao)
+        f.igual("resultado", "".join(resultado.split()) if resultado else None)
     f.contem("lido_por", quem)
     return f
 
@@ -224,22 +269,33 @@ class FiltrosRecebimento:
         analise: Literal["C.T 48h", "B.L 72h", "B.L 120h"] | None = None,
         situacao: Literal["Ok", "Não ok", "Atrasado", "Vence hoje", "No prazo"] | None = None,
         quem: str | None = Query(default=None, description="Parte do nome de quem leu"),
+        resultado: str | None = Query(default=None, max_length=10, description='O resultado, ex.: "<10"'),
     ) -> None:
         self.data_de, self.data_ate, self.load, self.lote = data_de, data_ate, load, lote
-        self.fabrica, self.analise, self.situacao, self.quem = fabrica, analise, situacao, quem
+        self.fabrica, self.analise, self.situacao, self.quem, self.resultado = fabrica, analise, situacao, quem, resultado
 
     def montar(self) -> _Filtro:
+        """Uma linha por análise (o gráfico)."""
         return filtro_recebimento(
-            self.data_de, self.data_ate, self.load, self.lote, self.fabrica, self.analise, self.situacao, self.quem
+            self.data_de, self.data_ate, self.load, self.lote, self.fabrica, self.analise, self.situacao, self.quem,
+            resultado=self.resultado,
+        )
+
+    def montar_tabela(self) -> _Filtro:
+        """Uma linha por lote (a tabela e o Excel)."""
+        return filtro_recebimento(
+            self.data_de, self.data_ate, self.load, self.lote, self.fabrica, self.analise, self.situacao, self.quem,
+            por_lote=True, resultado=self.resultado,
         )
 
     def descricao(self) -> list[tuple[str, Any]]:
         return [("Data prevista de", self.data_de), ("Data prevista até", self.data_ate), ("Load", self.load),
                 ("Lote", self.lote), ("Fábrica", self.fabrica), ("Análise", self.analise),
-                ("Situação", self.situacao), ("Quem leu", self.quem)]
+                ("Situação", self.situacao), ("Quem leu", self.quem), ("Resultado", self.resultado)]
 
 
-ORDEM_RECEBIMENTO = "prevista DESC, load, lote, analise"
+RECEBIMENTO_POR_LOTE = por_lote(RECEBIMENTO_BASE, "load, item, fabrica, lote")
+ORDEM_RECEBIMENTO = "prevista DESC, load, lote"
 
 
 def _barrar_coletor(pessoa: PessoaLogada) -> None:
@@ -257,7 +313,7 @@ def recebimento(
     con: psycopg.Connection = Depends(obter_conexao),
 ) -> Pagina:
     _barrar_coletor(pessoa)
-    return _paginar(con, RECEBIMENTO_BASE, filtros.montar(), ORDEM_RECEBIMENTO, pagina, por_pagina, busca)
+    return _paginar(con, RECEBIMENTO_POR_LOTE, filtros.montar_tabela(), ORDEM_RECEBIMENTO, pagina, por_pagina, busca)
 
 
 # ---------------------------------------------------------------- Exportar para Excel (APP-009)
@@ -269,8 +325,8 @@ COLUNAS_COLETAS = [
     ("coletado_por", "Coletado por"), ("digitado_por", "Digitado por"), ("registrado_em", "Registrado em"),
 ]
 COLUNAS_RECEBIMENTO = [
-    ("load", "Load"), ("item", "Item"), ("fabrica", "Fábrica"), ("lote", "Lote"), ("analise", "Análise"),
-    ("prevista", "Leitura prevista"), ("resultado", "Resultado"), ("situacao", "Situação"),
+    ("load", "Load"), ("item", "Item"), ("fabrica", "Fábrica"), ("lote", "Lote"), ("prevista", "Leitura prevista"),
+    ("ct_48", "C.T 48h"), ("bl_72", "B.L 72h"), ("bl_120", "B.L 120h"), ("situacao", "Situação"),
     ("lido_por", "Lido por"), ("data_leitura", "Data da leitura"),
 ]
 
@@ -310,7 +366,7 @@ def recebimento_excel(
     con: psycopg.Connection = Depends(obter_conexao),
 ) -> Response:
     _barrar_coletor(pessoa)
-    linhas = _linhas_para_excel(con, RECEBIMENTO_BASE, filtros.montar(), ORDEM_RECEBIMENTO, busca)
+    linhas = _linhas_para_excel(con, RECEBIMENTO_POR_LOTE, filtros.montar_tabela(), ORDEM_RECEBIMENTO, busca)
     arquivo = planilha("Recebimento", COLUNAS_RECEBIMENTO, linhas, filtros.descricao())
     return resposta_xlsx(arquivo, "recebimento")
 

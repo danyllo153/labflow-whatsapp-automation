@@ -64,6 +64,12 @@ export function Celula({ coluna, linha }: { coluna: Coluna; linha: Record<string
         {texto}
       </span>
     );
+  // o resultado de cada análise na linha do lote: vermelho se Não ok; "…" enquanto não foi lido (27/10)
+  if (coluna.formato === "contagem") {
+    const situacao = String(linha[`situacao_${coluna.chave}`] ?? "");
+    if (!texto) return <span className="texto-secundario" title={situacao || undefined}>…</span>;
+    return <span className={situacao === "Não ok" ? "contagem-nao-ok" : undefined}>{texto}</span>;
+  }
   if (coluna.formato === "amostra" && texto) return <span className={`etiqueta ${texto === "Fresh" ? "etiqueta-fresh" : "etiqueta-past"}`}>{texto}</span>;
   return <>{texto}</>;
 }

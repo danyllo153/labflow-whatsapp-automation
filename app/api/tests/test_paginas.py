@@ -21,6 +21,21 @@ def logado(cliente, criar_pessoa):
 def _conta(conexao, sql, *params):
     return conexao.execute(sql, params).fetchone()[0]
 
+# 27/10: a tabela tem uma linha por lote (no embarque, por amostra); a situação do lote é a pior das três análises
+SITUACAO_DO_LOTE = """
+CASE WHEN bool_or(lido AND alarme) THEN 'Não ok' WHEN bool_or(NOT lido AND situacao = 'Atrasado') THEN 'Atrasado'
+     WHEN bool_or(NOT lido AND situacao = 'Vence hoje') THEN 'Vence hoje' WHEN bool_or(NOT lido AND situacao = 'No prazo') THEN 'No prazo'
+     ELSE 'Ok' END
+"""
+CHAVES = {"Recebimento": "load, item, fabrica, numero", "Embarque": "navio, linha, fase, load, item, fabrica, lote_amostra"}
+
+
+def lotes_sql(origem: str, onde: str = "true", ter: str = "true") -> str:
+    """Quantos lotes (amostras) da origem: `onde` filtra as linhas; `ter` filtra o lote (ex.: a situação dele)."""
+    return (f"SELECT count(*) FROM (SELECT {SITUACAO_DO_LOTE} AS situacao_do_lote, bool_or(analise = 'C.T 48h' AND lido) AS ct_lido "
+            f"FROM bi.contagens WHERE origem = '{origem}' AND {onde} GROUP BY {CHAVES[origem]}) s WHERE {ter}")
+
+
 
 # ------------------------------------------------------------------ Coletas
 def test_coletas_sem_filtro_bate_com_bi_coletas(cliente, logado, conexao):
@@ -93,23 +108,22 @@ def test_texto_do_filtro_nao_vira_sql(cliente, logado):
 def test_recebimento_bate_com_bi_contagens(cliente, logado, conexao):
     logado("Consultor")
     corpo = cliente.get("/paginas/recebimento").json()
-    assert corpo["total"] == _conta(conexao, "SELECT count(*) FROM bi.contagens WHERE origem = 'Recebimento'") > 0
+    assert corpo["total"] == _conta(conexao, lotes_sql("Recebimento")) > 0
+    assert {"ct_48", "bl_72", "bl_120"} <= set(corpo["linhas"][0])  # uma linha por lote, uma coluna por análise
 
 
 @pytest.mark.parametrize(
     "situacao, sql",
     [
-        ("Não ok", "lido AND alarme"),
-        ("Ok", "lido AND NOT alarme"),
-        ("Atrasado", "NOT lido AND situacao = 'Atrasado'"),
+        ("Não ok", "situacao_do_lote = 'Não ok'"),
+        ("Ok", "situacao_do_lote = 'Ok'"),
+        ("Atrasado", "situacao_do_lote = 'Atrasado'"),
     ],
 )
 def test_recebimento_por_situacao(cliente, logado, conexao, situacao, sql):
     logado()
     corpo = cliente.get("/paginas/recebimento", params={"situacao": situacao, "por_pagina": 200}).json()
-    assert corpo["total"] == _conta(
-        conexao, f"SELECT count(*) FROM bi.contagens WHERE origem = 'Recebimento' AND {sql}"
-    )
+    assert corpo["total"] == _conta(conexao, lotes_sql("Recebimento", ter=sql))
     assert all(l["situacao"] == situacao for l in corpo["linhas"])
 
 
@@ -133,9 +147,22 @@ def test_recebimento_de_varias_fabricas_para_comparar(cliente, logado, conexao):
     """27/10: "AQA,COL" traz as duas fábricas (o gráfico compara uma com a outra)."""
     logado()
     corpo = cliente.get("/paginas/recebimento", params={"fabrica": "aqa, col"}).json()
-    assert corpo["total"] == _conta(
-        conexao, "SELECT count(*) FROM bi.contagens WHERE origem = 'Recebimento' AND fabrica IN ('AQA', 'COL')"
+    assert corpo["total"] == _conta(conexao, lotes_sql("Recebimento", "fabrica IN ('AQA', 'COL')"))
+
+
+def test_recebimento_por_lote_filtra_a_analise_e_o_resultado(cliente, logado, conexao):
+    """27/10: a análise com a situação filtra a situação daquela análise; o resultado ("<10") acha em qualquer coluna."""
+    logado()
+    ct_nao_ok = cliente.get("/paginas/recebimento", params={"analise": "C.T 48h", "situacao": "Não ok", "por_pagina": 200}).json()
+    assert ct_nao_ok["total"] == _conta(
+        conexao, "SELECT count(*) FROM bi.contagens WHERE origem = 'Recebimento' AND analise = 'C.T 48h' AND lido AND alarme"
     )
+    assert all(l["situacao_ct_48"] == "Não ok" for l in ct_nao_ok["linhas"])
+    resultado = conexao.execute(
+        "SELECT resultado FROM bi.contagens WHERE origem = 'Recebimento' AND resultado IS NOT NULL LIMIT 1"
+    ).fetchone()[0]
+    achados = cliente.get("/paginas/recebimento", params={"resultado": resultado, "por_pagina": 200}).json()["linhas"]
+    assert achados and all(resultado in (l["ct_48"], l["bl_72"], l["bl_120"]) for l in achados)
 
 
 def test_sem_login_nao_ve_paginas(cliente):

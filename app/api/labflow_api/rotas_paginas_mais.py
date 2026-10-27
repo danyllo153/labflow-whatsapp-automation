@@ -17,7 +17,16 @@ from pydantic import BaseModel
 from labflow_api.dependencias import PessoaLogada, obter_conexao
 from labflow_api.excel import MIME_XLSX, planilha, resposta_xlsx
 from labflow_api.permissoes import exigir
-from labflow_api.rotas_paginas import POR_PAGINA_MAX, Pagina, _barrar_coletor, _Filtro, _linhas_para_excel, _paginar
+from labflow_api.rotas_paginas import (
+    POR_PAGINA_MAX,
+    Pagina,
+    _barrar_coletor,
+    _Filtro,
+    _linhas_para_excel,
+    _paginar,
+    filtro_por_lote,
+    por_lote,
+)
 from labflow_api.rotas_pendencias import BLOCOS, PENDENCIAS_SQL
 
 roteador = APIRouter(prefix="/paginas", tags=["páginas"])
@@ -38,7 +47,8 @@ EMBARQUE_BASE = """
     FROM bi.contagens
     WHERE origem = 'Embarque'
 """
-ORDEM_EMBARQUE = "prevista DESC, navio, linha, fase, load, amostra, analise"
+EMBARQUE_POR_AMOSTRA = por_lote(EMBARQUE_BASE, "navio, linha, fase, load, item, fabrica, amostra")
+ORDEM_EMBARQUE = "prevista DESC, navio, linha, fase, load, amostra"
 
 
 class FiltrosEmbarque:
@@ -54,11 +64,14 @@ class FiltrosEmbarque:
         analise: Literal["C.T 48h", "B.L 72h", "B.L 120h"] | None = None,
         situacao: Literal["Ok", "Não ok", "Atrasado", "Vence hoje", "No prazo"] | None = None,
         quem: str | None = Query(default=None, description="Parte do nome de quem leu"),
+        resultado: str | None = Query(default=None, max_length=10, description='O resultado, ex.: "<10"'),
     ) -> None:
         self.data_de, self.data_ate, self.navio, self.linha, self.fase = data_de, data_ate, navio, linha, fase
         self.load, self.fabrica, self.analise, self.situacao, self.quem = load, fabrica, analise, situacao, quem
+        self.resultado = resultado
 
-    def montar(self) -> _Filtro:
+    def montar(self, por_lote: bool = False) -> _Filtro:
+        """Uma linha por análise (o gráfico); por_lote: uma linha por amostra, com C.T, B.L 72h e B.L 120h (a tabela)."""
         f = _Filtro()
         _periodo(f, "prevista", self.data_de, self.data_ate)
         f.contem("navio", self.navio)
@@ -66,22 +79,30 @@ class FiltrosEmbarque:
         f.igual("fase", self.fase)
         f.igual("load", self.load.strip() if self.load else None)
         f.uma_de("fabrica", self.fabrica)
-        f.igual("analise", self.analise)
-        f.igual("situacao", self.situacao)
+        if por_lote:
+            filtro_por_lote(f, self.analise, self.situacao, self.resultado)
+        else:
+            f.igual("analise", self.analise)
+            f.igual("situacao", self.situacao)
+            f.igual("resultado", "".join(self.resultado.split()) if self.resultado else None)
         f.contem("lido_por", self.quem)
         return f
+
+    def montar_tabela(self) -> _Filtro:
+        return self.montar(por_lote=True)
 
     def descricao(self) -> list[tuple[str, Any]]:
         return [("Prevista de", self.data_de), ("Prevista até", self.data_ate), ("Navio", self.navio),
                 ("Linha", self.linha), ("Fase", self.fase), ("Load", self.load), ("Fábrica", self.fabrica),
                 ("Análise", self.analise),
-                ("Situação", self.situacao), ("Quem leu", self.quem)]
+                ("Situação", self.situacao), ("Quem leu", self.quem), ("Resultado", self.resultado)]
 
 
 COLUNAS_EMBARQUE = [
     ("navio", "Navio"), ("linha", "Linha"), ("fase", "Fase"), ("load", "Load"), ("item", "Item"),
-    ("fabrica", "Fábrica"), ("amostra", "Amostra"), ("analise", "Análise"), ("prevista", "Leitura prevista"),
-    ("resultado", "Resultado"), ("situacao", "Situação"), ("lido_por", "Lido por"), ("data_leitura", "Data da leitura"),
+    ("fabrica", "Fábrica"), ("amostra", "Amostra"), ("prevista", "Leitura prevista"),
+    ("ct_48", "C.T 48h"), ("bl_72", "B.L 72h"), ("bl_120", "B.L 120h"), ("situacao", "Situação"), ("lido_por", "Lido por"),
+    ("data_leitura", "Data da leitura"),
 ]
 
 # ---------------------------------------------------------------- TAB e Coliformes (bi.testes; inclui Howard)
@@ -188,11 +209,16 @@ COLUNAS_RECEBIMENTO_NFC = [
 
 # ---------------------------------------------------------------- Rotas de lista e Excel (mesmo molde para todas)
 PAGINAS = {
-    "embarque": (EMBARQUE_BASE, ORDEM_EMBARQUE, FiltrosEmbarque, "Embarque", COLUNAS_EMBARQUE),
+    "embarque": (EMBARQUE_POR_AMOSTRA, ORDEM_EMBARQUE, FiltrosEmbarque, "Embarque", COLUNAS_EMBARQUE),
     "testes": (TESTES_BASE, ORDEM_TESTES, FiltrosTestes, "TAB e Coliformes", COLUNAS_TESTES),
     "recebimento-nfc": (RECEBIMENTO_NFC_BASE, ORDEM_RECEBIMENTO_NFC, FiltrosRecebimentoNfc, "Recebimento NFC",
                         COLUNAS_RECEBIMENTO_NFC),
 }
+
+
+def _da_tabela(filtros) -> _Filtro:
+    """O filtro da tabela: uma linha por amostra no embarque (montar_tabela); nas outras, o mesmo do gráfico."""
+    return filtros.montar_tabela() if hasattr(filtros, "montar_tabela") else filtros.montar()
 
 
 def _registrar(caminho: str) -> None:
@@ -207,7 +233,7 @@ def _registrar(caminho: str) -> None:
         con: psycopg.Connection = Depends(obter_conexao),
     ) -> Pagina:
         _barrar_coletor(pessoa)
-        return _paginar(con, base, filtros.montar(), ordem, pagina, por_pagina, busca)
+        return _paginar(con, base, _da_tabela(filtros), ordem, pagina, por_pagina, busca)
 
     def excel(
         filtros: Filtros = Depends(),  # type: ignore[valid-type]
@@ -216,7 +242,7 @@ def _registrar(caminho: str) -> None:
         con: psycopg.Connection = Depends(obter_conexao),
     ) -> Response:
         _barrar_coletor(pessoa)
-        linhas = _linhas_para_excel(con, base, filtros.montar(), ordem, busca)
+        linhas = _linhas_para_excel(con, base, _da_tabela(filtros), ordem, busca)
         return resposta_xlsx(planilha(titulo, colunas, linhas, filtros.descricao()), caminho)
 
     roteador.add_api_route(f"/{caminho}", lista, methods=["GET"], response_model=Pagina, name=f"pagina_{caminho}",

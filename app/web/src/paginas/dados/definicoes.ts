@@ -1,6 +1,14 @@
 /** Páginas do laboratório (07 §5): o que cada uma mostra e filtra. A API já filtra pelas views do Power BI. */
 
-export type Formato = "texto" | "data" | "dataHora" | "situacao" | "fabrica" | "amostra";
+// "contagem": o resultado de uma análise na linha do lote (27/10), em vermelho quando a situação dela é Não ok
+export type Formato = "texto" | "data" | "dataHora" | "situacao" | "fabrica" | "amostra" | "contagem";
+
+/** O C.T 48h, o B.L 72h e o B.L 120h na mesma linha do lote (Recebimento FCOJ e Embarque, 27/10). */
+const COLUNAS_DAS_CONTAGENS: Coluna[] = [
+  { chave: "ct_48", rotulo: "C.T 48h", formato: "contagem" },
+  { chave: "bl_72", rotulo: "B.L 72h", formato: "contagem" },
+  { chave: "bl_120", rotulo: "B.L 120h", formato: "contagem" },
+];
 
 export interface Coluna {
   chave: string;
@@ -106,9 +114,9 @@ export const PAGINAS: DefinicaoDePagina[] = [
       { chave: "lote", rotulo: "Lote" },
       { chave: "fabrica", rotulo: "Fábrica", formato: "fabrica" },
       { chave: "item", rotulo: "Item" },
-      { chave: "analise", rotulo: "Análise" },
       { chave: "prevista", rotulo: "Leitura prevista", formato: "data" },
-      { chave: "resultado", rotulo: "Resultado" },
+      // uma linha por lote (27/10): o C.T e os dois B.L lado a lado
+      ...COLUNAS_DAS_CONTAGENS,
       { chave: "situacao", rotulo: "Situação", formato: "situacao" },
       { chave: "lido_por", rotulo: "Lido por" },
       { chave: "data_leitura", rotulo: "Data da leitura", formato: "data" },
@@ -121,6 +129,7 @@ export const PAGINAS: DefinicaoDePagina[] = [
       { chave: "fabrica", rotulo: "Fábrica", tipo: "opcoes", opcoes: FABRICAS },
       { chave: "analise", rotulo: "Análise", tipo: "opcoes", opcoes: ["C.T 48h", "B.L 72h", "B.L 120h"] },
       { chave: "situacao", rotulo: "Situação", tipo: "opcoes", opcoes: ["Ok", "Não ok", "Atrasado", "Vence hoje", "No prazo"] },
+      { chave: "resultado", rotulo: "Resultado", tipo: "texto", dica: "ex.: <10 (com a análise, só nela)" },
       { chave: "quem", rotulo: "Quem leu", tipo: "texto" },
     ],
   },
@@ -244,9 +253,8 @@ export const PAGINAS: DefinicaoDePagina[] = [
       { chave: "load", rotulo: "Load" },
       { chave: "fabrica", rotulo: "Fábrica", formato: "fabrica" },
       { chave: "amostra", rotulo: "Amostra" },
-      { chave: "analise", rotulo: "Análise" },
       { chave: "prevista", rotulo: "Leitura prevista", formato: "data" },
-      { chave: "resultado", rotulo: "Resultado" },
+      ...COLUNAS_DAS_CONTAGENS,
       { chave: "situacao", rotulo: "Situação", formato: "situacao" },
       { chave: "lido_por", rotulo: "Lido por" },
     ],
@@ -260,6 +268,7 @@ export const PAGINAS: DefinicaoDePagina[] = [
       { chave: "fabrica", rotulo: "Fábrica", tipo: "opcoes", opcoes: FABRICAS },
       { chave: "analise", rotulo: "Análise", tipo: "opcoes", opcoes: ["C.T 48h", "B.L 72h", "B.L 120h"] },
       { chave: "situacao", rotulo: "Situação", tipo: "opcoes", opcoes: ["Ok", "Não ok", "Atrasado", "Vence hoje", "No prazo"] },
+      { chave: "resultado", rotulo: "Resultado", tipo: "texto", dica: "ex.: <10 (com a análise, só nela)" },
       { chave: "quem", rotulo: "Quem leu", tipo: "texto" },
     ],
   },

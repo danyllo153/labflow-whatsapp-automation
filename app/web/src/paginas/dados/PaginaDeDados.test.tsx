@@ -182,6 +182,26 @@ describe("Páginas: Coletas e Recebimento (APP-015)", () => {
     expect(screen.getByText("Ok")).toHaveClass("etiqueta-ok");
   });
 
+  it("Recebimento: uma linha por lote, com C.T, B.L 72h e B.L 120h lado a lado e o Não ok em vermelho (27/10)", async () => {
+    abrir("/paginas/recebimento", {
+      "GET /paginas/recebimento": (url: string) =>
+        paginaDe(
+          [
+            {
+              load: "90008", lote: 4, fabrica: "AQA", item: "2549", prevista: "2026-10-14", ct_48: "250", situacao_ct_48: "Não ok",
+              bl_72: "<10", situacao_bl_72: "Ok", bl_120: null, situacao_bl_120: "No prazo", situacao: "Não ok", lido_por: "Ana", data_leitura: "2026-10-14",
+            },
+          ],
+          url,
+        ),
+    });
+    for (const titulo of ["C.T 48h", "B.L 72h", "B.L 120h"]) expect(await screen.findByRole("columnheader", { name: titulo })).toBeInTheDocument();
+    expect(screen.queryByRole("columnheader", { name: "Análise" })).toBeNull();
+    expect(screen.getByText("250")).toHaveClass("contagem-nao-ok");
+    expect(screen.getByText("<10")).not.toHaveClass("contagem-nao-ok");
+    expect(screen.getByTitle("No prazo")).toHaveTextContent("…"); // o B.L 120h ainda não lido
+  });
+
   it("página sem permissão mostra a mensagem da API", async () => {
     abrir("/paginas/recebimento", {
       "GET /paginas/recebimento": () => ({ status: 403, corpo: { detail: "Seu cargo não permite esta página." } }),

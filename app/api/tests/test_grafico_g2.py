@@ -43,7 +43,8 @@ def test_nao_ok_bate_com_a_pagina(cliente, logado):
     logado()
     pontos = cliente.get("/paginas/recebimento/grafico", params={"situacao": "Não ok"}).json()["pontos"]
     tabela = cliente.get("/paginas/recebimento", params={"situacao": "Não ok"}).json()["total"]
-    assert pontos and all(p["nao_ok"] for p in pontos) and len(pontos) == tabela
+    # o gráfico tem um ponto por análise; a tabela, uma linha por lote (27/10)
+    assert pontos and all(p["nao_ok"] for p in pontos) and len({(p["load"], p["lote"]) for p in pontos}) == tabela
 
 
 def test_filtro_de_load_vale_no_grafico(cliente, logado):
