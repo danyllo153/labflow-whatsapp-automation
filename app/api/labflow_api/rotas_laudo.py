@@ -12,6 +12,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel
 
 from labflow_api import laudo_esterilizacao as laudo
+from labflow_api import laudos
 from labflow_api.dependencias import PessoaLogada, obter_conexao
 from labflow_api.permissoes import exigir, pode
 from labflow_api.rotas_turno import FUSO
@@ -46,6 +47,7 @@ SELECT l.id, row_number() OVER (ORDER BY l.id), l.impresso_em, coalesce(u.nome, 
        (SELECT min(e.feita_em) FROM app.esterilizacoes e WHERE e.laudo_id = l.id AND e.excluida_em IS NULL),
        (SELECT max(e.feita_em) FROM app.esterilizacoes e WHERE e.laudo_id = l.id AND e.excluida_em IS NULL)
 FROM app.laudos_esterilizacao l LEFT JOIN usuarios u ON u.id = l.impresso_por LEFT JOIN app.credenciais c ON c.usuario_id = l.impresso_por
+WHERE l.excluida_em IS NULL
 ORDER BY l.id
 """
 
@@ -111,7 +113,7 @@ async def enviar_modelo(
 
 
 def _existe(con: psycopg.Connection, laudo_id: int) -> None:
-    if con.execute("SELECT 1 FROM app.laudos_esterilizacao WHERE id = %s", (laudo_id,)).fetchone() is None:
+    if con.execute("SELECT 1 FROM app.laudos_esterilizacao WHERE id = %s AND excluida_em IS NULL", (laudo_id,)).fetchone() is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Página do laudo não encontrada.")
 
 
@@ -124,20 +126,58 @@ def baixar_pdf(
     """O PDF da página, com as linhas escritas sobre o modelo da empresa (ou o de demonstração)."""
     _existe(con, laudo_id)
     modelo = _modelo(con)
-    pdf = laudo.gerar_pdf(laudo.linhas_da_pagina(con, laudo_id), bytes(modelo[0]) if modelo else None)
+    linhas = laudo.linhas_da_pagina(con, laudo_id)
+    pdf = laudo.gerar_pdf(linhas, bytes(modelo[0]) if modelo else None)
+    if con.execute("SELECT impresso_em IS NOT NULL FROM app.laudos_esterilizacao WHERE id = %s", (laudo_id,)).fetchone()[0]:
+        # laudo finalizado: o traço que fecha as linhas vazias, como em todo documento (26/10)
+        risco = laudos.Tabela(laudo.COLUNAS_X, laudo.TOPO_DAS_LINHAS, laudo.BASE_DAS_LINHAS, laudo.CAPACIDADE).traco_das_vazias(len(linhas))
+        if risco:
+            pdf = laudos.riscar(pdf, [risco])
     return Response(pdf, media_type="application/pdf", headers={"Content-Disposition": f'inline; filename="laudo-esterilizacao-{laudo_id}.pdf"'})
 
 
-@roteador.post("/{laudo_id}/impresso", response_model=Laudos)
+@roteador.post("/{laudo_id}/finalizar", response_model=Laudos)
+@roteador.post("/{laudo_id}/impresso", response_model=Laudos, include_in_schema=False)  # o nome antigo
 def marcar_impresso(
     laudo_id: int,
     pessoa: PessoaLogada = Depends(exigir("registrar_analise")),
     con: psycopg.Connection = Depends(obter_conexao),
 ) -> Laudos:
-    """Marca a página como impressa (vai para o arquivo; as próximas esterilizações abrem uma página nova)."""
+    """Finalizar laudo (antes "marcar como impressa"): vai para o arquivo; as próximas esterilizações abrem uma página nova."""
     _existe(con, laudo_id)
     con.execute(
         "UPDATE app.laudos_esterilizacao SET impresso_por = %s, impresso_em = clock_timestamp() WHERE id = %s AND impresso_em IS NULL",
         (pessoa.usuario_id, laudo_id),
+    )
+    return _laudos(con, pessoa)
+
+
+@roteador.post("/{laudo_id}/reabrir", response_model=Laudos)
+def reabrir(
+    laudo_id: int,
+    pessoa: PessoaLogada = Depends(exigir("registrar_analise")),
+    con: psycopg.Connection = Depends(obter_conexao),
+) -> Laudos:
+    """Editar a página finalizada (27/10): volta a "em preenchimento"; o PDF sai de novo com o que estiver registrado."""
+    _existe(con, laudo_id)
+    con.execute("UPDATE app.laudos_esterilizacao SET impresso_por = NULL, impresso_em = NULL WHERE id = %s", (laudo_id,))
+    return _laudos(con, pessoa)
+
+
+@roteador.delete("/{laudo_id}", response_model=Laudos)
+def excluir(
+    laudo_id: int,
+    pessoa: PessoaLogada = Depends(exigir("registrar_analise")),
+    con: psycopg.Connection = Depends(obter_conexao),
+) -> Laudos:
+    """Excluir a página (27/10): as esterilizações dela vão para uma página nova (nada se apaga de verdade, 077)."""
+    _existe(con, laudo_id)
+    con.execute("SELECT pg_advisory_xact_lock(60, hashtext('esterilizacao'))")
+    nova = con.execute("INSERT INTO app.laudos_esterilizacao DEFAULT VALUES RETURNING id").fetchone()[0]
+    con.execute("UPDATE app.esterilizacoes SET laudo_id = %s WHERE laudo_id = %s", (nova, laudo_id))
+    con.execute(
+        "UPDATE app.laudos_esterilizacao SET excluida_em = clock_timestamp(), excluida_por = %(u)s,"
+        " impresso_em = coalesce(impresso_em, clock_timestamp()), impresso_por = coalesce(impresso_por, %(u)s) WHERE id = %(l)s",
+        {"u": pessoa.usuario_id, "l": laudo_id},
     )
     return _laudos(con, pessoa)

@@ -81,3 +81,40 @@ def test_contra_amostra_do_recebimento_corrida(cliente, logado, conexao):
 def test_tabela_das_linhas_no_banco(conexao):
     assert conexao.execute("SELECT has_table_privilege('labflow_app_web', 'app.laudo_linhas', 'INSERT')").fetchone()[0]
     assert not conexao.execute("SELECT has_table_privilege('labflow_app_web', 'app.laudo_linhas', 'DELETE')").fetchone()[0]
+
+
+def test_amostra_sem_numero_da_composta_e_tanque_com_a_data_da_coleta():
+    # (id, data, status, resultado, %, campos, criado, composta, load, item, fábrica, origem, rótulo, lotes, tanque, navio, coleta)
+    receb = (1, None, "", None, None, None, None, 18, "90009", "9100", "AQA", "recebimento", "load 90009", "1-5", None, None, None)
+    emb = (2, None, "", None, None, None, None, 20, "90012", "9200", None, "embarque", "D.SUN 142 linha 5 fase 1", "1-5", None, None, None)
+    terra = (3, None, "", None, None, None, None, None, None, None, None, None, None, None, "47", None, date(2026, 10, 26))
+    navio = (4, None, "", None, None, None, None, None, None, None, None, None, None, None, "2P", "O.SKY 189", date(2026, 10, 26))
+    assert [laudos_analises._amostra(x) for x in (receb, emb, terra, navio)] == [
+        "90009 (1-5)", "D.SUN 142 L5 F1 90012 (A1-A5)", "Tanque 47, 26/10/2026", "O.SKY 189 · 2P, 26/10/2026",
+    ]
+
+
+def test_tabela_se_encaixa_nas_linhas_do_modelo_enviado():
+    # um modelo de demonstração com as linhas 1,5 pt mais altas (como o Word desenha) e o mesmo topo
+    alta = laudos.Tabela(laudos_analises.CA_EMB.colunas, 222.8, 222.8 + 28 * 13.86, 28)
+    modelo = laudos.demonstracao("teste", alta, ("a", "b", "c", "d"))()
+    encaixada = laudos.encaixar(laudos_analises.CA_EMB, modelo)
+    assert (round(encaixada.topo, 0), round(encaixada.base, 0)) == (223, 611)
+    assert laudos.encaixar(laudos_analises.CA_EMB, None) == laudos_analises.CA_EMB  # sem modelo: a medida
+
+
+def test_finalizar_reabrir_e_excluir_a_folha(cliente, logado, conexao):
+    paginas = cliente.get("/laudos/howard").json()["paginas"]
+    alvo = paginas[0]
+    refs = {r for (r,) in conexao.execute("SELECT ref FROM app.laudo_linhas WHERE pagina_id = %s", (alvo["id"],))}
+    r = cliente.post(f"/laudos/howard/{alvo['id']}/finalizar")
+    assert r.status_code == 200 and next(p for p in r.json()["paginas"] if p["id"] == alvo["id"])["impresso"]
+    r = cliente.post(f"/laudos/howard/{alvo['id']}/reabrir")  # editar: volta a "em preenchimento"
+    assert not next(p for p in r.json()["paginas"] if p["id"] == alvo["id"])["impresso"]
+    cliente.post(f"/laudos/howard/{alvo['id']}/finalizar")
+    r = cliente.delete(f"/laudos/howard/{alvo['id']}")
+    assert r.status_code == 200 and all(p["id"] != alvo["id"] for p in r.json()["paginas"])  # a folha sai da lista
+    nova = conexao.execute("SELECT DISTINCT pagina_id FROM app.laudo_linhas WHERE ref = ANY(%s) AND laudo = 'howard'", (list(refs),)).fetchall()
+    assert len(nova) == 1 and nova[0][0] != alvo["id"]  # as linhas foram juntas para uma folha nova
+    assert conexao.execute("SELECT excluida_em IS NOT NULL FROM app.paginas_laudo WHERE id = %s", (alvo["id"],)).fetchone()[0]
+    assert cliente.get(f"/laudos/howard/{alvo['id']}/pdf").status_code == 404

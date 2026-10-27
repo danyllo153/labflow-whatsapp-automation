@@ -38,11 +38,13 @@ def _placas(placas: dict | None, chave: str) -> str:
 
 TAB = laudos.Tabela(colunas=(32.7, 224.1, 309.2, 394.3, 479.3, 564.4), topo=197.1, base=483.1, linhas=20)
 TAB_DATA = ((113.0, 146.0), (153.0, 176.0), (183.0, 212.0))  # "Data da Análise: __ / __ / __" (dia, mês, ano)
+TAB_DATA_Y = (127.0, 141.0)  # a data em cima do traço (27/10: antes flutuava 4 pt acima)
 DEMO_TAB = laudos.demonstracao("TAB – Método II (IFU 2019)", TAB, ("Amostra", "Item", "Fábrica", "TAB", "Guaiacol"))
 
 TESTES_SQL = """
 SELECT t.id, t.data_feito, t.status, t.resultado, t.percentual, t.campos_positivos, t.criado_em,
-       v.id, v.load, v.item, v.fabrica, v.origem, v.rotulo, lista_compacta(v.lotes), co.tanque, n.nome || ' ' || n.viagem
+       v.id, v.load, v.item, v.fabrica, v.origem, v.rotulo, lista_compacta(v.lotes), co.tanque, n.nome || ' ' || n.viagem,
+       co.data_coleta
 FROM testes t
 LEFT JOIN vw_compostas v ON v.id = t.composta_id
 LEFT JOIN coletas co ON co.id = t.coleta_id
@@ -51,14 +53,22 @@ WHERE t.tipo = %(tipo)s AND t.teste_pai_id IS NULL
 """
 
 
+def _br_ano(d: date | None) -> str:
+    return d.strftime("%d/%m/%Y") if d else ""
+
+
 def _amostra(linha: tuple) -> str:
-    """'#12 load 43669 lotes 1-5', 'O.SKY 189 linha 2 fase 1 A1-A5' ou 'Tanque 42'."""
-    composta, load, origem, rotulo, lotes, tanque, navio = linha[7], linha[8], linha[11], linha[12], linha[13], linha[14], linha[15]
+    """A amostra como no papel (pedido de 27/10): "43333 (1-5)" (sem "#" nem "lotes"), "D.SKY 123 L2 F3 43413 (A1-A5)" no
+    embarque e o tanque com a data da coleta: "Tanque 47, 26/10/2026" ou "O.SKY 189 · 2P, 26/10/2026" (navio e viagem)."""
+    composta, load, origem, rotulo, lotes, tanque, navio, coleta = (
+        linha[7], linha[8], linha[11], linha[12], linha[13], linha[14], linha[15], linha[16]
+    )
     if composta is None:
-        return f"{navio} tanque {tanque}" if navio else f"Tanque {tanque}"
+        return f"{navio} · {tanque}, {_br_ano(coleta)}" if navio else f"Tanque {tanque}, {_br_ano(coleta)}"
     if origem == "embarque":
-        return f"#{composta} {rotulo} A{lotes.replace(',', ',A').replace('-', '-A')}"
-    return f"#{composta} load {load} lotes {lotes}"
+        navio_fase = (rotulo or "").replace(" linha ", " L").replace(" fase ", " F")
+        return f"{navio_fase} {load} (A{lotes.replace(',', ',A').replace('-', '-A')})"
+    return f"{load} ({lotes})"
 
 
 def _testes(con: psycopg.Connection, tipo: str, ids: list[str]) -> dict[str, tuple]:
@@ -68,6 +78,19 @@ def _testes(con: psycopg.Connection, tipo: str, ids: list[str]) -> dict[str, tup
         str(r[0]): r
         for r in con.execute(TESTES_SQL + " AND t.id = ANY(%(ids)s)", {"tipo": tipo, "ids": [int(i) for i in ids]}).fetchall()
     }
+
+
+def _em_ordem(linhas: list[tuple[str, str]], testes: dict[str, tuple]) -> list[tuple[str, str]]:
+    """As compostas do mesmo load uma embaixo da outra, na ordem dos lotes; os tanques no fim (27/10)."""
+    def chave(linha: tuple[str, str]) -> tuple:
+        t = testes.get(linha[0])
+        if not t:
+            return (2, "", 0, linha[0])
+        if t[7] is None:  # tanque
+            return (1, str(t[15] or ""), 0, str(t[14] or ""))
+        primeiro = int(str(t[13] or "0").split("-")[0].split(",")[0] or 0)
+        return (0, str(t[8] or ""), primeiro, linha[0])
+    return sorted(linhas, key=chave)
 
 
 def _preparar_tab(con: psycopg.Connection) -> None:
@@ -90,17 +113,19 @@ def _resultado_tab(status: str, resultado: str | None) -> str:
 def _gerar_tab(con: psycopg.Connection, pagina_id: int, modelo: bytes | None) -> bytes:
     linhas = laudos.linhas_da_pagina(con, pagina_id)
     testes = _testes(con, "TAB", [r for r, _ in linhas])
+    tabela = laudos.encaixar(TAB, modelo)
+    desvio = tabela.topo - TAB.topo  # o cabeçalho anda junto com a tabela do modelo enviado
     celulas = []
     if linhas:
         dia = date.fromisoformat(linhas[0][1])
         for (x0, x1), texto in zip(TAB_DATA, (dia.strftime("%d"), dia.strftime("%m"), dia.strftime("%Y"))):
-            celulas.append(laudos.Celula(texto, x0, x1, 123.0, 139.0))
-    for n, (ref, _) in enumerate(linhas):
+            celulas.append(laudos.Celula(texto, x0, x1, TAB_DATA_Y[0] + desvio, TAB_DATA_Y[1] + desvio))
+    for n, (ref, _) in enumerate(_em_ordem(linhas, testes)):
         t = testes.get(ref)
         if not t:
             continue
         textos = [_amostra(t), t[9] or "", t[10] or "", _resultado_tab(t[2], t[3]), ""]
-        celulas += [laudos.TABELA_CELULA(TAB, texto, n, i, centro=i != 0) for i, texto in enumerate(textos)]
+        celulas += [laudos.TABELA_CELULA(tabela, texto, n, i, centro=i != 0) for i, texto in enumerate(textos)]
     return laudos.preencher(modelo, DEMO_TAB, celulas)
 
 
@@ -124,15 +149,17 @@ def _preparar_coli(con: psycopg.Connection) -> None:
 def _gerar_coli(con: psycopg.Connection, pagina_id: int, modelo: bytes | None) -> bytes:
     linhas = laudos.linhas_da_pagina(con, pagina_id)
     testes = _testes(con, "COLIFORMES", [r for r, _ in linhas])
+    tabela = laudos.encaixar(COLI, modelo)
     celulas = []
-    for n, (ref, _) in enumerate(linhas):
+    for n, (ref, _) in enumerate(_em_ordem(linhas, testes)):
         t = testes.get(ref)
         if not t:
             continue
-        hora = t[6].astimezone(laudos.FUSO).strftime("%H:%M") if t[6] else ""
         total = {"Positivo": "Presença", "Negativo": "Ausência"}.get(t[3] or "", "em confirmação" if t[2] == "Em confirmação" else "")
-        textos = [f"{_br(t[1])} {hora}".strip(), _amostra(t), total, "-", ""]  # E. coli "-": o bot não registra (25/10)
-        celulas += [laudos.TABELA_CELULA(COLI, texto, n, i, centro=i not in (1, 4)) for i, texto in enumerate(textos)]
+        # 27/10: a data sem a hora, a amostra "43333 (1-5)" e, na Observação, a fábrica e o item ("AQA, 2323")
+        observacao = ", ".join(v for v in (t[10], t[9]) if v)
+        textos = [_br(t[1]), _amostra(t), total, "-", observacao]  # E. coli "-": o bot não registra (25/10)
+        celulas += [laudos.TABELA_CELULA(tabela, texto, n, i, centro=i not in (1, 4)) for i, texto in enumerate(textos)]
     return laudos.preencher(modelo, DEMO_COLI, celulas)
 
 
@@ -153,23 +180,57 @@ def _preparar_howard(con: psycopg.Connection) -> None:
     laudos.distribuir_linhas(con, "howard", itens, HOWARD.linhas)
 
 
+# a grade de cada bloco (medida no modelo, 27/10): as 6 linhas e as divisas das 3 grades de 5 x 5 campos (#1, #2, #3)
+HOWARD_LINHAS = (152.6, 165.9, 179.35, 192.8, 206.1, 219.55)
+HOWARD_GRADES = (
+    (36.8, 57.2, 78.4, 99.7, 120.8, 142.0),
+    (156.6, 177.4, 198.7, 220.0, 241.0, 262.2),
+    (276.6, 297.6, 318.7, 340.0, 361.0, 382.4),
+)
+HOWARD_TOPO, HOWARD_PASSO = 126.0, 106.7  # a linha de cima do "Amostra:" do 1º bloco e a distância entre os blocos
+CAMPOS_LIDOS = 50  # #1 e #2 (o #3 fica em branco, como no papel); Howard % = positivos / 50
+
+
+def _regua_howard(modelo: bytes | None) -> tuple[float, float]:
+    """(onde começa o 1º bloco, escala) no modelo enviado: as linhas que cobrem a largura toda são as do "Amostra:"."""
+    ys = laudos.linhas_que_cobrem(modelo, 36.0, 559.6)
+    topo = next((y for y in ys if abs(y - HOWARD_TOPO) < 30), None)
+    if topo is None:
+        return HOWARD_TOPO, 1.0
+    seguinte = next((y for y in ys if abs(y - (topo + HOWARD_PASSO)) < 15), None)
+    return topo, ((seguinte - topo) / HOWARD_PASSO if seguinte else 1.0)
+
+
 def _gerar_howard(con: psycopg.Connection, pagina_id: int, modelo: bytes | None) -> bytes:
     linhas = laudos.linhas_da_pagina(con, pagina_id)
     testes = _testes(con, "HOWARD", [r for r, _ in linhas])
+    topo, escala = _regua_howard(modelo)
+
+    def y(medida: float, bloco: int) -> float:  # medida do 1º bloco no modelo medido -> no modelo enviado
+        return topo + (medida - HOWARD_TOPO + bloco * HOWARD_PASSO) * escala
+
     celulas = []
     for n, (ref, _) in enumerate(linhas):
         t = testes.get(ref)
         if not t:
             continue
-        y = n * 106.7
         percentual = t[4]
-        campos = t[5] if t[5] is not None else (round(float(percentual) * 50 / 100) if percentual is not None else None)
+        campos = t[5] if t[5] is not None else (round(float(percentual) * CAMPOS_LIDOS / 100) if percentual is not None else None)
         celulas += [
-            laudos.Celula(_amostra(t), 82.0, 415.0, 126.0 + y, 140.0 + y, centro=False),
-            laudos.Celula(_br(t[1]), 444.0, 556.0, 126.0 + y, 140.0 + y, centro=False),
-            laudos.Celula("" if campos is None else str(campos), 509.0, 556.0, 166.0 + y, 180.0 + y, centro=False),
-            laudos.Celula("" if percentual is None else f"{float(percentual):g}%".replace(".", ","), 441.0, 556.0, 179.0 + y, 193.0 + y, centro=False),
+            laudos.Celula(_amostra(t), 82.0, 415.0, y(126.0, n), y(140.0, n), centro=False),
+            laudos.Celula(_br_ano(t[1]), 444.0, 556.0, y(126.0, n), y(140.0, n), centro=False),
+            laudos.Celula("" if campos is None else str(campos), 509.0, 556.0, y(166.0, n), y(180.0, n), centro=False),
+            laudos.Celula("" if percentual is None else f"{float(percentual):g}%".replace(".", ","), 441.0, 556.0, y(179.0, n), y(193.0, n), centro=False),
         ]
+        if campos is None:
+            continue
+        # cada campo lido: "-"; os positivos com "+", a partir do 1º campo da grade #1 (como no papel)
+        for campo in range(CAMPOS_LIDOS):
+            grade, resto = divmod(campo, 25)
+            linha, coluna = divmod(resto, 5)
+            xs = HOWARD_GRADES[grade]
+            celulas.append(laudos.Celula("+" if campo < campos else "-", xs[coluna], xs[coluna + 1],
+                                         y(HOWARD_LINHAS[linha], n), y(HOWARD_LINHAS[linha + 1], n)))
     return laudos.preencher(modelo, DEMO_HOWARD, celulas)
 
 
@@ -219,8 +280,9 @@ def _gerar_nfc(con: psycopg.Connection, pagina_id: int, modelo: bytes | None) ->
     coletas = {str(i): (t, d) for i, t, d in con.execute("SELECT id, tanque, data_coleta FROM coletas WHERE id = ANY(%s)", (ids,))}
     frascos = {(str(c), f): (d, p) for c, f, d, p in con.execute(PLACAS_SQL, (ids,))}
     celulas = []
-    if linhas:  # "Nº do Tanque": o tanque de terra ou o nome do navio (25/10)
-        celulas.append(laudos.Celula(linhas[0][1].removeprefix("Tanque "), 101.0, 200.0, 108.0, 126.0, centro=False))
+    if linhas:  # "Nº do Tanque": o tanque de terra ou o navio e a viagem (25/10); em cima do traço (27/10)
+        celulas.append(laudos.Celula(linhas[0][1].removeprefix("Tanque "), 101.0, 200.0, 114.0, 132.0, centro=False))
+    anterior: list[str] = ["", "", ""]  # as datas só quando mudam, como no papel (27/10): coleta, análise e a do Stress
     for n, (ref, _) in enumerate(linhas):
         tanque, coleta = coletas.get(ref, ("", None))
         normal, stress = frascos.get((ref, "Normal"), (None, {})), frascos.get((ref, "Stress"), (None, {}))
@@ -230,7 +292,10 @@ def _gerar_nfc(con: psycopg.Connection, pagina_id: int, modelo: bytes | None) ->
             return [_placas(f[1], "CT:Profundidade"), _placas(f[1], "BL:Profundidade"), "-",
                     _placas(f[1], "WORT:Profundidade"), _placas(f[1], "WORT:Superficie")]
 
-        textos = [_br(coleta), _br(normal[0]), tanque, *bloco(normal), _br(stress[0]), *bloco(stress)]
+        datas = [_br(coleta), _br(normal[0]), _br(stress[0])]
+        mostrar = [d if d != a else "" for d, a in zip(datas, anterior)]
+        anterior = datas
+        textos = [mostrar[0], mostrar[1], tanque, *bloco(normal), mostrar[2], *bloco(stress)]
         celulas += [laudos.TABELA_CELULA(NFC, texto, n, i) for i, texto in enumerate(textos)]
     return laudos.preencher(modelo, DEMO_NFC, celulas)
 
@@ -324,18 +389,34 @@ def _preparar_ca_embarque(con: psycopg.Connection) -> None:
     laudos.distribuir_linhas(con, "contra-embarque", itens, CA_EMB.linhas)
 
 
+def _ordem_ca(d: tuple | None) -> tuple:
+    """Em ordem crescente (27/10): os loads primeiro, pelo número, depois os tanques do navio (1C, 1P, 1S, 2P...)."""
+    if d is None:
+        return (2, 0, "")
+    if d[5]:
+        numero = "".join(c for c in d[5] if c.isdigit())
+        return (0, int(numero or 0), d[5])
+    tanque = str(d[7] or "")
+    digitos = "".join(c for c in tanque if c.isdigit())
+    return (1, int(digitos or 0), tanque)
+
+
 def _gerar_ca_embarque(con: psycopg.Connection, pagina_id: int, modelo: bytes | None) -> bytes:
     linhas = laudos.linhas_da_pagina(con, pagina_id)
     dados = {r[0]: r for r in con.execute(ITENS_ARQUIVO_SQL + " WHERE i.item || ':' || i.ref_id = ANY(%s)", ([r for r, _ in linhas],))}
+    tabela = laudos.encaixar(CA_EMB, modelo)
+    desvio = tabela.base - CA_EMB.base  # a Observação vem logo abaixo da tabela
     celulas = []
-    for n, (ref, _) in enumerate(linhas):
+    for n, (ref, _) in enumerate(sorted(linhas, key=lambda linha: _ordem_ca(dados.get(linha[0])))):
         d = dados.get(ref)
         if not d:
             continue
-        loads = d[5] or f"tanque {d[7]}"  # o pote de NFC do navio não tem load: vai o tanque
-        celulas += [laudos.TABELA_CELULA(CA_EMB, t, n, i) for i, t in enumerate([str(d[2]), loads, str(d[8] or ""), _br4(d[10])])]
+        # o pote de NFC do navio não tem load: vai só o tanque ("2P", 27/10), com quantidade 1; o FCOJ, as amostras da linha
+        loads = d[5] or str(d[7] or "")
+        quantidade = str(d[8] or "") if d[5] else "1"
+        celulas += [laudos.TABELA_CELULA(tabela, t, n, i) for i, t in enumerate([str(d[2]), loads, quantidade, _br4(d[10])])]
     if linhas and (d := dados.get(linhas[0][0])):  # Observação: o navio, em letra grande, como no papel
-        celulas.append(laudos.Celula(f"{d[3]} {d[4]}", 46.0, 556.0, 604.0, 652.0, tamanho=28, fonte="Times-Bold", fixo=True))
+        celulas.append(laudos.Celula(f"{d[3]} {d[4]}", 46.0, 556.0, 604.0 + desvio, 652.0 + desvio, tamanho=28, fonte="Times-Bold", fixo=True))
     return laudos.preencher(modelo, DEMO_CA_EMB, celulas)
 
 
@@ -361,11 +442,12 @@ def _preparar_ca_recebimento(con: psycopg.Connection) -> None:
 def _gerar_ca_recebimento(con: psycopg.Connection, pagina_id: int, modelo: bytes | None) -> bytes:
     linhas = laudos.linhas_da_pagina(con, pagina_id)
     dados = {r[0]: r for r in con.execute(ITENS_ARQUIVO_SQL + " WHERE i.item || ':' || i.ref_id = ANY(%s)", ([r for r, _ in linhas],))}
+    tabela = laudos.encaixar(CA_REC, modelo)
     celulas = []
     for n, (ref, _) in enumerate(linhas):
         d = dados.get(ref)
         if d:
-            celulas += [laudos.TABELA_CELULA(CA_REC, t, n, i) for i, t in enumerate([str(d[2]), d[5] or "", (d[6] or "").replace(", ", ","), _br4(d[10])])]
+            celulas += [laudos.TABELA_CELULA(tabela, t, n, i) for i, t in enumerate([str(d[2]), d[5] or "", (d[6] or "").replace(", ", ","), _br4(d[10])])]
     return laudos.preencher(modelo, DEMO_CA_REC, celulas)
 
 

@@ -1143,3 +1143,37 @@ div.estatistica {
     grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
   }
 }
+
+/* botões das folhas de laudo, com ícone (27/10) */
+.acoes-linha {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.acao-laudo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border: 1px solid var(--borda);
+  border-radius: 6px;
+  background: var(--cartao);
+  color: var(--texto);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.acao-laudo:hover {
+  border-color: var(--acao);
+  color: var(--link);
+}
+
+.acao-laudo.acao-principal {
+  background: var(--acao-botao);
+  border-color: var(--acao-botao);
+  color: #fff;
+}
