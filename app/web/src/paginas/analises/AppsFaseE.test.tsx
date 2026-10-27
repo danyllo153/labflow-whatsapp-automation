@@ -97,18 +97,20 @@ describe("apps de análise da Fase E (E3 a E8)", () => {
   });
 
   it("Coliformes: os atrasados são as compostas esperando o caldo; os cartões abrem Iniciar análise e No caldo e incubados (27/10)", async () => {
+    const estriar = { teste_id: 4, teste: "Coliformes", alvo: "Load 43701 · #10 (1-4)", status: "No caldo", proxima: "espalhar", prevista: "2026-10-27", situacao: "Vence hoje", lote_aberto: false };
     const col = { teste_id: 3, teste: "Coliformes", alvo: "Load 43669 · #87 (1-5)", status: "Incubada", proxima: "ler", prevista: "2026-10-24", situacao: "Vence hoje", lote_aberto: false };
     abrir("/analises/coliformes", {
-      "GET /analises/testes/pendentes": () => ({ status: 200, corpo: [col] }),
+      "GET /analises/testes/pendentes": () => ({ status: 200, corpo: [col, estriar] }),
       "GET /analises/testes/compostas?tipo=COLIFORMES": () => ({
         status: 200, corpo: [{ composta_id: 90, alvo: "Load 43700 · #90 (1-5)", criada_em: "2026-10-26", pede: true }],
       }),
     });
+    expect(await screen.findByRole("region", { name: "Coliformes para estriar" })).toBeInTheDocument(); // o Coliformes se estria
     await userEvent.click(await screen.findByRole("button", { name: "Atrasados (esperando o caldo): 1" }));
     expect(await screen.findByRole("heading", { name: "Compostas que vão para o caldo" })).toBeInTheDocument();
     expect(await screen.findByRole("checkbox", { name: /Load 43700 · #90/ })).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: /^Para fazer/ }));
-    await userEvent.click(await screen.findByRole("button", { name: "Em andamento: 1" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Em andamento: 2" }));
     const estufa = await screen.findByRole("region", { name: "Incubada" });
     expect(within(estufa).getByText(/Load 43669 · #87/)).toBeInTheDocument();
   });

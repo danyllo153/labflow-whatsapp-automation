@@ -114,6 +114,10 @@ const NOME_DA_ETAPA: Record<string, string> = {
   "resultado do lote": "aberto por lote (resultado de cada lote)",
 };
 
+/** O nome da etapa na tela: o TAB se espalha, o Coliformes se estria (27/10). */
+const nomeDaEtapa = (teste: string, proxima: string) =>
+  proxima === "espalhar" && teste !== "Tab" ? "para estriar" : (NOME_DA_ETAPA[proxima] ?? proxima);
+
 /** A leitura do TAB e do Coliformes (ler a placa e confirmar no PCA): aqui e na aba Leituras (27/10). Sem o "para espalhar",
  * que é análise. */
 export function LeituraDoTeste({ qual }: { qual: "TAB" | "COLIFORMES" }) {
@@ -236,9 +240,9 @@ function Grupo({ itens, pode, aoGravar }: { itens: Teste[]; pode: boolean; aoGra
   }
 
   return (
-    <section className="cartao" aria-label={`${nome} ${NOME_DA_ETAPA[itens[0].proxima] ?? itens[0].proxima}`}>
+    <section className="cartao" aria-label={`${nome} ${nomeDaEtapa(itens[0].teste, itens[0].proxima)}`}>
       <h2>
-        {nome} {NOME_DA_ETAPA[itens[0].proxima] ?? itens[0].proxima} <span className="contador">{itens.length}</span>
+        {nome} {nomeDaEtapa(itens[0].teste, itens[0].proxima)} <span className="contador">{itens.length}</span>
       </h2>
       <ul className="lista-marcavel">
         {itens.map((t) => (
@@ -298,7 +302,7 @@ function EmAndamento({ testes, carregando, nome }: { testes: Teste[]; carregando
                 <span className="alvo-e-situacao">
                   <span>
                     {t.alvo}
-                    <span className="texto-secundario">{t.prevista ? ` · ${NOME_DA_ETAPA[t.proxima] ?? t.proxima} · ${dm(t.prevista)}` : ""}</span>
+                    <span className="texto-secundario">{t.prevista ? ` · ${nomeDaEtapa(t.teste, t.proxima)} · ${dm(t.prevista)}` : ""}</span>
                   </span>
                   {t.situacao && <span className={classeDaSituacao(t.situacao)}>{t.situacao}</span>}
                 </span>
