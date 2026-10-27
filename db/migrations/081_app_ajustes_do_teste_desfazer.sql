@@ -1,6 +1,9 @@
--- Desfaz a 081: os desvios da água do processo deixam de ser encerrados (a nota de quem encerrou some).
+-- Desfaz a 081: os desvios da água do processo deixam de ser encerrados (a nota de quem encerrou some) e as marcas de
+-- TAB, Coliformes e Howard das compostas do embarque somem (o "Para fazer" volta a contar toda composta sem o teste).
 
 BEGIN;
+
+DROP TABLE IF EXISTS app.compostas_testes;
 
 ALTER TABLE app.coletas_agua_processo
     DROP CONSTRAINT IF EXISTS coletas_agua_processo_desvio_encerrado,

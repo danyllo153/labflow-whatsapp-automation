@@ -320,18 +320,35 @@ const ICONE_DO_TOM: Record<"atrasado" | "hoje" | "nao-ok" | "ok" | "neutro", JSX
 
 /** Os números do topo. A cor tem regra (26/10): vermelho = atrasado ou não ok, laranja = atenção (hoje), verde = ok,
  * e o zero (ou o que é só informação) fica neutro. */
-export function Numeros({ itens }: { itens: { rotulo: string; valor: number; tom: "atrasado" | "hoje" | "nao-ok" | "ok" | "neutro" }[] }) {
+/** Os números do app; com `aoClicar`, o cartão vira botão e leva à lista (27/10: "Em andamento" abre os que estão na estufa). */
+export function Numeros({
+  itens,
+}: {
+  itens: { rotulo: string; valor: number; tom: "atrasado" | "hoje" | "nao-ok" | "ok" | "neutro"; aoClicar?: () => void }[];
+}) {
   return (
     <div className="numeros-app">
-      {itens.map((n) => (
-        <div key={n.rotulo} className={`numero-app numero-${n.valor === 0 ? "neutro" : n.tom}`}>
-          <span className="numero-icone" aria-hidden="true">
-            {ICONE_DO_TOM[n.valor === 0 ? "neutro" : n.tom]}
-          </span>
-          <strong>{n.valor}</strong>
-          <span>{n.rotulo}</span>
-        </div>
-      ))}
+      {itens.map((n) => {
+        const conteudo = (
+          <>
+            <span className="numero-icone" aria-hidden="true">
+              {ICONE_DO_TOM[n.valor === 0 ? "neutro" : n.tom]}
+            </span>
+            <strong>{n.valor}</strong>
+            <span>{n.rotulo}</span>
+          </>
+        );
+        const classe = `numero-app numero-${n.valor === 0 ? "neutro" : n.tom}`;
+        return n.aoClicar ? (
+          <button key={n.rotulo} type="button" className={`${classe} numero-clicavel`} aria-label={`${n.rotulo}: ${n.valor}`} onClick={n.aoClicar}>
+            {conteudo}
+          </button>
+        ) : (
+          <div key={n.rotulo} className={classe}>
+            {conteudo}
+          </div>
+        );
+      })}
     </div>
   );
 }

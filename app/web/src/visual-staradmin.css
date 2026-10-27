@@ -1475,3 +1475,54 @@ div.estatistica {
   border-color: var(--primaria, #1f3bb3);
   color: #fff;
 }
+
+/* 27/10: o cartão de número que leva à lista; o nome e a situação um embaixo do outro nas listas do TAB e do Coliformes */
+button.numero-app.numero-clicavel {
+  cursor: pointer;
+  width: 100%;
+}
+
+button.numero-app.numero-clicavel:hover {
+  border-color: var(--acao);
+}
+
+.alvo-e-situacao {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+/* compostas do embarque: os cartões de TAB, Coliformes e Howard ao lado de cada composta (27/10) */
+.marcas-de-teste {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 4px 0 12px;
+}
+
+.marcas-de-teste .botao-tipo {
+  min-height: 38px;
+  min-width: 110px;
+  font-size: 0.9em;
+}
+
+.lista-compostas-testes {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.lista-compostas-testes li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--borda);
+}
+
+.lista-compostas-testes .marcas-de-teste {
+  margin: 0;
+}
