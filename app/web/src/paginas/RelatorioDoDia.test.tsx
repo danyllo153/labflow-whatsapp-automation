@@ -60,7 +60,7 @@ afterEach(() => vi.unstubAllGlobals());
 describe("Leituras do dia (relatório do dia como o do bot)", () => {
   it("mostra os blocos, as linhas com lido e alarme, e os alertas, sem emoji na tela", async () => {
     abrir();
-    expect(await screen.findByRole("heading", { level: 1, name: "Leituras do dia" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { level: 1, name: "Leituras" })).toBeInTheDocument(); // página com abas (27/10); o relatório é a 1ª
     const fcoj = await screen.findByRole("article", { name: "FCOJ — Recebimento" });
     expect(within(fcoj).getByText("3 de 4 lidas")).toBeInTheDocument();
     expect(within(fcoj).getByText("C.T 48h")).toBeInTheDocument();
@@ -84,5 +84,51 @@ describe("Leituras do dia (relatório do dia como o do bot)", () => {
     abrir();
     const barra = await screen.findByRole("navigation", { name: "Menu do celular" });
     expect(within(barra).getByRole("link", { name: "Leituras" })).toBeInTheDocument();
+  });
+});
+
+describe("Leituras com uma aba por análise (27/10)", () => {
+  it("o atalho do Turno abre a aba certa e a leitura dos drops pede Confirmar", async () => {
+    const DROPS = {
+      pode_registrar: true,
+      drops: [
+        { drop_id: 7, drop: "D5", origem: "Terra", tanque: "41", navio: null, data_coleta: "2026-10-17", incubado_em: "2026-10-22", ler_em: "2026-10-27", atrasado: false },
+        { drop_id: 8, drop: "D10", origem: "Navio", tanque: "2P", navio: "D.STAR 900", data_coleta: "2026-10-12", incubado_em: "2026-10-22", ler_em: "2026-10-27", atrasado: false },
+      ],
+    };
+    const api = servidorFalso({
+      "GET /me": () => ({ status: 200, corpo: ANA }),
+      "GET /leituras/drops": () => ({ status: 200, corpo: DROPS }),
+      "POST /leituras/drops/negativos": () => ({ status: 200, corpo: { ...DROPS, drops: [] } }),
+      "GET /leituras/pendentes": () => ({ status: 200, corpo: { leituras: [{ grupo: "Drops", detalhe: "", itens: [{ rotulo: "Drop D5", quantidade: 2, unidade: "tanques", atrasadas: 1, caminho: "/leituras?aba=drops" }] }], analises: [] } }),
+    });
+    render(
+      <MemoryRouter initialEntries={["/leituras?aba=drops"]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <ProvedorDeSessao>
+          <App />
+        </ProvedorDeSessao>
+      </MemoryRouter>,
+    );
+    const cartao = await screen.findByRole("region", { name: "Leitura dos drops" });
+    expect(screen.getByRole("button", { name: /^Drops/ })).toHaveAttribute("aria-current", "page");
+    await userEvent.click(within(cartao).getByRole("checkbox", { name: /D10/ }));
+    await userEvent.click(within(cartao).getByRole("button", { name: "Todos negativos (1)" }));
+    expect(within(cartao).getByRole("group", { name: "O que vai ser gravado" })).toHaveTextContent("Negativo em 1 drop: D5 do tanque 41 (coleta 17/10)");
+    expect(api.vezes("POST /leituras/drops/negativos")).toBe(0);
+    await userEvent.click(within(cartao).getByRole("button", { name: "Confirmar" }));
+    expect(api.chamadas.find((c) => c.rota === "POST /leituras/drops/negativos")?.corpo).toEqual({ drop_ids: [7] });
+  });
+
+  it("o endereço antigo do relatório do dia leva a Leituras", async () => {
+    servidorFalso({ "GET /me": () => ({ status: 200, corpo: ANA }) });
+    render(
+      <MemoryRouter initialEntries={["/relatorio-do-dia"]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <ProvedorDeSessao>
+          <App />
+        </ProvedorDeSessao>
+      </MemoryRouter>,
+    );
+    expect(await screen.findByRole("heading", { level: 1, name: "Leituras" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Relatório do dia" })).toHaveAttribute("aria-current", "page");
   });
 });

@@ -90,7 +90,7 @@ const COR_DO_BLOCO: Record<string, string> = {
 
 const semEmoji = (t: string) => t.replace(/^(🚨|⚠️)\s*/u, "");
 
-export default function RelatorioDoDia() {
+export default function RelatorioDoDia({ embutido = false }: { embutido?: boolean }) {
   const { pessoa } = useSessao();
   const pode = !!pessoa?.pode.includes("registrar_analise");
   const [dia, setDia] = useState<string | null>(null);
@@ -137,14 +137,16 @@ export default function RelatorioDoDia() {
 
   return (
     <section className="relatorio-do-dia">
-      <CabecalhoDaPagina
-        icone="leituras"
-        cor="geral"
-        voltar={false}
-        titulo="Leituras do dia"
-        descricao='O relatório do dia, igual ao do bot: o que sai em cada análise, com lido e fora do limite. "Só o lido" é o relatório completo, com ok e não ok.'
-        acoes={<BotaoImprimir aoClicar={() => window.print()} />}
-      />
+      {!embutido && (
+        <CabecalhoDaPagina
+          icone="leituras"
+          cor="geral"
+          voltar={false}
+          titulo="Leituras do dia"
+          descricao='O relatório do dia, igual ao do bot: o que sai em cada análise, com lido e fora do limite. "Só o lido" é o relatório completo, com ok e não ok.'
+          acoes={<BotaoImprimir aoClicar={() => window.print()} />}
+        />
+      )}
       {erro && (
         <p className="mensagem-erro" role="alert">
           {erro}

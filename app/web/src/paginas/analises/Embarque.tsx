@@ -1,4 +1,7 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
+import { Link } from "react-router-dom";
+
+import { lerJson } from "../../api";
 
 import { useSessao } from "../../sessao";
 import {
@@ -48,11 +51,26 @@ const ANALISES = [
   { cod: "BL120", chave: "bl120", rotulo: "B.L 120h" },
 ] as const;
 
-export default function Embarque() {
+/** A leitura do C.T/B.L das amostras do embarque: aqui e na aba Leituras (27/10). */
+export function LeituraDoEmbarque() {
   const { pessoa } = useSessao();
   const pode = !!pessoa?.pode.includes("registrar_analise");
   const [busca, setBusca] = useState("");
   const lista = useLista<Amostra[]>("/analises/embarque/amostras", busca);
+  return (
+    <>
+      <Busca valor={busca} aoMudar={setBusca} rotulo="Procurar navio ou load" dica="Navio ou load (ex.: O.SKY 189)" />
+      {lista.erro && <p className="mensagem-erro">{lista.erro}</p>}
+      {!lista.dados && !lista.erro && <p className="carregando">Carregando...</p>}
+      {lista.dados && <Lancar amostras={lista.dados} pode={pode} aoGravar={lista.recarregar} />}
+    </>
+  );
+}
+
+export default function Embarque() {
+  const { pessoa } = useSessao();
+  const pode = !!pessoa?.pode.includes("registrar_analise");
+  const lista = useLista<Amostra[]>("/analises/embarque/amostras", "");
   return (
     <AppDeAnalise
       app="embarque-fcoj"
@@ -75,14 +93,7 @@ export default function Embarque() {
               <Compostas aoGravar={lista.recarregar} />
             </SoQuemGrava>
           )}
-          {aba === "resultados" && (
-            <>
-              <Busca valor={busca} aoMudar={setBusca} rotulo="Procurar navio ou load" dica="Navio ou load (ex.: O.SKY 189)" />
-              {lista.erro && <p className="mensagem-erro">{lista.erro}</p>}
-              {!lista.dados && !lista.erro && <p className="carregando">Carregando...</p>}
-              {lista.dados && <Lancar amostras={lista.dados} pode={pode} aoGravar={lista.recarregar} />}
-            </>
-          )}
+          {aba === "resultados" && <LeituraDoEmbarque />}
           {aba === "laudo" && <AbaLaudo laudo="embarque-fcoj" />}
           {aba === "tabelas" && (
             <Resultados
@@ -102,7 +113,6 @@ interface Painel {
   atrasados: number;
   para_hoje: number;
   nao_ok_semana: number;
-  navios: { navio: string; lidos: number; nao_ok: number }[];
 }
 
 /** O painel do Embarque, igual ao do Recebimento FCOJ (padronização de 26/10): os números e o Não ok por navio. */
@@ -111,7 +121,6 @@ function PainelDoEmbarque({ irPara }: { irPara: (aba: string) => void }) {
   if (painel.erro) return <p className="mensagem-erro">{painel.erro}</p>;
   if (!painel.dados) return <p className="carregando">Carregando...</p>;
   const p = painel.dados;
-  const maior = Math.max(1, ...p.navios.map((n) => n.nao_ok));
   return (
     <>
       <div className="numeros-app">
@@ -128,28 +137,86 @@ function PainelDoEmbarque({ irPara }: { irPara: (aba: string) => void }) {
           <span>Não ok na semana</span>
         </div>
       </div>
-      <div className="cartao">
-        <h2>Não ok por navio</h2>
-        <p className="texto-secundario">Últimos 30 dias.</p>
-        {p.navios.length === 0 ? (
-          <p className="texto-secundario">Nenhuma leitura no período.</p>
-        ) : (
-          <ul className="barras-fabrica">
-            {p.navios.map((n) => (
-              <li key={n.navio}>
-                <span className="fabrica-rotulo">{n.navio}</span>
-                <span className="fabrica-trilho">
-                  <span className="fabrica-valor" style={{ width: `${(n.nao_ok / maior) * 100}%` }} />
-                </span>
-                <span className="fabrica-numero">
-                  {n.nao_ok} de {n.lidos}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      <UltimosNavios />
     </>
+  );
+}
+
+interface NavioEmbarcado {
+  navio: string;
+  ultima_data: string | null;
+  amostras: number;
+  lidos: number;
+  pendentes: number;
+  nao_ok: number;
+}
+
+const POR_PAGINA_NAVIOS = 10;
+
+/** Últimos navios embarcados (pedido de 27/10): 5 à vista, "Ver mais" até 10 e páginas para os mais antigos; tocar no
+ * navio abre a página dele, com todas as análises do FCOJ. */
+export function UltimosNavios() {
+  const [pagina, setPagina] = useState(1);
+  const [todos, setTodos] = useState(false);
+  const [dados, setDados] = useState<{ total: number; navios: NavioEmbarcado[] } | null>(null);
+  const [erro, setErro] = useState("");
+  useEffect(() => {
+    let vivo = true;
+    lerJson<{ total: number; navios: NavioEmbarcado[] }>(`/analises/embarque/navios?pagina=${pagina}&por_pagina=${POR_PAGINA_NAVIOS}`).then(
+      (d) => vivo && (setDados(d), setErro("")),
+      (e) => vivo && setErro(e instanceof Error ? e.message : "Não foi possível carregar os navios."),
+    );
+    return () => {
+      vivo = false;
+    };
+  }, [pagina]);
+  const paginas = dados ? Math.max(1, Math.ceil(dados.total / POR_PAGINA_NAVIOS)) : 1;
+  const visiveis = dados ? (todos ? dados.navios : dados.navios.slice(0, 5)) : [];
+  return (
+    <div className="cartao">
+      <h2>
+        Últimos navios embarcados {dados && <span className="contador">{dados.total}</span>}
+      </h2>
+      {erro && <p className="mensagem-erro">{erro}</p>}
+      {!dados && !erro && <p className="carregando">Carregando...</p>}
+      {dados && dados.navios.length === 0 && <p className="texto-secundario">Nenhum navio embarcado.</p>}
+      {visiveis.length > 0 && (
+        <ul className="lista-navios">
+          {visiveis.map((n) => (
+            <li key={n.navio}>
+              <Link to={`/paginas/navios/${encodeURIComponent(n.navio)}`}>
+                <strong>{n.navio}</strong>
+                <span className="texto-secundario">
+                  {n.ultima_data ? dm(n.ultima_data) : "-"} · {n.amostras} {n.amostras === 1 ? "amostra" : "amostras"}
+                  {n.pendentes > 0 && ` · ${n.pendentes} a ler`}
+                </span>
+              </Link>
+              <span className={n.nao_ok ? "etiqueta etiqueta-nao-ok" : n.pendentes ? "etiqueta etiqueta-pendente" : "etiqueta etiqueta-ok"}>
+                {n.nao_ok ? `${n.nao_ok} não ok` : n.pendentes ? "Em andamento" : "Ok"}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
+      {dados && !todos && dados.navios.length > 5 && (
+        <button type="button" className="botao botao-simples botao-pequeno" onClick={() => setTodos(true)}>
+          Ver mais
+        </button>
+      )}
+      {todos && paginas > 1 && (
+        <nav className="paginacao" aria-label="Páginas dos navios">
+          <button type="button" className="botao-secundario" disabled={pagina <= 1} onClick={() => setPagina(pagina - 1)}>
+            Anterior
+          </button>
+          <span>
+            {pagina} de {paginas}
+          </span>
+          <button type="button" className="botao-secundario" disabled={pagina >= paginas} onClick={() => setPagina(pagina + 1)}>
+            Próxima
+          </button>
+        </nav>
+      )}
+    </div>
   );
 }
 

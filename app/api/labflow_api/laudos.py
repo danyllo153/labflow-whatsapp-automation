@@ -5,11 +5,14 @@ Spec: 07-app-pwa.md (v1.0), "Laudos automáticos" (rumo-do-app.md). Tarefa: APP-
 
 Cada laudo se registra aqui (`registrar`) com a tabela das linhas, quantas cabem por página, o nome do modelo e a função
 que monta o PDF. As rotas são as mesmas para todos: GET /laudos/{laudo}, PUT /laudos/{laudo}/modelo,
-GET /laudos/{laudo}/{pagina}/pdf e POST /laudos/{laudo}/{pagina}/impresso. O PDF oficial da empresa fica no banco
+GET /laudos/{laudo}/{pagina}/pdf, POST /laudos/{laudo}/{pagina}/finalizar (antes "impresso"), POST .../reabrir (editar
+a folha finalizada) e DELETE /laudos/{laudo}/{pagina} (a folha sai e as linhas vão para uma folha nova, 077). O PDF oficial da empresa fica no banco
 (enviado pelo Admin), nunca no Git; sem ele, o laudo sai numa tabela de demonstração com a mesma geometria.
 """
 
+import hashlib
 import io
+import statistics
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import date
@@ -18,6 +21,7 @@ import psycopg
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from pydantic import BaseModel
 from pypdf import PdfReader, PdfWriter
+from pypdf.generic import ContentStream
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
@@ -157,6 +161,97 @@ def riscar(pdf: bytes, riscos: list[tuple[float, float, float, float]]) -> bytes
     return saida.getvalue()
 
 
+# --- encaixar a tabela nas linhas do modelo enviado (27/10) -------------------------------------------------------------
+# A geometria de cada laudo foi medida num PDF-modelo, mas o PDF que o Admin envia pode ter saído de outro programa (o Word
+# do laboratório desenha as linhas um pouco mais altas que o LibreOffice) e o texto "descia" e cruzava as linhas. Por isso,
+# antes de escrever, o app procura no próprio modelo as linhas horizontais da tabela (as que cobrem a largura dela) e usa a
+# sequência de linhas igualmente espaçadas mais perto da medida. Modelo digitalizado (imagem, sem linhas): fica a medida.
+
+
+def _mult(a: list[float], b: list[float]) -> list[float]:
+    return [a[0] * b[0] + a[1] * b[2], a[0] * b[1] + a[1] * b[3], a[2] * b[0] + a[3] * b[2], a[2] * b[1] + a[3] * b[3],
+            a[4] * b[0] + a[5] * b[2] + b[4], a[4] * b[1] + a[5] * b[3] + b[5]]
+
+
+def _ponto(m: list[float], x: float, y: float) -> tuple[float, float]:
+    return m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5]
+
+
+def linhas_horizontais(pdf: bytes) -> list[tuple[float, float, float]]:
+    """(x0, x1, y) de cada traço horizontal da 1ª folha (y medido do alto da folha): retângulos finos e segmentos."""
+    folha = PdfReader(io.BytesIO(pdf)).pages[0]
+    altura = float(folha.mediabox.height)
+    m, pilha, atual, saida = [1.0, 0.0, 0.0, 1.0, 0.0, 0.0], [], None, []
+    for ops, op in ContentStream(folha.get_contents(), folha.pdf).operations:
+        if op == b"q":
+            pilha.append(m[:])
+        elif op == b"Q":
+            m = pilha.pop() if pilha else [1.0, 0.0, 0.0, 1.0, 0.0, 0.0]
+        elif op == b"cm":
+            m = _mult([float(v) for v in ops], m)
+        elif op == b"re":
+            x, y, w, h = (float(v) for v in ops)
+            (ax, ay), (bx, by) = _ponto(m, x, y), _ponto(m, x + w, y + h)
+            if abs(by - ay) < 2.5 and abs(bx - ax) > 3:
+                saida.append((min(ax, bx), max(ax, bx), altura - (ay + by) / 2))
+        elif op == b"m":
+            atual = _ponto(m, float(ops[0]), float(ops[1]))
+        elif op == b"l" and atual is not None:
+            p = _ponto(m, float(ops[0]), float(ops[1]))
+            if abs(p[1] - atual[1]) < 0.5 and abs(p[0] - atual[0]) > 3:
+                saida.append((min(p[0], atual[0]), max(p[0], atual[0]), altura - p[1]))
+            atual = p
+    return saida
+
+
+def linhas_que_cobrem(modelo: bytes | None, esquerda: float, direita: float) -> list[float]:
+    """O y das linhas horizontais do modelo que cobrem a faixa [esquerda, direita] (as duplas viram uma), de cima para baixo."""
+    if not modelo:
+        return []
+    try:
+        tracos = linhas_horizontais(modelo)
+    except Exception:
+        return []
+    cobertura: dict[float, float] = {}
+    for x0, x1, y in tracos:
+        a, b = max(x0, esquerda), min(x1, direita)
+        if b > a:
+            cobertura[round(y * 2) / 2] = cobertura.get(round(y * 2) / 2, 0) + (b - a)
+    ys: list[float] = []
+    for y in sorted(y for y, c in cobertura.items() if c >= 0.6 * (direita - esquerda)):
+        if ys and y - ys[-1] < 2:  # linha dupla (o Word desenha a borda de cada célula): uma só
+            continue
+        ys.append(y)
+    return ys
+
+
+_ENCAIXES: dict[tuple[str, Tabela], Tabela] = {}
+
+
+def encaixar(tabela: Tabela, modelo: bytes | None) -> Tabela:
+    """A tabela com o topo e a base das linhas do modelo enviado (ou como foi medida, se o modelo não tem as linhas)."""
+    if not modelo:
+        return tabela
+    chave = (hashlib.sha1(modelo).hexdigest(), tabela)
+    if chave not in _ENCAIXES:
+        _ENCAIXES[chave] = _encaixar(tabela, modelo)
+    return _ENCAIXES[chave]
+
+
+def _encaixar(tabela: Tabela, modelo: bytes) -> Tabela:
+    ys = linhas_que_cobrem(modelo, tabela.colunas[0], tabela.colunas[-1])
+    melhor, erro = tabela, 30.0
+    for i, topo in enumerate(ys):
+        seq = ys[i : i + tabela.linhas + 1]
+        if len(seq) < tabela.linhas + 1 or abs(topo - tabela.topo) >= erro:
+            continue
+        passos = [b - a for a, b in zip(seq, seq[1:])]
+        mediana = statistics.median(passos)
+        if mediana > 4 and all(abs(p - mediana) <= 0.2 * mediana for p in passos):
+            melhor, erro = Tabela(tabela.colunas, seq[0], seq[-1], tabela.linhas), abs(topo - tabela.topo)
+    return melhor
+
+
 def TABELA_CELULA(tabela: Tabela, texto: str, linha: int, coluna: int, centro: bool = True) -> Celula:  # noqa: N802
     """A célula de uma tabela, com o texto à esquerda quando não é centralizado (Times 11, o papel)."""
     return tabela.celula(texto, linha, coluna, centro=centro)
@@ -177,7 +272,7 @@ def distribuir_linhas(con: psycopg.Connection, nome: str, itens: list[tuple[str,
         pagina = con.execute(
             """
             SELECT p.id FROM app.paginas_laudo p
-            WHERE p.laudo = %(n)s AND p.impresso_em IS NULL
+            WHERE p.laudo = %(n)s AND p.impresso_em IS NULL AND p.excluida_em IS NULL
               AND NOT EXISTS (SELECT 1 FROM app.laudo_linhas l WHERE l.pagina_id = p.id AND l.chave <> %(c)s)
               AND (SELECT count(*) FROM app.laudo_linhas l WHERE l.pagina_id = p.id) < %(cap)s
             ORDER BY p.id LIMIT 1
@@ -265,7 +360,7 @@ def pagina_com_vaga(con: psycopg.Connection, nome: str) -> int:
     laudo = _laudo(nome)
     con.execute("SELECT pg_advisory_xact_lock(60, hashtext(%s))", (nome,))
     for (pagina_id,) in con.execute(
-        "SELECT id FROM app.paginas_laudo WHERE laudo = %s AND impresso_em IS NULL ORDER BY id", (nome,)
+        "SELECT id FROM app.paginas_laudo WHERE laudo = %s AND impresso_em IS NULL AND excluida_em IS NULL ORDER BY id", (nome,)
     ).fetchall():
         if con.execute(laudo.contar_sql, (pagina_id,)).fetchone()[0] < laudo.capacidade:
             return pagina_id
@@ -302,7 +397,7 @@ def _listar(con: psycopg.Connection, pessoa: PessoaLogada, laudo: Laudo) -> Laud
             """
             SELECT p.id, p.impresso_em, coalesce(u.nome, c.usuario) FROM app.paginas_laudo p
             LEFT JOIN usuarios u ON u.id = p.impresso_por LEFT JOIN app.credenciais c ON c.usuario_id = p.impresso_por
-            WHERE p.laudo = %s ORDER BY p.id
+            WHERE p.laudo = %s AND p.excluida_em IS NULL ORDER BY p.id
             """,
             (laudo.nome,),
         ).fetchall(),
@@ -377,7 +472,9 @@ async def enviar_modelo(
 
 
 def _da_pagina(con: psycopg.Connection, laudo: Laudo, pagina_id: int) -> None:
-    if con.execute("SELECT 1 FROM app.paginas_laudo WHERE id = %s AND laudo = %s", (pagina_id, laudo.nome)).fetchone() is None:
+    if con.execute(
+        "SELECT 1 FROM app.paginas_laudo WHERE id = %s AND laudo = %s AND excluida_em IS NULL", (pagina_id, laudo.nome)
+    ).fetchone() is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Página do laudo não encontrada.")
 
 
@@ -390,18 +487,20 @@ def baixar_pdf(
 ) -> Response:
     laudo = _laudo(nome)
     _da_pagina(con, laudo, pagina_id)
-    pdf = laudo.gerar(con, pagina_id, modelo_do_banco(con, laudo.modelo))
+    modelo = modelo_do_banco(con, laudo.modelo)
+    pdf = laudo.gerar(con, pagina_id, modelo)
     if laudo.traco is not None:
         impressa = con.execute("SELECT impresso_em IS NOT NULL FROM app.paginas_laudo WHERE id = %s", (pagina_id,)).fetchone()[0]
         if impressa:
             usadas = con.execute(laudo.contar_sql, (pagina_id,)).fetchone()[0] * laudo.linhas_por_unidade
-            risco = laudo.traco.traco_das_vazias(usadas)
+            risco = encaixar(laudo.traco, modelo).traco_das_vazias(usadas)
             if risco:
                 pdf = riscar(pdf, [risco])
     return Response(pdf, media_type="application/pdf", headers={"Content-Disposition": f'inline; filename="{nome}-{pagina_id}.pdf"'})
 
 
-@roteador.post("/{nome}/{pagina_id}/impresso", response_model=Laudos)
+@roteador.post("/{nome}/{pagina_id}/finalizar", response_model=Laudos)
+@roteador.post("/{nome}/{pagina_id}/impresso", response_model=Laudos, include_in_schema=False)  # o nome antigo
 def marcar_impresso(
     nome: str,
     pagina_id: int,
@@ -410,8 +509,71 @@ def marcar_impresso(
 ) -> Laudos:
     laudo = _laudo(nome)
     _da_pagina(con, laudo, pagina_id)
+    finalizar(con, pagina_id, pessoa.usuario_id)
+    return _listar(con, pessoa, laudo)
+
+
+def finalizar(con: psycopg.Connection, pagina_id: int, usuario_id: int) -> None:
+    """Finalizar laudo (antes "marcar como impressa"): a folha não recebe mais linhas e sai com o traço das vazias."""
     con.execute(
         "UPDATE app.paginas_laudo SET impresso_por = %s, impresso_em = clock_timestamp() WHERE id = %s AND impresso_em IS NULL",
-        (pessoa.usuario_id, pagina_id),
+        (usuario_id, pagina_id),
     )
+
+
+def reabrir(con: psycopg.Connection, pagina_id: int) -> None:
+    """Editar a folha finalizada (27/10): volta a "em preenchimento", sem o traço; os registros podem ser corrigidos (o PDF
+    é sempre montado na hora com o que está no banco) e a folha é finalizada de novo."""
+    con.execute("UPDATE app.paginas_laudo SET impresso_por = NULL, impresso_em = NULL WHERE id = %s", (pagina_id,))
+
+
+# as tabelas que apontam para a folha (o registro, como a coleta de água, ou só o lugar da linha, como no TAB): lidas do
+# catálogo, para o excluir valer para todo laudo, inclusive os que vierem depois
+TABELAS_DA_FOLHA_SQL = """
+SELECT n.nspname || '.' || t.relname, a.attname
+FROM pg_constraint k
+JOIN pg_class t ON t.oid = k.conrelid JOIN pg_namespace n ON n.oid = t.relnamespace
+JOIN pg_attribute a ON a.attrelid = k.conrelid AND a.attnum = k.conkey[1]
+WHERE k.contype = 'f' AND k.confrelid = 'app.paginas_laudo'::regclass
+"""
+
+
+def excluir(con: psycopg.Connection, nome: str, pagina_id: int, usuario_id: int) -> None:
+    """Excluir a folha (27/10): ela sai da lista (nada se apaga de verdade, 077) e as linhas vão para uma folha nova, que
+    sai de novo para imprimir. Trava como a distribuição das linhas."""
+    con.execute("SELECT pg_advisory_xact_lock(60, hashtext(%s))", (nome,))
+    reabrir(con, pagina_id)  # a incubação não deixa mexer em linha de folha finalizada (075)
+    nova = con.execute("INSERT INTO app.paginas_laudo (laudo) VALUES (%s) RETURNING id", (nome,)).fetchone()[0]
+    for tabela, coluna in con.execute(TABELAS_DA_FOLHA_SQL).fetchall():
+        con.execute(f"UPDATE {tabela} SET {coluna} = %s WHERE {coluna} = %s", (nova, pagina_id))  # nomes do catálogo
+    con.execute(
+        "UPDATE app.paginas_laudo SET excluida_em = clock_timestamp(), excluida_por = %(u)s,"
+        " impresso_em = clock_timestamp(), impresso_por = %(u)s WHERE id = %(p)s",
+        {"u": usuario_id, "p": pagina_id},
+    )
+
+
+@roteador.post("/{nome}/{pagina_id}/reabrir", response_model=Laudos)
+def reabrir_pagina(
+    nome: str,
+    pagina_id: int,
+    pessoa: PessoaLogada = Depends(exigir("registrar_analise")),
+    con: psycopg.Connection = Depends(obter_conexao),
+) -> Laudos:
+    laudo = _laudo(nome)
+    _da_pagina(con, laudo, pagina_id)
+    reabrir(con, pagina_id)
+    return _listar(con, pessoa, laudo)
+
+
+@roteador.delete("/{nome}/{pagina_id}", response_model=Laudos)
+def excluir_pagina(
+    nome: str,
+    pagina_id: int,
+    pessoa: PessoaLogada = Depends(exigir("registrar_analise")),
+    con: psycopg.Connection = Depends(obter_conexao),
+) -> Laudos:
+    laudo = _laudo(nome)
+    _da_pagina(con, laudo, pagina_id)
+    excluir(con, laudo.nome, pagina_id, pessoa.usuario_id)
     return _listar(con, pessoa, laudo)

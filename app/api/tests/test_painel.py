@@ -59,14 +59,10 @@ def test_turnos_mostra_os_3_turnos_com_a_media_e_o_de_hoje(cliente, logado, monk
     assert all(t["analises"] == 0 and t["hoje_analises"] == 0 and t["esterilizacoes"] == 0 for t in m["turnos"])
 
 
-def test_turnos_conta_a_esterilizacao_de_hoje_no_turno_dela(cliente, logado):
+def test_turnos_conta_a_esterilizacao_de_hoje_no_turno_dela(cliente, logado, monkeypatch):
+    # hora fixa (o resultado não pode depender do relógio de quem roda o teste): Manhã de um dia sem dados
+    monkeypatch.setattr(rotas_turno, "_agora", lambda con: datetime(2031, 3, 10, 10, tzinfo=FUSO))
     logado()
-    antes = {t["turno"]: t for t in cliente.get("/painel/turnos").json()["turnos"]}
-    agora = next(t for t in antes.values() if t["agora"])
-    assert cliente.post("/turno/entrar", json={"turno_id": 1}).status_code in (200, 201, 409)
-    r = cliente.post("/esterilizacao", json={"tipo": "Ponteira", "ciclo": "990"})
-    if r.status_code >= 400:
-        pytest.skip(f"esterilização fora do turno neste horário: {r.text}")
-    depois = {t["turno"]: t for t in cliente.get("/painel/turnos").json()["turnos"]}
-    assert sum(t["hoje_esterilizacoes"] for t in depois.values()) == sum(t["hoje_esterilizacoes"] for t in antes.values()) + 1
-    assert depois[agora["turno"]]["agora"]
+    assert cliente.post("/esterilizacao", json={"tipo": "Ponteira", "ciclo": "990"}).status_code == 201
+    turnos = {t["turno"]: t for t in cliente.get("/painel/turnos").json()["turnos"]}
+    assert (turnos["Manhã"]["agora"], turnos["Manhã"]["hoje_esterilizacoes"], turnos["Tarde"]["hoje_esterilizacoes"]) == (True, 1, 0)

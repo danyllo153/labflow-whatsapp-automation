@@ -110,6 +110,25 @@ const NOME_DA_ETAPA: Record<string, string> = {
   "resultado do lote": "aberto por lote (resultado de cada lote)",
 };
 
+/** A leitura do TAB e do Coliformes (ler a placa e confirmar no PCA): aqui e na aba Leituras (27/10). Sem o "para espalhar",
+ * que é análise. */
+export function LeituraDoTeste({ qual }: { qual: "TAB" | "COLIFORMES" }) {
+  const { pessoa } = useSessao();
+  const pode = !!pessoa?.pode.includes("registrar_analise");
+  const [busca, setBusca] = useState("");
+  const lista = useLista<Teste[]>("/analises/testes/pendentes", busca);
+  const paraLer = (lista.dados ?? []).filter((t) => (qual === "TAB" ? t.teste === "Tab" : t.teste !== "Tab") && t.proxima !== "espalhar");
+  return (
+    <>
+      <Busca valor={busca} aoMudar={setBusca} rotulo="Procurar load, tanque ou composta" dica="Load, tanque ou nº da composta" />
+      {lista.erro && <p className="mensagem-erro">{lista.erro}</p>}
+      {!lista.dados && !lista.erro && <p className="carregando">Carregando...</p>}
+      {lista.dados && paraLer.length === 0 && <p className="texto-secundario">Nada para ler agora.</p>}
+      {lista.dados && <Grupos testes={paraLer} pode={pode} aoGravar={lista.recarregar} />}
+    </>
+  );
+}
+
 export default function Testes({ qual }: { qual: QualTeste }) {
   const { pessoa } = useSessao();
   const pode = !!pessoa?.pode.includes("registrar_analise");

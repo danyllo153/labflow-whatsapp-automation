@@ -292,10 +292,28 @@ def navios_excel(
     return resposta_xlsx(planilha("Navios", COLUNAS_NAVIOS, linhas, filtros.descricao()), "navios")
 
 
+# uma linha por amostra, com o C.T e o B.L lado a lado (pedido de 27/10: tocar no navio mostra todas as análises)
+AMOSTRAS_SQL = """
+    SELECT {chaves}, fabrica,
+           max(resultado) FILTER (WHERE analise = 'C.T 48h') AS ct,
+           max(resultado) FILTER (WHERE analise = 'B.L 72h') AS bl72,
+           max(resultado) FILTER (WHERE analise = 'B.L 120h') AS bl120,
+           min(prevista) AS prevista,
+           CASE WHEN bool_or(lido AND alarme) THEN 'Não ok' WHEN bool_and(lido) THEN 'Ok'
+                WHEN bool_or(situacao = 'Atrasado') THEN 'Atrasado' ELSE 'Pendente' END AS situacao
+    FROM bi.contagens
+    WHERE origem = %s AND {onde}
+    GROUP BY {chaves}, fabrica
+    ORDER BY {ordem}
+"""
+_ORDEM_NUMERICA = "nullif(regexp_replace({c}, '\\D', '', 'g'), '')::numeric NULLS LAST, {c}"
+
+
 class DetalheNavio(BaseModel):
     resumo: dict[str, Any]
     tanques: list[dict[str, Any]]  # tanques NFC do navio (uma linha por coleta, como em Tanques terra)
     embarques: list[dict[str, Any]]  # concentrado FCOJ: uma linha por linha e fase
+    amostras: list[dict[str, Any]] = []  # cada amostra do FCOJ com o C.T e o B.L
 
 
 @roteador.get("/navios/{navio}", response_model=DetalheNavio)
@@ -312,4 +330,50 @@ def navio(
         con, f"SELECT * FROM ({POR_COLETA}) x WHERE origem = 'Navio' AND navio = %s ORDER BY data_coleta, tanque", [navio]
     )
     embarques = _linhas(con, f"SELECT * FROM ({POR_EMBARQUE}) e WHERE navio = %s ORDER BY linha, fase", [navio])
-    return DetalheNavio(resumo=resumo[0], tanques=tanques, embarques=embarques)
+    amostras = _linhas(
+        con,
+        AMOSTRAS_SQL.format(chaves="linha, fase, load, lote_amostra", onde="navio = %s",
+                            ordem="linha, fase, " + _ORDEM_NUMERICA.format(c="load") + ", " + _ORDEM_NUMERICA.format(c="lote_amostra")),
+        ["Embarque", navio],
+    )
+    return DetalheNavio(resumo=resumo[0], tanques=tanques, embarques=embarques,
+                        amostras=[{**a, "amostra": a.pop("lote_amostra")} for a in amostras])
+
+
+class DetalheLoad(BaseModel):
+    resumo: dict[str, Any]
+    lotes: list[dict[str, Any]]  # cada lote com o C.T e o B.L lado a lado
+    testes: list[dict[str, Any]]  # compostas: TAB, Coliformes e Howard do load
+
+
+@roteador.get("/loads/{load}", response_model=DetalheLoad)
+def load_recebido(
+    load: str,
+    pessoa: PessoaLogada = Depends(exigir("ver_paginas")),
+    con: psycopg.Connection = Depends(obter_conexao),
+) -> DetalheLoad:
+    """A página de um load do recebimento (rastreável, pedido de 27/10): os lotes com os resultados e as compostas."""
+    _barrar_coletor(pessoa)
+    lotes = _linhas(
+        con, AMOSTRAS_SQL.format(chaves="item, numero", onde="load = %s", ordem="numero, item"), ["Recebimento", load]
+    )
+    if not lotes:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Load não encontrado.")
+    testes = _linhas(
+        con,
+        """SELECT teste, alvo, data_feito, status, resultado, howard_percentual, situacao, proxima_etapa
+           FROM bi.testes WHERE origem = 'Recebimento' AND load_ou_tanque = %s ORDER BY teste, data_feito, alvo""",
+        [load],
+    )
+    itens = sorted({str(l["item"]) for l in lotes if l["item"] is not None})
+    fabricas = sorted({l["fabrica"] for l in lotes if l["fabrica"]})
+    nao_ok = sum(1 for l in lotes if l["situacao"] == "Não ok")
+    abertos = sum(1 for l in lotes if l["situacao"] in ("Pendente", "Atrasado")) + sum(1 for t in testes if t["situacao"] != "Concluído")
+    atrasados = sum(1 for l in lotes if l["situacao"] == "Atrasado") + sum(1 for t in testes if t["situacao"] == "Atrasado")
+    resumo = {
+        "load": load, "itens": ", ".join(itens), "fabricas": ", ".join(fabricas), "lotes": len(lotes), "nao_ok": nao_ok,
+        "testes": len(testes), "positivos": sum(1 for t in testes if t["resultado"] == "Positivo"),
+        "primeira_data": min(l["prevista"] for l in lotes),
+        "status": "Atrasado" if atrasados else "Concluído" if not abertos else "Em andamento",
+    }
+    return DetalheLoad(resumo=resumo, lotes=[{**l, "lote": l.pop("numero")} for l in lotes], testes=testes)

@@ -58,20 +58,37 @@ describe("Laudo de esterilização (APP-035)", () => {
     expect(within(laudo).getByText("Cheia: imprimir")).toBeInTheDocument();
     expect(within(laudo).getByRole("link", { name: "Abrir o PDF da página 2" })).toHaveAttribute("href", "/esterilizacao/laudos/2/pdf");
     expect(within(laudo).getByRole("link", { name: "Reimprimir a página 1" })).toHaveAttribute("href", "/esterilizacao/laudos/1/pdf");
-    expect(within(laudo).getByText(/impressa 21\/10 17:05 por Ana Souza/)).toBeInTheDocument();
+    expect(within(laudo).getByText(/finalizada 21\/10 17:05 por Ana Souza/)).toBeInTheDocument();
     expect(within(laudo).getByText(/sem o modelo da empresa/)).toBeInTheDocument();
   });
 
-  it("marcar como impressa manda a página para o arquivo", async () => {
+  it("Finalizar laudo manda a página para o arquivo (27/10)", async () => {
     const api = abrir({
-      "POST /esterilizacao/laudos/2/impresso": () => ({
+      "POST /esterilizacao/laudos/2/finalizar": () => ({
         status: 200,
         corpo: { ...LAUDOS, paginas: LAUDOS.paginas.map((p) => (p.id === 2 ? { ...p, impresso: true, impresso_por: "Ana Souza", impresso_em: "22/10 09:00" } : p)) },
       }),
     });
-    await userEvent.click(await screen.findByRole("button", { name: "Marcar a página 2 como impressa" }));
-    expect(api.vezes("POST /esterilizacao/laudos/2/impresso")).toBe(1);
+    await userEvent.click(await screen.findByRole("button", { name: "Finalizar o laudo da página 2" }));
+    expect(api.vezes("POST /esterilizacao/laudos/2/finalizar")).toBe(1);
     expect(await screen.findByText("Nenhuma página pendente de impressão.")).toBeInTheDocument();
+  });
+
+  it("a página finalizada pode ser editada ou excluída, sempre com um Confirmar", async () => {
+    const api = abrir({
+      "POST /esterilizacao/laudos/1/reabrir": () => ({ status: 200, corpo: LAUDOS }),
+      "DELETE /esterilizacao/laudos/1": () => ({ status: 200, corpo: LAUDOS }),
+    });
+    const laudo = await screen.findByRole("region", { name: "Laudo de esterilização" });
+    await userEvent.click(within(laudo).getByRole("button", { name: "Editar a página 1" }));
+    expect(within(laudo).getByRole("group", { name: "Confirmar: editar a página 1" })).toHaveTextContent("volta a \"em preenchimento\"");
+    expect(api.vezes("POST /esterilizacao/laudos/1/reabrir")).toBe(0);
+    await userEvent.click(within(laudo).getByRole("button", { name: "Confirmar" }));
+    expect(api.vezes("POST /esterilizacao/laudos/1/reabrir")).toBe(1);
+    await userEvent.click(within(laudo).getByRole("button", { name: "Excluir a página 1" }));
+    expect(within(laudo).getByRole("group", { name: "Confirmar: excluir a página 1" })).toHaveTextContent("vão para uma folha nova");
+    await userEvent.click(within(laudo).getByRole("button", { name: "Confirmar" }));
+    expect(api.vezes("DELETE /esterilizacao/laudos/1")).toBe(1);
   });
 
   it("avisa, sem bloquear, quando o ciclo digitado já tem material", async () => {

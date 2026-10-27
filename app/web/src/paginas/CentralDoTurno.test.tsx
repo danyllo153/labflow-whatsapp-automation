@@ -110,21 +110,27 @@ describe("Turno como central (APP-033)", () => {
     expect(within(cartao).getByText("Limpeza da capela")).toBeInTheDocument();
   });
 
-  it("mostra as análises a fazer hoje na tela do Turno", async () => {
+  it("mostra as leituras e as análises pendentes em dois blocos, com o atalho de cada número (27/10)", async () => {
     abrir("/turno", {
       "GET /turno": () => ({ status: 200, corpo: { ...ESTADO_TURNO, no_turno: NA_TARDE } }),
-      "GET /pendencias-hoje": () => ({
+      "GET /leituras/pendentes": () => ({
         status: 200,
         corpo: {
-          vence_hoje: 1, atrasados: 0, desvios_abertos: 0,
-          itens: [{ bloco: "Leituras NFC", tipo: "NFC", referencia: "T-01", analise: "NFC", prevista: "2026-10-22", situacao: "Vence hoje" }],
+          leituras: [
+            { grupo: "Recebimento concentrado", detalhe: "", itens: [{ rotulo: "C.T 48h", quantidade: 30, unidade: "placas", atrasadas: 0, caminho: "/leituras?aba=recebimento&analise=CT" }] },
+            { grupo: "D.STAR 900", detalhe: "4 tanques", itens: [{ rotulo: "Wort 240h", quantidade: 12, unidade: "placas", atrasadas: 3, caminho: "/leituras?aba=tanques-navio&navio=D.STAR 900&leitura=Wort 240h" }] },
+          ],
+          analises: [{ grupo: "Drops", detalhe: "", itens: [{ rotulo: "Drop D5", quantidade: 2, unidade: "tanques", atrasadas: 0, caminho: "/analises/drops" }] }],
         },
       }),
     });
-    expect(await screen.findByText("Análises a fazer hoje (1)")).toBeInTheDocument();
-    await userEvent.click(await screen.findByText("Análises a fazer hoje (1)"));
-    await userEvent.click(await screen.findByRole("button", { name: /^1\s*NFC/ }));
-    expect(await screen.findByText("T-01")).toBeInTheDocument();
+    const leituras = await screen.findByRole("region", { name: "Leituras pendentes" });
+    expect(within(leituras).getByRole("link", { name: "Recebimento concentrado: 30 placas de C.T 48h" })).toHaveAttribute("href", "/leituras?aba=recebimento&analise=CT");
+    expect(within(leituras).getByText("· 4 tanques")).toBeInTheDocument();
+    expect(within(leituras).getByRole("link", { name: /D.STAR 900: 12 placas de Wort 240h, 3 atrasadas/ })).toBeInTheDocument();
+    const analises = screen.getByRole("region", { name: "Análises pendentes" });
+    expect(within(analises).getByRole("link", { name: "Drops: 2 tanques de Drop D5" })).toHaveAttribute("href", "/analises/drops");
+    expect(screen.queryByText(/Análises a fazer hoje/)).not.toBeInTheDocument();
   });
 
   it("avisa a estufa que ficou Não ok no turno anterior, com o horário desde quando", async () => {

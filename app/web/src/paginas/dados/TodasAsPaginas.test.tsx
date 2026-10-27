@@ -58,21 +58,23 @@ describe("todas as páginas do Power BI no app (APP-019)", () => {
     const grupo = (nome: string) => within(within(principal).getByRole("heading", { level: 2, name: nome }).parentElement as HTMLElement);
     const hrefs = (nome: string) => grupo(nome).getAllByRole("link").map((l) => l.getAttribute("href"));
     expect(within(principal).queryByRole("link", { name: /Visão geral|^Coletas/ })).toBeNull(); // a Visão geral saiu e Coletas está no menu (26/10)
-    expect(hrefs("NFC")).toEqual(expect.arrayContaining(["/analises/tanques", "/analises/drops", "/analises/desvios", "/analises/recebimento-nfc"])); // apps da Fase E
-    expect(hrefs("NFC").filter((h) => h === "/analises/tanques")).toHaveLength(1); // terra e navio num app só (25/10)
+    expect(hrefs("NFC")).toEqual(
+      expect.arrayContaining(["/analises/tanques-terra", "/analises/tanques-navio", "/analises/drops", "/analises/desvios", "/analises/recebimento-nfc"]),
+    ); // apps da Fase E; terra e navio em dois apps (27/10)
     expect(hrefs("FCOJ (concentrado)")).toEqual(["/analises/recebimento-fcoj", "/analises/embarque-fcoj"]); // viraram apps (Fase E)
     expect(hrefs("TAB, Coliformes e Howard")).toEqual(["/analises/tab", "/analises/coliformes", "/analises/howard"]); // um app para cada (25/10)
     expect(within(principal).queryByRole("link", { name: /^Tanques Leituras/ })).toBeNull();
     expect(within(principal).queryByText("Em breve")).toBeNull();
-    expect(hrefs("Águas e superfícies")).toEqual(["/paginas/agua-processo", "/paginas/baias", "/paginas/linhas"]); // APP-037
+    expect(hrefs("Águas e superfícies")).toEqual(["/paginas/agua-processo", "/paginas/agua-consumo", "/paginas/baias", "/paginas/linhas"]); // APP-037; consumo 27/10
     expect(hrefs("Registros diários")).toEqual(["/esterilizacao", "/material-asseptico", "/meios-lotes", "/fluxo-laminar", "/arquivo", "/incubacao"]);
   });
 
-  it("o Coletor só vê a água do processo na grade (Coletas está no menu; baias e linhas são análise, 25/10)", async () => {
+  it("o Coletor só vê as águas na grade (Coletas está no menu; baias e linhas são análise, 25/10)", async () => {
     abrir("/paginas", { ...ANA, cargo: "Coletor" });
     const principal = (await screen.findByRole("heading", { level: 1, name: "Análises" })).closest("section") as HTMLElement;
     expect(within(principal).getAllByRole("link").map((l) => l.getAttribute("href"))).toEqual([
       "/paginas/agua-processo",
+      "/paginas/agua-consumo",
     ]);
   });
 

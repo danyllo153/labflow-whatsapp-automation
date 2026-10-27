@@ -1,13 +1,15 @@
 import { lazy, Suspense, useCallback, useEffect, useState, type FormEvent } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 
 import { enviarJson, lerJson } from "../../api";
+import { useSessao } from "../../sessao";
 import IconeApp from "../../componentes/IconeApp";
 import { dm } from "../../componentes/SeletorDeDias";
 import { FABRICAS } from "../dados/definicoes";
 import { classeDaSituacao } from "../dados/formatos";
 import LaudoEsterilizacao from "../LaudoEsterilizacao";
 import Instrucao from "./Instrucao";
+import { Resultados as TabelasDoApp } from "./comum";
 
 const GraficoResultado = lazy(() => import("../dados/GraficoResultado"));
 
@@ -197,7 +199,7 @@ export default function RecebimentoFcoj() {
           <p className="mensagem-erro">{erro}</p>
         </div>
       )}
-      {aba === "painel" && (painel ? <PainelDoRecebimento painel={painel} irPara={irPara} /> : !erro && <p className="carregando">Carregando...</p>)}
+      {aba === "painel" && (painel ? <PainelDoRecebimento painel={painel} /> : !erro && <p className="carregando">Carregando...</p>)}
       {aba === "registrar" && (
         <>
           <Registrar pode={painel?.pode_registrar ?? false} aoGravar={() => void carregarPainel()} />
@@ -207,14 +209,9 @@ export default function RecebimentoFcoj() {
           </details>
         </>
       )}
+      {/* a tabela de todas as páginas, com os filtros completos e o gráfico (27/10); a leitura mora na aba Leituras */}
       {aba === "resultados" && (
-        <Resultados
-          pode={painel?.pode_registrar ?? false}
-          buscaInicial={params.get("busca") ?? ""}
-          analiseInicial={params.get("analise") ?? ""}
-          pendentesInicial={params.get("pendentes") === "1" || !!params.get("analise")}
-          aoGravar={() => void carregarPainel()}
-        />
+        <TabelasDoApp paginas={[{ caminho: "/paginas/recebimento", titulo: "Recebimento FCOJ", descricao: "C.T e B.L por load e lote" }]} />
       )}
       {aba === "laudo" && painel?.pode_registrar && <LaudoEsterilizacao versao={0} config={LAUDO} />}
       {aba === "laudo" && (
@@ -267,16 +264,19 @@ function SinoEmObservacao({ painel, aoAtualizar }: { painel: Painel; aoAtualizar
   );
 }
 
-function PainelDoRecebimento({ painel, irPara }: { painel: Painel; irPara: (aba: string, extra?: Record<string, string>) => void }) {
+function PainelDoRecebimento({ painel }: { painel: Painel }) {
+  // o que é para ler vai para a aba Leituras (27/10)
+  const navegar = useNavigate();
+  const ler = (analise = "") => navegar(`/leituras?aba=recebimento${analise ? `&analise=${analise}` : ""}`);
   const maior = Math.max(1, ...painel.fabricas.map((f) => f.nao_ok));
   return (
     <>
       <div className="numeros-app">
-        <button type="button" className="numero-app numero-atrasado" onClick={() => irPara("resultados", { pendentes: "1" })}>
+        <button type="button" className="numero-app numero-atrasado" onClick={() => ler()}>
           <strong>{painel.atrasados}</strong>
           <span>Atrasados</span>
         </button>
-        <button type="button" className="numero-app numero-hoje" onClick={() => irPara("resultados", { pendentes: "1" })}>
+        <button type="button" className="numero-app numero-hoje" onClick={() => ler()}>
           <strong>{painel.para_hoje}</strong>
           <span>Para hoje</span>
         </button>
@@ -303,7 +303,7 @@ function PainelDoRecebimento({ painel, irPara }: { painel: Painel; irPara: (aba:
                     <button
                       type="button"
                       className="botao botao-simples"
-                      onClick={() => irPara("resultados", { analise: ANALISES.find((a) => a.rotulo === g.analise)?.cod ?? "CT" })}
+                      onClick={() => ler(ANALISES.find((a) => a.rotulo === g.analise)?.cod ?? "CT")}
                     >
                       Lançar
                     </button>
@@ -522,18 +522,35 @@ function Registrar({ pode, aoGravar }: { pode: boolean; aoGravar: () => void }) 
   );
 }
 
+/** A leitura do C.T/B.L dos lotes do recebimento: aqui e na aba Leituras (27/10), já com só os pendentes. */
+export function LeituraDoRecebimento({ analiseInicial = "" }: { analiseInicial?: string }) {
+  const { pessoa } = useSessao();
+  return (
+    <Resultados
+      pode={!!pessoa?.pode.includes("registrar_analise")}
+      buscaInicial=""
+      analiseInicial={analiseInicial}
+      pendentesInicial
+      aoGravar={() => undefined}
+      comGraficoInicial={false}
+    />
+  );
+}
+
 function Resultados({
   pode,
   buscaInicial,
   analiseInicial,
   pendentesInicial,
   aoGravar,
+  comGraficoInicial = true,
 }: {
   pode: boolean;
   buscaInicial: string;
   analiseInicial: string;
   pendentesInicial: boolean;
   aoGravar: () => void;
+  comGraficoInicial?: boolean;
 }) {
   const [busca, setBusca] = useState(buscaInicial);
   const [filtros, setFiltros] = useState({ fabrica: "", so_pendentes: pendentesInicial, dias: "30" });
@@ -591,7 +608,7 @@ function Resultados({
 
   const filtrosAtivos = [filtros.so_pendentes && "Só pendentes", filtros.dias !== "30" && `${filtros.dias} dias`].filter(Boolean);
   // o gráfico do resultado (26/10) acompanha a fábrica, o período e a busca da tabela
-  const [comGrafico, setComGrafico] = useState(true);
+  const [comGrafico, setComGrafico] = useState(comGraficoInicial);
   const desde = new Date(`${hoje}T12:00:00`);
   desde.setDate(desde.getDate() - Number(filtros.dias));
   const consultaDoGrafico = new URLSearchParams({

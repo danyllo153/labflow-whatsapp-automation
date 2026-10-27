@@ -5,7 +5,6 @@ import { MENU } from "../menu";
 import { useSessao } from "../sessao";
 import BotaoTema from "./BotaoTema";
 import BuscaRapida from "./BuscaRapida";
-import CartaoFolhas from "./CartaoFolhas";
 import ChipEquipe from "./ChipEquipe";
 import FaixaDemonstracao from "./FaixaDemonstracao";
 import Icone from "./Icone";
@@ -19,7 +18,7 @@ import MenuNavegacao from "./MenuNavegacao";
  * com o dia a dia.
  */
 
-const BARRA_DO_CELULAR = ["/", "/turno", "/relatorio-do-dia", "/esterilizacao"];
+const BARRA_DO_CELULAR = ["/", "/turno", "/leituras", "/esterilizacao"];
 export default function Moldura() {
   const { pessoa } = useSessao();
   const { pathname } = useLocation();
@@ -39,7 +38,6 @@ export default function Moldura() {
           </button>
         </div>
         <MenuNavegacao />
-        <CartaoFolhas />
       </aside>
       {gaveta && <div className="gaveta-fundo" aria-hidden="true" onClick={() => setGaveta(false)} />}
 

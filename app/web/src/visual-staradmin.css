@@ -1143,3 +1143,254 @@ div.estatistica {
     grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
   }
 }
+
+/* botões das folhas de laudo, com ícone (27/10) */
+.acoes-linha {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.acao-laudo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border: 1px solid var(--borda);
+  border-radius: 6px;
+  background: var(--cartao);
+  color: var(--texto);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.acao-laudo:hover {
+  border-color: var(--acao);
+  color: var(--link);
+}
+
+.acao-laudo.acao-principal {
+  background: var(--acao-botao);
+  border-color: var(--acao-botao);
+  color: #fff;
+}
+
+/* os dois blocos do dia no Turno (27/10): leituras e análises pendentes, lado a lado no computador */
+.blocos-do-dia {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  gap: 16px;
+  align-items: start;
+  margin-bottom: 16px;
+}
+
+.blocos-do-dia > .cartao {
+  margin: 0;
+}
+
+.grupos-do-dia {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.grupos-do-dia li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--linha-suave);
+}
+
+.grupos-do-dia li:last-child {
+  border-bottom: 0;
+}
+
+.grupo-do-dia-nome {
+  flex: 0 0 190px;
+  min-width: 0;
+}
+
+.itens-do-dia {
+  flex: 1 1 240px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pilula-do-dia {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  padding: 3px 10px;
+  border: 1px solid var(--borda);
+  border-radius: 999px;
+  color: var(--texto);
+  font-size: 0.8rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.pilula-do-dia b {
+  color: var(--texto-titulo);
+}
+
+.pilula-do-dia:hover {
+  border-color: var(--acao);
+  color: var(--link);
+}
+
+.pilula-do-dia.com-atraso {
+  border-color: var(--nao-ok);
+}
+
+.pilula-do-dia.com-atraso b {
+  color: var(--nao-ok-texto);
+}
+
+/* ---------- fábrica com a cor dos gráficos; fresh e pasteurizado (27/10) ---------- */
+.chip-fabrica {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.chip-fabrica .quadrado {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex: none;
+}
+
+.etiqueta-fresh { color: #0f7a3d; background: transparent; }
+.etiqueta-past { color: #a35200; background: transparent; }
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-tema="claro"]) .etiqueta-fresh { color: #5fd08f; }
+  :root:not([data-tema="claro"]) .etiqueta-past { color: #f0a35a; }
+}
+:root[data-tema="escuro"] .etiqueta-fresh { color: #5fd08f; }
+:root[data-tema="escuro"] .etiqueta-past { color: #f0a35a; }
+
+.campo.campo-em-linha {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+}
+
+.grafico-resultado .dashboard-topo {
+  flex-wrap: wrap;
+  gap: 8px 12px;
+}
+
+/* ---------- últimos navios embarcados (27/10) ---------- */
+.lista-navios {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+}
+
+.lista-navios li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--borda);
+}
+
+.lista-navios li:last-child {
+  border-bottom: 0;
+}
+
+.lista-navios a {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  color: inherit;
+  text-decoration: none;
+  min-width: 0;
+}
+
+.lista-navios a strong {
+  color: var(--primaria, #1f3bb3);
+}
+
+/* ---------- água de consumo (27/10) ---------- */
+.cartoes-agua {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.cartao-agua {
+  margin: 0;
+}
+
+.cartao-agua.escolhido {
+  outline: 2px solid var(--primaria, #1f3bb3);
+}
+
+.cartao-agua h2 {
+  margin-top: 0;
+}
+
+.titulo-da-escolha {
+  margin: 8px 0 4px;
+}
+
+.coleta-agua {
+  border-bottom: 1px solid var(--borda);
+  padding: 10px 0;
+}
+
+.coleta-agua summary {
+  cursor: pointer;
+}
+
+.resultados-agua,
+.lista-pontos {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0;
+}
+
+.resultados-agua li,
+.lista-pontos li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.lista-pontos input {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+
+.campo-curto {
+  width: 100%;
+  min-width: 64px;
+  max-width: 140px;
+}
+
+.texto-previa {
+  white-space: pre-wrap;
+  font-family: inherit;
+  margin: 0 0 8px;
+}
+
+.cartao-agua .botao[aria-pressed="true"] {
+  background: var(--primaria, #1f3bb3);
+  border-color: var(--primaria, #1f3bb3);
+  color: #fff;
+}

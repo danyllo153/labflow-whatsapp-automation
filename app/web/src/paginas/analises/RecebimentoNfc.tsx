@@ -62,11 +62,33 @@ const LAUDO = {
 
 const ROTULO = { CT: "C.T 48h", BL72: "B.L 72h", BL120: "B.L 120h" };
 
-export default function RecebimentoNfc() {
+/** A leitura do C.T/B.L dos lotes de NFC recebido: aqui e na aba Leituras (27/10). */
+export function LeituraDoNfc() {
   const { pessoa } = useSessao();
   const pode = !!pessoa?.pode.includes("registrar_analise");
   const [busca, setBusca] = useState("");
   const lista = useLista<Pendente[]>("/analises/recebimento-nfc/pendentes", busca);
+  const atrasados = (lista.dados ?? []).filter((p) => p.situacao === "Atrasado").length;
+  return (
+    <>
+      <Numeros
+        itens={[
+          { rotulo: "Atrasados", valor: atrasados, tom: "atrasado" },
+          { rotulo: "Para hoje", valor: (lista.dados ?? []).length - atrasados, tom: "hoje" },
+        ]}
+      />
+      <Busca valor={busca} aoMudar={setBusca} rotulo="Procurar load" dica="Número do load" />
+      {lista.erro && <p className="mensagem-erro">{lista.erro}</p>}
+      {!lista.dados && !lista.erro && <p className="carregando">Carregando...</p>}
+      {lista.dados && <Lancar pendentes={lista.dados} pode={pode} aoGravar={lista.recarregar} />}
+    </>
+  );
+}
+
+export default function RecebimentoNfc() {
+  const { pessoa } = useSessao();
+  const pode = !!pessoa?.pode.includes("registrar_analise");
+  const lista = useLista<Pendente[]>("/analises/recebimento-nfc/pendentes", "");
   const atrasados = (lista.dados ?? []).filter((p) => p.situacao === "Atrasado").length;
   return (
     <AppDeAnalise
@@ -79,20 +101,7 @@ export default function RecebimentoNfc() {
     >
       {(aba) => (
         <>
-          {aba === "resultados" && (
-            <>
-              <Numeros
-                itens={[
-                  { rotulo: "Atrasados", valor: atrasados, tom: "atrasado" },
-                  { rotulo: "Para hoje", valor: (lista.dados ?? []).length - atrasados, tom: "hoje" },
-                ]}
-              />
-              <Busca valor={busca} aoMudar={setBusca} rotulo="Procurar load" dica="Número do load" />
-              {lista.erro && <p className="mensagem-erro">{lista.erro}</p>}
-              {!lista.dados && !lista.erro && <p className="carregando">Carregando...</p>}
-              {lista.dados && <Lancar pendentes={lista.dados} pode={pode} aoGravar={lista.recarregar} />}
-            </>
-          )}
+          {aba === "resultados" && <LeituraDoNfc />}
           {aba === "registrar" && (
             <SoQuemGrava pode={pode}>
               <Registrar aoGravar={lista.recarregar} />

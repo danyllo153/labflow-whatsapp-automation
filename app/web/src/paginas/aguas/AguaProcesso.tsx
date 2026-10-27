@@ -52,6 +52,58 @@ const LAUDO = {
   unidade: "coletas",
 };
 
+// para ler hoje: a situação da coleta diz "Atrasado: ..." ou "Vence hoje: ..." (rotas_aguas._situacao)
+const PARA_LER = (situacao: string) => situacao.startsWith("Atrasado") || situacao.startsWith("Vence hoje");
+
+/** A leitura da água do processo: só as coletas com resultado por lançar; aqui e na aba Leituras (27/10). */
+export function LeituraDaAguaDoProcesso() {
+  const [dados, setDados] = useState<AguaDoProcesso | null>(null);
+  const [erro, setErro] = useState("");
+  const [versao, setVersao] = useState(0);
+  useEffect(() => {
+    lerJson<AguaDoProcesso>("/aguas/processo").then(setDados, (e) => setErro(mensagem(e, "Não foi possível carregar a água do processo.")));
+  }, []);
+  const pendentes = (dados?.coletas ?? []).filter((c) => PARA_LER(c.situacao));
+  if (erro) return <p className="mensagem-erro">{erro}</p>;
+  if (!dados) return <p className="carregando">Carregando...</p>;
+  return (
+    <div className="cartao" aria-label="Leituras da água do processo">
+      <h2>
+        Água do processo: resultados por lançar <span className="contador">{pendentes.length}</span>
+      </h2>
+      {pendentes.length === 0 ? (
+        <p className="texto-secundario">Nenhuma leitura pendente.</p>
+      ) : (
+        <div className="tabela-rolagem">
+          <table className="tabela">
+            <thead>
+              <tr>
+                <th scope="col">Coleta</th>
+                {PONTOS.map((p) => (
+                  <th key={p.chave} scope="col">
+                    {p.nome}
+                    <br />
+                    <span className="texto-secundario">C.T. / B.L.</span>
+                  </th>
+                ))}
+                <th scope="col">Observação</th>
+                <th scope="col">Quem</th>
+                <th scope="col">Situação</th>
+                {dados.pode_lancar && <th scope="col">Ações</th>}
+              </tr>
+            </thead>
+            <tbody>
+              {pendentes.map((c) => (
+                <LinhaDaColeta key={`${c.id}-${versao}`} coleta={c} pode={dados.pode_lancar} aoMudar={(d) => (setDados(d), setVersao((v) => v + 1))} />
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function AguaProcesso() {
   const [dados, setDados] = useState<AguaDoProcesso | null>(null);
   const [erro, setErro] = useState("");

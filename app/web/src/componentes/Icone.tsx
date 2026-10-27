@@ -25,7 +25,7 @@ const FORMAS: Record<string, JSX.Element> = {
       <path d="M15 5h3a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h3M8.5 12h7M8.5 16h5" />
     </>
   ),
-  "/relatorio-do-dia": (
+  "/leituras": (
     <>
       <rect x="3" y="4" width="18" height="17" rx="2" />
       <path d="M3 9h18M8 2v4M16 2v4M8 14l2.5 2.5L16 12" />

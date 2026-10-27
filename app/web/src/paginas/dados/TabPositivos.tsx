@@ -3,7 +3,7 @@ import { BarController, BarElement, CategoryScale, Chart as ChartJS, Legend, Lin
 import { Bar } from "react-chartjs-2";
 
 import { lerJson } from "../../api";
-import { FABRICAS } from "./definicoes";
+import { corDaFabrica, FABRICAS } from "./definicoes";
 import { formatar } from "./formatos";
 
 ChartJS.register(BarController, CategoryScale, LinearScale, BarElement, Tooltip, Legend);
@@ -22,7 +22,6 @@ export interface TabPositivo {
 
 const MESES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
 const MESES_EXTENSO = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
-const CORES = ["#1f6fb5", "#e08a00", "#0f8b8d", "#7d5ba6", "#c2410c", "#5a6677", "#8a9a2b"];
 const SEM_FABRICA = "Sem fábrica";
 
 /** Os positivos do mês, um por load ou navio (o mesmo load com várias compostas positivas aparece uma vez, com o total). */
@@ -161,7 +160,7 @@ export default function TabPositivos({
                 datasets: fabricas.map((f) => ({
                   label: f,
                   data: contagem.get(f) ?? [],
-                  backgroundColor: CORES[(FABRICAS.indexOf(f) + CORES.length) % CORES.length],
+                  backgroundColor: corDaFabrica(f),
                   borderColor: cartao,
                   borderWidth: { top: 2 },
                   borderSkipped: false,
@@ -194,7 +193,7 @@ export default function TabPositivos({
               <ul>
                 {agruparPorReferencia(doMes).map((p) => (
                   <li key={`${p.referencia}|${p.fabrica}|${p.origem}`}>
-                    <i className="quadrado" style={{ background: CORES[(FABRICAS.indexOf(p.fabrica ?? SEM_FABRICA) + CORES.length) % CORES.length] }} />
+                    <i className="quadrado" style={{ background: corDaFabrica(p.fabrica) }} />
                     <span className="tab-positivo-texto">
                       <strong>{p.referencia}</strong>
                       <small>

@@ -4,6 +4,7 @@ import { Link, useParams } from "react-router-dom";
 import { lerJson } from "../../api";
 import type { Coluna } from "./definicoes";
 import { classeDaSituacao, formatar } from "./formatos";
+import { Celula } from "./PaginaDeDados";
 
 /**
  * Página de um tanque e de um navio (APP-019b, pedido de 23/10/2026). Mostra o status, o que já foi lido e o que falta.
@@ -32,11 +33,7 @@ function useDetalhe<T>(caminho: string) {
   return { dados, erro };
 }
 
-function Valor({ coluna, linha }: { coluna: Coluna; linha: Linha }) {
-  const texto = formatar(linha[coluna.chave], coluna.formato);
-  if (coluna.formato === "situacao" && texto) return <span className={classeDaSituacao(texto)}>{texto}</span>;
-  return <>{texto}</>;
-}
+const Valor = Celula; // a mesma célula das páginas (situação, fábrica com a cor, fresh e pasteurizado)
 
 function Bloco(props: { titulo: string; colunas: Coluna[]; linhas: Linha[]; vazio: string; link?: (l: Linha) => string }) {
   return (
@@ -211,7 +208,20 @@ interface DadosNavio {
   resumo: Linha;
   tanques: Linha[];
   embarques: Linha[];
+  amostras?: Linha[];
 }
+
+// cada amostra do FCOJ embarcado com o C.T e o B.L lado a lado (pedido de 27/10)
+const COLS_AMOSTRAS: Coluna[] = [
+  { chave: "embarque", rotulo: "Linha e fase", principal: true },
+  { chave: "load", rotulo: "Load" },
+  { chave: "fabrica", rotulo: "Fábrica", formato: "fabrica" },
+  { chave: "amostra", rotulo: "Amostra" },
+  { chave: "ct", rotulo: "C.T 48h" },
+  { chave: "bl72", rotulo: "B.L 72h" },
+  { chave: "bl120", rotulo: "B.L 120h" },
+  { chave: "situacao", rotulo: "Situação", formato: "situacao" },
+];
 
 export function DetalheNavio() {
   const { navio = "" } = useParams();
@@ -256,6 +266,84 @@ export function DetalheNavio() {
             linhas={embarques}
             vazio="Este navio não tem concentrado (FCOJ)."
             link={(l) => `/paginas/embarque?navio=${encodeURIComponent(navio)}&linha=${l.linha}&fase=${l.fase}`}
+          />
+          {(dados.amostras ?? []).length > 0 && (
+            <Bloco
+              titulo="Análises do concentrado"
+              colunas={COLS_AMOSTRAS}
+              linhas={(dados.amostras ?? []).map((a) => ({ ...a, embarque: `Linha ${a.linha} · fase ${a.fase}` }))}
+              vazio=""
+              link={(l) => (l.load ? `/paginas/loads/${encodeURIComponent(String(l.load))}` : `/paginas/navios/${encodeURIComponent(navio)}`)}
+            />
+          )}
+        </>
+      )}
+    </section>
+  );
+}
+
+// ---------------------------------------------------------------- Um load do recebimento (rastreável, 27/10)
+interface DadosLoad {
+  resumo: Linha;
+  lotes: Linha[];
+  testes: Linha[];
+}
+
+const COLS_LOTES: Coluna[] = [
+  { chave: "lote", rotulo: "Lote", principal: true },
+  { chave: "item", rotulo: "Item" },
+  { chave: "fabrica", rotulo: "Fábrica", formato: "fabrica" },
+  { chave: "prevista", rotulo: "Leitura prevista", formato: "data" },
+  { chave: "ct", rotulo: "C.T 48h" },
+  { chave: "bl72", rotulo: "B.L 72h" },
+  { chave: "bl120", rotulo: "B.L 120h" },
+  { chave: "situacao", rotulo: "Situação", formato: "situacao" },
+];
+const COLS_TESTES_LOAD: Coluna[] = [
+  { chave: "teste", rotulo: "Teste", principal: true },
+  { chave: "alvo", rotulo: "Composta / lote" },
+  { chave: "data_feito", rotulo: "Feito em", formato: "data" },
+  { chave: "status", rotulo: "Status" },
+  { chave: "resultado", rotulo: "Resultado", formato: "situacao" },
+  { chave: "howard_percentual", rotulo: "Howard (%)" },
+  { chave: "situacao", rotulo: "Situação", formato: "situacao" },
+];
+
+export function DetalheLoad() {
+  const { load = "" } = useParams();
+  const { dados, erro } = useDetalhe<DadosLoad>(`/paginas/loads/${encodeURIComponent(load)}`);
+  const r = dados?.resumo;
+  return (
+    <section>
+      <p className="trilha">
+        <Link to="/paginas">Análises</Link> / <Link to="/analises/recebimento-fcoj?aba=resultados">Recebimento FCOJ</Link> / Load {load}
+      </p>
+      {erro && <p className="mensagem-erro" role="alert">{erro}</p>}
+      {!dados && !erro && <p className="carregando">Carregando...</p>}
+      {r && dados && (
+        <>
+          <h1>
+            Load {load} <span className={classeDaSituacao(String(r.status))}>{String(r.status)}</span>
+          </h1>
+          <p className="texto-secundario">
+            {r.fabricas ? `Fábrica ${String(r.fabricas)}` : "Sem fábrica"} · item {String(r.itens || "-")} · primeira leitura{" "}
+            {formatar(r.primeira_data, "data")}
+          </p>
+          <Numeros
+            itens={[
+              ["Lotes", r.lotes],
+              ["Não ok", r.nao_ok, true],
+              ["TAB, Coliformes e Howard", r.testes],
+              ["Positivos", r.positivos, true],
+            ]}
+          />
+          <Bloco titulo="Lotes" colunas={COLS_LOTES} linhas={dados.lotes} vazio="Nenhum lote." />
+          <Bloco
+            titulo="Compostas: TAB, Coliformes e Howard"
+            colunas={COLS_TESTES_LOAD}
+            linhas={dados.testes}
+            vazio="Nenhum teste nas compostas deste load."
+            link={(l) => `/paginas/${String(l.teste).toLowerCase()}?referencia=${encodeURIComponent(load)}`}
           />
         </>
       )}

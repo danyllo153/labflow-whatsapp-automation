@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, useState, type FormEvent, type ReactNode } from "react";
 
 import { useSessao } from "../../sessao";
 import { classeDaSituacao } from "../dados/formatos";
@@ -18,7 +18,12 @@ import {
 import { ABAS_FINAIS } from "./Instrucao";
 import { ABA_LAUDO, AbaLaudo } from "./LaudoDoApp";
 
-/** Tanques de terra e de navio (Fase E, E3; funções da 042): leituras do dia, coleta e análise, como o bot. */
+const ColetasDosTanques = lazy(() => import("./ColetasDosTanques"));
+
+/** Tanques de terra e de navio (Fase E, E3; funções da 042): leituras do dia, coleta e análise, como o bot. Desde 27/10
+ * são dois apps (Tanques terra e Tanques navio), cada um com o seu painel. */
+
+type Origem = "terra" | "navio";
 
 interface Leitura {
   analise_id: number;
@@ -33,6 +38,7 @@ interface Leitura {
 }
 
 export const ABAS_TANQUES = [
+  { aba: "painel", rotulo: "Painel" },
   { aba: "leituras", rotulo: "Leituras" },
   { aba: "coleta", rotulo: "Coleta" },
   { aba: "analise", rotulo: "Análise" },
@@ -42,57 +48,86 @@ export const ABAS_TANQUES = [
 ];
 
 
-export default function Tanques() {
+/** As leituras dos tanques (pré-leitura e leitura final): aqui e na aba Leituras (27/10), de terra, de navio ou de um navio. */
+export function LeituraDosTanques({ origem, navio, buscaInicial = "" }: { origem?: "terra" | "navio"; navio?: string; buscaInicial?: string }) {
+  const { pessoa } = useSessao();
+  const pode = !!pessoa?.pode.includes("registrar_analise");
+  const [busca, setBusca] = useState(buscaInicial || navio || "");
+  const lista = useLista<Leitura[]>("/analises/tanques/leituras", busca);
+  const dados = lista.dados?.filter((l) => !origem || (origem === "navio" ? !!l.navio : !l.navio)) ?? null;
+  const atrasadas = (dados ?? []).filter((l) => l.situacao === "Atrasado").length;
+  return (
+    <>
+      <Numeros
+        itens={[
+          { rotulo: "Atrasadas", valor: atrasadas, tom: "atrasado" },
+          { rotulo: "Vencem hoje", valor: (dados ?? []).length - atrasadas, tom: "hoje" },
+        ]}
+      />
+      <Busca valor={busca} aoMudar={setBusca} rotulo="Procurar tanque ou navio" dica="Tanque ou navio (ex.: 44, O.SKY)" />
+      <Leituras leituras={dados} erro={lista.erro} pode={pode} aoGravar={lista.recarregar} />
+    </>
+  );
+}
+
+const TEXTOS: Record<Origem, { titulo: string; sigla: string; descricao: string }> = {
+  terra: { titulo: "Tanques terra", sigla: "TT", descricao: "Tank farm: coleta, análise normal e stress, pré-leitura e leitura final, e o laudo." },
+  navio: { titulo: "Tanques navio", sigla: "TN", descricao: "Tanques dos navios (pesquise pelo navio): coleta, análise, leituras, o histórico de cada navio e o laudo." },
+};
+
+/** Só a leitura final, com o gráfico de C.T, B.L e Wort e o limite (27/10); o filtro de origem fica fixo no app. */
+const RESULTADOS: Record<Origem, Parameters<typeof Resultados>[0]["paginas"]> = {
+  terra: [
+    { caminho: "/paginas/tanques", titulo: "Resultados", descricao: "C.T, B.L e Wort de cada tanque, com o gráfico", fixos: { origem: "Terra" } },
+    { caminho: "/paginas/tanques-terra", titulo: "Um tanque por coleta", descricao: "o status de cada tanque; toque para ver tudo dele" },
+  ],
+  navio: [
+    { caminho: "/paginas/tanques", titulo: "Resultados", descricao: "C.T, B.L e Wort de cada tanque, com o gráfico", fixos: { origem: "Navio" } },
+    { caminho: "/paginas/navios", titulo: "Navios", descricao: "cada navio com os tanques e o FCOJ", fixos: { produto: "NFC" } },
+  ],
+};
+
+export default function Tanques({ origem }: { origem: Origem }) {
   const { pessoa } = useSessao();
   const pode = !!pessoa?.pode.includes("registrar_analise");
   const podeColetar = !!pessoa?.pode.includes("registrar_coleta");
-  const [busca, setBusca] = useState("");
-  const lista = useLista<Leitura[]>("/analises/tanques/leituras", busca);
-  const atrasadas = (lista.dados ?? []).filter((l) => l.situacao === "Atrasado").length;
+  const lista = useLista<Leitura[]>("/analises/tanques/leituras", "");
+  const atrasadas = (lista.dados ?? []).filter((l) => l.situacao === "Atrasado" && (origem === "navio" ? !!l.navio : !l.navio)).length;
+  const t = TEXTOS[origem];
 
   return (
     <AppDeAnalise
+      key={origem}
       app="tanques"
-      sigla="TQ"
+      sigla={t.sigla}
       cor="verde"
-      titulo="Análise de tanques"
-      descricao="Tanques de terra e de navio (pesquise pelo navio): coleta, análise normal e stress, pré-leitura e leitura final."
+      titulo={t.titulo}
+      descricao={t.descricao}
       abas={ABAS_TANQUES.map((a) => (a.aba === "leituras" ? { ...a, contador: atrasadas } : a))}
     >
       {(aba) => (
         <>
-          {aba === "leituras" && (
+          {aba === "painel" && (
             <>
-              <Numeros
-                itens={[
-                  { rotulo: "Atrasadas", valor: atrasadas, tom: "atrasado" },
-                  { rotulo: "Vencem hoje", valor: (lista.dados ?? []).length - atrasadas, tom: "hoje" },
-                ]}
-              />
-              <Busca valor={busca} aoMudar={setBusca} rotulo="Procurar tanque ou navio" dica="Tanque ou navio (ex.: 44, O.SKY)" />
-              <Leituras leituras={lista.dados} erro={lista.erro} pode={pode} aoGravar={lista.recarregar} />
+              <Suspense fallback={<p className="carregando">Montando o gráfico...</p>}>
+                <ColetasDosTanques origem={origem} />
+              </Suspense>
+              {origem === "navio" && <Resultados paginas={[{ ...RESULTADOS.navio[1], titulo: "Histórico dos navios" }]} />}
             </>
           )}
+          {aba === "leituras" && <LeituraDosTanques origem={origem} />}
           {aba === "coleta" && (
             <SoQuemGrava pode={podeColetar}>
-              <Coleta aoGravar={lista.recarregar} coletor={pessoa?.cargo === "Coletor"} />
+              <Coleta origem={origem} aoGravar={lista.recarregar} coletor={pessoa?.cargo === "Coletor"} />
             </SoQuemGrava>
           )}
           {aba === "analise" && (
             <SoQuemGrava pode={pode}>
-              <Analise aoGravar={lista.recarregar} />
+              <Analise origem={origem} aoGravar={lista.recarregar} />
             </SoQuemGrava>
           )}
           {aba === "laudo" && <AbaLaudo laudo="nfc-tanques" />}
-          {aba === "resultados" && (
-            <Resultados
-              paginas={[
-                { caminho: "/paginas/tanques-terra", titulo: "Tanques terra", descricao: "um tanque por linha, com as análises" },
-                { caminho: "/paginas/navios", titulo: "Navios", descricao: "cada navio com os tanques e o FCOJ" },
-                { caminho: "/paginas/tanques", titulo: "Leituras de tanques", descricao: "todas as leituras, com as placas" },
-              ]}
-            />
-          )}
+          {aba === "resultados" && <Resultados paginas={RESULTADOS[origem]} />}
         </>
       )}
     </AppDeAnalise>
@@ -237,13 +272,6 @@ function CamposDeTanque({
   return (
     <>
       <div className="linha-formulario">
-        <label className="campo">
-          Origem
-          <select value={campos.origem} onChange={(e) => mudar({ origem: e.target.value })}>
-            <option value="terra">Terra</option>
-            <option value="navio">Navio</option>
-          </select>
-        </label>
         {campos.origem === "navio" && (
           <label className="campo">
             Navio e viagem
@@ -272,8 +300,8 @@ function CamposDeTanque({
   );
 }
 
-function Coleta({ aoGravar, coletor }: { aoGravar: () => void; coletor: boolean }) {
-  const [campos, setCampos] = useState({ origem: "terra", navio: "", tanques: "", data: hojeEmSaoPaulo(), coletado_por: "" });
+function Coleta({ origem, aoGravar, coletor }: { origem: Origem; aoGravar: () => void; coletor: boolean }) {
+  const [campos, setCampos] = useState({ origem: origem as string, navio: "", tanques: "", data: hojeEmSaoPaulo(), coletado_por: "" });
   const g = useGravacao("/analises/tanques/coleta", () => (setCampos({ ...campos, tanques: "" }), aoGravar()));
   const mudar = (c: Partial<typeof campos>) => (setCampos({ ...campos, ...c }), g.voltar());
   return (
@@ -304,8 +332,8 @@ function Coleta({ aoGravar, coletor }: { aoGravar: () => void; coletor: boolean 
   );
 }
 
-function Analise({ aoGravar }: { aoGravar: () => void }) {
-  const [campos, setCampos] = useState({ origem: "terra", navio: "", tanques: "", data: hojeEmSaoPaulo(), frasco: "Normal" });
+function Analise({ origem, aoGravar }: { origem: Origem; aoGravar: () => void }) {
+  const [campos, setCampos] = useState({ origem: origem as string, navio: "", tanques: "", data: hojeEmSaoPaulo(), frasco: "Normal" });
   const g = useGravacao("/analises/tanques/analise", () => (setCampos({ ...campos, tanques: "" }), aoGravar()));
   const mudar = (c: Partial<typeof campos>) => (setCampos({ ...campos, ...c }), g.voltar());
   return (

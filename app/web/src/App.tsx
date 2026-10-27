@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation } from "react-router-dom";
 
 import { lerJson } from "./api";
 
@@ -18,13 +18,14 @@ import RegistrosDiarios from "./paginas/RegistrosDiarios";
 import BrancoDoDia from "./paginas/BrancoDoDia";
 import IncubacaoLeitura from "./paginas/IncubacaoLeitura";
 import MeiosLotes from "./paginas/MeiosLotes";
+import AguaConsumo from "./paginas/aguas/AguaConsumo";
 import AguaProcesso from "./paginas/aguas/AguaProcesso";
 import SuperficiesPagina from "./paginas/aguas/Superficies";
 import CorrigirRecebimento from "./paginas/dados/CorrigirRecebimento";
 import Inicio from "./paginas/Inicio";
 import NaoEncontrada from "./paginas/NaoEncontrada";
 import DetalheColeta from "./paginas/dados/DetalheColeta";
-import { DetalheNavio, DetalheTanque } from "./paginas/dados/Detalhes";
+import { DetalheLoad, DetalheNavio, DetalheTanque } from "./paginas/dados/Detalhes";
 import { ListaDePaginas, PaginaEscolhida } from "./paginas/Paginas";
 import RecebimentoFcoj from "./paginas/analises/RecebimentoFcoj";
 import Desvios from "./paginas/analises/Desvios";
@@ -34,7 +35,7 @@ import RecebimentoNfc from "./paginas/analises/RecebimentoNfc";
 import Tanques from "./paginas/analises/Tanques";
 import Testes from "./paginas/analises/Testes";
 import TrocarSenha from "./paginas/TrocarSenha";
-import RelatorioDoDia from "./paginas/RelatorioDoDia";
+import Leituras from "./paginas/Leituras";
 import RelatorioDoTurno from "./paginas/RelatorioDoTurno";
 import Turno, { TURNO_MUDOU, type EstadoDoTurno } from "./paginas/Turno";
 import { useSessao } from "./sessao";
@@ -97,11 +98,14 @@ export default function App() {
         <Route path="/meios-lotes" element={<MeiosLotes />} />
         <Route path="/material-asseptico" element={<MaterialAsseptico />} />
         <Route path="/turno/relatorio" element={<RelatorioDoTurno />} />
-        <Route path="/relatorio-do-dia" element={<RelatorioDoDia />} />
+        <Route path="/leituras" element={<Leituras />} />
+        <Route path="/relatorio-do-dia" element={<Navigate to="/leituras" replace />} />  {/* Leituras virou página com abas (27/10) */}
         <Route path="/arquivo" element={<ArquivoDeContraAmostras />} />
         <Route path="/paginas" element={<ListaDePaginas />} />
         <Route path="/analises/recebimento-fcoj" element={<RecebimentoFcoj />} />
-        <Route path="/analises/tanques" element={<Tanques />} />
+        <Route path="/analises/tanques" element={<ParaTanquesTerra />} />  {/* virou dois apps (27/10) */}
+        <Route path="/analises/tanques-terra" element={<Tanques key="terra" origem="terra" />} />
+        <Route path="/analises/tanques-navio" element={<Tanques key="navio" origem="navio" />} />
         <Route path="/analises/tab" element={<Testes key="TAB" qual="TAB" />} />
         <Route path="/analises/coliformes" element={<Testes key="COLIFORMES" qual="COLIFORMES" />} />
         <Route path="/analises/howard" element={<Testes key="HOWARD" qual="HOWARD" />} />
@@ -111,12 +115,14 @@ export default function App() {
         <Route path="/analises/recebimento-nfc" element={<RecebimentoNfc />} />
         <Route path="/analises/desvios" element={<Desvios />} />
         <Route path="/paginas/agua-processo" element={<AguaProcesso />} />
+        <Route path="/paginas/agua-consumo" element={<AguaConsumo />} />
         <Route path="/paginas/baias" element={<SuperficiesPagina key="Baia" tipo="Baia" />} />
         <Route path="/paginas/linhas" element={<SuperficiesPagina key="Linha" tipo="Linha" />} />
         <Route path="/paginas/recebimento/corrigir" element={<CorrigirRecebimento />} />
         <Route path="/paginas/coletas/:id" element={<DetalheColeta />} />
         <Route path="/paginas/tanques-terra/:id" element={<DetalheTanque />} />
         <Route path="/paginas/navios/:navio" element={<DetalheNavio />} />
+        <Route path="/paginas/loads/:load" element={<DetalheLoad />} />
         <Route path="/paginas/:pagina" element={<PaginaEscolhida />} />
         {MENU.filter((item) => !item.pronto).map((item) => (
           <Route key={item.caminho} path={item.caminho} element={<EmBreve item={item} />} />
@@ -130,4 +136,10 @@ export default function App() {
       </Route>
     </Routes>
   );
+}
+
+/** O endereço antigo do app de tanques (links e favoritos) abre o Tanques terra, com a mesma aba. */
+function ParaTanquesTerra() {
+  const { search } = useLocation();
+  return <Navigate to={`/analises/tanques-terra${search}`} replace />;
 }

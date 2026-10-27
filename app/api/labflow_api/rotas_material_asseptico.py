@@ -19,7 +19,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response,
 from pydantic import BaseModel, Field
 
 from labflow_api import laudo_asseptico as laudo
-from labflow_api import laudo_esterilizacao, rotas_turno
+from labflow_api import laudo_esterilizacao, laudos, rotas_turno
 from labflow_api.dependencias import PessoaLogada, obter_conexao
 from labflow_api.permissoes import exigir, pode
 from labflow_api.rotas_turno import FUSO
@@ -252,7 +252,7 @@ SELECT p.id, row_number() OVER (ORDER BY p.id), p.impresso_em, coalesce(u.nome, 
        (SELECT min(dia) FROM app.material_asseptico m WHERE m.pagina_id = p.id AND m.excluido_em IS NULL),
        (SELECT max(dia) FROM app.material_asseptico m WHERE m.pagina_id = p.id AND m.excluido_em IS NULL)
 FROM app.paginas_laudo p LEFT JOIN usuarios u ON u.id = p.impresso_por LEFT JOIN app.credenciais c ON c.usuario_id = p.impresso_por
-WHERE p.laudo = %s ORDER BY p.id
+WHERE p.laudo = %s AND p.excluida_em IS NULL ORDER BY p.id
 """
 
 
@@ -305,7 +305,9 @@ async def enviar_modelo(
 
 
 def _da_pagina(con: psycopg.Connection, pagina_id: int) -> None:
-    if con.execute("SELECT 1 FROM app.paginas_laudo WHERE id = %s AND laudo = %s", (pagina_id, laudo.NOME_DO_MODELO)).fetchone() is None:
+    if con.execute(
+        "SELECT 1 FROM app.paginas_laudo WHERE id = %s AND laudo = %s AND excluida_em IS NULL", (pagina_id, laudo.NOME_DO_MODELO)
+    ).fetchone() is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Página do laudo não encontrada.")
 
 
@@ -331,18 +333,46 @@ def baixar_pdf(
     ]
     modelo = con.execute("SELECT pdf FROM app.modelos_documento WHERE nome = %s", (laudo.NOME_DO_MODELO,)).fetchone()
     pdf = laudo.gerar_pdf(dias, bytes(modelo[0]) if modelo else None)
+    if con.execute("SELECT impresso_em IS NOT NULL FROM app.paginas_laudo WHERE id = %s", (pagina_id,)).fetchone()[0]:
+        # laudo finalizado: o traço que fecha as linhas vazias (4 linhas por dia), como em todo documento (26/10)
+        tabela = laudos.Tabela(laudo.COLUNAS_X, laudo.TOPO_DOS_DIAS, laudo.BASE_DOS_DIAS, laudo.DIAS_POR_PAGINA * 4)
+        risco = tabela.traco_das_vazias(len(dias) * 4)
+        if risco:
+            pdf = laudos.riscar(pdf, [risco])
     return Response(pdf, media_type="application/pdf", headers={"Content-Disposition": f'inline; filename="material-asseptico-{pagina_id}.pdf"'})
 
 
-@roteador.post("/laudos/{pagina_id}/impresso", response_model=Laudos)
+@roteador.post("/laudos/{pagina_id}/finalizar", response_model=Laudos)
+@roteador.post("/laudos/{pagina_id}/impresso", response_model=Laudos, include_in_schema=False)  # o nome antigo
 def marcar_impresso(
     pagina_id: int,
     pessoa: PessoaLogada = Depends(exigir("registrar_analise")),
     con: psycopg.Connection = Depends(obter_conexao),
 ) -> Laudos:
     _da_pagina(con, pagina_id)
-    con.execute(
-        "UPDATE app.paginas_laudo SET impresso_por = %s, impresso_em = clock_timestamp() WHERE id = %s AND impresso_em IS NULL",
-        (pessoa.usuario_id, pagina_id),
-    )
+    laudos.finalizar(con, pagina_id, pessoa.usuario_id)
+    return _laudos(con, pessoa)
+
+
+@roteador.post("/laudos/{pagina_id}/reabrir", response_model=Laudos)
+def reabrir(
+    pagina_id: int,
+    pessoa: PessoaLogada = Depends(exigir("registrar_analise")),
+    con: psycopg.Connection = Depends(obter_conexao),
+) -> Laudos:
+    """Editar a folha finalizada (27/10): volta a "em preenchimento" e os dias dela podem ser corrigidos."""
+    _da_pagina(con, pagina_id)
+    laudos.reabrir(con, pagina_id)
+    return _laudos(con, pessoa)
+
+
+@roteador.delete("/laudos/{pagina_id}", response_model=Laudos)
+def excluir(
+    pagina_id: int,
+    pessoa: PessoaLogada = Depends(exigir("registrar_analise")),
+    con: psycopg.Connection = Depends(obter_conexao),
+) -> Laudos:
+    """Excluir a folha (27/10): os dias dela vão para uma folha nova (nada se apaga de verdade, 077)."""
+    _da_pagina(con, pagina_id)
+    laudos.excluir(con, laudo.NOME_DO_MODELO, pagina_id, pessoa.usuario_id)
     return _laudos(con, pessoa)

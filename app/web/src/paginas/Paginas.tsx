@@ -45,17 +45,16 @@ export const GRUPOS: { grupo: Grupo; titulo: string }[] = [
 ];
 
 
-/** Tanques terra e navios são um app só ("Análise de tanques", com a pesquisa por navio): a página de navios não
- * aparece na grade, e as pendências dela contam no app de tanques. */
-const JUNTADAS = new Set(["navios"]);
+/** Tanques terra e Tanques navio são dois apps desde 27/10 (a página Navios abre o Tanques navio). */
+const JUNTADAS = new Set<string>();
 
 const APP_DO_RECEBIMENTO = "/analises/recebimento-fcoj";
 
 /** A página que virou app (Fase E): o endereço do app e as abas do menu que sobe no celular. */
 const APPS_DA_FASE_E: Record<string, { caminho: string; atalhos: { aba: string; rotulo: string }[] }> = {
   recebimento: { caminho: APP_DO_RECEBIMENTO, atalhos: ATALHOS_DO_APP },
-  "tanques-terra": { caminho: "/analises/tanques", atalhos: ABAS_TANQUES },
-  navios: { caminho: "/analises/tanques", atalhos: ABAS_TANQUES },
+  "tanques-terra": { caminho: "/analises/tanques-terra", atalhos: ABAS_TANQUES },
+  navios: { caminho: "/analises/tanques-navio", atalhos: ABAS_TANQUES },
   drops: { caminho: "/analises/drops", atalhos: ABAS_DROPS },
   desvios: { caminho: "/analises/desvios", atalhos: ABAS_DESVIOS },
   "recebimento-nfc": { caminho: "/analises/recebimento-nfc", atalhos: ABAS_NFC },
@@ -68,9 +67,11 @@ const APPS_DA_FASE_E: Record<string, { caminho: string; atalhos: { aba: string; 
 const APPS_FIXOS: App[] = [
   { caminho: "/paginas/agua-processo", titulo: "Água do processo", icone: "agua", cor: "agua", grupo: "Aguas",
     descricao: "Manifold e Câmaras 4, 5 e 6: coleta, C.T. e B.L., e o laudo." },
-  { caminho: "/paginas/baias", titulo: "Baias", icone: "baias", cor: "baias", grupo: "Aguas", semColetor: true,
+  { caminho: "/paginas/agua-consumo", titulo: "Água de consumo", icone: "agua", cor: "agua", grupo: "Aguas",
+    descricao: "Santos e TMG (Guarujá), mensal e semanal, e a água dos navios (TEC e COZ), com os laudos." },
+  { caminho: "/paginas/baias", titulo: "CIP baia", icone: "baias", cor: "baias", grupo: "Aguas", semColetor: true,
     descricao: "CIP dos mangotes do recebimento: C.T. 48 h, B.L. 72 h e 120 h, e o laudo." },
-  { caminho: "/paginas/linhas", titulo: "Linhas", icone: "linhas", cor: "linhas", grupo: "Aguas", semColetor: true,
+  { caminho: "/paginas/linhas", titulo: "CIP linha de embarque", icone: "linhas", cor: "linhas", grupo: "Aguas", semColetor: true,
     descricao: "CIP das linhas de embarque: C.T. 48 h, B.L. 72 h e 120 h, e o laudo." },
   { caminho: "/esterilizacao", titulo: "Esterilização", icone: "esterilizacao", cor: "rotina", grupo: "Rotina", semColetor: true,
     descricao: "Ciclos da autoclave e o laudo." },
@@ -122,7 +123,7 @@ function appDaPendencia(p: Pendencia): string | null {
     case "NFC Tank farm":
       return "/paginas/tanques-terra";
     case "NFC Navio":
-      return "/paginas/tanques-terra"; // navios e tanques terra são o mesmo app
+      return "/paginas/navios"; // o app Tanques navio
     case "Recebimento NFC":
       return "/paginas/recebimento-nfc";
     case "Desvios":
