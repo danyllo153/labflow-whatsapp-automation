@@ -44,7 +44,11 @@
 - [ ] Se as pendências do piloto voltarem a acumular: `C:\Dev\estudos\ia\em-dia-2026-10-23.sql` (ensaio com `-v fim=ROLLBACK`; o `COMMIT` em massa o Danyllo roda no servidor)
 
 ### 📱 App (sessão da nuvem)
-- [ ] **▶ Padronizar as telas** (revisão de 26/10, o Danyllo escolhe a ordem): (1) cabeçalho único com ícone colorido, título, subtítulo e "← Análises" também nos Registros diários, Esterilização, Leituras, Arquivo e páginas de dados; (2) gráfico de resultado em Tanques (placas, limite da `limites_nfc`), Coliformes/Howard e Água/Baias/Linhas, tirando o Dashboard de contagem; (3) painel igual em todos os apps (Embarque abre no painel; "Não ok por fábrica/tanque"); (4) laudo sempre numa aba "Laudo"; (5) Imprimir/Excel sempre em ícone, ações da lista como botão ("abrir desvio" igual em Drops e Desvios), abas sublinhadas, cor dos números com regra (vermelho atrasado, laranja atenção, verde ok)
+- [ ] **▶ Testar ao vivo o #339 e o #341** (27/10): marcas "também semanal" no mensal da água de consumo; um laudo físico-químico e um microbiológico (datas entre as barras, traço por bloco); Iniciar análise e No caldo e incubados do TAB e do Coliformes; compostas do navio com TAB/Coliformes/Howard; Desvios da água do processo; várias fábricas no gráfico
+- [ ] Publicar o **#341** (Coliformes "para estriar"; só o container), se ainda não foi
+- [ ] **Apagar os loads de teste** (33333 e 44444, 4 loads, 54 lotes, 9 compostas): script `~/labflow/apagar_loads_teste.sql` no servidor (fora do Git), com trava de contagem; ensaio com `-v fim=ROLLBACK`, depois `-v fim=COMMIT`, sempre `-d labflow` e com backup antes
+- [x] **Ajustes depois do teste de 27/10** (#339, migrations 080 e 081, no ar): água de consumo (mensal com pH e cloro, quem coletou/analisou, laudos semanais pelo modelo), leitura só em Leituras, Desvios da água do processo, TAB/Coliformes com Iniciar análise e No caldo, compostas do navio marcáveis, várias fábricas, painel dos tanques, meios coloridos, apagar de vez a coleta excluída, atividade opcional, estufas em cartões
+- [ ] Padronizar as telas (revisão de 26/10, o Danyllo escolhe a ordem): (1) cabeçalho único com ícone colorido, título, subtítulo e "← Análises" também nos Registros diários, Esterilização, Leituras, Arquivo e páginas de dados; (2) gráfico de resultado em Tanques (placas, limite da `limites_nfc`), Coliformes/Howard e Água/Baias/Linhas, tirando o Dashboard de contagem; (3) painel igual em todos os apps (Embarque abre no painel; "Não ok por fábrica/tanque"); (4) laudo sempre numa aba "Laudo"; (5) Imprimir/Excel sempre em ícone, ações da lista como botão ("abrir desvio" igual em Drops e Desvios), abas sublinhadas, cor dos números com regra (vermelho atrasado, laranja atenção, verde ok)
 - [ ] Mesclar e publicar o **#322** (cores do gráfico de resultado) quando o Danyllo pedir
 - [ ] Limites por análise para o gráfico (NFC recebido, tanques...): o Danyllo passa os valores; tabela com vigência no banco, valores fora do Git
 - [x] **Gráficos de resultado com Chart.js** (26/10, #320, no ar): Tendência no Recebimento FCOJ, Embarque e Recebimento NFC; TAB positivos no ano
@@ -56,9 +60,9 @@
   por família, Excel/Imprimir em ícone, IT, atividades com a caixa, TAB/Coliformes/Howard separados, Wort numa linha, compostas no Registrar,
   sininho, <10 no FCOJ, Relatório do dia, Dashboard, branco automático, incubação sem lotes; no ar em 25/10 (`6c041c3`, com o #285)
 - [x] **Laudos novos** (26/10, #316, migration 076; modelos recebidos em 25/10; detalhe na tabela "Laudos automáticos" do rumo): Recebimento NFC (mesmo modelo do FCOJ, item 129), NFC de tanques e navios, Embarque, TAB, Coliformes e Howard; drops e estufas não têm laudo
-- [ ] Mostrar como pendência só o **Coliformes obrigatório** (`vw_coliformes_pendentes.obrigatorio`, migration 104 do bot)
+- [x] Mostrar como pendência só o **Coliformes obrigatório** (27/10, #339: o Para fazer conta o que cada composta pede) (`vw_coliformes_pendentes.obrigatorio`, migration 104 do bot)
 - [ ] **Recuperar lote apagado do recebimento** pelo Admin (`recuperar_recebimento`, 036)
-- [ ] Botões **Criar TAB** e **Criar Howard** na composta do embarque, quando o bot fizer o PB20
+- [x] **TAB / Coliformes / Howard** marcáveis na composta do embarque (27/10, #339, `app.compostas_testes`)
 - [ ] Relatório do dia no formato do relatório diário do bot, quando o bot responder o PB18
 - [ ] Embarque com vários loads/itens na tela, quando o bot fizer o PB19
 - [x] **Compostas no Recebimento FCOJ** (24/10, APP-058): recomendado de ~5 por composta e prévia
