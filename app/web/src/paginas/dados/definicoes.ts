@@ -35,7 +35,8 @@ export interface DefinicaoDePagina {
   filtros: Filtro[];
   impressao: "em pé" | "deitado"; // 07: em pé para listas estreitas, deitado para tabelas largas
   semColetor?: boolean; // 07: o Coletor não vê esta página
-  resultado?: { tipo: "tendencia"; data: string; api?: string } | { tipo: "positivos"; teste: "TAB" | "Coliformes" }; // gráfico de resultado no lugar do Dashboard (26/10)
+  // gráfico de resultado no lugar do Dashboard (26/10); "lotes" (27/10): lotes Ok/Não ok por dia e as leituras com crescimento
+  resultado?: { tipo: "tendencia"; data: string; api?: string } | { tipo: "positivos"; teste: "TAB" | "Coliformes" } | { tipo: "lotes" };
   grupo: "Geral" | "NFC" | "FCOJ" | "Testes"; // como a lista de páginas agrupa (pedidos de 23 e 24/10)
   oculta?: boolean; // não aparece na lista, mas o endereço continua abrindo (links antigos)
   linkDaLinha?: (linha: Record<string, unknown>) => string; // tocar na linha abre a página do item
@@ -107,7 +108,7 @@ export const PAGINAS: DefinicaoDePagina[] = [
     api: "/paginas/recebimento",
     impressao: "deitado",
     semColetor: true,
-    resultado: { tipo: "tendencia", data: "data da leitura" },
+    resultado: { tipo: "lotes" },
     linkDaLinha: (l) => `/paginas/loads/${encodeURIComponent(String(l.load))}`, // o load com os lotes e as compostas (27/10)
     colunas: [
       { chave: "load", rotulo: "Load", principal: true },
@@ -242,7 +243,7 @@ export const PAGINAS: DefinicaoDePagina[] = [
     titulo: "Embarque FCOJ",
     descricao: "Concentrado embarcado: C.T e B.L das amostras por navio, linha e fase.",
     api: "/paginas/embarque",
-    resultado: { tipo: "tendencia", data: "data da leitura" },
+    resultado: { tipo: "lotes" },
     impressao: "deitado",
     semColetor: true,
     linkDaLinha: (l) => `/paginas/navios/${encodeURIComponent(String(l.navio))}`, // o navio com todas as análises (27/10)

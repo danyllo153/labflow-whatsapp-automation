@@ -12,7 +12,7 @@ import LaudoEsterilizacao from "../LaudoEsterilizacao";
 import Instrucao from "./Instrucao";
 import { Resultados as TabelasDoApp } from "./comum";
 
-const GraficoResultado = lazy(() => import("../dados/GraficoResultado"));
+const GraficoLotes = lazy(() => import("../dados/GraficoLotes"));
 
 /**
  * Recebimento FCOJ como um app (Fase E, E2; APP-057): Painel, Registrar, Resultados, Laudo, Instrução e Vídeo numa
@@ -644,7 +644,7 @@ function Resultados({
       </div>
       {comGrafico && (
         <Suspense fallback={<p className="carregando">Montando o gráfico...</p>}>
-          <GraficoResultado api="/paginas/recebimento" consulta={consultaDoGrafico} rotuloData="data da leitura" />
+          <GraficoLotes api="/paginas/recebimento" consulta={consultaDoGrafico} />
         </Suspense>
       )}
       <div className="busca-com-filtro">
