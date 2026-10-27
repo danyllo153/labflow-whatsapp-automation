@@ -1377,6 +1377,25 @@ div.estatistica {
   min-width: 0;
 }
 
+.marca-ponto {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.marca-semanal {
+  margin-left: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: var(--cartao);
+  border: 1px solid var(--borda);
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
 .lista-pontos .botao-icone:not(:disabled) {
   color: var(--acao);
   border-color: var(--acao);

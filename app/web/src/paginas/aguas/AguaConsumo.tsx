@@ -10,6 +10,7 @@ import { agoraSP, classeDaSituacao, dm, hojeSP, mensagem } from "./comum";
  * Água de consumo (pedido de 27/10, migration 079): Santos e TMG (Guarujá), cada um com o mensal e o semanal, e a água
  * dos navios (TEC e COZ). Coleta aqui; o resultado é lançado na aba Leituras (o bag de Coliformes e E.coli em 24 h, o
  * C.T em 48 h, o B.L em 120 h; pH e cloro do semanal na hora). Os pontos e os limites o Admin edita aqui.
+ * No mensal, os pontos marcados "semanal" (080) medem também pH e cloro e valem como a coleta semanal daquela semana.
  */
 
 type Unidade = "Santos" | "TMG";
@@ -21,6 +22,7 @@ interface Ponto {
   nome: string;
   ordem: number;
   ativo: boolean;
+  semanal?: boolean; // só no mensal: também é ponto fixo do semanal (pH e cloro)
 }
 
 interface Resultado {
@@ -33,6 +35,7 @@ interface Resultado {
   ph: number | null;
   cloro: number | null;
   observacao: string | null;
+  semanal?: boolean; // linha do mensal que vale também como semanal
   fora: string[];
 }
 
@@ -193,8 +196,8 @@ export default function AguaConsumo() {
 function NovaColeta({ dados, escolha, tipo, aoGravar }: { dados: AguaDeConsumo; escolha: Escolha; tipo: Tipo; aoGravar: (d: AguaDeConsumo) => void }) {
   const opcoes =
     escolha === "Navio"
-      ? Object.entries(dados.pontos_do_navio).map(([cod, nome], i) => ({ id: i + 1, nome: `${cod} · ${nome}` }))
-      : dados.pontos[escolha][tipo].filter((p) => p.ativo).map((p) => ({ id: p.id, nome: p.nome }));
+      ? Object.entries(dados.pontos_do_navio).map(([cod, nome], i) => ({ id: i + 1, nome: `${cod} · ${nome}`, semanal: false }))
+      : dados.pontos[escolha][tipo].filter((p) => p.ativo).map((p) => ({ id: p.id, nome: p.nome, semanal: tipo === "mensal" && !!p.semanal }));
   const [dia, setDia] = useState(hojeSP());
   const [hora, setHora] = useState(agoraSP());
   const [navio, setNavio] = useState("");
@@ -265,9 +268,13 @@ function NovaColeta({ dados, escolha, tipo, aoGravar }: { dados: AguaDeConsumo; 
             }
           >
             {p.nome}
+            {p.semanal && <span className="marca-semanal">pH e cloro</span>}
           </button>
         ))}
       </div>
+      {opcoes.some((p) => p.semanal) && (
+        <p className="texto-secundario">"pH e cloro": ponto fixo do semanal. Nele se medem também pH e cloro, e a coleta vale como a semanal.</p>
+      )}
       {opcoes.length === 0 && <p className="texto-secundario">Nenhum ponto ativo: o Admin cadastra em "Pontos e limites".</p>}
       {erro && (
         <p className="mensagem-erro" role="alert">
@@ -299,7 +306,8 @@ function resumo(r: Resultado, tipo: Tipo): string {
   const pa = (v: string | null) => v ?? "…";
   if (tipo === "semanal")
     return `pH ${r.ph?.toLocaleString("pt-BR") ?? "…"} · cloro ${r.cloro?.toLocaleString("pt-BR") ?? "…"} · Colif. ${pa(r.coliformes)} · E.coli ${pa(r.ecoli)}`;
-  return `C.T ${r.ct ?? "…"} · B.L ${r.bl ?? "…"} · Colif. ${pa(r.coliformes)} · E.coli ${pa(r.ecoli)}`;
+  const fq = r.semanal ? ` · pH ${r.ph?.toLocaleString("pt-BR") ?? "…"} · cloro ${r.cloro?.toLocaleString("pt-BR") ?? "…"}` : "";
+  return `C.T ${r.ct ?? "…"} · B.L ${r.bl ?? "…"} · Colif. ${pa(r.coliformes)} · E.coli ${pa(r.ecoli)}${fq}`;
 }
 
 function ListaDeColetas({ coletas, pode, aoMudar }: { coletas: Coleta[]; pode: boolean; aoMudar: (d: AguaDeConsumo) => void }) {
@@ -412,7 +420,7 @@ const limpo = (nome: string) => nome.split(/\s+/).filter(Boolean).join(" ");
 
 /** Um ponto: nome editável e o disquete (Enter também salva). A chave tem o nome, então depois de salvar a linha recomeça
  * com o nome que o banco guardou (ele tira espaços sobrando; antes o botão ficava na tela e parecia que não tinha salvado). */
-function LinhaDoPonto({ ponto, enviar }: { ponto: Ponto; enviar: (fazer: () => Promise<AguaDeConsumo>) => Promise<string> }) {
+function LinhaDoPonto({ ponto, tipo, enviar }: { ponto: Ponto; tipo: Tipo; enviar: (fazer: () => Promise<AguaDeConsumo>) => Promise<string> }) {
   const [nome, setNome] = useState(ponto.nome);
   const [erro, setErro] = useState("");
   const mudou = limpo(nome) !== ponto.nome && limpo(nome) !== "";
@@ -445,6 +453,19 @@ function LinhaDoPonto({ ponto, enviar }: { ponto: Ponto; enviar: (fazer: () => P
           <path d="M17 21v-8H7v8M7 3v5h8" />
         </svg>
       </button>
+      {tipo === "mensal" && (
+        <label className="marca-ponto" title="Ponto fixo do semanal: mede também pH e cloro e vale como a coleta semanal">
+          <input
+            type="checkbox"
+            checked={!!ponto.semanal}
+            onChange={(e) => {
+              const semanal = e.target.checked;
+              void enviar(() => enviarJson(`/aguas/consumo/pontos/${ponto.id}`, { semanal }, "PUT")).then(setErro);
+            }}
+          />
+          também semanal (pH e cloro)
+        </label>
+      )}
       <button
         type="button"
         className="link-botao"
@@ -488,11 +509,14 @@ function Pontos({ unidade, tipo, pontos, aoMudar }: { unidade: Unidade; tipo: Ti
         Pontos · {NOME[unidade]} · {tipo} <span className="contador">{pontos.filter((p) => p.ativo).length}</span>
       </h2>
       <p className="texto-secundario">
-        Renomear não muda o que já foi coletado (a coleta guarda o nome do dia). {tipo === "semanal" ? "Os mesmos pontos na físico-química e na microbiológica." : ""}
+        Renomear não muda o que já foi coletado (a coleta guarda o nome do dia).{" "}
+        {tipo === "semanal"
+          ? "Os mesmos pontos na físico-química e na microbiológica."
+          : "Marque \"também semanal\" nos pontos fixos do semanal: neles se medem pH e cloro, e a coleta mensal entra nos laudos semanais."}
       </p>
       <ul className="lista-pontos">
         {pontos.map((p) => (
-          <LinhaDoPonto key={`${p.id}-${p.nome}`} ponto={p} enviar={enviarNaLinha} />
+          <LinhaDoPonto key={`${p.id}-${p.nome}`} ponto={p} tipo={tipo} enviar={enviarNaLinha} />
         ))}
       </ul>
       <form
@@ -607,8 +631,13 @@ export function LeituraDaAguaDeConsumo() {
   );
 }
 
+const FQ: [Campo, string][] = [["ph", "pH"], ["cloro", "Cloro livre"], ["observacao", "Observação"]];
+
+/** No mensal, pH, cloro e observação só nos pontos que valem também como semanal (080). */
+const doPonto = (r: Resultado, tipo: Tipo, c: Campo) => tipo === "semanal" || !!r.semanal || !FQ.some(([f]) => f === c);
+
 function LeituraDaColeta({ coleta, pode, aoGravar }: { coleta: Coleta; pode: boolean; aoGravar: (d: AguaDeConsumo) => void }) {
-  const campos = CAMPOS[coleta.tipo];
+  const campos = coleta.tipo === "mensal" && coleta.resultados.some((r) => r.semanal) ? [...FQ, ...CAMPOS.mensal] : CAMPOS[coleta.tipo];
   const inicial = () => Object.fromEntries(coleta.resultados.map((r) => [r.ordem, Object.fromEntries(campos.map(([c]) => [c, valorInicial(r, c)]))]));
   const [valores, setValores] = useState<Record<number, Record<string, string>>>(inicial);
   const [previa, setPrevia] = useState<{ texto: string; fora: string[] } | null>(null);
@@ -670,17 +699,23 @@ function LeituraDaColeta({ coleta, pode, aoGravar }: { coleta: Coleta; pode: boo
                 <th scope="row">{r.ponto}</th>
                 {campos.map(([c, rotulo]) => (
                   <td key={c}>
-                    <input
-                      className="campo-curto"
-                      aria-label={`${rotulo} de ${r.ponto}`}
-                      disabled={!pode}
-                      maxLength={c === "observacao" ? 40 : 10}
-                      value={valores[r.ordem]?.[c] ?? ""}
-                      onChange={(e) => {
-                        setPrevia(null);
-                        setValores({ ...valores, [r.ordem]: { ...valores[r.ordem], [c]: e.target.value } });
-                      }}
-                    />
+                    {doPonto(r, coleta.tipo, c) ? (
+                      <input
+                        className="campo-curto"
+                        aria-label={`${rotulo} de ${r.ponto}`}
+                        disabled={!pode}
+                        maxLength={c === "observacao" ? 40 : 10}
+                        value={valores[r.ordem]?.[c] ?? ""}
+                        onChange={(e) => {
+                          setPrevia(null);
+                          setValores({ ...valores, [r.ordem]: { ...valores[r.ordem], [c]: e.target.value } });
+                        }}
+                      />
+                    ) : (
+                      <span className="texto-secundario" title="Só nos pontos do semanal">
+                        —
+                      </span>
+                    )}
                   </td>
                 ))}
               </tr>

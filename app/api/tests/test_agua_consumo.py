@@ -28,6 +28,13 @@ def agora(monkeypatch):
     return _fixar
 
 
+@pytest.fixture(autouse=True)
+def _mensal_sem_semanal(conexao):
+    """Os pontos fictícios do mensal e do semanal têm os mesmos nomes, então a 080 marca todos do mensal como "semanal";
+    os testes começam sem a marca, e o da 080 marca os que quer."""
+    conexao.execute("UPDATE app.pontos_agua_consumo SET semanal = false")
+
+
 @pytest.fixture
 def logado(cliente, criar_pessoa):
     def _logar(cargo="Analista"):
@@ -166,3 +173,33 @@ def test_laudos_mensal_por_unidade_navio_por_navio_e_semanal_em_blocos(cliente, 
     assert "TEC" in PdfReader(io.BytesIO(pdf.content)).pages[0].extract_text()
     pdf = cliente.get(f"/laudos/agua-consumo-fq-TMG/{fq[-1]['id']}/pdf")
     assert pdf.status_code == 200 and "Ponto 1" in PdfReader(io.BytesIO(pdf.content)).pages[0].extract_text()
+
+
+def test_mensal_com_os_pontos_do_semanal_mede_ph_e_cloro_e_entra_nos_laudos_semanais(cliente, logado, agora):
+    """080: no mensal, os pontos marcados "semanal" medem pH e cloro na hora, e a coleta vale como a semanal."""
+    logado("Admin")
+    mensal = cliente.get("/aguas/consumo").json()["pontos"]["TMG"]["mensal"]
+    for p in mensal[:2]:
+        r = cliente.put(f"/aguas/consumo/pontos/{p['id']}", json={"semanal": True})
+        assert r.status_code == 200
+    assert [p["semanal"] for p in r.json()["pontos"]["TMG"]["mensal"]][:3] == [True, True, False]
+    semanal = cliente.get("/aguas/consumo").json()["pontos"]["TMG"]["semanal"][0]
+    assert cliente.put(f"/aguas/consumo/pontos/{semanal['id']}", json={"semanal": True}).status_code == 422  # só no mensal
+    c = _coleta(cliente)
+    assert [r["semanal"] for r in c["resultados"]][:3] == [True, True, False]
+    assert c["situacao"] == "Vence hoje: pH e cloro"
+    url = f"/aguas/consumo/coletas/{c['id']}/resultados"
+    assert cliente.put(url, json={"itens": [{"ordem": 3, "ph": "7"}]}).status_code == 422  # ponto 3 não é do semanal
+    r = cliente.put(url, json={"itens": [{"ordem": 1, "ph": "7,1", "cloro": "1"}, {"ordem": 2, "ph": "9,9", "cloro": "1"}], "previa": False}).json()
+    assert r["fora"] == ["Ponto 2: pH fora do limite"]
+    assert r["agua"]["coletas"][0]["situacao"] == "Aguardando Coliformes e E.coli (23/10)"
+    # desmarcar o ponto depois não muda a coleta já feita
+    cliente.put(f"/aguas/consumo/pontos/{mensal[0]['id']}", json={"semanal": False})
+    assert cliente.get("/aguas/consumo").json()["coletas"][0]["resultados"][0]["semanal"] is True
+    # a folha mensal com todos os pontos; os laudos semanais com a coleta mensal, só os 2 pontos
+    assert [p["linhas"] for p in cliente.get("/laudos/agua-consumo-mensal-TMG").json()["paginas"]] == [8]
+    fq = cliente.get("/laudos/agua-consumo-fq-TMG").json()["paginas"]
+    micro = cliente.get("/laudos/agua-consumo-micro-TMG").json()["paginas"]
+    assert [p["linhas"] for p in fq] == [1] and len(micro) == 1
+    texto = PdfReader(io.BytesIO(cliente.get(f"/laudos/agua-consumo-fq-TMG/{fq[0]['id']}/pdf").content)).pages[0].extract_text()
+    assert "7,10" in texto and "9,90" in texto and "Ponto 2" in texto and "Ponto 3" not in texto

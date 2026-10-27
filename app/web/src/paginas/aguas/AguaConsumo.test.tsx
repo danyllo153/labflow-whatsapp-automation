@@ -93,6 +93,22 @@ describe("Água de consumo (27/10)", () => {
     expect(screen.getByRole("button", { name: "Salvar o nome do ponto 1" })).toBeDisabled();
   });
 
+  it("mensal com pontos do semanal: pH e cloro só neles, na leitura (080)", async () => {
+    const linha = (ordem: number, semanal: boolean) => ({ ...vazio(ordem), semanal });
+    const mensal = { ...COLETA, resultados: [linha(1, true), linha(2, false)], situacao: "Vence hoje: pH e cloro" };
+    const api = abrir("/leituras?aba=agua-consumo", {
+      "GET /aguas/consumo": () => ({ status: 200, corpo: { ...AGUA, coletas: [mensal] } }),
+      "PUT /aguas/consumo/coletas/9/resultados": () => ({ status: 200, corpo: { previa: true, texto: "Ponto 1: pH 7,00", fora: [] } }),
+    });
+    const cartao = await screen.findByRole("region", { name: /TMG \(Guarujá\) mensal/ });
+    expect(within(cartao).getByRole("textbox", { name: "pH de Ponto 1" })).toBeInTheDocument();
+    expect(within(cartao).queryByRole("textbox", { name: "pH de Ponto 2" })).toBeNull();
+    expect(within(cartao).getByRole("textbox", { name: "C.T 48h de Ponto 2" })).toBeInTheDocument();
+    await userEvent.type(within(cartao).getByRole("textbox", { name: "pH de Ponto 1" }), "7");
+    await userEvent.click(within(cartao).getByRole("button", { name: "Ver o que vai ser gravado (1)" }));
+    expect(api.chamadas.find((c) => c.rota === "PUT /aguas/consumo/coletas/9/resultados")?.corpo).toEqual({ previa: true, itens: [{ ordem: 1, ph: "7" }] });
+  });
+
   it("na aba Leituras: Ausente em todos, a prévia com o que passou do limite e o Confirmar", async () => {
     const api = abrir("/leituras?aba=agua-consumo", {
       "PUT /aguas/consumo/coletas/9/resultados": (c) => ({

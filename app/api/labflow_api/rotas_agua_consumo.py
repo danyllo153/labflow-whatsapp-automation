@@ -9,7 +9,10 @@ Regras:
   dos mesmos pontos; uma coleta é um bloco do laudo (2 por folha na físico-química, 1 na microbiológica);
 - navio: a mesma tabela do mensal, com o navio e a viagem na amostra ("O.BLOSSOM II - 123 TEC"), uma folha por navio
   (cheia, abre outra); TEC = água técnica, COZ = água da cozinha;
-- os pontos são editáveis pelo Admin (nome, ordem, ativo); o nome é copiado na coleta;
+- mensal com os pontos fixos do semanal (080): no ponto do mensal marcado "semanal", mede-se também pH e cloro (na
+  hora), e a coleta mensal vale como a semanal daquela semana: essas linhas entram nos laudos físico-químico e
+  microbiológico semanais (a folha mensal continua com todos os pontos);
+- os pontos são editáveis pelo Admin (nome, ordem, ativo, a marca "semanal"); o nome e a marca são copiados na coleta;
 - os limites (C.T, B.L, pH e cloro) são do banco, editáveis pelo Admin; o repositório só tem valores fictícios;
 - quem coleta: Admin, Analista e Coletor; quem lança: Admin e Analista; o resultado passa pela prévia antes do Confirmar.
 """
@@ -47,6 +50,7 @@ class Ponto(BaseModel):
     nome: str
     ordem: int
     ativo: bool
+    semanal: bool = False  # só no mensal: também é ponto fixo do semanal (pH e cloro)
 
 
 class Resultado(BaseModel):
@@ -59,6 +63,7 @@ class Resultado(BaseModel):
     ph: float | None = None
     cloro: float | None = None
     observacao: str | None = None
+    semanal: bool = False  # linha do mensal que vale também como semanal (pH e cloro; entra nos laudos semanais)
     fora: list[str] = []  # o que passou do limite ("C.T", "pH"...)
 
 
@@ -134,11 +139,13 @@ def fora_do_limite(r: Resultado, lim: Limites) -> list[str]:
 
 
 def _faltas(tipo: str, dia: date, resultados: list[Resultado]) -> list[tuple[str, date]]:
-    """O que falta ler e quando: o bag (Coliformes e E.coli) em 24 h, o C.T em 48 h, o B.L em 120 h; pH e cloro na hora."""
+    """O que falta ler e quando: o bag (Coliformes e E.coli) em 24 h, o C.T em 48 h, o B.L em 120 h; pH e cloro na hora
+    (no semanal e, no mensal, nos pontos marcados "semanal")."""
     etapas = (
         [("pH e cloro", 0, lambda r: r.ph is None or r.cloro is None), ("Coliformes e E.coli", 1, lambda r: r.coliformes is None or r.ecoli is None)]
         if tipo == "semanal"
-        else [("Coliformes e E.coli", 1, lambda r: r.coliformes is None or r.ecoli is None),
+        else [("pH e cloro", 0, lambda r: r.semanal and (r.ph is None or r.cloro is None)),
+              ("Coliformes e E.coli", 1, lambda r: r.coliformes is None or r.ecoli is None),
               ("C.T 48h", 2, lambda r: r.ct is None), ("B.L 120h", 5, lambda r: r.bl is None)]
     )
     return [(nome, dia + timedelta(days=d)) for nome, d, falta in etapas if any(falta(r) for r in resultados)]
@@ -171,12 +178,12 @@ def _coletas(con: psycopg.Connection, onde: str, valores: list, lim: Limites, ho
     if not linhas:
         return []
     resultados: dict[int, list[Resultado]] = {}
-    for cid, ordem, ponto, ct, bl, coli, ec, ph, cl, obs in con.execute(
-        """SELECT coleta_id, ordem, ponto, ct, bl, coliformes, ecoli, ph, cloro, observacao
+    for cid, ordem, ponto, ct, bl, coli, ec, ph, cl, obs, semanal in con.execute(
+        """SELECT coleta_id, ordem, ponto, ct, bl, coliformes, ecoli, ph, cloro, observacao, semanal
            FROM app.resultados_agua_consumo WHERE coleta_id = ANY(%s) ORDER BY coleta_id, ordem""",
         ([l[0] for l in linhas],),
     ).fetchall():
-        r = Resultado(ordem=ordem, ponto=ponto, ct=ct, bl=bl, coliformes=coli, ecoli=ec, observacao=obs,
+        r = Resultado(ordem=ordem, ponto=ponto, ct=ct, bl=bl, coliformes=coli, ecoli=ec, observacao=obs, semanal=semanal,
                       ph=float(ph) if ph is not None else None, cloro=float(cl) if cl is not None else None)
         r.fora = fora_do_limite(r, lim)
         resultados.setdefault(cid, []).append(r)
@@ -198,10 +205,10 @@ def _coletas(con: psycopg.Connection, onde: str, valores: list, lim: Limites, ho
 
 def _pontos(con: psycopg.Connection) -> dict[str, dict[str, list[Ponto]]]:
     pontos: dict[str, dict[str, list[Ponto]]] = {u: {"mensal": [], "semanal": []} for u in ("Santos", "TMG")}
-    for pid, unidade, tipo, nome, ordem, ativo in con.execute(
-        "SELECT id, unidade, tipo, nome, ordem, ativo FROM app.pontos_agua_consumo ORDER BY unidade, tipo, ordem, nome"
+    for pid, unidade, tipo, nome, ordem, ativo, semanal in con.execute(
+        "SELECT id, unidade, tipo, nome, ordem, ativo, semanal FROM app.pontos_agua_consumo ORDER BY unidade, tipo, ordem, nome"
     ).fetchall():
-        pontos[unidade][tipo].append(Ponto(id=pid, nome=nome, ordem=ordem, ativo=ativo))
+        pontos[unidade][tipo].append(Ponto(id=pid, nome=nome, ordem=ordem, ativo=ativo, semanal=semanal))
     return pontos
 
 
@@ -215,7 +222,7 @@ def _agua(con: psycopg.Connection, pessoa: PessoaLogada) -> AguaDeConsumo:
         """ AND c.coletada_em < %s AND EXISTS (SELECT 1 FROM app.resultados_agua_consumo r WHERE r.coleta_id = c.id
                AND (r.coliformes IS NULL OR r.ecoli IS NULL
                     OR (c.tipo = 'mensal' AND (r.ct IS NULL OR r.bl IS NULL))
-                    OR (c.tipo = 'semanal' AND (r.ph IS NULL OR r.cloro IS NULL))))
+                    OR ((c.tipo = 'semanal' OR r.semanal) AND (r.ph IS NULL OR r.cloro IS NULL))))
             ORDER BY c.coletada_em DESC""",
         [desde], lim, hoje,
     )
@@ -273,15 +280,16 @@ def coletar(
         if not navio:
             raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Diga o navio e a viagem (ex.: O.BLOSSOM II - 123).")
         codigos = list(PONTOS_DO_NAVIO)
-        escolhidos = [(i + 1, c) for i, c in enumerate(codigos) if not pedido.pontos or (i + 1) in pedido.pontos]
+        escolhidos = [(i + 1, c, False) for i, c in enumerate(codigos) if not pedido.pontos or (i + 1) in pedido.pontos]
         tipo = "mensal"
     else:
         navio, tipo = None, pedido.tipo
         ativos = con.execute(
-            "SELECT id, ordem, nome FROM app.pontos_agua_consumo WHERE unidade = %s AND tipo = %s AND ativo ORDER BY ordem, nome",
+            """SELECT id, nome, semanal FROM app.pontos_agua_consumo WHERE unidade = %s AND tipo = %s AND ativo
+               ORDER BY ordem, nome""",
             (pedido.unidade, tipo),
         ).fetchall()
-        escolhidos = [(n, nome) for n, (pid, _, nome) in enumerate(ativos, start=1) if not pedido.pontos or pid in pedido.pontos]
+        escolhidos = [(n, nome, semanal) for n, (pid, nome, semanal) in enumerate(ativos, start=1) if not pedido.pontos or pid in pedido.pontos]
     if not escolhidos:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Marque os pontos coletados.")
     coletor = " ".join(pedido.coletado_por.split()) or None
@@ -290,8 +298,11 @@ def coletar(
            VALUES (%s, %s, %s, %s, %s, %s) RETURNING id""",
         (pedido.unidade, tipo, navio, quando, pessoa.usuario_id, coletor),
     ).fetchone()[0]
-    for ordem, nome in escolhidos:
-        con.execute("INSERT INTO app.resultados_agua_consumo (coleta_id, ordem, ponto) VALUES (%s, %s, %s)", (cid, ordem, nome))
+    for ordem, nome, semanal in escolhidos:
+        con.execute(
+            "INSERT INTO app.resultados_agua_consumo (coleta_id, ordem, ponto, semanal) VALUES (%s, %s, %s, %s)",
+            (cid, ordem, nome, semanal),
+        )
     return _agua(con, pessoa)
 
 
@@ -377,13 +388,24 @@ def lancar(
     if coleta is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Coleta não encontrada.")
     tipo, analisada_em = coleta
-    pontos = dict(con.execute("SELECT ordem, ponto FROM app.resultados_agua_consumo WHERE coleta_id = %s", (coleta_id,)).fetchall())
+    linhas = {o: (p, s) for o, p, s in con.execute(
+        "SELECT ordem, ponto, semanal FROM app.resultados_agua_consumo WHERE coleta_id = %s", (coleta_id,)
+    ).fetchall()}
+    pontos = {o: p for o, (p, _) in linhas.items()}
     lim = _limites(con)
-    campos_do_tipo = ("ct", "bl", "coliformes", "ecoli") if tipo == "mensal" else ("ph", "cloro", "observacao", "coliformes", "ecoli")
+    fq = ("ph", "cloro", "observacao")
     texto, fora, mudancas = [], [], []
     for item in pedido.itens:
         if item.ordem not in pontos:
             raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, f"O ponto {item.ordem} não é desta coleta.")
+        # mensal: C.T, B.L, Coliformes e E.coli; pH, cloro e observação só nos pontos que valem também como semanal
+        if tipo == "semanal":
+            campos_do_tipo = (*fq, "coliformes", "ecoli")
+        else:
+            campos_do_tipo = ("ct", "bl", "coliformes", "ecoli", *(fq if linhas[item.ordem][1] else ()))
+            if not linhas[item.ordem][1] and any(c in item.model_fields_set and getattr(item, c) for c in fq):
+                raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY,
+                                    f"{pontos[item.ordem]} não é ponto do semanal: pH e cloro não se medem nele.")
         enviados = {c for c in item.model_fields_set if c in campos_do_tipo}
         valores: dict = {}
         for c in enviados:
@@ -443,6 +465,7 @@ class MudancaDePonto(BaseModel):
     nome: str | None = Field(default=None, min_length=1, max_length=50)
     ordem: int | None = Field(default=None, ge=1, le=99)
     ativo: bool | None = None
+    semanal: bool | None = None  # só no mensal
 
 
 def _nome_do_ponto(nome: str) -> str:
@@ -495,6 +518,8 @@ def mudar_ponto(
     if linha is None:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Ponto não encontrado.")
     unidade, tipo, ativo = linha
+    if pedido.semanal and tipo != "mensal":
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "A marca \"também semanal\" é só dos pontos do mensal.")
     if pedido.ativo and not ativo and _ativos(con, unidade, tipo) >= MAX_PONTOS[(unidade, tipo)]:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, f"{unidade} {tipo} já tem o máximo de pontos ativos.")
     valores = {k: v for k, v in pedido.model_dump().items() if v is not None}
@@ -627,7 +652,9 @@ def _gerar_semanal(qual: str, unidade: str) -> Callable[[psycopg.Connection, int
                 celulas.append(laudos.Celula(quando, 152, 300, linha_y - 3, linha_y + 11, centro=False, tamanho=9))
                 celulas.append(laudos.Celula(laudo_esterilizacao.primeiro_nome(quem) if quem else "", 454, direita, linha_y - 3,
                                              linha_y + 11, centro=False, tamanho=9))
-            for n, r in enumerate(c.resultados[: tabela.linhas]):
+            # a coleta mensal entra só com os pontos que valem também como semanal (080)
+            linhas = c.resultados if c.tipo == "semanal" else [r for r in c.resultados if r.semanal]
+            for n, r in enumerate(linhas[: tabela.linhas]):
                 if qual == "fq":
                     textos = (r.ponto, _br(r.ph), _br(r.cloro), r.observacao or ("-" if r.ph is not None else ""))
                 else:
@@ -642,8 +669,11 @@ def _gerar_semanal(qual: str, unidade: str) -> Callable[[psycopg.Connection, int
 def _preparar_semanal(qual: str, unidade: str, capacidade: int) -> Callable[[psycopg.Connection], None]:
     def _preparar(con: psycopg.Connection) -> None:
         linhas = con.execute(
-            """SELECT id, (coletada_em AT TIME ZONE 'America/Sao_Paulo')::date FROM app.coletas_agua_consumo
-               WHERE excluida_em IS NULL AND tipo = 'semanal' AND unidade = %s ORDER BY coletada_em, id""",
+            """SELECT c.id, (c.coletada_em AT TIME ZONE 'America/Sao_Paulo')::date FROM app.coletas_agua_consumo c
+               WHERE c.excluida_em IS NULL AND c.unidade = %s
+                 AND (c.tipo = 'semanal'
+                      OR EXISTS (SELECT 1 FROM app.resultados_agua_consumo r WHERE r.coleta_id = c.id AND r.semanal))
+               ORDER BY c.coletada_em, c.id""",
             (unidade,),
         ).fetchall()
         laudos.distribuir_linhas(con, f"agua-consumo-{qual}-{unidade}", [(f"c{i}", "", d) for i, d in linhas], capacidade)
