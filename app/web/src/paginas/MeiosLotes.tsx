@@ -115,12 +115,12 @@ export default function MeiosLotes() {
               <button
                 key={m.meio}
                 type="button"
-                className={`cartao-numero${m.meio === meio ? " ativo" : ""}`}
+                className={`cartao-numero cartao-meio meio-${m.meio.toLowerCase()}${m.meio === meio ? " ativo" : ""}`}
                 aria-pressed={m.meio === meio}
                 onClick={() => setMeio(m.meio)}
               >
-                <span className="numero">{m.meio}</span>
-                <span className="rotulo">{m.em_uso ? `Em uso: ${m.em_uso.lote}` : "Sem lote em uso"}</span>
+                {/* só o nome do meio, na cor dele (27/10); o lote em uso aparece embaixo, ao tocar */}
+                <span className="nome-do-meio">{m.meio}</span>
               </button>
             ))}
           </div>

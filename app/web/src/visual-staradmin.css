@@ -1531,3 +1531,31 @@ button.numero-app.numero-clicavel:hover {
 .grafico-compacto .grafico-resultado-area {
   height: 220px;
 }
+
+/* Meios e lotes (27/10): o cartão só com o nome do meio, numa letra própria e na cor do meio (OSA vermelho, PDA amarelo,
+   Wort verde; o PCA fica na cor do texto) */
+.cartao-meio {
+  align-items: center;
+  justify-content: center;
+  min-height: 72px;
+}
+
+.nome-do-meio {
+  font-family: "Manrope Variable", "Manrope", system-ui, sans-serif;
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.meio-osa .nome-do-meio {
+  color: #d93a3a;
+}
+
+.meio-pda .nome-do-meio {
+  color: #d39a00;
+}
+
+.meio-wort .nome-do-meio {
+  color: #2f9e44;
+}
