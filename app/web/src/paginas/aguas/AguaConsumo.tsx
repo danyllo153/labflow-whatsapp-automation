@@ -225,7 +225,7 @@ function NovaColeta({ dados, escolha, tipo, aoGravar }: { dados: AguaDeConsumo; 
   }
 
   return (
-    <form className="cartao" onSubmit={gravar} aria-label="Nova coleta da água de consumo">
+    <form className="cartao coleta-agua-nova" onSubmit={gravar} aria-label="Nova coleta da água de consumo">
       <h2>{escolha === "Navio" ? "Água do navio" : "Nova coleta"}</h2>
       <div className="linha-formulario">
         {escolha === "Navio" && (
@@ -279,9 +279,18 @@ function NovaColeta({ dados, escolha, tipo, aoGravar }: { dados: AguaDeConsumo; 
           {feito}
         </p>
       )}
-      <button type="submit" className="botao botao-principal" disabled={enviando || marcados.length === 0}>
-        Registrar coleta ({marcados.length})
-      </button>
+      {/* Separado dos pontos (que são marcar e desmarcar): uma faixa embaixo, com o botão verde à direita. */}
+      <div className="rodape-coleta">
+        <span className="texto-secundario">
+          {marcados.length} de {opcoes.length} {opcoes.length === 1 ? "ponto" : "pontos"}
+        </span>
+        <button type="submit" className="botao botao-registrar" disabled={enviando || marcados.length === 0}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M20 6 9 17l-5-5" />
+          </svg>
+          Registrar coleta ({marcados.length})
+        </button>
+      </div>
     </form>
   );
 }
@@ -399,10 +408,72 @@ function HistoricoDosNavios({ dados, versao }: { dados: AguaDeConsumo; versao: n
   );
 }
 
+const limpo = (nome: string) => nome.split(/\s+/).filter(Boolean).join(" ");
+
+/** Um ponto: nome editável e o disquete (Enter também salva). A chave tem o nome, então depois de salvar a linha recomeça
+ * com o nome que o banco guardou (ele tira espaços sobrando; antes o botão ficava na tela e parecia que não tinha salvado). */
+function LinhaDoPonto({ ponto, enviar }: { ponto: Ponto; enviar: (fazer: () => Promise<AguaDeConsumo>) => Promise<string> }) {
+  const [nome, setNome] = useState(ponto.nome);
+  const [erro, setErro] = useState("");
+  const mudou = limpo(nome) !== ponto.nome && limpo(nome) !== "";
+  const salvar = async () => setErro(await enviar(() => enviarJson(`/aguas/consumo/pontos/${ponto.id}`, { nome: limpo(nome) }, "PUT")));
+  return (
+    <li>
+      <span className="texto-secundario">{ponto.ordem}.</span>
+      <input
+        aria-label={`Nome do ponto ${ponto.ordem}`}
+        maxLength={50}
+        value={nome}
+        onChange={(e) => setNome(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" && mudou) {
+            e.preventDefault();
+            void salvar();
+          }
+        }}
+      />
+      <button
+        type="button"
+        className="botao-icone"
+        aria-label={`Salvar o nome do ponto ${ponto.ordem}`}
+        title={mudou ? "Salvar" : "Sem mudança"}
+        disabled={!mudou}
+        onClick={() => void salvar()}
+      >
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+          <path d="M17 21v-8H7v8M7 3v5h8" />
+        </svg>
+      </button>
+      <button
+        type="button"
+        className="link-botao"
+        aria-label={`${ponto.ativo ? "Desativar" : "Ativar"} ${ponto.nome}`}
+        onClick={() => void enviar(() => enviarJson(`/aguas/consumo/pontos/${ponto.id}`, { ativo: !ponto.ativo }, "PUT")).then(setErro)}
+      >
+        {ponto.ativo ? "Desativar" : "Ativar"}
+      </button>
+      {erro && (
+        <span className="mensagem-erro" role="alert">
+          {erro}
+        </span>
+      )}
+    </li>
+  );
+}
+
 function Pontos({ unidade, tipo, pontos, aoMudar }: { unidade: Unidade; tipo: Tipo; pontos: Ponto[]; aoMudar: (d: AguaDeConsumo) => void }) {
   const [novo, setNovo] = useState("");
-  const [nomes, setNomes] = useState<Record<number, string>>(Object.fromEntries(pontos.map((p) => [p.id, p.nome])));
   const [erro, setErro] = useState("");
+  /** Devolve o erro ("" se deu certo), para cada linha mostrar o seu ao lado. */
+  async function enviarNaLinha(fazer: () => Promise<AguaDeConsumo>): Promise<string> {
+    try {
+      aoMudar(await fazer());
+      return "";
+    } catch (e) {
+      return mensagem(e, "Não foi possível salvar.");
+    }
+  }
   async function enviar(fazer: () => Promise<AguaDeConsumo>) {
     setErro("");
     try {
@@ -421,23 +492,7 @@ function Pontos({ unidade, tipo, pontos, aoMudar }: { unidade: Unidade; tipo: Ti
       </p>
       <ul className="lista-pontos">
         {pontos.map((p) => (
-          <li key={p.id}>
-            <span className="texto-secundario">{p.ordem}.</span>
-            <input aria-label={`Nome do ponto ${p.ordem}`} maxLength={50} value={nomes[p.id] ?? p.nome} onChange={(e) => setNomes({ ...nomes, [p.id]: e.target.value })} />
-            {nomes[p.id] !== undefined && nomes[p.id] !== p.nome && (
-              <button type="button" className="botao botao-simples botao-pequeno" onClick={() => void enviar(() => enviarJson(`/aguas/consumo/pontos/${p.id}`, { nome: nomes[p.id] }, "PUT"))}>
-                Salvar
-              </button>
-            )}
-            <button
-              type="button"
-              className="link-botao"
-              aria-label={`${p.ativo ? "Desativar" : "Ativar"} ${p.nome}`}
-              onClick={() => void enviar(() => enviarJson(`/aguas/consumo/pontos/${p.id}`, { ativo: !p.ativo }, "PUT"))}
-            >
-              {p.ativo ? "Desativar" : "Ativar"}
-            </button>
-          </li>
+          <LinhaDoPonto key={`${p.id}-${p.nome}`} ponto={p} enviar={enviarNaLinha} />
         ))}
       </ul>
       <form

@@ -1377,6 +1377,68 @@ div.estatistica {
   min-width: 0;
 }
 
+.lista-pontos .botao-icone:not(:disabled) {
+  color: var(--acao);
+  border-color: var(--acao);
+}
+
+/* Nova coleta da água de consumo: os pontos são marcas leves (contorno e fundo claro), não botões cheios como o de
+   registrar; o registrar fica numa faixa própria, verde, à direita (pedido de 27/10). */
+.coleta-agua-nova .botao-tipo {
+  min-height: 44px;
+  font-size: 0.95em;
+}
+
+.coleta-agua-nova .botao-tipo[aria-pressed="true"] {
+  background: var(--ok-fundo);
+  border-color: var(--ok);
+  color: var(--texto);
+  font-weight: 600;
+}
+
+.coleta-agua-nova .botao-tipo[aria-pressed="true"]::before {
+  color: var(--ok);
+  font-weight: 800;
+}
+
+.coleta-agua-nova .botao-tipo[aria-pressed="false"] {
+  background: transparent;
+  border-style: dashed;
+  color: var(--texto-secundario, #6b7280);
+  text-decoration: line-through;
+}
+
+.rodape-coleta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--borda);
+}
+
+.botao.botao-registrar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  border-radius: 999px;
+  border: 0;
+  background: var(--ok);
+  color: #fff;
+  font-weight: 700;
+}
+
+.botao.botao-registrar:hover:not(:disabled) {
+  filter: brightness(0.92);
+}
+
+.botao.botao-registrar:disabled {
+  opacity: 0.55;
+}
+
 .campo-curto {
   width: 100%;
   min-width: 64px;

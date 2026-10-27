@@ -60,6 +60,39 @@ describe("Água de consumo (27/10)", () => {
     expect(screen.getByText("Histórico dos navios")).toBeInTheDocument();
   });
 
+  it("trocar de aba fica na água do navio (antes voltava para o TMG)", async () => {
+    abrir("/paginas/agua-consumo?unidade=Navio&tipo=mensal");
+    expect(await screen.findByLabelText("Navio e viagem")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Coletas" }));
+    expect(screen.getByRole("button", { name: "Registrar água do navio" })).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("heading", { name: "Navios" })).toBeInTheDocument();
+  });
+
+  it("pontos: o disquete salva o nome limpo e some a mudança pendente", async () => {
+    const renomeado = { ...AGUA, pode_configurar: true, pontos: { ...AGUA.pontos, TMG: { ...AGUA.pontos.TMG, mensal: [{ ...pontos(8)[0], nome: "Cavalete" }, ...pontos(8).slice(1)] } } };
+    const api = servidorFalso({
+      "GET /me": () => ({ status: 200, corpo: { ...ANA, pode: [...QUEM_LANCA.pode, "configurar_turnos"] } }),
+      "GET /aguas/consumo": () => ({ status: 200, corpo: { ...AGUA, pode_configurar: true } }),
+      "PUT /aguas/consumo/pontos/1": () => ({ status: 200, corpo: renomeado }),
+    });
+    render(
+      <MemoryRouter initialEntries={["/paginas/agua-consumo?aba=pontos"]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <ProvedorDeSessao>
+          <App />
+        </ProvedorDeSessao>
+      </MemoryRouter>,
+    );
+    const salvar = await screen.findByRole("button", { name: "Salvar o nome do ponto 1" });
+    expect(salvar).toBeDisabled();
+    const nome = screen.getByRole("textbox", { name: "Nome do ponto 1" });
+    await userEvent.clear(nome);
+    await userEvent.type(nome, "  Cavalete  ");
+    await userEvent.click(salvar);
+    expect(api.chamadas.find((c) => c.rota === "PUT /aguas/consumo/pontos/1")?.corpo).toEqual({ nome: "Cavalete" });
+    expect(await screen.findByRole("textbox", { name: "Nome do ponto 1" })).toHaveValue("Cavalete");
+    expect(screen.getByRole("button", { name: "Salvar o nome do ponto 1" })).toBeDisabled();
+  });
+
   it("na aba Leituras: Ausente em todos, a prévia com o que passou do limite e o Confirmar", async () => {
     const api = abrir("/leituras?aba=agua-consumo", {
       "PUT /aguas/consumo/coletas/9/resultados": (c) => ({
