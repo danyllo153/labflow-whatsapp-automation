@@ -1,22 +1,8 @@
-// Roteiro do tour guiado do LabFlow: cada passo diz a tela, o que fica em destaque e a legenda (lida pela voz de IA).
+// Tour GERAL do LabFlow (o vídeo de apresentação, de ponta a ponta): cada passo diz a tela, o que fica em destaque e a legenda (lida pela voz de IA).
 // `fala` substitui a legenda na narração quando a escrita não soa bem lida (siglas, números).
 // Dados sempre FICTÍCIOS (banco de teste). Usuária do tour: preparar.py.
 
-export const USUARIO = "marina.lopes";
-export const SENHA = "Tour-2026-ok";
-
-const cartao = (page, texto) => page.locator(".cartao").filter({ hasText: texto });
-const aba = (page, nome) => page.getByRole("tab", { name: nome }).or(page.getByRole("link", { name: nome, exact: true })).or(page.getByRole("button", { name: nome, exact: true }));
-
-const FRASCO = `<svg viewBox="0 0 24 24" width="54" height="54" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3h6M10 3v6.5L4.6 18.2A1.8 1.8 0 0 0 6.1 21h11.8a1.8 1.8 0 0 0 1.5-2.8L14 9.5V3M7.5 15h9"/></svg>`;
-const FUNDO = `margin:0;height:100vh;display:flex;align-items:center;justify-content:center;flex-direction:column;
-  background:radial-gradient(ellipse at 50% 35%,#2541b8 0%,#16245e 55%,#0d1638 100%);color:#fff;font-family:Manrope,"Segoe UI",Arial,sans-serif;`;
-const capa = (titulo, subtitulo) => `<!doctype html><html><body style='${FUNDO}'>
-  <div style="width:92px;height:92px;border-radius:50%;background:rgba(255,255,255,.12);display:flex;align-items:center;justify-content:center;margin-bottom:22px">${FRASCO}</div>
-  <div style="font-size:30px;font-weight:800;letter-spacing:.5px;margin-bottom:6px">LabFlow</div>
-  <div style="font-size:40px;font-weight:800;text-align:center;max-width:1000px">${titulo}</div>
-  <div style="width:70px;height:3px;background:#ffa726;margin:22px 0"></div>
-  <div style="font-size:20px;opacity:.85;text-align:center;max-width:900px">${subtitulo}</div></body></html>`;
+import { FUNDO, USUARIO, SENHA, capa, cartao } from "../comum.mjs";
 
 const linha = (icone, nome, nota = "") =>
   `<div style="display:flex;gap:12px;align-items:center;padding:9px 14px;border-bottom:1px solid #eef0f4"><span style="font-size:20px">${icone}</span>
@@ -32,13 +18,13 @@ const PASTA = `<!doctype html><html><body style='${FUNDO}'>
     ${linha("🗄️", "dados", "o banco, os backups e a marca: nunca apagar")}
   </div></body></html>`;
 
-export const CARTOES = {
+const CARTOES = {
   abertura: capa("Sistema do Laboratório de Microbiologia", "Tour guiado pelas ferramentas do sistema"),
   pasta: PASTA,
   fim: capa("Todo o laboratório num lugar só", "Dados de demonstração · LabFlow"),
 };
 
-export const roteiro = [
+const passos = [
   // --- abertura e acesso
   { antes: (p, f) => f.cartao("abertura"), legenda: "", fala: "Bem-vindo ao LabFlow, o sistema do laboratório de microbiologia. Vamos fazer um tour pelas principais ferramentas.", folga: 1.2 },
   {
@@ -103,9 +89,9 @@ export const roteiro = [
     legenda: "Cada análise tem o seu aplicativo. Em Tanques terra, o painel mostra as coletas das últimas semanas, por tanque.",
   },
   {
-    antes: async (p, f) => { await f.clicar(aba(p, "Coleta")); },
+    antes: async (p, f) => { await f.aba("Análise"); },
     destaque: (p) => p.locator("form.cartao, .cartao").first(),
-    legenda: "Na aba Coleta registra-se a amostra. Antes de gravar, o LabFlow mostra uma prévia do que vai ser criado, e só grava com o Confirmar.",
+    legenda: "Na aba Análise registra-se a amostra. Antes de gravar, o LabFlow mostra uma prévia do que vai ser criado, e só grava com o Confirmar.",
   },
   {
     antes: (p, f) => f.ir("/analises/recebimento-fcoj"),
@@ -174,7 +160,7 @@ export const roteiro = [
     legenda: "Os laudos de rastreio se preenchem sozinhos com o que foi registrado no dia.",
   },
   {
-    antes: async (p, f) => { await f.ir("/analises/tanques-terra"); await f.clicar(aba(p, "Laudo")); },
+    antes: async (p, f) => { await f.ir("/analises/tanques-terra"); await f.aba("Laudo"); },
     legenda: "Os laudos saem no modelo oficial da empresa, preenchidos linha a linha. Ao finalizar a folha, as linhas vazias recebem o traço, como em todo documento.",
   },
   // --- dados
@@ -209,3 +195,11 @@ export const roteiro = [
   },
   { antes: (p, f) => f.cartao("fim"), legenda: "", fala: "LabFlow: todo o laboratório num lugar só. Obrigado por assistir.", folga: 2 },
 ];
+
+export default {
+  titulo: "Tour geral",
+  mostraEntrada: true, // o próprio roteiro mostra a tela de entrar
+  semCapa: true, // já tem abertura e fim próprios
+  cartoes: CARTOES,
+  passos,
+};
