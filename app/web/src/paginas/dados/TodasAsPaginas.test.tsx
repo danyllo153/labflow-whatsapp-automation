@@ -69,13 +69,13 @@ describe("todas as páginas do Power BI no app (APP-019)", () => {
     expect(hrefs("Registros diários")).toEqual(["/esterilizacao", "/material-asseptico", "/meios-lotes", "/fluxo-laminar", "/arquivo", "/incubacao"]);
   });
 
-  it("o Coletor só vê as águas na grade (Coletas está no menu; baias e linhas são análise, 25/10)", async () => {
-    abrir("/paginas", { ...ANA, cargo: "Coletor" });
-    const principal = (await screen.findByRole("heading", { level: 1, name: "Análises" })).closest("section") as HTMLElement;
-    expect(within(principal).getAllByRole("link").map((l) => l.getAttribute("href"))).toEqual([
-      "/paginas/agua-processo",
-      "/paginas/agua-consumo",
-    ]);
+  it("o Coletor só vê Coletas e o Turno: a grade de Análises cai em Coletas, no registrar (01/11)", async () => {
+    abrir("/paginas", { ...ANA, cargo: "Coletor", pode: ["ver_paginas", "registrar_coleta"] });
+    expect(await screen.findByRole("heading", { level: 1, name: "Coletas" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Tanque terra" })).toHaveAttribute("aria-pressed", "true");
+    const menu = screen.getAllByRole("navigation", { name: "Menu" })[0];
+    expect(within(menu).getAllByRole("link").map((l) => l.getAttribute("href"))).toEqual(["/turno", "/paginas/coletas"]);
+    expect(screen.queryByText("Ver o gráfico")).not.toBeInTheDocument();
   });
 
   it.each(PAGINAS.map((p) => [p.titulo, p] as const))("%s abre, chama a API certa e mostra as colunas", async (_t, def) => {

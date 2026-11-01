@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { NavLink, Outlet, useLocation } from "react-router-dom";
 
 import { useMarca } from "../marca";
-import { MENU } from "../menu";
+import { MENU, TELAS_DO_COLETOR } from "../menu";
 import { useSessao } from "../sessao";
 import BotaoTema from "./BotaoTema";
 import BuscaRapida from "./BuscaRapida";
@@ -25,7 +25,10 @@ export default function Moldura() {
   const { pathname } = useLocation();
   const [gaveta, setGaveta] = useState(false); // o menu no celular
   useEffect(() => setGaveta(false), [pathname]);
-  const barra = MENU.filter((item) => !item.soNoMenuLateral && BARRA_DO_CELULAR.includes(item.caminho) && (!item.pode || pessoa?.pode.includes(item.pode)));
+  const coletor = pessoa?.cargo === "Coletor"; // só Coletas e Turno (01/11)
+  const barra = coletor
+    ? MENU.filter((i) => TELAS_DO_COLETOR.includes(i.caminho))
+    : MENU.filter((item) => !item.soNoMenuLateral && BARRA_DO_CELULAR.includes(item.caminho) && (!item.pode || pessoa?.pode.includes(item.pode)));
 
   return (
     <div className="moldura">
@@ -52,7 +55,7 @@ export default function Moldura() {
           <Marca />
           <Saudacao nome={pessoa?.nome || pessoa?.usuario} />
           <span className="topo-espaco" />
-          <BuscaRapida />
+          {!coletor && <BuscaRapida />}
           <ChipEquipe />
           <BotaoTema />
           <MenuConta />
@@ -71,12 +74,14 @@ export default function Moldura() {
             <span>{item.rotulo}</span>
           </NavLink>
         ))}
-        <button type="button" className="item-barra" aria-expanded={gaveta} aria-controls="menu-lateral" onClick={() => setGaveta(true)}>
-          <svg className="icone" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-            <path d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-          <span>Análises</span>
-        </button>
+        {!coletor && (
+          <button type="button" className="item-barra" aria-expanded={gaveta} aria-controls="menu-lateral" onClick={() => setGaveta(true)}>
+            <svg className="icone" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+              <path d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+            <span>Análises</span>
+          </button>
+        )}
       </nav>
     </div>
   );

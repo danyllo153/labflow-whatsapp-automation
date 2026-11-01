@@ -27,6 +27,7 @@ import NaoEncontrada from "./paginas/NaoEncontrada";
 import DetalheColeta from "./paginas/dados/DetalheColeta";
 import { DetalheLoad, DetalheNavio, DetalheTanque } from "./paginas/dados/Detalhes";
 import { ListaDePaginas, PaginaEscolhida } from "./paginas/Paginas";
+import Coletas from "./paginas/Coletas";
 import RecebimentoFcoj from "./paginas/analises/RecebimentoFcoj";
 import Desvios from "./paginas/analises/Desvios";
 import Drops from "./paginas/analises/Drops";
@@ -85,6 +86,22 @@ export default function App() {
     );
   }
 
+  if (pessoa.cargo === "Coletor") {
+    // 01/11: o Coletor só vê a página Coletas (registrar e as dele) e o Turno; qualquer outro endereço cai em Coletas
+    return (
+      <Routes>
+        <Route element={<Moldura />}>
+          <Route path="/paginas/coletas" element={<Coletas />} />
+          <Route path="/paginas/coletas/:id" element={<DetalheColeta />} />
+          <Route path="/turno" element={<Turno />} />
+          <Route path="/conta" element={<Conta />} />
+          <Route path="/conta/senha" element={<TrocarSenha />} />
+          <Route path="*" element={<Navigate to="/paginas/coletas" replace />} />
+        </Route>
+      </Routes>
+    );
+  }
+
   return (
     <Routes>
       <Route element={<Moldura />}>
@@ -119,6 +136,7 @@ export default function App() {
         <Route path="/paginas/baias" element={<SuperficiesPagina key="Baia" tipo="Baia" />} />
         <Route path="/paginas/linhas" element={<SuperficiesPagina key="Linha" tipo="Linha" />} />
         <Route path="/paginas/recebimento/corrigir" element={<CorrigirRecebimento />} />
+        <Route path="/paginas/coletas" element={<Coletas />} />
         <Route path="/paginas/coletas/:id" element={<DetalheColeta />} />
         <Route path="/paginas/tanques-terra/:id" element={<DetalheTanque />} />
         <Route path="/paginas/navios/:navio" element={<DetalheNavio />} />
