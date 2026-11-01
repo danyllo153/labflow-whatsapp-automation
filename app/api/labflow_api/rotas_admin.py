@@ -6,6 +6,7 @@ desbloquear, bloquear acesso). Cadastrar e trocar cargo usam as funções do bot
 a regra mora num lugar só e quem o app cadastra já é reconhecido no WhatsApp.
 """
 
+import os
 import secrets
 
 import psycopg
@@ -179,9 +180,24 @@ def _recusa_do_banco(erro: psycopg.errors.RaiseException) -> HTTPException:
     return HTTPException(codigo, mensagem)
 
 
+def e_lite() -> bool:
+    """A LabFlow Lite (spec 12): sem bot, então o telefone da pessoa é opcional (01/11)."""
+    return os.environ.get("LABFLOW_LITE", "0") == "1"
+
+
+# Na Lite, a pessoa sem telefone ganha um marcador (como o Admin da Lite, 5500000000001): o banco exige um telefone
+# único (001, função do bot 031), e o bot não existe lá. O Admin troca depois, se quiser.
+MARCADOR_LITE = "55000000"
+
+
+def _telefone_marcador(con: psycopg.Connection) -> str:
+    usados = {t for (t,) in con.execute("SELECT telefone FROM usuarios WHERE telefone LIKE %s", (MARCADOR_LITE + "%",))}
+    return next(t for n in range(2, 100000) if (t := f"{MARCADOR_LITE}{n:05d}") not in usados)
+
+
 class PedidoNovaPessoa(BaseModel):
     nome: str
-    telefone: str  # DDI + DDD + número; obrigatório porque o bot identifica a pessoa pelo número (06)
+    telefone: str = ""  # DDI + DDD + número; obrigatório porque o bot identifica a pessoa pelo número (06); na Lite, opcional
     cargo: Cargo
     usuario: str
 
@@ -202,11 +218,16 @@ def nova_pessoa(
     usuario = pedido.usuario.strip().lower()
     if con.execute("SELECT 1 FROM app.credenciais WHERE usuario = %s", (usuario,)).fetchone():
         raise HTTPException(status.HTTP_409_CONFLICT, "Esse usuário já é de outra pessoa.")
+    telefone = pedido.telefone.strip()
+    if not telefone:
+        if not e_lite():
+            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Informe o telefone: o bot identifica a pessoa pelo número.")
+        telefone = _telefone_marcador(con)
     try:
         with con.transaction():  # ponto de volta: se o usuário curto for inválido, a pessoa também não fica cadastrada
             novo_id = con.execute(
                 "SELECT id FROM cadastrar_usuario(%s, %s, %s, %s)",
-                (pedido.nome, pedido.telefone, _cargo_no_banco(pedido.cargo), admin.usuario_id),
+                (pedido.nome, telefone, _cargo_no_banco(pedido.cargo), admin.usuario_id),
             ).fetchone()[0]
             con.execute("INSERT INTO app.credenciais (usuario_id, usuario) VALUES (%s, %s)", (novo_id, usuario))
             senha, valida_ate = _nova_provisoria(con, novo_id, admin.usuario_id)

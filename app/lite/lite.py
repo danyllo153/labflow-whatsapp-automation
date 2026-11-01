@@ -500,6 +500,7 @@ class Servidor:
             LABFLOW_MARCA_DIR=str(self.preparar_marca()),
             LABFLOW_COOKIE_SEGURO="0",  # a rede interna é HTTP (decisão da Lite)
             LABFLOW_DEMONSTRACAO="0",
+            LABFLOW_LITE="1",  # sem bot: o telefone em Nova pessoa é opcional (01/11)
             PYTHONPATH=str(INST / "app"),
             PYTHONUNBUFFERED="1",
             PYTHONUTF8="1",
@@ -869,6 +870,17 @@ def main() -> int:
         signal.signal(signal.SIGINT, lambda *_: srv.parar.set())
 
     codigo = srv.rodar()
+    if codigo == -1 and args.redefinir_admin:
+        # 01/11: com o LabFlow aberto em algum PC, a senha não pode ser redefinida (o banco está com o servidor)
+        log("O LabFlow está aberto: feche em todos os PCs e rode o --redefinir-admin de novo.")
+        avisar(
+            "LabFlow: feche antes de redefinir",
+            "O LabFlow está aberto em algum PC do laboratório. Para redefinir a senha do Admin, feche o LabFlow em todos "
+            "os PCs (ícone perto do relógio > Encerrar) e rode de novo com --redefinir-admin.",
+            erro=True,
+            esperar=True,
+        )
+        return 1
     if codigo == -1:
         return modo_cliente(dados, args)
     return codigo
