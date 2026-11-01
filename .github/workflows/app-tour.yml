@@ -1,6 +1,7 @@
 name: Vídeo do tour (LabFlow)
 
-# Grava o tour guiado do LabFlow com voz de IA e deixa o MP4 em "Artifacts" desta execução.
+# Grava os vídeos do LabFlow com voz de IA (um por grupo do app e o tour geral), um job por vídeo, em paralelo,
+# e deixa cada MP4 em "Artifacts" desta execução (LabFlow-01-inicio, LabFlow-02-nfc...).
 # Usa só DADOS FICTÍCIOS (o banco de teste com db/seeds). O vídeo nunca vai para o repositório.
 on:
   push:
@@ -8,9 +9,46 @@ on:
       - "app/tour/**"
       - ".github/workflows/app-tour.yml"
   workflow_dispatch:
+    inputs:
+      tour:
+        description: "Qual vídeo gerar (todos = um por grupo e o geral)"
+        type: choice
+        default: todos
+        options:
+          - todos
+          - 01-inicio
+          - 02-nfc
+          - 03-fcoj
+          - 04-tab-coliformes-howard
+          - 05-drops-desvios
+          - 06-aguas-superficies
+          - 07-registros-diarios
+          - 08-leituras-coletas-arquivo
+          - 09-administracao
+          - 00-geral
 
 jobs:
+  lista:
+    # os vídeos a gerar: todos (app/tour/roteiros/index.mjs) ou só o escolhido
+    runs-on: ubuntu-latest
+    outputs:
+      tours: ${{ steps.lista.outputs.tours }}
+    steps:
+      - uses: actions/checkout@v7
+      - id: lista
+        env:
+          ESCOLHIDO: ${{ inputs.tour }}
+        run: |
+          if [ -n "$ESCOLHIDO" ] && [ "$ESCOLHIDO" != "todos" ]; then echo "tours=[\"$ESCOLHIDO\"]" >> "$GITHUB_OUTPUT"
+          else echo "tours=$(node app/tour/roteiros/index.mjs --lista)" >> "$GITHUB_OUTPUT"; fi
+
   video:
+    needs: lista
+    name: Vídeo ${{ matrix.tour }}
+    strategy:
+      fail-fast: false
+      matrix:
+        tour: ${{ fromJSON(needs.lista.outputs.tours) }}
     runs-on: ubuntu-latest
     timeout-minutes: 40
     services:
@@ -62,19 +100,22 @@ jobs:
         run: |
           npm i --no-save --no-audit --no-fund playwright@1.56.1
           npx playwright install --with-deps chromium
-          node -e "import('./roteiro.mjs').then(m => console.log(JSON.stringify(m.roteiro.map(p => p.fala ?? p.legenda))))" > /tmp/falas.json
+          node roteiros/index.mjs --falas "${{ matrix.tour }}" > /tmp/falas.json
           python narrar.py /tmp/falas.json /tmp/narracao
       - name: Gravar o tour
         working-directory: app/tour
-        run: node gravar.mjs --base http://127.0.0.1:8100 --saida /tmp/tour --duracoes /tmp/narracao/duracoes.json
+        run: node gravar.mjs --tour "${{ matrix.tour }}" --base http://127.0.0.1:8100 --saida /tmp/tour --duracoes /tmp/narracao/duracoes.json
       - name: Juntar vídeo e narração
-        run: python app/tour/montar.py /tmp/tour /tmp/narracao
+        run: |
+          python app/tour/montar.py /tmp/tour /tmp/narracao
+          mv /tmp/tour/tour.mp4 "/tmp/tour/LabFlow-${{ matrix.tour }}.mp4"
       - name: Guardar o vídeo
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: LabFlow-tour
+          name: LabFlow-${{ matrix.tour }}
           path: |
-            /tmp/tour/tour.mp4
+            /tmp/tour/LabFlow-*.mp4
             /tmp/tour/erro-passo-*.png
+            /tmp/tour/aviso-clique-*.png
           retention-days: 30

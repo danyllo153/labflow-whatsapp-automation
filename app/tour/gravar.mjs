@@ -2,14 +2,17 @@
 // ganha uma moldura laranja e o resto escurece, a legenda aparece embaixo e o cursor mostra os cliques.
 // Roda contra um LabFlow com DADOS FICTÍCIOS (o banco de teste). O vídeo nunca vai para o repositório.
 //
-// Uso: node gravar.mjs --base http://127.0.0.1:8100 --saida pasta [--duracoes pasta/duracoes.json]
-//   gera pasta/tour.webm e pasta/linha-do-tempo.json (início de cada fala, para o montar.sh pôr a narração no lugar)
+// Uso: node gravar.mjs --tour 02-nfc --base http://127.0.0.1:8100 --saida pasta [--duracoes pasta/duracoes.json]
+//   gera pasta/tour.webm e pasta/linha-do-tempo.json (início de cada fala, para o montar.py pôr a narração no lugar).
+//   --tour: um dos nomes de roteiros/index.mjs (padrão: 00-geral, o tour de ponta a ponta).
+//   Os vídeos que não mostram a tela de entrar já começam com a Marina Lopes logada.
 
 import fs from "node:fs";
 import path from "node:path";
 import { createRequire } from "node:module";
 
-import { CARTOES, roteiro } from "./roteiro.mjs";
+import { SENHA, USUARIO, abaApp } from "./comum.mjs";
+import { TOURS, passosDo } from "./roteiros/index.mjs";
 
 // require (e não import) para achar o Playwright também pelo NODE_PATH (instalação global)
 const { chromium } = createRequire(import.meta.url)("playwright");
@@ -19,6 +22,9 @@ const args = Object.fromEntries(
 );
 const BASE = args.base ?? "http://127.0.0.1:8100";
 const SAIDA = path.resolve(args.saida ?? "tour-saida");
+const NOME = args.tour ?? "00-geral";
+const TOUR = TOURS[NOME];
+const roteiro = passosDo(NOME);
 const DURACOES = args.duracoes && fs.existsSync(args.duracoes) ? JSON.parse(fs.readFileSync(args.duracoes, "utf8")) : {};
 const LARGURA = 1280;
 const ALTURA = 720;
@@ -120,6 +126,13 @@ function ferramentas(page) {
       await page.waitForTimeout(250);
     },
     async clicar(locator) {
+      // Sem o alvo (a tela mudou), o vídeo segue sem o clique e fica a foto para corrigir o roteiro.
+      const achou = await locator.first().waitFor({ state: "visible", timeout: 6000 }).then(() => true, () => false);
+      if (!achou) {
+        console.warn(`  (clique não encontrado: ${locator}; segue sem ele)`);
+        await page.screenshot({ path: path.join(SAIDA, `aviso-clique-${Date.now()}.png`) }).catch(() => {});
+        return;
+      }
       await locator.first().scrollIntoViewIfNeeded().catch(() => {});
       await this.mover(locator);
       await page.mouse.down();
@@ -137,8 +150,14 @@ function ferramentas(page) {
       await page.waitForTimeout(600);
       await camada(page);
     },
-    async cartao(chave) {
-      await page.setContent(CARTOES[chave]);
+    /** Uma aba do app (Painel, Registrar, Resultados, Laudo, IT, Vídeo...). */
+    async aba(nome) {
+      await this.clicar(abaApp(page, nome));
+      await page.waitForLoadState("networkidle").catch(() => {});
+    },
+    /** Um cartão em tela cheia: o HTML pronto (capa e fim) ou a chave de `cartoes` do roteiro. */
+    async cartao(chaveOuHtml) {
+      await page.setContent(chaveOuHtml.startsWith("<") ? chaveOuHtml : TOUR.cartoes[chaveOuHtml]);
       await camada(page);
     },
     espera: (ms) => page.waitForTimeout(ms),
@@ -146,7 +165,25 @@ function ferramentas(page) {
 }
 
 const navegador = await chromium.launch();
+
+/** Entra antes de gravar (sem aparecer no vídeo) e devolve a sessão, para os vídeos que não mostram a tela de entrar. */
+async function sessaoLogada() {
+  const ctx = await navegador.newContext({ locale: "pt-BR", timezoneId: "America/Sao_Paulo" });
+  const pg = await ctx.newPage();
+  await pg.goto(BASE + "/app/", { waitUntil: "networkidle" });
+  await pg.fill("input[name=usuario]", USUARIO);
+  await pg.fill("input[type=password]", SENHA);
+  await pg.getByRole("button", { name: "Entrar" }).click();
+  await pg.waitForLoadState("networkidle");
+  await pg.waitForTimeout(800);
+  const estado = await ctx.storageState();
+  await ctx.close();
+  return estado;
+}
+
+console.log(`tour: ${NOME} (${TOUR.titulo}), ${roteiro.length} passos`);
 const contexto = await navegador.newContext({
+  storageState: TOUR.mostraEntrada ? undefined : await sessaoLogada(),
   viewport: { width: LARGURA, height: ALTURA },
   recordVideo: { dir: SAIDA, size: { width: LARGURA, height: ALTURA } },
   locale: "pt-BR",
