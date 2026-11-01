@@ -29,6 +29,8 @@ export interface DadosLaudos {
   modelo_enviado: boolean;
   modelo_enviado_em: string | null;
   paginas: PaginaDoLaudo[];
+  guarda?: string | null; // o prazo de guarda do rodapé do modelo (01/11), ex.: "1 mês"
+  vencidas?: number; // finalizadas que passaram do prazo: saem da lista
 }
 
 function dm(data: string | null): string {
@@ -87,6 +89,18 @@ export default function LaudoEsterilizacao({ versao, config = LAUDO_ESTERILIZACA
       setConfirmar(null);
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não foi possível gravar.");
+    }
+  }
+
+  const [apagandoVencidas, setApagandoVencidas] = useState(false);
+
+  async function apagarVencidas() {
+    setErro("");
+    try {
+      setDados(await enviarJson<DadosLaudos>(`${config.base}/apagar-vencidas`, undefined));
+      setApagandoVencidas(false);
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Não foi possível apagar.");
     }
   }
 
@@ -155,7 +169,9 @@ export default function LaudoEsterilizacao({ versao, config = LAUDO_ESTERILIZACA
       )}
       {arquivo.length > 0 && (
         <details className="recolhivel">
-          <summary>Arquivo ({arquivo.length} {arquivo.length === 1 ? "página finalizada" : "páginas finalizadas"})</summary>
+          <summary>
+            Arquivo ({arquivo.length} {arquivo.length === 1 ? "página finalizada" : "páginas finalizadas"}){dados.guarda && ` · guardar por no mínimo ${dados.guarda}`}
+          </summary>
           <ul className="lista-simples">
             {arquivo.map((p) => (
               <li key={p.id}>
@@ -184,6 +200,33 @@ export default function LaudoEsterilizacao({ versao, config = LAUDO_ESTERILIZACA
             ))}
           </ul>
         </details>
+      )}
+      {(dados.vencidas ?? 0) > 0 && (
+        <div className="guarda-laudo">
+          <p className="texto-secundario">
+            {dados.vencidas === 1 ? "1 folha finalizada passou" : `${dados.vencidas} folhas finalizadas passaram`} do prazo de guarda
+            ({dados.guarda ? `mínimo de ${dados.guarda}, ` : ""}conforme o rodapé do modelo) e saiu da lista.
+          </p>
+          {podeApagar && !apagandoVencidas && (
+            <button type="button" className="acao-laudo" onClick={() => setApagandoVencidas(true)}>
+              <IconeAcao nome="apagar" />
+              Apagar as vencidas
+            </button>
+          )}
+          {apagandoVencidas && (
+            <div className="previa-app" role="group" aria-label="Confirmar: apagar as folhas vencidas">
+              <p>As folhas vencidas saem do banco de vez. Os registros delas continuam nas telas de análise, fora do laudo.</p>
+              <div className="botoes-lado">
+                <button type="button" className="botao botao-principal" onClick={() => void apagarVencidas()}>
+                  Confirmar
+                </button>
+                <button type="button" className="botao botao-simples" onClick={() => setApagandoVencidas(false)}>
+                  Voltar
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       )}
       {dados.pode_enviar_modelo && (
         <div className="modelo-laudo">

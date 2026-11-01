@@ -38,6 +38,8 @@ class Laudos(BaseModel):
     modelo_enviado: bool
     modelo_enviado_em: str | None
     paginas: list[Pagina]  # as pendentes primeiro, depois as impressas (mais nova primeiro)
+    guarda: str | None = None  # o prazo de guarda do rodapé do modelo (01/11)
+    vencidas: int = 0
 
 
 PAGINAS_SQL = """
@@ -58,7 +60,11 @@ def _modelo(con: psycopg.Connection):
 
 def _laudos(con: psycopg.Connection, pessoa: PessoaLogada) -> Laudos:
     paginas = []
-    for id_, numero, impresso_em, impresso_por, linhas, de, ate in con.execute(PAGINAS_SQL).fetchall():
+    folhas = con.execute(PAGINAS_SQL).fetchall()
+    guarda, fora = _vencidas(con, folhas)
+    for id_, numero, impresso_em, impresso_por, linhas, de, ate in folhas:
+        if id_ in fora:
+            continue  # passou do prazo de guarda do modelo (01/11): sai da lista
         if linhas == 0 and impresso_em is None:
             continue  # página vazia (as linhas foram excluídas): não aparece
         paginas.append(
@@ -74,7 +80,27 @@ def _laudos(con: psycopg.Connection, pessoa: PessoaLogada) -> Laudos:
     return Laudos(
         pode_enviar_modelo=pode(pessoa.cargo, "configurar_turnos"), modelo_enviado=modelo is not None,
         modelo_enviado_em=modelo[0].astimezone(FUSO).strftime("%d/%m/%Y %H:%M") if modelo else None, paginas=paginas,
+        guarda=guarda.texto if guarda else None, vencidas=len(fora),
     )
+
+
+def _vencidas(con: psycopg.Connection, folhas) -> tuple[laudos.Guarda | None, set[int]]:
+    modelo = _modelo(con)
+    guarda = laudos.guarda_do_modelo(bytes(modelo[0]) if modelo else None)
+    return guarda, laudos.vencidas(con, [(f[0], f[2]) for f in folhas], guarda)
+
+
+@roteador.post("/apagar-vencidas", response_model=Laudos)
+def apagar_vencidas(
+    pessoa: PessoaLogada = Depends(exigir("gerenciar_pessoas")), con: psycopg.Connection = Depends(obter_conexao)
+) -> Laudos:
+    """Só o Admin (01/11): apaga de vez as páginas que passaram do prazo de guarda do modelo."""
+    con.execute("SELECT pg_advisory_xact_lock(60, hashtext('esterilizacao'))")
+    _, fora = _vencidas(con, con.execute(PAGINAS_SQL).fetchall())
+    for laudo_id in fora:
+        con.execute("UPDATE app.esterilizacoes SET laudo_id = NULL WHERE laudo_id = %s", (laudo_id,))
+        con.execute("DELETE FROM app.laudos_esterilizacao WHERE id = %s", (laudo_id,))
+    return _laudos(con, pessoa)
 
 
 @roteador.get("", response_model=Laudos)

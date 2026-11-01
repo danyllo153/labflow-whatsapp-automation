@@ -108,6 +108,21 @@ describe("Laudo de esterilização (APP-035)", () => {
     expect(api.vezes("POST /esterilizacao/laudos/1/apagar")).toBe(1);
   });
 
+  it("as folhas que passaram do prazo de guarda do modelo saem da lista e o Admin apaga de uma vez (01/11)", async () => {
+    const api = abrir({
+      "GET /me": () => ({ status: 200, corpo: { ...ANA, cargo: "Admin", pode: ["ver_paginas", "registrar_analise", "gerenciar_pessoas"] } }),
+      "GET /esterilizacao/laudos": () => ({ status: 200, corpo: { ...LAUDOS, guarda: "1 mês", vencidas: 2 } }),
+      "POST /esterilizacao/laudos/apagar-vencidas": () => ({ status: 200, corpo: { ...LAUDOS, guarda: "1 mês", vencidas: 0 } }),
+    });
+    const laudo = await screen.findByRole("region", { name: "Laudo de esterilização" });
+    expect(laudo).toHaveTextContent("2 folhas finalizadas passaram do prazo de guarda (mínimo de 1 mês, conforme o rodapé do modelo)");
+    expect(laudo).toHaveTextContent("guardar por no mínimo 1 mês");
+    await userEvent.click(within(laudo).getByRole("button", { name: "Apagar as vencidas" }));
+    await userEvent.click(within(within(laudo).getByRole("group", { name: "Confirmar: apagar as folhas vencidas" })).getByRole("button", { name: "Confirmar" }));
+    expect(api.vezes("POST /esterilizacao/laudos/apagar-vencidas")).toBe(1);
+    expect(laudo).not.toHaveTextContent("passaram do prazo");
+  });
+
   it("avisa, sem bloquear, quando o ciclo digitado já tem material", async () => {
     abrir({ "GET /esterilizacao/ciclo?ciclo=A1092%2F26": () => ({ status: 200, corpo: [{ tipo: "Meio", quem: "Ana Souza", quando: "09:40" }] }) }, "/esterilizacao");
     await userEvent.click(await screen.findByRole("button", { name: "Frasco" }));

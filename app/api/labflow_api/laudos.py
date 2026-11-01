@@ -10,12 +10,14 @@ a folha finalizada) e DELETE /laudos/{laudo}/{pagina} (a folha sai e as linhas v
 (enviado pelo Admin), nunca no Git; sem ele, o laudo sai numa tabela de demonstração com a mesma geometria.
 """
 
+import calendar
 import hashlib
 import io
+import re
 import statistics
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import date
+from datetime import date, datetime, timedelta
 
 import psycopg
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
@@ -494,8 +496,74 @@ class Pagina(BaseModel):
     ate: date | None
 
 
+# --- prazo de guarda (01/11): o rodapé de cada modelo diz por quanto tempo a folha finalizada fica guardada ("...arquivado
+# junto ao Responsável pela Correta Aplicação por um período mínimo de 1 mês"). O app lê do próprio PDF enviado (fica no
+# banco, nunca no Git): passado o prazo, a folha sai da lista e o Admin pode apagar as vencidas de uma vez.
+
+NUMEROS = {"um": 1, "uma": 1, "dois": 2, "duas": 2, "tres": 3, "três": 3, "quatro": 4, "cinco": 5, "seis": 6, "doze": 12}
+PRAZO_RE = re.compile(
+    r"per[ií]odo\s+m[ií]nimo\s+de\s+(\d+|um|uma|dois|duas|tr[eê]s|quatro|cinco|seis|doze)\s*(?:\([^)]*\)\s*)?(dias?|m[eê]s(?:es)?|anos?)",
+    re.IGNORECASE,
+)
+
+
+@dataclass(frozen=True)
+class Guarda:
+    quantidade: int
+    unidade: str  # "dia", "mes" ou "ano"
+
+    @property
+    def texto(self) -> str:
+        nomes = {"dia": ("dia", "dias"), "mes": ("mês", "meses"), "ano": ("ano", "anos")}[self.unidade]
+        return f"{self.quantidade} {nomes[self.quantidade != 1]}"
+
+    def vence(self, finalizada: datetime) -> datetime:
+        if self.unidade == "dia":
+            return finalizada + timedelta(days=self.quantidade)
+        meses = self.quantidade * (12 if self.unidade == "ano" else 1)
+        ano, mes = divmod(finalizada.month - 1 + meses, 12)
+        ano += finalizada.year
+        return finalizada.replace(year=ano, month=mes + 1, day=min(finalizada.day, calendar.monthrange(ano, mes + 1)[1]))
+
+
+_GUARDAS: dict[str, Guarda | None] = {}
+
+
+def guarda_do_texto(texto: str) -> Guarda | None:
+    achado = PRAZO_RE.search(" ".join(texto.split()))
+    if not achado:
+        return None
+    numero, unidade = achado.group(1).lower(), achado.group(2).lower()
+    quantidade = int(numero) if numero.isdigit() else NUMEROS[numero]
+    return Guarda(quantidade, "dia" if unidade.startswith("dia") else "ano" if unidade.startswith("ano") else "mes")
+
+
+def guarda_do_modelo(pdf: bytes | None) -> Guarda | None:
+    """O prazo de guarda escrito no rodapé do modelo; None sem modelo ou sem a frase (aí nada vence)."""
+    if not pdf:
+        return None
+    chave = hashlib.sha256(pdf).hexdigest()
+    if chave not in _GUARDAS:
+        try:
+            texto = " ".join(p.extract_text() or "" for p in PdfReader(io.BytesIO(pdf)).pages)
+        except Exception:  # PDF que o pypdf não lê: sem prazo
+            texto = ""
+        _GUARDAS[chave] = guarda_do_texto(texto)
+    return _GUARDAS[chave]
+
+
+def vencidas(con: psycopg.Connection, folhas: list[tuple[int, datetime | None]], guarda: Guarda | None) -> set[int]:
+    """As folhas finalizadas cujo prazo de guarda já passou."""
+    if guarda is None:
+        return set()
+    agora = con.execute("SELECT clock_timestamp()").fetchone()[0]
+    return {i for i, finalizada in folhas if finalizada is not None and guarda.vence(finalizada) <= agora}
+
+
 class Laudos(BaseModel):
     titulo: str
+    guarda: str | None = None  # o prazo de guarda do rodapé do modelo ("1 mês"); None se o modelo não diz
+    vencidas: int = 0  # folhas finalizadas que passaram do prazo: saem da lista; o Admin apaga de uma vez
     pode_enviar_modelo: bool
     modelo_enviado: bool
     modelo_enviado_em: str | None
@@ -508,17 +576,19 @@ def _listar(con: psycopg.Connection, pessoa: PessoaLogada, laudo: Laudo) -> Laud
     if laudo.preparar_por:
         laudo.preparar_por(con, pessoa.usuario_id)
     paginas = []
-    for n, (pagina_id, impresso_em, por) in enumerate(
-        con.execute(
-            """
-            SELECT p.id, p.impresso_em, coalesce(u.nome, c.usuario) FROM app.paginas_laudo p
-            LEFT JOIN usuarios u ON u.id = p.impresso_por LEFT JOIN app.credenciais c ON c.usuario_id = p.impresso_por
-            WHERE p.laudo = %s AND p.excluida_em IS NULL ORDER BY p.id
-            """,
-            (laudo.nome,),
-        ).fetchall(),
-        start=1,
-    ):
+    folhas = con.execute(
+        """
+        SELECT p.id, p.impresso_em, coalesce(u.nome, c.usuario) FROM app.paginas_laudo p
+        LEFT JOIN usuarios u ON u.id = p.impresso_por LEFT JOIN app.credenciais c ON c.usuario_id = p.impresso_por
+        WHERE p.laudo = %s AND p.excluida_em IS NULL ORDER BY p.id
+        """,
+        (laudo.nome,),
+    ).fetchall()
+    guarda = guarda_do_modelo(modelo_do_banco(con, laudo.modelo))
+    fora = vencidas(con, [(i, em) for i, em, _ in folhas], guarda)
+    for n, (pagina_id, impresso_em, por) in enumerate(folhas, start=1):
+        if pagina_id in fora:
+            continue  # passou do prazo de guarda do modelo (01/11): sai da lista
         linhas, de, ate = con.execute(laudo.contar_sql, (pagina_id,)).fetchone()
         if linhas == 0 and impresso_em is None:
             continue  # página que ficou vazia (linhas excluídas): não aparece
@@ -535,6 +605,7 @@ def _listar(con: psycopg.Connection, pessoa: PessoaLogada, laudo: Laudo) -> Laud
     return Laudos(
         titulo=laudo.titulo, pode_enviar_modelo=pode(pessoa.cargo, "configurar_turnos"), modelo_enviado=modelo is not None,
         modelo_enviado_em=modelo[0].astimezone(FUSO).strftime("%d/%m/%Y %H:%M") if modelo else None, paginas=paginas,
+        guarda=guarda.texto if guarda else None, vencidas=len(fora),
     )
 
 
@@ -679,6 +750,20 @@ def apagar(con: psycopg.Connection, nome: str, pagina_id: int) -> int:
         linhas += con.execute(f"UPDATE {tabela} SET {coluna} = NULL WHERE {coluna} = %s", (pagina_id,)).rowcount  # nomes do catálogo
     con.execute("DELETE FROM app.paginas_laudo WHERE id = %s", (pagina_id,))
     return linhas
+
+
+@roteador.post("/{nome}/apagar-vencidas", response_model=Laudos)
+def apagar_vencidas(
+    nome: str, pessoa: PessoaLogada = Depends(exigir("gerenciar_pessoas")), con: psycopg.Connection = Depends(obter_conexao)
+) -> Laudos:
+    """Só o Admin (01/11): apaga de vez as folhas que passaram do prazo de guarda do modelo."""
+    laudo = _laudo(nome)
+    folhas = con.execute(
+        "SELECT id, impresso_em FROM app.paginas_laudo WHERE laudo = %s AND excluida_em IS NULL", (laudo.nome,)
+    ).fetchall()
+    for pagina_id in sorted(vencidas(con, folhas, guarda_do_modelo(modelo_do_banco(con, laudo.modelo)))):
+        apagar(con, laudo.nome, pagina_id)
+    return _listar(con, pessoa, laudo)
 
 
 @roteador.post("/{nome}/{pagina_id}/apagar", response_model=Laudos)
