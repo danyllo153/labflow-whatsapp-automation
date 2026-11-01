@@ -473,11 +473,16 @@ class Embarque(BaseModel):
     navio: str = Field(max_length=40)
     linha: int = Field(ge=1, le=99)
     fase: int = Field(ge=1, le=99)
-    load: str = Field(max_length=10)
-    item: str = Field(max_length=10)
+    load: str = Field(max_length=60)  # "43783" ou vários (102): "43783/43784"
+    item: str = Field(max_length=60)  # um por load, na mesma ordem, ou um só para todos
     amostras: str = Field(max_length=200)  # "1-5"
     data: date
     previa: bool = True
+
+
+def _varios(texto: str) -> str:
+    """"43783, 43784" ou "43783 43784" vira "43783/43784", como a registrar_embarque (102) entende."""
+    return "/".join(p for p in re.split(r"[\s,;/]+", texto.strip()) if p)
 
 
 @roteador.post("/embarque/registrar", response_model=Gravacao)
@@ -488,7 +493,7 @@ def registrar_embarque(
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "A data do embarque não pode ser depois de hoje.")
     r = _chamar(
         con, "SELECT registrar_embarque(%s, %s, %s, %s, %s, %s, %s, %s, %s)",
-        (pessoa.usuario_id, pedido.navio, pedido.linha, pedido.fase, pedido.load, pedido.item, _lotes(pedido.amostras),
+        (pessoa.usuario_id, pedido.navio, pedido.linha, pedido.fase, _varios(pedido.load), _varios(pedido.item), _lotes(pedido.amostras),
          pedido.data, pedido.previa),
     )
     return _resposta(r, pedido.previa)

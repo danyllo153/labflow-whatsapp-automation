@@ -262,7 +262,9 @@ function Registrar({ aoGravar }: { aoGravar: () => void }) {
       aria-label="Registrar embarque"
       onSubmit={(e: FormEvent) => {
         e.preventDefault();
-        void g.ver({ ...campos, linha: Number(campos.linha), fase: Number(campos.fase) });
+        // vários loads e itens (102): "43783, 43784" ou "43783 43784" vira "43783/43784", como o bot entende
+        const varios = (t: string) => t.trim().replace(/\s*[,;/\s]\s*/g, "/");
+        void g.ver({ ...campos, load: varios(campos.load), item: varios(campos.item), linha: Number(campos.linha), fase: Number(campos.fase) });
       }}
     >
       <h2>Registrar amostras do embarque</h2>
@@ -270,11 +272,11 @@ function Registrar({ aoGravar }: { aoGravar: () => void }) {
       <div className="linha-formulario">
         <label className="campo">
           Load
-          <input required maxLength={10} inputMode="numeric" value={campos.load} onChange={(e) => mudar({ load: e.target.value })} />
+          <input required maxLength={60} value={campos.load} placeholder="ex.: 43783 ou 43783, 43784" onChange={(e) => mudar({ load: e.target.value })} />
         </label>
         <label className="campo">
           Item
-          <input required maxLength={10} inputMode="numeric" value={campos.item} onChange={(e) => mudar({ item: e.target.value })} />
+          <input required maxLength={60} value={campos.item} placeholder="um por load, ou um só para todos" onChange={(e) => mudar({ item: e.target.value })} />
         </label>
       </div>
       <div className="linha-formulario">
@@ -332,14 +334,80 @@ function MarcasDeTeste({ marcas, mudar, rotulo, travados = [] }: { marcas: Marca
   );
 }
 
+/** "1-5, 7": os números das amostras em faixas. */
+function faixas(numeros: number[]): string {
+  const ns = [...new Set(numeros)].sort((a, b) => a - b);
+  const partes: string[] = [];
+  for (let i = 0; i < ns.length; i++) {
+    let j = i;
+    while (j + 1 < ns.length && ns[j + 1] === ns[j] + 1) j++;
+    partes.push(i === j ? `${ns[i]}` : `${ns[i]}-${ns[j]}`);
+    i = j;
+  }
+  return partes.join(", ");
+}
+
+interface SemComposta {
+  embarque: string; // "O.SKY 189 L1 F2"
+  navio: string;
+  linha: string;
+  fase: string;
+  numeros: number[];
+  data: string;
+}
+
+/** As amostras registradas que ainda não estão em nenhuma composta, por navio, linha e fase (pedido de 01/11). */
+function semComposta(amostras: Amostra[] | null): SemComposta[] {
+  const grupos = new Map<string, SemComposta>();
+  for (const a of amostras ?? []) {
+    if (a.composta !== null) continue;
+    const m = /^(.*) L(\d+) F(\d+)$/.exec(a.embarque);
+    if (!m) continue;
+    const g = grupos.get(a.embarque) ?? { embarque: a.embarque, navio: m[1], linha: m[2], fase: m[3], numeros: [], data: a.data };
+    g.numeros.push(Number(a.amostra.replace(/\D/g, "")));
+    if (a.data < g.data) g.data = a.data;
+    grupos.set(a.embarque, g);
+  }
+  return [...grupos.values()];
+}
+
 function Compostas({ aoGravar }: { aoGravar: () => void }) {
   const [campos, setCampos] = useState({ navio: "", linha: "", fase: "", grupos: "" });
   const [marcas, setMarcas] = useState<Marcas>({ tab: false, coliformes: true, howard: false });
   const recentes = useLista<TestesDaComposta[]>("/analises/embarque/compostas-recentes");
-  const g = useGravacao("/analises/embarque/compostas", () => (setCampos({ ...campos, grupos: "" }), recentes.recarregar(), aoGravar()));
+  const amostras = useLista<Amostra[]>("/analises/embarque/amostras");
+  const pendentes = semComposta(amostras.dados);
+  const g = useGravacao("/analises/embarque/compostas", () => (setCampos({ ...campos, grupos: "" }), recentes.recarregar(), amostras.recarregar(), aoGravar()));
   const mudar = (c: Partial<typeof campos>) => (setCampos({ ...campos, ...c }), g.voltar());
   return (
     <>
+      <section className="cartao" aria-label="Amostras sem composta">
+        <h2>
+          Amostras sem composta <span className="contador">{pendentes.length}</span>
+        </h2>
+        {pendentes.length === 0 ? (
+          <p className="texto-secundario">Todas as amostras dos últimos 30 dias já estão em composta.</p>
+        ) : (
+          <ul className="lista-simples">
+            {pendentes.map((p) => (
+              <li key={p.embarque} className="linha-turno">
+                <span>
+                  <strong>{p.embarque}</strong> · A{faixas(p.numeros).replace(/, /g, ", A").replace(/-/g, " a A")}{" "}
+                  <span className="texto-secundario">· {dm(p.data)}</span>
+                </span>
+                <button
+                  type="button"
+                  className="botao-secundario"
+                  aria-label={`Fazer as compostas de ${p.embarque}`}
+                  onClick={() => mudar({ navio: p.navio, linha: p.linha, fase: p.fase, grupos: faixas(p.numeros).split(", ").map((f) => `(${f})`).join("") })}
+                >
+                  Fazer compostas
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
       <form
         className="cartao"
         aria-label="Compostas do embarque"

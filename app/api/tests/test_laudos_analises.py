@@ -53,18 +53,24 @@ def test_folha_do_tab_e_do_nfc_nao_misturam_chaves(cliente, logado, conexao):
     assert misturadas == []
 
 
-def test_folha_impressa_ganha_o_traco_nas_linhas_vazias(cliente, logado, monkeypatch):
-    paginas = cliente.get("/laudos/howard").json()["paginas"]
+@pytest.mark.parametrize("nome, com_traco", [("tab", True), ("howard", False)])  # o Howard não leva o traço (01/11)
+def test_folha_impressa_ganha_o_traco_nas_linhas_vazias(cliente, logado, monkeypatch, nome, com_traco):
+    paginas = cliente.get(f"/laudos/{nome}").json()["paginas"]
     pagina = next(p for p in paginas if p["linhas"] < p["capacidade"]) if any(p["linhas"] < p["capacidade"] for p in paginas) else None
     riscos = []
     original = laudos.riscar
     monkeypatch.setattr(laudos, "riscar", lambda pdf, r: riscos.append(r) or original(pdf, r))
     alvo = pagina or paginas[0]
-    _texto(cliente, "howard", alvo["id"])
+    _texto(cliente, nome, alvo["id"])
     assert riscos == []  # folha aberta: sem traço
-    assert cliente.post(f"/laudos/howard/{alvo['id']}/impresso").status_code == 200
-    _texto(cliente, "howard", alvo["id"])
-    assert (len(riscos) == 1) == (alvo["linhas"] < alvo["capacidade"])
+    assert cliente.post(f"/laudos/{nome}/{alvo['id']}/impresso").status_code == 200
+    _texto(cliente, nome, alvo["id"])
+    assert (len(riscos) == 1) == (com_traco and alvo["linhas"] < alvo["capacidade"])
+
+
+def test_laudo_do_embarque_leva_o_item_na_observacao(cliente, logado):
+    paginas = cliente.get("/laudos/embarque-fcoj").json()["paginas"]
+    assert "Item " in _texto(cliente, "embarque-fcoj", paginas[0]["id"])  # 01/11: o item (e os outros loads) na Observação
 
 
 def test_contra_amostra_do_recebimento_corrida(cliente, logado, conexao):
