@@ -51,7 +51,14 @@ const CAMADA = `
   const legenda = document.createElement("div"); legenda.id = "tour-legenda";
   const cursor = document.createElement("div"); cursor.id = "tour-cursor";
   cursor.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22"><path d="M3 2l7.5 19 2.6-7.9L21 10.5z" fill="#fff" stroke="#111" stroke-width="1.6" stroke-linejoin="round"/></svg>';
-  const montar = () => { document.head.appendChild(css); document.body.append(foco, legenda, cursor); };
+  // marca de sincronia: 6 quadradinhos no canto de baixo à esquerda, com o número do passo em binário (branco = 1).
+  // O montar.py lê a marca no próprio vídeo para pôr cada fala no quadro exato (o vídeo do navegador não segue o relógio)
+  // e depois a cobre.
+  const marca = document.createElement("div");
+  marca.style.cssText = "position:fixed;left:0;bottom:0;width:48px;height:8px;display:flex;z-index:2147483003;pointer-events:none;background:#000";
+  for (let i = 0; i < 6; i++) { const b = document.createElement("span"); b.style.cssText = "width:8px;height:8px;background:#000"; marca.appendChild(b); }
+  const marcar = (n) => [...marca.children].forEach((b, i) => (b.style.background = (n >> i) & 1 ? "#fff" : "#000"));
+  const montar = () => { document.head.appendChild(css); document.body.append(foco, legenda, cursor, marca); };
   document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", montar) : montar();
   addEventListener("mousemove", (e) => { cursor.style.left = e.clientX - 3 + "px"; cursor.style.top = e.clientY - 2 + "px"; }, true);
   addEventListener("mousedown", (e) => {
@@ -60,8 +67,9 @@ const CAMADA = `
     document.body.appendChild(p); setTimeout(() => p.remove(), 700);
   }, true);
   window.__tour = {
-    mostrar(alvo, texto) {
+    mostrar(alvo, texto, n = 0) {
       if (!foco.isConnected) montar();
+      marcar(n);
       if (alvo) {
         Object.assign(foco.style, { display: "block", left: alvo.x + "px", top: alvo.y + "px", width: alvo.w + "px", height: alvo.h + "px" });
       } else foco.style.display = "none";
@@ -69,7 +77,7 @@ const CAMADA = `
       Object.assign(legenda.style, embaixo ? { bottom: "26px", top: "auto" } : { top: "22px", bottom: "auto" });
       legenda.textContent = texto; legenda.style.opacity = texto ? 1 : 0;
     },
-    esconder() { foco.style.display = "none"; legenda.style.opacity = 0; },
+    esconder() { foco.style.display = "none"; legenda.style.opacity = 0; marcar(0); },
   };
 })();`;
 
@@ -155,7 +163,7 @@ for (const [i, passo] of roteiro.entries()) {
     if (passo.antes) await passo.antes(page, f);
     await camada(page);
     const alvo = passo.destaque ? await caixa(page, passo.destaque) : null;
-    await page.evaluate(([a, t]) => window.__tour.mostrar(a, t), [alvo, passo.legenda]);
+    await page.evaluate(([a, t, n]) => window.__tour.mostrar(a, t, n), [alvo, passo.legenda, i + 1]);
     const comeco = (Date.now() - inicio) / 1000;
     linhaDoTempo.push({ passo: i, inicio: comeco, legenda: passo.legenda });
     const dura = (DURACOES[i] ?? estimar(passo.fala ?? passo.legenda)) + (passo.folga ?? 0.7);
