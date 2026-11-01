@@ -83,3 +83,29 @@ def test_laudo_le_cada_placa_no_seu_dia_e_fecha_a_folha_com_o_traco(cliente, log
     texto = PdfReader(io.BytesIO(cliente.get(f"/laudos/fluxo-laminar/{pagina['id']}/pdf").content)).pages[0].extract_text()
     assert len(riscos) == 1 and len(riscos[0]) == 1  # impressa: o traço que fecha as linhas vazias
     assert "19.10.2026" in texto and "<1|<1" in texto
+
+
+def test_pca_com_agua_de_consumo_mensal_e_nao_com_agua_do_processo(cliente, logado):
+    """01/11 (Danyllo): PCA = baias, linhas e água de consumo mensal; a água do processo cria a linha, mas sem PCA."""
+    logado()
+    cliente.post("/aguas/processo", json={"dia": "2026-10-20", "hora": "09:30", "pontos": ["manifold"]})
+    r = cliente.post("/aguas/consumo/coletas", json={"unidade": "TMG", "tipo": "mensal", "dia": "2026-10-21", "hora": "08:30"})
+    assert r.status_code == 201, r.text
+    processo = cliente.get("/fluxo-laminar", params={"dia": "2026-10-20"}).json()
+    assert processo["registro"] is not None and (processo["registro"]["wort"], processo["registro"]["pca"]) == ("-", "-")
+    consumo = cliente.get("/fluxo-laminar", params={"dia": "2026-10-21"}).json()
+    assert consumo["registro"]["pca"] == "<1" and "consumo" in consumo["motivo_pca"]
+
+
+def test_branco_entra_ao_abrir_o_app_ou_o_laudo_e_ate_30_dias_atras(cliente, logado, monkeypatch):
+    """01/11: o cartão das folhas saiu do Início, então o branco só entrava abrindo a aba Branco do dia. Agora entra também
+    ao abrir o app (GET /turno) e o laudo, e alcança 30 dias (antes 7)."""
+    logado()
+    cliente.post("/aguas/superficies", json={"tipo": "Baia", "pontos": ["08"], "dia": "2026-10-10", "hora": "07:10"})
+    cliente.put("/fluxo-laminar/2026-10-15", json={})  # um branco já existia antes dos dias que faltam
+    cliente.post("/aguas/superficies", json={"tipo": "Linha", "pontos": ["4"], "dia": "2026-10-16", "hora": "08:00"})
+    monkeypatch.setattr(rotas_turno, "_agora", lambda con: datetime(2026, 10, 25, 10, tzinfo=FUSO))
+    assert cliente.get("/turno").status_code == 200
+    pagina = cliente.get("/laudos/fluxo-laminar").json()["paginas"][0]
+    assert pagina["linhas"] == 2  # o dia 15 e o 16; o 10 fica de fora (antes do primeiro branco: entraria fora de ordem)
+    assert cliente.get("/fluxo-laminar", params={"dia": "2026-10-16"}).json()["registro"]["pca"] == "<1"
