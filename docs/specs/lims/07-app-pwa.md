@@ -292,18 +292,18 @@ O **Operador é o analista em geral**.
 
 | Ação | Admin | Operador | Consultor | Coletor (futuro) |
 |---|---|---|---|---|
-| Ver Início, páginas, gráficos e relatórios; filtrar, imprimir, exportar | Sim | Sim | Sim | Só as próprias coletas e as pendências de coleta |
+| Ver Início, páginas, gráficos e relatórios; filtrar, imprimir, exportar | Sim | Sim | Sim | Só a página **Coletas** (as próprias, sem gráfico) e o Turno (01/11) |
 | Entrar no turno e editar o próprio horário | Sim | Sim | Não | Sim |
 | Encerrar o turno | Sim | Sim | Não | Não |
 | Registrar coletas | Sim | Sim | Não | Sim |
 | Registrar análises, resultados, desvios e esterilização | Sim | Sim | Não | Não |
-| Corrigir registro (coleta sem motivo; análise com motivo) | Sim | Sim | Não | Só a própria coleta |
-| Excluir registro (com confirmação; coleta sem motivo, análise com motivo; fica no histórico) | Sim | Sim | Não | Só a própria coleta (como no bot, migration 029) |
+| Corrigir registro (coleta sem motivo; análise com motivo) | Sim | Sim | Não | Só o tanque e a data da própria coleta (01/11) |
+| Excluir registro (com confirmação; coleta sem motivo, análise com motivo; fica no histórico) | Sim | Sim | Não | Só a própria coleta, **com motivo** (01/11) |
 | Usar o assistente | Sim | Sim | Só consultas | Só coletas |
 | Adicionar pessoa, gerar senha provisória, trocar cargo | Sim | Não | Não | Não |
 | Horários padrão dos turnos, reabrir turno | Sim | Não | Não | Não |
 
-O cargo **Coletor** depende do pedido PB2 à sessão do bot.
+O cargo **Coletor** depende do pedido PB2 à sessão do bot. **Desde 01/11** a coleta de tanque terra ou navio se registra só na página **Coletas** (aba "Registrar coleta", que escolhe terra ou navio; saiu dos apps Tanques terra e Tanques navio), e o Coletor vê só essa página e o Turno: qualquer outro endereço o leva para Coletas.
 
 ## Visual (decidido em 15/10)
 

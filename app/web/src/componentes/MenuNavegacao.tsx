@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 
-import { MENU } from "../menu";
+import { MENU, TELAS_DO_COLETOR } from "../menu";
 import { APPS, GRUPOS, useContagensDosApps, type Grupo } from "../paginas/Paginas";
 import { useSessao } from "../sessao";
 import Icone from "./Icone";
@@ -52,10 +52,13 @@ export default function MenuNavegacao() {
   const { pathname } = useLocation();
   const coletor = pessoa?.cargo === "Coletor";
   const pode = (p?: string) => !p || !!pessoa?.pode.includes(p);
-  const topo = MENU.filter((i) => NO_TOPO.includes(i.caminho) && pode(i.pode));
-  const admin = MENU.filter((i) => i.caminho.startsWith("/admin") && pode(i.pode));
-  const breve = MENU.filter((i) => !i.pronto && pode(i.pode));
-  const apps = APPS.filter((a) => !(a.semColetor && coletor));
+  // o Coletor: só Coletas e Turno (01/11)
+  const topo = coletor
+    ? MENU.filter((i) => TELAS_DO_COLETOR.includes(i.caminho))
+    : MENU.filter((i) => NO_TOPO.includes(i.caminho) && pode(i.pode));
+  const admin = coletor ? [] : MENU.filter((i) => i.caminho.startsWith("/admin") && pode(i.pode));
+  const breve = coletor ? [] : MENU.filter((i) => !i.pronto && pode(i.pode));
+  const apps = coletor ? [] : APPS;
   const grupos = GRUPOS.map((g) => ({ ...g, apps: apps.filter((a) => a.grupo === g.grupo) })).filter((g) => g.apps.length > 0);
   const grupoDaTela = grupos.find((g) => g.apps.some((a) => semConsulta(a.caminho) === pathname))?.grupo;
 
@@ -87,12 +90,14 @@ export default function MenuNavegacao() {
         </NavLink>
       ))}
 
-      <p className="menu-secao">
-        Análises
-        <NavLink to="/paginas" end className="menu-secao-link">
-          ver todas
-        </NavLink>
-      </p>
+      {!coletor && (
+        <p className="menu-secao">
+          Análises
+          <NavLink to="/paginas" end className="menu-secao-link">
+            ver todas
+          </NavLink>
+        </p>
+      )}
       {grupos.map((g) => {
         const aberto = abertos.includes(g.grupo);
         const id = `menu-grupo-${g.grupo}`;

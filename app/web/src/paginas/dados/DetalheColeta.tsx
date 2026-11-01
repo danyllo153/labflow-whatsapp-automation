@@ -44,6 +44,7 @@ export default function DetalheColeta() {
   const [erro, setErro] = useState("");
   const [aviso, setAviso] = useState("");
   const [modo, setModo] = useState<"corrigir" | "excluir" | null>(null);
+  const coletor = pessoa?.cargo === "Coletor"; // 01/11: corrige só o tanque e a data; exclui com motivo
 
   const carregar = useCallback(async () => {
     try {
@@ -62,7 +63,7 @@ export default function DetalheColeta() {
     return (
       <section>
         <p className="trilha">
-          <Link to="/paginas">Análises</Link> / <Link to="/paginas/coletas">Coletas</Link>
+          {!coletor && <><Link to="/paginas">Análises</Link> / </>}<Link to="/paginas/coletas?aba=lista">Coletas</Link>
         </p>
         <h1>Coleta</h1>
         <div className="cartao" role="alert">
@@ -79,7 +80,7 @@ export default function DetalheColeta() {
   return (
     <section className="detalhe-coleta">
       <p className="trilha">
-        <Link to="/paginas">Análises</Link> / <Link to="/paginas/coletas">Coletas</Link> / Tanque {c.tanque}
+        {!coletor && <><Link to="/paginas">Análises</Link> / </>}<Link to="/paginas/coletas?aba=lista">Coletas</Link> / Tanque {c.tanque}
       </p>
       <h1>
         Coleta · Tanque {c.tanque} · {formatar(c.data_coleta, "data")}
@@ -131,6 +132,7 @@ export default function DetalheColeta() {
       {modo === "corrigir" && (
         <Corrigir
           coleta={c}
+          coletor={coletor}
           aoTerminar={(nova) => {
             setModo(null);
             if (nova) {
@@ -140,12 +142,12 @@ export default function DetalheColeta() {
           }}
         />
       )}
-      {modo === "excluir" && <Excluir coleta={c} aoCancelar={() => setModo(null)} aoExcluir={() => navegar("/paginas/coletas")} />}
+      {modo === "excluir" && <Excluir coleta={c} coletor={coletor} aoCancelar={() => setModo(null)} aoExcluir={() => navegar("/paginas/coletas?aba=lista")} />}
     </section>
   );
 }
 
-function Corrigir({ coleta: c, aoTerminar }: { coleta: Coleta; aoTerminar: (nova: Coleta | null) => void }) {
+function Corrigir({ coleta: c, coletor, aoTerminar }: { coleta: Coleta; coletor: boolean; aoTerminar: (nova: Coleta | null) => void }) {
   const [tanque, setTanque] = useState(c.tanque);
   const [data, setData] = useState(c.data_coleta);
   const [quem, setQuem] = useState(c.coletado_por ?? "");
@@ -199,11 +201,13 @@ function Corrigir({ coleta: c, aoTerminar }: { coleta: Coleta; aoTerminar: (nova
           Data da coleta
           <input type="date" value={data} onChange={(e) => setData(e.target.value)} />
         </label>
-        <label className="campo">
-          Coletado por
-          <input value={quem} maxLength={40} onChange={(e) => setQuem(e.target.value)} />
-        </label>
-        {c.origem === "Navio" && (
+        {!coletor && (
+          <label className="campo">
+            Coletado por
+            <input value={quem} maxLength={40} onChange={(e) => setQuem(e.target.value)} />
+          </label>
+        )}
+        {c.origem === "Navio" && !coletor && (
           <label className="campo">
             Navio
             <select value={navioId} onChange={(e) => setNavioId(e.target.value)}>
@@ -254,7 +258,7 @@ function Corrigir({ coleta: c, aoTerminar }: { coleta: Coleta; aoTerminar: (nova
   );
 }
 
-function Excluir({ coleta: c, aoCancelar, aoExcluir }: { coleta: Coleta; aoCancelar: () => void; aoExcluir: () => void }) {
+function Excluir({ coleta: c, coletor, aoCancelar, aoExcluir }: { coleta: Coleta; coletor: boolean; aoCancelar: () => void; aoExcluir: () => void }) {
   const [motivo, setMotivo] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState("");
@@ -278,10 +282,13 @@ function Excluir({ coleta: c, aoCancelar, aoExcluir }: { coleta: Coleta; aoCance
       <h2>
         Excluir a coleta do tanque {c.tanque} de {formatar(c.data_coleta, "data")}?
       </h2>
-      <p>Ela sai das páginas e das contas, mas fica guardada com quem excluiu e quando: o Admin pode recuperar. Coleta não pede motivo.</p>
+      <p>
+        Ela sai das páginas e das contas, mas fica guardada com quem excluiu e quando: o Admin pode recuperar.
+        {!coletor && " Coleta não pede motivo."}
+      </p>
       <label className="campo">
-        Motivo (opcional)
-        <input maxLength={300} value={motivo} onChange={(e) => setMotivo(e.target.value)} />
+        {coletor ? "Motivo" : "Motivo (opcional)"}
+        <input maxLength={300} required={coletor} value={motivo} onChange={(e) => setMotivo(e.target.value)} />
       </label>
       {erro && (
         <p className="mensagem-erro" role="alert">
