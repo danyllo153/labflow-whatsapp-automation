@@ -34,6 +34,10 @@ class Caixa(BaseModel):
     descarte_em: date | None
     situacao: str  # Disponível / Em uso / Vencida
     itens_vencidos: int
+    # caixa de navio (PB24, 109 do bot): a data de onde contam o 1 ano do pote e os 2 anos do FCOJ
+    ultima_amostra: date | None = None
+    inicio_em: date | None = None  # a escolhida à mão ou a automática (última amostra + 5 dias)
+    inicio_fixado: bool = False
 
 
 class Arquivo(BaseModel):
@@ -49,19 +53,26 @@ SELECT c.tipo, c.numero, c.familia, c.navio, c.viagem, c.itens_arquivados, c.amo
        CASE WHEN c.tipo = 'recebimento' THEN r.ultimo ELSE c.descarte_em END,
        CASE WHEN c.tipo = 'recebimento' AND c.situacao = 'Vencida' AND c.itens_vencidos < c.itens_arquivados THEN 'Em uso'
             ELSE c.situacao END,
-       c.itens_vencidos
+       c.itens_vencidos, c.ultima_amostra, c.inicio_em, coalesce(c.inicio_fixado, false)
 FROM vw_arquivo_caixas c
 LEFT JOIN LATERAL (SELECT max(i.data_descarte) AS ultimo FROM vw_arquivo_itens i
                    WHERE i.caixa_tipo = 'recebimento' AND i.caixa = c.numero AND i.situacao <> 'Descartado') r ON c.tipo = 'recebimento'
 """
 
 
+def _caixa(t, n, f, nv, v, i, a, d, s, iv, ua, ini, fixado) -> Caixa:
+    return Caixa(
+        tipo=t, numero=n, familia=f, navio=nv, viagem=v, itens=i, amostras=a, descarte_em=d, situacao=s, itens_vencidos=iv,
+        ultima_amostra=ua, inicio_em=ini, inicio_fixado=fixado,
+    )
+
+
 @roteador.get("", response_model=Arquivo)
 def arquivo(pessoa: PessoaLogada = Depends(exigir("ver_paginas")), con: psycopg.Connection = Depends(obter_conexao)) -> Arquivo:
     """Todas as caixas, com a situação de cada uma (as vencidas primeiro na tela)."""
     caixas = [
-        Caixa(tipo=t, numero=n, familia=f, navio=nv, viagem=v, itens=i, amostras=a, descarte_em=d, situacao=s, itens_vencidos=iv)
-        for t, n, f, nv, v, i, a, d, s, iv in con.execute(
+        _caixa(*linha)
+        for linha in con.execute(
             CAIXAS_SQL + " ORDER BY CASE c.tipo WHEN 'navio' THEN 1 WHEN 'recebimento' THEN 2 ELSE 3 END, c.numero"
         ).fetchall()
     ]
@@ -101,8 +112,8 @@ def caixa(
     ).fetchone()
     if not linha:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Caixa não encontrada.")
-    t, n, f, nv, v, i, a, d, s, iv = linha
-    cx = Caixa(tipo=t, numero=n, familia=f, navio=nv, viagem=v, itens=i, amostras=a, descarte_em=d, situacao=s, itens_vencidos=iv)
+    cx = _caixa(*linha)
+    nv, v = cx.navio, cx.viagem
     # caixa de navio: só os itens do navio e viagem que ocupa a caixa agora (a mesma conta da view das caixas)
     itens = [
         Item(item=it, descricao=de, navio=na, viagem=vi, tanque=ta, load=lo, lotes=lt, quantidade=q, data_ref=dr,
@@ -203,6 +214,24 @@ def descartar(
 ) -> Gravacao:
     """Navio: a caixa inteira, depois da maior data. Recebimento e tanque: o que já venceu."""
     r = _chamar(con, "SELECT arquivo_descartar(%s, %s, %s, %s)", (pessoa.usuario_id, pedido.tipo, pedido.numero, pedido.previa))
+    return _resposta(r, pedido.previa)
+
+
+class DataInicial(BaseModel):
+    numero: int
+    data: date | None = None  # sem data: volta à automática (última amostra + 5 dias)
+    previa: bool = True
+
+
+@roteador.post("/data-inicial", response_model=Gravacao)
+def data_inicial(
+    pedido: DataInicial, pessoa: PessoaLogada = Depends(exigir("registrar_analise")), con: psycopg.Connection = Depends(obter_conexao)
+) -> Gravacao:
+    """Caixa de navio (PB24, 109 do bot): fixar a data inicial à mão ou voltar à automática. A prévia mostra o descarte que
+    a data vai dar (pote 1 ano, FCOJ 2 anos); a regra e a permissão (Admin e Analista) são da função do bot."""
+    r = _chamar(
+        con, "SELECT arquivo_data_inicial_navio(%s, %s, %s, %s)", (pessoa.usuario_id, pedido.numero, pedido.data, pedido.previa)
+    )
     return _resposta(r, pedido.previa)
 
 

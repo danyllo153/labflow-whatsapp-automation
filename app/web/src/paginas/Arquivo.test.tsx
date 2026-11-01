@@ -16,7 +16,7 @@ const ARQUIVO = {
   sugerida_recebimento: 122,
   pode_gravar: true,
   caixas: [
-    caixa({ tipo: "navio", numero: 27, familia: "O.BETA", navio: "O.BETA", viagem: "205", itens: 3, amostras: 7, descarte_em: "2028-10-25", situacao: "Em uso" }),
+    caixa({ tipo: "navio", numero: 27, familia: "O.BETA", navio: "O.BETA", viagem: "205", itens: 3, amostras: 7, descarte_em: "2028-10-25", situacao: "Em uso", ultima_amostra: "2026-10-20", inicio_em: "2026-10-25", inicio_fixado: false }),
     caixa({ tipo: "recebimento", numero: 121, itens: 1, amostras: 3, descarte_em: "2026-10-18", situacao: "Vencida", itens_vencidos: 1 }),
     caixa({ tipo: "recebimento", numero: 122 }),
     caixa({ tipo: "tanque", numero: 34 }),
@@ -37,6 +37,7 @@ function abrir() {
     "GET /arquivo/navio/27": () => ({ status: 200, corpo: { caixa: ARQUIVO.caixas[0], itens: [] } }),
     "GET /arquivo/navio/27/laudo": () => ({ status: 200, corpo: [{ laudo: "contra-embarque", pagina_id: 41, finalizada: true }] }),
     "GET /arquivo/recebimento/121/laudo": () => ({ status: 200, corpo: [] }),
+    "POST /arquivo/data-inicial": () => ({ status: 200, corpo: { ok: true, previa: true, texto: "Caixa 27 (O.BETA 205): data inicial 30/10/2026 (escolhida à mão). FCOJ até 30/10/2028. A caixa libera em 30/10/2028.", dados: {} } }),
     "POST /arquivo/arquivar": () => ({ status: 200, corpo: { ok: true, previa: true, texto: "Caixa 122 (recebimento): load 98802 lotes 1-5", dados: {} } }),
   });
   render(
@@ -83,6 +84,24 @@ describe("Arquivo de contra-amostras (PB21)", () => {
     const conteudo = await screen.findByRole("article", { name: /Caixa 27 · Navio/ });
     expect(await within(conteudo).findByRole("link", { name: /Laudo/ })).toHaveAttribute("href", "/laudos/contra-embarque/41/pdf");
     expect(within(conteudo).queryByRole("button", { name: /Imprimir/ })).toBeNull();
+  });
+
+  it("a caixa de navio mostra a data inicial e deixa escolher outra, com a prévia do descarte (PB24, 01/11)", async () => {
+    const api = abrir();
+    const busca = await screen.findByRole("search", { name: "Procurar load no arquivo" });
+    await userEvent.type(within(busca).getByLabelText("Em qual caixa está o load ou o navio?"), "O.BETA 205");
+    await userEvent.click(within(busca).getByRole("button", { name: "Procurar" }));
+    await userEvent.click(await within(busca).findByRole("button", { name: "Abrir a caixa 27" }));
+    const conteudo = await screen.findByRole("article", { name: /Caixa 27 · Navio/ });
+    expect(conteudo).toHaveTextContent("Data inicial: 25/10/2026 (última amostra em 20/10/2026 + 5 dias)");
+    await userEvent.click(within(conteudo).getByRole("button", { name: "Data inicial" }));
+    const form = within(conteudo).getByRole("form", { name: "Escolher a data inicial" });
+    const campo = within(form).getByLabelText("Data inicial");
+    await userEvent.clear(campo);
+    await userEvent.type(campo, "2026-10-30");
+    await userEvent.click(within(form).getByRole("button", { name: "Ver o descarte" }));
+    expect(await within(conteudo).findByText(/A caixa libera em 30\/10\/2028/)).toBeInTheDocument();
+    expect(api.chamadas.find((c) => c.rota === "POST /arquivo/data-inicial")?.corpo).toEqual({ numero: 27, data: "2026-10-30", previa: true });
   });
 
   it("Recebimento tem o arquivar com a caixa sugerida e sem o Item", async () => {
