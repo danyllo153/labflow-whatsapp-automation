@@ -74,10 +74,20 @@ foreach ($dll in "vcruntime140.dll", "vcruntime140_1.dll", "msvcp140.dll") {
 Write-Host "PostgreSQL de: $PostgresDir"
 (& (Join-Path $pg "bin\pg_config.exe") --version) | Set-Content -Encoding ascii (Join-Path $pg "VERSAO.txt")
 Checar "pg_config"
+# confere como num PC sem PostgreSQL instalado: PATH so com o Windows
+$pathOriginal = $env:PATH
+$env:PATH = "$env:WINDIR\System32;$env:WINDIR"
 foreach ($exe in "initdb", "postgres", "pg_ctl", "psql", "pg_dump", "pg_restore") {
   & (Join-Path $pg "bin\$exe.exe") --version
-  if ($LASTEXITCODE -ne 0) { throw ("Falhou: $exe --version (codigo 0x{0:X}); falta DLL no pacote?" -f $LASTEXITCODE) }
+  if ($LASTEXITCODE -ne 0) {
+    $env:PATH = $pathOriginal
+    $dlls = Get-ChildItem (Join-Path $PostgresDir "bin") -Filter "*.dll" | ForEach-Object { $_.Name }
+    Write-Host "DLLs em $PostgresDir\bin: $($dlls -join ', ')"
+    foreach ($d in ($pathOriginal -split ";")) { if ($d -and (Test-Path $d)) { Get-ChildItem $d -Filter "lib*.dll" -ErrorAction SilentlyContinue | Select-Object -First 3 | ForEach-Object { Write-Host "  no PATH: $($_.FullName)" } } }
+    throw ("Falhou: $exe --version (codigo 0x{0:X}); falta DLL no pacote" -f $LASTEXITCODE)
+  }
 }
+$env:PATH = $pathOriginal
 
 # 4. Versao do pacote (o .bat recopia o programa para o PC quando ela muda)
 Write-Host "4/6 Versao"
