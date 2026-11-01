@@ -20,6 +20,13 @@ MARCA = (48, 8)  # 6 quadradinhos de 8 x 8 px
 COR_DO_MENU = "0x1e283d"
 
 
+def duracao(arquivo: Path) -> float:
+    return float(subprocess.run(
+        ["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", str(arquivo)],
+        capture_output=True, text=True, check=True,
+    ).stdout)
+
+
 def inicios_pela_marca(video: Path) -> dict[int, float]:
     """{passo: segundo do vídeo em que a legenda dele apareceu}, lendo a marca quadro a quadro."""
     w, h = MARCA
@@ -46,9 +53,11 @@ def main() -> None:
     faltando = [p["passo"] + 1 for p in passos if p["passo"] not in inicios]
     if faltando:
         print(f"aviso: marca não achada nos passos {faltando}; usando o relógio da gravação neles")
+    total_video = duracao(video)
     entradas = ["-i", str(video)]
-    filtros = [f"[0:v]drawbox=x=0:y={ALTURA - MARCA[1]}:w={MARCA[0]}:h={MARCA[1]}:color={COR_DO_MENU}:t=fill[v]"]
+    filtros = []
     rotulos = []
+    fim = total_video
     for item in passos:
         fala = narracao / f"fala-{item['passo']:02d}.mp3" if narracao else None
         if fala is None or not fala.exists():
@@ -58,11 +67,17 @@ def main() -> None:
         atraso = int(inicios.get(item["passo"], item["inicio"]) * 1000) + 250  # um respiro depois da moldura aparecer
         filtros.append(f"[{k}:a]adelay={atraso}|{atraso}[a{k}]")
         rotulos.append(f"[a{k}]")
+        fim = max(fim, atraso / 1000 + duracao(fala) + 0.5)
     codec = ["-c:v", "libx264", "-preset", "medium", "-crf", "20", "-pix_fmt", "yuv420p", "-r", "30", "-movflags", "+faststart"]
-    mapa = ["-map", "[v]"]
+    # a marca coberta; se a última fala passar do fim do vídeo, o último quadro fica parado até ela acabar
+    sobra = max(0.0, fim - total_video)
+    filtros.insert(0, f"[0:v]drawbox=x=0:y={ALTURA - MARCA[1]}:w={MARCA[0]}:h={MARCA[1]}:color={COR_DO_MENU}:t=fill,"
+                      f"tpad=stop_mode=clone:stop_duration={sobra:.2f}[v]")
+    mapa = ["-map", "[v]", "-t", f"{fim:.2f}"]
     if rotulos:
-        filtros.append("".join(rotulos) + f"amix=inputs={len(rotulos)}:normalize=0,apad[audio]")
-        mapa += ["-map", "[audio]", "-c:a", "aac", "-b:a", "160k", "-shortest"]
+        # áudio do tamanho exato do vídeo (sem isso o apad não acaba e o arquivo enche o disco)
+        filtros.append("".join(rotulos) + f"amix=inputs={len(rotulos)}:normalize=0,apad=whole_dur={fim:.2f}[audio]")
+        mapa += ["-map", "[audio]", "-c:a", "aac", "-b:a", "160k"]
     saida = gravacao / "tour.mp4"
     subprocess.run(["ffmpeg", "-y", "-v", "error", *entradas, "-filter_complex", ";".join(filtros), *mapa, *codec, str(saida)], check=True)
     print(f"pronto: {saida} ({len(inicios)} de {len(passos)} passos sincronizados pela marca)")
