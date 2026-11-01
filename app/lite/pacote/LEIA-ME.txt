@@ -30,6 +30,11 @@ PRIMEIRO ACESSO (banco vazio)
   Admin > Pessoas. Perdeu a senha do admin? Abra pela linha de comando:
   "Abrir LabFlow.bat" --redefinir-admin
 
+MARCA (opcional)
+  Nome, logo e cores do laboratório: pasta dados\marca (instruções no LEIA-ME de lá).
+  marca.json (nome, cor principal e secundária), logo.png e estilo.css. Vale ao
+  reabrir o LabFlow e continua depois das atualizações (fica em "dados").
+
 ATUALIZAR O PROGRAMA
   Feche o LabFlow em todos os PCs e troque SÓ a pasta "instalacao" pela nova.
   Na próxima abertura ele faz um backup e atualiza o banco sozinho.

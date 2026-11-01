@@ -1,10 +1,12 @@
 import { useState, type FormEvent } from "react";
 
 import FaixaDemonstracao from "../componentes/FaixaDemonstracao";
+import { useMarca } from "../marca";
 import { useSessao } from "../sessao";
 
 /** Tela de entrar (07 §1; 06 §Primeiro acesso). O botão fica travado enquanto espera a resposta (19/10: dois cliques gastavam a senha provisória). */
 export default function Entrar() {
+  const marca = useMarca();
   const { entrar } = useSessao();
   const [usuario, setUsuario] = useState("");
   const [senha, setSenha] = useState("");
@@ -29,7 +31,8 @@ export default function Entrar() {
     <div className="tela-entrar">
       <form className="cartao cartao-entrar" onSubmit={enviar} noValidate>
         <div className="marca marca-entrar">
-          LabFlow
+          {marca.logo && <img className="marca-logo-entrar" src="/marca/logo.png" alt="" />}
+          {marca.nome}
           <span className="marca-subtitulo">Laboratório de microbiologia</span>
         </div>
         <FaixaDemonstracao />

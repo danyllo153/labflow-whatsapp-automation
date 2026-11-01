@@ -33,6 +33,13 @@ LabFlow\                      (G:)
 6. Papéis como no servidor (`labflow_app`, `labflow_leitura`, `labflow_app_web`); o app entra como `labflow_app_web`; PostgreSQL só em 127.0.0.1 com senha.
 7. Fechar: ENTER + S na janela, `Fechar LabFlow.bat`, ou o X da janela (o Windows dá poucos segundos; o que não couber fica no banco local e volta na próxima abertura no mesmo PC).
 
+## Marca da instalação
+- Pasta `dados\marca` no G: (criada na primeira abertura, com um LEIA-ME): `marca.json` (`nome`, `cor_principal`, `cor_secundaria`, em `#rrggbb`), `logo.png` (até 2 MB) e `estilo.css` (até 200 KB, por último). Tudo opcional; arquivo com erro é ignorado sozinho.
+- Ao abrir, a Lite copia a pasta para o PC e passa `LABFLOW_MARCA_DIR` ao app; a API (`marca.py`, rotas `/marca`, `/marca/logo.png`, `/marca/estilo.css`, sem login) lê uma vez. Mudou a marca: reabrir no PC servidor.
+- Cor principal: botões, links e abas; secundária: menu e topo (tons derivados nos temas claro e escuro). Logo no menu e na tela de entrar; o nome também no título da aba.
+- **Laudos não mudam:** já saem nos modelos da empresa.
+- Fica em `dados`, então a troca da `instalacao` não mexe nela. **Nada da marca vai para o repositório** (só valores fictícios nos testes; `.gitignore` barra `dados/` e `marca/`). Sem a variável (servidor de demonstração), fica o LabFlow.
+
 ## O que derruba o servidor (vai no LEIA-ME)
 Sair do usuário do Windows, suspender/hibernar, reinício do Windows Update. Troca de turno é só "Sair" no LabFlow.
 

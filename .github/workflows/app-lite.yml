@@ -6,6 +6,7 @@ on:
   pull_request:
     paths:
       - "app/lite/**"
+      - "app/api/labflow_api/marca.py"
       - ".github/workflows/app-lite.yml"
   push:
     branches: [main]

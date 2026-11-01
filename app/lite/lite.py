@@ -43,6 +43,20 @@ BANCO = "labflow"
 ADMIN_TELEFONE = "5500000000001"  # marcador: o Admin troca depois em Admin > Pessoas
 
 
+LEIA_ME_MARCA = """MARCA DESTA INSTALAÇÃO (opcional)
+Coloque aqui os arquivos e reabra o LabFlow (feche no PC servidor e abra de novo):
+
+  marca.json   o nome e as cores, por exemplo:
+               {"nome": "Laboratório de Microbiologia", "cor_principal": "#1f3bb3", "cor_secundaria": "#1e283d"}
+               cor principal = botões, links e abas; cor secundária = menu lateral e topo (formato #rrggbb)
+  logo.png     a logo (PNG, até 2 MB; aparece no menu e na tela de entrar)
+  estilo.css   ajustes de visual (CSS, até 200 KB), aplicados por último
+
+Tudo é opcional: sem estes arquivos fica o visual do LabFlow. Arquivo com erro é ignorado (o resto vale).
+Esta pasta fica em "dados": a troca da pasta "instalacao" numa atualização não mexe nela.
+"""
+
+
 def log(msg: str) -> None:
     print(msg, flush=True)
     with contextlib.suppress(Exception):
@@ -423,6 +437,26 @@ class Servidor:
         if os.environ.get("LABFLOW_LITE_TESTE"):
             print(f"LITE_ADMIN={usuario}:{senha}", flush=True)
 
+    # --- marca da instalação (dados\marca: nome, logo e cores; fica no G:, então passa intacta pelas atualizações)
+    def preparar_marca(self) -> Path:
+        origem = self.dados.dir / "marca"
+        destino = self.local / "marca"
+        if not origem.exists():
+            with contextlib.suppress(OSError):
+                origem.mkdir(parents=True)
+                (origem / "LEIA-ME.txt").write_text(LEIA_ME_MARCA, encoding="utf-8-sig")
+        shutil.rmtree(destino, ignore_errors=True)
+        destino.mkdir(parents=True, exist_ok=True)
+        achados = []
+        for nome in ("marca.json", "logo.png", "estilo.css"):
+            with contextlib.suppress(OSError):
+                if (origem / nome).is_file():
+                    shutil.copyfile(origem / nome, destino / nome)
+                    achados.append(nome)
+        if achados:
+            log(f"Marca da instalação: {', '.join(achados)}.")
+        return destino
+
     # --- API
     def subir_api(self) -> None:
         self.porta_api = porta_livre(self.args.porta, True)
@@ -430,6 +464,7 @@ class Servidor:
         env.update(
             LABFLOW_DB_URL=self.pg.url_web(),
             LABFLOW_WEB_DIR=str(INST / "web"),
+            LABFLOW_MARCA_DIR=str(self.preparar_marca()),
             LABFLOW_COOKIE_SEGURO="0",  # a rede interna é HTTP (decisão da Lite)
             LABFLOW_DEMONSTRACAO="0",
             PYTHONPATH=str(INST / "app"),

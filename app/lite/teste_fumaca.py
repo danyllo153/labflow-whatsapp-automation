@@ -80,6 +80,9 @@ def main() -> None:
     trabalho.mkdir(parents=True)
     raiz = trabalho / "G" / "LabFlow"
     shutil.copytree(pacote, raiz)
+    marca = raiz / "dados" / "marca"
+    marca.mkdir(parents=True)
+    (marca / "marca.json").write_text(json.dumps({"nome": "Laboratório Exemplo", "cor_principal": "#0a7c4a"}), encoding="utf-8")
     pc_a, pc_b = trabalho / "pcA", trabalho / "pcB"
     pc_a.mkdir()
     pc_b.mkdir()
@@ -94,9 +97,11 @@ def main() -> None:
     web = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
     assert pedir(web, base + "/saude") == 200
     assert pedir(web, base + "/app/") == 200, "telas não abriram"
+    marca_lida = json.loads(urllib.request.urlopen(base + "/marca", timeout=20).read())
+    assert marca_lida["nome"] == "Laboratório Exemplo" and marca_lida["cor_principal"] == "#0a7c4a", marca_lida
     assert pedir(web, base + "/login", {"usuario": usuario, "senha": senha}) == 200, "login com a senha provisória"
     assert pedir(web, base + "/trocar-senha", {"nova_senha": "SenhaDoTeste123"}) == 204, "troca de senha"
-    print("1 ok: PC A abriu do zero, login e troca de senha")
+    print("1 ok: PC A abriu do zero, marca lida, login e troca de senha")
 
     # 2. PC B enquanto A está no ar: cliente
     saida_b = trabalho / "b.txt"

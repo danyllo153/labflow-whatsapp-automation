@@ -41,6 +41,7 @@ from labflow_api.rotas_pendencias import roteador as roteador_pendencias
 from labflow_api.rotas_relatorio_dia import roteador as roteador_relatorio_dia
 from labflow_api.rotas_relatorio_turno import roteador as roteador_relatorio_turno
 from labflow_api.rotas_turno import roteador as roteador_turno
+from labflow_api.marca import roteador as roteador_marca
 from labflow_api.telas import roteador as roteador_telas
 
 app = FastAPI(
@@ -65,6 +66,7 @@ def ambiente() -> dict[str, bool]:
     return {"demonstracao": os.environ.get("LABFLOW_DEMONSTRACAO", "1") != "0"}
 
 
+app.include_router(roteador_marca)  # nome, logo e cores da instalação (Lite); sem login
 app.include_router(roteador_login)
 app.include_router(roteador_admin)
 app.include_router(roteador_admin_turnos)

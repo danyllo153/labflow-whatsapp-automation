@@ -40,3 +40,11 @@ db/seeds/limites_nfc.sql
 # Ambiente do Python da API do app
 .venv/
 .pytest_cache/
+
+# Marca e dados da LabFlow Lite (logo, nome e cores da empresa): nunca no Git
+/dados/
+app/lite/**/dados/
+**/dados/marca/
+**/marca/logo.png
+marca.json
+estilo.css
