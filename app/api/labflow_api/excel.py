@@ -63,6 +63,37 @@ def planilha(titulo: str, colunas: list[tuple[str, str]], linhas: list[dict[str,
     return saida.getvalue()
 
 
+def livro_de_abas(titulo: str, abas: list[tuple[str, list[tuple[str, str]], list[dict[str, Any]]]],
+                  resumo: list[tuple[str, Any]]) -> bytes:
+    """Várias abas (uma por bloco, como o relatório do dia, 01/11) e uma aba "Resumo" com o dia e os totais."""
+    livro = Workbook()
+    info = livro.active
+    info.title = "Resumo"
+    info.append(["LabFlow", titulo])
+    info.append(["Exportado em", datetime.now(_FUSO).strftime("%d/%m/%Y %H:%M")])
+    for nome, valor in resumo:
+        info.append([nome, valor.strftime("%d/%m/%Y") if isinstance(valor, date) else valor])
+    info.column_dimensions["A"].width = 22
+    info.column_dimensions["B"].width = 40
+    for nome, colunas, linhas in abas:
+        aba = livro.create_sheet(nome[:31])
+        aba.append([rotulo for _, rotulo in colunas])
+        for celula in aba[1]:
+            celula.font = Font(bold=True)
+            celula.fill = _CABECALHO
+        for linha in linhas:
+            aba.append([_celula(linha.get(chave)) for chave, _ in colunas])
+        for i, (chave, rotulo) in enumerate(colunas, start=1):
+            maior = max([len(rotulo)] + [len(str(l.get(chave) or "")) for l in linhas[:500]])
+            aba.column_dimensions[get_column_letter(i)].width = min(maior + 2, 40)
+        aba.freeze_panes = "A2"
+        if linhas:
+            aba.auto_filter.ref = aba.dimensions
+    saida = BytesIO()
+    livro.save(saida)
+    return saida.getvalue()
+
+
 def resposta_xlsx(conteudo: bytes, nome: str) -> Response:
     hoje = datetime.now(_FUSO).strftime("%Y-%m-%d")
     return Response(

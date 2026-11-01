@@ -78,3 +78,23 @@ def test_montar_concentrado_alarmes_e_faixas(hoje):
     _, texto, *_ = montar(hoje, True, [], conc, {"finalizado_por": "Ana", "finalizado_as": "16:40"})
     assert "C.T 48h: 77001 (4-6) — não ok" in texto and "B.L 72h: -" in texto
     assert "Ainda há 1 leitura por fazer" in texto and "finalizada por Ana às 16:40.\n\n*Atenção:*" in texto
+
+
+def test_excel_das_leituras_do_dia_uma_aba_por_bloco(cliente, criar_pessoa, hoje):
+    """01/11: o Excel das leituras do dia, com o Resumo e uma aba por bloco, uma linha por leitura."""
+    import io
+
+    from openpyxl import load_workbook
+
+    _logar(cliente, criar_pessoa)
+    coleta = {"origem": "terra", "tanques": "9961", "data": str(hoje - timedelta(days=2))}
+    _gravar(cliente, "/analises/tanques/coleta", coleta)
+    _gravar(cliente, "/analises/tanques/analise", {**coleta, "frasco": "Normal"})
+    r = cliente.get("/relatorio-do-dia/excel")
+    assert r.status_code == 200, r.text
+    assert f"labflow-leituras-{hoje:%Y-%m-%d}.xlsx" in r.headers["content-disposition"]
+    livro = load_workbook(io.BytesIO(r.content))
+    assert livro.sheetnames == ["Resumo", "FCOJ Recebimento", "FCOJ Embarque", "NFC Tank farm", "NFC Navio", "Desvios"]
+    terra = [dict(zip([c.value for c in livro["NFC Tank farm"][1]], [c.value for c in linha])) for linha in livro["NFC Tank farm"].iter_rows(min_row=2)]
+    ct = [l for l in terra if l["Tanque"] == "9961" and l["Análise"] == "C.T 48h"]
+    assert ct and ct[0]["Situação"] == "Falta ler" and ct[0]["Amostra"] == "Normal"

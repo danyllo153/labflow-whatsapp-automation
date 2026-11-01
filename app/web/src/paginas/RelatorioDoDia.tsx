@@ -175,6 +175,10 @@ export default function RelatorioDoDia({ embutido = false }: { embutido?: boolea
             <button type="button" className="botao botao-principal" onClick={copiar} disabled={!rel.total}>
               {copiado ? "Copiado" : "Copiar o relatório"}
             </button>
+            {/* 01/11: as leituras do dia em Excel, uma aba por bloco e uma linha por leitura */}
+            <a className="botao-secundario" href={`/relatorio-do-dia/excel?dia=${rel.dia}`} download aria-label="Exportar as leituras do dia para o Excel">
+              Exportar Excel
+            </a>
             <a
               className="botao-secundario"
               href={`https://wa.me/?text=${encodeURIComponent(rel.texto)}`}
