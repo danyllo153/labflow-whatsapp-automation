@@ -45,7 +45,7 @@ jobs:
         working-directory: app/api
         run: |
           bash scripts/preparar_banco_teste.sh
-          python ../tour/preparar.py
+          PYTHONPATH=. python ../tour/preparar.py
       - name: Telas
         working-directory: app/web
         run: |

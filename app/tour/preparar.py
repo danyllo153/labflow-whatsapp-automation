@@ -1,6 +1,6 @@
 """Cria a usuária FICTÍCIA do tour (Marina Lopes, Admin) no banco de TESTE, com a senha do roteiro.
 
-Uso (na pasta app/api): LABFLOW_DB_URL=<banco de teste> python ../tour/preparar.py
+Uso (na pasta app/api): LABFLOW_DB_URL=<banco de teste> PYTHONPATH=. python ../tour/preparar.py
 Nunca rodar no banco do servidor: os dados do tour são os de demonstração (db/seeds).
 """
 
