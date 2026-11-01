@@ -15,9 +15,11 @@ import "./visual-novo.css";
 import "./navegacao.css";
 import "./visual-kaiadmin.css";
 import "./visual-staradmin.css";
+import { carregarMarca } from "./marca";
 import { aplicarTema } from "./tema";
 
 aplicarTema(); // antes de desenhar a tela, para não piscar claro e depois escuro
+void carregarMarca(); // nome, logo e cores da instalação (Lite); sem marca fica o LabFlow
 
 createRoot(document.getElementById("raiz")!).render(
   <StrictMode>

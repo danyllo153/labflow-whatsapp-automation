@@ -129,12 +129,37 @@ const COLS_TESTES: Coluna[] = [
   { chave: "situacao", rotulo: "Situação", formato: "situacao" },
 ];
 
+// o arquivo de contra-amostras (rastreio, 01/11): em que caixa está ou esteve, inclusive o descartado
+const COLS_ARQUIVO: Coluna[] = [
+  { chave: "referencia", rotulo: "Contra-amostra", principal: true },
+  { chave: "caixa_tipo", rotulo: "Caixa de" },
+  { chave: "caixa", rotulo: "Caixa" },
+  { chave: "lotes", rotulo: "Lotes" },
+  { chave: "data_ref", rotulo: "Data", formato: "data" },
+  { chave: "data_descarte", rotulo: "Descartar em", formato: "data" },
+  { chave: "situacao", rotulo: "Situação", formato: "situacao" },
+  { chave: "descartado_em", rotulo: "Descartada em", formato: "data" },
+];
+
+function BlocoArquivo({ linhas }: { linhas?: Linha[] }) {
+  return (
+    <Bloco
+      titulo="Arquivo de contra-amostras"
+      colunas={COLS_ARQUIVO}
+      linhas={linhas ?? []}
+      vazio="Nada no arquivo de contra-amostras."
+      link={() => "/arquivo"}
+    />
+  );
+}
+
 interface DadosTanque {
   resumo: Linha;
   leituras: Linha[];
   drops: Linha[];
   desvios: Linha[];
   testes: Linha[];
+  arquivo?: Linha[];
 }
 
 export function DetalheTanque() {
@@ -177,6 +202,7 @@ export function DetalheTanque() {
           <Bloco titulo="Drops" colunas={COLS_DROPS} linhas={dados.drops} vazio="Sem drops." />
           <Bloco titulo="Desvios" colunas={COLS_DESVIOS} linhas={dados.desvios} vazio="Nenhum desvio." />
           {!deNavio && <Bloco titulo="TAB" colunas={COLS_TESTES} linhas={dados.testes} vazio="Nenhum TAB registrado." />}
+          {!deNavio && <BlocoArquivo linhas={dados.arquivo} />}
         </>
       )}
     </section>
@@ -209,6 +235,7 @@ interface DadosNavio {
   tanques: Linha[];
   embarques: Linha[];
   amostras?: Linha[];
+  arquivo?: Linha[];
 }
 
 // cada amostra do FCOJ embarcado com o C.T e o B.L lado a lado (pedido de 27/10)
@@ -276,6 +303,7 @@ export function DetalheNavio() {
               link={(l) => (l.load ? `/paginas/loads/${encodeURIComponent(String(l.load))}` : `/paginas/navios/${encodeURIComponent(navio)}`)}
             />
           )}
+          <BlocoArquivo linhas={dados.arquivo} />
         </>
       )}
     </section>
@@ -287,7 +315,21 @@ interface DadosLoad {
   resumo: Linha;
   lotes: Linha[];
   testes: Linha[];
+  nfc?: Linha[];
+  arquivo?: Linha[];
 }
+
+const COLS_NFC_LOAD: Coluna[] = [
+  { chave: "lote", rotulo: "Lote", principal: true },
+  { chave: "amostra", rotulo: "Amostra" },
+  { chave: "diluicao", rotulo: "Diluição" },
+  { chave: "fabrica", rotulo: "Fábrica", formato: "fabrica" },
+  { chave: "data_recebimento", rotulo: "Recebido em", formato: "data" },
+  { chave: "ct", rotulo: "C.T 48h" },
+  { chave: "bl72", rotulo: "B.L 72h" },
+  { chave: "bl120", rotulo: "B.L 120h" },
+  { chave: "situacao", rotulo: "Situação", formato: "situacao" },
+];
 
 const COLS_LOTES: Coluna[] = [
   { chave: "lote", rotulo: "Lote", principal: true },
@@ -316,7 +358,7 @@ export function DetalheLoad() {
   return (
     <section>
       <p className="trilha">
-        <Link to="/paginas">Análises</Link> / <Link to="/analises/recebimento-fcoj?aba=resultados">Recebimento FCOJ</Link> / Load {load}
+        <Link to="/paginas">Análises</Link> / Load {load}
       </p>
       {erro && <p className="mensagem-erro" role="alert">{erro}</p>}
       {!dados && !erro && <p className="carregando">Carregando...</p>}
@@ -326,18 +368,20 @@ export function DetalheLoad() {
             Load {load} <span className={classeDaSituacao(String(r.status))}>{String(r.status)}</span>
           </h1>
           <p className="texto-secundario">
-            {r.fabricas ? `Fábrica ${String(r.fabricas)}` : "Sem fábrica"} · item {String(r.itens || "-")} · primeira leitura{" "}
+            {r.fabricas ? `Fábrica ${String(r.fabricas)}` : "Sem fábrica"} · item {String(r.itens || "-")} · desde{" "}
             {formatar(r.primeira_data, "data")}
           </p>
           <Numeros
             itens={[
-              ["Lotes", r.lotes],
+              ["Lotes FCOJ", r.lotes],
               ["Não ok", r.nao_ok, true],
               ["TAB, Coliformes e Howard", r.testes],
               ["Positivos", r.positivos, true],
+              ["Lotes NFC", r.lotes_nfc],
+              ["Caixas no arquivo", r.caixas],
             ]}
           />
-          <Bloco titulo="Lotes" colunas={COLS_LOTES} linhas={dados.lotes} vazio="Nenhum lote." />
+          <Bloco titulo="Recebimento FCOJ: lotes" colunas={COLS_LOTES} linhas={dados.lotes} vazio="Este load não tem recebimento de FCOJ." />
           <Bloco
             titulo="Compostas: TAB, Coliformes e Howard"
             colunas={COLS_TESTES_LOAD}
@@ -345,6 +389,10 @@ export function DetalheLoad() {
             vazio="Nenhum teste nas compostas deste load."
             link={(l) => `/paginas/${String(l.teste).toLowerCase()}?referencia=${encodeURIComponent(load)}`}
           />
+          {(dados.nfc ?? []).length > 0 && (
+            <Bloco titulo="Recebimento NFC" colunas={COLS_NFC_LOAD} linhas={dados.nfc ?? []} vazio="" link={() => "/analises/recebimento-nfc"} />
+          )}
+          <BlocoArquivo linhas={dados.arquivo} />
         </>
       )}
     </section>

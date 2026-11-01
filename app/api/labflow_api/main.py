@@ -16,6 +16,7 @@ from labflow_api.rotas_instrucoes import roteador as roteador_instrucoes
 from labflow_api.rotas_arquivo import roteador as roteador_arquivo
 from labflow_api.rotas_atividades import roteador as roteador_atividades
 from labflow_api.rotas_estufas import roteador as roteador_estufas
+from labflow_api.rotas_busca import roteador as roteador_busca
 from labflow_api.rotas_coletas import roteador as roteador_coletas
 from labflow_api.rotas_equipe import roteador as roteador_equipe
 from labflow_api.rotas_esterilizacao import roteador as roteador_esterilizacao
@@ -41,6 +42,7 @@ from labflow_api.rotas_pendencias import roteador as roteador_pendencias
 from labflow_api.rotas_relatorio_dia import roteador as roteador_relatorio_dia
 from labflow_api.rotas_relatorio_turno import roteador as roteador_relatorio_turno
 from labflow_api.rotas_turno import roteador as roteador_turno
+from labflow_api.marca import roteador as roteador_marca
 from labflow_api.telas import roteador as roteador_telas
 
 app = FastAPI(
@@ -65,10 +67,12 @@ def ambiente() -> dict[str, bool]:
     return {"demonstracao": os.environ.get("LABFLOW_DEMONSTRACAO", "1") != "0"}
 
 
+app.include_router(roteador_marca)  # nome, logo e cores da instalação (Lite); sem login
 app.include_router(roteador_login)
 app.include_router(roteador_admin)
 app.include_router(roteador_admin_turnos)
 app.include_router(roteador_coletas)
+app.include_router(roteador_busca)  # rastreio do topo: load, tanque, navio e arquivo
 app.include_router(roteador_paginas)
 app.include_router(roteador_paginas_nfc)
 app.include_router(roteador_paginas_mais)

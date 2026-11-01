@@ -44,6 +44,7 @@
 - [ ] Se as pendências do piloto voltarem a acumular: `C:\Dev\estudos\ia\em-dia-2026-10-23.sql` (ensaio com `-v fim=ROLLBACK`; o `COMMIT` em massa o Danyllo roda no servidor)
 
 ### 📱 App (sessão da nuvem)
+- ▶ **LabFlow Lite** (spec 12): testar o pacote nos PCs da micro (servidor = o PC ligado 24 h, Windows 10), pedir à TI a porta 8000, Henry descompacta no G:; depois: assistente dentro do app e acesso por Wi-Fi
 - [ ] **Registrar coleta só na página Coletas** (ideia do Danyllo, 28/10; **não aplicar ainda**): o Coletor não vê tabela, só coleta. O registro sai das abas Coleta de Tanques terra e Tanques navio e vai para a página **Coletas**, com um botão **Registrar coleta** que abre a página de registrar; nela a pessoa escolhe **Tanque terra** ou **Navio**, e o formulário fica igual ao de hoje
 - [x] **Testado ao vivo pelo Danyllo** (27/10, tudo ok): o #339 e os gráficos novos: Lotes lidos (tocar na coluna) e Com crescimento no Recebimento FCOJ e no Embarque; marcas "também semanal" no mensal da água de consumo; um laudo físico-químico e um microbiológico (datas entre as barras, traço por bloco); Iniciar análise e No caldo e incubados do TAB e do Coliformes; compostas do navio com TAB/Coliformes/Howard; Desvios da água do processo; várias fábricas no gráfico
 - [x] **#341, #343 e #344 no ar** (27/10, commit `b6be510`): "para estriar", uma linha por lote no Recebimento FCOJ e no Embarque, e os gráficos Lotes lidos e Com crescimento
