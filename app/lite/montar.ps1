@@ -71,8 +71,13 @@ foreach ($dll in "vcruntime140.dll", "vcruntime140_1.dll", "msvcp140.dll") {
   $orig = Join-Path $env:WINDIR "System32\$dll"
   if ((Test-Path $orig) -and -not (Test-Path (Join-Path $pg "bin\$dll"))) { Copy-Item $orig (Join-Path $pg "bin") }
 }
+Write-Host "PostgreSQL de: $PostgresDir"
 (& (Join-Path $pg "bin\pg_config.exe") --version) | Set-Content -Encoding ascii (Join-Path $pg "VERSAO.txt")
 Checar "pg_config"
+foreach ($exe in "initdb", "postgres", "pg_ctl", "psql", "pg_dump", "pg_restore") {
+  & (Join-Path $pg "bin\$exe.exe") --version
+  if ($LASTEXITCODE -ne 0) { throw ("Falhou: $exe --version (codigo 0x{0:X}); falta DLL no pacote?" -f $LASTEXITCODE) }
+}
 
 # 4. Versao do pacote (o .bat recopia o programa para o PC quando ela muda)
 Write-Host "4/6 Versao"

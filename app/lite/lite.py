@@ -223,7 +223,7 @@ class Postgres:
                 if r.returncode == 0:
                     return
                 shutil.rmtree(self.data, ignore_errors=True)
-            raise RuntimeError(f"initdb falhou: {(r.stderr or r.stdout).strip()[-800:]}")
+            raise RuntimeError(f"initdb falhou (código {r.returncode:#x}): {(r.stderr or r.stdout).strip()[-800:]}")
         finally:
             with contextlib.suppress(OSError):
                 pw.unlink()

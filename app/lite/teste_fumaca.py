@@ -42,6 +42,9 @@ def esperar(saida: Path, texto: str, segundos: int, proc: subprocess.Popen | Non
             break
         time.sleep(2)
     print(saida.read_text(encoding="utf-8", errors="replace") if saida.exists() else "(sem saída)")
+    for log in sorted(saida.parent.glob("pc*/LabFlowLite/*.log")):
+        print(f"--- {log}")
+        print(log.read_text(encoding="utf-8", errors="replace")[-3000:])
     raise SystemExit(f"FALHOU: não apareceu '{texto}'")
 
 
