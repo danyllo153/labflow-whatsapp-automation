@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -89,6 +89,38 @@ describe("Laudo de esterilização (APP-035)", () => {
     expect(within(laudo).getByRole("group", { name: "Confirmar: refazer a página 1" })).toHaveTextContent("vão para uma folha nova");
     await userEvent.click(within(laudo).getByRole("button", { name: "Confirmar" }));
     expect(api.vezes("DELETE /esterilizacao/laudos/1")).toBe(1);
+  });
+
+  it("só o Admin apaga a folha de vez, com um Confirmar (01/11)", async () => {
+    abrir();
+    const laudo = await screen.findByRole("region", { name: "Laudo de esterilização" });
+    expect(within(laudo).queryByRole("button", { name: "Apagar a página 1" })).not.toBeInTheDocument();
+    cleanup();
+    const api = abrir({
+      "GET /me": () => ({ status: 200, corpo: { ...ANA, cargo: "Admin", pode: ["ver_paginas", "registrar_analise", "gerenciar_pessoas"] } }),
+      "POST /esterilizacao/laudos/1/apagar": () => ({ status: 200, corpo: { ...LAUDOS, paginas: LAUDOS.paginas.slice(0, 1) } }),
+    });
+    const doAdmin = await screen.findByRole("region", { name: "Laudo de esterilização" });
+    await userEvent.click(within(doAdmin).getByRole("button", { name: "Apagar a página 1" }));
+    expect(within(doAdmin).getByRole("group", { name: "Confirmar: apagar a página 1" })).toHaveTextContent("sai do banco de vez");
+    expect(api.vezes("POST /esterilizacao/laudos/1/apagar")).toBe(0);
+    await userEvent.click(within(doAdmin).getByRole("button", { name: "Confirmar" }));
+    expect(api.vezes("POST /esterilizacao/laudos/1/apagar")).toBe(1);
+  });
+
+  it("as folhas que passaram do prazo de guarda do modelo saem da lista e o Admin apaga de uma vez (01/11)", async () => {
+    const api = abrir({
+      "GET /me": () => ({ status: 200, corpo: { ...ANA, cargo: "Admin", pode: ["ver_paginas", "registrar_analise", "gerenciar_pessoas"] } }),
+      "GET /esterilizacao/laudos": () => ({ status: 200, corpo: { ...LAUDOS, guarda: "1 mês", vencidas: 2 } }),
+      "POST /esterilizacao/laudos/apagar-vencidas": () => ({ status: 200, corpo: { ...LAUDOS, guarda: "1 mês", vencidas: 0 } }),
+    });
+    const laudo = await screen.findByRole("region", { name: "Laudo de esterilização" });
+    expect(laudo).toHaveTextContent("2 folhas finalizadas passaram do prazo de guarda (mínimo de 1 mês, conforme o rodapé do modelo)");
+    expect(laudo).toHaveTextContent("guardar por no mínimo 1 mês");
+    await userEvent.click(within(laudo).getByRole("button", { name: "Apagar as vencidas" }));
+    await userEvent.click(within(within(laudo).getByRole("group", { name: "Confirmar: apagar as folhas vencidas" })).getByRole("button", { name: "Confirmar" }));
+    expect(api.vezes("POST /esterilizacao/laudos/apagar-vencidas")).toBe(1);
+    expect(laudo).not.toHaveTextContent("passaram do prazo");
   });
 
   it("avisa, sem bloquear, quando o ciclo digitado já tem material", async () => {

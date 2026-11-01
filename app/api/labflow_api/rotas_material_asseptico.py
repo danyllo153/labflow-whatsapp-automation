@@ -204,7 +204,7 @@ def excluir(
     Dia de página já impressa não se exclui (a folha em papel já tem a linha)."""
     linha = con.execute(
         """
-        SELECT m.id, p.impresso_em FROM app.material_asseptico m JOIN app.paginas_laudo p ON p.id = m.pagina_id
+        SELECT m.id, p.impresso_em FROM app.material_asseptico m LEFT JOIN app.paginas_laudo p ON p.id = m.pagina_id
         WHERE m.dia = %s AND m.excluido_em IS NULL
         """,
         (dia,),
@@ -244,6 +244,8 @@ class Laudos(BaseModel):
     modelo_enviado: bool
     modelo_enviado_em: str | None
     paginas: list[Pagina]
+    guarda: str | None = None  # o prazo de guarda do rodapé do modelo (01/11)
+    vencidas: int = 0
 
 
 PAGINAS_SQL = """
@@ -256,21 +258,29 @@ WHERE p.laudo = %s AND p.excluida_em IS NULL ORDER BY p.id
 """
 
 
+def _vencidas(con: psycopg.Connection, folhas) -> tuple[laudos.Guarda | None, set[int]]:
+    guarda = laudos.guarda_do_modelo(laudos.modelo_do_banco(con, laudo.NOME_DO_MODELO))
+    return guarda, laudos.vencidas(con, [(f[0], f[2]) for f in folhas], guarda)
+
+
 def _laudos(con: psycopg.Connection, pessoa: PessoaLogada) -> Laudos:
+    folhas = con.execute(PAGINAS_SQL, (laudo.NOME_DO_MODELO,)).fetchall()
+    guarda, fora = _vencidas(con, folhas)
     paginas = [
         Pagina(
             id=i, numero=n, linhas=q, capacidade=laudo.DIAS_POR_PAGINA, cheia=q >= laudo.DIAS_POR_PAGINA,
             impresso=em is not None, impresso_por=por, impresso_em=em.astimezone(FUSO).strftime("%d/%m %H:%M") if em else None,
             de=de, ate=ate,
         )
-        for i, n, em, por, q, de, ate in con.execute(PAGINAS_SQL, (laudo.NOME_DO_MODELO,)).fetchall()
-        if q > 0 or em is not None
+        for i, n, em, por, q, de, ate in folhas
+        if (q > 0 or em is not None) and i not in fora  # vencida (prazo de guarda do modelo, 01/11): sai da lista
     ]
     paginas.sort(key=lambda p: (p.impresso, -p.id))
     modelo = con.execute("SELECT enviado_em FROM app.modelos_documento WHERE nome = %s", (laudo.NOME_DO_MODELO,)).fetchone()
     return Laudos(
         pode_enviar_modelo=pode(pessoa.cargo, "configurar_turnos"), modelo_enviado=modelo is not None,
         modelo_enviado_em=modelo[0].astimezone(FUSO).strftime("%d/%m/%Y %H:%M") if modelo else None, paginas=paginas,
+        guarda=guarda.texto if guarda else None, vencidas=len(fora),
     )
 
 
@@ -361,13 +371,36 @@ def reabrir(
     return _laudos(con, pessoa)
 
 
+@roteador.post("/laudos/apagar-vencidas", response_model=Laudos)
+def apagar_vencidas(
+    pessoa: PessoaLogada = Depends(exigir("gerenciar_pessoas")), con: psycopg.Connection = Depends(obter_conexao)
+) -> Laudos:
+    """Só o Admin (01/11): apaga de vez as folhas que passaram do prazo de guarda do modelo."""
+    _, fora = _vencidas(con, con.execute(PAGINAS_SQL, (laudo.NOME_DO_MODELO,)).fetchall())
+    for pagina_id in sorted(fora):
+        laudos.apagar(con, laudo.NOME_DO_MODELO, pagina_id)
+    return _laudos(con, pessoa)
+
+
+@roteador.post("/laudos/{pagina_id}/apagar", response_model=Laudos)
+def apagar(
+    pagina_id: int,
+    pessoa: PessoaLogada = Depends(exigir("gerenciar_pessoas")),
+    con: psycopg.Connection = Depends(obter_conexao),
+) -> Laudos:
+    """Só o Admin (01/11, 082): a folha sai de vez; os dias dela ficam fora do laudo (continuam na tela)."""
+    _da_pagina(con, pagina_id)
+    laudos.apagar(con, laudo.NOME_DO_MODELO, pagina_id)
+    return _laudos(con, pessoa)
+
+
 @roteador.delete("/laudos/{pagina_id}", response_model=Laudos)
 def excluir(
     pagina_id: int,
     pessoa: PessoaLogada = Depends(exigir("registrar_analise")),
     con: psycopg.Connection = Depends(obter_conexao),
 ) -> Laudos:
-    """Excluir a folha (27/10): os dias dela vão para uma folha nova (nada se apaga de verdade, 077)."""
+    """Refazer a folha (27/10): os dias dela vão para uma folha nova e a antiga, vazia, sai do banco (01/11)."""
     _da_pagina(con, pagina_id)
     laudos.excluir(con, laudo.NOME_DO_MODELO, pagina_id, pessoa.usuario_id)
     return _laudos(con, pessoa)
