@@ -738,8 +738,8 @@ def modo_cliente(dados: Dados, args: argparse.Namespace) -> int:
 
 
 def abrir_janela(endereco: str) -> None:
-    """Abre o LabFlow como um programa: janela própria, sem barra de endereço nem abas (modo aplicativo do Edge, que vem
-    no Windows 10 e 11; senão o do Chrome). Sem nenhum dos dois, abre no navegador padrão."""
+    """Abre o LabFlow como um programa, em tela cheia (como o F11; o F11 volta para janela): sem barra de endereço nem abas
+    (modo aplicativo do Edge, que vem no Windows 10 e 11; senão o do Chrome). Sem nenhum dos dois, abre no navegador."""
     if EH_WINDOWS:
         pastas = [os.environ.get(v, "") for v in ("ProgramFiles(x86)", "ProgramFiles", "LOCALAPPDATA")]
         candidatos = [Path(p) / "Microsoft" / "Edge" / "Application" / "msedge.exe" for p in pastas if p]
@@ -747,7 +747,7 @@ def abrir_janela(endereco: str) -> None:
         for exe in candidatos:
             if exe.is_file():
                 with contextlib.suppress(OSError):
-                    subprocess.Popen([str(exe), f"--app={endereco}", "--window-size=1366,820", "--new-window"],
+                    subprocess.Popen([str(exe), f"--app={endereco}", "--start-fullscreen", "--new-window"],
                                      stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                                      creationflags=SEM_JANELA)
                     return
