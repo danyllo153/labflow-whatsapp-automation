@@ -162,3 +162,24 @@ def test_nao_exclui_dia_de_pagina_impressa(cliente, logado, agora):
     pagina = cliente.get("/material-asseptico/laudos").json()["paginas"][0]
     cliente.post(f"/material-asseptico/laudos/{pagina['id']}/impresso")
     assert cliente.post("/material-asseptico/2026-10-22/excluir", json={}).status_code == 409
+
+
+def test_folha_finalizada_fecha_cada_dia_vazio_com_hifens_e_traco_no_ciclo(monkeypatch):
+    """01/11 (modelo do Danyllo): "-" na data, C.T., B.L., nome e visto de cada dia vazio e um traço no ciclo."""
+    from datetime import date
+
+    from reportlab.pdfgen import canvas
+
+    from labflow_api import laudo_asseptico as la
+
+    modelo = la.modelo_de_demonstracao()  # antes de espiar as linhas: o de demonstração desenha a grade
+    linhas, hifens = [], []
+    monkeypatch.setattr(canvas.Canvas, "line", lambda self, *xy: linhas.append(xy))
+    original = la._escrever
+    monkeypatch.setattr(la, "_escrever", lambda c, texto, *a, **k: (texto == "-" and hifens.append(a[0])) or original(c, texto, *a, **k))
+    dia = {"dia": date(2026, 10, 23), "ponteiras": "A954", "agua_diluicao": "A933", "placas": "P1", "meios": "A1092", "ct": "<1", "bl": "<1", "analista": "Ana"}
+    la.gerar_pdf([dia], modelo, finalizada=False)
+    assert hifens == [] and linhas == []
+    la.gerar_pdf([dia], modelo, finalizada=True)
+    assert len(linhas) == la.DIAS_POR_PAGINA - 1 and all(l[0] == la.COLUNAS_X[6] and l[2] == la.COLUNAS_X[7] for l in linhas)
+    assert sorted(set(hifens)) == [0, 2, 3, 4, 5] and len(hifens) == (la.DIAS_POR_PAGINA - 1) * 5

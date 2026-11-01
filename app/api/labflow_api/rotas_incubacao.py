@@ -325,19 +325,36 @@ def _celulas_do_dia(dia: DiaDeIncubacao, bloco: int, blocos: int) -> list[laudos
     return celulas
 
 
+def encerramento(usados: int) -> tuple[list[laudos.Celula], list[tuple[float, float, float, float]]]:
+    """A folha finalizada (modelo do Danyllo, 01/11): cada bloco vazio leva um traço na descrição das amostras (do canto de
+    baixo à esquerda ao de cima à direita) e "-" nos lotes, na data da incubação e nas datas de leitura."""
+    celulas, riscos = [], []
+    for b in range(usados, BLOCOS_POR_FOLHA):
+        topo = TABELA.topo + b * LINHAS_POR_BLOCO * TABELA.altura
+        base = topo + LINHAS_POR_BLOCO * TABELA.altura
+        riscos.append((COLUNAS[0], base, COLUNAS[1], topo))
+        celulas += [laudos.Celula("-", COLUNAS[i], COLUNAS[i + 1], topo, base, tamanho=7.5) for i in range(1, len(COLUNAS) - 1)]
+    return celulas, riscos
+
+
 def _gerar(con: psycopg.Connection, pagina_id: int, modelo: bytes | None) -> bytes:
-    celulas = []
+    celulas, usados = [], 0
     for dia, bloco, blocos in con.execute(
         "SELECT dia, bloco, blocos FROM app.incubacao_dias WHERE pagina_id = %s ORDER BY bloco", (pagina_id,)
     ).fetchall():
         celulas += _celulas_do_dia(montar_dia(con, dia, True), bloco, blocos)
-    return laudos.preencher(modelo, DEMONSTRACAO, celulas)
+        usados = max(usados, bloco + blocos)
+    riscos = []
+    if laudos.finalizada(con, pagina_id):
+        fechar, riscos = encerramento(usados)
+        celulas += fechar
+    return laudos.preencher(modelo, DEMONSTRACAO, celulas, riscos=riscos)
 
 
 laudos.registrar(
     laudos.Laudo(
         nome=NOME, titulo="Controle de incubação e leitura", modelo="incubacao", capacidade=BLOCOS_POR_FOLHA,
         contar_sql="SELECT coalesce(sum(blocos), 0), min(dia), max(dia) FROM app.incubacao_dias WHERE pagina_id = %s",
-        gerar=_gerar, preparar=distribuir, traco=TABELA, linhas_por_unidade=LINHAS_POR_BLOCO,
+        gerar=_gerar, preparar=distribuir,  # o encerramento é do próprio laudo (blocos com traço e "-", 01/11)
     )
 )

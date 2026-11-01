@@ -157,3 +157,15 @@ def test_dia_que_cresce_ganha_blocos_e_o_que_nao_cabe_vai_inteiro_para_a_proxima
     with pytest.raises(Exception, match="já foi impressa"):
         with conexao.transaction():
             conexao.execute("UPDATE app.incubacao_dias SET bloco = 0 WHERE dia = %s", (DIA,))
+
+
+def test_folha_finalizada_fecha_cada_bloco_vazio_com_traco_e_hifens():
+    """01/11 (modelo do Danyllo): um traço na descrição de cada bloco vazio e "-" nos lotes, na incubação e nas leituras."""
+    from labflow_api import rotas_incubacao as ri
+
+    celulas, riscos = ri.encerramento(1)
+    assert len(riscos) == ri.BLOCOS_POR_FOLHA - 1
+    x0, y0, x1, y1 = riscos[0]
+    assert (x0, x1) == (ri.COLUNAS[0], ri.COLUNAS[1]) and y0 > y1  # só na descrição, de baixo à esquerda para cima à direita
+    assert len(celulas) == (ri.BLOCOS_POR_FOLHA - 1) * 9 and {c.texto for c in celulas} == {"-"}
+    assert ri.encerramento(ri.BLOCOS_POR_FOLHA) == ([], [])

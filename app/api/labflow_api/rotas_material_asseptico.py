@@ -332,13 +332,8 @@ def baixar_pdf(
         )
     ]
     modelo = con.execute("SELECT pdf FROM app.modelos_documento WHERE nome = %s", (laudo.NOME_DO_MODELO,)).fetchone()
-    pdf = laudo.gerar_pdf(dias, bytes(modelo[0]) if modelo else None)
-    if con.execute("SELECT impresso_em IS NOT NULL FROM app.paginas_laudo WHERE id = %s", (pagina_id,)).fetchone()[0]:
-        # laudo finalizado: o traço que fecha as linhas vazias (4 linhas por dia), como em todo documento (26/10)
-        tabela = laudos.Tabela(laudo.COLUNAS_X, laudo.TOPO_DOS_DIAS, laudo.BASE_DOS_DIAS, laudo.DIAS_POR_PAGINA * 4)
-        risco = tabela.traco_das_vazias(len(dias) * 4)
-        if risco:
-            pdf = laudos.riscar(pdf, [risco])
+    # finalizado: cada dia vazio com "-" e o traço no ciclo (modelo do Danyllo, 01/11; antes, um traço só na folha)
+    pdf = laudo.gerar_pdf(dias, bytes(modelo[0]) if modelo else None, laudos.finalizada(con, pagina_id))
     return Response(pdf, media_type="application/pdf", headers={"Content-Disposition": f'inline; filename="material-asseptico-{pagina_id}.pdf"'})
 
 
