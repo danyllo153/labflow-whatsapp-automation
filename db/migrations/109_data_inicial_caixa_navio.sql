@@ -303,9 +303,15 @@ EXCEPTION
 END;
 $$ LANGUAGE plpgsql SET search_path = public, pg_temp;
 
--- objetos novos com o mesmo dono dos outros do arquivo (a função é SECURITY DEFINER: não pode rodar como administrador)
-ALTER VIEW vw_arquivo_inicio_navio OWNER TO labflow_app;
-ALTER FUNCTION arquivo_data_inicial_navio(bigint, int, date, boolean) OWNER TO labflow_app;
+-- objetos novos com o mesmo dono da arquivo_navios (a função é SECURITY DEFINER: não pode rodar como administrador)
+DO $$
+DECLARE
+    v_dono text;
+BEGIN
+    SELECT tableowner INTO v_dono FROM pg_tables WHERE schemaname = 'public' AND tablename = 'arquivo_navios';
+    EXECUTE format('ALTER VIEW vw_arquivo_inicio_navio OWNER TO %I', v_dono);
+    EXECUTE format('ALTER FUNCTION arquivo_data_inicial_navio(bigint, int, date, boolean) OWNER TO %I', v_dono);
+END $$;
 
 REVOKE ALL ON FUNCTION arquivo_data_inicial_navio(bigint, int, date, boolean) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION arquivo_data_inicial_navio(bigint, int, date, boolean) TO labflow_app, labflow_app_web;

@@ -89,7 +89,13 @@ LEFT JOIN LATERAL (
                                 AND arquivo_viagem(i.viagem) = an.viagem)
 ) s ON true;
 
-ALTER VIEW vw_arquivo_caixas OWNER TO labflow_app;
+DO $$
+DECLARE
+    v_dono text;
+BEGIN
+    SELECT tableowner INTO v_dono FROM pg_tables WHERE schemaname = 'public' AND tablename = 'arquivo_navios';
+    EXECUTE format('ALTER VIEW vw_arquivo_caixas OWNER TO %I', v_dono);
+END $$;
 GRANT SELECT ON vw_arquivo_caixas TO labflow_app_web, labflow_leitura;
 
 ALTER TABLE arquivo_navios DROP COLUMN inicio_manual, DROP COLUMN inicio_manual_por, DROP COLUMN inicio_manual_em;

@@ -172,7 +172,7 @@ test('migration 109: data inicial = última amostra + 5 dias ou a manual; dela c
   assert.match(m, /AS itens_vencidos,\s+u\.ultima_amostra,\s+COALESCE\(an\.inicio_manual, u\.inicio_auto\) AS inicio_em,\s+an\.inicio_manual IS NOT NULL AS inicio_fixado\s+FROM arquivo_caixas k/);
   assert.match(m, /arquivo_data_inicial_navio\(p_quem bigint, p_caixa int, p_data date, p_previa boolean DEFAULT false\)/);
   assert.equal((m.match(/tanque_exigir_cargo\(p_quem, ARRAY\['Admin', 'Analista'\]\)/g) || []).length, 1);
-  assert.match(m, /ALTER FUNCTION arquivo_data_inicial_navio\(bigint, int, date, boolean\) OWNER TO labflow_app;/);
+  assert.match(m, /tablename = 'arquivo_navios';\s+EXECUTE format\('ALTER VIEW vw_arquivo_inicio_navio OWNER TO %I', v_dono\);\s+EXECUTE format\('ALTER FUNCTION arquivo_data_inicial_navio\(bigint, int, date, boolean\) OWNER TO %I', v_dono\);/, 'o mesmo dono da tabela, em qualquer banco');
   assert.match(m, /GRANT EXECUTE ON FUNCTION arquivo_data_inicial_navio\(bigint, int, date, boolean\) TO labflow_app, labflow_app_web;/);
   assert.match(m, /v_acao = 'arquivo_data_inicial' THEN/);
   assert.match(m, /121 AND 153/, 'a consulta refeita sobre a 108, não sobre a 105');
