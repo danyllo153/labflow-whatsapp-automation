@@ -17,7 +17,7 @@ from pydantic import BaseModel, Field
 
 from labflow_api.dependencias import PessoaLogada, obter_conexao
 from labflow_api.permissoes import exigir
-from labflow_api.rotas_analise_recebimento import _chamar, _faixas, _grupos, _hoje, _lotes, _resultado
+from labflow_api.rotas_analise_recebimento import LIMITE, PRAZO, _chamar, _faixas, _grupos, _hoje, _lotes, _resultado
 
 roteador = APIRouter(prefix="/analises", tags=["apps de análise (Fase E)"])
 
@@ -600,16 +600,39 @@ class AmostraDoEmbarque(BaseModel):
     bl72: str | None
     bl120: str | None
     composta: int | None
+    situacao: str = "Ok"  # como no recebimento (01/11): Não ok, Atrasado, Para hoje, No prazo ou Ok
+
+
+def _nao_ok(resultado: str | None, cod: str) -> bool:
+    """O mesmo alarme do bot (040): "<" nunca é alarme; "=" ou ">" a partir do limite."""
+    if not resultado or resultado.startswith("<"):
+        return False
+    try:
+        return float(resultado.lstrip(">=").replace(",", ".")) >= LIMITE[cod]
+    except ValueError:
+        return False
+
+
+def _situacao_da_amostra(data: date, resultados: dict[str, str | None], hoje: date) -> str:
+    if any(_nao_ok(resultados.get(cod), cod) for cod in PRAZO):
+        return "Não ok"
+    pendentes = [data + timedelta(days=PRAZO[cod]) for cod in PRAZO if resultados.get(cod) is None]
+    if not pendentes:
+        return "Ok"
+    primeira = min(pendentes)
+    return "Atrasado" if primeira < hoje else ("Para hoje" if primeira == hoje else "No prazo")
 
 
 @roteador.get("/embarque/amostras", response_model=list[AmostraDoEmbarque])
 def amostras_do_embarque(
     busca: str = Query(default="", max_length=40),
     dias: int = Query(default=30, ge=1, le=365),
+    so_pendentes: bool = Query(default=False),  # só atrasados, para hoje e não ok (a leitura, 01/11)
     pessoa: PessoaLogada = Depends(exigir("ver_paginas")),
     con: psycopg.Connection = Depends(obter_conexao),
 ) -> list[AmostraDoEmbarque]:
     termo = busca.strip()
+    hoje = _hoje(con)
     linhas = con.execute(
         """
         SELECT a.id, n.nome || ' ' || n.viagem || ' L' || e.linha || ' F' || e.fase, 'A' || a.numero, l.numero, a.data_embarque,
@@ -622,13 +645,14 @@ def amostras_do_embarque(
           AND (%(termo)s = '' OR (n.nome || ' ' || n.viagem) ILIKE %(parecido)s OR coalesce(l.numero, '') ILIKE %(parecido)s)
         ORDER BY a.data_embarque DESC, n.nome, e.linha, e.fase, a.numero LIMIT 400
         """,
-        {"desde": _hoje(con) - timedelta(days=dias), "termo": termo, "parecido": f"%{termo}%"},
+        {"desde": hoje - timedelta(days=dias), "termo": termo, "parecido": f"%{termo}%"},
     ).fetchall()
-    return [
+    saida = [
         AmostraDoEmbarque(id=i, embarque=em, amostra=am, load=ld, data=d, ct=(r or {}).get("CT"), bl72=(r or {}).get("BL72"),
-                          bl120=(r or {}).get("BL120"), composta=c)
+                          bl120=(r or {}).get("BL120"), composta=c, situacao=_situacao_da_amostra(d, r or {}, hoje))
         for i, em, am, ld, d, r, c in linhas
     ]
+    return [a for a in saida if a.situacao not in ("Ok", "No prazo")] if so_pendentes else saida
 
 
 class NavioNaoOk(BaseModel):

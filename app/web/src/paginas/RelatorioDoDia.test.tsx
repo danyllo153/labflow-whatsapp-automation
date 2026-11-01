@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -111,12 +111,40 @@ describe("Leituras com uma aba por análise (27/10)", () => {
     );
     const cartao = await screen.findByRole("region", { name: "Leitura dos drops" });
     expect(screen.getByRole("button", { name: /^Drops/ })).toHaveAttribute("aria-current", "page");
+    await waitFor(() => expect(screen.getByRole("button", { name: /^Drops/ })).toHaveTextContent("Drops2")); // para hoje e atrasadas (01/11)
     await userEvent.click(within(cartao).getByRole("checkbox", { name: /D10/ }));
     await userEvent.click(within(cartao).getByRole("button", { name: "Todos negativos (1)" }));
     expect(within(cartao).getByRole("group", { name: "O que vai ser gravado" })).toHaveTextContent("Negativo em 1 drop: D5 do tanque 41 (coleta 17/10)");
     expect(api.vezes("POST /leituras/drops/negativos")).toBe(0);
     await userEvent.click(within(cartao).getByRole("button", { name: "Confirmar" }));
     expect(api.chamadas.find((c) => c.rota === "POST /leituras/drops/negativos")?.corpo).toEqual({ drop_ids: [7] });
+  });
+
+  it("toda aba de leitura mostra o número quando chega o dia de ler, não só os atrasados (01/11)", async () => {
+    const grupos = ["Recebimento concentrado", "Embarque FCOJ", "Recebimento NFC", "Tanques terra", "O.SKY 189", "Drops", "Água do processo",
+      "CIP linha de embarque", "CIP baia", "TAB", "Coliformes", "Água de consumo"];
+    const abas = ["Recebimento concentrado", "Embarque FCOJ", "Recebimento NFC", "Tanques terra", "Tanques navio", "Drops", "Água do processo",
+      "CIP linha de embarque", "CIP baia", "TAB", "Coliformes", "Água de consumo"];
+    servidorFalso({
+      "GET /me": () => ({ status: 200, corpo: ANA }),
+      "GET /relatorio-do-dia": () => ({ status: 200, corpo: REL }),
+      "GET /pendencias-hoje": () => ({ status: 200, corpo: { itens: [], vence_hoje: 0, atrasados: 0 } }),
+      "GET /analises/desvios": () => ({ status: 200, corpo: { para_abrir: [], abertos: [], dia_finalizado: false } }),
+      "GET /leituras/pendentes": () => ({
+        status: 200,
+        corpo: { leituras: grupos.map((g) => ({ grupo: g, detalhe: "", itens: [{ rotulo: "x", quantidade: 3, unidade: "placas", atrasadas: 0, caminho: "/leituras" }] })), analises: [] },
+      }),
+    });
+    render(
+      <MemoryRouter initialEntries={["/leituras"]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <ProvedorDeSessao>
+          <App />
+        </ProvedorDeSessao>
+      </MemoryRouter>,
+    );
+    const nav = await screen.findByRole("navigation", { name: "Partes de Leituras" });
+    await waitFor(() => expect(within(nav).getByRole("button", { name: /^Coliformes/ })).toHaveTextContent("Coliformes3"));
+    for (const aba of abas) expect(within(nav).getByRole("button", { name: new RegExp(`^${aba}`) })).toHaveTextContent(`${aba}3`);
   });
 
   it("o endereço antigo do relatório do dia leva a Leituras", async () => {
