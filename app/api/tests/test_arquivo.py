@@ -107,3 +107,25 @@ def test_busca_pelo_navio_e_o_laudo_da_caixa(cliente, logado, hoje, conexao):
     assert len(folhas) == 1 and folhas[0]["laudo"] == "contra-recebimento"
     assert cliente.get(f"/laudos/contra-recebimento/{folhas[0]['pagina_id']}/pdf").status_code == 200
     assert cliente.get("/arquivo/tanque/34/laudo").status_code == 404
+
+
+def test_data_inicial_da_caixa_de_navio_a_mao_e_de_volta_a_automatica(cliente, logado, conexao):
+    """PB24 (109 do bot), 01/11: a caixa de navio mostra a data inicial; o Analista escolhe outra (prévia e Confirmar) e
+    volta à automática."""
+    conexao.execute("INSERT INTO arquivo_familias (nome, caixa_de, caixa_ate) VALUES ('O.TESTE', 901, 902)")
+    conexao.execute("INSERT INTO arquivo_caixas (tipo, numero, familia) VALUES ('navio', 901, 'O.TESTE'), ('navio', 902, 'O.TESTE')")
+    conexao.execute("INSERT INTO arquivo_navios (caixa, navio, viagem, origem, descarte_carga) VALUES (901, 'O.TESTE', '205', 'carga', '2028-10-25')")
+    logado()
+    cx = cliente.get("/arquivo/navio/901").json()["caixa"]
+    assert cx["inicio_fixado"] is False
+    r = cliente.post("/arquivo/data-inicial", json={"numero": 901, "data": "2026-10-30"})
+    assert r.status_code == 200, r.text
+    assert r.json()["previa"] and "30/10/2026 (escolhida à mão)" in r.json()["texto"]
+    assert cliente.get("/arquivo/navio/901").json()["caixa"]["inicio_fixado"] is False  # a prévia não grava
+    assert cliente.post("/arquivo/data-inicial", json={"numero": 901, "data": "2026-10-30", "previa": False}).status_code == 200
+    cx = cliente.get("/arquivo/navio/901").json()["caixa"]
+    assert (cx["inicio_em"], cx["inicio_fixado"]) == ("2026-10-30", True)
+    assert cliente.post("/arquivo/data-inicial", json={"numero": 901, "data": None, "previa": False}).status_code == 200
+    assert cliente.get("/arquivo/navio/901").json()["caixa"]["inicio_fixado"] is False
+    r = cliente.post("/arquivo/data-inicial", json={"numero": 902, "data": "2026-10-30"})
+    assert r.status_code == 422 and "vazia" in r.json()["detail"]  # a recusa do banco, em português

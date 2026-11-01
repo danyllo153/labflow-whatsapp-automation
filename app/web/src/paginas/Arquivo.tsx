@@ -42,6 +42,9 @@ export interface Caixa {
   descarte_em: string | null;
   situacao: "Disponível" | "Em uso" | "Vencida";
   itens_vencidos: number;
+  ultima_amostra?: string | null; // caixa de navio (PB24): a última amostra do navio
+  inicio_em?: string | null; // a data inicial: escolhida à mão ou a última amostra + 5 dias
+  inicio_fixado?: boolean;
 }
 
 interface Arquivo {
@@ -250,11 +253,12 @@ function ConteudoDaCaixa({ caixa, pode, aoFechar, aoMudar }: { caixa: Caixa; pod
       </h2>
       <p className="texto-secundario">
         {caixa.tipo === "navio"
-          ? `A caixa sai inteira quando tudo vence${caixa.descarte_em ? `: ${dataBr(caixa.descarte_em)}` : ""}. NFC vence em 1 ano; FCOJ em 2.`
+          ? `A caixa sai inteira quando tudo vence${caixa.descarte_em ? `: ${dataBr(caixa.descarte_em)}` : ""}. NFC vence 1 ano e FCOJ 2 anos depois da data inicial.`
           : caixa.tipo === "recebimento"
             ? "Cada load vence 7 dias depois de arquivado; descartar tira só o que venceu."
             : "Cada bag vence 1 ano depois da coleta; descartar tira só o que venceu."}
       </p>
+      {caixa.tipo === "navio" && caixa.navio && <DataInicialDoNavio caixa={caixa} pode={pode} aoMudar={aoMudar} />}
       {erro && <p className="mensagem-erro">{erro}</p>}
       {!itens && !erro && <p className="carregando">Carregando...</p>}
       {itens && itens.length === 0 && <p className="texto-secundario">Caixa vazia.</p>}
@@ -308,6 +312,64 @@ function ConteudoDaCaixa({ caixa, pode, aoFechar, aoMudar }: { caixa: Caixa; pod
       </div>
       <PreviaDaGravacao g={g} titulo="Descartar" />
     </article>
+  );
+}
+
+/** A data inicial da caixa de navio (PB24, 01/11): a última amostra do navio + 5 dias, ou a escolhida à mão; dela contam o
+ * 1 ano do pote e os 2 anos do FCOJ. Escolher ou voltar à automática mostra a prévia com o descarte e pede Confirmar. */
+function DataInicialDoNavio({ caixa, pode, aoMudar }: { caixa: Caixa; pode: boolean; aoMudar: () => void }) {
+  const [editando, setEditando] = useState(false);
+  const [data, setData] = useState(caixa.inicio_em ?? "");
+  const g = useGravacao("/arquivo/data-inicial", () => {
+    setEditando(false);
+    aoMudar();
+  });
+  const origem = caixa.inicio_fixado
+    ? "escolhida à mão"
+    : caixa.ultima_amostra
+      ? `última amostra em ${dataBr(caixa.ultima_amostra)} + 5 dias`
+      : "";
+  return (
+    <div className="data-inicial-navio">
+      <p>
+        <strong>Data inicial:</strong> {caixa.inicio_em ? dataBr(caixa.inicio_em) : "sem amostra registrada"}
+        {origem && <span className="texto-secundario"> ({origem})</span>}
+      </p>
+      {pode && !editando && !g.previa && (
+        <div className="botoes-lado">
+          <button type="button" className="botao-secundario" onClick={() => setEditando(true)}>
+            Data inicial
+          </button>
+          {caixa.inicio_fixado && (
+            <button type="button" className="botao-secundario" disabled={g.enviando} onClick={() => void g.ver({ numero: caixa.numero, data: null })}>
+              Voltar à automática
+            </button>
+          )}
+        </div>
+      )}
+      {pode && editando && !g.previa && (
+        <form
+          className="linha-formulario"
+          aria-label="Escolher a data inicial"
+          onSubmit={(e: FormEvent) => {
+            e.preventDefault();
+            if (data) void g.ver({ numero: caixa.numero, data });
+          }}
+        >
+          <label className="campo">
+            Data inicial
+            <input type="date" value={data} required onChange={(e) => setData(e.target.value)} />
+          </label>
+          <button type="submit" className="botao botao-principal" disabled={g.enviando || !data}>
+            Ver o descarte
+          </button>
+          <button type="button" className="botao botao-simples" onClick={() => setEditando(false)}>
+            Cancelar
+          </button>
+        </form>
+      )}
+      <PreviaDaGravacao g={g} titulo="Data inicial" />
+    </div>
   );
 }
 
