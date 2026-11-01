@@ -1,0 +1,42 @@
+LABFLOW (versão para a pasta de rede)
+=====================================
+
+PARA ABRIR
+  Dois cliques em "Abrir LabFlow".
+  - Na primeira vez em cada PC ele se prepara (1 a 3 minutos).
+  - O navegador abre na tela de entrar. Cada pessoa usa o PRÓPRIO usuário e senha.
+  - Se outro PC já estiver com o LabFlow aberto, este só abre o navegador nele:
+    vários PCs usam juntos, cada um com o seu login.
+
+O PC SERVIDOR
+  O primeiro PC que abre é o "servidor": a janela preta dele precisa ficar ABERTA.
+  Use de preferência o PC que fica ligado o dia todo.
+  - Troca de turno: só "Sair" no LabFlow. NÃO saia do usuário do Windows nesse PC
+    (bloquear a tela com Windows+L pode).
+  - Esse PC não pode suspender/hibernar (plano de energia: nunca).
+  - Para fechar: tecle ENTER na janela preta e confirme com S. Os outros PCs param até
+    alguém abrir de novo.
+
+OS DADOS
+  Ficam na pasta "dados". Nunca apague nem substitua essa pasta.
+  - O LabFlow grava uma cópia a cada minuto (se algo mudou) e ao fechar.
+  - Backup de cada dia em dados\backup (últimos 30 dias).
+  - Se o PC servidor cair, espere 1 minuto e abra em qualquer PC: ele assume com
+    os dados gravados (pode faltar no máximo o último minuto).
+
+PRIMEIRO ACESSO (banco vazio)
+  Na primeira abertura a janela preta mostra o usuário "admin" e uma senha
+  provisória (vale 24 horas). Entre, troque a senha e cadastre as pessoas em
+  Admin > Pessoas. Perdeu a senha do admin? Abra pela linha de comando:
+  "Abrir LabFlow.bat" --redefinir-admin
+
+ATUALIZAR O PROGRAMA
+  Feche o LabFlow em todos os PCs e troque SÓ a pasta "instalacao" pela nova.
+  Na próxima abertura ele faz um backup e atualiza o banco sozinho.
+
+REDE (vários PCs)
+  Os outros PCs entram pela porta 8000 do PC servidor. Se o "Abrir LabFlow" de
+  outro PC disser que não conseguiu falar com o servidor, a TI precisa liberar no
+  firewall do Windows do PC servidor a porta TCP 8000 de entrada, só para os PCs
+  do laboratório. Para conferir: "Testar rede" (primeiro no servidor, depois nos
+  outros). Sem essa liberação, funciona um PC por vez.

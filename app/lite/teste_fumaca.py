@@ -1,0 +1,116 @@
+"""Teste de fumaça do pacote do LabFlow Lite no Windows (roda no GitHub Actions depois do montar.ps1).
+
+Simula o uso real numa CÓPIA do pacote (o pacote publicado continua sem dados):
+1. PC A abre pelo "Abrir LabFlow.bat": banco do zero, Admin provisório, telas e login.
+2. PC B (outro LOCALAPPDATA) abre enquanto A está no ar: vira cliente e não liga outro banco.
+3. A fecha (parar.txt): cópia no G: e backup do dia gravados, aviso de servidor apagado.
+4. PC B abre: restaura do G: e a senha trocada em A continua valendo.
+
+Uso: python teste_fumaca.py <pasta LabFlow do pacote>
+"""
+
+import http.cookiejar
+import json
+import os
+import shutil
+import subprocess
+import sys
+import tempfile
+import time
+import urllib.request
+from pathlib import Path
+
+
+def abrir(raiz: Path, local_app: Path, saida: Path) -> subprocess.Popen:
+    env = dict(os.environ, LOCALAPPDATA=str(local_app), LABFLOW_LITE_TESTE="1")
+    return subprocess.Popen(
+        ["cmd", "/c", str(raiz / "Abrir LabFlow.bat"), "--sem-navegador"],
+        env=env,
+        stdin=subprocess.DEVNULL,
+        stdout=open(saida, "w", encoding="utf-8"),
+        stderr=subprocess.STDOUT,
+    )
+
+
+def esperar(saida: Path, texto: str, segundos: int, proc: subprocess.Popen | None = None) -> str:
+    fim = time.time() + segundos
+    while time.time() < fim:
+        conteudo = saida.read_text(encoding="utf-8", errors="replace") if saida.exists() else ""
+        if texto in conteudo:
+            return conteudo
+        if proc is not None and proc.poll() is not None:
+            break
+        time.sleep(2)
+    print(saida.read_text(encoding="utf-8", errors="replace") if saida.exists() else "(sem saída)")
+    raise SystemExit(f"FALHOU: não apareceu '{texto}'")
+
+
+def pedir(abridor, url: str, corpo: dict | None = None) -> int:
+    dados = json.dumps(corpo).encode() if corpo is not None else None
+    req = urllib.request.Request(url, data=dados, headers={"content-type": "application/json"})
+    try:
+        return abridor.open(req, timeout=20).status
+    except urllib.error.HTTPError as erro:
+        return erro.code
+
+
+def fechar(raiz: Path, local_app: Path, proc: subprocess.Popen, saida: Path) -> None:
+    (local_app / "LabFlowLite" / "parar.txt").write_text("")
+    proc.wait(timeout=180)
+    esperar(saida, "Tudo gravado", 5)
+    assert not (raiz / "dados" / "servidor.json").exists(), "o aviso de servidor ficou para trás"
+
+
+def main() -> None:
+    pacote = Path(sys.argv[1]).resolve()
+    trabalho = Path(tempfile.mkdtemp(prefix="lite-fumaca-"))
+    raiz = trabalho / "G" / "LabFlow"
+    shutil.copytree(pacote, raiz)
+    pc_a, pc_b = trabalho / "pcA", trabalho / "pcB"
+    pc_a.mkdir()
+    pc_b.mkdir()
+
+    # 1. PC A: do zero
+    saida_a = trabalho / "a.txt"
+    a = abrir(raiz, pc_a, saida_a)
+    texto = esperar(saida_a, "LabFlow no ar", 600, a)
+    usuario, senha = next(l for l in texto.splitlines() if l.startswith("LITE_ADMIN=")).split("=", 1)[1].split(":", 1)
+    info = json.loads((raiz / "dados" / "servidor.json").read_text(encoding="utf-8"))
+    base = f"http://127.0.0.1:{info['porta']}"
+    web = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
+    assert pedir(web, base + "/saude") == 200
+    assert pedir(web, base + "/app/") == 200, "telas não abriram"
+    assert pedir(web, base + "/login", {"usuario": usuario, "senha": senha}) == 200, "login com a senha provisória"
+    assert pedir(web, base + "/trocar-senha", {"nova_senha": "SenhaDoTeste123"}) == 204, "troca de senha"
+    print("1 ok: PC A abriu do zero, login e troca de senha")
+
+    # 2. PC B enquanto A está no ar: cliente
+    saida_b = trabalho / "b.txt"
+    b = abrir(raiz, pc_b, saida_b)
+    b.wait(timeout=600)
+    esperar(saida_b, "já está aberto", 5)
+    assert not (pc_b / "LabFlowLite" / "data").exists(), "o cliente não pode ligar outro banco"
+    print("2 ok: PC B virou cliente")
+
+    # 3. A fecha
+    fechar(raiz, pc_a, a, saida_a)
+    dados = raiz / "dados"
+    assert (dados / "labflow.dump").stat().st_size > 0
+    assert list((dados / "backup").glob("labflow-*.dump")), "sem backup do dia"
+    print("3 ok: A fechou e gravou no G:")
+
+    # 4. B vira servidor com os dados do G:
+    saida_b2 = trabalho / "b2.txt"
+    b2 = abrir(raiz, pc_b, saida_b2)
+    texto = esperar(saida_b2, "LabFlow no ar", 600, b2)
+    assert "Restaurando os dados do G:" in texto
+    info = json.loads((raiz / "dados" / "servidor.json").read_text(encoding="utf-8"))
+    web = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
+    assert pedir(web, f"http://127.0.0.1:{info['porta']}/login", {"usuario": usuario, "senha": "SenhaDoTeste123"}) == 200
+    fechar(raiz, pc_b, b2, saida_b2)
+    print("4 ok: B restaurou do G: e a senha nova vale")
+    print("TESTE DE FUMAÇA OK")
+
+
+if __name__ == "__main__":
+    main()

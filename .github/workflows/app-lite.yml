@@ -1,0 +1,45 @@
+name: LabFlow Lite (pacote Windows)
+
+# Monta o pacote da versão para a pasta de rede (spec 12) num Windows de verdade, testa (abrir do zero, segundo PC,
+# fechar e reabrir em outro PC) e deixa o .zip para baixar em "Artifacts" desta execução.
+on:
+  pull_request:
+    paths:
+      - "app/lite/**"
+      - ".github/workflows/app-lite.yml"
+  push:
+    branches: [main]
+    paths:
+      - "app/**"
+      - "db/migrations/**"
+      - ".github/workflows/app-lite.yml"
+  workflow_dispatch:
+
+jobs:
+  pacote:
+    runs-on: windows-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Montar as telas
+        working-directory: app/web
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build
+      - name: Montar o pacote
+        shell: pwsh
+        run: ./app/lite/montar.ps1 -Saida "$env:RUNNER_TEMP\lite"
+      - name: Teste de fumaça (numa cópia do pacote)
+        run: python app/lite/teste_fumaca.py "$env:RUNNER_TEMP\lite\LabFlow"
+      - name: Guardar o pacote
+        uses: actions/upload-artifact@v4
+        with:
+          name: LabFlow-Lite
+          path: ${{ runner.temp }}\lite\LabFlow
+          retention-days: 30
