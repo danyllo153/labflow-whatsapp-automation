@@ -205,7 +205,17 @@ class Postgres:
         if "lite.conf" not in principal.read_text(encoding="utf-8", errors="replace"):
             with open(principal, "a", encoding="utf-8") as f:
                 f.write("\ninclude_if_exists = 'lite.conf'\n")
-        self.run("pg_ctl", "-D", str(self.data), "-l", str(self.local / "postgres.log"), "-w", "-t", "90", "start")
+        # sem capturar a saída: no Windows o PostgreSQL herda o "cano" e o Python esperaria para sempre (a saída vai pro log)
+        r = subprocess.run(
+            [self.exe("pg_ctl"), "-D", str(self.data), "-l", str(self.local / "postgres.log"), "-w", "-t", "90", "start"],
+            env=self.env(),
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            creationflags=0x08000000 if EH_WINDOWS else 0,  # CREATE_NO_WINDOW: o PostgreSQL não recebe o "fechar" da janela
+        )
+        if r.returncode != 0:
+            raise RuntimeError(f"O PostgreSQL não ligou (código {r.returncode}). Veja postgres.log em {self.local}")
 
     def parar(self) -> None:
         with contextlib.suppress(Exception):
