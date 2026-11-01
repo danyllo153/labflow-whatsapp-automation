@@ -63,8 +63,11 @@ def _escrever(c: canvas.Canvas, texto: str, coluna: int, topo: float, altura: fl
         c.drawString(esquerda + 3, base, texto)
 
 
-def gerar_pdf(dias: list[dict], modelo: bytes | None) -> bytes:
-    """`dias`: dia, ponteiras, agua_diluicao, placas, meios, ct, bl, analista. Escreve sobre o modelo (ou o de demonstração)."""
+def gerar_pdf(dias: list[dict], modelo: bytes | None, finalizada: bool = False) -> bytes:
+    """`dias`: dia, ponteiras, agua_diluicao, placas, meios, ct, bl, analista. Escreve sobre o modelo (ou o de demonstração).
+
+    Folha finalizada (modelo do Danyllo, 01/11): cada dia vazio leva "-" na data, no C.T., no B.L., no nome e no visto, e
+    um traço no ciclo de esterilização (do canto de baixo à esquerda ao de cima à direita das 4 linhas)."""
     escritor = PdfWriter(clone_from=io.BytesIO(modelo or modelo_de_demonstracao()))
     camada = io.BytesIO()
     c = canvas.Canvas(camada, pagesize=A4)
@@ -81,6 +84,13 @@ def gerar_pdf(dias: list[dict], modelo: bytes | None) -> bytes:
             if sem_modelo:  # no modelo oficial o nome do material já vem impresso
                 _escrever(c, material, 1, topo, ALTURA_DA_LINHA, centro=False)
             _escrever(c, d[chave] or "-", 6, topo, ALTURA_DA_LINHA, centro=False)
+    if finalizada:
+        c.setLineWidth(0.8)
+        for n in range(min(len(dias), DIAS_POR_PAGINA), DIAS_POR_PAGINA):
+            topo_do_dia, bloco = _y(n * 4), 4 * ALTURA_DA_LINHA
+            for coluna in (0, 2, 3, 4, 5):
+                _escrever(c, "-", coluna, topo_do_dia, bloco)
+            c.line(COLUNAS_X[6], topo_do_dia - bloco, COLUNAS_X[7], topo_do_dia)
     c.showPage()  # garante a página mesmo sem nenhuma linha escrita
     c.save()
     escritor.pages[0].merge_page(PdfReader(io.BytesIO(camada.getvalue())).pages[0])

@@ -149,6 +149,11 @@ def preencher(
     return saida.getvalue()
 
 
+def finalizada(con: psycopg.Connection, pagina_id: int) -> bool:
+    linha = con.execute("SELECT impresso_em IS NOT NULL FROM app.paginas_laudo WHERE id = %s", (pagina_id,)).fetchone()
+    return bool(linha and linha[0])
+
+
 def riscar(pdf: bytes, riscos: list[tuple[float, float, float, float]]) -> bytes:
     """Linhas por cima de um PDF pronto (origem em cima à esquerda), como o traço que fecha as linhas vazias da folha."""
     escritor = PdfWriter(clone_from=io.BytesIO(pdf))
