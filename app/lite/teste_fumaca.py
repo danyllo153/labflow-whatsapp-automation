@@ -50,6 +50,12 @@ def esperar(saida: Path, texto: str, segundos: int, proc: subprocess.Popen | Non
         for py in (sys.executable, str(prog / "python" / "python.exe")):
             r = subprocess.run([py, "-c", f"import subprocess;r=subprocess.run([r'{local_bin / 'initdb.exe'}','--version'],capture_output=True,text=True);print(hex(r.returncode & 0xffffffff),r.stdout,r.stderr)"], capture_output=True, text=True)
             print(f"  initdb --version via {py}: {r.stdout.strip()} {r.stderr.strip()[-300:]}")
+    origens = [Path(r"C:\Program Files\PostgreSQL\17\bin"), saida.parent / "G" / "LabFlow" / "instalacao" / "postgres" / "bin"]
+    origens += [p / "postgres" / "bin" for p in sorted(saida.parent.glob("pc*/LabFlowLite/programa"))]
+    for i, binario in enumerate(origens):
+        alvo = saida.parent / f"initdb-teste-{i}"
+        r = subprocess.run([str(binario / "initdb.exe"), "-D", str(alvo), "-U", "x", "-A", "trust", "-E", "UTF8", "--locale=C"], capture_output=True, text=True)
+        print(f"  initdb real de {binario}: {hex(r.returncode & 0xffffffff)} {(r.stderr or r.stdout).strip()[-400:]}")
     for log in sorted(saida.parent.glob("pc*/LabFlowLite/*.log")):
         print(f"--- {log}")
         print(log.read_text(encoding="utf-8", errors="replace")[-3000:])
