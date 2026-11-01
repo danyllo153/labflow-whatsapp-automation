@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { enviarJson, lerJson } from "../../api";
 
 import { useSessao } from "../../sessao";
+import { classeDaSituacao } from "../dados/formatos";
 import {
   AppDeAnalise,
   Busca,
@@ -34,6 +35,7 @@ interface Amostra {
   bl72: string | null;
   bl120: string | null;
   composta: number | null;
+  situacao?: string; // Não ok, Atrasado, Para hoje, No prazo, Ok (01/11)
 }
 
 export const ABAS_EMBARQUE = [
@@ -56,10 +58,16 @@ export function LeituraDoEmbarque() {
   const { pessoa } = useSessao();
   const pode = !!pessoa?.pode.includes("registrar_analise");
   const [busca, setBusca] = useState("");
-  const lista = useLista<Amostra[]>("/analises/embarque/amostras", busca);
+  // como no recebimento (01/11): de início só atrasados, para hoje e não ok
+  const [soPendentes, setSoPendentes] = useState(true);
+  const lista = useLista<Amostra[]>(`/analises/embarque/amostras${soPendentes ? "?so_pendentes=true" : ""}`, busca);
   return (
     <>
       <Busca valor={busca} aoMudar={setBusca} rotulo="Procurar navio ou load" dica="Navio ou load (ex.: O.SKY 189)" />
+      <label className="campo-marcar">
+        <input type="checkbox" checked={soPendentes} onChange={(e) => setSoPendentes(e.target.checked)} />
+        Só atrasados, para hoje e não ok
+      </label>
       {lista.erro && <p className="mensagem-erro">{lista.erro}</p>}
       {!lista.dados && !lista.erro && <p className="carregando">Carregando...</p>}
       {lista.dados && <Lancar amostras={lista.dados} pode={pode} aoGravar={lista.recarregar} />}
@@ -479,7 +487,7 @@ function Lancar({ amostras, pode, aoGravar }: { amostras: Amostra[]; pode: boole
   const [analise, setAnalise] = useState<(typeof ANALISES)[number]>(ANALISES[0]);
   const [valores, setValores] = useState<Record<number, string>>({});
   const g = useGravacao("/analises/embarque/lancar", () => (setValores({}), aoGravar()));
-  if (amostras.length === 0) return <p className="texto-secundario">Nenhuma amostra de embarque no período.</p>;
+  if (amostras.length === 0) return <p className="texto-secundario">Nenhuma amostra de embarque para mostrar (nada atrasado, para hoje ou não ok).</p>;
   const vazias = amostras.filter((a) => a[analise.chave] === null);
   const preenchidas = vazias.filter((a) => (valores[a.id] ?? "").trim());
   return (
@@ -515,6 +523,7 @@ function Lancar({ amostras, pode, aoGravar }: { amostras: Amostra[]; pode: boole
                 <th key={a.cod}>{a.rotulo}</th>
               ))}
               <th>Composta</th>
+              <th>Situação</th>
             </tr>
           </thead>
           <tbody>
@@ -540,6 +549,7 @@ function Lancar({ amostras, pode, aoGravar }: { amostras: Amostra[]; pode: boole
                   ),
                 )}
                 <td>{am.composta ? `#${am.composta}` : "—"}</td>
+                <td>{am.situacao && <span className={classeDaSituacao(am.situacao === "Para hoje" ? "Vence hoje" : am.situacao)}>{am.situacao}</span>}</td>
               </tr>
             ))}
           </tbody>
