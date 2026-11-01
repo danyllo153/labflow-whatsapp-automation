@@ -42,6 +42,14 @@ def esperar(saida: Path, texto: str, segundos: int, proc: subprocess.Popen | Non
             break
         time.sleep(2)
     print(saida.read_text(encoding="utf-8", errors="replace") if saida.exists() else "(sem saída)")
+    for prog in sorted(saida.parent.glob("pc*/LabFlowLite/programa")):
+        local_bin = prog / "postgres" / "bin"
+        pacote_bin = saida.parent / "G" / "LabFlow" / "instalacao" / "postgres" / "bin"
+        faltam = sorted({p.name for p in pacote_bin.iterdir()} - {p.name for p in local_bin.iterdir()})
+        print(f"--- {local_bin}: {len(list(local_bin.iterdir()))} arquivos; faltam da instalacao: {faltam[:20]}")
+        for py in (sys.executable, str(prog / "python" / "python.exe")):
+            r = subprocess.run([py, "-c", f"import subprocess;r=subprocess.run([r'{local_bin / 'initdb.exe'}','--version'],capture_output=True,text=True);print(hex(r.returncode & 0xffffffff),r.stdout,r.stderr)"], capture_output=True, text=True)
+            print(f"  initdb --version via {py}: {r.stdout.strip()} {r.stderr.strip()[-300:]}")
     for log in sorted(saida.parent.glob("pc*/LabFlowLite/*.log")):
         print(f"--- {log}")
         print(log.read_text(encoding="utf-8", errors="replace")[-3000:])
