@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 
 import { AbasDaPagina, CabecalhoDaPagina } from "../componentes/CabecalhoDaPagina";
-import { lerJson } from "../api";
+import { enviarJson, lerJson } from "../api";
 import { useSessao } from "../sessao";
 import { dm } from "../componentes/SeletorDeDias";
 import { hojeEmSaoPaulo, Numeros, PreviaDaGravacao, SoQuemGrava, useGravacao } from "./analises/comum";
@@ -45,6 +45,7 @@ export interface Caixa {
   ultima_amostra?: string | null; // caixa de navio (PB24): a última amostra do navio
   inicio_em?: string | null; // a data inicial: escolhida à mão ou a última amostra + 5 dias
   inicio_fixado?: boolean;
+  da_planilha?: boolean; // veio da planilha (carga inicial): "Adicionar laudo" digita o que tem nela (01/11)
 }
 
 interface Arquivo {
@@ -66,6 +67,7 @@ interface Item {
   data_descarte: string | null;
   situacao: "Arquivado" | "Vencido" | "Descartado";
   descartado_em: string | null;
+  ref_id?: number | null; // a linha digitada da caixa da planilha (item "planilha")
 }
 
 type Aba = "vencidas" | Tipo | "laudo";
@@ -259,6 +261,7 @@ function ConteudoDaCaixa({ caixa, pode, aoFechar, aoMudar }: { caixa: Caixa; pod
             : "Cada bag vence 1 ano depois da coleta; descartar tira só o que venceu."}
       </p>
       {caixa.tipo === "navio" && caixa.navio && <DataInicialDoNavio caixa={caixa} pode={pode} aoMudar={aoMudar} />}
+      {caixa.tipo === "navio" && caixa.da_planilha && pode && <LaudoDaPlanilha caixa={caixa} aoMudar={aoMudar} />}
       {erro && <p className="mensagem-erro">{erro}</p>}
       {!itens && !erro && <p className="carregando">Carregando...</p>}
       {itens && itens.length === 0 && <p className="texto-secundario">Caixa vazia.</p>}
@@ -273,6 +276,7 @@ function ConteudoDaCaixa({ caixa, pode, aoFechar, aoMudar }: { caixa: Caixa; pod
                 <th>{caixa.tipo === "recebimento" ? "Arquivado" : "Coleta / embarque"}</th>
                 <th>Descarte</th>
                 <th>Situação</th>
+                {pode && itens.some((i) => i.item === "planilha") && <th aria-label="Ações" />}
               </tr>
             </thead>
             <tbody>
@@ -284,6 +288,9 @@ function ConteudoDaCaixa({ caixa, pode, aoFechar, aoMudar }: { caixa: Caixa; pod
                   <td>{dataBr(i.data_ref)}</td>
                   <td>{dataBr(i.data_descarte)}</td>
                   <td>{i.situacao === "Descartado" && i.descartado_em ? `Descartado em ${i.descartado_em}` : i.situacao}</td>
+                  {pode && itens.some((x) => x.item === "planilha") && (
+                    <td>{i.item === "planilha" && i.ref_id != null && <TirarDaPlanilha id={i.ref_id} descricao={i.descricao} aoMudar={aoMudar} />}</td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -370,6 +377,133 @@ function DataInicialDoNavio({ caixa, pode, aoMudar }: { caixa: Caixa; pode: bool
       )}
       <PreviaDaGravacao g={g} titulo="Data inicial" />
     </div>
+  );
+}
+
+interface LinhaDaPlanilha {
+  tipo: "fcoj" | "pote";
+  loads: string;
+  tanque: string;
+  quantidade: string;
+}
+
+const LINHA_VAZIA: LinhaDaPlanilha = { tipo: "fcoj", loads: "", tanque: "", quantidade: "1" };
+
+/** A caixa de navio que veio da planilha (01/11): só tinha a "carga inicial". "Adicionar laudo" digita o que tem nela (o
+ * laudo de papel que já existe): FCOJ com os loads e as amostras, ou o pote de NFC com o tanque. Sai no laudo de
+ * contra-amostra do embarque; o vencimento continua o da planilha. Prévia e um Confirmar para a lista toda. */
+function LaudoDaPlanilha({ caixa, aoMudar }: { caixa: Caixa; aoMudar: () => void }) {
+  const [abrindo, setAbrindo] = useState(false);
+  const [linhas, setLinhas] = useState<LinhaDaPlanilha[]>([{ ...LINHA_VAZIA }]);
+  const g = useGravacao(`/arquivo/navio/${caixa.numero}/planilha`, () => {
+    setAbrindo(false);
+    setLinhas([{ ...LINHA_VAZIA }]);
+    aoMudar();
+  });
+  const muda = (n: number, k: keyof LinhaDaPlanilha) => (e: { target: { value: string } }) =>
+    setLinhas((ls) => ls.map((l, i) => (i === n ? { ...l, [k]: e.target.value } : l)));
+
+  if (!abrindo && !g.previa)
+    return (
+      <div className="botoes-lado">
+        <button type="button" className="botao-secundario" onClick={() => setAbrindo(true)}>
+          Adicionar laudo
+        </button>
+      </div>
+    );
+  return (
+    <div className="laudo-da-planilha">
+      {!g.previa && (
+        <form
+          aria-label="Adicionar o laudo da caixa"
+          onSubmit={(e: FormEvent) => {
+            e.preventDefault();
+            void g.ver({
+              linhas: linhas.map((l) => ({ tipo: l.tipo, loads: l.loads, tanque: l.tanque, quantidade: Number(l.quantidade) || 1 })),
+            });
+          }}
+        >
+          <p className="texto-secundario">
+            O que tem na caixa {caixa.numero}, como no laudo de papel. Sai no laudo de contra-amostra; o vencimento continua o da planilha
+            {caixa.descarte_em ? ` (${dataBr(caixa.descarte_em)})` : ""}.
+          </p>
+          {linhas.map((l, n) => (
+            <div key={n} className="campos-linha">
+              <label className="campo">
+                Amostra
+                <select value={l.tipo} onChange={muda(n, "tipo")} aria-label={`Amostra da linha ${n + 1}`}>
+                  <option value="fcoj">FCOJ (loads)</option>
+                  <option value="pote">Pote de NFC (tanque)</option>
+                </select>
+              </label>
+              {l.tipo === "fcoj" ? (
+                <>
+                  <label className="campo">
+                    Loads
+                    <input required maxLength={200} placeholder="43783/43784" value={l.loads} onChange={muda(n, "loads")} aria-label={`Loads da linha ${n + 1}`} />
+                  </label>
+                  <label className="campo campo-hora">
+                    Qtd.
+                    <input inputMode="numeric" required value={l.quantidade} onChange={muda(n, "quantidade")} aria-label={`Quantidade da linha ${n + 1}`} />
+                  </label>
+                </>
+              ) : (
+                <label className="campo campo-hora">
+                  Tanque
+                  <input required maxLength={4} placeholder="2P" value={l.tanque} onChange={muda(n, "tanque")} aria-label={`Tanque da linha ${n + 1}`} />
+                </label>
+              )}
+              {linhas.length > 1 && (
+                <button type="button" className="botao botao-simples" onClick={() => setLinhas((ls) => ls.filter((_, i) => i !== n))} aria-label={`Tirar a linha ${n + 1}`}>
+                  Tirar
+                </button>
+              )}
+            </div>
+          ))}
+          <div className="botoes-lado">
+            <button type="button" className="botao-secundario" disabled={linhas.length >= 28} onClick={() => setLinhas((ls) => [...ls, { ...LINHA_VAZIA, tipo: ls[ls.length - 1].tipo }])}>
+              + Linha
+            </button>
+            <button type="submit" className="botao botao-principal" disabled={g.enviando}>
+              Ver o laudo
+            </button>
+            <button type="button" className="botao botao-simples" onClick={() => setAbrindo(false)}>
+              Cancelar
+            </button>
+          </div>
+        </form>
+      )}
+      <PreviaDaGravacao g={g} titulo="Adicionar laudo" />
+    </div>
+  );
+}
+
+/** Tira do laudo uma linha digitada da planilha (fica no banco, com quem e quando); pede confirmação. */
+function TirarDaPlanilha({ id, descricao, aoMudar }: { id: number; descricao: string; aoMudar: () => void }) {
+  const [confirmando, setConfirmando] = useState(false);
+  const [erro, setErro] = useState("");
+  async function tirar() {
+    try {
+      await enviarJson(`/arquivo/planilha/${id}/apagar`);
+      setConfirmando(false);
+      aoMudar();
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Não foi possível tirar a linha.");
+    }
+  }
+  return (
+    <>
+      {confirmando ? (
+        <button type="button" className="botao botao-perigo" onClick={() => void tirar()} aria-label={`Confirmar: tirar ${descricao} do laudo`}>
+          Confirmar
+        </button>
+      ) : (
+        <button type="button" className="botao botao-simples" onClick={() => setConfirmando(true)} aria-label={`Tirar ${descricao} do laudo`}>
+          Tirar
+        </button>
+      )}
+      {erro && <span className="mensagem-erro">{erro}</span>}
+    </>
   );
 }
 

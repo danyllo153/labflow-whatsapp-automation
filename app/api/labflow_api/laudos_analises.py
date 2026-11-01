@@ -373,10 +373,29 @@ DEMO_CA_EMB = laudos.demonstracao(
     "Controle de Contra Amostra – Embarque", CA_EMB, ("Número da caixa", "Número dos Loads", "Quantidade de Amostra", "Liberada para Descarte")
 )
 
-ITENS_ARQUIVO_SQL = """
+# Os itens do arquivo (vw_arquivo_itens, do bot) e o que foi digitado nas caixas da planilha (app.arquivo_conteudo_planilha,
+# 084; pedido do Danyllo de 01/11): mesmas colunas, item "planilha". A data de descarte é a da planilha (não muda).
+ITENS_DO_ARQUIVO = """(
+SELECT i.caixa_tipo, i.caixa, i.item, i.ref_id, i.descricao, i.navio, i.viagem, i.tanque, i.load, i.lotes, i.quantidade,
+       i.data_ref, i.data_descarte, i.situacao, i.descartado_em
+FROM vw_arquivo_itens i
+UNION ALL
+SELECT 'navio', an.caixa, 'planilha', x.id,
+       CASE x.tipo WHEN 'fcoj' THEN 'FCOJ ' || x.loads ELSE 'NFC tanque ' || x.tanque END || ' (laudo da planilha)',
+       an.navio, an.viagem, x.tanque, x.loads, NULL, x.quantidade, (x.criada_em AT TIME ZONE 'America/Sao_Paulo')::date,
+       an.descarte_carga,
+       CASE WHEN an.descartado_em IS NOT NULL THEN 'Descartado'
+            WHEN an.descarte_carga <= (now() AT TIME ZONE 'America/Sao_Paulo')::date THEN 'Vencido' ELSE 'Arquivado' END,
+       an.descartado_em
+FROM app.arquivo_conteudo_planilha x
+JOIN arquivo_navios an ON an.id = x.carga_id
+WHERE x.apagada_em IS NULL
+)"""
+
+ITENS_ARQUIVO_SQL = f"""
 SELECT i.item || ':' || i.ref_id, i.caixa_tipo, i.caixa, i.navio, i.viagem, i.load, i.lotes, i.tanque, i.quantidade, i.data_ref,
        i.data_descarte, i.descricao
-FROM vw_arquivo_itens i
+FROM {ITENS_DO_ARQUIVO} i
 """
 
 
@@ -384,8 +403,8 @@ def _preparar_ca_embarque(con: psycopg.Connection) -> None:
     itens = [
         (ref, f"{caixa} {navio} {viagem}", d)
         for ref, caixa, navio, viagem, d in con.execute(
-            "SELECT i.item || ':' || i.ref_id, i.caixa, i.navio, i.viagem, i.data_ref FROM vw_arquivo_itens i"
-            " WHERE i.caixa_tipo = 'navio' AND i.item IN ('fcoj', 'pote') AND i.caixa IS NOT NULL"
+            f"SELECT i.item || ':' || i.ref_id, i.caixa, i.navio, i.viagem, i.data_ref FROM {ITENS_DO_ARQUIVO} i"
+            " WHERE i.caixa_tipo = 'navio' AND i.item IN ('fcoj', 'pote', 'planilha') AND i.caixa IS NOT NULL"
             " ORDER BY i.caixa, i.navio, i.viagem, i.item, i.data_ref, i.ref_id"
         ).fetchall()
     ]
@@ -410,10 +429,10 @@ def _gerar_ca_embarque(con: psycopg.Connection, pagina_id: int, modelo: bytes | 
     tabela = laudos.encaixar(CA_EMB, modelo)
     desvio = tabela.base - CA_EMB.base  # a Observação vem logo abaixo da tabela
     celulas = []
+    # só o que existe (a linha da planilha apagada sai da folha sem deixar buraco)
+    linhas = [linha for linha in linhas if linha[0] in dados]
     for n, (ref, _) in enumerate(sorted(linhas, key=lambda linha: _ordem_ca(dados.get(linha[0])))):
-        d = dados.get(ref)
-        if not d:
-            continue
+        d = dados[ref]
         # o pote de NFC do navio não tem load: vai só o tanque ("2P", 27/10), com quantidade 1; o FCOJ, as amostras da linha
         loads = d[5] or str(d[7] or "")
         quantidade = str(d[8] or "") if d[5] else "1"

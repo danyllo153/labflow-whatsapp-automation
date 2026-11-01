@@ -98,7 +98,7 @@
 - [x] Acabamento visual do app (APP-030 a APP-032: ícones, etiquetas, modo escuro, layout profissional)
 - [ ] Ideia para depois do piloto: importar do Excel com "antes → depois" no app (tudo pelas funções, com histórico)
 - [ ] Futuro: **barreiras de segurança no celular** (localização da fábrica, horário do turno, aparelho autorizado, nada guardado no aparelho; aviso de LGPD antes de ligar), depois do piloto do app
-- [ ] **Adicionar laudo preenchido à caixa** (pedido do Danyllo, 01/11): botão na caixa de navio que não tem laudo, para as caixas da planilha mostrarem quais amostras têm; o vencimento continua o da planilha (recado no `rumo-do-app.md`)
+- [x] **Adicionar laudo preenchido à caixa** (pedido do Danyllo, 01/11; app, migration 084): botão na caixa de navio que não tem laudo, para as caixas da planilha mostrarem quais amostras têm; o vencimento continua o da planilha (recado no `rumo-do-app.md`)
 
 ### 🧪 Testes ao vivo (pelo WhatsApp)
 - [x] **Foto da folha de TAB com resultado** do load **43701** depois da leitura: testada pelo Danyllo em 24/10, tudo certo
