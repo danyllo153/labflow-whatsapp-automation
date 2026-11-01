@@ -659,18 +659,40 @@ WHERE k.contype = 'f' AND k.confrelid = 'app.paginas_laudo'::regclass
 
 
 def excluir(con: psycopg.Connection, nome: str, pagina_id: int, usuario_id: int) -> None:
-    """Excluir a folha (27/10): ela sai da lista (nada se apaga de verdade, 077) e as linhas vão para uma folha nova, que
-    sai de novo para imprimir. Trava como a distribuição das linhas."""
+    """Refazer a folha (27/10; antes "excluir"): as linhas vão para uma folha nova, que sai de novo para imprimir, e a folha
+    antiga, vazia, sai do banco (01/11; antes ficava guardada como excluída, 077). Trava como a distribuição das linhas."""
     con.execute("SELECT pg_advisory_xact_lock(60, hashtext(%s))", (nome,))
     reabrir(con, pagina_id)  # a incubação não deixa mexer em linha de folha finalizada (075)
     nova = con.execute("INSERT INTO app.paginas_laudo (laudo) VALUES (%s) RETURNING id", (nome,)).fetchone()[0]
     for tabela, coluna in con.execute(TABELAS_DA_FOLHA_SQL).fetchall():
         con.execute(f"UPDATE {tabela} SET {coluna} = %s WHERE {coluna} = %s", (nova, pagina_id))  # nomes do catálogo
-    con.execute(
-        "UPDATE app.paginas_laudo SET excluida_em = clock_timestamp(), excluida_por = %(u)s,"
-        " impresso_em = clock_timestamp(), impresso_por = %(u)s WHERE id = %(p)s",
-        {"u": usuario_id, "p": pagina_id},
-    )
+    con.execute("DELETE FROM app.paginas_laudo WHERE id = %s", (pagina_id,))  # vazia: sai do banco (01/11, 082)
+
+
+def apagar(con: psycopg.Connection, nome: str, pagina_id: int) -> int:
+    """Apagar a folha de vez (01/11, 082): a folha sai do banco e o que estava nela fica "fora do laudo" (pagina_id NULL),
+    sem voltar para uma folha nova; os registros continuam nas páginas de análise. Devolve quantas linhas saíram."""
+    con.execute("SELECT pg_advisory_xact_lock(60, hashtext(%s))", (nome,))
+    reabrir(con, pagina_id)  # a incubação não deixa mexer em linha de folha finalizada (075)
+    linhas = 0
+    for tabela, coluna in con.execute(TABELAS_DA_FOLHA_SQL).fetchall():
+        linhas += con.execute(f"UPDATE {tabela} SET {coluna} = NULL WHERE {coluna} = %s", (pagina_id,)).rowcount  # nomes do catálogo
+    con.execute("DELETE FROM app.paginas_laudo WHERE id = %s", (pagina_id,))
+    return linhas
+
+
+@roteador.post("/{nome}/{pagina_id}/apagar", response_model=Laudos)
+def apagar_pagina(
+    nome: str,
+    pagina_id: int,
+    pessoa: PessoaLogada = Depends(exigir("gerenciar_pessoas")),
+    con: psycopg.Connection = Depends(obter_conexao),
+) -> Laudos:
+    """Só o Admin (01/11): a folha sai de vez; o que estava nela não volta para nenhuma folha."""
+    laudo = _laudo(nome)
+    _da_pagina(con, laudo, pagina_id)
+    apagar(con, laudo.nome, pagina_id)
+    return _listar(con, pessoa, laudo)
 
 
 @roteador.post("/{nome}/{pagina_id}/reabrir", response_model=Laudos)

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type ChangeEvent } from "react";
 
 import { enviarArquivo, enviarJson, lerJson } from "../api";
+import { useSessao } from "../sessao";
 
 /**
  * Laudo "Controle de Ciclos de Esterilização" (07 §7; APP-035) e, com `config`, todos os outros laudos: as páginas se
@@ -56,6 +57,8 @@ export const LAUDO_ESTERILIZACAO: ConfigDoLaudo = {
 export default function LaudoEsterilizacao({ versao, config = LAUDO_ESTERILIZACAO }: { versao: number; config?: ConfigDoLaudo }) {
   const [dados, setDados] = useState<DadosLaudos | null>(null);
   const [erro, setErro] = useState("");
+  const { pessoa } = useSessao();
+  const podeApagar = !!pessoa?.pode.includes("gerenciar_pessoas"); // 01/11: só o Admin apaga a folha de vez
 
   const carregar = useCallback(async () => {
     try {
@@ -71,9 +74,9 @@ export default function LaudoEsterilizacao({ versao, config = LAUDO_ESTERILIZACA
 
   // o que espera o Confirmar: editar (reabrir) ou refazer uma folha (a rota é a de excluir: a folha sai e os registros vão
   // para uma folha nova; 01/11: "Excluir" confundia, parecia apagar as coletas)
-  const [confirmar, setConfirmar] = useState<{ acao: "reabrir" | "excluir"; pagina: PaginaDoLaudo } | null>(null);
+  const [confirmar, setConfirmar] = useState<{ acao: Acao; pagina: PaginaDoLaudo } | null>(null);
 
-  async function acao(id: number, qual: "finalizar" | "reabrir" | "excluir") {
+  async function acao(id: number, qual: "finalizar" | Acao) {
     setErro("");
     try {
       setDados(
@@ -142,6 +145,7 @@ export default function LaudoEsterilizacao({ versao, config = LAUDO_ESTERILIZACA
                     <IconeAcao nome="refazer" />
                     Refazer folha
                   </button>
+                  {podeApagar && <BotaoApagar pagina={p} aoClicar={() => setConfirmar({ acao: "apagar", pagina: p })} />}
                 </span>
               </div>
               {confirmar?.pagina.id === p.id && <Confirmar pedido={confirmar} aoConfirmar={() => void acao(p.id, confirmar.acao)} aoVoltar={() => setConfirmar(null)} />}
@@ -172,6 +176,7 @@ export default function LaudoEsterilizacao({ versao, config = LAUDO_ESTERILIZACA
                       <IconeAcao nome="refazer" />
                       Refazer folha
                     </button>
+                    {podeApagar && <BotaoApagar pagina={p} aoClicar={() => setConfirmar({ acao: "apagar", pagina: p })} />}
                   </span>
                 </div>
                 {confirmar?.pagina.id === p.id && <Confirmar pedido={confirmar} aoConfirmar={() => void acao(p.id, confirmar.acao)} aoVoltar={() => setConfirmar(null)} />}
@@ -203,7 +208,19 @@ const ICONES = {
   finalizar: "M20 6 9 17l-5-5",
   editar: "M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z",
   refazer: "M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5",
+  apagar: "M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6",
 };
+
+type Acao = "reabrir" | "excluir" | "apagar";
+
+function BotaoApagar({ pagina, aoClicar }: { pagina: PaginaDoLaudo; aoClicar: () => void }) {
+  return (
+    <button type="button" className="acao-laudo" aria-label={`Apagar a página ${pagina.numero}`} onClick={aoClicar}>
+      <IconeAcao nome="apagar" />
+      Apagar
+    </button>
+  );
+}
 
 /** Os ícones dos botões do laudo (27/10: "ícones desses botões, por favor"). */
 export function IconeAcao({ nome }: { nome: keyof typeof ICONES }) {
@@ -219,14 +236,16 @@ function Confirmar({
   aoConfirmar,
   aoVoltar,
 }: {
-  pedido: { acao: "reabrir" | "excluir"; pagina: PaginaDoLaudo };
+  pedido: { acao: Acao; pagina: PaginaDoLaudo };
   aoConfirmar: () => void;
   aoVoltar: () => void;
 }) {
   return (
-    <div className="previa-app" role="group" aria-label={`Confirmar: ${pedido.acao === "excluir" ? "refazer" : "editar"} a página ${pedido.pagina.numero}`}>
+    <div className="previa-app" role="group" aria-label={`Confirmar: ${{ excluir: "refazer", reabrir: "editar", apagar: "apagar" }[pedido.acao]} a página ${pedido.pagina.numero}`}>
       <p>
-        {pedido.acao === "excluir"
+        {pedido.acao === "apagar"
+          ? `A página ${pedido.pagina.numero} sai do banco de vez e não volta. Os ${pedido.pagina.linhas} registros dela continuam nas telas de análise, mas ficam fora do laudo: não vão para nenhuma folha nova.`
+          : pedido.acao === "excluir"
           ? `A página ${pedido.pagina.numero} sai da lista e os ${pedido.pagina.linhas} registros dela vão para uma folha nova, para imprimir de novo. Nenhum registro se apaga: para apagar um, exclua-o na tela da análise (o registro ou a coleta).`
           : `A página ${pedido.pagina.numero} volta a "em preenchimento", sem o traço. Corrija os registros na tela da análise e finalize de novo.`}
       </p>

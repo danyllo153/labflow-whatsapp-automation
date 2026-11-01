@@ -204,7 +204,7 @@ def excluir(
     Dia de página já impressa não se exclui (a folha em papel já tem a linha)."""
     linha = con.execute(
         """
-        SELECT m.id, p.impresso_em FROM app.material_asseptico m JOIN app.paginas_laudo p ON p.id = m.pagina_id
+        SELECT m.id, p.impresso_em FROM app.material_asseptico m LEFT JOIN app.paginas_laudo p ON p.id = m.pagina_id
         WHERE m.dia = %s AND m.excluido_em IS NULL
         """,
         (dia,),
@@ -361,13 +361,25 @@ def reabrir(
     return _laudos(con, pessoa)
 
 
+@roteador.post("/laudos/{pagina_id}/apagar", response_model=Laudos)
+def apagar(
+    pagina_id: int,
+    pessoa: PessoaLogada = Depends(exigir("gerenciar_pessoas")),
+    con: psycopg.Connection = Depends(obter_conexao),
+) -> Laudos:
+    """Só o Admin (01/11, 082): a folha sai de vez; os dias dela ficam fora do laudo (continuam na tela)."""
+    _da_pagina(con, pagina_id)
+    laudos.apagar(con, laudo.NOME_DO_MODELO, pagina_id)
+    return _laudos(con, pessoa)
+
+
 @roteador.delete("/laudos/{pagina_id}", response_model=Laudos)
 def excluir(
     pagina_id: int,
     pessoa: PessoaLogada = Depends(exigir("registrar_analise")),
     con: psycopg.Connection = Depends(obter_conexao),
 ) -> Laudos:
-    """Excluir a folha (27/10): os dias dela vão para uma folha nova (nada se apaga de verdade, 077)."""
+    """Refazer a folha (27/10): os dias dela vão para uma folha nova e a antiga, vazia, sai do banco (01/11)."""
     _da_pagina(con, pagina_id)
     laudos.excluir(con, laudo.NOME_DO_MODELO, pagina_id, pessoa.usuario_id)
     return _laudos(con, pessoa)

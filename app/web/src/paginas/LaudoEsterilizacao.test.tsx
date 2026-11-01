@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -89,6 +89,23 @@ describe("Laudo de esterilização (APP-035)", () => {
     expect(within(laudo).getByRole("group", { name: "Confirmar: refazer a página 1" })).toHaveTextContent("vão para uma folha nova");
     await userEvent.click(within(laudo).getByRole("button", { name: "Confirmar" }));
     expect(api.vezes("DELETE /esterilizacao/laudos/1")).toBe(1);
+  });
+
+  it("só o Admin apaga a folha de vez, com um Confirmar (01/11)", async () => {
+    abrir();
+    const laudo = await screen.findByRole("region", { name: "Laudo de esterilização" });
+    expect(within(laudo).queryByRole("button", { name: "Apagar a página 1" })).not.toBeInTheDocument();
+    cleanup();
+    const api = abrir({
+      "GET /me": () => ({ status: 200, corpo: { ...ANA, cargo: "Admin", pode: ["ver_paginas", "registrar_analise", "gerenciar_pessoas"] } }),
+      "POST /esterilizacao/laudos/1/apagar": () => ({ status: 200, corpo: { ...LAUDOS, paginas: LAUDOS.paginas.slice(0, 1) } }),
+    });
+    const doAdmin = await screen.findByRole("region", { name: "Laudo de esterilização" });
+    await userEvent.click(within(doAdmin).getByRole("button", { name: "Apagar a página 1" }));
+    expect(within(doAdmin).getByRole("group", { name: "Confirmar: apagar a página 1" })).toHaveTextContent("sai do banco de vez");
+    expect(api.vezes("POST /esterilizacao/laudos/1/apagar")).toBe(0);
+    await userEvent.click(within(doAdmin).getByRole("button", { name: "Confirmar" }));
+    expect(api.vezes("POST /esterilizacao/laudos/1/apagar")).toBe(1);
   });
 
   it("avisa, sem bloquear, quando o ciclo digitado já tem material", async () => {

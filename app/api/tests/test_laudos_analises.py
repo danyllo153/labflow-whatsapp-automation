@@ -122,5 +122,25 @@ def test_finalizar_reabrir_e_excluir_a_folha(cliente, logado, conexao):
     assert r.status_code == 200 and all(p["id"] != alvo["id"] for p in r.json()["paginas"])  # a folha sai da lista
     nova = conexao.execute("SELECT DISTINCT pagina_id FROM app.laudo_linhas WHERE ref = ANY(%s) AND laudo = 'howard'", (list(refs),)).fetchall()
     assert len(nova) == 1 and nova[0][0] != alvo["id"]  # as linhas foram juntas para uma folha nova
-    assert conexao.execute("SELECT excluida_em IS NOT NULL FROM app.paginas_laudo WHERE id = %s", (alvo["id"],)).fetchone()[0]
+    assert conexao.execute("SELECT 1 FROM app.paginas_laudo WHERE id = %s", (alvo["id"],)).fetchone() is None  # vazia: saiu do banco (01/11)
     assert cliente.get(f"/laudos/howard/{alvo['id']}/pdf").status_code == 404
+
+
+def test_so_o_admin_apaga_a_folha_de_vez_e_as_linhas_nao_voltam(cliente, logado, criar_pessoa, conexao):
+    """01/11 (082): a folha sai do banco; as linhas ficam fora do laudo (pagina_id NULL) e não voltam numa folha nova."""
+    alvo = cliente.get("/laudos/howard").json()["paginas"][0]
+    refs = [r for (r,) in conexao.execute("SELECT ref FROM app.laudo_linhas WHERE pagina_id = %s", (alvo["id"],))]
+    assert refs
+    assert cliente.post(f"/laudos/howard/{alvo['id']}/apagar").status_code == 403  # o Analista não apaga
+    criar_pessoa(usuario="admin.laudos", cargo="Admin")
+    cliente.cookies.clear()
+    assert cliente.post("/login", json={"usuario": "admin.laudos", "senha": SENHA}).status_code == 200
+    cliente.post(f"/laudos/howard/{alvo['id']}/finalizar")
+    r = cliente.post(f"/laudos/howard/{alvo['id']}/apagar")
+    assert r.status_code == 200, r.text
+    assert all(p["id"] != alvo["id"] for p in r.json()["paginas"])
+    assert conexao.execute("SELECT 1 FROM app.paginas_laudo WHERE id = %s", (alvo["id"],)).fetchone() is None
+    fora = conexao.execute("SELECT pagina_id FROM app.laudo_linhas WHERE laudo = 'howard' AND ref = ANY(%s)", (refs,)).fetchall()
+    assert len(fora) == len(refs) and all(p is None for (p,) in fora)
+    cliente.get("/laudos/howard")  # listar de novo (distribui as linhas novas) não traz as apagadas de volta
+    assert all(p is None for (p,) in conexao.execute("SELECT pagina_id FROM app.laudo_linhas WHERE laudo = 'howard' AND ref = ANY(%s)", (refs,)))

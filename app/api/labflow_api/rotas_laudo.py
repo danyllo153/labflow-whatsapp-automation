@@ -170,14 +170,24 @@ def excluir(
     pessoa: PessoaLogada = Depends(exigir("registrar_analise")),
     con: psycopg.Connection = Depends(obter_conexao),
 ) -> Laudos:
-    """Excluir a página (27/10): as esterilizações dela vão para uma página nova (nada se apaga de verdade, 077)."""
+    """Refazer a página (27/10): as esterilizações dela vão para uma página nova e a antiga, vazia, sai do banco (01/11)."""
     _existe(con, laudo_id)
     con.execute("SELECT pg_advisory_xact_lock(60, hashtext('esterilizacao'))")
     nova = con.execute("INSERT INTO app.laudos_esterilizacao DEFAULT VALUES RETURNING id").fetchone()[0]
     con.execute("UPDATE app.esterilizacoes SET laudo_id = %s WHERE laudo_id = %s", (nova, laudo_id))
-    con.execute(
-        "UPDATE app.laudos_esterilizacao SET excluida_em = clock_timestamp(), excluida_por = %(u)s,"
-        " impresso_em = coalesce(impresso_em, clock_timestamp()), impresso_por = coalesce(impresso_por, %(u)s) WHERE id = %(l)s",
-        {"u": pessoa.usuario_id, "l": laudo_id},
-    )
+    con.execute("DELETE FROM app.laudos_esterilizacao WHERE id = %s", (laudo_id,))
+    return _laudos(con, pessoa)
+
+
+@roteador.post("/{laudo_id}/apagar", response_model=Laudos)
+def apagar(
+    laudo_id: int,
+    pessoa: PessoaLogada = Depends(exigir("gerenciar_pessoas")),
+    con: psycopg.Connection = Depends(obter_conexao),
+) -> Laudos:
+    """Só o Admin (01/11, 082): a página sai de vez; as esterilizações dela ficam fora do laudo (continuam na tela)."""
+    _existe(con, laudo_id)
+    con.execute("SELECT pg_advisory_xact_lock(60, hashtext('esterilizacao'))")
+    con.execute("UPDATE app.esterilizacoes SET laudo_id = NULL WHERE laudo_id = %s", (laudo_id,))
+    con.execute("DELETE FROM app.laudos_esterilizacao WHERE id = %s", (laudo_id,))
     return _laudos(con, pessoa)
