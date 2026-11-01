@@ -32,6 +32,7 @@ from pathlib import Path
 
 EH_WINDOWS = os.name == "nt"
 EXE = ".exe" if EH_WINDOWS else ""
+SEM_JANELA = 0x08000000 if EH_WINDOWS else 0  # CREATE_NO_WINDOW: psql, pg_dump etc. sem piscar janela preta
 BATIMENTO_S = 10  # o servidor "diz que está vivo" a cada 10 s
 VENCE_S = 45  # sem sinal há 45 s = servidor caiu
 SALVAR_S = 60  # cópia no G: a cada minuto, se mudou
@@ -57,15 +58,37 @@ Esta pasta fica em "dados": a troca da pasta "instalacao" numa atualização nã
 """
 
 
-def log(msg: str) -> None:
+def log(msg: str, segredo: bool = False) -> None:
+    """Na janela (quando há) e no lite.log. `segredo` (a senha provisória) só vai para a tela, nunca para o arquivo."""
     print(msg, flush=True)
     with contextlib.suppress(Exception):
-        if LOCAL is not None:
+        if LOCAL is not None and not segredo:
             with open(LOCAL / "lite.log", "a", encoding="utf-8") as f:
                 f.write(f"{dt.datetime.now().isoformat(timespec='seconds')} {msg}\n")
 
 
 LOCAL: Path | None = None
+OCULTO = False  # sem a janela preta (da segunda vez em diante em cada PC): avisos em janelinha e o ícone no canto
+MARCADOR = "ja-abriu.txt"  # no LOCAL: este PC já abriu o LabFlow uma vez (o .bat abre oculto daí em diante)
+
+
+def avisar(titulo: str, texto: str, erro: bool = False, esperar: bool = False) -> None:
+    """Janelinha do Windows com o aviso, quando o LabFlow roda oculto (na janela preta, o log já mostra)."""
+    if not (OCULTO and EH_WINDOWS):
+        return
+    import ctypes
+
+    estilo = (0x10 if erro else 0x40) | 0x40000 | 0x10000  # ícone de erro/informação, por cima de tudo, em primeiro plano
+    mostrar = lambda: ctypes.windll.user32.MessageBoxW(0, texto, titulo, estilo)  # noqa: E731
+    mostrar() if esperar else threading.Thread(target=mostrar, daemon=True).start()
+
+
+def confirmar(titulo: str, texto: str) -> bool:
+    if not EH_WINDOWS:
+        return True
+    import ctypes
+
+    return ctypes.windll.user32.MessageBoxW(0, texto, titulo, 0x4 | 0x20 | 0x40000 | 0x10000) == 6  # Sim/Não; 6 = Sim
 INST = Path(__file__).resolve().parents[1]  # <programa>/lite/lite.py -> <programa>
 PROGRAMA_VERSAO = (INST / "VERSAO.txt").read_text(encoding="utf-8").strip() if (INST / "VERSAO.txt").exists() else "dev"
 
@@ -188,7 +211,8 @@ class Postgres:
 
     def run(self, nome: str, *args: str, check: bool = True, banco: str | None = None) -> subprocess.CompletedProcess:
         cmd = [self.exe(nome), *args]
-        r = subprocess.run(cmd, env=self.env(), capture_output=True, text=True, encoding="utf-8", errors="replace")
+        r = subprocess.run(cmd, env=self.env(), capture_output=True, text=True, encoding="utf-8", errors="replace",
+                           stdin=subprocess.DEVNULL, creationflags=SEM_JANELA)
         if check and r.returncode != 0:
             raise RuntimeError(f"{nome} falhou: {(r.stderr or r.stdout).strip()[-800:]}")
         return r
@@ -243,7 +267,8 @@ class Postgres:
         base = [self.exe("initdb"), "-D", str(self.data), "-U", SUPER, "-E", "UTF8", "-A", "scram-sha-256", f"--pwfile={pw}"]
         try:
             for extra in (["--locale=C", "--locale-provider=icu", "--icu-locale=pt-BR"], ["--locale=C"]):
-                r = subprocess.run(base + extra, capture_output=True, text=True, encoding="utf-8", errors="replace")
+                r = subprocess.run(base + extra, capture_output=True, text=True, encoding="utf-8", errors="replace",
+                                   stdin=subprocess.DEVNULL, creationflags=SEM_JANELA)
                 if r.returncode == 0:
                     return
                 shutil.rmtree(self.data, ignore_errors=True)
@@ -306,6 +331,8 @@ class Servidor:
         self.salvando = threading.Lock()
         self.estado = self._ler_estado()
         self.mudou_desde_inicio = False
+        self.falha_avisada = False
+        self.icone = None
 
     # --- estado local (senhas e marcadores; fica só no PC do servidor)
     def _ler_estado(self) -> dict:
@@ -429,11 +456,17 @@ class Servidor:
         log("=" * 60)
         log("PRIMEIRO ACESSO" if not tem else "SENHA REDEFINIDA")
         log(f"  Usuário: {usuario}")
-        log(f"  Senha provisória (vale 24 horas): {senha}")
+        log(f"  Senha provisória (vale 24 horas): {senha}", segredo=True)
+        with contextlib.suppress(Exception):
+            with open(self.local / "lite.log", "a", encoding="utf-8") as f:
+                f.write(f"{dt.datetime.now().isoformat(timespec='seconds')}   (senha provisória mostrada só na tela)\n")
         log("  No primeiro login o LabFlow pede uma senha nova.")
         log("  Anote agora: esta senha não aparece de novo.")
         log("=" * 60)
         log("")
+        avisar("LabFlow: primeiro acesso" if not tem else "LabFlow: senha redefinida",
+               f"Usuário: {usuario}\nSenha provisória (vale 24 horas): {senha}\n\n"
+               "No primeiro login o LabFlow pede uma senha nova. Anote agora: esta senha não aparece de novo.")
         if os.environ.get("LABFLOW_LITE_TESTE"):
             print(f"LITE_ADMIN={usuario}:{senha}", flush=True)
 
@@ -507,6 +540,7 @@ class Servidor:
             atual = self.dados.ler_json(self.dados.servidor)
             if atual is not None and atual.get("dono") != self.token:
                 log("Outro PC assumiu o servidor. Encerrando este.")
+                avisar("LabFlow", "Outro PC assumiu o LabFlow. Este PC deixou de ser o servidor; abra o LabFlow de novo para entrar.")
                 self.parar.set()
                 return
             self.dados.escrever_json(self.dados.servidor, self.conteudo_servidor())
@@ -534,9 +568,14 @@ class Servidor:
                 self.ultimo_contador = contador
                 self.ultimo_salvo = agora
                 self.backup_do_dia()
+                self.falha_avisada = False
                 return True
             except Exception as erro:
                 log(f"ATENÇÃO: não consegui gravar no G: ({erro}). Tento de novo em instantes; o app continua funcionando.")
+                if not self.falha_avisada:  # uma janelinha por sequência de falhas, não a cada minuto
+                    self.falha_avisada = True
+                    avisar("LabFlow: não consegui gravar no G:", f"{erro}\n\nO LabFlow continua funcionando e tenta de novo a cada minuto. "
+                           "Confira o acesso à pasta de rede.", erro=True)
                 return False
 
     def backup_do_dia(self) -> None:
@@ -602,6 +641,7 @@ class Servidor:
             self.subir_api()
         except Exception as erro:
             log(f"NÃO FOI POSSÍVEL ABRIR: {erro}")
+            avisar("LabFlow: não foi possível abrir", f"{erro}\n\nDetalhes em {self.local / 'lite.log'}", erro=True, esperar=True)
             self.parar.set()
             with contextlib.suppress(Exception):
                 self.pg.parar()
@@ -619,12 +659,22 @@ class Servidor:
         log("LabFlow no ar neste PC (SERVIDOR).")
         log(f"  Aqui:  {endereco}")
         log(f"  Outros PCs do laboratório: abram o 'Abrir LabFlow' (ou {outros})")
-        log("  Deixe esta janela ABERTA. Para encerrar: tecle ENTER aqui.")
+        if OCULTO:
+            log("  Rodando oculto: o ícone do LabFlow fica perto do relógio (Abrir, Endereço, Encerrar).")
+        else:
+            log("  Deixe esta janela ABERTA. Para encerrar: tecle ENTER aqui.")
+            log("  Da próxima vez neste PC, o LabFlow abre oculto, com o ícone perto do relógio.")
         log("=" * 60)
+        marcar_que_abriu()
+        if OCULTO:
+            self.icone = iniciar_bandeja(self, endereco, outros)
         if not self.args.sem_navegador:
             webbrowser.open(endereco)
         self._esperar_fim()
         self.encerrar()
+        if self.icone is not None:
+            with contextlib.suppress(Exception):
+                self.icone.stop()
         return 0
 
     def _esperar_fim(self) -> None:
@@ -671,6 +721,7 @@ def modo_cliente(dados: Dados, args: argparse.Namespace) -> int:
         if conecta(host, porta):
             endereco = f"http://{host}:{porta}/app/"
             log(f"O LabFlow já está aberto no PC {info.get('pc')}. Abrindo {endereco}")
+            marcar_que_abriu()
             if not args.sem_navegador:
                 webbrowser.open(endereco)
             return 0
@@ -680,7 +731,48 @@ def modo_cliente(dados: Dados, args: argparse.Namespace) -> int:
     log("no PC servidor, para os PCs do laboratório. Enquanto isso, só um PC usa o LabFlow por vez:")
     log("peça para fechar lá (tecla ENTER na janela do LabFlow) e abra aqui.")
     log("Se o PC servidor caiu ou foi desligado, espere 1 minuto e abra de novo: este PC assume, com os dados gravados.")
+    avisar("LabFlow: não conectou", f"O LabFlow está aberto no PC {info.get('pc')}, mas este PC não conseguiu falar com ele "
+           f"(porta {porta}).\n\nSe o PC servidor caiu ou foi desligado, espere 1 minuto e abra de novo: este PC assume.\n"
+           f"Se acontecer sempre, peça à TI para liberar a porta TCP {porta} no PC servidor.", erro=True, esperar=True)
     return 2
+
+
+def marcar_que_abriu() -> None:
+    with contextlib.suppress(OSError):
+        if LOCAL is not None:
+            (LOCAL / MARCADOR).write_text(dt.datetime.now().isoformat(timespec="seconds"), encoding="utf-8")
+
+
+def iniciar_bandeja(srv: "Servidor", endereco: str, outros: str):
+    """O ícone do LabFlow perto do relógio (modo oculto). Sem ele (biblioteca ausente, sessão sem área de trabalho), o
+    LabFlow segue funcionando e fecha pelo 'Fechar LabFlow'."""
+    try:
+        import pystray
+        from PIL import Image, ImageDraw
+
+        imagem = Image.new("RGBA", (64, 64), (0, 0, 0, 0))
+        desenho = ImageDraw.Draw(imagem)
+        desenho.ellipse((2, 2, 62, 62), fill=(31, 59, 179))
+        desenho.polygon([(26, 13), (38, 13), (38, 28), (50, 50), (14, 50), (26, 28)], fill=(255, 255, 255))
+
+        def encerrar(icone, _item) -> None:
+            if confirmar("Encerrar o LabFlow?", "Tudo será gravado no G: e os outros PCs param de usar o LabFlow até alguém "
+                                               "abrir de novo.\n\nEncerrar agora?"):
+                srv.parar.set()
+
+        menu = pystray.Menu(
+            pystray.MenuItem("Abrir o LabFlow", lambda _i, _it: webbrowser.open(endereco), default=True),
+            pystray.MenuItem("Endereço para os outros PCs", lambda _i, _it: avisar(
+                "LabFlow: endereço", f"Neste PC: {endereco}\nOutros PCs: {outros}\n\nOu, nos outros PCs, os dois cliques em Abrir LabFlow.")),
+            pystray.Menu.SEPARATOR,
+            pystray.MenuItem("Encerrar o LabFlow", encerrar),
+        )
+        icone = pystray.Icon("LabFlow", imagem, "LabFlow (servidor deste laboratório)", menu)
+        threading.Thread(target=icone.run, daemon=True).start()
+        return icone
+    except Exception as erro:
+        log(f"(sem o ícone perto do relógio: {erro}; para encerrar, use o Fechar LabFlow)")
+        return None
 
 
 # ---------------------------------------------------------------- teste de rede ------------------------------------
@@ -714,7 +806,7 @@ def testar_rede(dados: Dados, args: argparse.Namespace) -> int:
 
 # ---------------------------------------------------------------- principal ----------------------------------------
 def main() -> int:
-    global LOCAL
+    global LOCAL, OCULTO
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     ap = argparse.ArgumentParser()
@@ -724,7 +816,9 @@ def main() -> int:
     ap.add_argument("--sem-navegador", action="store_true")
     ap.add_argument("--redefinir-admin", action="store_true", help="gera nova senha provisória para o primeiro Admin")
     ap.add_argument("--testar-rede", action="store_true")
+    ap.add_argument("--oculto", action="store_true", help="sem a janela preta: ícone perto do relógio e avisos em janelinha")
     args = ap.parse_args()
+    OCULTO = args.oculto
 
     if EH_WINDOWS:
         base = Path(os.environ.get("LOCALAPPDATA", str(Path.home()))) / "LabFlowLite"

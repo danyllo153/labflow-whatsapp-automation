@@ -21,10 +21,14 @@ import urllib.request
 from pathlib import Path
 
 
-def abrir(raiz: Path, local_app: Path, saida: Path) -> subprocess.Popen:
-    env = dict(os.environ, LOCALAPPDATA=str(local_app), LABFLOW_LITE_TESTE="1")
+def abrir(raiz: Path, local_app: Path, saida: Path, oculto: bool = False) -> subprocess.Popen:
+    env = dict(os.environ, LOCALAPPDATA=str(local_app))
+    if not oculto:
+        env["LABFLOW_LITE_TESTE"] = "1"
+    else:
+        env.pop("LABFLOW_LITE_TESTE", None)
     return subprocess.Popen(
-        ["cmd", "/c", str(raiz / "Abrir LabFlow.bat"), "--sem-navegador"],
+        ["cmd", "/c", str(raiz / "Abrir LabFlow.bat")] + ([] if oculto else ["--sem-navegador"]),
         env=env,
         stdin=subprocess.DEVNULL,
         stdout=open(saida, "w", encoding="utf-8"),
@@ -128,6 +132,33 @@ def main() -> None:
     assert pedir(web, f"http://127.0.0.1:{info['porta']}/login", {"usuario": usuario, "senha": "SenhaDoTeste123"}) == 200
     fechar(raiz, pc_b, b2, saida_b2)
     print("4 ok: B restaurou do G: e a senha nova vale")
+
+    # 5. B de novo: já abriu uma vez, então abre OCULTO (sem a janela preta; o .bat devolve na hora)
+    assert (pc_b / "LabFlowLite" / "ja-abriu.txt").exists(), "o marcador de 'já abriu' não foi gravado"
+    oculto = abrir(raiz, pc_b, trabalho / "b3.txt", oculto=True)
+    oculto.wait(timeout=60)  # o start devolve o controle logo
+    fim = time.time() + 300
+    while time.time() < fim:
+        info = json.loads((raiz / "dados" / "servidor.json").read_text(encoding="utf-8")) if (raiz / "dados" / "servidor.json").exists() else {}
+        if info.get("porta") and pedir(urllib.request.build_opener(), f"http://127.0.0.1:{info['porta']}/saude") == 200:
+            break
+        time.sleep(3)
+    else:
+        print((pc_b / "LabFlowLite" / "lite.log").read_text(encoding="utf-8", errors="replace")[-3000:])
+        raise SystemExit("FALHOU: o modo oculto não subiu")
+    (pc_b / "LabFlowLite" / "parar.txt").write_text("")
+    fim = time.time() + 180
+    while (raiz / "dados" / "servidor.json").exists() and time.time() < fim:
+        time.sleep(2)
+    assert not (raiz / "dados" / "servidor.json").exists(), "o modo oculto não fechou pelo Fechar LabFlow"
+    log_b = (pc_b / "LabFlowLite" / "lite.log").read_text(encoding="utf-8", errors="replace")
+    assert "Rodando oculto" in log_b and "Tudo gravado" in log_b.split("Rodando oculto")[-1]
+    print("5 ok: da segunda vez abriu oculto e fechou pelo Fechar LabFlow")
+
+    # 6. a senha provisória não fica gravada no lite.log
+    log_a = (pc_a / "LabFlowLite" / "lite.log").read_text(encoding="utf-8", errors="replace")
+    assert senha not in log_a and "senha provisória mostrada só na tela" in log_a
+    print("6 ok: a senha provisória não está no log")
     print("TESTE DE FUMAÇA OK")
 
 

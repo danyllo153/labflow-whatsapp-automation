@@ -33,6 +33,11 @@ LabFlow\                      (G:)
 6. Papéis como no servidor (`labflow_app`, `labflow_leitura`, `labflow_app_web`); o app entra como `labflow_app_web`; PostgreSQL só em 127.0.0.1 com senha.
 7. Fechar: ENTER + S na janela, `Fechar LabFlow.bat`, ou o X da janela (o Windows dá poucos segundos; o que não couber fica no banco local e volta na próxima abertura no mesmo PC).
 
+## Janela e ícone (01/11)
+- Primeira vez em cada PC: a janela preta (preparo, senha do primeiro acesso). Depois (marcador `%LOCALAPPDATA%\LabFlowLite\ja-abriu.txt`, sem opções extras no .bat): `pythonw --oculto`, sem janela.
+- Oculto: ícone perto do relógio (pystray) com Abrir o LabFlow, Endereço para os outros PCs e Encerrar (com confirmação); avisos (não abriu, não conectou, outro PC assumiu, falha ao gravar no G:, senha) em janelinha do Windows. Sem o ícone (sessão sem área de trabalho), segue funcionando e fecha pelo `Fechar LabFlow.bat`.
+- A senha provisória só aparece na tela/janelinha; o `lite.log` registra só que ela foi mostrada.
+
 ## Marca da instalação
 - Pasta `dados\marca` no G: (criada na primeira abertura, com um LEIA-ME): `marca.json` (`nome`, `cor_principal`, `cor_secundaria`, em `#rrggbb`), `logo.png` (até 2 MB) e `estilo.css` (até 200 KB, por último). Tudo opcional; arquivo com erro é ignorado sozinho.
 - Ao abrir, a Lite copia a pasta para o PC e passa `LABFLOW_MARCA_DIR` ao app; a API (`marca.py`, rotas `/marca`, `/marca/logo.png`, `/marca/estilo.css`, sem login) lê uma vez. Mudou a marca: reabrir no PC servidor.

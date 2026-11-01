@@ -35,7 +35,7 @@ Set-Content -Encoding ascii (Join-Path $py "python$mm._pth") @("python$mm.zip", 
 $pyver = ($PythonVersao.Split(".")[0..1] -join ".")
 python -m pip install --disable-pip-version-check --no-compile --only-binary=:all: --platform win_amd64 `
   --python-version $pyver --implementation cp --target (Join-Path $py "Lib\site-packages") `
-  -r (Join-Path $repo "app\api\requirements.txt") tzdata
+  -r (Join-Path $repo "app\api\requirements.txt") tzdata pystray==0.19.5
 Checar "pip install"
 
 # 2. API, telas, migrations e o lancador

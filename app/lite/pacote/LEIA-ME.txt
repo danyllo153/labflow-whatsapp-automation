@@ -8,14 +8,23 @@ PARA ABRIR
   - Se outro PC já estiver com o LabFlow aberto, este só abre o navegador nele:
     vários PCs usam juntos, cada um com o seu login.
 
+A JANELA PRETA E O ÍCONE PERTO DO RELÓGIO
+  Na PRIMEIRA vez em cada PC, o LabFlow abre com uma janela preta: ela mostra o
+  preparo e, no banco novo, a senha do primeiro acesso (anote).
+  Da segunda vez em diante, abre OCULTO: só aparece o ícone do LabFlow perto do
+  relógio do Windows. Botão direito no ícone:
+    Abrir o LabFlow · Endereço para os outros PCs · Encerrar o LabFlow
+  Avisos importantes aparecem numa janelinha. "Fechar LabFlow" também encerra.
+
 O PC SERVIDOR
-  O primeiro PC que abre é o "servidor": a janela preta dele precisa ficar ABERTA.
+  O primeiro PC que abre é o "servidor": o LabFlow dele precisa ficar ABERTO
+  (a janela preta, na primeira vez, ou o ícone perto do relógio).
   Use de preferência o PC que fica ligado o dia todo.
   - Troca de turno: só "Sair" no LabFlow. NÃO saia do usuário do Windows nesse PC
     (bloquear a tela com Windows+L pode).
   - Esse PC não pode suspender/hibernar (plano de energia: nunca).
-  - Para fechar: tecle ENTER na janela preta e confirme com S. Os outros PCs param até
-    alguém abrir de novo.
+  - Para fechar: no ícone perto do relógio, "Encerrar o LabFlow" (ou ENTER e S na
+    janela preta). Os outros PCs param até alguém abrir de novo.
 
 OS DADOS
   Ficam na pasta "dados". Nunca apague nem substitua essa pasta.
