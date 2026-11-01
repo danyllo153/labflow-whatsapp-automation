@@ -11,8 +11,10 @@ from typing import Any
 
 import psycopg
 from psycopg.rows import dict_row
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Response
 from pydantic import BaseModel
+
+from labflow_api import excel
 
 from labflow_api.dependencias import PessoaLogada, obter_conexao
 from labflow_api.permissoes import exigir
@@ -411,3 +413,81 @@ def relatorio_do_dia(
     blocos, texto, lidos, total, alertas = montar(dia, completo, [r for r in nfc if r["linha"]], [r for r in conc if r["linha"]], fin)
     return Relatorio(dia=dia, hoje=hoje, completo=completo, blocos=blocos, lidos=lidos, total=total, alertas=alertas,
                      finalizado_por=por, finalizado_as=as_, texto=texto)
+
+
+# --- Excel (pedido de 01/11): as leituras do dia separadas por bloco, uma linha por leitura ----------------------------
+
+
+def _situacao(lido: bool, nao_ok: bool) -> str:
+    return "Não ok" if nao_ok else ("Lido" if lido else "Falta ler")
+
+
+def _faixa_texto(nums: list[int] | None, pref: str) -> str:
+    return ", ".join(_txt_faixa(f, pref) for f in _faixas(sorted(nums))) if nums else ""
+
+
+def abas_do_excel(nfc: list[dict], conc: list[dict], fin: dict[str, Any]) -> list[tuple[str, list[tuple[str, str]], list[dict]]]:
+    receb, emb, terra, navio, desvios = [], [], [], [], []
+    for r in conc:
+        sit = _situacao(r["lido"], r["alarme"])
+        if r["bloco"] == "Tank farm":  # o TAB dos tanques de terra
+            terra.append({"amostra": "TAB", "analise": "TAB", "tanque": r["tanque"], "coleta": r["data_coleta"],
+                          "resultado": r["resultado"] or "", "situacao": sit})
+            continue
+        comum = {"analise": r["linha"], "load": r["load"], "composta": f"#{r['composta_id']}" if r["composta_id"] else "",
+                 "resultado": r["resultado"] or "", "situacao": sit}
+        if r["bloco"] == "Recebimento":
+            receb.append({**comum, "lote": _faixa_texto(r["lotes"], "") if r["lotes"] else (r["numero"] or "")})
+        else:
+            emb.append({**comum, "onde": r["onde"], "amostra": _faixa_texto(r["lotes"], "A") if r["lotes"] else (f"A{r['numero']}" if r["numero"] else "")})
+    for r in nfc:
+        linha = {"amostra": r["amostra"], "analise": r["linha"], "navio": r["navio"] or "", "tanque": r["tanque"],
+                 "resultado": r["contagem"] or "", "situacao": _situacao(r["lido"], r["nao_ok"]),
+                 "obs": "repetição" if r.get("repeticao") else ""}
+        (terra if r["bloco"] == "Tank farm" else navio).append(linha)
+    for d in fin.get("desvios") or []:
+        desvios.append({"tipo": f"Desvio de {d['linha'].lower()}", "local": d["bloco"], "navio": d.get("navio") or "", "tanque": d["tanque"],
+                        "ler_ate": d.get("ler_ate") or "", "status": d.get("status") or "", "resultado": d.get("resultado") or ""})
+    for d in fin.get("desvios_tanque") or []:
+        desvios.append({"tipo": f"Desvio de tanque ({d['analise']}, {d.get('frasco') or ''})", "local": d["bloco"], "navio": d.get("navio") or "",
+                        "tanque": d["tanque"], "ler_ate": d.get("ler_ate") or "", "status": d.get("status") or "", "resultado": d.get("resultado") or ""})
+    sit = [("resultado", "Resultado"), ("situacao", "Situação")]
+    return [
+        ("FCOJ Recebimento", [("analise", "Análise"), ("load", "Load"), ("lote", "Lote"), ("composta", "Composta"), *sit], receb),
+        ("FCOJ Embarque", [("analise", "Análise"), ("onde", "Navio, linha e fase"), ("load", "Load"), ("amostra", "Amostra"),
+                           ("composta", "Composta"), *sit], emb),
+        ("NFC Tank farm", [("amostra", "Amostra"), ("analise", "Análise"), ("tanque", "Tanque"), ("coleta", "Coleta"), *sit, ("obs", "Obs.")], terra),
+        ("NFC Navio", [("amostra", "Amostra"), ("analise", "Análise"), ("navio", "Navio"), ("tanque", "Tanque"), *sit, ("obs", "Obs.")], navio),
+        ("Desvios", [("tipo", "Desvio"), ("local", "Onde"), ("navio", "Navio"), ("tanque", "Tanque"), ("ler_ate", "Ler até"),
+                     ("status", "Status"), ("resultado", "Resultado")], desvios),
+    ]
+
+
+@roteador.get("/relatorio-do-dia/excel")
+def relatorio_do_dia_excel(
+    dia: date | None = Query(default=None),
+    pessoa: PessoaLogada = Depends(exigir("imprimir_exportar")),
+    con: psycopg.Connection = Depends(obter_conexao),
+) -> Response:
+    """As leituras do dia em Excel: uma aba por bloco (FCOJ recebimento e embarque, NFC tank farm e navio, desvios), uma
+    linha por leitura com o resultado e a situação (Lido, Não ok, Falta ler), e o Resumo com os totais."""
+    dia = dia or _hoje(con)
+    p = {"dia": dia}
+    cur = con.cursor(row_factory=dict_row)
+    nfc = [r for r in cur.execute(NFC_SQL, p).fetchall() if r["linha"]]
+    conc = [r for r in cur.execute(CONCENTRADO_SQL, p).fetchall() if r["linha"]]
+    por, as_, desvios, desvios_tanque = con.execute(FINALIZADA_SQL, p).fetchone()
+    fin = {"finalizado_por": por, "finalizado_as": as_, "desvios": desvios, "desvios_tanque": desvios_tanque}
+    abas = abas_do_excel(nfc, conc, fin)
+    leituras = [l for _, _, linhas in abas[:4] for l in linhas]
+    resumo = [
+        ("Dia", dia),
+        ("Leituras", len(leituras)),
+        ("Lidas", sum(l["situacao"] != "Falta ler" for l in leituras)),
+        ("Não ok", sum(l["situacao"] == "Não ok" for l in leituras)),
+        ("Falta ler", sum(l["situacao"] == "Falta ler" for l in leituras)),
+        ("Leitura finalizada", f"por {por} às {as_}" if por else "não"),
+    ]
+    conteudo = excel.livro_de_abas("Leituras do dia", abas, resumo)
+    return Response(content=conteudo, media_type=excel.MIME_XLSX,
+                    headers={"Content-Disposition": f'attachment; filename="labflow-leituras-{dia:%Y-%m-%d}.xlsx"'})

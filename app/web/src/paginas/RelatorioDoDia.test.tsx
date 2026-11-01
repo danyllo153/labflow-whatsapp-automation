@@ -68,6 +68,7 @@ describe("Leituras do dia (relatório do dia como o do bot)", () => {
     expect(within(fcoj).getByText("C.T 48h ≥ 200 — 77001: lote 6 = 250")).toBeInTheDocument();
     expect(screen.getByRole("article", { name: "NFC — Tank farm" })).toHaveTextContent("Amostra normal");
     expect(screen.getByRole("link", { name: "Enviar no WhatsApp" }).getAttribute("href")).toContain(encodeURIComponent("FCOJ — Recebimento"));
+    expect(screen.getByRole("link", { name: "Exportar as leituras do dia para o Excel" }).getAttribute("href")).toMatch(/^\/relatorio-do-dia\/excel\?dia=\d{4}-\d{2}-\d{2}$/);
     expect(document.querySelector(".relatorio-do-dia")?.textContent ?? "").not.toMatch(/\p{Extended_Pictographic}/u);
   });
 
