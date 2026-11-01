@@ -90,7 +90,12 @@ def test_coletor_so_mexe_na_propria_coleta(cliente, pessoa_logada, nova_coleta):
     assert cliente.put(f"/coletas/{alheia}", json={"tanque": "T93"}).status_code == 404
     assert cliente.post(f"/coletas/{alheia}/excluir", json={}).status_code == 404
     assert cliente.put(f"/coletas/{minha}", json={"tanque": "T94"}).status_code == 200
-    assert cliente.post(f"/coletas/{minha}/excluir", json={}).status_code == 200
+    # 01/11: o Coletor corrige só o tanque e a data, e exclui só com motivo
+    assert cliente.put(f"/coletas/{minha}", json={"coletado_por": "Outro"}).status_code == 403
+    assert cliente.put(f"/coletas/{minha}", json={"data_coleta": "2026-10-21"}).status_code == 200
+    assert cliente.post(f"/coletas/{minha}/excluir", json={}).status_code == 422
+    assert cliente.post(f"/coletas/{minha}/excluir", json={"motivo": "  "}).status_code == 422
+    assert cliente.post(f"/coletas/{minha}/excluir", json={"motivo": "coleta de teste"}).status_code == 200
 
 
 def test_consultor_ve_mas_nao_corrige_nem_exclui(cliente, pessoa_logada, nova_coleta):

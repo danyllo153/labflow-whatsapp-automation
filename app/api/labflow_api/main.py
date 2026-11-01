@@ -8,7 +8,7 @@ import os
 
 from fastapi import FastAPI
 
-from labflow_api.rotas_admin import roteador as roteador_admin
+from labflow_api.rotas_admin import e_lite, roteador as roteador_admin
 from labflow_api.rotas_admin_turnos import roteador as roteador_admin_turnos
 from labflow_api.rotas_analise_recebimento import roteador as roteador_analise_recebimento
 from labflow_api.rotas_apps_analise import roteador as roteador_apps_analise
@@ -60,11 +60,12 @@ def saude() -> dict[str, str]:
 
 @app.get("/ambiente", tags=["sistema"])
 def ambiente() -> dict[str, bool]:
-    """Diz às telas se o servidor é de demonstração (mostra a faixa "Dados de demonstração").
+    """Diz às telas se o servidor é de demonstração (mostra a faixa "Dados de demonstração") e se é a Lite (sem bot:
+    o telefone em Nova pessoa é opcional, 01/11).
 
-    Liga por padrão; só desliga com LABFLOW_DEMONSTRACAO=0 (servidor do laboratório, no futuro).
+    A demonstração liga por padrão; só desliga com LABFLOW_DEMONSTRACAO=0 (servidor do laboratório, no futuro).
     """
-    return {"demonstracao": os.environ.get("LABFLOW_DEMONSTRACAO", "1") != "0"}
+    return {"demonstracao": os.environ.get("LABFLOW_DEMONSTRACAO", "1") != "0", "lite": e_lite()}
 
 
 app.include_router(roteador_marca)  # nome, logo e cores da instalação (Lite); sem login

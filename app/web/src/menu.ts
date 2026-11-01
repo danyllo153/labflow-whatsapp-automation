@@ -8,6 +8,9 @@ export interface ItemDoMenu {
   soNoMenuLateral?: boolean; // no celular a barra de baixo tem só os 5 fixos; o resto fica em "Minha conta"
 }
 
+/** O Coletor só vê a página Coletas e o Turno (o check-in), pedido de 01/11: nada de Análises, Leituras nem busca. */
+export const TELAS_DO_COLETOR = ["/paginas/coletas", "/turno"];
+
 export const MENU: ItemDoMenu[] = [
   { caminho: "/", rotulo: "Início", pronto: true },
   { caminho: "/turno", rotulo: "Turno", pronto: true },

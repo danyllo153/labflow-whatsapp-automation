@@ -65,12 +65,13 @@ describe("apps de análise da Fase E (E3 a E8)", () => {
   });
 
   it("Tanques: registrar coleta de navio com a prévia", async () => {
-    const { posts } = abrir("/analises/tanques-navio?aba=coleta", {
+    const { posts } = abrir("/paginas/coletas?aba=registrar", {
       "GET /analises/tanques/leituras": () => ({ status: 200, corpo: [] }),
       "POST /analises/tanques/coleta": (c) => gravacao("Coleta do navio O.SKY 189: 1C, 2P (2 tanques, 6 drops).", c.previa),
     });
+    // 01/11: a coleta saiu dos apps de tanques e mora na página Coletas, que escolhe terra ou navio
+    await userEvent.click(await screen.findByRole("button", { name: "Tanque navio" }));
     const form = await screen.findByRole("form", { name: "Registrar coleta" });
-    expect(within(form).queryByLabelText("Origem")).toBeNull(); // cada app tem a sua origem (27/10)
     await userEvent.type(within(form).getByLabelText("Navio e viagem"), "O.SKY 189");
     await userEvent.type(within(form).getByLabelText("Tanques"), "1C, 2P");
     await userEvent.click(within(form).getByRole("button", { name: "Ver o que vai ser criado" }));
