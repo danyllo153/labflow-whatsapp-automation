@@ -72,4 +72,4 @@ def test_ambiente_demonstracao(monkeypatch, valor, esperado):
         monkeypatch.delenv("LABFLOW_DEMONSTRACAO", raising=False)
     else:
         monkeypatch.setenv("LABFLOW_DEMONSTRACAO", valor)
-    assert TestClient(app).get("/ambiente").json() == {"demonstracao": esperado}
+    assert TestClient(app).get("/ambiente").json() == {"demonstracao": esperado, "lite": False}

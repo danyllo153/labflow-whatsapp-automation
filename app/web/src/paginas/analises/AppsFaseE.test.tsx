@@ -100,6 +100,21 @@ describe("apps de análise da Fase E (E3 a E8)", () => {
     expect(within(form).getByLabelText("Compostas")).toHaveValue("(1-3)(5)");
   });
 
+  it("Leituras do Embarque: de início só atrasados, para hoje e não ok, com a situação (01/11)", async () => {
+    const am = (id: number, situacao: string) => ({
+      id, embarque: "O.SKY 198 L1 F1", amostra: `A${id}`, load: "22232", data: "2026-11-01", ct: null, bl72: null, bl120: null, composta: null, situacao,
+    });
+    const { api } = abrir("/leituras?aba=embarque", {
+      "GET /analises/embarque/amostras?so_pendentes=true": () => ({ status: 200, corpo: [am(1, "Para hoje")] }),
+      "GET /analises/embarque/amostras": () => ({ status: 200, corpo: [am(1, "Para hoje"), am(2, "Ok")] }),
+    });
+    expect(await screen.findByText("Para hoje")).toBeInTheDocument();
+    expect(screen.queryByText("A2")).not.toBeInTheDocument();
+    await userEvent.click(screen.getByRole("checkbox", { name: "Só atrasados, para hoje e não ok" }));
+    expect(await screen.findByText("A2")).toBeInTheDocument();
+    expect(api.chamadas.some((c) => c.rota === "GET /analises/embarque/amostras?so_pendentes=true")).toBe(true);
+  });
+
   it("TAB: o grupo vem todo marcado e um Confirmar espalha todos", async () => {
     const tab = (id: number, alvo: string) => ({ teste_id: id, teste: "Tab", alvo, status: "No caldo", proxima: "espalhar", prevista: "2026-10-24", situacao: "Vence hoje", lote_aberto: false });
     const { posts } = abrir("/analises/tab", {
