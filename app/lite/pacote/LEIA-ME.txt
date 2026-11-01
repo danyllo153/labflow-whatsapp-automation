@@ -2,20 +2,32 @@ LABFLOW (versão para a pasta de rede)
 =====================================
 
 PARA ABRIR
-  Dois cliques em "Abrir LabFlow".
+  Dois cliques em "Abrir LabFlow" (o atalho .vbs: abre sem janela do cmd).
+  Se a TI bloquear o .vbs, use "Abrir LabFlow com janela" (o .bat): funciona igual.
   - Na primeira vez em cada PC ele se prepara (1 a 3 minutos).
-  - O navegador abre na tela de entrar. Cada pessoa usa o PRÓPRIO usuário e senha.
-  - Se outro PC já estiver com o LabFlow aberto, este só abre o navegador nele:
+  - O LabFlow abre como um programa, em TELA CHEIA, na tela de entrar.
+    F11 alterna entre tela cheia e janela; Alt+F4 fecha só a tela (o LabFlow
+    continua rodando no ícone perto do relógio). Cada pessoa usa o PRÓPRIO usuário e senha.
+  - Se outro PC já estiver com o LabFlow aberto, este só abre a janela do LabFlow dele:
     vários PCs usam juntos, cada um com o seu login.
 
+A JANELA PRETA E O ÍCONE PERTO DO RELÓGIO
+  Na PRIMEIRA vez em cada PC, o LabFlow abre com uma janela preta: ela mostra o
+  preparo e, no banco novo, a senha do primeiro acesso (anote).
+  Da segunda vez em diante, abre OCULTO: só aparece o ícone do LabFlow perto do
+  relógio do Windows. Botão direito no ícone:
+    Abrir o LabFlow · Endereço para os outros PCs · Encerrar o LabFlow
+  Avisos importantes aparecem numa janelinha. "Fechar LabFlow" também encerra.
+
 O PC SERVIDOR
-  O primeiro PC que abre é o "servidor": a janela preta dele precisa ficar ABERTA.
+  O primeiro PC que abre é o "servidor": o LabFlow dele precisa ficar ABERTO
+  (a janela preta, na primeira vez, ou o ícone perto do relógio).
   Use de preferência o PC que fica ligado o dia todo.
   - Troca de turno: só "Sair" no LabFlow. NÃO saia do usuário do Windows nesse PC
     (bloquear a tela com Windows+L pode).
   - Esse PC não pode suspender/hibernar (plano de energia: nunca).
-  - Para fechar: tecle ENTER na janela preta e confirme com S. Os outros PCs param até
-    alguém abrir de novo.
+  - Para fechar: no ícone perto do relógio, "Encerrar o LabFlow" (ou ENTER e S na
+    janela preta). Os outros PCs param até alguém abrir de novo.
 
 OS DADOS
   Ficam na pasta "dados". Nunca apague nem substitua essa pasta.
@@ -27,8 +39,8 @@ OS DADOS
 PRIMEIRO ACESSO (banco vazio)
   Na primeira abertura a janela preta mostra o usuário "admin" e uma senha
   provisória (vale 24 horas). Entre, troque a senha e cadastre as pessoas em
-  Admin > Pessoas. Perdeu a senha do admin? Abra pela linha de comando:
-  "Abrir LabFlow.bat" --redefinir-admin
+  Admin > Pessoas. Perdeu a senha do admin? Feche o LabFlow e, na pasta, rode
+  pela linha de comando:  "Abrir LabFlow com janela.bat" --redefinir-admin
 
 MARCA (opcional)
   Nome, logo e cores do laboratório: pasta dados\marca (instruções no LEIA-ME de lá).

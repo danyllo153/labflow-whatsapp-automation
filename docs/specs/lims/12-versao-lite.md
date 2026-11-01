@@ -15,7 +15,7 @@
 ## Pastas
 ```
 LabFlow\                      (G:)
-  Abrir LabFlow.bat  Fechar LabFlow.bat  Testar rede.bat  LEIA-ME.txt
+  Abrir LabFlow.vbs (sem janela)  Abrir LabFlow com janela.bat  Fechar LabFlow.bat  Testar rede.bat  LEIA-ME.txt
   instalacao\                 trocada inteira a cada versão
     python\ (embutido + dependências)  app\labflow_api\  web\  migrations\  postgres\ (15+)  lite\lite.py  VERSAO.txt
   dados\                      nunca apagar nem substituir
@@ -32,6 +32,12 @@ LabFlow\                      (G:)
 5. Cópia no G: a cada 60 s se houve escrita (e a cada 10 min mesmo sem), e ao fechar; `labflow.anterior.dump` e backup do dia (30 dias).
 6. Papéis como no servidor (`labflow_app`, `labflow_leitura`, `labflow_app_web`); o app entra como `labflow_app_web`; PostgreSQL só em 127.0.0.1 com senha.
 7. Fechar: ENTER + S na janela, `Fechar LabFlow.bat`, ou o X da janela (o Windows dá poucos segundos; o que não couber fica no banco local e volta na próxima abertura no mesmo PC).
+
+## Janela e ícone (01/11)
+- O LabFlow abre como programa: modo aplicativo do Edge (`--app --start-fullscreen`: tela cheia como o F11, sem barra de endereço; o F11 volta para janela), senão o do Chrome, senão o navegador padrão.
+- Primeira vez em cada PC: a janela preta (preparo, senha do primeiro acesso). Depois (marcador `%LOCALAPPDATA%\LabFlowLite\ja-abriu.txt`, sem opções extras no .bat): `pythonw --oculto`, sem janela.
+- Oculto: ícone perto do relógio (pystray) com Abrir o LabFlow, Endereço para os outros PCs e Encerrar (com confirmação); avisos (não abriu, não conectou, outro PC assumiu, falha ao gravar no G:, senha) em janelinha do Windows. Sem o ícone (sessão sem área de trabalho), segue funcionando e fecha pelo `Fechar LabFlow.bat`.
+- A senha provisória só aparece na tela/janelinha; o `lite.log` registra só que ela foi mostrada.
 
 ## Marca da instalação
 - Pasta `dados\marca` no G: (criada na primeira abertura, com um LEIA-ME): `marca.json` (`nome`, `cor_principal`, `cor_secundaria`, em `#rrggbb`), `logo.png` (até 2 MB) e `estilo.css` (até 200 KB, por último). Tudo opcional; arquivo com erro é ignorado sozinho.
