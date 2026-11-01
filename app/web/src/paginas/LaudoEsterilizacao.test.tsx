@@ -85,8 +85,8 @@ describe("Laudo de esterilização (APP-035)", () => {
     expect(api.vezes("POST /esterilizacao/laudos/1/reabrir")).toBe(0);
     await userEvent.click(within(laudo).getByRole("button", { name: "Confirmar" }));
     expect(api.vezes("POST /esterilizacao/laudos/1/reabrir")).toBe(1);
-    await userEvent.click(within(laudo).getByRole("button", { name: "Excluir a página 1" }));
-    expect(within(laudo).getByRole("group", { name: "Confirmar: excluir a página 1" })).toHaveTextContent("vão para uma folha nova");
+    await userEvent.click(within(laudo).getByRole("button", { name: "Refazer a página 1" }));
+    expect(within(laudo).getByRole("group", { name: "Confirmar: refazer a página 1" })).toHaveTextContent("vão para uma folha nova");
     await userEvent.click(within(laudo).getByRole("button", { name: "Confirmar" }));
     expect(api.vezes("DELETE /esterilizacao/laudos/1")).toBe(1);
   });
