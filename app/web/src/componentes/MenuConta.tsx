@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 
 import { nomeDoCargo } from "../cargos";
-import { MENU } from "../menu";
+import { MENU, TELAS_DO_COLETOR } from "../menu";
 import { useSessao } from "../sessao";
 import Icone from "./Icone";
 
@@ -17,7 +17,12 @@ export default function MenuConta() {
   const local = useLocation();
   const nome = pessoa?.nome || pessoa?.usuario;
   // no celular a barra de baixo tem só os 5 fixos: as outras telas ficam aqui (no computador estão no menu lateral)
-  const outras = MENU.filter((item) => item.soNoMenuLateral && (!item.pode || pessoa?.pode.includes(item.pode)));
+  const outras = MENU.filter(
+    (item) =>
+      item.soNoMenuLateral &&
+      (!item.pode || pessoa?.pode.includes(item.pode)) &&
+      (pessoa?.cargo !== "Coletor" || TELAS_DO_COLETOR.includes(item.caminho)), // o Coletor: só Coletas (01/11)
+  );
 
   useEffect(() => setAberto(false), [local.pathname]);
 

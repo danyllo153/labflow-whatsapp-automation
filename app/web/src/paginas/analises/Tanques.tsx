@@ -40,7 +40,6 @@ interface Leitura {
 
 export const ABAS_TANQUES = [
   { aba: "painel", rotulo: "Painel" },
-  { aba: "coleta", rotulo: "Coleta" },
   { aba: "analise", rotulo: "Análise" },
   { aba: "resultados", rotulo: "Resultados" },
   ABA_LAUDO,
@@ -90,8 +89,7 @@ const RESULTADOS: Record<Origem, Parameters<typeof Resultados>[0]["paginas"]> = 
 export default function Tanques({ origem }: { origem: Origem }) {
   const { pessoa } = useSessao();
   const pode = !!pessoa?.pode.includes("registrar_analise");
-  const podeColetar = !!pessoa?.pode.includes("registrar_coleta");
-  // a leitura dos tanques fica só na página Leituras (27/10); aqui, coleta, análise e o histórico
+  // a leitura dos tanques fica só na página Leituras (27/10) e a coleta só na página Coletas (01/11); aqui, análise e o histórico
   const lista = useLista<Leitura[]>("/analises/tanques/leituras", "");
   const t = TEXTOS[origem];
 
@@ -115,11 +113,6 @@ export default function Tanques({ origem }: { origem: Origem }) {
               {/* 27/10: como o rastreio do Embarque FCOJ, só os últimos navios; tocar abre a página do navio */}
               {origem === "navio" && <UltimosNavios url="/analises/tanques/navios" titulo="Últimos navios" unidade={["tanque", "tanques"]} />}
             </>
-          )}
-          {aba === "coleta" && (
-            <SoQuemGrava pode={podeColetar}>
-              <Coleta origem={origem} aoGravar={lista.recarregar} coletor={pessoa?.cargo === "Coletor"} />
-            </SoQuemGrava>
           )}
           {aba === "analise" && (
             <SoQuemGrava pode={pode}>
@@ -300,7 +293,8 @@ function CamposDeTanque({
   );
 }
 
-function Coleta({ origem, aoGravar, coletor }: { origem: Origem; aoGravar: () => void; coletor: boolean }) {
+/** O registro da coleta (desde 01/11 só na página Coletas, que escolhe terra ou navio). */
+export function ColetaDeTanque({ origem, aoGravar, coletor }: { origem: Origem; aoGravar: () => void; coletor: boolean }) {
   const [campos, setCampos] = useState({ origem: origem as string, navio: "", tanques: "", data: hojeEmSaoPaulo(), coletado_por: "" });
   const g = useGravacao("/analises/tanques/coleta", () => (setCampos({ ...campos, tanques: "" }), aoGravar()));
   const mudar = (c: Partial<typeof campos>) => (setCampos({ ...campos, ...c }), g.voltar());

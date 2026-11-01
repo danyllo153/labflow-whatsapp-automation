@@ -73,9 +73,9 @@ describe("Páginas: Coletas e Recebimento (APP-015)", () => {
     expect(screen.getByRole("link", { name: /^Recebimento FCOJ/ })).toBeInTheDocument();
   });
 
-  it("o Coletor não vê Recebimento na lista", async () => {
-    abrir("/paginas", {}, { ...ANA, cargo: "Coletor" });
-    await screen.findByRole("link", { name: /^Coletas/ });
+  it("o Coletor não abre o Recebimento: cai nas coletas dele, sem o gráfico (01/11)", async () => {
+    abrir("/paginas/recebimento?aba=lista", { "GET /paginas/coletas": (url: string) => paginaDe(COLETAS, url) }, { ...ANA, cargo: "Coletor" });
+    expect(await screen.findByRole("heading", { level: 1, name: "Coletas" })).toBeInTheDocument();
     expect(screen.queryByRole("link", { name: /Recebimento/ })).not.toBeInTheDocument();
   });
 

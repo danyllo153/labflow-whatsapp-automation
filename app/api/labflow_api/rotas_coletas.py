@@ -166,6 +166,8 @@ def corrigir(
     """Corrige só o que veio no pedido (tanque, data, navio, quem coletou). Coleta não pede motivo."""
     campos: dict[str, Any] = {k: (v.isoformat() if isinstance(v, date) else v) for k, v in correcao.model_dump(exclude_unset=True).items()}
     _detalhe(con, pessoa, coleta_id)  # 404 se não existe (ou, para o Coletor, se não é dele)
+    if pessoa.cargo == "Coletor" and set(campos) - {"tanque", "data_coleta"}:  # 01/11: o Coletor corrige só o tanque e a data
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "O Coletor corrige só o tanque e a data da coleta.")
     try:
         with con.transaction():
             con.execute("SELECT corrigir_coleta(%s, %s::jsonb, %s)", (coleta_id, json.dumps(campos), pessoa.usuario_id))
@@ -190,8 +192,11 @@ def excluir(
     pessoa: PessoaLogada = Depends(exigir("excluir_registro")),
     con: psycopg.Connection = Depends(obter_conexao),
 ) -> Excluida201:
-    """Arquiva a coleta (com os drops e o arquivo); o Admin recupera. Recusa se já tem análise, drop concluído ou TAB."""
-    _detalhe(con, pessoa, coleta_id)
+    """Arquiva a coleta (com os drops e o arquivo); o Admin recupera. Recusa se já tem análise, drop concluído ou TAB.
+    O Coletor exclui só com motivo (01/11); para os outros, coleta não pede motivo."""
+    _detalhe(con, pessoa, coleta_id)  # 404 antes de tudo se não existe (ou, para o Coletor, se não é dele)
+    if pessoa.cargo == "Coletor" and not (pedido.motivo or "").strip():
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Escreva o motivo da exclusão.")
     try:
         with con.transaction():
             con.execute("SELECT id FROM excluir_coleta(%s, %s, %s)", (coleta_id, pessoa.usuario_id, pedido.motivo))
