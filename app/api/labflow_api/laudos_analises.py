@@ -355,7 +355,7 @@ def _gerar_embarque(con: psycopg.Connection, pagina_id: int, modelo: bytes | Non
             continue
         cont = d[8] or {}
         # 01/11: no Load, só o load da amostra (o principal); o item e os outros loads da linha e fase vão na Observação
-        obs = "; ".join(t for t in (f"Item {d[10]}" if d[10] else "", f"também load {d[11]}" if d[11] else "") if t)
+        obs = "; ".join(t for t in (f"Item {d[10]}" if d[10] else "", f"{d[11]}" if d[11] else "") if t)
         textos = [_br(d[1]), f"{d[2]}/{d[3]}", d[4], f"A{d[5]}", cont.get("CT", ""), cont.get("BL72", ""), cont.get("BL120", ""), obs]
         celulas += [laudos.TABELA_CELULA(EMB, texto or "", n, i, centro=i != 7) for i, texto in enumerate(textos)]
         nome = laudo_esterilizacao.primeiro_nome(d[9]) if d[9] else ""
