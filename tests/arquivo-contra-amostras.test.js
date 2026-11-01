@@ -131,3 +131,57 @@ test('PB23 (108): caixas do recebimento de 121 a 153; de 154 em diante é navio'
   assert.match(d, /IF EXISTS \(SELECT 1 FROM arquivo_recebimento WHERE caixa BETWEEN 146 AND 153\) THEN/);
   assert.match(d, /UPDATE arquivo_familias SET caixa_de = 146 WHERE caixa_de = 154;/);
 });
+
+test('PB24 (109): data inicial da caixa de navio pelo comando, com sim; Coletor e Consultor não; recebimento não tem', () => {
+  const r = interpretar('caixa 67 começa em 10/11/2026', { cargo: 'Analista' });
+  assert.equal(r.tipo, 'laudo_registrar');
+  assert.equal(r.fase, 'previa');
+  assert.deepEqual(dados(r), { acao: 'arquivo_data_inicial', numero: '67', data: '10/11/2026' });
+  assert.deepEqual(dados(interpretar('Data inicial da caixa 67 em 5/1/27', { cargo: 'Admin' })), { acao: 'arquivo_data_inicial', numero: '67', data: '05/01/2027' });
+  assert.deepEqual(dados(interpretar('a caixa 67 inicia dia 10/11/2026', { cargo: 'Analista' })), { acao: 'arquivo_data_inicial', numero: '67', data: '10/11/2026' });
+  const ano = new Date().toLocaleDateString('pt-BR', { timeZone: 'America/Sao_Paulo' }).slice(6);
+  assert.equal(dados(interpretar('caixa 67 comeca em 10/11', { cargo: 'Analista' })).data, '10/11/' + ano);
+  for (const f of ['caixa 67 começa automático', 'caixa 67 data inicial automatica', 'data inicial da caixa 67 automática']) {
+    assert.deepEqual(dados(interpretar(f, { cargo: 'Analista' })), { acao: 'arquivo_data_inicial', numero: '67' }, f);
+  }
+  assert.match(interpretar('caixa 121 começa em 10/11/2026', { cargo: 'Analista' }).textoResposta, /só existe na caixa de navio/);
+  assert.match(interpretar('caixa 67 começa em 10/11/2026', { cargo: 'Coletor' }).textoResposta, /Admin e Analista/);
+  assert.notEqual(interpretar('caixa 67 começa em 10/11/2026', { cargo: 'Consultor' }).tipo, 'laudo_registrar');
+  // a consulta da caixa continua no caminho dela
+  assert.equal(dados(interpretar('caixa 67')).acao, 'arquivo_consulta');
+  const sim = interpretar('laudo registrado: ' + JSON.stringify({ acao: 'arquivo_data_inicial', numero: '67', data: '10/11/2026' }), { cargo: 'Analista', reenvio: true });
+  assert.equal(sim.fase, 'gravar');
+});
+
+test('PB24: a consulta de potes lê o prazo novo, não a data antiga da arquivo_amostras', () => {
+  const q = workflow.nodes.find((n) => n.name === 'BD · Potes para descartar').parameters.query;
+  assert.match(q, /FROM vw_arquivo_itens i/);
+  assert.match(q, /i\.item = 'pote'\s+AND i\.situacao = 'Vencido'/);
+  assert.doesNotMatch(q, /arquivo_amostras/);
+});
+
+test('migration 109: data inicial = última amostra + 5 dias ou a manual; dela contam 1 e 2 anos; a carga fica como está', () => {
+  const m = mig('109_data_inicial_caixa_navio.sql');
+  assert.match(m, /^BEGIN;[\s\S]*COMMIT;\s*$/m);
+  assert.match(m, /max\(x\.dia\) \+ 5 AS inicio_auto/);
+  assert.match(m, /c\.data_coleta AS dia FROM coletas c/);
+  assert.match(m, /ea\.data_embarque FROM embarque_amostras ea/);
+  assert.match(m, /COALESCE\(an\.inicio_manual, u\.inicio_auto\) \+ interval '1 year'/);
+  assert.match(m, /COALESCE\(an\.inicio_manual, u\.inicio_auto\) \+ interval '2 years'/);
+  assert.match(m, /NULL, an\.descarte_carga, an\.descartado_em IS NOT NULL/, 'a linha da planilha não muda');
+  assert.match(m, /AS itens_vencidos,\s+u\.ultima_amostra,\s+COALESCE\(an\.inicio_manual, u\.inicio_auto\) AS inicio_em,\s+an\.inicio_manual IS NOT NULL AS inicio_fixado\s+FROM arquivo_caixas k/);
+  assert.match(m, /arquivo_data_inicial_navio\(p_quem bigint, p_caixa int, p_data date, p_previa boolean DEFAULT false\)/);
+  assert.equal((m.match(/tanque_exigir_cargo\(p_quem, ARRAY\['Admin', 'Analista'\]\)/g) || []).length, 1);
+  assert.match(m, /ALTER FUNCTION arquivo_data_inicial_navio\(bigint, int, date, boolean\) OWNER TO labflow_app;/);
+  assert.match(m, /GRANT EXECUTE ON FUNCTION arquivo_data_inicial_navio\(bigint, int, date, boolean\) TO labflow_app, labflow_app_web;/);
+  assert.match(m, /v_acao = 'arquivo_data_inicial' THEN/);
+  assert.match(m, /121 AND 153/, 'a consulta refeita sobre a 108, não sobre a 105');
+  assert.doesNotMatch(m, /DELETE FROM|O\.(SEA|WAVE|SUN|STAR|OCEAN|BLOSSOM)/);
+  const d = mig('109_data_inicial_caixa_navio_desfazer.sql');
+  assert.match(d, /DROP FUNCTION arquivo_data_inicial_navio\(bigint, int, date, boolean\);/);
+  assert.match(d, /DROP VIEW vw_arquivo_inicio_navio;/);
+  assert.match(d, /ALTER TABLE arquivo_navios DROP COLUMN inicio_manual, DROP COLUMN inicio_manual_por, DROP COLUMN inicio_manual_em;/);
+  assert.match(d, /\(s\.dia \+ interval '2 years'\)::date/);
+  assert.match(d, /GRANT SELECT ON vw_arquivo_caixas TO labflow_app_web, labflow_leitura;/);
+  assert.doesNotMatch(d, /arquivo_data_inicial'/, 'o bot volta ao que era');
+});

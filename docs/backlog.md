@@ -33,6 +33,7 @@
 - [ ] **Corrigir resultado (039) numa função geral** (`corrigir_resultado(quem, ...)`) para o app também chamar
 - [ ] Registrar por frase o que hoje só o app faz: material asséptico, lote de meio (receber e trocar o em uso) e temperatura das estufas (funções do app)
 - [x] **PB21, arquivo de contra-amostras** (25/10, migration 105): caixas, reserva do navio, arquivar o recebimento, descartar com sim, consultas; carga inicial da planilha fora do Git (`C:\Dev\estudos\ia\arquivo`)
+- [x] **PB24, data inicial da caixa de navio** (01/11, migration 109): última amostra + 5 dias ou escolhida à mão; dela contam 1 e 2 anos; `caixa N começa em DD/MM`. **Falta aplicar a 109 e publicar o workflow**; depois, o botão **Data inicial** no app
 - [ ] **PB21 parte 2:** a caixa do recebimento lida pela **foto** da folha e `caixa N` no próprio comando de recebimento
 - [x] **PB22, pendências do dia** e **apelidos de navio** (25/10, migration 106): `pendências do dia` no bot, `vw_pendencias_do_dia` para o app; O.BLOSSOM vira o nome oficial (apelido fora do Git)
 - [ ] **PB6:** canal `app` no webhook (assistente do app pelo mesmo workflow), só na Fase D do app

@@ -92,3 +92,5 @@ Tabelas `arquivo_familias`, `arquivo_caixas`, `arquivo_navios` (a caixa de cada 
 
 
 > **26/10/2026:** o recebimento vai da caixa **121 à 153** (conferido pelo Danyllo; pedido PB23 ao bot). A caixa do recebimento só vai para descarte quando **todos** os loads dela venceram (o app não avisa load vencido sozinho).
+
+> **01/11/2026 (PB24, migration 109):** caixa de navio ganhou **data inicial**: a última amostra do navio e viagem (coleta de tanque ou amostra do embarque) mais 5 dias, ou a data escolhida à mão por Admin e Analista. O pote conta 1 ano e o FCOJ 2 anos **dessa data**, não mais da coleta e do embarque; a caixa continua liberando na maior. A linha da carga inicial mantém a data da planilha, porque ela não diz se é pote ou FCOJ.
