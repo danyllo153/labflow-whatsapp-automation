@@ -669,7 +669,7 @@ class Servidor:
         if OCULTO:
             self.icone = iniciar_bandeja(self, endereco, outros)
         if not self.args.sem_navegador:
-            webbrowser.open(endereco)
+            abrir_janela(endereco)
         self._esperar_fim()
         self.encerrar()
         if self.icone is not None:
@@ -723,7 +723,7 @@ def modo_cliente(dados: Dados, args: argparse.Namespace) -> int:
             log(f"O LabFlow já está aberto no PC {info.get('pc')}. Abrindo {endereco}")
             marcar_que_abriu()
             if not args.sem_navegador:
-                webbrowser.open(endereco)
+                abrir_janela(endereco)
             return 0
     log("")
     log(f"O LabFlow está aberto no PC {info.get('pc')} (desde {info.get('inicio')}), mas este PC não conseguiu falar com ele.")
@@ -735,6 +735,23 @@ def modo_cliente(dados: Dados, args: argparse.Namespace) -> int:
            f"(porta {porta}).\n\nSe o PC servidor caiu ou foi desligado, espere 1 minuto e abra de novo: este PC assume.\n"
            f"Se acontecer sempre, peça à TI para liberar a porta TCP {porta} no PC servidor.", erro=True, esperar=True)
     return 2
+
+
+def abrir_janela(endereco: str) -> None:
+    """Abre o LabFlow como um programa: janela própria, sem barra de endereço nem abas (modo aplicativo do Edge, que vem
+    no Windows 10 e 11; senão o do Chrome). Sem nenhum dos dois, abre no navegador padrão."""
+    if EH_WINDOWS:
+        pastas = [os.environ.get(v, "") for v in ("ProgramFiles(x86)", "ProgramFiles", "LOCALAPPDATA")]
+        candidatos = [Path(p) / "Microsoft" / "Edge" / "Application" / "msedge.exe" for p in pastas if p]
+        candidatos += [Path(p) / "Google" / "Chrome" / "Application" / "chrome.exe" for p in pastas if p]
+        for exe in candidatos:
+            if exe.is_file():
+                with contextlib.suppress(OSError):
+                    subprocess.Popen([str(exe), f"--app={endereco}", "--window-size=1366,820", "--new-window"],
+                                     stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                                     creationflags=SEM_JANELA)
+                    return
+    webbrowser.open(endereco)
 
 
 def marcar_que_abriu() -> None:
@@ -761,7 +778,7 @@ def iniciar_bandeja(srv: "Servidor", endereco: str, outros: str):
                 srv.parar.set()
 
         menu = pystray.Menu(
-            pystray.MenuItem("Abrir o LabFlow", lambda _i, _it: webbrowser.open(endereco), default=True),
+            pystray.MenuItem("Abrir o LabFlow", lambda _i, _it: abrir_janela(endereco), default=True),
             pystray.MenuItem("Endereço para os outros PCs", lambda _i, _it: avisar(
                 "LabFlow: endereço", f"Neste PC: {endereco}\nOutros PCs: {outros}\n\nOu, nos outros PCs, os dois cliques em Abrir LabFlow.")),
             pystray.Menu.SEPARATOR,

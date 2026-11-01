@@ -5,8 +5,9 @@ PARA ABRIR
   Dois cliques em "Abrir LabFlow" (o atalho .vbs: abre sem janela do cmd).
   Se a TI bloquear o .vbs, use "Abrir LabFlow com janela" (o .bat): funciona igual.
   - Na primeira vez em cada PC ele se prepara (1 a 3 minutos).
-  - O navegador abre na tela de entrar. Cada pessoa usa o PRÓPRIO usuário e senha.
-  - Se outro PC já estiver com o LabFlow aberto, este só abre o navegador nele:
+  - O LabFlow abre numa janela própria, como um programa (sem barra de endereço),
+    na tela de entrar. Cada pessoa usa o PRÓPRIO usuário e senha.
+  - Se outro PC já estiver com o LabFlow aberto, este só abre a janela do LabFlow dele:
     vários PCs usam juntos, cada um com o seu login.
 
 A JANELA PRETA E O ÍCONE PERTO DO RELÓGIO

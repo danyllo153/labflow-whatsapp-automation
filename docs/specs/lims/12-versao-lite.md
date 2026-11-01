@@ -34,6 +34,7 @@ LabFlow\                      (G:)
 7. Fechar: ENTER + S na janela, `Fechar LabFlow.bat`, ou o X da janela (o Windows dá poucos segundos; o que não couber fica no banco local e volta na próxima abertura no mesmo PC).
 
 ## Janela e ícone (01/11)
+- O LabFlow abre como programa: modo aplicativo do Edge (`--app`, janela própria sem barra de endereço), senão o do Chrome, senão o navegador padrão.
 - Primeira vez em cada PC: a janela preta (preparo, senha do primeiro acesso). Depois (marcador `%LOCALAPPDATA%\LabFlowLite\ja-abriu.txt`, sem opções extras no .bat): `pythonw --oculto`, sem janela.
 - Oculto: ícone perto do relógio (pystray) com Abrir o LabFlow, Endereço para os outros PCs e Encerrar (com confirmação); avisos (não abriu, não conectou, outro PC assumiu, falha ao gravar no G:, senha) em janelinha do Windows. Sem o ícone (sessão sem área de trabalho), segue funcionando e fecha pelo `Fechar LabFlow.bat`.
 - A senha provisória só aparece na tela/janelinha; o `lite.log` registra só que ela foi mostrada.
