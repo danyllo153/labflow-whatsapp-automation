@@ -125,6 +125,28 @@ describe("Admin → Pessoas (APP-016)", () => {
     expect(api.vezes("POST /admin/pessoas")).toBe(0);
   });
 
+  it("Nova pessoa na Lite: o telefone é opcional e vai vazio (01/11)", async () => {
+    const api = abrir("/admin/pessoas", ADMIN, {
+      "GET /ambiente": () => ({ status: 200, corpo: { demonstracao: false, lite: true } }),
+      "POST /admin/pessoas": (corpo) => ({
+        status: 201,
+        corpo: { pessoa: { id: 13, nome: corpo.nome, cargo: corpo.cargo, usuario: corpo.usuario, situacao: "Senha provisória pendente" }, senha_provisoria: "P9x2-Lm4k", valida_ate: "02/11/2026 10:00" },
+      }),
+    });
+    const u = userEvent.setup();
+    await u.click(await screen.findByRole("button", { name: "Nova pessoa" }));
+    const form = screen.getByRole("form", { name: "Nova pessoa" });
+    await u.type(within(form).getByLabelText("Nome"), "Teo Silva");
+    expect(await within(form).findByLabelText("Telefone (opcional)")).toHaveValue("");
+    await u.click(within(form).getByRole("button", { name: "Continuar" }));
+    const resumo = within(form).getByRole("dialog", { name: "Confirmar" });
+    expect(resumo).toHaveTextContent("Teo Silva como Analista, sem telefone, usuário no app teo.silva");
+    expect(resumo).not.toHaveTextContent("WhatsApp");
+    await u.click(within(resumo).getByRole("button", { name: "Cadastrar e gerar senha provisória" }));
+    expect(await screen.findByText("P9x2-Lm4k")).toBeInTheDocument();
+    expect(api.chamadas.find((c) => c.rota === "POST /admin/pessoas")?.corpo).toMatchObject({ telefone: "" });
+  });
+
   it("Nova pessoa: a recusa do banco aparece como veio", async () => {
     abrir("/admin/pessoas", ADMIN, {
       "POST /admin/pessoas": () => ({ status: 422, corpo: { detail: "Esse telefone já está cadastrado; para mudar o cargo use a troca de cargo." } }),

@@ -226,13 +226,21 @@ function NovaPessoa({ aoTerminar, aoProvisoria }: { aoTerminar: () => void; aoPr
   const [erro, setErro] = useState("");
 
   const tel = telefoneComDdi(telefone);
+  // na Lite não há bot: o telefone é opcional (01/11)
+  const [lite, setLite] = useState(false);
+  useEffect(() => {
+    lerJson<{ lite?: boolean }>("/ambiente")
+      .then((a) => setLite(!!a.lite))
+      .catch(() => setLite(false));
+  }, []);
+  const semTelefone = lite && !tel;
   const usuarioFinal = (usuarioMexido ? usuario : sugerirUsuario(nome)).trim().toLowerCase();
 
   function conferir(e: FormEvent) {
     e.preventDefault();
     setErro("");
     if (!nome.trim()) return setErro("Escreva o nome.");
-    if (!/^[0-9]{12,13}$/.test(tel)) return setErro("Telefone com DDD e número (ex.: 11 98765-4321).");
+    if (!semTelefone && !/^[0-9]{12,13}$/.test(tel)) return setErro("Telefone com DDD e número (ex.: 11 98765-4321).");
     if (!usuarioFinal) return setErro("Escreva o usuário no app (ex.: ana.souza).");
     setConferindo(true);
   }
@@ -262,8 +270,9 @@ function NovaPessoa({ aoTerminar, aoProvisoria }: { aoTerminar: () => void; aoPr
       <h2>Nova pessoa</h2>
       {conferindo ? (
         <Confirmar ocupado={ocupado} rotulo="Cadastrar e gerar senha provisória" onSim={() => void cadastrar()} onNao={() => setConferindo(false)}>
-          Vai cadastrar <strong>{nome.trim()}</strong> como <strong>{nomeDoCargo(cargo)}</strong>, telefone <strong>{tel}</strong>, usuário no app{" "}
-          <strong>{usuarioFinal}</strong>, e gerar uma senha provisória de 24 horas. A pessoa também passa a ser reconhecida no WhatsApp.
+          Vai cadastrar <strong>{nome.trim()}</strong> como <strong>{nomeDoCargo(cargo)}</strong>
+          {semTelefone ? ", sem telefone" : <>, telefone <strong>{tel}</strong></>}, usuário no app <strong>{usuarioFinal}</strong>, e gerar
+          uma senha provisória de 24 horas.{!lite && " A pessoa também passa a ser reconhecida no WhatsApp."}
         </Confirmar>
       ) : (
         <>
@@ -272,7 +281,7 @@ function NovaPessoa({ aoTerminar, aoProvisoria }: { aoTerminar: () => void; aoPr
             <input value={nome} onChange={(e) => setNome(e.target.value)} />
           </label>
           <label className="campo">
-            Telefone (WhatsApp)
+            {lite ? "Telefone (opcional)" : "Telefone (WhatsApp)"}
             <input type="tel" inputMode="tel" placeholder="11 98765-4321" value={telefone} onChange={(e) => setTelefone(e.target.value)} />
           </label>
           <label className="campo">

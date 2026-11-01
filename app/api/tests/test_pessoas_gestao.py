@@ -164,3 +164,19 @@ def test_operador_e_aceito_como_nome_antigo_e_gravado_como_analista(admin, criar
     outro = criar_pessoa(usuario="caio.teste", cargo="Consultor")
     assert admin.put(f"/admin/pessoas/{outro}/cargo", json={"cargo": "Operador"}).status_code == 200
     assert conexao.execute("SELECT cargo FROM usuarios WHERE id = %s", (outro,)).fetchone()[0] == "Analista"
+
+
+# ---------------------------------------------------------------- Lite sem telefone (01/11)
+def test_sem_telefone_so_na_lite(admin, conexao, monkeypatch):
+    sem = {**NOVA, "telefone": ""}
+    r = admin.post("/admin/pessoas", json=sem)
+    assert r.status_code == 422 and "telefone" in r.json()["detail"]  # servidor com bot: o telefone é obrigatório
+    monkeypatch.setenv("LABFLOW_LITE", "1")
+    assert admin.get("/ambiente").json()["lite"] is True
+    r = admin.post("/admin/pessoas", json=sem)
+    assert r.status_code == 201, r.text
+    r2 = admin.post("/admin/pessoas", json={**sem, "nome": "Caio Teste", "usuario": "caio.teste"})
+    assert r2.status_code == 201, r2.text
+    telefones = [t for (t,) in conexao.execute("SELECT telefone FROM usuarios WHERE nome IN ('Bia Teste', 'Caio Teste') ORDER BY id")]
+    assert len(telefones) == 2 and len(set(telefones)) == 2  # cada um com o seu marcador, sem repetir
+    assert all(t.startswith("55000000") and len(t) == 13 for t in telefones)
