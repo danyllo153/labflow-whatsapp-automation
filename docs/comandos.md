@@ -107,7 +107,7 @@ descartar potes hoje
 potes do navio hoje
 ```
 
-Bags (terra) e potes (navio) são comandos separados: cada um responde só com o seu tipo.
+Bags (terra) e potes (navio) são comandos separados: cada um responde só com o seu tipo. Os potes mostram os que já venceram, contando da data inicial da caixa (seção 20).
 
 ## 6. Gerenciar cargo de usuário
 
@@ -987,7 +987,7 @@ Ajuda: `comandos esterilização`.
 Pedido PB21 (spec [`specs/lims/11-arquivo-contra-amostras.md`](specs/lims/11-arquivo-contra-amostras.md), migration `105`). O registro que o analista já faz arquiva a amostra numa caixa:
 
 - **Tanque terra:** o bag de cada coleta vai para a caixa com o **número do tanque** (34 a 49) e vence em **1 ano**.
-- **Navio:** cada navio e viagem tem **uma caixa**, reservada sozinha (a próxima livre da família do navio) quando o navio é cadastrado pela primeira coleta ou embarque. Nela ficam os **potes de NFC** (um por tanque do navio, 1 ano) e as **amostras de FCOJ do embarque** (uma linha por linha e fase, com os loads e a quantidade, **2 anos**). A caixa só é descartada **inteira**, quando tudo venceu (a maior data).
+- **Navio:** cada navio e viagem tem **uma caixa**, reservada sozinha (a próxima livre da família do navio) quando o navio é cadastrado pela primeira coleta ou embarque. Nela ficam os **potes de NFC** (um por tanque do navio, 1 ano) e as **amostras de FCOJ do embarque** (uma linha por linha e fase, com os loads e a quantidade, **2 anos**). Os prazos contam da **data inicial da caixa** (migration `109`, PB24): a última amostra do navio e viagem (coleta de tanque ou amostra do embarque) **mais 5 dias**, ou a data escolhida à mão; enquanto chegam amostras, ela anda junto. A caixa só é descartada **inteira**, quando tudo venceu (a maior data).
 - **Recebimento de FCOJ:** caixas **121 a 153** (eram 121 a 145 até a migration `108`, PB23), informadas pelo analista; vence **7 dias** depois de arquivado. A sugestão é a caixa em uso mais recente ou a primeira livre desde a 121.
 
 ```
@@ -1001,13 +1001,16 @@ arquivei load 43599 lotes 1-12,14 caixa 121 [data 24/10/2026]
 descartei caixa 121
 descartei caixa 67
 descartei bags do tanque 35
+caixa 67 começa em 10/11/2026  (data inicial à mão; sem o ano, o ano atual)
+caixa 67 começa automático     (volta à última amostra + 5 dias)
 ```
 
 - As consultas respondem direto (também para o Consultor). **Arquivar** e **descartar** mostram o que vai mudar e pedem **sim** (Admin e Analista). Nada é apagado: o item fica como descartado, com quem e quando, e a caixa volta a ficar disponível.
+- **Data inicial:** só na caixa de navio, Admin e Analista, com **sim**; a prévia mostra até quando vai o NFC e o FCOJ e quando a caixa libera. As caixas da planilha vencem na data da planilha (decisão do Danyllo, 01/11): a linha `carga inicial` não diz o que é pote e o que é FCOJ, então a data inicial não a muda. `caixa 67` mostra a data inicial e de onde ela veio.
 - Caixa de **121 a 153** é do recebimento; outro número é de navio; o tanque sempre com a palavra `tanque`.
 - Recusas: lote não recebido, lote que já está em outra caixa, caixa fora de 121-153, caixa do navio que ainda não venceu (`libera em dd/mm/aaaa`), nada vencido na caixa.
 - `quais bags posso descartar hoje` agora mostra também os bags que venceram antes de hoje.
-- Para o app: views `vw_arquivo_caixas` (situação Disponível / Em uso / **Vencida**) e `vw_arquivo_itens` (situação Arquivado / **Vencido** / Descartado), funções `arquivo_arquivar_recebimento(quem, load, item, lotes, caixa, data, previa)`, `arquivo_descartar(quem, tipo, numero, previa)` e `arquivo_caixa_recebimento_sugerida()`.
+- Para o app: views `vw_arquivo_caixas` (situação Disponível / Em uso / **Vencida**) e `vw_arquivo_itens` (situação Arquivado / **Vencido** / Descartado), funções `arquivo_arquivar_recebimento(quem, load, item, lotes, caixa, data, previa)`, `arquivo_descartar(quem, tipo, numero, previa)`, `arquivo_caixa_recebimento_sugerida()` e `arquivo_data_inicial_navio(quem, caixa, data, previa)` (data vazia volta à automática). `vw_arquivo_caixas` traz também `ultima_amostra`, `inicio_em` e `inicio_fixado`.
 - As famílias de navio e as faixas reais entram pela **carga inicial** (gerada da planilha do laboratório, fora do Git); o que já tinha vencido na planilha entra como descartado. Exemplo fictício: `db/seeds/arquivo_exemplo.sql`.
 
 Ajuda: `comandos descarte` (ou `comandos arquivo`).
