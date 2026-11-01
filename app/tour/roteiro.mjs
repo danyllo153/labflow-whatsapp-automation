@@ -198,8 +198,8 @@ export const roteiro = [
   {
     antes: (p, f) => f.ir("/"),
     destaque: (p) => p.locator(".busca-rapida").first(),
-    legenda: "A busca do topo encontra qualquer análise pelo load, tanque ou navio.",
-    durante: async (p, f) => { await f.digitar(p.locator(".busca-rapida input"), "tanque 85"); await f.espera(1500); },
+    legenda: "A busca do topo leva direto a qualquer análise: é só digitar o nome, como drops, TAB ou água, e escolher.",
+    durante: async (p, f) => { await f.digitar(p.locator(".busca-rapida input"), "drops"); await f.espera(1800); },
     depois: async (p) => { await p.keyboard.press("Escape"); },
   },
   {
