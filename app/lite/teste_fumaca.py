@@ -1,7 +1,7 @@
 """Teste de fumaça do pacote do LabFlow Lite no Windows (roda no GitHub Actions depois do montar.ps1).
 
 Simula o uso real numa CÓPIA do pacote (o pacote publicado continua sem dados):
-1. PC A abre pelo "Abrir LabFlow.bat": banco do zero, Admin provisório, telas e login.
+1. PC A abre pelo "Abrir LabFlow com janela.bat": banco do zero, Admin provisório, telas e login.
 2. PC B (outro LOCALAPPDATA) abre enquanto A está no ar: vira cliente e não liga outro banco.
 3. A fecha (parar.txt): cópia no G: e backup do dia gravados, aviso de servidor apagado.
 4. PC B abre: restaura do G: e a senha trocada em A continua valendo.
@@ -28,7 +28,7 @@ def abrir(raiz: Path, local_app: Path, saida: Path, oculto: bool = False) -> sub
     else:
         env.pop("LABFLOW_LITE_TESTE", None)
     return subprocess.Popen(
-        ["cmd", "/c", str(raiz / "Abrir LabFlow.bat")] + ([] if oculto else ["--sem-navegador"]),
+        ["wscript", str(raiz / "Abrir LabFlow.vbs")] if oculto else ["cmd", "/c", str(raiz / "Abrir LabFlow com janela.bat"), "--sem-navegador"],
         env=env,
         stdin=subprocess.DEVNULL,
         stdout=open(saida, "w", encoding="utf-8"),
@@ -133,10 +133,10 @@ def main() -> None:
     fechar(raiz, pc_b, b2, saida_b2)
     print("4 ok: B restaurou do G: e a senha nova vale")
 
-    # 5. B de novo: já abriu uma vez, então abre OCULTO (sem a janela preta; o .bat devolve na hora)
+    # 5. B de novo pelo atalho Abrir LabFlow.vbs: já abriu uma vez, então abre OCULTO (sem janela nenhuma)
     assert (pc_b / "LabFlowLite" / "ja-abriu.txt").exists(), "o marcador de 'já abriu' não foi gravado"
     oculto = abrir(raiz, pc_b, trabalho / "b3.txt", oculto=True)
-    oculto.wait(timeout=60)  # o start devolve o controle logo
+    oculto.wait(timeout=60)  # o wscript devolve o controle logo
     fim = time.time() + 300
     while time.time() < fim:
         info = json.loads((raiz / "dados" / "servidor.json").read_text(encoding="utf-8")) if (raiz / "dados" / "servidor.json").exists() else {}
@@ -153,7 +153,7 @@ def main() -> None:
     assert not (raiz / "dados" / "servidor.json").exists(), "o modo oculto não fechou pelo Fechar LabFlow"
     log_b = (pc_b / "LabFlowLite" / "lite.log").read_text(encoding="utf-8", errors="replace")
     assert "Rodando oculto" in log_b and "Tudo gravado" in log_b.split("Rodando oculto")[-1]
-    print("5 ok: da segunda vez abriu oculto e fechou pelo Fechar LabFlow")
+    print("5 ok: pelo atalho .vbs, da segunda vez abriu oculto e fechou pelo Fechar LabFlow")
 
     # 6. a senha provisória não fica gravada no lite.log
     log_a = (pc_a / "LabFlowLite" / "lite.log").read_text(encoding="utf-8", errors="replace")

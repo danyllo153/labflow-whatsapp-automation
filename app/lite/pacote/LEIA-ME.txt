@@ -2,7 +2,8 @@ LABFLOW (versão para a pasta de rede)
 =====================================
 
 PARA ABRIR
-  Dois cliques em "Abrir LabFlow".
+  Dois cliques em "Abrir LabFlow" (o atalho .vbs: abre sem janela do cmd).
+  Se a TI bloquear o .vbs, use "Abrir LabFlow com janela" (o .bat): funciona igual.
   - Na primeira vez em cada PC ele se prepara (1 a 3 minutos).
   - O navegador abre na tela de entrar. Cada pessoa usa o PRÓPRIO usuário e senha.
   - Se outro PC já estiver com o LabFlow aberto, este só abre o navegador nele:
@@ -36,8 +37,8 @@ OS DADOS
 PRIMEIRO ACESSO (banco vazio)
   Na primeira abertura a janela preta mostra o usuário "admin" e uma senha
   provisória (vale 24 horas). Entre, troque a senha e cadastre as pessoas em
-  Admin > Pessoas. Perdeu a senha do admin? Abra pela linha de comando:
-  "Abrir LabFlow.bat" --redefinir-admin
+  Admin > Pessoas. Perdeu a senha do admin? Feche o LabFlow e, na pasta, rode
+  pela linha de comando:  "Abrir LabFlow com janela.bat" --redefinir-admin
 
 MARCA (opcional)
   Nome, logo e cores do laboratório: pasta dados\marca (instruções no LEIA-ME de lá).

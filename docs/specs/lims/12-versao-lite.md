@@ -15,7 +15,7 @@
 ## Pastas
 ```
 LabFlow\                      (G:)
-  Abrir LabFlow.bat  Fechar LabFlow.bat  Testar rede.bat  LEIA-ME.txt
+  Abrir LabFlow.vbs (sem janela)  Abrir LabFlow com janela.bat  Fechar LabFlow.bat  Testar rede.bat  LEIA-ME.txt
   instalacao\                 trocada inteira a cada versão
     python\ (embutido + dependências)  app\labflow_api\  web\  migrations\  postgres\ (15+)  lite\lite.py  VERSAO.txt
   dados\                      nunca apagar nem substituir

@@ -97,12 +97,12 @@ if (-not $Versao) {
 }
 Set-Content -Encoding ascii (Join-Path $inst "VERSAO.txt") $Versao
 
-# 5. Arquivos da raiz: .bat em ASCII com CRLF; LEIA-ME em UTF-8 com BOM (Bloco de Notas)
+# 5. Arquivos da raiz: .bat e .vbs em ASCII com CRLF; LEIA-ME em UTF-8 com BOM (Bloco de Notas)
 Write-Host "5/6 Atalhos e LEIA-ME"
 Get-ChildItem (Join-Path $repo "app\lite\pacote") | ForEach-Object {
   $texto = ([IO.File]::ReadAllText($_.FullName) -replace "`r`n", "`n") -replace "`n", "`r`n"
   $destino = Join-Path $raiz $_.Name
-  if ($_.Extension -eq ".bat") { [IO.File]::WriteAllText($destino, $texto, [Text.Encoding]::ASCII) }
+  if ($_.Extension -eq ".bat" -or $_.Extension -eq ".vbs") { [IO.File]::WriteAllText($destino, $texto, [Text.Encoding]::ASCII) }
   else { [IO.File]::WriteAllText($destino, $texto, (New-Object Text.UTF8Encoding($true))) }
 }
 
