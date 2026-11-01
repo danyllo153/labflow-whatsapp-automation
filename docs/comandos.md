@@ -1006,7 +1006,7 @@ caixa 67 começa automático     (volta à última amostra + 5 dias)
 ```
 
 - As consultas respondem direto (também para o Consultor). **Arquivar** e **descartar** mostram o que vai mudar e pedem **sim** (Admin e Analista). Nada é apagado: o item fica como descartado, com quem e quando, e a caixa volta a ficar disponível.
-- **Data inicial:** só na caixa de navio, Admin e Analista, com **sim**; a prévia mostra até quando vai o NFC e o FCOJ e quando a caixa libera. A linha `carga inicial` (caixa que veio da planilha) mantém a data da planilha, que não diz o que é pote e o que é FCOJ. `caixa 67` mostra a data inicial e de onde ela veio.
+- **Data inicial:** só na caixa de navio, Admin e Analista, com **sim**; a prévia mostra até quando vai o NFC e o FCOJ e quando a caixa libera. As caixas da planilha vencem na data da planilha (decisão do Danyllo, 01/11): a linha `carga inicial` não diz o que é pote e o que é FCOJ, então a data inicial não a muda. `caixa 67` mostra a data inicial e de onde ela veio.
 - Caixa de **121 a 153** é do recebimento; outro número é de navio; o tanque sempre com a palavra `tanque`.
 - Recusas: lote não recebido, lote que já está em outra caixa, caixa fora de 121-153, caixa do navio que ainda não venceu (`libera em dd/mm/aaaa`), nada vencido na caixa.
 - `quais bags posso descartar hoje` agora mostra também os bags que venceram antes de hoje.
