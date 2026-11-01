@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -111,6 +111,7 @@ describe("Leituras com uma aba por análise (27/10)", () => {
     );
     const cartao = await screen.findByRole("region", { name: "Leitura dos drops" });
     expect(screen.getByRole("button", { name: /^Drops/ })).toHaveAttribute("aria-current", "page");
+    await waitFor(() => expect(screen.getByRole("button", { name: /^Drops/ })).toHaveTextContent("Drops2")); // para hoje e atrasadas (01/11)
     await userEvent.click(within(cartao).getByRole("checkbox", { name: /D10/ }));
     await userEvent.click(within(cartao).getByRole("button", { name: "Todos negativos (1)" }));
     expect(within(cartao).getByRole("group", { name: "O que vai ser gravado" })).toHaveTextContent("Negativo em 1 drop: D5 do tanque 41 (coleta 17/10)");

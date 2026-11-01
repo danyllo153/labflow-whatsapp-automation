@@ -47,7 +47,7 @@ export default function Leituras() {
   const contar = (grupo: string) =>
     (pendentes?.leituras ?? [])
       .filter((g) => (grupo === "navio" ? !FIXOS.has(g.grupo) : g.grupo === grupo))
-      .reduce((n, g) => n + g.itens.reduce((m, i) => m + i.atrasadas, 0), 0);
+      .reduce((n, g) => n + g.itens.reduce((m, i) => m + i.quantidade, 0), 0); // para hoje e atrasadas (01/11: só as atrasadas escondia o "ler hoje")
   const abas = ABAS.map((a) => ({ aba: a.aba, rotulo: a.rotulo, contador: a.grupo ? contar(a.grupo) || undefined : undefined }));
 
   return (
