@@ -1,5 +1,5 @@
 // Vídeo 5: Drops e Desvios.
-import { cartao } from "../comum.mjs";
+import { cartao, demoResultados } from "../comum.mjs";
 
 export default {
   titulo: "Drops e Desvios",
@@ -26,6 +26,14 @@ export default {
       destaque: (p) => cartao(p, "Por situação"),
       legenda: "Nos Resultados, os drops aparecem por situação: atrasado, vence hoje, no prazo e concluído. O botão Desvios troca a tabela.",
     },
+    ...demoResultados({
+      busca: "4C",
+      legendaBusca: "A busca acha os drops de um tanque ou navio. Aqui, o tanque 4C.",
+      falaBusca: "A busca acha os drops de um tanque ou navio. Aqui, o tanque 4 C.",
+      filtros: [{ campo: "Drop", valor: "D10" }, { campo: "Situação", valor: "Atrasado" }],
+      legendaFiltros: "Nos Filtros dos drops: a data prevista, a origem terra ou navio, o tanque, o navio, o drop e a situação. Aqui: D10 atrasados.",
+      falaFiltros: "Nos Filtros dos drops: a data prevista, a origem terra ou navio, o tanque, o navio, o drop e a situação. Aqui: D 10 atrasados.",
+    }),
     {
       antes: (p, f) => f.ir("/analises/desvios"),
       destaque: (p) => cartao(p, "Leituras não ok sem desvio"),
@@ -43,6 +51,11 @@ export default {
       antes: (p, f) => f.aba("Resultados"),
       destaque: (p) => cartao(p, "Por situação"),
       legenda: "Nos Resultados ficam os desvios, no prazo e concluídos, e a visão Leituras de tanques, para achar a origem de cada um.",
+      durante: async (p, f) => { await f.espera(2500); await f.clicar(p.locator("main").getByRole("button", { name: "Leituras de tanques" })); await f.espera(2500); await f.clicar(p.locator("main").getByRole("button", { name: "Desvios", exact: true })); },
     },
+    ...demoResultados({
+      filtros: [{ campo: "Tipo", valor: "Drop" }, { campo: "Abertos ou concluídos", valor: "Abertos" }],
+      legendaFiltros: "Nos Filtros dos desvios: o tipo, de drop ou de tanque, abertos ou concluídos, a origem, o tanque e o navio. Aqui: desvios de drop ainda abertos.",
+    }),
   ],
 };

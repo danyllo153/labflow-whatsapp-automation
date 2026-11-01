@@ -1,5 +1,5 @@
 // Vídeo 4: TAB, Coliformes e Howard.
-import { cartao } from "../comum.mjs";
+import { cartao, demoResultados } from "../comum.mjs";
 
 export default {
   titulo: "TAB, Coliformes e Howard",
@@ -29,6 +29,13 @@ export default {
       destaque: (p) => cartao(p, "TAB positivos no ano"),
       legenda: "Em Resultados, além da situação de cada análise, o quadro TAB positivos no ano mostra os positivos mês a mês.",
     },
+    ...demoResultados({
+      busca: "90007",
+      legendaBusca: "A busca acha a composta pelo load ou pelo tanque. Aqui, o load 90007.",
+      falaBusca: "A busca acha a composta pelo load ou pelo tanque. Aqui, o load nove zero zero zero sete.",
+      filtros: [{ campo: "Origem", valor: "Recebimento" }, { campo: "Status", valor: "Concluído" }],
+      legendaFiltros: "Nos Filtros do TAB: a origem (recebimento, embarque ou tank farm), o status de cada etapa, o resultado e a situação. Aqui: recebimento, concluído.",
+    }),
     {
       antes: (p, f) => f.aba("Laudo"),
       legenda: "O Laudo do TAB sai no modelo do Método Dois, preenchido com as compostas analisadas.",
@@ -54,7 +61,9 @@ export default {
       antes: (p, f) => f.aba("Resultados"),
       destaque: (p) => cartao(p, "Tendência do resultado"),
       legenda: "Os Resultados do Howard mostram a tendência da contagem ao longo do tempo.",
+      durante: async (p, f) => { await f.espera(2500); await f.clicar(p.getByRole("button", { name: "Colunas", exact: true })); },
     },
+    ...demoResultados({}).filter((x) => /Excel/.test(x.legenda)),
     {
       antes: (p, f) => f.aba("Laudo"),
       legenda: "E o Laudo da contagem de bolores sai pronto para finalizar e imprimir.",

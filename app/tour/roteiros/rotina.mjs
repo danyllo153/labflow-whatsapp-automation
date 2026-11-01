@@ -35,8 +35,22 @@ export default {
     },
     {
       destaque: (p) => cartao(p, "Lote recebido"),
-      legenda: "Cada lote recebido é aceito com o pH e a conservação, no botão Cadastrar lote. O histórico em papel pode ser lançado pelo Admin.",
-      fala: "Cada lote recebido é aceito com o p H e a conservação, no botão Cadastrar lote. O histórico em papel pode ser lançado pelo Admin.",
+      legenda: "Cada lote recebido é aceito com o pH e a conservação, no botão Cadastrar lote.",
+      fala: "Cada lote recebido é aceito com o p H e a conservação, no botão Cadastrar lote.",
+    },
+    {
+      destaque: (p) => p.getByLabel("Importar histórico"),
+      legenda: "O histórico em papel entra de uma vez: o Admin salva a planilha como CSV, com meio, lote, data, conservação, pH, observação e em uso, e clica em Importar CSV.",
+      fala: "O histórico em papel entra de uma vez: o Admin salva a planilha como C S V, com meio, lote, data, conservação, p H, observação e em uso, e clica em Importar C S V.",
+      durante: async (p, f) => {
+        await f.espera(3000);
+        await f.enviar(p.getByLabel("Arquivo CSV do histórico de lotes"), "historico-meios.csv",
+          "OSA;DEMO-101;05/09/2026;OK;OK;-;nao\nOSA;DEMO-102;20/09/2026;OK;OK;-;nao\nPDA;DEMO-201;12/09/2026;OK;OK;-;nao\n");
+      },
+    },
+    {
+      destaque: (p) => p.getByLabel("Importar histórico"),
+      legenda: "O LabFlow diz quantos lotes entraram e quantos já existiam. Se uma linha estiver errada, nada é gravado e ele mostra qual linha corrigir.",
     },
     {
       antes: (p, f) => f.ir("/fluxo-laminar"),
@@ -48,7 +62,11 @@ export default {
     },
     {
       antes: (p, f) => f.aba("Laudo"),
-      legenda: "Todos os registros diários têm a aba Laudo, com a folha pronta para finalizar e imprimir.",
+      legenda: "Todos os registros diários têm a aba Laudo, com a folha pronta para finalizar e imprimir. O Abrir PDF mostra a folha no modelo da empresa.",
+    },
+    {
+      destaque: (p) => p.getByText(/Enviar o modelo \(PDF\)|Trocar o modelo \(PDF\)/).first(),
+      legenda: "E o modelo de cada laudo é importado uma vez pelo Admin: o PDF em branco da empresa, no botão Enviar o modelo. Daí em diante, as folhas saem nele.",
     },
   ],
 };

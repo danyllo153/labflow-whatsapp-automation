@@ -21,7 +21,10 @@ de teste com `db/seeds`); os vídeos **nunca** vão para o repositório.
 
 - `roteiros/<vídeo>.mjs`: os passos de cada vídeo (tela, aba, destaque, legenda e a `fala`, quando a escrita não soa bem
   lida, como C.T, B.L, pH e IT). Mudou uma tela do app, ajuste aqui. `roteiros/index.mjs` lista os vídeos e põe a capa e o fim.
-- `comum.mjs`: a usuária do tour, os seletores (cartão, aba do app) e a capa.
+- `comum.mjs`: a usuária do tour, os seletores (cartão, aba do app), a capa e o `demoResultados`, que mostra a aba
+  Resultados **funcionando**: busca digitada, Filtros escolhidos e as etiquetas, fábricas comparadas, as visões do gráfico
+  (e o toque numa coluna), **Exportar Excel** (aparece o aviso do arquivo baixado), Imprimir, Limpar filtros e a página
+  do load ou do navio. Também há o **Importar CSV** do histórico de meios (com um CSV fictício) e o Excel das leituras do dia.
 - `gravar.mjs --tour <vídeo>`: abre o app no Chromium (Playwright), mostra cada passo e grava `tour.webm` +
   `linha-do-tempo.json`. Os vídeos que não mostram a tela de entrar já começam logados. Clique que não acha o botão não
   derruba o vídeo: segue sem ele e deixa a foto `aviso-clique-*.png` para corrigir o roteiro.

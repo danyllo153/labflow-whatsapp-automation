@@ -1,5 +1,5 @@
 // Vídeo 8: Leituras (relatório do dia), Coletas e Arquivo de contra-amostras.
-import { cartao } from "../comum.mjs";
+import { cartao, demoResultados } from "../comum.mjs";
 
 export default {
   titulo: "Leituras, Coletas e Arquivo",
@@ -14,6 +14,15 @@ export default {
     {
       destaque: (p) => p.getByRole("button", { name: "Copiar o relatório" }),
       legenda: "O relatório do dia sai pronto para copiar e enviar: tudo o que sai hoje, ou só o que já foi lido. Os botões de data mostram os dias anteriores.",
+      durante: async (p, f) => {
+        await f.espera(1500); await f.clicar(p.getByRole("button", { name: "Só o lido (completo)" }));
+        await f.espera(2000); await f.clicar(p.getByRole("button", { name: "Tudo o que sai" }));
+      },
+    },
+    {
+      destaque: (p) => p.getByRole("link", { name: "Exportar as leituras do dia para o Excel" }),
+      legenda: "O Exportar Excel baixa as leituras do dia: uma aba de resumo e uma aba por bloco, uma linha por leitura, com filtro no cabeçalho.",
+      durante: async (p, f) => { await f.espera(1500); await f.baixar(p.getByRole("link", { name: "Exportar as leituras do dia para o Excel" }), "resumo e uma aba por bloco"); },
     },
     {
       destaque: (p) => p.getByLabel("Finalizar o dia"),
@@ -33,15 +42,32 @@ export default {
     },
     {
       antes: (p, f) => f.ir("/paginas/coletas"),
-      legenda: "Em Coletas fica o histórico de todas as coletas, com o dashboard em cima e a tabela embaixo, com busca, filtros e colunas.",
+      legenda: "Em Coletas fica o histórico de todas as coletas, com o dashboard em cima e a tabela embaixo.",
     },
+    ...demoResultados({
+      busca: "Ana",
+      legendaBusca: "A busca acha o tanque, o navio ou quem coletou. Aqui, as coletas da Ana.",
+      visoes: [
+        { botao: "Tendência", legenda: "O dashboard troca entre colunas e tendência: aqui, as coletas ao longo dos dias." },
+        { botao: "Colunas", legenda: "E em colunas, a contagem agrupada pelo campo escolhido em Contar por, como quem coletou." },
+      ],
+      detalhe: "Tocando numa coleta, abre o detalhe: o tanque, quem coletou e as análises dela. Daqui o Admin edita ou exclui com o motivo.",
+    }),
     {
       antes: (p, f) => f.aba("Registrar coleta"),
       legenda: "A aba Registrar coleta é a do Coletor: escolhe tanque terra ou tanque navio, preenche e confere a prévia.",
     },
     {
       antes: (p, f) => f.ir("/arquivo"),
-      legenda: "No Arquivo de contra-amostras, a aba Para descartar mostra as caixas vencidas. O campo Procurar diz em qual caixa está cada load.",
+      legenda: "No Arquivo de contra-amostras, a aba Para descartar mostra as caixas vencidas, com o descarte de cada uma.",
+    },
+    {
+      destaque: (p) => p.getByRole("search", { name: "Procurar load no arquivo" }),
+      legenda: "O Procurar diz em qual caixa está cada load ou navio, inclusive o que já foi descartado.",
+      durante: async (p, f) => {
+        const busca = p.getByRole("search", { name: "Procurar load no arquivo" });
+        await f.digitar(busca.locator("input"), "90008"); await f.clicar(busca.getByRole("button", { name: "Procurar" })); await f.espera(2000);
+      },
     },
     {
       antes: (p, f) => f.aba("Navios"),
