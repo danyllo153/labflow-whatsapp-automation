@@ -131,47 +131,33 @@ def test_data_inicial_da_caixa_de_navio_a_mao_e_de_volta_a_automatica(cliente, l
     assert r.status_code == 422 and "vazia" in r.json()["detail"]  # a recusa do banco, em português
 
 
-def test_laudo_da_caixa_da_planilha_entra_no_laudo_de_contra_amostra(cliente, logado, conexao):
-    """01/11: a caixa de navio da planilha (carga inicial) ganha o que tem nela (FCOJ com loads e amostras, pote com o
-    tanque), com prévia e Confirmar; sai no laudo de contra-amostra do embarque; o vencimento continua o da planilha."""
-    import io
-
-    from pypdf import PdfReader
-
+def test_caixa_da_planilha_guarda_o_pdf_do_laudo_e_o_botao_laudo_abre(cliente, logado, conexao):
+    """01/11: a caixa de navio da planilha (carga inicial) recebe o PDF do laudo pronto; o Laudo da caixa abre esse PDF;
+    outro PDF troca o anterior; a caixa que não veio da planilha recusa."""
     conexao.execute("INSERT INTO arquivo_familias (nome, caixa_de, caixa_ate) VALUES ('O.TESTE', 901, 902)")
     conexao.execute("INSERT INTO arquivo_caixas (tipo, numero, familia) VALUES ('navio', 901, 'O.TESTE'), ('navio', 902, 'O.TESTE')")
     conexao.execute("INSERT INTO arquivo_navios (caixa, navio, viagem, origem, descarte_carga) VALUES (901, 'O.TESTE', '205', 'carga', '2028-10-25')")
+    pdf = b"%PDF-1.4 laudo de teste ficticio"
+    cabecalho = {"Content-Type": "application/pdf"}
     logado("Consultor")
-    assert cliente.post("/arquivo/navio/901/planilha", json={"linhas": [{"tipo": "pote", "tanque": "2P"}]}).status_code == 403
+    assert cliente.put("/arquivo/navio/901/laudo-pdf", content=pdf, headers=cabecalho).status_code == 403
     logado()
     cx = cliente.get("/arquivo/navio/901").json()["caixa"]
-    assert cx["da_planilha"] is True
-    pedido = {"linhas": [{"tipo": "fcoj", "loads": "98831 / 98832", "quantidade": 4}, {"tipo": "pote", "tanque": "2p"}]}
-    previa = cliente.post("/arquivo/navio/901/planilha", json=pedido)
-    assert previa.status_code == 200, previa.text
-    texto = previa.json()["texto"]
-    assert "FCOJ 98831/98832 (4 amostras); NFC tanque 2P (1 pote)" in texto and "25/10/2028" in texto
-    assert [i for i in cliente.get("/arquivo/navio/901").json()["itens"] if i["item"] == "planilha"] == []  # a prévia não grava
-    assert cliente.post("/arquivo/navio/901/planilha", json={**pedido, "previa": False}).status_code == 200
+    assert (cx["da_planilha"], cx["laudo_pdf"]) == (True, False)
+    assert cliente.get("/arquivo/navio/901/laudo-pdf").status_code == 404
 
-    itens = [i for i in cliente.get("/arquivo/navio/901").json()["itens"] if i["item"] == "planilha"]
-    assert sorted([(i["load"], i["tanque"], i["quantidade"], i["data_descarte"]) for i in itens], key=str) == sorted(
-        [("98831/98832", None, 4, "2028-10-25"), (None, "2P", 1, "2028-10-25")], key=str
-    )
-    assert next(c for c in cliente.get("/arquivo").json()["caixas"] if c["numero"] == 901 and c["tipo"] == "navio")["descarte_em"] == "2028-10-25"
+    r = cliente.put("/arquivo/navio/901/laudo-pdf", params={"nome": "caixa 901.pdf"}, content=pdf, headers=cabecalho)
+    assert r.status_code == 200, r.text
+    assert r.json()["texto"] == "Laudo da caixa 901 guardado."
+    assert cliente.get("/arquivo/navio/901").json()["caixa"]["laudo_pdf"] is True
+    baixado = cliente.get("/arquivo/navio/901/laudo-pdf")
+    assert baixado.status_code == 200 and baixado.content == pdf and baixado.headers["content-type"] == "application/pdf"
 
-    folhas = cliente.get("/arquivo/navio/901/laudo").json()
-    assert len(folhas) == 1 and folhas[0]["laudo"] == "contra-embarque"
-    pdf = cliente.get(f"/laudos/contra-embarque/{folhas[0]['pagina_id']}/pdf")
-    assert pdf.status_code == 200
-    escrito = "".join(p.extract_text() for p in PdfReader(io.BytesIO(pdf.content)).pages)
-    assert "98831/98832" in escrito and "2P" in escrito and "25/10/2028" in escrito
+    outro = b"%PDF-1.4 outro laudo ficticio"
+    assert cliente.put("/arquivo/navio/901/laudo-pdf", content=outro, headers=cabecalho).json()["texto"] == "Laudo da caixa 901 trocado."
+    assert cliente.get("/arquivo/navio/901/laudo-pdf").content == outro
 
-    pote = next(i for i in itens if i["tanque"] == "2P")
-    assert cliente.post(f"/arquivo/planilha/{pote['ref_id']}/apagar").status_code == 200
-    assert [i["load"] for i in cliente.get("/arquivo/navio/901").json()["itens"] if i["item"] == "planilha"] == ["98831/98832"]
-
-    r = cliente.post("/arquivo/navio/902/planilha", json={"linhas": [{"tipo": "pote", "tanque": "1C"}]})
+    r = cliente.put("/arquivo/navio/901/laudo-pdf", content=b"nao e pdf", headers=cabecalho)
+    assert r.status_code == 422 and "não é um PDF" in r.json()["detail"]
+    r = cliente.put("/arquivo/navio/902/laudo-pdf", content=pdf, headers=cabecalho)
     assert r.status_code == 422 and "não veio da planilha" in r.json()["detail"]
-    r = cliente.post("/arquivo/navio/901/planilha", json={"linhas": [{"tipo": "fcoj", "loads": "abc", "quantidade": 2}]})
-    assert r.status_code == 422 and "loads" in r.json()["detail"]

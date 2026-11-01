@@ -17,7 +17,7 @@ const ARQUIVO = {
   pode_gravar: true,
   caixas: [
     caixa({ tipo: "navio", numero: 27, familia: "O.BETA", navio: "O.BETA", viagem: "205", itens: 3, amostras: 7, descarte_em: "2028-10-25", situacao: "Em uso", ultima_amostra: "2026-10-20", inicio_em: "2026-10-25", inicio_fixado: false }),
-    caixa({ tipo: "navio", numero: 28, familia: "O.GAMA", navio: "O.GAMA", viagem: "10", itens: 1, descarte_em: "2027-03-01", situacao: "Em uso", da_planilha: true }),
+    caixa({ tipo: "navio", numero: 28, familia: "O.GAMA", navio: "O.GAMA", viagem: "10", itens: 1, descarte_em: "2027-03-01", situacao: "Em uso", da_planilha: true, laudo_pdf: true }),
     caixa({ tipo: "recebimento", numero: 121, itens: 1, amostras: 3, descarte_em: "2026-10-18", situacao: "Vencida", itens_vencidos: 1 }),
     caixa({ tipo: "recebimento", numero: 122 }),
     caixa({ tipo: "tanque", numero: 34 }),
@@ -40,9 +40,9 @@ function abrir() {
     "GET /arquivo/recebimento/121/laudo": () => ({ status: 200, corpo: [] }),
     "POST /arquivo/data-inicial": () => ({ status: 200, corpo: { ok: true, previa: true, texto: "Caixa 27 (O.BETA 205): data inicial 30/10/2026 (escolhida à mão). FCOJ até 30/10/2028. A caixa libera em 30/10/2028.", dados: {} } }),
     "GET /arquivo/busca?load=O.GAMA%2010": () => ({ status: 200, corpo: [{ tipo: "navio", caixa: 28, load: "", navio: "O.GAMA 10", lotes: null, data_ref: null, data_descarte: "2027-03-01", situacao: "Em uso" }] }),
-    "GET /arquivo/navio/28": () => ({ status: 200, corpo: { caixa: ARQUIVO.caixas[1], itens: [{ item: "carga", descricao: "carga inicial", navio: "O.GAMA", viagem: "10", tanque: null, load: null, lotes: null, quantidade: null, data_ref: null, data_descarte: "2027-03-01", situacao: "Arquivado", descartado_em: null, ref_id: 5 }] } }),
+    "GET /arquivo/navio/28": () => ({ status: 200, corpo: { caixa: ARQUIVO.caixas[1], itens: [] } }),
     "GET /arquivo/navio/28/laudo": () => ({ status: 200, corpo: [] }),
-    "POST /arquivo/navio/28/planilha": () => ({ status: 200, corpo: { ok: true, previa: true, texto: "Caixa 28 (O.GAMA 10, da planilha): 2 linhas no laudo de contra-amostra: FCOJ 98831/98832 (4 amostras); NFC tanque 2P (1 pote). O vencimento continua o da planilha: 01/03/2027.", dados: {} } }),
+    "PUT /arquivo/navio/28/laudo-pdf?nome=caixa%2028.pdf": () => ({ status: 200, corpo: { caixa: 28, texto: "Laudo da caixa 28 trocado." } }),
     "POST /arquivo/arquivar": () => ({ status: 200, corpo: { ok: true, previa: true, texto: "Caixa 122 (recebimento): load 98802 lotes 1-5", dados: {} } }),
   });
   render(
@@ -109,31 +109,18 @@ describe("Arquivo de contra-amostras (PB21)", () => {
     expect(api.chamadas.find((c) => c.rota === "POST /arquivo/data-inicial")?.corpo).toEqual({ numero: 27, data: "2026-10-30", previa: true });
   });
 
-  it("a caixa da planilha ganha o laudo digitado: FCOJ e pote, com a prévia (01/11)", async () => {
+  it("a caixa da planilha abre o PDF do laudo pelo botão Laudo e deixa trocar o PDF (01/11)", async () => {
     const api = abrir();
     const busca = await screen.findByRole("search", { name: "Procurar load no arquivo" });
     await userEvent.type(within(busca).getByLabelText("Em qual caixa está o load ou o navio?"), "O.GAMA 10");
     await userEvent.click(within(busca).getByRole("button", { name: "Procurar" }));
     await userEvent.click(await within(busca).findByRole("button", { name: "Abrir a caixa 28" }));
     const conteudo = await screen.findByRole("article", { name: /Caixa 28 · Navio/ });
-    await userEvent.click(within(conteudo).getByRole("button", { name: "Adicionar laudo" }));
-    const form = within(conteudo).getByRole("form", { name: "Adicionar o laudo da caixa" });
-    expect(form).toHaveTextContent("o vencimento continua o da planilha (01/03/2027)");
-    await userEvent.type(within(form).getByLabelText("Loads da linha 1"), "98831/98832");
-    await userEvent.clear(within(form).getByLabelText("Quantidade da linha 1"));
-    await userEvent.type(within(form).getByLabelText("Quantidade da linha 1"), "4");
-    await userEvent.click(within(form).getByRole("button", { name: "+ Linha" }));
-    await userEvent.selectOptions(within(form).getByLabelText("Amostra da linha 2"), "pote");
-    await userEvent.type(within(form).getByLabelText("Tanque da linha 2"), "2P");
-    await userEvent.click(within(form).getByRole("button", { name: "Ver o laudo" }));
-    expect(await within(conteudo).findByText(/O vencimento continua o da planilha: 01\/03\/2027/)).toBeInTheDocument();
-    expect(api.chamadas.find((c) => c.rota === "POST /arquivo/navio/28/planilha")?.corpo).toEqual({
-      linhas: [
-        { tipo: "fcoj", loads: "98831/98832", tanque: "", quantidade: 4 },
-        { tipo: "pote", loads: "", tanque: "2P", quantidade: 1 },
-      ],
-      previa: true,
-    });
+    expect(within(conteudo).getByRole("link", { name: /Laudo/ })).toHaveAttribute("href", "/arquivo/navio/28/laudo-pdf");
+    expect(within(conteudo).getByText("Trocar o PDF do laudo")).toBeInTheDocument();
+    await userEvent.upload(within(conteudo).getByLabelText("PDF do laudo da caixa 28"), new File(["%PDF-1.7"], "caixa 28.pdf", { type: "application/pdf" }));
+    expect(await within(conteudo).findByText("Laudo da caixa 28 trocado.")).toBeInTheDocument();
+    expect(api.chamadas.some((c) => c.rota === "PUT /arquivo/navio/28/laudo-pdf?nome=caixa%2028.pdf")).toBe(true);
   });
 
   it("Recebimento tem o arquivar com a caixa sugerida e sem o Item", async () => {

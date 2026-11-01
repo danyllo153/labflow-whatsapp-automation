@@ -6,16 +6,14 @@ Spec: docs/specs/lims/11-arquivo-contra-amostras.md; rumo-do-app.md, PB21 (migra
 ninguém é avisado (decisão do Danyllo).
 """
 
-import re
 from datetime import date
 from typing import Literal
 
 import psycopg
-from fastapi import APIRouter, Depends, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
 from pydantic import BaseModel, Field
 
 from labflow_api.dependencias import PessoaLogada, obter_conexao
-from labflow_api.laudos_analises import ITENS_DO_ARQUIVO
 from labflow_api.permissoes import exigir, pode
 from labflow_api.rotas_analise_recebimento import _chamar, _lotes
 from labflow_api.rotas_apps_analise import Gravacao, _resposta
@@ -40,8 +38,9 @@ class Caixa(BaseModel):
     ultima_amostra: date | None = None
     inicio_em: date | None = None  # a escolhida à mão ou a automática (última amostra + 5 dias)
     inicio_fixado: bool = False
-    # caixa de navio que veio da planilha (carga inicial): o botão "Adicionar laudo" digita o que tem nela (084, 01/11)
+    # caixa de navio que veio da planilha (carga inicial): o laudo é o PDF pronto que se sobe nela (085, 01/11)
     da_planilha: bool = False
+    laudo_pdf: bool = False  # já tem o PDF do laudo
 
 
 class Arquivo(BaseModel):
@@ -58,18 +57,18 @@ SELECT c.tipo, c.numero, c.familia, c.navio, c.viagem, c.itens_arquivados, c.amo
        CASE WHEN c.tipo = 'recebimento' AND c.situacao = 'Vencida' AND c.itens_vencidos < c.itens_arquivados THEN 'Em uso'
             ELSE c.situacao END,
        c.itens_vencidos, c.ultima_amostra, c.inicio_em, coalesce(c.inicio_fixado, false),
-       c.tipo = 'navio' AND EXISTS (SELECT 1 FROM arquivo_navios an WHERE an.caixa = c.numero AND an.origem = 'carga'
-                                    AND an.descartado_em IS NULL)
+       cg.id IS NOT NULL, EXISTS (SELECT 1 FROM app.arquivo_laudo_pdf p WHERE p.carga_id = cg.id AND p.trocado_em IS NULL)
 FROM vw_arquivo_caixas c
+LEFT JOIN arquivo_navios cg ON c.tipo = 'navio' AND cg.caixa = c.numero AND cg.origem = 'carga' AND cg.descartado_em IS NULL
 LEFT JOIN LATERAL (SELECT max(i.data_descarte) AS ultimo FROM vw_arquivo_itens i
                    WHERE i.caixa_tipo = 'recebimento' AND i.caixa = c.numero AND i.situacao <> 'Descartado') r ON c.tipo = 'recebimento'
 """
 
 
-def _caixa(t, n, f, nv, v, i, a, d, s, iv, ua, ini, fixado, planilha) -> Caixa:
+def _caixa(t, n, f, nv, v, i, a, d, s, iv, ua, ini, fixado, planilha, pdf) -> Caixa:
     return Caixa(
         tipo=t, numero=n, familia=f, navio=nv, viagem=v, itens=i, amostras=a, descarte_em=d, situacao=s, itens_vencidos=iv,
-        ultima_amostra=ua, inicio_em=ini, inicio_fixado=fixado, da_planilha=planilha,
+        ultima_amostra=ua, inicio_em=ini, inicio_fixado=fixado, da_planilha=planilha, laudo_pdf=pdf,
     )
 
 
@@ -87,7 +86,7 @@ def arquivo(pessoa: PessoaLogada = Depends(exigir("ver_paginas")), con: psycopg.
 
 
 class Item(BaseModel):
-    item: str  # bag / pote / fcoj / carga / recebimento / planilha (digitado na caixa da planilha, 084)
+    item: str  # bag / pote / fcoj / carga / recebimento
     descricao: str
     navio: str | None
     viagem: str | None
@@ -99,7 +98,6 @@ class Item(BaseModel):
     data_descarte: date | None
     situacao: str  # Arquivado / Vencido / Descartado
     descartado_em: str | None
-    ref_id: int | None = None  # a linha digitada da planilha (item "planilha"): para tirar do laudo
 
 
 class ConteudoDaCaixa(BaseModel):
@@ -124,12 +122,12 @@ def caixa(
     # caixa de navio: só os itens do navio e viagem que ocupa a caixa agora (a mesma conta da view das caixas)
     itens = [
         Item(item=it, descricao=de, navio=na, viagem=vi, tanque=ta, load=lo, lotes=lt, quantidade=q, data_ref=dr,
-             data_descarte=dd, situacao=si, descartado_em=em.strftime("%d/%m/%Y") if em else None, ref_id=ri)
-        for it, de, na, vi, ta, lo, lt, q, dr, dd, si, em, ri in con.execute(
-            f"""
+             data_descarte=dd, situacao=si, descartado_em=em.strftime("%d/%m/%Y") if em else None)
+        for it, de, na, vi, ta, lo, lt, q, dr, dd, si, em in con.execute(
+            """
             SELECT i.item, i.descricao, i.navio, i.viagem, i.tanque, i.load, i.lotes, i.quantidade, i.data_ref, i.data_descarte,
-                   i.situacao, i.descartado_em AT TIME ZONE 'America/Sao_Paulo', i.ref_id
-            FROM {ITENS_DO_ARQUIVO} i
+                   i.situacao, i.descartado_em AT TIME ZONE 'America/Sao_Paulo'
+            FROM vw_arquivo_itens i
             WHERE i.caixa_tipo = %(t)s AND i.caixa = %(n)s AND (%(todos)s OR i.situacao <> 'Descartado')
               AND (%(t)s <> 'navio' OR i.situacao = 'Descartado' OR %(navio)s::text IS NULL
                    OR (arquivo_nome_navio(i.navio) = %(navio)s AND arquivo_viagem(i.viagem) = %(viagem)s))
@@ -140,110 +138,6 @@ def caixa(
         )
     ]
     return ConteudoDaCaixa(caixa=cx, itens=itens)
-
-
-# --- o laudo da caixa da planilha (084, pedido do Danyllo de 01/11) ------------------------------------------------------
-# As caixas de navio da carga inicial só têm a linha "carga inicial". Admin e Analista digitam o que tem nelas (o laudo de
-# papel que já existe) e isso sai no laudo de contra-amostra do embarque, na folha da caixa. O vencimento é o da planilha.
-
-
-class LinhaDaPlanilha(BaseModel):
-    tipo: Literal["fcoj", "pote"]
-    loads: str = Field(default="", max_length=200)  # FCOJ: "43783/43784"
-    tanque: str = Field(default="", max_length=10)  # pote de NFC: "2P"
-    quantidade: int = Field(default=1, ge=1, le=99)  # FCOJ: as amostras; o pote é sempre 1
-
-
-class ConteudoDaPlanilha(BaseModel):
-    linhas: list[LinhaDaPlanilha] = Field(min_length=1, max_length=28)  # uma folha do laudo tem 28 linhas
-    previa: bool = True
-
-
-def _carga(con: psycopg.Connection, numero: int) -> tuple[int, str, str, date | None]:
-    linha = con.execute(
-        "SELECT id, navio, viagem, descarte_carga FROM arquivo_navios"
-        " WHERE caixa = %s AND origem = 'carga' AND descartado_em IS NULL",
-        (numero,),
-    ).fetchone()
-    if not linha:
-        raise HTTPException(
-            status.HTTP_422_UNPROCESSABLE_ENTITY,
-            f"A caixa {numero} não veio da planilha: o laudo dela se monta sozinho com as amostras registradas.",
-        )
-    return linha
-
-
-def _linha_valida(linha: LinhaDaPlanilha) -> tuple[str, str | None, str | None, int]:
-    if linha.tipo == "fcoj":
-        loads = [p for p in re.split(r"[/,;\s]+", linha.loads) if p]
-        if not loads or not all(p.isdigit() and len(p) <= 10 for p in loads) or len(loads) > 20:
-            raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Diga os loads do FCOJ só com números (ex.: 43783/43784).")
-        return "fcoj", "/".join(loads), None, linha.quantidade
-    tanque = linha.tanque.strip().upper()
-    if not re.fullmatch(r"[0-9]{1,2}[A-Z]{0,2}", tanque):
-        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "Diga o tanque do pote de NFC (ex.: 2P, 1C).")
-    return "pote", None, tanque, 1
-
-
-def _descricao(tipo: str, loads: str | None, tanque: str | None, quantidade: int) -> str:
-    if tipo == "fcoj":
-        return f"FCOJ {loads} ({quantidade} amostra{'s' if quantidade > 1 else ''})"
-    return f"NFC tanque {tanque} (1 pote)"
-
-
-@roteador.post("/navio/{numero}/planilha", response_model=Gravacao)
-def adicionar_laudo_da_planilha(
-    numero: int, pedido: ConteudoDaPlanilha,
-    pessoa: PessoaLogada = Depends(exigir("registrar_analise")), con: psycopg.Connection = Depends(obter_conexao),
-) -> Gravacao:
-    """Põe no laudo de contra-amostra o que tem numa caixa de navio da planilha (FCOJ: loads e amostras; NFC: o tanque do
-    pote). A prévia mostra as linhas; o Confirmar grava. O vencimento continua o da planilha."""
-    carga_id, navio, viagem, descarte = _carga(con, numero)
-    linhas = [_linha_valida(linha) for linha in pedido.linhas]
-    texto = (
-        f"Caixa {numero} ({navio} {viagem}, da planilha): {len(linhas)} linha{'s' if len(linhas) > 1 else ''} no laudo de "
-        "contra-amostra: " + "; ".join(_descricao(*linha) for linha in linhas) + "."
-        + (f" O vencimento continua o da planilha: {descarte.strftime('%d/%m/%Y')}." if descarte else "")
-    )
-    if not pedido.previa:
-        with con.transaction():
-            for tipo, loads, tanque, quantidade in linhas:
-                con.execute(
-                    "INSERT INTO app.arquivo_conteudo_planilha (carga_id, tipo, loads, tanque, quantidade, criada_por)"
-                    " VALUES (%s, %s, %s, %s, %s, %s)",
-                    (carga_id, tipo, loads, tanque, quantidade, pessoa.usuario_id),
-                )
-    return Gravacao(ok=True, previa=pedido.previa, texto=texto, dados={"caixa": numero, "linhas": len(linhas)})
-
-
-@roteador.post("/planilha/{linha_id}/apagar", response_model=Gravacao)
-def apagar_linha_da_planilha(
-    linha_id: int, pessoa: PessoaLogada = Depends(exigir("registrar_analise")), con: psycopg.Connection = Depends(obter_conexao),
-) -> Gravacao:
-    """Tira do laudo uma linha digitada da planilha (fica no banco, com quem e quando). A folha já finalizada não muda:
-    reabra-a no laudo antes."""
-    linha = con.execute(
-        """
-        SELECT an.caixa, p.impresso_em IS NOT NULL FROM app.arquivo_conteudo_planilha x
-        JOIN arquivo_navios an ON an.id = x.carga_id
-        LEFT JOIN app.laudo_linhas l ON l.laudo = 'contra-embarque' AND l.ref = 'planilha:' || x.id
-        LEFT JOIN app.paginas_laudo p ON p.id = l.pagina_id
-        WHERE x.id = %s AND x.apagada_em IS NULL
-        """,
-        (linha_id,),
-    ).fetchone()
-    if not linha:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, "Linha não encontrada.")
-    if linha[1]:
-        raise HTTPException(
-            status.HTTP_422_UNPROCESSABLE_ENTITY, "A folha do laudo desta caixa está finalizada: reabra-a antes de tirar a linha."
-        )
-    with con.transaction():
-        con.execute(
-            "UPDATE app.arquivo_conteudo_planilha SET apagada_em = clock_timestamp(), apagada_por = %s WHERE id = %s",
-            (pessoa.usuario_id, linha_id),
-        )
-    return Gravacao(ok=True, previa=False, texto=f"Linha tirada do laudo da caixa {linha[0]}.", dados={"caixa": linha[0]})
 
 
 class Achado(BaseModel):
@@ -379,10 +273,10 @@ def laudo_da_caixa(
     return [
         LaudoDaCaixa(laudo=nome, pagina_id=p, finalizada=f)
         for p, f in con.execute(
-            f"""
+            """
             SELECT DISTINCT l.pagina_id, p.impresso_em IS NOT NULL FROM app.laudo_linhas l
             JOIN app.paginas_laudo p ON p.id = l.pagina_id AND p.excluida_em IS NULL
-            JOIN {ITENS_DO_ARQUIVO} i ON i.item || ':' || i.ref_id = l.ref
+            JOIN vw_arquivo_itens i ON i.item || ':' || i.ref_id = l.ref
             WHERE l.laudo = %s AND i.caixa_tipo = %s AND i.caixa = %s
             ORDER BY l.pagina_id
             """,
@@ -390,3 +284,75 @@ def laudo_da_caixa(
         )
     ]
 
+
+
+# --- o PDF do laudo da caixa da planilha (085, pedido do Danyllo de 01/11) -------------------------------------------------
+# As caixas de navio da carga inicial não têm laudo gerado pelo app: sobe-se o PDF do laudo que já existe e o botão "Laudo"
+# da caixa abre esse PDF. Subir outro troca (o antigo fica no banco). O PDF fica só no banco.
+
+TAMANHO_MAXIMO = 10 * 1024 * 1024
+
+
+def _carga(con: psycopg.Connection, numero: int) -> int:
+    linha = con.execute(
+        "SELECT id FROM arquivo_navios WHERE caixa = %s AND origem = 'carga' AND descartado_em IS NULL", (numero,)
+    ).fetchone()
+    if not linha:
+        raise HTTPException(
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            f"A caixa {numero} não veio da planilha: o laudo dela é a folha do laudo de contra-amostra.",
+        )
+    return linha[0]
+
+
+class LaudoEnviado(BaseModel):
+    caixa: int
+    texto: str
+
+
+@roteador.put("/navio/{numero}/laudo-pdf", response_model=LaudoEnviado)
+async def enviar_laudo_pdf(
+    numero: int,
+    pedido: Request,
+    nome: str = Query(default="", max_length=200),
+    pessoa: PessoaLogada = Depends(exigir("registrar_analise")),
+    con: psycopg.Connection = Depends(obter_conexao),
+) -> LaudoEnviado:
+    """Sobe o PDF do laudo pronto de uma caixa de navio da planilha (Admin e Analista); outro PDF troca o anterior."""
+    pdf = await pedido.body()
+    if len(pdf) > TAMANHO_MAXIMO:
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "O PDF passa de 10 MB.")
+    if not pdf.startswith(b"%PDF"):
+        raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "O arquivo não é um PDF.")
+    carga_id = _carga(con, numero)
+    with con.transaction():
+        trocou = con.execute(
+            "UPDATE app.arquivo_laudo_pdf SET trocado_em = clock_timestamp() WHERE carga_id = %s AND trocado_em IS NULL",
+            (carga_id,),
+        ).rowcount
+        con.execute(
+            "INSERT INTO app.arquivo_laudo_pdf (carga_id, pdf, nome_arquivo, enviado_por) VALUES (%s, %s, %s, %s)",
+            (carga_id, pdf, nome.strip() or None, pessoa.usuario_id),
+        )
+    return LaudoEnviado(caixa=numero, texto=f"Laudo da caixa {numero} {'trocado' if trocou else 'guardado'}.")
+
+
+@roteador.get("/navio/{numero}/laudo-pdf")
+def baixar_laudo_pdf(
+    numero: int, pessoa: PessoaLogada = Depends(exigir("ver_paginas")), con: psycopg.Connection = Depends(obter_conexao)
+) -> Response:
+    """O PDF do laudo da caixa da planilha, para abrir na tela."""
+    linha = con.execute(
+        """
+        SELECT p.pdf FROM app.arquivo_laudo_pdf p
+        JOIN arquivo_navios an ON an.id = p.carga_id
+        WHERE an.caixa = %s AND an.origem = 'carga' AND an.descartado_em IS NULL AND p.trocado_em IS NULL
+        """,
+        (numero,),
+    ).fetchone()
+    if not linha:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, f"A caixa {numero} ainda não tem o PDF do laudo.")
+    return Response(
+        content=bytes(linha[0]), media_type="application/pdf",
+        headers={"Content-Disposition": f'inline; filename="laudo-caixa-{numero}.pdf"'},
+    )
