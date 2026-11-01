@@ -128,6 +128,7 @@ class Achado(BaseModel):
     tipo: str
     caixa: int
     load: str
+    navio: str | None = None  # na busca por navio (01/11): "O.WAVE 223"
     lotes: str | None
     data_ref: date | None
     data_descarte: date | None
@@ -136,11 +137,26 @@ class Achado(BaseModel):
 
 @roteador.get("/busca", response_model=list[Achado])
 def buscar_load(
-    load: str = Query(min_length=1, max_length=20),
+    load: str = Query(min_length=1, max_length=40),
     pessoa: PessoaLogada = Depends(exigir("ver_paginas")),
     con: psycopg.Connection = Depends(obter_conexao),
 ) -> list[Achado]:
-    """Em qual caixa está um load (o que ainda não foi descartado; recebimento e embarque)."""
+    """Em qual caixa está um load (o que ainda não foi descartado; recebimento e embarque) ou, com letras, um navio
+    ("O.WAVE 223", "owave 223" ou só "O.WAVE"): a caixa de cada viagem (01/11)."""
+    if any(ch.isalpha() for ch in load):
+        termo = "".join(ch for ch in load.upper() if ch.isalnum())
+        return [
+            Achado(tipo="navio", caixa=c, load="", navio=f"{nv} {vg}", lotes=None, data_ref=None, data_descarte=dd, situacao=si)
+            for c, nv, vg, dd, si in con.execute(
+                """
+                SELECT numero, navio, viagem, descarte_em, situacao FROM vw_arquivo_caixas
+                WHERE tipo = 'navio' AND navio IS NOT NULL
+                  AND regexp_replace(upper(navio || viagem), '[^A-Z0-9]', '', 'g') LIKE %s
+                ORDER BY navio, length(viagem), viagem LIMIT 50
+                """,
+                (f"%{termo}%",),
+            )
+        ]
     return [
         Achado(tipo=t, caixa=c, load=lo, lotes=lt, data_ref=dr, data_descarte=dd, situacao=si)
         for t, c, lo, lt, dr, dd, si in con.execute(
@@ -188,3 +204,47 @@ def descartar(
     """Navio: a caixa inteira, depois da maior data. Recebimento e tanque: o que já venceu."""
     r = _chamar(con, "SELECT arquivo_descartar(%s, %s, %s, %s)", (pessoa.usuario_id, pedido.tipo, pedido.numero, pedido.previa))
     return _resposta(r, pedido.previa)
+
+
+# --- o laudo da caixa (01/11): a folha do laudo de contra-amostra onde a caixa está --------------------------------------
+
+LAUDO_DO_TIPO = {"navio": "contra-embarque", "recebimento": "contra-recebimento"}
+
+
+class LaudoDaCaixa(BaseModel):
+    laudo: str  # "contra-embarque" ou "contra-recebimento"
+    pagina_id: int
+    finalizada: bool
+
+
+@roteador.get("/{tipo}/{numero}/laudo", response_model=list[LaudoDaCaixa])
+def laudo_da_caixa(
+    tipo: Tipo,
+    numero: int,
+    pessoa: PessoaLogada = Depends(exigir("ver_paginas")),
+    con: psycopg.Connection = Depends(obter_conexao),
+) -> list[LaudoDaCaixa]:
+    """As folhas do laudo de contra-amostra com o que está (ou esteve) nesta caixa: navio no laudo do embarque (uma folha
+    por caixa), recebimento na folha corrida. O tanque de terra não tem laudo de contra-amostra."""
+    nome = LAUDO_DO_TIPO.get(tipo)
+    if nome is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "A caixa do tanque não tem laudo de contra-amostra.")
+    from labflow_api import laudos  # os laudos de contra-amostra moram em laudos_analises (registrados no main)
+
+    laudo = laudos.LAUDOS.get(nome)
+    if laudo is not None and laudo.preparar:
+        laudo.preparar(con)  # põe nas folhas o que ainda não tem lugar
+    return [
+        LaudoDaCaixa(laudo=nome, pagina_id=p, finalizada=f)
+        for p, f in con.execute(
+            """
+            SELECT DISTINCT l.pagina_id, p.impresso_em IS NOT NULL FROM app.laudo_linhas l
+            JOIN app.paginas_laudo p ON p.id = l.pagina_id AND p.excluida_em IS NULL
+            JOIN vw_arquivo_itens i ON i.item || ':' || i.ref_id = l.ref
+            WHERE l.laudo = %s AND i.caixa_tipo = %s AND i.caixa = %s
+            ORDER BY l.pagina_id
+            """,
+            (nome, tipo, numero),
+        )
+    ]
+
