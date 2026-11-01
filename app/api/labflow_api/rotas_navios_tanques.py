@@ -133,12 +133,25 @@ def _linhas(con: psycopg.Connection, sql: str, valores: list[Any]) -> list[dict[
     return [dict(zip(nomes, l)) for l in cur.fetchall()]
 
 
+# o arquivo de contra-amostras (em que caixa está ou esteve, inclusive o descartado: rastreio, pedido de 01/11)
+ARQUIVO_SQL = """
+    SELECT caixa_tipo, caixa, coalesce(load, tanque, navio || ' ' || viagem) AS referencia, item, lotes, descricao,
+           data_ref, data_descarte, situacao, (descartado_em AT TIME ZONE 'America/Sao_Paulo')::date AS descartado_em
+    FROM vw_arquivo_itens WHERE {onde} ORDER BY data_ref DESC NULLS LAST, caixa
+"""
+
+
+def _arquivo(con: psycopg.Connection, onde: str, valores: list[Any]) -> list[dict[str, Any]]:
+    return _linhas(con, ARQUIVO_SQL.format(onde=onde), valores)
+
+
 class DetalheTanque(BaseModel):
     resumo: dict[str, Any]
     leituras: list[dict[str, Any]]
     drops: list[dict[str, Any]]
     desvios: list[dict[str, Any]]
     testes: list[dict[str, Any]]
+    arquivo: list[dict[str, Any]] = []  # a contra-amostra do tanque (terra) na caixa do arquivo
 
 
 def _detalhe_da_coleta(con: psycopg.Connection, coleta_id: int) -> DetalheTanque:
@@ -171,7 +184,11 @@ def _detalhe_da_coleta(con: psycopg.Connection, coleta_id: int) -> DetalheTanque
         "WHERE origem = 'Tank farm' AND tanque = %s AND data_coleta = %s AND %s = 'Terra' ORDER BY data_feito",
         [r["tanque"], r["data_coleta"], r["origem"]],
     )
-    return DetalheTanque(resumo=r, leituras=leituras, drops=drops, desvios=desvios, testes=testes)
+    arquivo = (
+        _arquivo(con, "caixa_tipo = 'tanque' AND tanque = %s AND data_ref = %s", [r["tanque"], r["data_coleta"]])
+        if r["origem"] == "Terra" else []
+    )
+    return DetalheTanque(resumo=r, leituras=leituras, drops=drops, desvios=desvios, testes=testes, arquivo=arquivo)
 
 
 @roteador.get("/tanques-terra/{coleta_id}", response_model=DetalheTanque)
@@ -314,6 +331,7 @@ class DetalheNavio(BaseModel):
     tanques: list[dict[str, Any]]  # tanques NFC do navio (uma linha por coleta, como em Tanques terra)
     embarques: list[dict[str, Any]]  # concentrado FCOJ: uma linha por linha e fase
     amostras: list[dict[str, Any]] = []  # cada amostra do FCOJ com o C.T e o B.L
+    arquivo: list[dict[str, Any]] = []  # as caixas de contra-amostra do navio (inclusive as descartadas)
 
 
 @roteador.get("/navios/{navio}", response_model=DetalheNavio)
@@ -336,14 +354,28 @@ def navio(
                             ordem="linha, fase, " + _ORDEM_NUMERICA.format(c="load") + ", " + _ORDEM_NUMERICA.format(c="lote_amostra")),
         ["Embarque", navio],
     )
+    arquivo = _arquivo(con, "caixa_tipo = 'navio' AND navio || ' ' || viagem = %s", [navio])
     return DetalheNavio(resumo=resumo[0], tanques=tanques, embarques=embarques,
-                        amostras=[{**a, "amostra": a.pop("lote_amostra")} for a in amostras])
+                        amostras=[{**a, "amostra": a.pop("lote_amostra")} for a in amostras], arquivo=arquivo)
 
 
 class DetalheLoad(BaseModel):
     resumo: dict[str, Any]
     lotes: list[dict[str, Any]]  # cada lote com o C.T e o B.L lado a lado
     testes: list[dict[str, Any]]  # compostas: TAB, Coliformes e Howard do load
+    nfc: list[dict[str, Any]] = []  # o mesmo load no recebimento de NFC (lote, fresh/past, diluição, C.T/B.L)
+    arquivo: list[dict[str, Any]] = []  # em que caixa está ou esteve (inclusive o descartado)
+
+
+NFC_DO_LOAD = """
+    SELECT lote, amostra, diluicao_texto AS diluicao, fabrica, data_recebimento,
+           max(resultado) FILTER (WHERE analise = 'C.T 48h') AS ct,
+           max(resultado) FILTER (WHERE analise = 'B.L 72h') AS bl72,
+           max(resultado) FILTER (WHERE analise = 'B.L 120h') AS bl120,
+           CASE WHEN bool_and(lido) THEN 'Ok' WHEN bool_or(situacao = 'Atrasado') THEN 'Atrasado' ELSE 'Pendente' END AS situacao
+    FROM bi.recebimento_nfc WHERE load = %s
+    GROUP BY lote, amostra, diluicao_texto, fabrica, data_recebimento ORDER BY data_recebimento, lote, amostra
+"""
 
 
 @roteador.get("/loads/{load}", response_model=DetalheLoad)
@@ -352,12 +384,15 @@ def load_recebido(
     pessoa: PessoaLogada = Depends(exigir("ver_paginas")),
     con: psycopg.Connection = Depends(obter_conexao),
 ) -> DetalheLoad:
-    """A página de um load do recebimento (rastreável, pedido de 27/10): os lotes com os resultados e as compostas."""
+    """A página de um load (rastreável, 27/10 e 01/11): recebimento de FCOJ (lotes e compostas), recebimento de NFC e o
+    arquivo de contra-amostras, inclusive o que já foi descartado."""
     _barrar_coletor(pessoa)
     lotes = _linhas(
         con, AMOSTRAS_SQL.format(chaves="item, numero", onde="load = %s", ordem="numero, item"), ["Recebimento", load]
     )
-    if not lotes:
+    nfc = _linhas(con, NFC_DO_LOAD, [load])
+    arquivo = _arquivo(con, "load = %s", [load])
+    if not lotes and not nfc and not arquivo:
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Load não encontrado.")
     testes = _linhas(
         con,
@@ -366,14 +401,17 @@ def load_recebido(
         [load],
     )
     itens = sorted({str(l["item"]) for l in lotes if l["item"] is not None})
-    fabricas = sorted({l["fabrica"] for l in lotes if l["fabrica"]})
+    fabricas = sorted({l["fabrica"] for l in lotes + nfc if l["fabrica"]})
     nao_ok = sum(1 for l in lotes if l["situacao"] == "Não ok")
-    abertos = sum(1 for l in lotes if l["situacao"] in ("Pendente", "Atrasado")) + sum(1 for t in testes if t["situacao"] != "Concluído")
-    atrasados = sum(1 for l in lotes if l["situacao"] == "Atrasado") + sum(1 for t in testes if t["situacao"] == "Atrasado")
+    abertos = (sum(1 for l in lotes + nfc if l["situacao"] in ("Pendente", "Atrasado"))
+               + sum(1 for t in testes if t["situacao"] != "Concluído"))
+    atrasados = sum(1 for l in lotes + nfc if l["situacao"] == "Atrasado") + sum(1 for t in testes if t["situacao"] == "Atrasado")
+    datas = [l["prevista"] for l in lotes] + [l["data_recebimento"] for l in nfc]
     resumo = {
         "load": load, "itens": ", ".join(itens), "fabricas": ", ".join(fabricas), "lotes": len(lotes), "nao_ok": nao_ok,
         "testes": len(testes), "positivos": sum(1 for t in testes if t["resultado"] == "Positivo"),
-        "primeira_data": min(l["prevista"] for l in lotes),
+        "lotes_nfc": len(nfc), "caixas": len({(a["caixa_tipo"], a["caixa"]) for a in arquivo if a["caixa"] is not None}),
+        "primeira_data": min(datas) if datas else None,
         "status": "Atrasado" if atrasados else "Concluído" if not abertos else "Em andamento",
     }
-    return DetalheLoad(resumo=resumo, lotes=[{**l, "lote": l.pop("numero")} for l in lotes], testes=testes)
+    return DetalheLoad(resumo=resumo, lotes=[{**l, "lote": l.pop("numero")} for l in lotes], testes=testes, nfc=nfc, arquivo=arquivo)

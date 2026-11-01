@@ -3,7 +3,7 @@
 Números conferidos contra as views bi.* do banco de teste. A hora "agora" é fixada em rotas_turno._agora.
 """
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 import pytest
 
@@ -44,15 +44,18 @@ def _grupo(corpo, tipo):
 
 def test_drops_do_turno_batem_com_a_view_e_caem_no_turno_certo(cliente, logado, agora, conexao):
     # os drops fictícios do banco de teste foram concluídos em 18/10 às 07:00 (horário de Brasília): Madrugada de 18/10
+    # (a data dos dados fictícios muda com o dia em que o banco de teste é montado: conta com datas completas, não só o dia)
     quando = conexao.execute("SELECT max(concluido_em) FROM bi.drops").fetchone()[0].astimezone(FUSO)
-    agora(em(quando.day + 1, 12))
+    dia = quando.date()
+    meia_noite = datetime(dia.year, dia.month, dia.day, tzinfo=FUSO)
+    agora(meia_noite + timedelta(days=1, hours=12))
     logado()
     esperado = conexao.execute(
         """SELECT count(*) FROM bi.drops WHERE concluido_em >= %s AND concluido_em < %s
            AND (prevista IS NULL OR (concluido_em AT TIME ZONE 'America/Sao_Paulo')::date >= prevista)""",
-        (em(quando.day, 0), em(quando.day, 8)),
+        (meia_noite, meia_noite + timedelta(hours=8)),
     ).fetchone()[0]
-    r = cliente.get("/turno/relatorio", params={"turno_id": MADRUGADA, "dia": f"2026-10-{quando.day}"})
+    r = cliente.get("/turno/relatorio", params={"turno_id": MADRUGADA, "dia": dia.isoformat()})
     assert r.status_code == 200, r.text
     corpo = r.json()
     assert (corpo["turno"], corpo["inicio"], corpo["fim"], corpo["em_andamento"]) == ("Madrugada", "00:00", "08:00", False)
@@ -60,7 +63,7 @@ def test_drops_do_turno_batem_com_a_view_e_caem_no_turno_certo(cliente, logado, 
     assert drops["total"] == esperado > 0
     assert sum(p["n"] for p in drops["por_pessoa"]) == esperado
     # o mesmo dia, mas na Manhã: nenhum desses drops
-    manha = cliente.get("/turno/relatorio", params={"turno_id": MANHA, "dia": f"2026-10-{quando.day}"}).json()
+    manha = cliente.get("/turno/relatorio", params={"turno_id": MANHA, "dia": dia.isoformat()}).json()
     assert _grupo(manha, "Drops concluídos")["total"] == 0
 
 
