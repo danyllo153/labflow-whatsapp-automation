@@ -82,6 +82,23 @@ describe("apps de análise da Fase E (E3 a E8)", () => {
     ]);
   });
 
+  it("Embarque: as amostras sem composta aparecem e preenchem o formulário (01/11)", async () => {
+    const am = (id: number, n: number, composta: number | null) => ({
+      id, embarque: "O.SKY 189 L1 F1", amostra: `A${n}`, load: "22232", data: "2026-11-01", ct: null, bl72: null, bl120: null, composta,
+    });
+    abrir("/analises/embarque-fcoj?aba=compostas", {
+      "GET /analises/embarque/amostras": () => ({ status: 200, corpo: [am(1, 1, null), am(2, 2, null), am(3, 3, null), am(4, 5, null), am(5, 6, 9)] }),
+      "GET /analises/embarque/compostas-recentes": () => ({ status: 200, corpo: [] }),
+    });
+    const pendentes = await screen.findByRole("region", { name: "Amostras sem composta" });
+    expect(await within(pendentes).findByText(/A1 a A3, A5/)).toBeInTheDocument();
+    await userEvent.click(within(pendentes).getByRole("button", { name: "Fazer as compostas de O.SKY 189 L1 F1" }));
+    const form = screen.getByRole("form", { name: "Compostas do embarque" });
+    expect(within(form).getByLabelText("Navio e viagem")).toHaveValue("O.SKY 189");
+    expect(within(form).getByLabelText("Linha")).toHaveValue("1");
+    expect(within(form).getByLabelText("Compostas")).toHaveValue("(1-3)(5)");
+  });
+
   it("TAB: o grupo vem todo marcado e um Confirmar espalha todos", async () => {
     const tab = (id: number, alvo: string) => ({ teste_id: id, teste: "Tab", alvo, status: "No caldo", proxima: "espalhar", prevista: "2026-10-24", situacao: "Vence hoje", lote_aberto: false });
     const { posts } = abrir("/analises/tab", {

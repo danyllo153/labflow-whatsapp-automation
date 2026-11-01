@@ -329,14 +329,15 @@ def _gerar_embarque(con: psycopg.Connection, pagina_id: int, modelo: bytes | Non
         str(r[0]): r
         for r in con.execute(
             """
-            SELECT ea.id, ea.data_embarque, e.linha, e.fase,
-                   coalesce((SELECT string_agg(l.numero, '/' ORDER BY el.principal DESC, l.numero) FROM embarque_loads el
-                             JOIN loads l ON l.id = el.load_id WHERE el.embarque_id = e.id), l.numero),
+            SELECT ea.id, ea.data_embarque, e.linha, e.fase, l.numero,
                    ea.numero, n.nome, n.viagem,
                    (SELECT jsonb_object_agg(c.analise, c.resultado) FROM vw_contagens c WHERE c.embarque_amostra_id = ea.id),
-                   coalesce(u.nome, cr.usuario)
+                   coalesce(u.nome, cr.usuario), i.codigo,
+                   (SELECT string_agg(l2.numero || ' (item ' || i2.codigo || ')', ', ' ORDER BY l2.numero) FROM embarque_loads el
+                    JOIN loads l2 ON l2.id = el.load_id JOIN itens i2 ON i2.id = l2.item_id
+                    WHERE el.embarque_id = e.id AND el.load_id <> ea.load_id)
             FROM embarque_amostras ea JOIN embarques e ON e.id = ea.embarque_id JOIN navios n ON n.id = e.navio_id
-            JOIN loads l ON l.id = ea.load_id
+            JOIN loads l ON l.id = ea.load_id JOIN itens i ON i.id = l.item_id
             LEFT JOIN usuarios u ON u.id = ea.registrado_por LEFT JOIN app.credenciais cr ON cr.usuario_id = ea.registrado_por
             WHERE ea.id = ANY(%s)
             """,
@@ -353,7 +354,9 @@ def _gerar_embarque(con: psycopg.Connection, pagina_id: int, modelo: bytes | Non
         if not d:
             continue
         cont = d[8] or {}
-        textos = [_br(d[1]), f"{d[2]}/{d[3]}", d[4], f"A{d[5]}", cont.get("CT", ""), cont.get("BL72", ""), cont.get("BL120", ""), ""]
+        # 01/11: no Load, só o load da amostra (o principal); o item e os outros loads da linha e fase vão na Observação
+        obs = "; ".join(t for t in (f"Item {d[10]}" if d[10] else "", f"também load {d[11]}" if d[11] else "") if t)
+        textos = [_br(d[1]), f"{d[2]}/{d[3]}", d[4], f"A{d[5]}", cont.get("CT", ""), cont.get("BL72", ""), cont.get("BL120", ""), obs]
         celulas += [laudos.TABELA_CELULA(EMB, texto or "", n, i, centro=i != 7) for i, texto in enumerate(textos)]
         nome = laudo_esterilizacao.primeiro_nome(d[9]) if d[9] else ""
         if nome and nome not in analistas:
@@ -469,7 +472,8 @@ for _nome, _titulo, _tabela, _gerar, _preparar, _aceitar in (
     laudos.registrar(
         laudos.Laudo(
             nome=_nome, titulo=_titulo, modelo=_nome, capacidade=_tabela.linhas, contar_sql=laudos.CONTAR_LINHAS,
-            gerar=_gerar, aceitar_modelo=_aceitar, preparar=_preparar, traco=_tabela,
+            # o Howard não leva o traço ao finalizar (pedido de 01/11): os blocos dele são fixos, não linhas vazias
+            gerar=_gerar, aceitar_modelo=_aceitar, preparar=_preparar, traco=None if _nome == "howard" else _tabela,
         )
     )
 

@@ -239,3 +239,13 @@ def test_laudo_do_recebimento_nfc_no_modelo_do_fcoj(cliente, logado, hoje):
     assert "2000" not in texto  # o C.T sai como lido na placa (2), não multiplicado
     fcoj = cliente.get("/laudos/recebimento-fcoj").json()["paginas"]
     assert all(p["id"] != laudo["paginas"][0]["id"] for p in fcoj)  # folhas separadas do FCOJ
+
+
+def test_embarque_com_dois_loads_separados_por_virgula(cliente, logado, hoje):
+    """01/11: o app aceita "98741, 98742" (vira 98741/98742, 102); as amostras ficam no primeiro load e aparecem sem composta."""
+    logado()
+    embarque = {"navio": "NAVIO TESTE 904", "linha": 2, "fase": 1, "load": "98741, 98742", "item": "99902", "amostras": "1-2", "data": str(hoje)}
+    previa, _ = _confirmar(cliente, "/analises/embarque/registrar", embarque)
+    assert "98742" in previa["texto"]
+    amostras = cliente.get("/analises/embarque/amostras", params={"busca": "NAVIO TESTE 904"}).json()
+    assert {a["load"] for a in amostras} == {"98741"} and all(a["composta"] is None for a in amostras)  # sem composta ainda
