@@ -13,6 +13,7 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 ## [Não lançado]
 
 ### Adicionado
+- **Busca de rastreio no topo** (01/11): digite um load, tanque ou navio e aparece tudo dele: recebimento de FCOJ e de NFC, embarque, tanques terra e de navio e o arquivo de contra-amostras, inclusive o já descartado; as páginas do load, do navio e do tanque mostram em que caixa a contra-amostra está ou esteve (`GET /busca`)
 - **Ajustes depois de testar o app** (27/10, PR #339, migrations **080** e **081** do app):
   - **Água de consumo:** no **mensal**, os pontos marcados "também semanal" medem **pH e cloro** e a coleta mensal vale como a semanal (entra nos laudos físico-químico e microbiológico só com esses pontos); na leitura, **quem coletou**, **quem analisou** e a data e hora da análise (guardados à parte para a físico-química e a microbiológica); nos laudos semanais o cabeçalho é achado no **próprio modelo** enviado e cada parte (dia, mês, ano, hora, minuto, nome) vai no seu espaço, as colunas se ajustam às linhas do modelo, o "-" impresso nas observações some das linhas vazias e a folha finalizada leva o **traço em cada bloco**; salvar o nome do ponto com o **disquete**; a coleta com o **Registrar coleta** verde, separado dos pontos
   - **Água do processo:** aba **Desvios** no lugar do gráfico (a coleta com crescimento, com os pontos e os valores; encerrar com a ação feita)

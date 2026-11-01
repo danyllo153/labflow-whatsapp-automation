@@ -16,6 +16,7 @@ from labflow_api.rotas_instrucoes import roteador as roteador_instrucoes
 from labflow_api.rotas_arquivo import roteador as roteador_arquivo
 from labflow_api.rotas_atividades import roteador as roteador_atividades
 from labflow_api.rotas_estufas import roteador as roteador_estufas
+from labflow_api.rotas_busca import roteador as roteador_busca
 from labflow_api.rotas_coletas import roteador as roteador_coletas
 from labflow_api.rotas_equipe import roteador as roteador_equipe
 from labflow_api.rotas_esterilizacao import roteador as roteador_esterilizacao
@@ -69,6 +70,7 @@ app.include_router(roteador_login)
 app.include_router(roteador_admin)
 app.include_router(roteador_admin_turnos)
 app.include_router(roteador_coletas)
+app.include_router(roteador_busca)  # rastreio do topo: load, tanque, navio e arquivo
 app.include_router(roteador_paginas)
 app.include_router(roteador_paginas_nfc)
 app.include_router(roteador_paginas_mais)
