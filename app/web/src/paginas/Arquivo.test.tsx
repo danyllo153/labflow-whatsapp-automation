@@ -33,6 +33,10 @@ function abrir() {
     }),
     "POST /arquivo/descartar": () => ({ status: 200, corpo: { ok: true, previa: true, texto: "Caixa 121 (recebimento): load 98801 lotes 1-3 (11/10/2026). A caixa fica disponível.", dados: {} } }),
     "GET /arquivo/busca?load=98801": () => ({ status: 200, corpo: [{ tipo: "recebimento", caixa: 121, load: "98801", lotes: "1-3", data_ref: "2026-10-11", data_descarte: "2026-10-18", situacao: "Vencido" }] }),
+    "GET /arquivo/busca?load=O.BETA%20205": () => ({ status: 200, corpo: [{ tipo: "navio", caixa: 27, load: "", navio: "O.BETA 205", lotes: null, data_ref: null, data_descarte: "2028-10-25", situacao: "Em uso" }] }),
+    "GET /arquivo/navio/27": () => ({ status: 200, corpo: { caixa: ARQUIVO.caixas[0], itens: [] } }),
+    "GET /arquivo/navio/27/laudo": () => ({ status: 200, corpo: [{ laudo: "contra-embarque", pagina_id: 41, finalizada: true }] }),
+    "GET /arquivo/recebimento/121/laudo": () => ({ status: 200, corpo: [] }),
     "POST /arquivo/arquivar": () => ({ status: 200, corpo: { ok: true, previa: true, texto: "Caixa 122 (recebimento): load 98802 lotes 1-5", dados: {} } }),
   });
   render(
@@ -64,9 +68,21 @@ describe("Arquivo de contra-amostras (PB21)", () => {
   it("a busca mostra em qual caixa está o load", async () => {
     abrir();
     const busca = await screen.findByRole("search", { name: "Procurar load no arquivo" });
-    await userEvent.type(within(busca).getByLabelText("Em qual caixa está o load?"), "98801");
+    await userEvent.type(within(busca).getByLabelText("Em qual caixa está o load ou o navio?"), "98801");
     await userEvent.click(within(busca).getByRole("button", { name: "Procurar" }));
     expect(await within(busca).findByRole("list", { name: "Caixas do load" })).toHaveTextContent("Caixa 121 (Recebimento) · load 98801 · lotes 1-3");
+  });
+
+  it("procurar um navio acha a caixa dele, abre a caixa e o Laudo leva à folha do laudo (01/11)", async () => {
+    abrir();
+    const busca = await screen.findByRole("search", { name: "Procurar load no arquivo" });
+    await userEvent.type(within(busca).getByLabelText("Em qual caixa está o load ou o navio?"), "O.BETA 205");
+    await userEvent.click(within(busca).getByRole("button", { name: "Procurar" }));
+    expect(await within(busca).findByRole("list", { name: "Caixas do load" })).toHaveTextContent("Caixa 27 (Navio) · O.BETA 205");
+    await userEvent.click(within(busca).getByRole("button", { name: "Abrir a caixa 27" }));
+    const conteudo = await screen.findByRole("article", { name: /Caixa 27 · Navio/ });
+    expect(await within(conteudo).findByRole("link", { name: /Laudo/ })).toHaveAttribute("href", "/laudos/contra-embarque/41/pdf");
+    expect(within(conteudo).queryByRole("button", { name: /Imprimir/ })).toBeNull();
   });
 
   it("Recebimento tem o arquivar com a caixa sugerida e sem o Item", async () => {

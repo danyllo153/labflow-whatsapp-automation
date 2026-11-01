@@ -91,6 +91,7 @@ export default function ArquivoDeContraAmostras() {
   const [erro, setErro] = useState("");
   const [aba, setAba] = useState<Aba>("vencidas");
   const [escolhida, setEscolhida] = useState<Caixa | null>(null);
+  const [familia, setFamilia] = useState(""); // na aba Navios, uma família de navio (01/11), como as fábricas
 
   const carregar = useCallback(async () => {
     try {
@@ -108,7 +109,18 @@ export default function ArquivoDeContraAmostras() {
   }, [carregar]);
 
   const vencidas = dados?.caixas.filter((c) => c.situacao === "Vencida") ?? [];
-  const daAba = aba === "vencidas" ? vencidas : (dados?.caixas.filter((c) => c.tipo === aba) ?? []);
+  const daAba = (aba === "vencidas" ? vencidas : (dados?.caixas.filter((c) => c.tipo === aba) ?? [])).filter(
+    (c) => aba !== "navio" || !familia || c.familia === familia,
+  );
+  const familias = [...new Set((dados?.caixas ?? []).filter((c) => c.tipo === "navio" && c.familia).map((c) => c.familia as string))];
+  // a busca (load ou navio) abre a caixa achada na aba dela
+  const abrir = (tipo: Tipo, numero: number) => {
+    const c = dados?.caixas.find((x) => x.tipo === tipo && x.numero === numero);
+    if (!c) return;
+    setAba(tipo);
+    setFamilia("");
+    setEscolhida(c);
+  };
   const pode = !!dados?.pode_gravar && !!pessoa?.pode.includes("registrar_analise");
 
   return (
@@ -134,7 +146,7 @@ export default function ArquivoDeContraAmostras() {
               { rotulo: "Livres", valor: dados.caixas.filter((c) => c.situacao === "Disponível").length, tom: "ok" },
             ]}
           />
-          <BuscaDeLoad />
+          <BuscaDeLoad aoAbrir={abrir} />
           <AbasDaPagina
             titulo="Arquivo"
             abas={ABAS.filter((a) => a.aba !== "laudo" || pode).map((a) => ({ ...a, contador: a.aba === "vencidas" ? vencidas.length : undefined }))}
@@ -154,6 +166,15 @@ export default function ArquivoDeContraAmostras() {
               <LaudoEsterilizacao versao={0} config={LAUDO_CONTRA_RECEBIMENTO} />
               <LaudoEsterilizacao versao={0} config={LAUDO_CONTRA_EMBARQUE} />
             </>
+          )}
+          {aba === "navio" && familias.length > 1 && (
+            <div className="seletor-de-tabela pilulas-fabrica" role="group" aria-label="Família do navio">
+              {["", ...familias].map((f) => (
+                <button key={f || "todas"} type="button" aria-pressed={familia === f} onClick={() => setFamilia(f)}>
+                  {f || "Todas"}
+                </button>
+              ))}
+            </div>
           )}
           {escolhida && <ConteudoDaCaixa caixa={escolhida} pode={pode} aoFechar={() => setEscolhida(null)} aoMudar={() => void carregar()} />}
           {aba === "laudo" ? null : daAba.length === 0 ? (
@@ -202,6 +223,21 @@ function ConteudoDaCaixa({ caixa, pode, aoFechar, aoMudar }: { caixa: Caixa; pod
       vivo = false;
     };
   }, [caixa, historico]);
+
+  // o laudo de contra-amostra da caixa (navio e recebimento; o tanque não tem)
+  const [folhas, setFolhas] = useState<FolhaDoLaudo[] | null>(null);
+  useEffect(() => {
+    let vivo = true;
+    setFolhas(null);
+    if (caixa.tipo !== "tanque")
+      lerJson<FolhaDoLaudo[]>(`/arquivo/${caixa.tipo}/${caixa.numero}/laudo`).then(
+        (r) => vivo && setFolhas(r),
+        () => vivo && setFolhas([]),
+      );
+    return () => {
+      vivo = false;
+    };
+  }, [caixa]);
 
   const titulo = `Caixa ${caixa.numero} · ${NOME_DO_TIPO[caixa.tipo]}${caixa.navio ? ` · ${caixa.navio} ${caixa.viagem ?? ""}` : ""}`;
   return (
@@ -259,9 +295,13 @@ function ConteudoDaCaixa({ caixa, pode, aoFechar, aoMudar }: { caixa: Caixa; pod
         <button type="button" className="botao-secundario" onClick={() => setHistorico((h) => !h)} aria-pressed={historico}>
           {historico ? "Esconder descartados" : "Ver descartados"}
         </button>
-        <button type="button" className="botao-secundario" onClick={() => window.print()}>
-          <IconeAcao nome="imprimir" /> Imprimir
-        </button>
+        {/* 01/11: no lugar do Imprimir (que imprimia a tela), o laudo de contra-amostra onde a caixa está */}
+        {folhas?.map((f, i) => (
+          <a key={f.pagina_id} className="botao-secundario" href={`/laudos/${f.laudo}/${f.pagina_id}/pdf`} target="_blank" rel="noreferrer">
+            <IconeAcao nome="pdf" /> {folhas.length > 1 ? `Laudo (folha ${i + 1})` : "Laudo"}
+            {!f.finalizada && " · em preenchimento"}
+          </a>
+        ))}
         <button type="button" className="botao botao-simples" onClick={aoFechar}>
           Fechar
         </button>
@@ -271,18 +311,25 @@ function ConteudoDaCaixa({ caixa, pode, aoFechar, aoMudar }: { caixa: Caixa; pod
   );
 }
 
+interface FolhaDoLaudo {
+  laudo: string;
+  pagina_id: number;
+  finalizada: boolean;
+}
+
 interface Achado {
   tipo: Tipo;
   caixa: number;
   load: string;
+  navio?: string | null;
   lotes: string | null;
   data_ref: string | null;
   data_descarte: string | null;
   situacao: string;
 }
 
-/** Em qual caixa está um load (26/10): digita o número e vê a caixa, os lotes e quando vence. */
-function BuscaDeLoad() {
+/** Em qual caixa está um load (26/10) ou um navio (01/11, "O.WAVE 223"): a caixa, os lotes e quando vence; tocar abre a caixa. */
+function BuscaDeLoad({ aoAbrir }: { aoAbrir: (tipo: Tipo, numero: number) => void }) {
   const [load, setLoad] = useState("");
   const [achados, setAchados] = useState<Achado[] | null>(null);
   const [erro, setErro] = useState("");
@@ -302,21 +349,27 @@ function BuscaDeLoad() {
     <form className="cartao busca-arquivo" onSubmit={buscar} role="search" aria-label="Procurar load no arquivo">
       <div className="campos-linha">
         <label className="campo">
-          Em qual caixa está o load?
-          <input inputMode="numeric" maxLength={20} placeholder="Número do load" value={load} onChange={(e) => setLoad(e.target.value)} />
+          Em qual caixa está o load ou o navio?
+          <input maxLength={40} placeholder="Load ou navio (ex.: 43413 ou O.WAVE 223)" value={load} onChange={(e) => setLoad(e.target.value)} />
         </label>
         <button type="submit" className="botao botao-principal">
           Procurar
         </button>
       </div>
       {erro && <p className="mensagem-erro">{erro}</p>}
-      {achados && achados.length === 0 && <p className="texto-secundario">Nenhuma caixa com o load {load.trim()} (ou já foi descartado).</p>}
+      {achados && achados.length === 0 && <p className="texto-secundario">Nenhuma caixa com {load.trim()} (ou já foi descartado).</p>}
       {achados && achados.length > 0 && (
         <ul className="lista-simples" aria-label="Caixas do load">
           {achados.map((a, i) => (
-            <li key={i}>
-              <strong>Caixa {a.caixa}</strong> ({NOME_DO_TIPO[a.tipo]}) · load {a.load}
-              {a.lotes ? ` · lotes ${a.lotes}` : ""} · arquivado {dataBr(a.data_ref)} · vence {dataBr(a.data_descarte)}
+            <li key={i} className="linha-turno">
+              <span>
+                <strong>Caixa {a.caixa}</strong> ({NOME_DO_TIPO[a.tipo]}) · {a.navio ?? `load ${a.load}`}
+                {a.lotes ? ` · lotes ${a.lotes}` : ""}
+                {a.data_ref ? ` · arquivado ${dataBr(a.data_ref)}` : ""} · vence {dataBr(a.data_descarte)}
+              </span>
+              <button type="button" className="botao-secundario" onClick={() => aoAbrir(a.tipo, a.caixa)} aria-label={`Abrir a caixa ${a.caixa}`}>
+                Abrir a caixa
+              </button>
             </li>
           ))}
         </ul>

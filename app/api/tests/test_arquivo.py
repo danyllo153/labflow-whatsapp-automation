@@ -87,3 +87,23 @@ def test_caixa_do_recebimento_so_vence_inteira_e_a_busca_pelo_load(cliente, loga
     assert caixa["descarte_em"] == str(hoje + timedelta(days=6))  # a data do último load a vencer
     achados = cliente.get("/arquivo/busca", params={"load": "98812"}).json()
     assert [(a["tipo"], a["caixa"], a["lotes"]) for a in achados] == [("recebimento", 143, "1-3")]
+
+
+def test_busca_pelo_navio_e_o_laudo_da_caixa(cliente, logado, hoje, conexao):
+    """01/11: com letras, a busca acha a caixa do navio ("o.teste 205", sem ponto ou espaço também); o Laudo da caixa é a
+    folha do laudo de contra-amostra onde ela está; o tanque não tem laudo."""
+    conexao.execute("INSERT INTO arquivo_familias (nome, caixa_de, caixa_ate) VALUES ('O.TESTE', 901, 902)")
+    conexao.execute("INSERT INTO arquivo_caixas (tipo, numero, familia) VALUES ('navio', 901, 'O.TESTE'), ('navio', 902, 'O.TESTE')")
+    conexao.execute("INSERT INTO arquivo_navios (caixa, navio, viagem, origem, descarte_carga) VALUES (901, 'O.TESTE', '205', 'carga', '2028-10-25')")
+    logado()
+    for termo in ("O.TESTE 205", "oteste205", "o.teste"):
+        achados = cliente.get("/arquivo/busca", params={"load": termo}).json()
+        assert ("navio", 901, "O.TESTE 205") in [(a["tipo"], a["caixa"], a["navio"]) for a in achados], termo
+    assert cliente.get("/arquivo/busca", params={"load": "O.NADA 1"}).json() == []
+
+    _receber(cliente, "98821", "1-2", hoje - timedelta(days=1))
+    assert cliente.post("/arquivo/arquivar", json={"load": "98821", "lotes": "1-2", "caixa": 144, "data": str(hoje), "previa": False}).status_code == 200
+    folhas = cliente.get("/arquivo/recebimento/144/laudo").json()
+    assert len(folhas) == 1 and folhas[0]["laudo"] == "contra-recebimento"
+    assert cliente.get(f"/laudos/contra-recebimento/{folhas[0]['pagina_id']}/pdf").status_code == 200
+    assert cliente.get("/arquivo/tanque/34/laudo").status_code == 404
