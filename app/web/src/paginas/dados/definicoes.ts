@@ -420,10 +420,9 @@ export const PAGINAS: DefinicaoDePagina[] = [
       { chave: "amostra", rotulo: "Amostra", formato: "amostra" },
       { chave: "diluicao", rotulo: "Diluição" },
       { chave: "data_recebimento", rotulo: "Recebido em", formato: "data" },
-      { chave: "analise", rotulo: "Análise" },
       { chave: "prevista", rotulo: "Leitura prevista", formato: "data" },
-      { chave: "valor_lido", rotulo: "Valor lido" },
-      { chave: "resultado", rotulo: "Com diluição" },
+      // uma linha por lote e amostra (01/11): o C.T e os dois B.L lado a lado, já com a diluição, como no FCOJ
+      ...COLUNAS_DAS_CONTAGENS,
       { chave: "situacao", rotulo: "Situação", formato: "situacao" },
       { chave: "lido_por", rotulo: "Lido por" },
     ],
