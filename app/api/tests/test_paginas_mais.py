@@ -68,7 +68,8 @@ CASOS = [
     ("embarque", lotes_sql("Embarque", ter="situacao_do_lote = 'Não ok'"), {"situacao": "Não ok"}),
     ("embarque", lotes_sql("Embarque", ter="situacao_do_lote = 'Atrasado'"), {"situacao": "Atrasado"}),
     ("embarque", lotes_sql("Embarque", "fabrica = 'AQA'"), {"fabrica": "aqa"}),
-    ("recebimento-nfc", "SELECT count(*) FROM bi.recebimento_nfc WHERE fabrica = 'AQA'", {"fabrica": "AQA"}),
+    ("recebimento-nfc", "SELECT count(DISTINCT (load, item, lote, amostra, data_recebimento)) FROM bi.recebimento_nfc "
+                        "WHERE fabrica = 'AQA'", {"fabrica": "AQA"}),
     ("testes", "SELECT count(*) FROM bi.testes", {}),
     ("testes", "SELECT count(*) FROM bi.testes WHERE teste = 'TAB' AND origem = 'Recebimento'", {"teste": "TAB", "origem": "Recebimento"}),
     ("testes", "SELECT count(*) FROM bi.testes WHERE resultado = 'Positivo'", {"resultado": "Positivo"}),
@@ -97,17 +98,20 @@ def test_referencia_procura_load_ou_tanque(cliente, logado, conexao):
     assert cliente.get("/paginas/testes", params={"referencia": "tanque 8"}).json()["total"] == esperado > 0
 
 
-def test_recebimento_nfc_mostra_valor_lido_e_com_diluicao(cliente, logado, recebimento_nfc):
+def test_recebimento_nfc_uma_linha_por_lote_e_amostra(cliente, logado, recebimento_nfc):
     logado()
     corpo = cliente.get("/paginas/recebimento-nfc", params={"por_pagina": 200}).json()
-    assert corpo["total"] == 6  # 2 lotes x (C.T 48h, B.L 72h, B.L 120h)
-    lido = next(l for l in corpo["linhas"] if l["situacao"] == "Lido")
-    assert (lido["analise"], lido["amostra"], lido["diluicao"], lido["valor_lido"], lido["resultado"]) == (
-        "C.T 48h", "Fresh", "10^3", "14", "14000"
-    )  # números decimais do banco vão como texto, igual às outras páginas
-    assert "alarme" not in lido and lido["situacao"] not in ("Ok", "Não ok")  # NFC recebido não usa limites (027)
-    assert cliente.get("/paginas/recebimento-nfc", params={"amostra": "Pasteurizado"}).json()["total"] == 3
-    assert cliente.get("/paginas/recebimento-nfc", params={"situacao": "Lido"}).json()["total"] == 1
+    assert corpo["total"] == 2  # 2 lotes (fresh e past), cada um com C.T 48h, B.L 72h e B.L 120h na mesma linha (01/11)
+    fresh = next(l for l in corpo["linhas"] if l["amostra"] == "Fresh")
+    assert (fresh["diluicao"], fresh["ct_48"], fresh["bl_72"], fresh["bl_120"]) == ("10^3", "14000", None, None)
+    assert fresh["situacao_ct_48"] == "Lido" and fresh["situacao"] not in ("Ok", "Não ok", "Lido")  # NFC não usa limites (027)
+    assert "alarme" not in fresh
+    assert cliente.get("/paginas/recebimento-nfc", params={"amostra": "Pasteurizado"}).json()["total"] == 1
+    assert cliente.get("/paginas/recebimento-nfc", params={"analise": "C.T 48h", "situacao": "Lido"}).json()["total"] == 1
+    assert cliente.get("/paginas/recebimento-nfc", params={"analise": "C.T 48h"}).json()["total"] == 1  # só o lote com ela lida
+    assert cliente.get("/paginas/recebimento-nfc", params={"situacao": "Lido"}).json()["total"] == 0  # falta ler o B.L
+    planilha = cliente.get("/paginas/recebimento-nfc/excel")
+    assert planilha.status_code == 200
 
 
 # ---------------------------------------------------------------- Visão geral

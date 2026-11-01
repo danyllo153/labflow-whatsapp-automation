@@ -18,5 +18,10 @@ if not exist "%PROG%\versao-%VER%.ok" (
   )
   echo ok>"%PROG%\versao-%VER%.ok"
 )
+rem Da segunda vez em diante neste PC (e sem opcoes extras): abre oculto, com o icone perto do relogio.
+if "%~1"=="" if not defined LABFLOW_LITE_TESTE if exist "%LOCAL%\ja-abriu.txt" (
+  start "" "%PROG%\python\pythonw.exe" "%PROG%\lite\lite.py" --raiz "%RAIZ%." --oculto
+  exit /b 0
+)
 "%PROG%\python\python.exe" "%PROG%\lite\lite.py" --raiz "%RAIZ%." %*
 if errorlevel 1 pause

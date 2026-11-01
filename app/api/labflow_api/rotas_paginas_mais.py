@@ -18,6 +18,7 @@ from labflow_api.dependencias import PessoaLogada, obter_conexao
 from labflow_api.excel import MIME_XLSX, planilha, resposta_xlsx
 from labflow_api.permissoes import exigir
 from labflow_api.rotas_paginas import (
+    ANALISES_DA_TABELA,
     POR_PAGINA_MAX,
     Pagina,
     _barrar_coletor,
@@ -164,7 +165,19 @@ RECEBIMENTO_NFC_BASE = """
            valor_lido, resultado, situacao, lido_por, data_leitura
     FROM bi.recebimento_nfc
 """
-ORDEM_RECEBIMENTO_NFC = "data_recebimento DESC, load, lote, amostra, analise"
+# a tabela (01/11): uma linha por lote e amostra, com o C.T 48h, o B.L 72h e o B.L 120h lado a lado, como no FCOJ.
+# Sem Ok / Não ok: a situação da linha é a pior das três (Atrasado, Vence hoje, No prazo) ou Lido quando as três foram lidas.
+RECEBIMENTO_NFC_POR_LOTE = f"""
+    SELECT load, item, fabrica, lote, amostra, diluicao, data_recebimento, min(prevista) AS prevista,
+           {", ".join(f"max(resultado) FILTER (WHERE analise = '{a}') AS {c}, max(situacao) FILTER (WHERE analise = '{a}') AS situacao_{c}"
+                      for a, c in ANALISES_DA_TABELA)},
+           CASE WHEN bool_or(situacao = 'Atrasado') THEN 'Atrasado' WHEN bool_or(situacao = 'Vence hoje') THEN 'Vence hoje'
+                WHEN bool_or(situacao = 'No prazo') THEN 'No prazo' ELSE 'Lido' END AS situacao,
+           string_agg(DISTINCT lido_por, ', ') AS lido_por, max(data_leitura) AS data_leitura
+    FROM ({RECEBIMENTO_NFC_BASE}) x
+    GROUP BY load, item, fabrica, lote, amostra, diluicao, data_recebimento
+"""
+ORDEM_RECEBIMENTO_NFC = "data_recebimento DESC, load, lote, amostra"
 
 
 class FiltrosRecebimentoNfc:
@@ -183,17 +196,24 @@ class FiltrosRecebimentoNfc:
         self.data_de, self.data_ate, self.load, self.lote, self.fabrica = data_de, data_ate, load, lote, fabrica
         self.amostra, self.analise, self.situacao, self.quem = amostra, analise, situacao, quem
 
-    def montar(self) -> _Filtro:
+    def montar(self, por_lote: bool = False) -> _Filtro:
+        """Uma linha por análise (o gráfico); por_lote: uma linha por lote e amostra, com as três análises (a tabela)."""
         f = _Filtro()
         _periodo(f, "data_recebimento", self.data_de, self.data_ate)
         f.igual("load", self.load.strip() if self.load else None)
         f.igual("lote", self.lote)
         f.uma_de("fabrica", self.fabrica)
         f.igual("amostra", self.amostra)
-        f.igual("analise", self.analise)
-        f.igual("situacao", self.situacao)
+        if por_lote:
+            filtro_por_lote(f, self.analise, self.situacao, None)
+        else:
+            f.igual("analise", self.analise)
+            f.igual("situacao", self.situacao)
         f.contem("lido_por", self.quem)
         return f
+
+    def montar_tabela(self) -> _Filtro:
+        return self.montar(por_lote=True)
 
     def descricao(self) -> list[tuple[str, Any]]:
         return [("Recebido de", self.data_de), ("Recebido até", self.data_ate), ("Load", self.load), ("Lote", self.lote),
@@ -202,8 +222,8 @@ class FiltrosRecebimentoNfc:
 
 COLUNAS_RECEBIMENTO_NFC = [
     ("load", "Load"), ("item", "Item"), ("fabrica", "Fábrica"), ("lote", "Lote"), ("amostra", "Amostra"),
-    ("diluicao", "Diluição"), ("data_recebimento", "Recebido em"), ("analise", "Análise"), ("prevista", "Leitura prevista"),
-    ("valor_lido", "Valor lido"), ("resultado", "Resultado (com diluição)"), ("situacao", "Situação"),
+    ("diluicao", "Diluição"), ("data_recebimento", "Recebido em"), ("prevista", "Leitura prevista"),
+    ("ct_48", "C.T 48h"), ("bl_72", "B.L 72h"), ("bl_120", "B.L 120h"), ("situacao", "Situação"),
     ("lido_por", "Lido por"), ("data_leitura", "Data da leitura"),
 ]
 
@@ -211,13 +231,13 @@ COLUNAS_RECEBIMENTO_NFC = [
 PAGINAS = {
     "embarque": (EMBARQUE_POR_AMOSTRA, ORDEM_EMBARQUE, FiltrosEmbarque, "Embarque", COLUNAS_EMBARQUE),
     "testes": (TESTES_BASE, ORDEM_TESTES, FiltrosTestes, "TAB e Coliformes", COLUNAS_TESTES),
-    "recebimento-nfc": (RECEBIMENTO_NFC_BASE, ORDEM_RECEBIMENTO_NFC, FiltrosRecebimentoNfc, "Recebimento NFC",
+    "recebimento-nfc": (RECEBIMENTO_NFC_POR_LOTE, ORDEM_RECEBIMENTO_NFC, FiltrosRecebimentoNfc, "Recebimento NFC",
                         COLUNAS_RECEBIMENTO_NFC),
 }
 
 
 def _da_tabela(filtros) -> _Filtro:
-    """O filtro da tabela: uma linha por amostra no embarque (montar_tabela); nas outras, o mesmo do gráfico."""
+    """O filtro da tabela: uma linha por amostra no embarque e no NFC (montar_tabela); nas outras, o mesmo do gráfico."""
     return filtros.montar_tabela() if hasattr(filtros, "montar_tabela") else filtros.montar()
 
 
