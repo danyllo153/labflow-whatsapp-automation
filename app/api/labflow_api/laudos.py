@@ -441,6 +441,8 @@ class Laudo:
     aceitar_modelo: Callable[[bytes], None] = field(default=laudo_esterilizacao.modelo_valido)
     # laudo cujas linhas vêm de outras tabelas (ex.: incubação, que lê o bot): põe as novas nas páginas antes de mostrar
     preparar: Callable[[psycopg.Connection], None] | None = None
+    # o mesmo, quando a linha nova leva o nome de quem abriu (o branco do dia, 01/11): (conexão, usuario_id)
+    preparar_por: Callable[[psycopg.Connection, int], object] | None = None
     # a folha marcada como impressa sai com o traço que fecha as linhas vazias (regra de todo documento, 26/10): a tabela do
     # papel e quantas linhas dela cada unidade do contar_sql ocupa (a incubação conta blocos de 4 linhas)
     traco: "Tabela | None" = None
@@ -498,6 +500,8 @@ class Laudos(BaseModel):
 def _listar(con: psycopg.Connection, pessoa: PessoaLogada, laudo: Laudo) -> Laudos:
     if laudo.preparar:
         laudo.preparar(con)
+    if laudo.preparar_por:
+        laudo.preparar_por(con, pessoa.usuario_id)
     paginas = []
     for n, (pagina_id, impresso_em, por) in enumerate(
         con.execute(

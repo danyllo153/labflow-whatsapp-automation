@@ -3,14 +3,14 @@
 Spec: 07-app-pwa.md (v1.0), §7.5 Branco do dia. Tarefa: APP-038. Tabela da migration 063.
 
 Regras (decididas com o Danyllo em 24/10): um dia de análise por linha; tudo começa em "<1"; Wort e PCA ficam com "-"
-nos dias sem análise que use esses meios (Wort = tanques de NFC; PCA = águas, baias e linhas): o app sugere, o
+nos dias sem análise que use esses meios (Wort = tanques terra e navio; PCA = baias, linhas e água de consumo mensal, 01/11): o app sugere, o
 analista confirma ou troca. Quem salva é o responsável. Vale a versão de 2024 do modelo (LAB/001, capela em UFC/50 cm²).
 
 Desde 25/10 (APP-067, pedido do Danyllo) o branco é AUTOMÁTICO: todo dia que teve análise (plaqueamento de recebimento,
 concentrado, embarque, tanques, NFC, águas, baias ou linhas) já entra preenchido com a sugestão (capela e OSA/PDA "<1";
 Wort e PCA "<1" ou "-" conforme o dia), sem o analista registrar; ele só corrige se algo crescer. O app preenche os dias
-anteriores (até 7 dias, o dia de hoje fica para amanhã, quando já se sabe tudo o que foi plaqueado) na primeira vez que
-alguém do laboratório abre o app; o responsável é essa pessoa.
+anteriores (até 30 dias desde 01/11; o dia de hoje fica para amanhã, quando já se sabe tudo o que foi plaqueado) quando
+alguém do laboratório abre o app, o branco ou o laudo; o responsável é essa pessoa.
 """
 
 from datetime import date, timedelta
@@ -58,56 +58,74 @@ def _hoje(con: psycopg.Connection) -> date:
     return rotas_turno._agora(con).astimezone(FUSO).date()
 
 
+CONTAGENS_SQL = """
+SELECT (SELECT count(*) FROM bi.incubacao WHERE dia_incubacao = %(dia)s AND tipo = 'Tanque'),
+       (SELECT count(*) FROM bi.incubacao WHERE dia_incubacao = %(dia)s AND tipo IN ('Recebimento', 'Embarque', 'Recebimento NFC')),
+       (SELECT count(*) FROM app.coletas_agua_processo WHERE excluida_em IS NULL
+          AND (coletada_em AT TIME ZONE 'America/Sao_Paulo')::date = %(dia)s),
+       (SELECT count(*) FROM app.coletas_superficie WHERE excluida_em IS NULL AND analisada_em = %(dia)s),
+       (SELECT count(*) FROM app.coletas_agua_consumo WHERE excluida_em IS NULL AND tipo = 'mensal'
+          AND (coletada_em AT TIME ZONE 'America/Sao_Paulo')::date = %(dia)s)
+"""
+
+
+def _contagens(con: psycopg.Connection, dia: date) -> tuple[int, int, int, int, int]:
+    """Tanques (terra e navio, pelo dia da análise), recebimento/embarque/NFC, água do processo, baias e linhas (CIP) e
+    água de consumo mensal plaqueados no dia. TAB e Coliformes não usam a capela; a água de consumo semanal é pH e cloro."""
+    return con.execute(CONTAGENS_SQL, {"dia": dia}).fetchone()
+
+
 def _sugestao(con: psycopg.Connection, dia: date) -> tuple[Valores, str, str]:
-    tanques = con.execute(
-        "SELECT count(DISTINCT coleta_id) FROM bi.leituras_nfc WHERE data_coleta = %s AND analise ILIKE 'Psicrotr%%'", (dia,)
-    ).fetchone()[0]
-    aguas = con.execute(
-        """
-        SELECT (SELECT count(*) FROM app.coletas_agua_processo WHERE excluida_em IS NULL
-                  AND (coletada_em AT TIME ZONE 'America/Sao_Paulo')::date = %(dia)s)
-             + (SELECT count(*) FROM app.coletas_superficie WHERE excluida_em IS NULL AND analisada_em = %(dia)s)
-        """,
-        {"dia": dia},
-    ).fetchone()[0]
-    valores = Valores(capela_ct=DUAS_PLACAS, capela_bl=DUAS_PLACAS, osa="<1", pda="<1", wort="<1" if tanques else "-", pca="<1" if aguas else "-")
-    motivo_wort = f"{tanques} tanque(s) de NFC no dia" if tanques else "nenhum tanque de NFC no dia"
-    motivo_pca = f"{aguas} coleta(s) de água, baia ou linha no dia" if aguas else "nenhuma água, baia ou linha no dia"
+    """01/11 (Danyllo): Wort só com tanque (lido em 10 dias); PCA só com baia, linha ou água de consumo mensal (a água do
+    processo não usa PCA, como no laudo de incubação)."""
+    tanques, _, _, superficies, consumo = _contagens(con, dia)
+    pca = superficies + consumo
+    valores = Valores(capela_ct=DUAS_PLACAS, capela_bl=DUAS_PLACAS, osa="<1", pda="<1", wort="<1" if tanques else "-", pca="<1" if pca else "-")
+    motivo_wort = f"{tanques} tanque(s) analisado(s) no dia" if tanques else "nenhum tanque analisado no dia"
+    motivo_pca = (
+        f"{pca} coleta(s) de baia, linha ou água de consumo mensal no dia" if pca else "nenhuma baia, linha ou água de consumo mensal no dia"
+    )
     return valores, motivo_wort, motivo_pca
 
 
 def _houve_analise(con: psycopg.Connection, dia: date) -> bool:
-    """O dia teve plaqueamento (fora TAB e Coliformes, que não usam a capela) ou água, baia ou linha."""
-    return con.execute(
-        """
-        SELECT EXISTS (SELECT 1 FROM bi.incubacao WHERE dia_incubacao = %(dia)s AND tipo NOT IN ('TAB', 'Coliformes'))
-            OR EXISTS (SELECT 1 FROM app.coletas_agua_processo WHERE excluida_em IS NULL
-                         AND (coletada_em AT TIME ZONE 'America/Sao_Paulo')::date = %(dia)s)
-            OR EXISTS (SELECT 1 FROM app.coletas_superficie WHERE excluida_em IS NULL AND analisada_em = %(dia)s)
-        """,
-        {"dia": dia},
-    ).fetchone()[0]
+    """O dia teve plaqueamento: recebimento, recebimento NFC, embarque, tanques, água do processo, baias, linhas ou água de
+    consumo mensal (01/11: toda análise cria a linha do branco)."""
+    return any(_contagens(con, dia))
+
+
+JANELA = 30  # dias para trás que o branco ainda preenche sozinho (antes 7: um fim de semana sem abrir a tela perdia dias)
 
 
 def preencher_sozinho(con: psycopg.Connection, quem: int) -> int:
-    """Preenche o branco dos 7 dias anteriores que tiveram análise e ainda não têm branco. Devolve quantos preencheu."""
+    """Preenche o branco dos dias anteriores que tiveram análise e ainda não têm branco. Devolve quantos preencheu.
+
+    Roda quando alguém do laboratório abre o app (GET /turno), o branco do dia ou o laudo. Não volta antes do último dia
+    de uma folha finalizada (a linha nova cairia fora de ordem) nem, num banco sem branco nenhum, antes de 7 dias."""
     hoje = _hoje(con)
-    feitos = {d for (d,) in con.execute("SELECT dia FROM app.fluxo_laminar WHERE dia BETWEEN %s AND %s", (hoje - timedelta(days=7), hoje))}
+    primeiro, finalizado = con.execute(
+        """
+        SELECT min(f.dia), max(f.dia) FILTER (WHERE p.impresso_em IS NOT NULL)
+        FROM app.fluxo_laminar f JOIN app.paginas_laudo p ON p.id = f.pagina_id
+        """
+    ).fetchone()
+    inicio = max(hoje - timedelta(days=JANELA), primeiro or hoje - timedelta(days=7), (finalizado + timedelta(days=1)) if finalizado else hoje - timedelta(days=JANELA))
+    feitos = {d for (d,) in con.execute("SELECT dia FROM app.fluxo_laminar WHERE dia BETWEEN %s AND %s", (inicio, hoje))}
     preenchidos = 0
-    for atras in range(7, 0, -1):  # do mais antigo para o mais novo: as linhas do laudo ficam na ordem dos dias
-        dia = hoje - timedelta(days=atras)
-        if dia in feitos or not _houve_analise(con, dia):
-            continue
-        valores, _, _ = _sugestao(con, dia)
-        con.execute(
-            """
-            INSERT INTO app.fluxo_laminar (dia, capela_ct, capela_bl, osa, pda, wort, pca, preenchido_por, preenchido_em, pagina_id)
-            VALUES (%(dia)s, %(capela_ct)s, %(capela_bl)s, %(osa)s, %(pda)s, %(wort)s, %(pca)s, %(quem)s, clock_timestamp(), %(pagina)s)
-            ON CONFLICT (dia) DO NOTHING
-            """,
-            {**valores.model_dump(), "quem": quem, "dia": dia, "pagina": laudos.pagina_com_vaga(con, "fluxo-laminar")},
-        )
-        preenchidos += 1
+    dia = inicio
+    while dia < hoje:  # do mais antigo para o mais novo: as linhas do laudo ficam na ordem dos dias; hoje fica para amanhã
+        if dia not in feitos and _houve_analise(con, dia):
+            valores, _, _ = _sugestao(con, dia)
+            con.execute(
+                """
+                INSERT INTO app.fluxo_laminar (dia, capela_ct, capela_bl, osa, pda, wort, pca, preenchido_por, preenchido_em, pagina_id)
+                VALUES (%(dia)s, %(capela_ct)s, %(capela_bl)s, %(osa)s, %(pda)s, %(wort)s, %(pca)s, %(quem)s, clock_timestamp(), %(pagina)s)
+                ON CONFLICT (dia) DO NOTHING
+                """,
+                {**valores.model_dump(), "quem": quem, "dia": dia, "pagina": laudos.pagina_com_vaga(con, "fluxo-laminar")},
+            )
+            preenchidos += 1
+        dia += timedelta(days=1)
     return preenchidos
 
 
@@ -227,6 +245,6 @@ laudos.registrar(
     laudos.Laudo(
         nome="fluxo-laminar", titulo="Controle de meio de cultura e fluxo laminar", modelo="fluxo-laminar", capacidade=TABELA.linhas,
         contar_sql="SELECT count(*), min(dia), max(dia) FROM app.fluxo_laminar WHERE pagina_id = %s",
-        gerar=_gerar, traco=TABELA,
+        gerar=_gerar, traco=TABELA, preparar_por=preencher_sozinho,
     )
 )
