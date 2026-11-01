@@ -195,6 +195,10 @@ def estado_do_turno(
     agora = _agora(con)
     sugerido, dia = turno_agora(turnos, agora)
     no_turno = _fechar_esquecida(con, pessoa.usuario_id, turnos, agora)
+    if pode(pessoa.cargo, "registrar_analise"):  # o branco dos dias com análise entra sozinho ao abrir o app (01/11)
+        from labflow_api.rotas_fluxo_laminar import preencher_sozinho
+
+        preencher_sozinho(con, pessoa.usuario_id)
     recentes = [
         _entrada(l)
         for l in con.execute(ENTRADA_SQL + " WHERE e.usuario_id = %s ORDER BY e.entrada DESC LIMIT 5", (pessoa.usuario_id,))
