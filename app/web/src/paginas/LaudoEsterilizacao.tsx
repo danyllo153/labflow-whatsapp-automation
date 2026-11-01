@@ -7,7 +7,7 @@ import { enviarArquivo, enviarJson, lerJson } from "../api";
  * preenchem sozinhas com o que foi registrado. "Finalizar laudo" (27/10, antes "marcar como impressa") fecha a folha, que
  * sai com o traço nas linhas vazias e vai para o arquivo. Toda folha, mesmo finalizada, pode ser impressa de novo, editada
  * (volta a "em preenchimento" para corrigir os registros) ou excluída (os registros vão para uma folha nova); editar e
- * excluir pedem um Confirmar. A assinatura (Visto) é à mão. O modelo oficial é enviado pelo Admin e fica no banco.
+ * refazer pedem um Confirmar. A assinatura (Visto) é à mão. O modelo oficial é enviado pelo Admin e fica no banco.
  */
 
 export interface PaginaDoLaudo {
@@ -69,7 +69,8 @@ export default function LaudoEsterilizacao({ versao, config = LAUDO_ESTERILIZACA
     void carregar();
   }, [carregar, versao]);
 
-  // o que espera o Confirmar: editar (reabrir) ou excluir uma folha
+  // o que espera o Confirmar: editar (reabrir) ou refazer uma folha (a rota é a de excluir: a folha sai e os registros vão
+  // para uma folha nova; 01/11: "Excluir" confundia, parecia apagar as coletas)
   const [confirmar, setConfirmar] = useState<{ acao: "reabrir" | "excluir"; pagina: PaginaDoLaudo } | null>(null);
 
   async function acao(id: number, qual: "finalizar" | "reabrir" | "excluir") {
@@ -137,9 +138,9 @@ export default function LaudoEsterilizacao({ versao, config = LAUDO_ESTERILIZACA
                     <IconeAcao nome="finalizar" />
                     Finalizar laudo
                   </button>
-                  <button type="button" className="acao-laudo" aria-label={`Excluir a página ${p.numero}`} onClick={() => setConfirmar({ acao: "excluir", pagina: p })}>
-                    <IconeAcao nome="excluir" />
-                    Excluir
+                  <button type="button" className="acao-laudo" aria-label={`Refazer a página ${p.numero}`} onClick={() => setConfirmar({ acao: "excluir", pagina: p })}>
+                    <IconeAcao nome="refazer" />
+                    Refazer folha
                   </button>
                 </span>
               </div>
@@ -167,9 +168,9 @@ export default function LaudoEsterilizacao({ versao, config = LAUDO_ESTERILIZACA
                       <IconeAcao nome="editar" />
                       Editar
                     </button>
-                    <button type="button" className="acao-laudo" aria-label={`Excluir a página ${p.numero}`} onClick={() => setConfirmar({ acao: "excluir", pagina: p })}>
-                      <IconeAcao nome="excluir" />
-                      Excluir
+                    <button type="button" className="acao-laudo" aria-label={`Refazer a página ${p.numero}`} onClick={() => setConfirmar({ acao: "excluir", pagina: p })}>
+                      <IconeAcao nome="refazer" />
+                      Refazer folha
                     </button>
                   </span>
                 </div>
@@ -201,7 +202,7 @@ const ICONES = {
   imprimir: "M6 9V3h12v6M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2M6 14h12v7H6z",
   finalizar: "M20 6 9 17l-5-5",
   editar: "M12 20h9M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z",
-  excluir: "M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14M10 11v6M14 11v6",
+  refazer: "M3 12a9 9 0 1 0 3-6.7L3 8M3 3v5h5",
 };
 
 /** Os ícones dos botões do laudo (27/10: "ícones desses botões, por favor"). */
@@ -223,10 +224,10 @@ function Confirmar({
   aoVoltar: () => void;
 }) {
   return (
-    <div className="previa-app" role="group" aria-label={`Confirmar: ${pedido.acao === "excluir" ? "excluir" : "editar"} a página ${pedido.pagina.numero}`}>
+    <div className="previa-app" role="group" aria-label={`Confirmar: ${pedido.acao === "excluir" ? "refazer" : "editar"} a página ${pedido.pagina.numero}`}>
       <p>
         {pedido.acao === "excluir"
-          ? `A página ${pedido.pagina.numero} sai da lista e os ${pedido.pagina.linhas} registros dela vão para uma folha nova, para imprimir de novo. Nada se apaga.`
+          ? `A página ${pedido.pagina.numero} sai da lista e os ${pedido.pagina.linhas} registros dela vão para uma folha nova, para imprimir de novo. Nenhum registro se apaga: para apagar um, exclua-o na tela da análise (o registro ou a coleta).`
           : `A página ${pedido.pagina.numero} volta a "em preenchimento", sem o traço. Corrija os registros na tela da análise e finalize de novo.`}
       </p>
       <div className="botoes-lado">
