@@ -33,23 +33,27 @@ export default {
       legenda: "Terminadas as leituras, o relatório do dia sai pronto para copiar e enviar.",
     },
     {
-      antes: async (p, f) => { await f.ir("/analises/tanques-terra"); await f.aba("Resultados"); },
-      destaque: (p) => cartao(p, "Por situação"),
-      legenda: "Cada resultado lançado vira dado: atrasado, não ok, no prazo e ok, com a porcentagem de cada um.",
+      antes: async (p, f) => { await f.ir("/analises/recebimento-nfc"); await f.aba("Resultados"); },
+      destaque: (p) => p.locator("main section.grafico-resultado").first(),
+      legenda: "Cada resultado lançado vira dado. No Recebimento de NFC, o gráfico mostra a tendência de cada análise, já com a diluição aplicada.",
     },
     {
       antes: async (p, f) => { await f.clicar(p.getByRole("button", { name: "Filtros" })); },
       destaque: (p) => p.locator("form.formulario-filtros"),
-      legenda: "Com o filtro por análise, o gráfico mostra só o C.T e fica limpo.",
+      legenda: "Um filtro separa a amostra Fresh da Pasteurizada. Aqui, só Fresh.",
       durante: async (p, f) => {
-        await f.escolher(p.locator("form.formulario-filtros label.campo").filter({ hasText: /^\s*Análise/ }).locator("select"), "C.T");
+        await f.escolher(p.locator("form.formulario-filtros label.campo").filter({ hasText: /^\s*Amostra/ }).locator("select"), "Fresh");
       },
       depois: async (p, f) => { await f.clicar(p.locator("form.formulario-filtros").getByRole("button", { name: "Filtrar" })); await f.espera(1500); },
     },
     {
-      destaque: (p) => cartao(p, "Tendência do resultado"),
-      legenda: "E vira gráfico: a tendência do C.T ao longo do tempo, com o limite tracejado.",
-      durante: async (p, f) => { await f.espera(2500); await f.clicar(p.getByRole("button", { name: "Colunas", exact: true })); },
+      destaque: (p) => p.locator(".pilulas-fabrica"),
+      legenda: "E duas fábricas lado a lado, cada uma com a sua cor, para comparar a tendência.",
+      durante: async (p, f) => {
+        for (const fab of ["CON", "TMG"]) { await f.espera(900); await f.clicar(p.locator(".pilulas-fabrica button").filter({ hasText: new RegExp(`^\\s*${fab}\\s*$`) })); }
+        await f.espera(1500);
+        await f.clicar(p.getByRole("button", { name: "Colunas", exact: true }));
+      },
     },
     { antes: (p, f) => f.cartao("fim"), legenda: "", fala: "LabFlow: do resultado lançado ao gráfico, sem planilha. Dados de demonstração.", folga: 1 },
   ],
