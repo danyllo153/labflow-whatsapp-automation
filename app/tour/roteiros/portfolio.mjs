@@ -19,34 +19,18 @@ export default {
       legenda: "O dia começa no Início: o que analisar, o que ler hoje e os atrasados, de todas as áreas num lugar só.",
     },
     {
-      destaque: (p) => cartao(p, "Para analisar agora"),
-      legenda: "Cada pendência traz o prazo e um botão que leva direto à tela certa.",
-    },
-    {
       destaque: (p) => cartao(p, "Ler hoje"),
-      legenda: "Em Ler hoje ficam as placas que vencem hoje. As atrasadas aparecem em vermelho.",
+      legenda: "Em Ler hoje ficam as placas que vencem hoje, e as atrasadas aparecem em vermelho. Cada pendência leva direto à tela certa.",
     },
     {
-      antes: (p, f) => f.ir("/leituras"),
+      antes: async (p, f) => { await f.ir("/leituras"); await f.aba("Tanques terra"); },
       destaque: (p) => p.locator("nav.abas-app"),
-      legenda: "Na página Leituras, cada análise tem a sua aba, com o número do que vence.",
-    },
-    {
-      antes: (p, f) => f.aba("Tanques terra"),
-      legenda: "É só digitar o resultado da placa. O LabFlow confere o limite e mostra uma prévia antes de gravar.",
-    },
-    {
-      antes: (p, f) => f.aba("Coliformes"),
-      legenda: "No Coliformes, o resultado vai de uma vez para a lista toda, mudando só o que for diferente.",
+      legenda: "Em Leituras, cada análise tem a sua aba. É só digitar o resultado da placa: o LabFlow confere o limite e mostra uma prévia antes de gravar.",
     },
     {
       antes: (p, f) => f.ir("/leituras"),
       destaque: (p) => p.getByRole("button", { name: "Copiar o relatório" }),
       legenda: "Terminadas as leituras, o relatório do dia sai pronto para copiar e enviar.",
-    },
-    {
-      destaque: (p) => p.getByRole("link", { name: "Exportar as leituras do dia para o Excel" }),
-      legenda: "E o Excel baixa as leituras do dia, uma linha por leitura.",
     },
     {
       antes: async (p, f) => { await f.ir("/analises/recebimento-fcoj"); await f.aba("Resultados"); },
