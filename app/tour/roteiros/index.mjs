@@ -13,6 +13,7 @@ import fcoj from "./fcoj.mjs";
 import geral from "./geral.mjs";
 import inicio from "./inicio.mjs";
 import nfc from "./nfc.mjs";
+import portfolio from "./portfolio.mjs";
 import rotina from "./rotina.mjs";
 import testes from "./testes.mjs";
 
@@ -28,6 +29,7 @@ export const TOURS = {
   "08-leituras-coletas-arquivo": dados,
   "09-administracao": admin,
   "00-geral": geral,
+  "10-portfolio": portfolio,
 };
 
 /** Os passos do vídeo, já com a capa e o fim. */
