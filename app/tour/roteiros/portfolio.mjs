@@ -33,14 +33,9 @@ export default {
       legenda: "Terminadas as leituras, o relatório do dia sai pronto para copiar e enviar.",
     },
     {
-      antes: async (p, f) => { await f.ir("/analises/recebimento-nfc"); await f.aba("Resultados"); },
-      destaque: (p) => p.locator("main section.grafico-resultado").first(),
-      legenda: "Cada resultado lançado vira dado. No Recebimento de NFC, o gráfico mostra a tendência de cada análise, já com a diluição aplicada.",
-    },
-    {
-      antes: async (p, f) => { await f.clicar(p.getByRole("button", { name: "Filtros" })); },
+      antes: async (p, f) => { await f.ir("/analises/recebimento-nfc"); await f.aba("Resultados"); await f.clicar(p.getByRole("button", { name: "Filtros" })); },
       destaque: (p) => p.locator("form.formulario-filtros"),
-      legenda: "Um filtro separa a amostra Fresh da Pasteurizada. Aqui, só Fresh.",
+      legenda: "Cada resultado lançado vira dado. No Recebimento de NFC, um filtro separa a amostra Fresh.",
       durante: async (p, f) => {
         await f.escolher(p.locator("form.formulario-filtros label.campo").filter({ hasText: /^\s*Amostra/ }).locator("select"), "Fresh");
       },
@@ -48,12 +43,19 @@ export default {
     },
     {
       destaque: (p) => p.locator(".pilulas-fabrica"),
-      legenda: "E duas fábricas lado a lado, cada uma com a sua cor, para comparar a tendência.",
+      legenda: "Duas fábricas lado a lado, para comparar.",
       durante: async (p, f) => {
         for (const fab of ["CON", "TMG"]) { await f.espera(900); await f.clicar(p.locator(".pilulas-fabrica button").filter({ hasText: new RegExp(`^\\s*${fab}\\s*$`) })); }
-        await f.espera(1500);
-        await f.clicar(p.getByRole("button", { name: "Colunas", exact: true }));
+        await f.espera(900);
+        await f.clicar(p.getByRole("button", { name: "Por fábrica", exact: true }));
+        await f.espera(900);
+        await f.escolher(p.locator("main section.grafico-resultado label.campo select").first(), "C.T 48h");
       },
+    },
+    {
+      destaque: (p) => p.locator("main section.grafico-resultado").first(),
+      legenda: "Cada fábrica com a sua cor: a tendência do C.T ao longo do tempo, em linha ou em colunas.",
+      durante: async (p, f) => { await f.espera(2500); await f.clicar(p.getByRole("button", { name: "Colunas", exact: true })); },
     },
     { antes: (p, f) => f.cartao("fim"), legenda: "", fala: "LabFlow: do resultado lançado ao gráfico, sem planilha. Dados de demonstração.", folga: 1 },
   ],

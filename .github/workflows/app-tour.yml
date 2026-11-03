@@ -85,6 +85,7 @@ jobs:
         run: |
           bash scripts/preparar_banco_teste.sh
           PYTHONPATH=. python ../tour/preparar.py
+          psql "$LABFLOW_DB_URL" -v ON_ERROR_STOP=1 -q -f ../tour/demo-nfc.sql
       - name: Telas
         working-directory: app/web
         run: |
