@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LabFlow Lite - Comece aqui</title>
+<style>
+  :root {
+    --bg: #f4f6fb; --card: #ffffff; --texto: #1c2438; --suave: #5b6478; --linha: #dde2ee;
+    --azul: #1f3bb3; --azul-fundo: #e8edff; --verde: #12794a; --verde-fundo: #e3f6ec;
+    --ambar: #8a5a00; --ambar-fundo: #fff3d6; --vermelho: #a52a2a; --vermelho-fundo: #fde8e8;
+    --codigo: #0f172a; --codigo-texto: #e6ebf7;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-print]) {
+      --bg: #0f1422; --card: #182036; --texto: #e6ebf7; --suave: #9aa5bf; --linha: #2a3452;
+      --azul: #8fa6ff; --azul-fundo: #1d2a55; --verde: #5fd69b; --verde-fundo: #12321f;
+      --ambar: #f0c36a; --ambar-fundo: #3a2c0a; --vermelho: #ff9b9b; --vermelho-fundo: #3a1717;
+      --codigo: #0a0f1c; --codigo-texto: #e6ebf7;
+    }
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--texto);
+         font: 16px/1.55 "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif; }
+  .pagina { max-width: 860px; margin: 0 auto; padding: 24px 16px 64px; }
+  header.topo { background: linear-gradient(135deg, #1f3bb3, #1e283d); color: #fff; border-radius: 16px;
+                padding: 28px 24px; margin-bottom: 20px; }
+  header.topo h1 { margin: 0 0 6px; font-size: 28px; letter-spacing: -.01em; }
+  header.topo p { margin: 0; opacity: .9; }
+  nav.indice { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 20px; }
+  nav.indice a { background: var(--card); border: 1px solid var(--linha); color: var(--azul);
+                 padding: 6px 12px; border-radius: 999px; font-size: 14px; text-decoration: none; }
+  section { background: var(--card); border: 1px solid var(--linha); border-radius: 14px;
+            padding: 20px 22px; margin-bottom: 18px; }
+  h2 { margin: 0 0 4px; font-size: 21px; }
+  h2 .tag { font-size: 12px; font-weight: 600; padding: 2px 9px; border-radius: 999px; margin-left: 8px;
+            vertical-align: middle; background: var(--azul-fundo); color: var(--azul); }
+  h3 { margin: 18px 0 6px; font-size: 16px; }
+  p { margin: 8px 0; }
+  .suave { color: var(--suave); }
+  ol.passos { list-style: none; counter-reset: p; padding: 0; margin: 14px 0 0; }
+  ol.passos > li { counter-increment: p; position: relative; padding: 4px 0 14px 48px; }
+  ol.passos > li::before { content: counter(p); position: absolute; left: 0; top: 2px; width: 34px; height: 34px;
+      border-radius: 50%; background: var(--azul); color: #fff; font-weight: 700; display: grid; place-items: center; }
+  ol.passos > li strong:first-child { display: block; }
+  .aviso, .ok, .perigo { border-radius: 10px; padding: 10px 14px; margin: 12px 0; border-left: 5px solid; }
+  .aviso { background: var(--ambar-fundo); border-color: var(--ambar); }
+  .ok { background: var(--verde-fundo); border-color: var(--verde); }
+  .perigo { background: var(--vermelho-fundo); border-color: var(--vermelho); }
+  .aviso b, .ok b, .perigo b { display: block; margin-bottom: 2px; }
+  .grade { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 12px; margin: 12px 0; }
+  .cartao { border: 1px solid var(--linha); border-radius: 12px; padding: 12px 14px; background: var(--bg); }
+  .cartao h4 { margin: 0 0 4px; font-size: 15px; }
+  .cartao p { margin: 0; font-size: 14.5px; color: var(--suave); }
+  code, .caminho { font-family: Consolas, "Cascadia Mono", monospace; font-size: 14px; background: var(--azul-fundo);
+         color: var(--azul); padding: 1px 6px; border-radius: 5px; word-break: break-word; }
+  pre { background: var(--codigo); color: var(--codigo-texto); border-radius: 10px; padding: 14px 16px; overflow-x: auto;
+        font: 13.5px/1.5 Consolas, "Cascadia Mono", monospace; margin: 10px 0; white-space: pre; }
+  pre.quebra { white-space: pre-wrap; word-break: break-word; }
+  table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 15px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--linha); vertical-align: top; }
+  th { background: var(--bg); font-size: 13px; text-transform: uppercase; letter-spacing: .04em; color: var(--suave); }
+  .arvore { line-height: 1.7; }
+  .arvore .d { color: #7fb0ff; } .arvore .n { color: #9be3b4; } .arvore .c { color: #94a3c4; }
+  button.copiar { background: var(--azul); color: #fff; border: 0; border-radius: 8px; padding: 9px 16px;
+                  font: inherit; font-weight: 600; cursor: pointer; }
+  button.copiar:hover { filter: brightness(1.1); }
+  .rodape { text-align: center; color: var(--suave); font-size: 13px; margin-top: 24px; }
+  @media print {
+    :root { --bg: #fff; }
+    body { background: #fff; font-size: 13.5px; }
+    .pagina { max-width: none; padding: 0; }
+    nav.indice, button.copiar, .so-tela { display: none !important; }
+    section { break-inside: auto; box-shadow: none; padding: 14px 16px; margin-bottom: 12px; }
+    h2, h3 { break-after: avoid; }
+    .grade, .cartao, .aviso, .ok, .perigo, tr { break-inside: avoid; }
+    pre.arvore { font-size: 11px; white-space: pre-wrap; }
+    pre.quebra { font-size: 11px; }
+    header.topo { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    pre, .aviso, .ok, .perigo, ol.passos > li::before, h2 .tag, code, .caminho, th {
+      -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    ol.passos > li { break-inside: avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="pagina">
+
+<header class="topo">
+  <h1>LabFlow Lite</h1>
+  <p>Sistema do laboratório de Microbiologia que roda direto da pasta de rede (G:), sem servidor, sem instalação e sem internet.</p>
+</header>
+
+<nav class="indice">
+  <a href="#resumo">Como funciona</a>
+  <a href="#instalar">Instalar</a>
+  <a href="#dia">No dia a dia</a>
+  <a href="#senha">Perdi a senha</a>
+  <a href="#atualizar">Atualizações</a>
+  <a href="#marca">Logo e visual</a>
+  <a href="#ti">Para a TI</a>
+  <a href="#pasta">O que tem na pasta</a>
+  <a href="#claude">Perguntar ao Claude</a>
+</nav>
+
+<section id="resumo">
+  <h2>Como funciona, em 30 segundos</h2>
+  <div class="grade">
+    <div class="cartao"><h4>1. Um PC vira o servidor</h4><p>O primeiro PC que abre o LabFlow guarda o banco de dados e roda o sistema. Use o PC da micro que fica ligado o dia todo.</p></div>
+    <div class="cartao"><h4>2. Os outros só abrem a tela</h4><p>Quem abre depois entra no sistema do PC servidor pelo navegador. Cada pessoa tem o próprio usuário e senha.</p></div>
+    <div class="cartao"><h4>3. Tudo é gravado no G:</h4><p>A cada minuto (se algo mudou) e ao fechar, o LabFlow guarda uma cópia na pasta <code>dados</code>, com backup de cada dia.</p></div>
+    <div class="cartao"><h4>4. Se o servidor cair</h4><p>Espere 1 minuto e abra o LabFlow em qualquer PC: ele assume com os dados gravados. Pode faltar no máximo o último minuto.</p></div>
+  </div>
+  <div class="ok"><b>O que tem</b> Todas as funções do app (amostras, resultados, laudos, painéis, cadastros), com usuários e cargos. <b style="margin-top:6px">O que não tem (nesta etapa)</b> Bot de WhatsApp, celular e assistente de IA.</div>
+</section>
+
+<section id="instalar">
+  <h2>Instalar <span class="tag">uma vez só</span></h2>
+  <p class="suave">Precisa de: Windows 10 ou mais novo (64 bits), acesso de escrita na pasta do G:. <b>Não precisa</b> de administrador, de instalar programa, de Docker nem de internet.</p>
+  <ol class="passos">
+    <li><strong>Descompacte o zip no G:</strong>
+      Extraia em <span class="caminho">G:\Terminal Guarujá\Garantia da Qualidade\Microbiologia\</span>. O zip já traz a pasta <code>LabFlow</code>; o resultado final é
+      <span class="caminho">G:\Terminal Guarujá\Garantia da Qualidade\Microbiologia\LabFlow</span>.</li>
+    <li><strong>Escolha o PC servidor</strong>
+      O PC da micro que fica ligado 24 horas (Windows 10). É nele que você abre o LabFlow primeiro.</li>
+    <li><strong>Peça à TI a liberação da porta 8000</strong>
+      Sem isso funciona um PC por vez. Detalhes na seção <a href="#ti">Para a TI</a>.</li>
+    <li><strong>Dê dois cliques em <code>Abrir LabFlow</code></strong>
+      Na primeira vez ele se prepara (1 a 3 minutos). Se a TI bloquear o arquivo <code>.vbs</code>, use <code>Abrir LabFlow com janela</code> (o <code>.bat</code>), que faz o mesmo.</li>
+    <li><strong>Anote a senha provisória</strong>
+      A janela preta mostra o usuário <code>admin</code> e uma senha provisória que vale <b>24 horas</b>. Anote antes de fechar a janela.
+      <div class="aviso"><b>Se o navegador perguntar "Salvar senha?"</b>Clique em <b style="display:inline">Nunca</b>. O PC é compartilhado: a senha salva ficaria preenchida para a próxima pessoa.</div></li>
+    <li><strong>Entre, troque a senha e cadastre as pessoas</strong>
+      O LabFlow abre em tela cheia na tela de entrar. Entre como <code>admin</code>, troque a senha e cadastre cada pessoa em <b>Admin → Pessoas</b> (o telefone é opcional). A partir daí, cada um usa o próprio login.</li>
+  </ol>
+</section>
+
+<section id="dia">
+  <h2>No dia a dia</h2>
+  <table>
+    <tr><th>Quero…</th><th>Faço assim</th></tr>
+    <tr><td>Abrir o LabFlow (qualquer PC)</td><td>Dois cliques em <code>Abrir LabFlow</code>. Se outro PC já é o servidor, ele só abre a janela do sistema dele.</td></tr>
+    <tr><td>Trocar de turno</td><td>Só clicar em <b>Sair</b> dentro do LabFlow.</td></tr>
+    <tr><td>Fechar a tela</td><td><b>Alt+F4</b> fecha só a tela; o LabFlow continua rodando no ícone perto do relógio. <b>F11</b> alterna entre tela cheia e janela.</td></tr>
+    <tr><td>Encerrar de vez (no PC servidor)</td><td>Ícone perto do relógio → botão direito → <b>Encerrar o LabFlow</b> → Sim. Espere de 10 a 30 segundos: ele grava tudo no G:. Alternativa: dois cliques em <code>Fechar LabFlow</code>.</td></tr>
+    <tr><td>Ver o endereço para os outros PCs</td><td>Ícone perto do relógio → <b>Endereço para os outros PCs</b>.</td></tr>
+  </table>
+  <div class="perigo"><b>O que derruba o servidor</b>
+    Sair do usuário do Windows (bloquear a tela com Windows+L pode), suspender ou hibernar o PC, e reinício do Windows Update.
+    No PC servidor, deixe o plano de energia em "nunca suspender". Se cair, espere 1 minuto e abra em qualquer PC.</div>
+</section>
+
+<section id="senha">
+  <h2>Perdi a senha do admin <span class="tag">tem solução</span></h2>
+  <ol class="passos">
+    <li><strong>Feche o LabFlow em todos os PCs</strong> (ícone perto do relógio → Encerrar o LabFlow).</li>
+    <li><strong>Dois cliques em <code>Redefinir senha do Admin</code></strong>, na pasta <code>LabFlow</code>.</li>
+    <li><strong>Anote a nova senha provisória</strong> que aparece na janela preta (vale 24 horas), entre e troque.</li>
+  </ol>
+  <div class="ok"><b>Seguro</b>Isso só gera uma senha nova para o admin. Os dados e os outros usuários não mudam. Com o LabFlow aberto em algum PC, ele avisa e não redefine.</div>
+</section>
+
+<section id="atualizar">
+  <h2>Atualizações de versão <span class="tag">só mexem em uma pasta</span></h2>
+  <p>Quando houver versão nova, você receberá uma pasta <code>instalacao</code> nova.</p>
+  <ol class="passos">
+    <li><strong>Feche o LabFlow em todos os PCs.</strong></li>
+    <li><strong>Troque somente a pasta <code>instalacao</code></strong> pela nova (apague a antiga e coloque a nova no lugar).</li>
+    <li><strong>Abra o LabFlow normalmente.</strong> Ele faz um backup e atualiza o banco sozinho.</li>
+  </ol>
+  <div class="ok"><b>O que não muda</b>A pasta <code>dados</code> (banco, backups, logo e visual) <b style="display:inline">nunca</b> é tocada por uma atualização. Nunca apague nem substitua a pasta <code>dados</code>.</div>
+</section>
+
+<section id="marca">
+  <h2>Logo, nome e cores do laboratório <span class="tag">opcional</span></h2>
+  <p>Você pode deixar o LabFlow com a cara do laboratório. Tudo fica na pasta <span class="caminho">dados\marca</span> (criada na primeira abertura, com um LEIA-ME dentro) e sobrevive às atualizações.</p>
+  <table>
+    <tr><th>Arquivo</th><th>Para quê</th></tr>
+    <tr><td><code>marca.json</code></td><td>Nome e cores (formato <code>#rrggbb</code>). Cor principal: botões, links e abas. Cor secundária: menu lateral e topo.</td></tr>
+    <tr><td><code>logo.png</code></td><td>A logo (PNG, até 2 MB). Aparece no menu e na tela de entrar.</td></tr>
+    <tr><td><code>estilo.css</code></td><td>Ajustes finos de visual (CSS, até 200 KB), aplicados por último.</td></tr>
+  </table>
+  <p>Exemplo de <code>marca.json</code>:</p>
+<pre>{
+  "nome": "Laboratório de Microbiologia",
+  "cor_principal": "#1f3bb3",
+  "cor_secundaria": "#1e283d"
+}</pre>
+  <div class="aviso"><b>Para valer</b>Feche o LabFlow no PC servidor e abra de novo. Os laudos <b style="display:inline">não mudam</b>: continuam nos modelos da empresa. Arquivo com erro é ignorado sozinho (o resto vale). Sem esses arquivos, fica o visual padrão do LabFlow.</div>
+</section>
+
+<section id="ti">
+  <h2>Para a TI <span class="tag">o que precisa liberar</span></h2>
+  <table>
+    <tr><th>Item</th><th>Detalhe</th></tr>
+    <tr><td><b>Firewall</b></td><td>Liberar a porta <b>TCP 8000 de entrada</b> no firewall do Windows do <b>PC servidor</b>, somente para os PCs do laboratório. É a única mudança de rede.</td></tr>
+    <tr><td><b>Conferir</b></td><td>Dois cliques em <code>Testar rede</code>: primeiro no PC servidor, depois nos outros. Ele diz se a conexão passa.</td></tr>
+    <tr><td><b>Instalação</b></td><td>Nenhuma. Roda sem administrador, sem Docker e sem internet. Python e PostgreSQL vão embutidos na pasta.</td></tr>
+    <tr><td><b>Onde grava</b></td><td>Dados no G: (<code>LabFlow\dados</code>). Cópia de trabalho em <code>%LOCALAPPDATA%\LabFlowLite</code> de cada PC (o PostgreSQL não roda bem direto de pasta de rede).</td></tr>
+    <tr><td><b>Segurança</b></td><td>O PostgreSQL escuta só em 127.0.0.1, com senha. A porta 8000 é a do sistema (HTTP, sem criptografia, rede interna). Cada pessoa tem usuário e senha.</td></tr>
+    <tr><td><b>Arquivos</b></td><td>Se a política bloquear <code>.vbs</code>, usar o <code>Abrir LabFlow com janela.bat</code> (equivalente). Antivírus: liberar a pasta <code>LabFlow</code> e <code>%LOCALAPPDATA%\LabFlowLite</code> se necessário.</td></tr>
+    <tr><td><b>Energia</b></td><td>O PC servidor não pode suspender nem hibernar, nem reiniciar sozinho com o LabFlow aberto.</td></tr>
+  </table>
+  <div class="ok"><b>Sem a liberação da porta</b>O LabFlow funciona assim mesmo, mas um PC por vez: o aviso diz quem está com ele aberto.</div>
+</section>
+
+<section id="pasta">
+  <h2>O que tem na pasta</h2>
+<pre class="arvore"><span class="d">LabFlow\</span>                          <span class="c">(no G:)</span>
+  Abrir LabFlow.vbs                 <span class="n">abre o sistema (sem janela do cmd)</span>
+  Abrir LabFlow com janela.bat      <span class="n">o mesmo, caso o .vbs seja bloqueado</span>
+  Fechar LabFlow.bat                <span class="n">grava tudo e fecha o LabFlow deste PC</span>
+  Redefinir senha do Admin.bat      <span class="n">gera nova senha provisória do admin</span>
+  Testar rede.bat                   <span class="n">confere a porta 8000 entre os PCs</span>
+  LEIA-ME.txt                       <span class="n">resumo em texto</span>
+  COMECE AQUI.html                  <span class="n">este guia</span>
+  <span class="d">instalacao\</span>                      <span class="c">programa; trocada inteira a cada versão</span>
+    python\  app\  web\  migrations\  postgres\  lite\  VERSAO.txt
+  <span class="d">dados\</span>                           <span class="c">criada na 1a abertura; NUNCA apagar nem substituir</span>
+    labflow.dump                    <span class="n">cópia atual do banco</span>
+    labflow.anterior.dump           <span class="n">a cópia de antes</span>
+    backup\                         <span class="n">um backup por dia (últimos 30)</span>
+    recuperacao\                    <span class="n">banco local que ficou para trás depois de uma queda</span>
+    marca\                          <span class="n">logo, nome e cores (opcional)</span>
+    servidor.json                   <span class="n">diz qual PC é o servidor agora</span></pre>
+  <p class="suave">Em cada PC também existe <code>%LOCALAPPDATA%\LabFlowLite</code> (cópia do programa, banco de trabalho do servidor e logs). Pode ficar; o LabFlow cuida dela.</p>
+</section>
+
+<section id="claude">
+  <h2>Perguntar ao Claude <span class="tag">opcional</span></h2>
+  <p>Se você usa o Claude, cole o texto abaixo numa conversa nova. Ele passa a conhecer a pasta e o funcionamento, e pode tirar dúvidas e orientar a TI. Mande a pasta <code>LabFlow</code> ou o <code>LEIA-ME.txt</code> junto, se quiser.</p>
+  <button class="copiar" id="btn" type="button">Copiar texto</button>
+<pre class="quebra" id="prompt">Você vai me ajudar a usar o "LabFlow Lite", um sistema de laboratório de microbiologia que roda de uma pasta de rede no Windows (G:), sem servidor, sem Docker, sem administrador e sem internet. Responda sempre em português, com passos curtos, um de cada vez. Use só o que está descrito aqui; se algo não estiver, diga que não sei e peça para olhar o LEIA-ME.txt ou falar com o Danyllo.
+
+O QUE É
+O mesmo app completo (API, telas e banco PostgreSQL) empacotado para Windows. Tem todas as funções do app, com usuários e cargos; cada pessoa tem o próprio login. NÃO tem bot de WhatsApp, celular nem assistente de IA nesta etapa.
+
+PASTA (G:\Terminal Guarujá\Garantia da Qualidade\Microbiologia\LabFlow)
+- Abrir LabFlow.vbs / Abrir LabFlow com janela.bat: abrem o sistema (o .bat serve se o .vbs for bloqueado).
+- Fechar LabFlow.bat: grava tudo no G: e fecha o LabFlow deste PC.
+- Redefinir senha do Admin.bat: gera uma nova senha provisória (24 h) para o admin; só funciona com o LabFlow fechado em todos os PCs.
+- Testar rede.bat: confere a porta 8000 entre o PC servidor e os outros.
+- instalacao\: o programa (Python, app, telas, migrations, PostgreSQL). É trocada inteira a cada versão.
+- dados\: banco (labflow.dump, labflow.anterior.dump), backup\ (um por dia, 30 dias), recuperacao\, marca\ e servidor.json. NUNCA apagar nem substituir.
+
+COMO FUNCIONA
+- O primeiro PC que abre vira o SERVIDOR (PostgreSQL e app rodam nele, só em 127.0.0.1 com senha). Os outros PCs só abrem o navegador no servidor, pela porta TCP 8000. Um banco só, sem conflito.
+- O servidor ideal é o PC da micro que fica ligado 24 h. Ele não pode suspender/hibernar, nem sair do usuário do Windows; troca de turno é só "Sair" no LabFlow.
+- O servidor grava uma cópia no G: a cada 60 s (se houve escrita), a cada 10 min mesmo sem escrita, e ao fechar. Se ele cair, depois de ~1 minuto qualquer PC que abrir assume com os dados gravados (pode faltar no máximo o último minuto).
+- Primeira abertura em cada PC: janela preta (preparo de 1 a 3 min; no banco novo mostra o usuário "admin" e uma senha provisória de 24 h, que deve ser anotada). Depois abre oculto, com um ícone perto do relógio: Abrir o LabFlow, Endereço para os outros PCs, Encerrar o LabFlow (leva 10 a 30 s para gravar). A tela abre em tela cheia (F11 alterna; Alt+F4 fecha só a tela).
+- Primeiro acesso: entrar como admin, trocar a senha e cadastrar as pessoas em Admin > Pessoas (telefone opcional). O navegador não deve salvar a senha (PC compartilhado).
+- Para a TI: liberar TCP 8000 de entrada no firewall do PC servidor, só para os PCs do laboratório (HTTP interno, sem criptografia). Sem isso funciona um PC por vez.
+
+LOGO, NOME E CORES (opcional)
+Na pasta dados\marca: marca.json (nome, cor_principal, cor_secundaria em #rrggbb), logo.png (até 2 MB) e estilo.css (até 200 KB, aplicado por último). Vale ao fechar e abrir de novo o LabFlow no PC servidor. Arquivo com erro é ignorado. Os laudos NÃO mudam (continuam nos modelos da empresa). Fica em "dados", então as atualizações não mexem nisso.
+
+ATUALIZAÇÕES
+Fechar o LabFlow em todos os PCs e trocar SÓ a pasta instalacao pela nova. Na próxima abertura ele faz backup e atualiza o banco sozinho. A pasta dados nunca é tocada.
+
+Agora me ajude com a minha dúvida:</pre>
+</section>
+
+<p class="rodape">LabFlow Lite · guia de instalação e uso</p>
+</div>
+<script>
+  (function () {
+    var b = document.getElementById("btn"), t = document.getElementById("prompt");
+    if (!b || !t) return;
+    b.addEventListener("click", function () {
+      var feito = function () { b.textContent = "Copiado!"; setTimeout(function () { b.textContent = "Copiar texto"; }, 2000); };
+      var plano = function () {
+        var r = document.createRange(); r.selectNodeContents(t);
+        var s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+        try { document.execCommand("copy"); feito(); } catch (e) { b.textContent = "Selecionei: use Ctrl+C"; }
+      };
+      if (navigator.clipboard && window.isSecureContext) { navigator.clipboard.writeText(t.innerText).then(feito, plano); }
+      else { plano(); }
+    });
+  })();
+</script>
+</body>
+</html>
