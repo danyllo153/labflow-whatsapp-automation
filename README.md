@@ -7,6 +7,12 @@
 
 Projeto pessoal que une biomedicina e automação: o problema vem da rotina real de um laboratório de controle de qualidade de suco. Roda num servidor de demonstração, sempre com **dados fictícios**.
 
+**O app do laboratório em 90 segundos**
+
+https://github.com/user-attachments/assets/92b22dc7-967c-4ca5-81ab-88f93a1ce27e
+
+<sub>O dia a dia do analista: o Início com o que analisar e o que ler hoje, o lançamento do resultado em Leituras, o relatório pronto e o gráfico de tendência comparando duas fábricas. Dados fictícios.</sub>
+
 ## Em resumo
 
 | | |
@@ -56,10 +62,6 @@ Desde 13/10/2026 o app e o bot rodam num **piloto de 1 mês no laboratório** (a
 ## Veja funcionando
 
 ![O app do laboratório: pendências do dia, lançamento de resultado em Leituras, relatório e gráfico de tendência](docs/img/app/app.gif)
-
-**Vídeo de 90 segundos do dia a dia do analista:**
-
-https://github.com/user-attachments/assets/92b22dc7-967c-4ca5-81ab-88f93a1ce27e
 
 <sub>O app do laboratório (dados fictícios): o Início com o que analisar e o que ler hoje, as Leituras por análise, e o gráfico de tendência do resultado com os limites. O bot do WhatsApp aparece em [Como é usar](#como-é-usar).</sub>
 
