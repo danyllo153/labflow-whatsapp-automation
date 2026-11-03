@@ -57,9 +57,9 @@ Desde 13/10/2026 o app e o bot rodam num **piloto de 1 mês no laboratório** (a
 
 ![O app do laboratório: pendências do dia, lançamento de resultado em Leituras, relatório e gráfico de tendência](docs/img/app/app.gif)
 
-**Vídeo de 72 segundos do dia a dia do analista:**
+**Vídeo de 90 segundos do dia a dia do analista:**
 
-https://github.com/user-attachments/assets/766cd0dd-ec91-46ad-912c-0f3b9ad7c497
+https://github.com/user-attachments/assets/92b22dc7-967c-4ca5-81ab-88f93a1ce27e
 
 <sub>O app do laboratório (dados fictícios): o Início com o que analisar e o que ler hoje, as Leituras por análise, e o gráfico de tendência do resultado com os limites. O bot do WhatsApp aparece em [Como é usar](#como-é-usar).</sub>
 
