@@ -12,11 +12,11 @@ export default {
   semCapa: true,
   cartoes: CARTOES,
   passos: [
-    { antes: (p, f) => f.cartao("abertura"), legenda: "", fala: "LabFlow, o sistema do laboratório. Veja o dia a dia do analista, do resultado lançado ao gráfico.", folga: 1 },
+    { antes: (p, f) => f.cartao("abertura"), legenda: "", fala: "LabFlow, o sistema do laboratório. Veja o dia a dia do analista, do resultado lançado ao gráfico.", folga: 0.5 },
     {
       antes: (p, f) => f.abrir("/app/"),
       destaque: (p) => p.locator(".estatisticas"),
-      legenda: "O dia começa no Início: o que analisar, o que ler hoje e os atrasados, de todas as áreas num lugar só.",
+      legenda: "O dia começa no Início: o que analisar, o que ler hoje e os atrasados, num lugar só.",
     },
     {
       destaque: (p) => cartao(p, "Ler hoje"),
@@ -25,7 +25,7 @@ export default {
     {
       antes: async (p, f) => { await f.ir("/leituras"); await f.aba("Tanques terra"); },
       destaque: (p) => p.locator("nav.abas-app"),
-      legenda: "Em Leituras, cada análise tem a sua aba. É só digitar o resultado da placa: o LabFlow confere o limite e mostra uma prévia antes de gravar.",
+      legenda: "Em Leituras, cada análise tem a sua aba. Digita-se o resultado da placa, e o LabFlow confere o limite antes de gravar.",
     },
     {
       antes: (p, f) => f.ir("/leituras"),
@@ -42,6 +42,6 @@ export default {
       legenda: "E vira gráfico: a tendência ao longo do tempo, em linha ou em colunas.",
       durante: async (p, f) => { await f.espera(2500); await f.clicar(p.getByRole("button", { name: "Colunas", exact: true })); },
     },
-    { antes: (p, f) => f.cartao("fim"), legenda: "", fala: "LabFlow: do resultado lançado ao gráfico, sem planilha. Dados de demonstração.", folga: 2 },
+    { antes: (p, f) => f.cartao("fim"), legenda: "", fala: "LabFlow: do resultado lançado ao gráfico, sem planilha. Dados de demonstração.", folga: 1 },
   ],
 };
