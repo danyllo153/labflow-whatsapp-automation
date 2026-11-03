@@ -40,9 +40,11 @@ PRIMEIRO ACESSO (banco vazio)
   Na primeira abertura a janela preta mostra o usuário "admin" e uma senha
   provisória (vale 24 horas). Entre, troque a senha e cadastre as pessoas em
   Admin > Pessoas (o telefone é opcional: a Lite não tem o bot do WhatsApp).
-  Perdeu a senha do admin? Feche o LabFlow em TODOS os PCs e, na pasta, rode
-  pela linha de comando:  "Abrir LabFlow com janela.bat" --redefinir-admin
-  (com o LabFlow aberto em algum PC, ele avisa e não redefine).
+  ANOTE a senha antes de fechar a janela preta. Se o navegador perguntar se quer
+  salvar a senha, clique em "Nunca" (o PC e compartilhado).
+  Perdeu a senha do admin? Feche o LabFlow em TODOS os PCs e dê dois cliques em
+  "Redefinir senha do Admin" (gera uma nova senha provisória de 24 h na janela preta).
+  Com o LabFlow aberto em algum PC, ele avisa e não redefine.
 
 MARCA (opcional)
   Nome, logo e cores do laboratório: pasta dados\marca (instruções no LEIA-ME de lá).
