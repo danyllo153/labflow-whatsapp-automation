@@ -150,8 +150,6 @@ LabFlow:  📋 Relatório do dia 05/10/2026
 
 O que o bot grava vira um painel de 11 páginas para o laboratório acompanhar prazos, atrasos e resultados. Cada página segue o mesmo padrão: cartões e filtros no topo, três gráficos e uma tabela. O painel é **gerado por código** ([`scripts/gerar-painel-powerbi.js`](scripts/gerar-painel-powerbi.js)) e versionado no Git em formato PBIP; o modelo de dados foi montado com o **Power BI Modeling MCP** da Microsoft, e os números foram conferidos contra o banco.
 
-![Páginas do painel (GIF da v1.2.0; as páginas de análise dos tanques e de Recebimento de NFC vieram depois)](docs/img/powerbi/painel.gif)
-
 | | | |
 |---|---|---|
 | [![Coletas](docs/img/powerbi/02-coletas.png)](docs/img/powerbi/02-coletas.png)<br>**Coletas** | [![Tanques](docs/img/powerbi/03-tanques.png)](docs/img/powerbi/03-tanques.png)<br>**Tanques (NFC)** | [![Drops](docs/img/powerbi/04-drops.png)](docs/img/powerbi/04-drops.png)<br>**Drops** |
