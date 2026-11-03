@@ -122,7 +122,14 @@
 
 ### 🎨 Portfólio
 - [ ] Refazer os prints e o GIF do painel (modo claro, 10 páginas) e o carrossel do LinkedIn; postar no LinkedIn com os GIFs do README
-- [ ] Vídeo/GIF do bot no README e seção "Como usei IA neste projeto"
+- [x] **README completo, vídeo e GIFs** (03/11: #374, #378, #380, #381, #382): topo com o vídeo de 90 s, duas formas de usar (Completa e Lite), piloto, GIF do app e GIF do bot com prints de 03/11
+- [x] **Textos do LinkedIn e página de oferta de serviços** (03/11, #374, #376, #377, em `docs/portfolio/`); LinkedIn e README de perfil do GitHub atualizados pela sessão do bot
+- [x] **Vídeo de portfólio de 90 s** (03/11, #379): `10-portfolio`, com gráfico do Recebimento NFC comparando CON e TMG em Fresh (dados fictícios de `app/tour/demo-nfc.sql`)
+- [ ] 📱 Postar o vídeo no LinkedIn e passar o link para o README (precisa do Danyllo)
+- [ ] 📱 GitHub: descrição e tópicos do repositório LabFlow (`postgresql`, `n8n`, `fastapi`, `react`, `whatsapp`, `power-bi`, `automacao`, `laboratorio`) e fixar no perfil (precisa do Danyllo)
+- [ ] Vídeo do bot gravado no celular, opcional, com os comandos de `docs/portfolio/` (precisa do Danyllo)
+- [ ] 🤖 Texto do desvio de drop termina com `(ou: não confirmou)`, que parece modelo: sugerir à sessão do bot
+- [ ] Seção "Como usei IA neste projeto" revisar no README
 
 ## Especificação do LIMS (Spec-Driven Development)
 - [ ] Refinar os documentos de [Especificação do LIMS](specs/lims/index.md) até `v1.0`, na ordem do `index.md`. As specs da Fase 1 (02 audit trail, 03 especificações, 04 liberação, 05 migrations) estão em v0.2; perguntas abertas que travam a v1.0: o que é *cliente* numa especificação, limites oficiais restantes, cargo Revisor, prazo de resultado ruim parado, retenção da auditoria, dbmate
