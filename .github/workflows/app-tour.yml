@@ -26,6 +26,7 @@ on:
           - 08-leituras-coletas-arquivo
           - 09-administracao
           - 00-geral
+          - 10-portfolio
 
 jobs:
   lista:
