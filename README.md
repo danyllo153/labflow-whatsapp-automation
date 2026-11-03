@@ -3,7 +3,7 @@
 [![Auditoria do workflow](https://github.com/danyllo153/labflow-whatsapp-automation/actions/workflows/audit-workflow.yml/badge.svg)](https://github.com/danyllo153/labflow-whatsapp-automation/actions/workflows/audit-workflow.yml)
 [![Testes](https://github.com/danyllo153/labflow-whatsapp-automation/actions/workflows/testes.yml/badge.svg)](https://github.com/danyllo153/labflow-whatsapp-automation/actions/workflows/testes.yml)
 
-**Automação de laboratório de microbiologia pelo WhatsApp.** O analista manda uma mensagem (no formato do comando ou do jeito que falaria), e o LabFlow registra coletas, análises e resultados num banco PostgreSQL, calcula todos os prazos de leitura, avisa o que vence no dia e monta sozinho o **relatório diário de microbiologia**.
+**Automação de laboratório de microbiologia pelo WhatsApp e por um app web.** O analista manda uma mensagem (no formato do comando ou do jeito que falaria) ou lança o resultado no app, e o LabFlow registra coletas, análises e resultados num banco PostgreSQL, calcula todos os prazos de leitura, mostra as pendências do dia, gera os laudos e monta sozinho o **relatório diário de microbiologia**.
 
 Projeto pessoal que une biomedicina e automação: o problema vem da rotina real de um laboratório de controle de qualidade de suco. Roda num servidor de demonstração, sempre com **dados fictícios**.
 
@@ -53,6 +53,12 @@ Desde 13/10/2026 o app e o bot rodam num **piloto de 1 mês no laboratório** (a
 
 **Dados:** modelagem relacional, SQL (funções, views, migrations), Power BI (DAX e modelo) · **Automação:** n8n, webhooks, integração com WhatsApp · **Back-end:** Python, FastAPI, JWT, pytest · **Front-end:** React, TypeScript, Vite · **IA aplicada:** prompt com catálogo fechado, validação no código, regressão do prompt · **Infra:** Docker, VPS Linux, SSH, GitHub Actions · **Domínio:** microbiologia, controle de qualidade, rastreabilidade e requisitos de laboratório (ISO/IEC 17025).
 
+## Veja funcionando
+
+![O app do laboratório: pendências do dia, lançamento de resultado em Leituras, relatório e gráfico de tendência](docs/img/app/app.gif)
+
+<sub>O app do laboratório (dados fictícios): o Início com o que analisar e o que ler hoje, as Leituras por análise, e o gráfico de tendência do resultado com os limites. O bot do WhatsApp aparece em [Como é usar](#como-é-usar) e o painel do Power BI em [Painel no Power BI](#painel-no-power-bi).</sub>
+
 <details>
 <summary>O que entrou nas versões 1.2 a 1.4 (histórico)</summary>
 
@@ -99,6 +105,8 @@ Cada coleta de tanque gera uma série de prazos: análises com pré-leitura e le
 O LabFlow deixa o registro no canal que a equipe já usa (WhatsApp), calcula os prazos e gera o relatório.
 
 ## Como é usar
+
+**No WhatsApp.** O mesmo registro também pode ser feito no app, com a prévia do banco e um Confirmar.
 
 ![O bot no WhatsApp: coleta, frase livre virando comando, consulta, recebimento, desvios e relatório do dia](docs/img/bot/bot.gif)
 
@@ -150,6 +158,20 @@ O que o bot grava vira um painel de 11 páginas para o laboratório acompanhar p
 
 ## Funcionalidades
 
+**App do laboratório (web e celular)**
+- Login por usuário e cargo (Admin, Analista, Coletor e Consultor), com senha em hash (Argon2) e a permissão conferida na API
+- **Início e Turno:** o que analisar, o que ler hoje, os atrasados e o que ficou do turno anterior; entrada no turno, equipe, estufas e relatório da passagem de turno
+- **Um app por análise** (tanques de terra e de navio, recebimento e embarque de FCOJ, recebimento de NFC, TAB, Coliformes, Howard, drops, desvios, águas e superfícies, esterilização, meios de cultura), cada um com painel, registro com prévia e Confirmar, resultados, gráficos e laudo
+- **Leituras:** uma aba por análise para digitar o resultado da placa, com o limite conferido antes de gravar e o relatório do dia pronto para copiar ou baixar em Excel
+- **Resultados e gráficos:** tabela com busca e filtros, gráfico de tendência com os limites, comparação entre fábricas, exportação para Excel e impressão do que está filtrado
+- **Laudos nos modelos da empresa**, preenchidos a partir dos resultados, com finalizar, editar, reimprimir e prazo de guarda
+- **Arquivo de contra-amostras:** em qual caixa está cada load ou navio, quando descartar, e busca de rastreio no topo
+- Histórico de alterações, exclusão que arquiva (o Admin recupera) e as mesmas regras do bot, porque os dois chamam as mesmas funções do banco
+
+**Versão Lite (só rede local)**
+- O mesmo app rodando de uma pasta de rede no Windows: sem Docker, sem internet e sem servidor dedicado (o primeiro PC que abre vira o servidor, com PostgreSQL local)
+- Cópia do banco na pasta de rede, backup diário e a marca da empresa (nome, logo e cores); sem bot, sem WhatsApp e sem assistente nesta etapa ([spec](docs/specs/lims/12-versao-lite.md))
+
 **Tanques de NFC (suco não concentrado)**
 - Coleta de tanque de terra (até 8 por mensagem) e de navio (até 16, com nome e viagem), com os drops D5/D10/D15 e o descarte do bag ou pote de arquivo (+365 dias) calculados na hora
 - Análise Normal ou Stress (C.T, B.L e Psicrotróficos, com pré-leitura e leitura final), que exige a coleta do tanque
@@ -182,31 +204,37 @@ O que o bot grava vira um painel de 11 páginas para o laboratório acompanhar p
 flowchart LR
     A[WhatsApp Business] --> B[Evolution API]
     B -- webhook --> C[n8n]
-    C --> D{Interpretar comando<br/>regex + regras + permissões}
-    D --> E[(PostgreSQL)]
+    C --> D{"Interpretar comando<br/>regex + regras + permissões"}
+    D --> E[("PostgreSQL<br/>funções, constraints e histórico")]
     D -- "regex não reconheceu" --> F[Gemini]
     F -- "formato oficial do catálogo" --> G{Validar resposta da IA}
     G -- "comando + sim/não" --> D
     D -- resposta --> B
     B --> A
     C -. "falha em qualquer fluxo" .-> H[Alerta de erro] -.-> B
+    U["App web e celular<br/>React + TypeScript"] --> API["API FastAPI<br/>login + cargos"]
+    API --> E
+    E --> BI[Painel Power BI]
 ```
 
 - **Evolution API** (self-hosted) conecta um número dedicado de WhatsApp Business e manda cada mensagem para o n8n.
 - **n8n** identifica o comando por regex, confere o cargo de quem mandou, aplica as regras de negócio e responde. O workflow é organizado em blocos por assunto (entrada, consultas, coletas, análises, sim/não, IA, cargos, concentrado, desvio).
 - **Gemini** só é chamado quando a regex não reconhece a mensagem. Ele propõe; o código decide.
 - **PostgreSQL** guarda tudo em tabelas ligadas por chave estrangeira (no NFC a coleta é o centro; no concentrado, *recebimento → compostas → testes*), e confere as regras de novo: duplicata, valores permitidos, temperaturas do desvio, um teste por composta.
-- Tudo em **Docker**, numa stack isolada num VPS Linux.
+- **API FastAPI e app React** (pasta [`app/`](app/)) leem o banco por views e gravam só pelas funções aprovadas, as mesmas que o bot chama: uma regra, dois canais.
+- **Power BI** lê views do banco por um usuário somente leitura.
+- Tudo em **Docker**, numa stack isolada num VPS Linux; a **Lite** empacota o mesmo app para Windows, sem Docker.
 
 Detalhes em [docs/arquitetura.md](docs/arquitetura.md), [docs/concentrado.md](docs/concentrado.md) e [docs/deploy-vps.md](docs/deploy-vps.md).
 
 ## Stack
 
-n8n · PostgreSQL · Docker / Docker Compose · Evolution API · Google Gemini API · JavaScript · SQL · Node.js (testes) · Python (auditoria) · GitHub Actions · Linux (VPS) · SSH
+PostgreSQL · SQL (funções, views, migrations) · Python · FastAPI · React · TypeScript · Vite · n8n · Docker / Docker Compose · Evolution API · Google Gemini API · Power BI · JavaScript · Node.js (testes) · pytest · Vitest · Playwright · GitHub Actions · Linux (VPS) · SSH · Windows (versão Lite)
 
 ## Engenharia e qualidade
 
 - **Testes dos Code nodes fora do n8n.** O código real dos nodes é extraído do workflow exportado e executado com mensagens de exemplo (`npm test`, 684 testes): reconhecimento de cada comando, campos extraídos, prazos de negócio, recusas, permissões, a validação da IA e o alerta de erro. Os testes foram validados **injetando defeitos de propósito**: um teste que nunca falha não protege nada.
+- **Três suítes de testes em GitHub Actions:** 684 do bot (`npm test`), 637 da API (pytest) e 283 das telas (Vitest), mais o teste de fumaça da Lite no Windows. Os vídeos de demonstração do app também são **gerados por código** (Playwright + voz de IA) sobre um banco de teste.
 - **Regressão do prompt.** O Gemini não roda offline, então um script gera um workflow de teste com o mesmo prompt do bot e frases que não estão nos exemplos, e mostra um placar ([scripts.md](docs/scripts.md)). Roda depois de qualquer mudança no prompt.
 - **Auditoria automática do workflow.** [`scripts/audit-workflow.py`](scripts/audit-workflow.py) procura nodes órfãos, ramos sem resposta ao webhook e dados sensíveis no arquivo público. Duas GitHub Actions rodam a auditoria e os testes a cada alteração.
 - **Banco versionado.** 88 migrations numeradas, aplicadas uma de cada vez, sempre testadas antes numa transação desfeita e com backup antes de aplicar.
@@ -243,13 +271,15 @@ n8n · PostgreSQL · Docker / Docker Compose · Evolution API · Google Gemini A
 
 - [x] **Resultados de NFC placa a placa** (1.2.0): triplicata, ok / não ok com alerta, desvio de tanque e repetição pelo frasco de arquivo
 
-- [ ] **Base de LIMS no banco:** histórico de alterações (audit trail), especificações por análise e produto, revisão e liberação de resultados por outra pessoa (requisitos de um laboratório ISO/IEC 17025)
+- [x] **Histórico de alterações (audit trail)** e exclusão que arquiva, no banco
+- [ ] **Base de LIMS no banco (resto):** especificações por análise e produto e revisão e liberação de resultados por outra pessoa (requisitos de um laboratório ISO/IEC 17025)
 - [x] **API própria** (FastAPI) com login (senha em hash + JWT) ligado aos cargos do bot
 - [x] **Plataforma web e app de computador (em evolução):** login por usuário; **tela do dia** (o que cada um tem para analisar e quais leituras vencem); **pendências do turno** visíveis para quem entra no turno seguinte; resultados e painéis no mesmo lugar. Primeiro só leitura, depois registro
 - [ ] **Assistente de IA na plataforma:** a mesma função do chat do WhatsApp (texto ou voz), com o mesmo pipeline do bot e confirmação antes de gravar
 - [ ] **IA que consulta os documentos do laboratório (RAG):** responde dúvidas a partir das instruções de trabalho em vigor, citando a fonte; os documentos ficam no servidor da empresa, com acesso por perfil
-- [ ] **Laudos preenchidos automaticamente** a partir dos resultados já registrados, sem redigitação; o analista revisa e outra pessoa libera
-- [ ] **V3, parte 2 — IA avançada:** comando por áudio e leitura de laudo por foto, sempre com confirmação antes de gravar
+- [x] **Laudos preenchidos automaticamente** nos modelos da empresa, a partir dos resultados já registrados (falta a liberação por outra pessoa)
+- [x] **V3, parte 2 — IA avançada:** comando por áudio e leitura de laudo por foto, sempre com confirmação antes de gravar (1.3.0)
+- [x] **Versão Lite:** o app inteiro na rede local da empresa, sem nuvem e sem servidor dedicado (em teste nos PCs do laboratório)
 - [ ] **Extras de LIMS:** meios e reagentes, equipamentos, QR code nas amostras, não conformidades
 - [ ] **V6 — Acabamento (contínuo):** testes, diagramas e documentação a cada marco
 
@@ -264,6 +294,9 @@ n8n · PostgreSQL · Docker / Docker Compose · Evolution API · Google Gemini A
 | [scripts.md](docs/scripts.md) | Testes (`npm test`), regressão do prompt, auditoria, sanitização do workflow e backup |
 | [postgres-migracao.md](docs/postgres-migracao.md) | Migrations, schema e decisões do banco |
 | [deploy-vps.md](docs/deploy-vps.md) | Infraestrutura no VPS: rede, segredos e acesso SSH |
+| [specs/lims](docs/specs/lims/index.md) | Especificação do LIMS: contextos, audit trail, API e login, app, fluxos, decisões e a versão Lite |
+| [app/api](app/api/README.md) | API FastAPI: como rodar, testes e deploy |
+| [backlog.md](docs/backlog.md) e [handoff.md](docs/handoff.md) | O que vem a seguir e onde o projeto parou |
 | [CHANGELOG.md](docs/CHANGELOG.md) | Histórico de versões |
 
 ## Dados e privacidade
@@ -273,3 +306,7 @@ Nenhum dado real de empresa é usado. Tanques, loads, navios, nomes e telefones 
 ## Autor
 
 **Danyllo Gomes** — biomédico (microbiologia e controle de qualidade) e estudante de Ciência da Computação, com foco em automação de processos e dados.
+
+[LinkedIn](https://www.linkedin.com/in/dg013/) · [GitHub](https://github.com/danyllo153)
+
+Procuro estágio ou primeira vaga em dados, automação ou desenvolvimento, e também faço projetos sob medida para laboratórios e pequenas empresas.
