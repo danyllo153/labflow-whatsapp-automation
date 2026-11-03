@@ -102,7 +102,7 @@ O LabFlow deixa o registro no canal que a equipe já usa (WhatsApp), calcula os 
 
 ![O bot no WhatsApp: coleta, frase livre virando comando, consulta, recebimento, desvios e relatório do dia](docs/img/bot/bot.gif)
 
-<sub>Conversa real com o bot no servidor de demonstração (dados fictícios): comando no formato oficial, frase livre que a IA transforma em comando (com "sim" antes de gravar), consultas e o relatório do dia.</sub>
+<sub>Conversa real com o bot no servidor de demonstração (dados fictícios), 03/11/2026: lista de comandos, coleta e análise de tanque, resultado em triplicata com **ok** / **não ok**, desvio de tanque, desvio de drop e o relatório do dia, sempre com "sim" antes de gravar.</sub>
 
 ```
 Você:     recebimento load 77001 item 444 fabrica AQA lotes 1-14
