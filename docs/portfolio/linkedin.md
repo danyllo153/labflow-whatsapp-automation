@@ -1,6 +1,21 @@
 # LinkedIn — textos prontos (copiar e colar)
 
-> Rascunho para o perfil `linkedin.com/in/dg013`. Revise cada frase: só deixe o que é verdade para você. Nada aqui cita empresa, cliente ou dado real do laboratório.
+> Rascunho para o perfil `linkedin.com/in/dg013`. O perfil e o README do GitHub (`danyllo153/danyllo153`) já foram atualizados em 03/11/2026 pela sessão do bot; **os textos publicados valem mais que os rascunhos abaixo** (o título escolhido não é nenhuma das 3 opções). Nada aqui cita cliente ou dado real do laboratório.
+
+## Decisões do Danyllo em 03/11/2026
+
+- **Empresa:** pode citar a Cutrale, como multinacional, no **LinkedIn** e no **README de perfil do GitHub**. No **repositório do LabFlow** continua a regra de não citar.
+- **Frase sobre o app:** no perfil, o Danyllo diz que o app **já roda localmente no laboratório** e melhora a produtividade (fim dos laudos repetitivos). No repositório (README, CHANGELOG, specs) continua **"piloto de 1 mês com dados de teste"**. Se alguém perguntar, a resposta é essa: piloto, dados de teste, Lite ainda em teste nos PCs.
+- **Certificados:** nenhum cadastrado no perfil.
+
+## Dados do perfil (para não divergir entre os textos)
+
+- Analista Pleno desde nov/2023; Analista Júnior de mai/2019 a nov/2023.
+- Ciência da Computação, São Judas (2026–2030).
+- Biomedicina, Santa Cecília (2021–2024).
+- Pós em Microbiologia dos Alimentos, FATESA (ago/2025–jan/2026).
+- Técnico em Química (2018–2020).
+
 
 ## Título (headline) — escolha um
 
@@ -60,5 +75,5 @@ Passei meses transformando a rotina de um laboratório de microbiologia em softw
 ## O que não dizer (cuidado)
 
 - Não escrever "sem riscos". Dizer: "roda na rede local, sem nuvem". Na rede interna a conexão é HTTP, a TI libera uma porta e o PC servidor precisa ficar ligado.
-- Não citar o nome de pessoas da empresa, caminhos de pastas da rede, clientes, limites ou resultados reais.
-- Dizer que o piloto é com dados de teste e que o uso real depende da TI e da LGPD.
+- Não citar o nome de pessoas da empresa, caminhos de pastas da rede, clientes, limites ou resultados reais. A empresa (Cutrale) só no LinkedIn e no README de perfil do GitHub, nunca no repositório do LabFlow.
+- No repositório, dizer que o piloto é com dados de teste e que o uso real depende da TI e da LGPD. No perfil, a frase "já roda localmente no laboratório" é decisão do Danyllo.
