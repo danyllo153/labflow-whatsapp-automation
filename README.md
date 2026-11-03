@@ -1,15 +1,17 @@
 # LabFlow
 
 [![Auditoria do workflow](https://github.com/danyllo153/labflow-whatsapp-automation/actions/workflows/audit-workflow.yml/badge.svg)](https://github.com/danyllo153/labflow-whatsapp-automation/actions/workflows/audit-workflow.yml)
-[![Testes](https://github.com/danyllo153/labflow-whatsapp-automation/actions/workflows/testes.yml/badge.svg)](https://github.com/
-
-https://github.com/user-attachments/assets/92b22dc7-967c-4ca5-81ab-88f93a1ce27e
-
-danyllo153/labflow-whatsapp-automation/actions/workflows/testes.yml)
+[![Testes](https://github.com/danyllo153/labflow-whatsapp-automation/actions/workflows/testes.yml/badge.svg)](https://github.com/danyllo153/labflow-whatsapp-automation/actions/workflows/testes.yml)
 
 **Automação de laboratório de microbiologia pelo WhatsApp e por um app web.** O analista manda uma mensagem (no formato do comando ou do jeito que falaria) ou lança o resultado no app, e o LabFlow registra coletas, análises e resultados num banco PostgreSQL, calcula todos os prazos de leitura, mostra as pendências do dia, gera os laudos e monta sozinho o **relatório diário de microbiologia**.
 
 Projeto pessoal que une biomedicina e automação: o problema vem da rotina real de um laboratório de controle de qualidade de suco. Roda num servidor de demonstração, sempre com **dados fictícios**.
+
+**O app do laboratório em 90 segundos**
+
+https://github.com/user-attachments/assets/92b22dc7-967c-4ca5-81ab-88f93a1ce27e
+
+<sub>O dia a dia do analista: o Início com o que analisar e o que ler hoje, o lançamento do resultado em Leituras, o relatório pronto e o gráfico de tendência comparando duas fábricas. Dados fictícios.</sub>
 
 ## Em resumo
 
@@ -57,13 +59,9 @@ Desde 13/10/2026 o app e o bot rodam num **piloto de 1 mês no laboratório** (a
 
 **Dados:** modelagem relacional, SQL (funções, views, migrations), Power BI (DAX e modelo) · **Automação:** n8n, webhooks, integração com WhatsApp · **Back-end:** Python, FastAPI, JWT, pytest · **Front-end:** React, TypeScript, Vite · **IA aplicada:** prompt com catálogo fechado, validação no código, regressão do prompt · **Infra:** Docker, VPS Linux, SSH, GitHub Actions · **Domínio:** microbiologia, controle de qualidade, rastreabilidade e requisitos de laboratório (ISO/IEC 17025).
 
-## Veja funcionando                    
+## Veja funcionando
 
 ![O app do laboratório: pendências do dia, lançamento de resultado em Leituras, relatório e gráfico de tendência](docs/img/app/app.gif)
-
-**Vídeo de 90 segundos do dia a dia do analista:**
-
-https://github.com/user-attachments/assets/92b22dc7-967c-4ca5-81ab-88f93a1ce27e
 
 <sub>O app do laboratório (dados fictícios): o Início com o que analisar e o que ler hoje, as Leituras por análise, e o gráfico de tendência do resultado com os limites. O bot do WhatsApp aparece em [Como é usar](#como-é-usar).</sub>
 
