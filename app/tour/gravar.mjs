@@ -2,14 +2,17 @@
 // ganha uma moldura laranja e o resto escurece, a legenda aparece embaixo e o cursor mostra os cliques.
 // Roda contra um LabFlow com DADOS FICTÍCIOS (o banco de teste). O vídeo nunca vai para o repositório.
 //
-// Uso: node gravar.mjs --base http://127.0.0.1:8100 --saida pasta [--duracoes pasta/duracoes.json]
-//   gera pasta/tour.webm e pasta/linha-do-tempo.json (início de cada fala, para o montar.sh pôr a narração no lugar)
+// Uso: node gravar.mjs --tour 02-nfc --base http://127.0.0.1:8100 --saida pasta [--duracoes pasta/duracoes.json]
+//   gera pasta/tour.webm e pasta/linha-do-tempo.json (início de cada fala, para o montar.py pôr a narração no lugar).
+//   --tour: um dos nomes de roteiros/index.mjs (padrão: 00-geral, o tour de ponta a ponta).
+//   Os vídeos que não mostram a tela de entrar já começam com a Marina Lopes logada.
 
 import fs from "node:fs";
 import path from "node:path";
 import { createRequire } from "node:module";
 
-import { CARTOES, roteiro } from "./roteiro.mjs";
+import { SENHA, USUARIO, abaApp } from "./comum.mjs";
+import { TOURS, passosDo } from "./roteiros/index.mjs";
 
 // require (e não import) para achar o Playwright também pelo NODE_PATH (instalação global)
 const { chromium } = createRequire(import.meta.url)("playwright");
@@ -19,6 +22,9 @@ const args = Object.fromEntries(
 );
 const BASE = args.base ?? "http://127.0.0.1:8100";
 const SAIDA = path.resolve(args.saida ?? "tour-saida");
+const NOME = args.tour ?? "00-geral";
+const TOUR = TOURS[NOME];
+const roteiro = passosDo(NOME);
 const DURACOES = args.duracoes && fs.existsSync(args.duracoes) ? JSON.parse(fs.readFileSync(args.duracoes, "utf8")) : {};
 const LARGURA = 1280;
 const ALTURA = 720;
@@ -46,10 +52,17 @@ const CAMADA = `
     #tour-cursor.clicou { transform: scale(.8); }
     .tour-pulso { position: fixed; z-index: 2147483001; pointer-events: none; width: 36px; height: 36px; margin: -18px 0 0 -18px;
       border-radius: 50%; border: 3px solid #ffa726; animation: tour-pulso .6s ease-out forwards; }
-    @keyframes tour-pulso { from { transform: scale(.3); opacity: 1 } to { transform: scale(1.6); opacity: 0 } }\`;
+    @keyframes tour-pulso { from { transform: scale(.3); opacity: 1 } to { transform: scale(1.6); opacity: 0 } }
+    #tour-aviso { position: fixed; z-index: 2147483002; pointer-events: none; right: 24px; top: 84px; max-width: 460px;
+      background: #fff; color: #1f2433; border-left: 5px solid #2e7d32; border-radius: 10px; padding: 14px 18px;
+      font: 600 16px/1.4 Manrope, "Segoe UI", Arial, sans-serif; box-shadow: 0 12px 30px rgba(0, 0, 0, .35);
+      transform: translateX(120%); transition: transform .4s ease; }
+    #tour-aviso.ver { transform: none; }
+    #tour-aviso small { display: block; font-weight: 500; color: #5a6275; margin-top: 3px; }\`;
   const foco = document.createElement("div"); foco.id = "tour-foco";
   const legenda = document.createElement("div"); legenda.id = "tour-legenda";
   const cursor = document.createElement("div"); cursor.id = "tour-cursor";
+  const aviso = document.createElement("div"); aviso.id = "tour-aviso";
   cursor.innerHTML = '<svg viewBox="0 0 24 24" width="22" height="22"><path d="M3 2l7.5 19 2.6-7.9L21 10.5z" fill="#fff" stroke="#111" stroke-width="1.6" stroke-linejoin="round"/></svg>';
   // marca de sincronia: 6 quadradinhos no canto de baixo à esquerda, com o número do passo em binário (branco = 1).
   // O montar.py lê a marca no próprio vídeo para pôr cada fala no quadro exato (o vídeo do navegador não segue o relógio)
@@ -58,7 +71,7 @@ const CAMADA = `
   marca.style.cssText = "position:fixed;left:0;bottom:0;width:48px;height:8px;display:flex;z-index:2147483003;pointer-events:none;background:#000";
   for (let i = 0; i < 6; i++) { const b = document.createElement("span"); b.style.cssText = "width:8px;height:8px;background:#000"; marca.appendChild(b); }
   const marcar = (n) => [...marca.children].forEach((b, i) => (b.style.background = (n >> i) & 1 ? "#fff" : "#000"));
-  const montar = () => { document.head.appendChild(css); document.body.append(foco, legenda, cursor, marca); };
+  const montar = () => { document.head.appendChild(css); document.body.append(foco, legenda, cursor, marca, aviso); };
   document.readyState === "loading" ? document.addEventListener("DOMContentLoaded", montar) : montar();
   addEventListener("mousemove", (e) => { cursor.style.left = e.clientX - 3 + "px"; cursor.style.top = e.clientY - 2 + "px"; }, true);
   addEventListener("mousedown", (e) => {
@@ -77,6 +90,13 @@ const CAMADA = `
       Object.assign(legenda.style, embaixo ? { bottom: "26px", top: "auto" } : { top: "22px", bottom: "auto" });
       legenda.textContent = texto; legenda.style.opacity = texto ? 1 : 0;
     },
+    aviso(titulo, detalhe = "") {
+      if (!aviso.isConnected) montar();
+      aviso.innerHTML = ""; aviso.append(titulo);
+      if (detalhe) { const d = document.createElement("small"); d.textContent = detalhe; aviso.appendChild(d); }
+      aviso.classList.add("ver"); clearTimeout(window.__tourAviso);
+      window.__tourAviso = setTimeout(() => aviso.classList.remove("ver"), 5000);
+    },
     esconder() { foco.style.display = "none"; legenda.style.opacity = 0; marcar(0); },
   };
 })();`;
@@ -85,10 +105,18 @@ async function camada(page) {
   await page.evaluate(CAMADA);
 }
 
+/** Rola até o alvo ficar no meio da tela (a barra do topo é fixa e cobriria o que ficasse colado em cima). */
+async function centralizar(locator, timeout = 6000) {
+  await locator.first().evaluate((e) => {
+    const r = e.getBoundingClientRect();
+    if (r.top < 100 || r.bottom > innerHeight - 20) e.scrollIntoView({ block: r.height > innerHeight - 140 ? "start" : "center" });
+  }, null, { timeout }).catch(() => {});
+}
+
 /** A caixa (com folga) do que vai em destaque, já rolado para aparecer na tela. */
 async function caixa(page, destaque) {
   const alvo = destaque(page).first();
-  await alvo.scrollIntoViewIfNeeded({ timeout: 8000 }).catch(() => {});
+  await centralizar(alvo, 8000);
   await page.waitForTimeout(250);
   const b = await alvo.boundingBox({ timeout: 6000 }).catch(() => null);
   if (!b) {
@@ -120,7 +148,14 @@ function ferramentas(page) {
       await page.waitForTimeout(250);
     },
     async clicar(locator) {
-      await locator.first().scrollIntoViewIfNeeded().catch(() => {});
+      // Sem o alvo (a tela mudou), o vídeo segue sem o clique e fica a foto para corrigir o roteiro.
+      const achou = await locator.first().waitFor({ state: "visible", timeout: 6000 }).then(() => true, () => false);
+      if (!achou) {
+        console.warn(`  (clique não encontrado: ${locator}; segue sem ele)`);
+        await page.screenshot({ path: path.join(SAIDA, `aviso-clique-${Date.now()}.png`) }).catch(() => {});
+        return;
+      }
+      await centralizar(locator);
       await this.mover(locator);
       await page.mouse.down();
       await page.mouse.up();
@@ -132,13 +167,50 @@ function ferramentas(page) {
       await locator.first().click();
       await page.keyboard.type(texto, { delay: 70 });
     },
+    /** Escolhe uma opção numa lista (select), com o cursor indo até ela. */
+    async escolher(locator, valor) {
+      const achou = await locator.first().waitFor({ state: "visible", timeout: 6000 }).then(() => true, () => false);
+      if (!achou) return console.warn(`  (lista não encontrada: ${locator}; segue sem ela)`);
+      await this.mover(locator);
+      await locator.first().selectOption({ label: valor });
+      await page.waitForTimeout(700);
+    },
+    /** Clica num botão que baixa um arquivo (Excel, PDF) e mostra o aviso do arquivo baixado. */
+    async baixar(locator, detalhe = "") {
+      const download = page.waitForEvent("download", { timeout: 15000 }).catch(() => null);
+      await this.clicar(locator);
+      const d = await download;
+      if (!d) return console.warn("  (nada foi baixado)");
+      await page.evaluate(([t, x]) => window.__tour.aviso(t, x), [`⬇ ${d.suggestedFilename()} baixado`, detalhe]);
+    },
+    /** Envia um arquivo num campo de arquivo (importar), mostrando o aviso com o nome. */
+    async enviar(locator, nome, conteudo, tipo = "text/csv") {
+      await this.mover(locator.locator("xpath=..").first()).catch(() => {});
+      await locator.first().setInputFiles({ name: nome, mimeType: tipo, buffer: Buffer.from(conteudo, "utf8") });
+      await page.evaluate((t) => window.__tour.aviso(t), `⬆ ${nome} enviado`);
+      await page.waitForTimeout(1200);
+    },
+    /** Toca num ponto do gráfico (fração da largura e da altura do desenho). */
+    async tocarGrafico(locator, fx = 0.8, fy = 0.8) {
+      const b = await locator.first().boundingBox().catch(() => null);
+      if (!b) return console.warn("  (gráfico não encontrado)");
+      await page.mouse.move(b.x + b.width * fx, b.y + b.height * fy, { steps: 25 });
+      await page.mouse.down(); await page.mouse.up();
+      await page.waitForTimeout(1000);
+    },
     async abrir(caminho) {
       await page.goto(BASE + caminho, { waitUntil: "networkidle" });
       await page.waitForTimeout(600);
       await camada(page);
     },
-    async cartao(chave) {
-      await page.setContent(CARTOES[chave]);
+    /** Uma aba do app (Painel, Registrar, Resultados, Laudo, IT, Vídeo...). */
+    async aba(nome) {
+      await this.clicar(abaApp(page, nome));
+      await page.waitForLoadState("networkidle").catch(() => {});
+    },
+    /** Um cartão em tela cheia: o HTML pronto (capa e fim) ou a chave de `cartoes` do roteiro. */
+    async cartao(chaveOuHtml) {
+      await page.setContent(chaveOuHtml.startsWith("<") ? chaveOuHtml : TOUR.cartoes[chaveOuHtml]);
       await camada(page);
     },
     espera: (ms) => page.waitForTimeout(ms),
@@ -146,7 +218,25 @@ function ferramentas(page) {
 }
 
 const navegador = await chromium.launch();
+
+/** Entra antes de gravar (sem aparecer no vídeo) e devolve a sessão, para os vídeos que não mostram a tela de entrar. */
+async function sessaoLogada() {
+  const ctx = await navegador.newContext({ locale: "pt-BR", timezoneId: "America/Sao_Paulo" });
+  const pg = await ctx.newPage();
+  await pg.goto(BASE + "/app/", { waitUntil: "networkidle" });
+  await pg.fill("input[name=usuario]", USUARIO);
+  await pg.fill("input[type=password]", SENHA);
+  await pg.getByRole("button", { name: "Entrar" }).click();
+  await pg.waitForLoadState("networkidle");
+  await pg.waitForTimeout(800);
+  const estado = await ctx.storageState();
+  await ctx.close();
+  return estado;
+}
+
+console.log(`tour: ${NOME} (${TOUR.titulo}), ${roteiro.length} passos`);
 const contexto = await navegador.newContext({
+  storageState: TOUR.mostraEntrada ? undefined : await sessaoLogada(),
   viewport: { width: LARGURA, height: ALTURA },
   recordVideo: { dir: SAIDA, size: { width: LARGURA, height: ALTURA } },
   locale: "pt-BR",

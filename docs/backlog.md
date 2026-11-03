@@ -77,7 +77,9 @@
 - [x] **Aviso de amostra pulada** (24/10, APP-059): na prévia do registro e no Painel do Recebimento, até o lote chegar; sem "finalizar load" (decisão de 24/10)
 - [x] **Fase E, E3 a E8** (24/10, APP-061): apps de Tanques, TAB/Coliformes/Howard, Drops, Embarque, Recebimento NFC e Desvios, pelas funções da 042 a 047
 - [x] **E9, Instrução e vídeo** (24/10, APP-062, migration 071): abas Instrução e Vídeo em todos os apps; o Admin escreve a instrução e cola o link do vídeo (versões no banco)
-- [ ] Escrever a instrução de cada app no app, como Admin (o Danyllo vai escrever, combinado em 26/10); os vídeos serão feitos depois por IA a partir dela
+- [ ] Escrever a instrução de cada app no app, como Admin (o Danyllo vai escrever, combinado em 26/10)
+- [x] **Vídeos por grupo** (01/11): 9 vídeos com voz de IA (`app/tour/roteiros/`, workflow "Vídeo do tour")
+- [ ] Baixar os vídeos do Actions, subir (YouTube não listado ou Drive) e colar o link na aba **Vídeo** de cada app (Danyllo, como Admin)
 - [x] Botões dos destaques do Início ligados aos apps novos (24/10): "Espalhei todos", "Lançar leituras" etc. abrem o app na aba certa, com a lista marcada e o Confirmar
 - [x] **Fase E, E1 e E2** (24/10, APP-057, migration 068): Páginas como tela de apps e o Recebimento FCOJ como app (painel, registrar e lançar pelas funções da 040). Próximo: E3 em diante, um app por análise, conforme o bot entregar PB12 a PB17
 - [x] **Marcos 3 e 4 mesclados** (23/10): turno com atividades fixas, relatório e encerrar (#181, #183, #185), esterilização com o G4 (#188), estufas (#189), Admin de turnos/atividades/estufas (#190) e **corrigir/excluir/recuperar coleta pelo app** (APP-029, #191)
