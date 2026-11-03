@@ -7,7 +7,54 @@
 
 Projeto pessoal que une biomedicina e automação: o problema vem da rotina real de um laboratório de controle de qualidade de suco. Roda num servidor de demonstração, sempre com **dados fictícios**.
 
-## Onde o projeto está
+## Em resumo
+
+| | |
+|---|---|
+| **Problema** | Rotina de microbiologia de um laboratório de controle de qualidade de suco: dezenas de prazos de leitura por dia, registro em planilha e relatório diário montado à mão |
+| **Solução** | Bot de WhatsApp (n8n + PostgreSQL + IA) **e** um app web/celular do laboratório (FastAPI + React), com as mesmas regras no banco |
+| **Estado** | v1.4.0 publicada; app e bot em evolução contínua. Em **piloto de 1 mês no laboratório** desde 13/10/2026 (analistas e 1 admin) |
+| **Dados** | Sempre fictícios no repositório e no servidor de demonstração |
+
+### Duas formas de usar
+
+| | **Completa** | **Lite** |
+|---|---|---|
+| Para quem | Laboratório com servidor (VPS ou TI) | Empresa que quer tudo dentro de casa, sem nuvem |
+| Canais | Bot de WhatsApp (com IA) + app web e celular | App no navegador, só na rede local |
+| Instalação | Docker no servidor | Pasta de rede no Windows: sem Docker, sem servidor dedicado, sem internet |
+| Como roda | n8n + PostgreSQL + API | O primeiro PC que abre vira o servidor (PostgreSQL local); os outros abrem o navegador nele |
+| Dados | No servidor da implantação | Dentro da empresa, com cópia do banco na pasta de rede e backup diário |
+| Marca | Padrão LabFlow | Nome, logo e cores da empresa; laudos nos modelos dela |
+
+As duas usam **o mesmo app, as mesmas regras e as mesmas migrations**, com login por cargo para cada pessoa. A Lite nasceu de um pedido real do laboratório ([spec 12](docs/specs/lims/12-versao-lite.md)). Limites que deixo claros: dentro da rede interna a conexão é HTTP (sem criptografia), a TI precisa liberar uma porta no firewall, o PC servidor precisa ficar ligado, e a Lite ainda está em teste nos PCs do laboratório.
+
+### Sobre o piloto
+
+Desde 13/10/2026 o app e o bot rodam num **piloto de 1 mês no laboratório** (analistas e 1 admin), com dados de teste. O objetivo é validar o fluxo do dia a dia antes de qualquer uso com dados reais, que dependerá da TI da empresa e da adequação à LGPD. Os bugs que o piloto revelou viram entradas no [troubleshooting](docs/troubleshooting.md).
+
+### O que construí
+
+- **Bot de WhatsApp:** 51 tipos de comando, linguagem livre e **áudio** via IA (Gemini, com reserva no Groq), **leitura de laudo por foto**, sempre com confirmação ("sim") antes de gravar.
+- **App do laboratório (FastAPI + React/TypeScript):** login por cargo, turno e pendências, leituras por análise, laudos gerados e reimpressos, arquivo de contra-amostras, busca de rastreio, gráficos, exportação para Excel e versão **Lite** que roda de uma pasta de rede, sem servidor.
+- **Banco PostgreSQL como dono das regras:** funções, `CHECK`, `UNIQUE`, chaves estrangeiras, histórico (audit trail) e exclusão que arquiva; o bot e o app chamam as mesmas funções.
+- **Painel no Power BI** com 11 páginas, gerado por código e conferido contra o banco.
+- **Qualidade:** testes automáticos rodando em GitHub Actions, auditoria do workflow, backups e migrations sempre testadas antes numa transação desfeita.
+
+| Em números | |
+|---|---|
+| Nodes no workflow do n8n | 271, em blocos por assunto |
+| Banco | 88 migrations versionadas (bot e app), todas com backup antes de aplicar |
+| Testes automáticos | **1.604**: 684 do bot (`npm test`), 637 da API (pytest) e 283 das telas (Vitest), a cada alteração |
+| Bugs reais documentados | 33, com causa raiz e lição ([troubleshooting](docs/troubleshooting.md)) |
+| Documentação | Especificação do LIMS em [`docs/specs/lims/`](docs/specs/lims/), comandos, arquitetura, CHANGELOG e handoff |
+
+### Habilidades que o projeto mostra
+
+**Dados:** modelagem relacional, SQL (funções, views, migrations), Power BI (DAX e modelo) · **Automação:** n8n, webhooks, integração com WhatsApp · **Back-end:** Python, FastAPI, JWT, pytest · **Front-end:** React, TypeScript, Vite · **IA aplicada:** prompt com catálogo fechado, validação no código, regressão do prompt · **Infra:** Docker, VPS Linux, SSH, GitHub Actions · **Domínio:** microbiologia, controle de qualidade, rastreabilidade e requisitos de laboratório (ISO/IEC 17025).
+
+<details>
+<summary>O que entrou nas versões 1.2 a 1.4 (histórico)</summary>
 
 **Versão publicada: [v1.4.0](docs/CHANGELOG.md)** (23/10/2026), em **piloto de 1 mês no laboratório** desde 13/10/2026 (analistas e 1 admin). O que entrou nela (a v1.3.0 e a v1.2.0, abaixo, seguem valendo):
 
@@ -41,9 +88,9 @@ Na v1.3.0:
 | Tipos de comando | 51 |
 | Consultas ao banco | 57, todas parametrizadas |
 | Banco | 33 migrations versionadas (29 do bot e 4 do app), 29 tabelas, 18 views (relatório e painel) |
-| Painel | Power BI com 11 páginas, gerado por código |
-| Testes automáticos | 936: 578 do bot (`npm test`), 265 da API e 93 das telas do app, rodando a cada alteração em GitHub Actions |
-| Bugs reais documentados | 33, com causa raiz e lição ([troubleshooting](docs/troubleshooting.md)) |
+
+</details>
+
 
 ## O problema
 
@@ -159,11 +206,11 @@ n8n · PostgreSQL · Docker / Docker Compose · Evolution API · Google Gemini A
 
 ## Engenharia e qualidade
 
-- **Testes dos Code nodes fora do n8n.** O código real dos nodes é extraído do workflow exportado e executado com mensagens de exemplo (`npm test`, 474 testes): reconhecimento de cada comando, campos extraídos, prazos de negócio, recusas, permissões, a validação da IA e o alerta de erro. Os testes foram validados **injetando defeitos de propósito**: um teste que nunca falha não protege nada.
+- **Testes dos Code nodes fora do n8n.** O código real dos nodes é extraído do workflow exportado e executado com mensagens de exemplo (`npm test`, 684 testes): reconhecimento de cada comando, campos extraídos, prazos de negócio, recusas, permissões, a validação da IA e o alerta de erro. Os testes foram validados **injetando defeitos de propósito**: um teste que nunca falha não protege nada.
 - **Regressão do prompt.** O Gemini não roda offline, então um script gera um workflow de teste com o mesmo prompt do bot e frases que não estão nos exemplos, e mostra um placar ([scripts.md](docs/scripts.md)). Roda depois de qualquer mudança no prompt.
 - **Auditoria automática do workflow.** [`scripts/audit-workflow.py`](scripts/audit-workflow.py) procura nodes órfãos, ramos sem resposta ao webhook e dados sensíveis no arquivo público. Duas GitHub Actions rodam a auditoria e os testes a cada alteração.
-- **Banco versionado.** 23 migrations numeradas, aplicadas uma de cada vez, sempre testadas antes numa transação desfeita e com backup antes de aplicar.
-- **Bugs documentados.** 30 bugs reais com sintoma, causa raiz, solução e lição ([troubleshooting](docs/troubleshooting.md)).
+- **Banco versionado.** 88 migrations numeradas, aplicadas uma de cada vez, sempre testadas antes numa transação desfeita e com backup antes de aplicar.
+- **Bugs documentados.** 33 bugs reais com sintoma, causa raiz, solução e lição ([troubleshooting](docs/troubleshooting.md)).
 
 ## Decisões técnicas
 
@@ -171,7 +218,7 @@ n8n · PostgreSQL · Docker / Docker Compose · Evolution API · Google Gemini A
 - **A IA sugere, o código executa.** O Gemini nunca grava nada: ele traduz a frase num comando oficial, e esse comando volta ao mesmo webhook e passa pelas regras de sempre (cargo, duplicata, limites). Formato fora do catálogo é recusado. No pior caso, uma interpretação errada vira uma confirmação que o analista recusa.
 - **Permissão validada no código, não no prompt.** Pedir ao modelo "só aceite Admin, Analista ou Consultor" não bastou: ele trocou "gerente" por Admin (Bug 23). Para ação sensível, o modelo propõe e o código decide.
 - **Regras também no banco.** Além do código do n8n, o PostgreSQL recusa duplicata (`UNIQUE`), valor fora do permitido (`CHECK`) e vínculo inexistente (chave estrangeira).
-- **Consultas sempre parametrizadas.** As 49 consultas recebem o texto da mensagem como parâmetro (`$1`, `$2`...), nunca concatenado no SQL.
+- **Consultas sempre parametrizadas.** As consultas recebem o texto da mensagem como parâmetro (`$1`, `$2`...), nunca concatenado no SQL.
 - **Mudança grande sempre reversível.** Workflow novo entra como cópia, o anterior fica desativado como plano B, e só depois dos testes pelo WhatsApp o novo vira o oficial. Foi assim na migração do Google Sheets para o PostgreSQL (1.0.0).
 - **Segredos fora do repositório.** Chaves e senhas ficam em Credenciais do n8n e no `.env` do servidor. O arquivo com IDs reais nunca vai para o Git; o público é gerado por script e auditado.
 - **Número dedicado.** A Evolution API é uma integração não oficial, então usa um eSIM próprio com WhatsApp Business, sem arriscar um número pessoal.
@@ -197,8 +244,8 @@ n8n · PostgreSQL · Docker / Docker Compose · Evolution API · Google Gemini A
 - [x] **Resultados de NFC placa a placa** (1.2.0): triplicata, ok / não ok com alerta, desvio de tanque e repetição pelo frasco de arquivo
 
 - [ ] **Base de LIMS no banco:** histórico de alterações (audit trail), especificações por análise e produto, revisão e liberação de resultados por outra pessoa (requisitos de um laboratório ISO/IEC 17025)
-- [ ] **API própria** (FastAPI) com login (senha em hash + JWT) ligado aos cargos do bot
-- [ ] **Plataforma web e app de computador:** login por usuário; **tela do dia** (o que cada um tem para analisar e quais leituras vencem); **pendências do turno** visíveis para quem entra no turno seguinte; resultados e painéis no mesmo lugar. Primeiro só leitura, depois registro
+- [x] **API própria** (FastAPI) com login (senha em hash + JWT) ligado aos cargos do bot
+- [x] **Plataforma web e app de computador (em evolução):** login por usuário; **tela do dia** (o que cada um tem para analisar e quais leituras vencem); **pendências do turno** visíveis para quem entra no turno seguinte; resultados e painéis no mesmo lugar. Primeiro só leitura, depois registro
 - [ ] **Assistente de IA na plataforma:** a mesma função do chat do WhatsApp (texto ou voz), com o mesmo pipeline do bot e confirmação antes de gravar
 - [ ] **IA que consulta os documentos do laboratório (RAG):** responde dúvidas a partir das instruções de trabalho em vigor, citando a fonte; os documentos ficam no servidor da empresa, com acesso por perfil
 - [ ] **Laudos preenchidos automaticamente** a partir dos resultados já registrados, sem redigitação; o analista revisa e outra pessoa libera
@@ -213,7 +260,7 @@ n8n · PostgreSQL · Docker / Docker Compose · Evolution API · Google Gemini A
 | [comandos.md](docs/comandos.md) | Todos os comandos do bot, com formato, exemplo, cargos e permissões |
 | [arquitetura.md](docs/arquitetura.md) | Nodes do workflow, tabelas do banco e decisões de cada etapa |
 | [concentrado.md](docs/concentrado.md) | Desenho do concentrado: ciclos do TAB, Coliformes e Howard, embarque, C.T/B.L e relatório diário |
-| [troubleshooting.md](docs/troubleshooting.md) | 30 bugs reais: sintoma, causa raiz, solução e lição |
+| [troubleshooting.md](docs/troubleshooting.md) | 33 bugs reais: sintoma, causa raiz, solução e lição |
 | [scripts.md](docs/scripts.md) | Testes (`npm test`), regressão do prompt, auditoria, sanitização do workflow e backup |
 | [postgres-migracao.md](docs/postgres-migracao.md) | Migrations, schema e decisões do banco |
 | [deploy-vps.md](docs/deploy-vps.md) | Infraestrutura no VPS: rede, segredos e acesso SSH |
