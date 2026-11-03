@@ -3,7 +3,7 @@
 import { capa, cartao } from "../comum.mjs";
 
 const CARTOES = {
-  abertura: capa("LabFlow", "O dia a dia do analista: pendências, resultados e gráficos"),
+  abertura: capa("O dia a dia do analista", "Pendências, resultados e gráficos"),
   fim: capa("Do resultado lançado ao gráfico, sem planilha", "Dados de demonstração · LabFlow"),
 };
 
@@ -38,8 +38,17 @@ export default {
       legenda: "Cada resultado lançado vira dado: atrasado, não ok, no prazo e ok, com a porcentagem de cada um.",
     },
     {
+      antes: async (p, f) => { await f.clicar(p.getByRole("button", { name: "Filtros" })); },
+      destaque: (p) => p.locator("form.formulario-filtros"),
+      legenda: "Com o filtro por análise, o gráfico mostra só o C.T e fica limpo.",
+      durante: async (p, f) => {
+        await f.escolher(p.locator("form.formulario-filtros label.campo").filter({ hasText: /^\s*Análise/ }).locator("select"), "C.T");
+      },
+      depois: async (p, f) => { await f.clicar(p.locator("form.formulario-filtros").getByRole("button", { name: "Filtrar" })); await f.espera(1500); },
+    },
+    {
       destaque: (p) => cartao(p, "Tendência do resultado"),
-      legenda: "E vira gráfico: a tendência ao longo do tempo, em linha ou em colunas.",
+      legenda: "E vira gráfico: a tendência do C.T ao longo do tempo, com o limite tracejado.",
       durante: async (p, f) => { await f.espera(2500); await f.clicar(p.getByRole("button", { name: "Colunas", exact: true })); },
     },
     { antes: (p, f) => f.cartao("fim"), legenda: "", fala: "LabFlow: do resultado lançado ao gráfico, sem planilha. Dados de demonstração.", folga: 1 },
