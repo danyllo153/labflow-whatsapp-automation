@@ -33,7 +33,7 @@ export default {
       legenda: "Terminadas as leituras, o relatório do dia sai pronto para copiar e enviar.",
     },
     {
-      antes: async (p, f) => { await f.ir("/analises/recebimento-fcoj"); await f.aba("Resultados"); },
+      antes: async (p, f) => { await f.ir("/analises/tanques-terra"); await f.aba("Resultados"); },
       destaque: (p) => cartao(p, "Por situação"),
       legenda: "Cada resultado lançado vira dado: atrasado, não ok, no prazo e ok, com a porcentagem de cada um.",
     },
