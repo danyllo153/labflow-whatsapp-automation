@@ -1,11 +1,3 @@
-
-
-https://github.com/user-attachments/assets/766cd0dd-ec91-46ad-912c-0f3b9ad7c497
-
-
-
-https://github.com/user-attachments/assets/7fa04180-acc0-452d-afe8-f4398ccecaa7
-
 # LabFlow
 
 [![Auditoria do workflow](https://github.com/danyllo153/labflow-whatsapp-automation/actions/workflows/audit-workflow.yml/badge.svg)](https://github.com/danyllo153/labflow-whatsapp-automation/actions/workflows/audit-workflow.yml)
@@ -64,6 +56,10 @@ Desde 13/10/2026 o app e o bot rodam num **piloto de 1 mês no laboratório** (a
 ## Veja funcionando
 
 ![O app do laboratório: pendências do dia, lançamento de resultado em Leituras, relatório e gráfico de tendência](docs/img/app/app.gif)
+
+**Vídeo de 72 segundos do dia a dia do analista:**
+
+https://github.com/user-attachments/assets/766cd0dd-ec91-46ad-912c-0f3b9ad7c497
 
 <sub>O app do laboratório (dados fictícios): o Início com o que analisar e o que ler hoje, as Leituras por análise, e o gráfico de tendência do resultado com os limites. O bot do WhatsApp aparece em [Como é usar](#como-é-usar) e o painel do Power BI em [Painel no Power BI](#painel-no-power-bi).</sub>
 
