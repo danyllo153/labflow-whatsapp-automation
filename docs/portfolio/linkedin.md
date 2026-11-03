@@ -19,6 +19,8 @@ O que ele faz hoje:
 • App web e de celular do laboratório (FastAPI + React/TypeScript) com login por cargo, turno, leituras, laudos, arquivo de contra-amostras e gráficos
 • Regras de negócio dentro do PostgreSQL (funções, constraints, histórico de alterações), usadas pelo bot e pelo app
 • Painel de 11 páginas em Power BI gerado por código
+• Versão Lite: o mesmo app rodando 100% na rede local da empresa, sem nuvem, sem Docker e sem servidor dedicado, pensada para quem precisa manter os dados dentro de casa
+• Piloto de 1 mês no laboratório (analistas e administrador), com dados de teste, para validar o fluxo antes de qualquer uso real
 • Mais de 1.600 testes automáticos rodando em GitHub Actions, 88 migrations versionadas e 33 bugs reais documentados com causa raiz
 
 Tudo com dados fictícios e código aberto. Uso IA (Claude Code) como par de programação; as regras de domínio e a validação são minhas.
@@ -31,6 +33,7 @@ Código: github.com/danyllo153/labflow-whatsapp-automation
 
 **LabFlow — automação de laboratório de microbiologia**
 Bot de WhatsApp + app web + painel Power BI sobre PostgreSQL.
+Duas versões: completa (bot + app) e Lite (só rede local).
 Tecnologias: PostgreSQL, SQL, n8n, Python, FastAPI, React, TypeScript, Docker, GitHub Actions, Power BI, Gemini API.
 Link: https://github.com/danyllo153/labflow-whatsapp-automation
 
@@ -43,12 +46,19 @@ PostgreSQL · SQL · Python · n8n · Automação de processos · FastAPI · Rea
 (Ajuste cargo e empresa como já estão no perfil; não cite dados confidenciais.)
 • Rotina de microbiologia e controle de qualidade de bebidas: leitura de placas, rastreabilidade e relatórios diários
 • Idealizei e desenvolvi o LabFlow para eliminar a redigitação e o controle manual de prazos (piloto de 1 mês com a equipe)
+• Entreguei também uma versão Lite, que roda na rede interna da empresa, a pedido da gestão da qualidade
 • Reduzi o registro a uma mensagem por tarefa, com cálculo automático de prazos e relatório diário gerado
 
 ## Mensagem de oferta de serviço (para o "Destaques" ou post fixado)
 
-Automatizo a rotina do seu laboratório ou pequena empresa: registro por WhatsApp, painéis em Power BI e sistemas web com banco de dados. Começo por um diagnóstico gratuito da rotina. Fale comigo por mensagem.
+Automatizo a rotina do seu laboratório ou pequena empresa: registro por WhatsApp, painéis em Power BI e sistemas web com banco de dados. Posso entregar na nuvem ou 100% na sua rede local, com os dados dentro da sua empresa. Começo por um diagnóstico gratuito da rotina. Fale comigo por mensagem.
 
 ## Post de lançamento (sugestão)
 
 Passei meses transformando a rotina de um laboratório de microbiologia em software. O resultado é o LabFlow: um bot de WhatsApp com IA, um app web e um painel Power BI sobre PostgreSQL, com mais de 1.600 testes automáticos. Tudo com dados fictícios e código aberto. O que mais aprendi: a IA sugere, o código decide, e regra importante mora no banco. Link nos comentários. #automação #python #postgresql #n8n #dados
+
+## O que não dizer (cuidado)
+
+- Não escrever "sem riscos". Dizer: "roda na rede local, sem nuvem". Na rede interna a conexão é HTTP, a TI libera uma porta e o PC servidor precisa ficar ligado.
+- Não citar o nome de pessoas da empresa, caminhos de pastas da rede, clientes, limites ou resultados reais.
+- Dizer que o piloto é com dados de teste e que o uso real depende da TI e da LGPD.

@@ -16,6 +16,23 @@ Projeto pessoal que une biomedicina e automação: o problema vem da rotina real
 | **Estado** | v1.4.0 publicada; app e bot em evolução contínua. Em **piloto de 1 mês no laboratório** desde 13/10/2026 (analistas e 1 admin) |
 | **Dados** | Sempre fictícios no repositório e no servidor de demonstração |
 
+### Duas formas de usar
+
+| | **Completa** | **Lite** |
+|---|---|---|
+| Para quem | Laboratório com servidor (VPS ou TI) | Empresa que quer tudo dentro de casa, sem nuvem |
+| Canais | Bot de WhatsApp (com IA) + app web e celular | App no navegador, só na rede local |
+| Instalação | Docker no servidor | Pasta de rede no Windows: sem Docker, sem servidor dedicado, sem internet |
+| Como roda | n8n + PostgreSQL + API | O primeiro PC que abre vira o servidor (PostgreSQL local); os outros abrem o navegador nele |
+| Dados | No servidor da implantação | Dentro da empresa, com cópia do banco na pasta de rede e backup diário |
+| Marca | Padrão LabFlow | Nome, logo e cores da empresa; laudos nos modelos dela |
+
+As duas usam **o mesmo app, as mesmas regras e as mesmas migrations**, com login por cargo para cada pessoa. A Lite nasceu de um pedido real do laboratório ([spec 12](docs/specs/lims/12-versao-lite.md)). Limites que deixo claros: dentro da rede interna a conexão é HTTP (sem criptografia), a TI precisa liberar uma porta no firewall, o PC servidor precisa ficar ligado, e a Lite ainda está em teste nos PCs do laboratório.
+
+### Sobre o piloto
+
+Desde 13/10/2026 o app e o bot rodam num **piloto de 1 mês no laboratório** (analistas e 1 admin), com dados de teste. O objetivo é validar o fluxo do dia a dia antes de qualquer uso com dados reais, que dependerá da TI da empresa e da adequação à LGPD. Os bugs que o piloto revelou viram entradas no [troubleshooting](docs/troubleshooting.md).
+
 ### O que construí
 
 - **Bot de WhatsApp:** 51 tipos de comando, linguagem livre e **áudio** via IA (Gemini, com reserva no Groq), **leitura de laudo por foto**, sempre com confirmação ("sim") antes de gravar.
