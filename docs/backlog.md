@@ -3,7 +3,8 @@
 > **Único lugar do "próximo"** (desde 24/10/2026 no repositório; antes ficava no Obsidian). Fases de longo prazo: o `Roadmap-V1-V6` do Obsidian. O que já foi feito, com data: [`CHANGELOG.md`](CHANGELOG.md) e [`handoff-historico.md`](handoff-historico.md). O app tem a bússola própria em [`specs/lims/rumo-do-app.md`](specs/lims/rumo-do-app.md).
 > Legenda: 🤖 bot · 📱 app · 🧪 teste ao vivo · 🛠️ infra e piloto · 🎨 portfólio. "(precisa do Danyllo)" = depende de decisão, foto ou ação dele.
 
-## ▶ Próximos passos (arrumado em 24/10/2026) — retomar daqui
+## ▶ Próximos passos (arrumado em 05/11/2026) — retomar daqui
+> **05/11/2026:** sem teste ao vivo nem tarefa de portfólio em aberto; o Lite está com o Henry (design). Em aberto e com o Danyllo: Power BI online com gateway e domínio próprio antes do piloto do app (abaixo).
 > **Estado em 24/10/2026 (tarde):** **v1.4.0 lançada** (23/10). Bot no ar com **263 nós** (`pre79`), banco até a migration **040** do bot e a **064** do app; cargo **Analista** (antes Operador). App com os Marcos 1 a 4, o acabamento visual e os laudos de rastreio no ar. Piloto: por enquanto só o Danyllo testa; dados em dia em lote em 23/10. Detalhe e como publicar: `docs/handoff.md` seção 0 no repositório.
 
 ### 🤖 Bot
@@ -33,7 +34,7 @@
 - [ ] **Corrigir resultado (039) numa função geral** (`corrigir_resultado(quem, ...)`) para o app também chamar
 - [ ] Registrar por frase o que hoje só o app faz: material asséptico, lote de meio (receber e trocar o em uso) e temperatura das estufas (funções do app)
 - [x] **PB21, arquivo de contra-amostras** (25/10, migration 105): caixas, reserva do navio, arquivar o recebimento, descartar com sim, consultas; carga inicial da planilha fora do Git (`C:\Dev\estudos\ia\arquivo`)
-- [x] **PB24, data inicial da caixa de navio** (01/11, migration 109): última amostra + 5 dias ou escolhida à mão; dela contam 1 e 2 anos; `caixa N começa em DD/MM`; no ar (`pre89`); falta o botão **Data inicial** no app
+- [x] **PB24, data inicial da caixa de navio** (01/11, migration 109): última amostra + 5 dias ou escolhida à mão; dela contam 1 e 2 anos; `caixa N começa em DD/MM`; no ar (`pre89`); botão **Data inicial** no app e teste ao vivo de `caixa N começa em ...` e `começa automático`: feitos (confirmado pelo Danyllo em 05/11)
 - [ ] **PB21 parte 2:** a caixa do recebimento lida pela **foto** da folha e `caixa N` no próprio comando de recebimento
 - [x] **PB22, pendências do dia** e **apelidos de navio** (25/10, migration 106): `pendências do dia` no bot, `vw_pendencias_do_dia` para o app; O.BLOSSOM vira o nome oficial (apelido fora do Git)
 - [ ] **PB6:** canal `app` no webhook (assistente do app pelo mesmo workflow), só na Fase D do app
@@ -45,7 +46,7 @@
 - [ ] Se as pendências do piloto voltarem a acumular: `C:\Dev\estudos\ia\em-dia-2026-10-23.sql` (ensaio com `-v fim=ROLLBACK`; o `COMMIT` em massa o Danyllo roda no servidor)
 
 ### 📱 App (sessão da nuvem)
-- ▶ **LabFlow Lite** (spec 12): testar o pacote nos PCs da micro (servidor = o PC ligado 24 h, Windows 10), pedir à TI a porta 8000, Henry descompacta no G:; depois: assistente dentro do app e acesso por Wi-Fi
+- **LabFlow Lite** (spec 12): o Henry está ajustando o design (05/11); depois: testar o pacote nos PCs da micro (servidor = o PC ligado 24 h, Windows 10), TI com a porta 8000, Henry descompacta no G:; depois: assistente dentro do app e acesso por Wi-Fi
 - [ ] 📱 **Coletor só na página Coletas** (pedido do Danyllo, 01/11; **para 02/11**, substitui a ideia de 28/10): tirar o **Registrar coleta** das páginas Tanques terra e Tanques navio; a página **Coletas** ganha uma aba para registrar a coleta de **tanque terra ou navio** (formulário igual ao de hoje); o **Coletor não vê o gráfico** da página Coletas (pendente) e **não vê mais nada** além dessa página; nela ele vê **as últimas coletas dele** e pode **excluir com motivo** ou **editar o número do tanque e a data da coleta** das próprias coletas
 - [x] 📱 **Lite: telefone opcional em Nova pessoa** (01/11, feito sem migration: marcador `55000000NNNNN`) (pedido do Danyllo, 01/11): na Lite não há bot, então o telefone não é obrigatório (tela e API); conferir se `usuarios.telefone` é NOT NULL e, se for, migration **082** só para a Lite (o servidor com bot continua exigindo)
 - [x] 📱 **Lite: `--redefinir-admin` com o LabFlow aberto** (01/11, feito: avisa e não redefine): hoje só abre a tela do servidor; deve avisar "feche o LabFlow em todos os PCs e rode de novo"
@@ -125,8 +126,8 @@
 - [x] **README completo, vídeo e GIFs** (03/11: #374, #378, #380, #381, #382): topo com o vídeo de 90 s, duas formas de usar (Completa e Lite), piloto, GIF do app e GIF do bot com prints de 03/11
 - [x] **Textos do LinkedIn e página de oferta de serviços** (03/11, #374, #376, #377, em `docs/portfolio/`); LinkedIn e README de perfil do GitHub atualizados pela sessão do bot
 - [x] **Vídeo de portfólio de 90 s** (03/11, #379): `10-portfolio`, com gráfico do Recebimento NFC comparando CON e TMG em Fresh (dados fictícios de `app/tour/demo-nfc.sql`)
-- [ ] 📱 Postar o vídeo no LinkedIn e passar o link para o README (precisa do Danyllo)
-- [ ] 📱 GitHub: descrição e tópicos do repositório LabFlow (`postgresql`, `n8n`, `fastapi`, `react`, `whatsapp`, `power-bi`, `automacao`, `laboratorio`) e fixar no perfil (precisa do Danyllo)
+- [x] 📱 Postar o vídeo no LinkedIn e passar o link para o README (feito, confirmado pelo Danyllo em 05/11)
+- [x] 📱 GitHub: descrição e tópicos do repositório LabFlow (`postgresql`, `n8n`, `fastapi`, `react`, `whatsapp`, `power-bi`, `automacao`, `laboratorio`) e fixar no perfil (precisa do Danyllo)
 - [ ] Vídeo do bot gravado no celular, opcional, com os comandos de `docs/portfolio/` (precisa do Danyllo)
 - [ ] 🤖 Texto do desvio de drop termina com `(ou: não confirmou)`, que parece modelo: sugerir à sessão do bot
 - [ ] Seção "Como usei IA neste projeto" revisar no README
