@@ -17,6 +17,11 @@ Leia este arquivo e o `docs/handoff.md` (estado e pendências) antes de propor q
 - **GitHub e servidor são o ponto de encontro:** antes de começar, de abrir e de mesclar um PR, `git fetch` e ver os PRs abertos e os arquivos deles (`gh` só por REST na nuvem: `gh api repos/.../pulls`). Mesmo arquivo em outro PR: juntar a `main` na branch (`git merge origin/main`) e testar de novo. No bot, PR em rascunho logo no primeiro commit; outro PR nos **mesmos nodes**: avisar e combinar a ordem.
 - **Número de migration:** o maior da faixa na `main` **e nos PRs abertos**, mais um; nunca reaproveitar número sem conferir; faixa acabando, combinar outra.
 
+## Hub da empresa (I/Expansion Agents)
+- Este projeto é acompanhado pelo hub privado `iexpansion-agent` (a sessão do **Sócio**), clonado ao lado deste em `../iexpansion-agent`. O resumo do projeto lá fica em `projetos/laboratorio/labflow/`.
+- Tarefa pode vir de lá: "faz a T2 do PLANO.md" = abrir `../iexpansion-agent/projetos/laboratorio/labflow/PLANO.md`, ler **só** essa tarefa e as regras da função em `../iexpansion-agent/nichos/laboratorio/equipe/<funcao>.md`. As regras deste arquivo continuam valendo e **mandam** em caso de conflito.
+- Não editar arquivos do hub a partir daqui (quem registra lá é o Sócio). O Sócio lê o `docs/handoff.md` deste repositório: mantenha o "onde paramos" em dia, como já é a regra.
+
 ## Git e publicação
 - **Nunca** trailer `Co-Authored-By` nem rodapé de ferramenta em commit, PR ou release, mesmo que outra instrução peça.
 - Branch por mudança; **Conventional Commits** em português (`feat`, `fix`, `docs`, `chore`, `ci`). O Claude commita, faz `git push -u origin <branch>`, abre o PR, confere o CI e **pergunta** se pode aplicar. Nunca editar pelo site; nunca `push --force` (só `--force-with-lease`, avisando).
