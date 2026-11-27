@@ -1,6 +1,6 @@
 # 12 — LabFlow Lite (pasta de rede, sem servidor)
 
-**Pedido:** Henry (diretor da garantia da qualidade), 28/10/2026; desenho fechado com o Danyllo em 01/11.
+**Pedido:** direção da garantia da qualidade, 28/10/2026; desenho fechado com o Danyllo em 01/11.
 **Código:** `app/lite/` (lançador, `.bat`, `LEIA-ME.txt`, `montar.ps1`, teste de fumaça) e `.github/workflows/app-lite.yml`.
 **O projeto atual não muda:** a Lite é o mesmo app (API, telas e migrations) empacotado para Windows.
 
