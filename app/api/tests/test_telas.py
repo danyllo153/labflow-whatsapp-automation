@@ -73,3 +73,25 @@ def test_ambiente_demonstracao(monkeypatch, valor, esperado):
     else:
         monkeypatch.setenv("LABFLOW_DEMONSTRACAO", valor)
     assert TestClient(app).get("/ambiente").json() == {"demonstracao": esperado, "lite": False}
+
+
+def test_icones_da_marca_valem_no_lugar_dos_neutros(telas, tmp_path, monkeypatch):
+    (tmp_path / "favicon.ico").write_bytes(b"neutro")
+    assert telas.get("/app/favicon.ico").content == b"neutro"
+    marca = tmp_path / "marca"
+    marca.mkdir()
+    (marca / "icone.ico").write_bytes(b"da-marca")
+    (marca / "icone.png").write_bytes(b"\x89PNG")
+    monkeypatch.setenv("LABFLOW_MARCA_DIR", str(marca))
+    assert telas.get("/app/favicon.ico").content == b"da-marca"
+    svg = telas.get("/app/icone.svg")
+    assert svg.status_code == 200 and "image/svg+xml" in svg.headers["content-type"] and "data:image/png;base64" in svg.text
+
+
+def test_icone_da_marca_acima_de_1_mb_cai_no_neutro(telas, tmp_path, monkeypatch):
+    (tmp_path / "icone.svg").write_text("<svg>neutro</svg>", encoding="utf-8")
+    marca = tmp_path / "marca"
+    marca.mkdir()
+    (marca / "icone.png").write_bytes(b"0" * (1024 * 1024 + 1))
+    monkeypatch.setenv("LABFLOW_MARCA_DIR", str(marca))
+    assert telas.get("/app/icone.svg").text == "<svg>neutro</svg>"

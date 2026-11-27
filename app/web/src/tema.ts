@@ -1,7 +1,7 @@
 /**
- * Aparência (APP-031): Automático (segue o aparelho), Claro ou Escuro. A escolha fica só neste aparelho
- * (localStorage, uma conveniência por pessoa; sem o armazenamento, o app segue o aparelho). O CSS lê
- * `data-tema` na raiz: sem o atributo vale o `prefers-color-scheme` do aparelho.
+ * Aparência: o padrão é o tema CLARO (decisão de 27/11). O escuro só aparece se a pessoa escolher
+ * (localStorage, uma conveniência por pessoa). "auto" = sem escolha guardada = claro; o aparelho não decide.
+ * O CSS lê `data-tema` na raiz, que sempre fica preenchido.
  */
 export type Tema = "auto" | "claro" | "escuro";
 
@@ -13,20 +13,16 @@ export function lerTema(): Tema {
     const v = window.localStorage.getItem(CHAVE_TEMA);
     return v === "claro" || v === "escuro" ? v : "auto";
   } catch {
-    return "auto"; // armazenamento bloqueado (janela privada): segue o aparelho
+    return "auto"; // armazenamento bloqueado (janela privada): claro
   }
-}
-
-function escuroDoAparelho(): boolean {
-  return typeof window.matchMedia === "function" && window.matchMedia("(prefers-color-scheme: dark)").matches;
 }
 
 /** Põe o tema na página (atributo da raiz e cor da barra do navegador no celular). */
 export function aplicarTema(tema: Tema = lerTema()): void {
   const raiz = document.documentElement;
-  if (tema === "auto") raiz.removeAttribute("data-tema");
-  else raiz.setAttribute("data-tema", tema);
-  const escuro = tema === "escuro" || (tema === "auto" && escuroDoAparelho());
+  const efetivo = tema === "escuro" ? "escuro" : "claro";
+  raiz.setAttribute("data-tema", efetivo);
+  const escuro = efetivo === "escuro";
   document.querySelector('meta[name="theme-color"]')?.setAttribute("content", COR_DA_BARRA[escuro ? "escuro" : "claro"]);
 }
 

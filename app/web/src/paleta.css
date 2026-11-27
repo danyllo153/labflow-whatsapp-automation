@@ -1,0 +1,151 @@
+/*
+ * Paleta creme, azul-marinho e laranja (27/11, pedido do Danyllo): fundo creme, textos e botões em azul-marinho, o
+ * laranja nas marcas (item ativo do menu, linha do topo, foco) e o verde no OK. Só o tema claro muda; o escuro fica.
+ * Carregado por último, sobre o visual-staradmin.css: o menu e o topo deixam de ser escuros no tema claro.
+ */
+:root {
+  --menu-texto-ativo: #ffffff;
+  --menu-marca: #6d8bff;
+  --menu-secao-texto: #8d96ab;
+  --menu-borda: transparent;
+  --topo-texto: #ffffff;
+  --topo-texto-suave: #9aa3b5;
+  --topo-linha: transparent;
+  --cartao-borda: none;
+  --topo-icone-tema: #ffd166;
+}
+
+:root[data-tema="claro"] {
+  --fundo: #fdf8ec;
+  --cartao: #ffffff;
+  --texto: #1e2a4a;
+  --texto-titulo: #1e2a4a;
+  --texto-secundario: #5a6178;
+  --borda: #ecdfc2;
+  --linha-suave: #f3ead6;
+  --zebra: #fffcf4;
+  --laranja: #e8892b;
+  --laranja-suave: #fdebd3;
+  --acao: #24365e;
+  --acao-botao: #24365e;
+  --acao-escura: #16223f;
+  --acao-fundo: #fdebd3;
+  --link: #24365e;
+  --ok: #3f7d3a;
+  --ok-texto: #2f6a2b;
+  --ok-fundo: #e8f2e5;
+  --campo-borda: #e2d5b8;
+  --sombra-cartao: 0 1px 2px rgba(80, 55, 10, 0.05);
+  --anel: 0 0 0 3px rgba(232, 137, 43, 0.35);
+  --menu-fundo: #fffdf7;
+  --menu-texto: #1e2a4a;
+  --menu-ativo-fundo: #fdebd3;
+  --topo-fundo: #fffdf7;
+  --topo-campo: #fdf3e1;
+  /* só desta paleta */
+  --menu-texto-ativo: #1e2a4a;
+  --menu-marca: #e8892b;
+  --menu-secao-texto: #8a7f66;
+  --menu-borda: #ecdfc2;
+  --topo-texto: #1e2a4a;
+  --topo-texto-suave: #5a6178;
+  --topo-linha: #e8892b;
+  --cartao-borda: 1px solid #ecdfc2;
+  --topo-icone-tema: #e8892b;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-tema="escuro"]) {
+    --fundo: #fdf8ec;
+    --cartao: #ffffff;
+    --texto: #1e2a4a;
+    --texto-titulo: #1e2a4a;
+    --texto-secundario: #5a6178;
+    --borda: #ecdfc2;
+    --linha-suave: #f3ead6;
+    --zebra: #fffcf4;
+    --laranja: #e8892b;
+    --laranja-suave: #fdebd3;
+    --acao: #24365e;
+    --acao-botao: #24365e;
+    --acao-escura: #16223f;
+    --acao-fundo: #fdebd3;
+    --link: #24365e;
+    --ok: #3f7d3a;
+    --ok-texto: #2f6a2b;
+    --ok-fundo: #e8f2e5;
+    --campo-borda: #e2d5b8;
+    --sombra-cartao: 0 1px 2px rgba(80, 55, 10, 0.05);
+    --anel: 0 0 0 3px rgba(232, 137, 43, 0.35);
+    --menu-fundo: #fffdf7;
+    --menu-texto: #1e2a4a;
+    --menu-ativo-fundo: #fdebd3;
+    --topo-fundo: #fffdf7;
+    --topo-campo: #fdf3e1;
+    /* só desta paleta */
+    --menu-texto-ativo: #1e2a4a;
+    --menu-marca: #e8892b;
+    --menu-secao-texto: #8a7f66;
+    --menu-borda: #ecdfc2;
+    --topo-texto: #1e2a4a;
+    --topo-texto-suave: #5a6178;
+    --topo-linha: #e8892b;
+    --cartao-borda: 1px solid #ecdfc2;
+    --topo-icone-tema: #e8892b;
+  }
+}
+
+.menu-lateral {
+  border-right: 1px solid var(--menu-borda);
+}
+
+.menu-navegacao .item-menu.active {
+  color: var(--menu-texto-ativo);
+  box-shadow: inset 3px 0 0 var(--menu-marca);
+}
+
+.menu-filho.active {
+  color: var(--menu-texto-ativo);
+}
+
+.menu-secao {
+  color: var(--menu-secao-texto);
+}
+
+:root .moldura header.topo-celular {
+  border-bottom: 2px solid var(--topo-linha);
+}
+
+.saudacao-topo strong {
+  color: var(--topo-texto-suave);
+}
+
+.saudacao-topo strong b {
+  color: var(--topo-texto);
+}
+
+.saudacao-topo span {
+  color: var(--topo-texto-suave);
+}
+
+.cartao {
+  border: var(--cartao-borda);
+}
+
+/* nome do app no alto do menu e os ícones do topo: escuros no fundo claro */
+:root .menu-lateral-topo .marca,
+:root .menu-lateral-topo .marca-nome,
+:root .moldura .topo-celular .marca,
+:root .moldura .topo-celular .marca-nome {
+  color: var(--topo-texto);
+}
+
+:root .moldura .topo-celular .botao-icone,
+:root .moldura .topo-celular .icone-topo:not(.botao-avatar),
+:root .moldura .topo-celular .chip-equipe {
+  color: var(--topo-texto);
+}
+
+:root .moldura .topo-celular .botao-tema {
+  color: var(--topo-icone-tema);
+}

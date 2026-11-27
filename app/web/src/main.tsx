@@ -15,6 +15,7 @@ import "./visual-novo.css";
 import "./navegacao.css";
 import "./visual-kaiadmin.css";
 import "./visual-staradmin.css";
+import "./paleta.css"; // creme, azul-marinho e laranja (27/11): por último
 import { carregarMarca } from "./marca";
 import { aplicarTema } from "./tema";
 

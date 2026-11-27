@@ -1652,19 +1652,28 @@ button.numero-app.numero-clicavel:hover {
 /* ---------- marca da instalação (Lite, spec 12): a logo de dados\marca no lugar do frasco ---------- */
 .marca-logo.marca-logo-imagem {
   width: auto;
-  max-width: 120px;
-  height: 36px;
-  border-radius: 6px;
+  max-width: 100%;
+  height: 48px; /* a logo costuma ser grande: cabe na altura do topo, largura automática, sem distorcer */
+  border-radius: 0;
   background: transparent;
   object-fit: contain;
 }
 
+:root .moldura header.topo-celular .marca-logo.marca-logo-imagem,
+:root .menu-lateral-topo .marca-logo.marca-logo-imagem {
+  width: auto;
+  height: 52px;
+}
+
 .marca-logo-entrar {
   display: block;
-  max-width: 180px;
-  max-height: 64px;
+  width: auto;
+  max-width: 100%;
+  height: 96px;
   margin: 0 auto 10px;
   object-fit: contain;
+}
+
 /* ---------- busca do topo com o rastreio (01/11): grupos, tipo e situação ---------- */
 .busca-rapida-sugestoes {
   max-height: 70vh;
