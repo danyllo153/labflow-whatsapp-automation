@@ -44,13 +44,16 @@ BANCO = "labflow"
 ADMIN_TELEFONE = "5500000000001"  # marcador: o Admin troca depois em Admin > Pessoas
 
 
+ICONES_DA_LOGO = ("icone.ico", "icone.png", "icone-180.png", "icone-192.png", "icone-512.png")
+
 LEIA_ME_MARCA = """MARCA DESTA INSTALAÇÃO (opcional)
 Coloque aqui os arquivos e reabra o LabFlow (feche no PC servidor e abra de novo):
 
   marca.json   o nome e as cores, por exemplo:
-               {"nome": "Laboratório de Microbiologia", "cor_principal": "#1f3bb3", "cor_secundaria": "#1e283d"}
+               {"nome": "Meu Laboratório", "cor_principal": "#1f3bb3", "cor_secundaria": "#1e283d"}
                cor principal = botões, links e abas; cor secundária = menu lateral e topo (formato #rrggbb)
-  logo.png     a logo (PNG, até 2 MB; aparece no menu e na tela de entrar)
+  logo.png     a logo (PNG, até 2 MB; aparece no menu e na tela de entrar). Ao abrir, o programa gera dela,
+               sozinho, icone.ico e icone.png (o símbolo da logo num quadrado): o ícone da janela e da aba.
   estilo.css   ajustes de visual (CSS, até 200 KB), aplicados por último
 
 Tudo é opcional: sem estes arquivos fica o visual do LabFlow. Arquivo com erro é ignorado (o resto vale).
@@ -478,10 +481,11 @@ class Servidor:
             with contextlib.suppress(OSError):
                 origem.mkdir(parents=True)
                 (origem / "LEIA-ME.txt").write_text(LEIA_ME_MARCA, encoding="utf-8-sig")
+        gerou_icone = gerar_icone_da_logo(origem) if origem.exists() else False
         shutil.rmtree(destino, ignore_errors=True)
         destino.mkdir(parents=True, exist_ok=True)
         achados = []
-        for nome in ("marca.json", "logo.png", "estilo.css"):
+        for nome in ("marca.json", "logo.png", "estilo.css", *(ICONES_DA_LOGO if gerou_icone else ())):
             with contextlib.suppress(OSError):
                 if (origem / nome).is_file():
                     shutil.copyfile(origem / nome, destino / nome)
@@ -739,7 +743,7 @@ def modo_cliente(dados: Dados, args: argparse.Namespace) -> int:
 
 
 def abrir_janela(endereco: str) -> None:
-    """Abre o LabFlow como um programa, em tela cheia (como o F11; o F11 volta para janela): sem barra de endereço nem abas
+    """Abre o LabFlow como um programa, em janela normal (1280x800, não maximizada): sem barra de endereço nem abas
     (modo aplicativo do Edge, que vem no Windows 10 e 11; senão o do Chrome). Sem nenhum dos dois, abre no navegador."""
     if EH_WINDOWS:
         pastas = [os.environ.get(v, "") for v in ("ProgramFiles(x86)", "ProgramFiles", "LOCALAPPDATA")]
@@ -748,7 +752,7 @@ def abrir_janela(endereco: str) -> None:
         for exe in candidatos:
             if exe.is_file():
                 with contextlib.suppress(OSError):
-                    subprocess.Popen([str(exe), f"--app={endereco}", "--start-fullscreen", "--new-window"],
+                    subprocess.Popen([str(exe), f"--app={endereco}", "--window-size=1280,800", "--window-position=80,40", "--new-window"],
                                      stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
                                      creationflags=SEM_JANELA)
                     return
@@ -759,6 +763,102 @@ def marcar_que_abriu() -> None:
     with contextlib.suppress(OSError):
         if LOCAL is not None:
             (LOCAL / MARCADOR).write_text(dt.datetime.now().isoformat(timespec="seconds"), encoding="utf-8")
+
+
+def _recortar_simbolo(imagem):
+    """Devolve so o simbolo da logo (sem o nome), sem redesenhar. Acha os "blocos" de tinta (fundo branco ou transparente conta como
+    vazio): o simbolo e o bloco que contem o ponto mais alto, mais os pedacos pequenos logo abaixo dele e dentro da sua largura (a
+    gota, mesmo solta). O resto (as letras) fica transparente. Devolve a imagem quadrada e centralizada, com margem pequena.
+    Qualquer tamanho. Sem tinta, devolve a logo inteira."""
+    from PIL import Image, ImageFilter
+
+    largura, altura = imagem.size
+    fator = min(1.0, 400 / max(largura, altura))
+    w, h = max(1, round(largura * fator)), max(1, round(altura * fator))
+    px = imagem.resize((w, h)).load()
+    tinta = [[px[x, y][3] > 40 and min(px[x, y][:3]) < 235 for x in range(w)] for y in range(h)]
+    visto = [[0] * w for _ in range(h)]
+    blocos = []  # (area, x0, y0, x1, y1, pontos)
+    for y0 in range(h):
+        for x0 in range(w):
+            if not tinta[y0][x0] or visto[y0][x0]:
+                continue
+            pilha, pontos = [(x0, y0)], []
+            visto[y0][x0] = 1
+            while pilha:
+                x, y = pilha.pop()
+                pontos.append((x, y))
+                for dy in (-1, 0, 1):
+                    for dx in (-1, 0, 1):
+                        nx, ny = x + dx, y + dy
+                        if 0 <= nx < w and 0 <= ny < h and tinta[ny][nx] and not visto[ny][nx]:
+                            visto[ny][nx] = 1
+                            pilha.append((nx, ny))
+            xs, ys = [q[0] for q in pontos], [q[1] for q in pontos]
+            blocos.append((len(pontos), min(xs), min(ys), max(xs), max(ys), pontos))
+    blocos = [b for b in blocos if b[0] >= 4]  # poeira
+    if not blocos:
+        return imagem
+    principal = min(blocos, key=lambda b: (b[2], -b[0]))  # o que tem o ponto mais alto
+    area, px0, py0, px1, py1, _ = principal
+    escolhidos = [principal]
+    for b in blocos:
+        if b is principal:
+            continue
+        if b[0] < area * 0.2 and b[2] <= py1 + (py1 - py0) * 0.06 and b[1] >= px0 and b[3] <= px1:
+            escolhidos.append(b)
+    x0, y0 = min(b[1] for b in escolhidos), min(b[2] for b in escolhidos)
+    x1, y1 = max(b[3] for b in escolhidos) + 1, max(b[4] for b in escolhidos) + 1
+    mascara = Image.new("L", (w, h), 0)
+    mp = mascara.load()
+    for b in escolhidos:
+        for x, y in b[5]:
+            mp[x, y] = 255
+    mascara = mascara.filter(ImageFilter.MaxFilter(5)).resize((largura, altura), Image.BILINEAR)  # folga para a borda suave
+    lado = max(x1 - x0, y1 - y0)
+    meio = lado / 2 * 1.08
+    cx, cy = (x0 + x1) / 2 / fator, (y0 + y1) / 2 / fator
+    meio /= fator
+    caixa = (round(cx - meio), round(cy - meio))
+    tam = round(2 * meio)
+    quadro = Image.new("RGBA", (tam, tam), (0, 0, 0, 0))
+    quadro.paste(imagem, (-caixa[0], -caixa[1]), mascara)
+    return quadro
+
+
+def gerar_icone_da_logo(pasta: Path) -> bool:
+    """Gera, da `logo.png` da pasta da marca, os icones da janela, da aba e da bandeja: so o SIMBOLO da logo (sem o nome), quadrado
+    e centralizado, sem redesenhar. Saidas na mesma pasta (fora do Git): icone.ico (16, 32, 48, 256), icone.png (512) e
+    icone-180/192/512.png. Sem logo, ou com erro, apaga os antigos e devolve False: valem os icones neutros do programa."""
+    try:
+        from PIL import Image
+
+        logo = pasta / "logo.png"
+        if not logo.is_file() or logo.stat().st_size > 2 * 1024 * 1024:  # o mesmo teto de 2 MB do LEIA-ME da marca
+            raise OSError("sem logo ou grande demais")
+        Image.MAX_IMAGE_PIXELS = 40_000_000
+        with Image.open(logo) as aberta:
+            if aberta.width > 8000 or aberta.height > 8000:
+                raise OSError("logo grande demais")
+            aberta.load()
+            origem = aberta.convert("RGBA")
+        origem = _recortar_simbolo(origem)
+        largura, altura = origem.size
+        fator = 512 / max(largura, altura)
+        miolo = origem.resize((max(1, round(largura * fator)), max(1, round(altura * fator))), Image.LANCZOS)
+        base = Image.new("RGBA", (512, 512), (0, 0, 0, 0))
+        base.paste(miolo, ((512 - miolo.width) // 2, (512 - miolo.height) // 2))
+        base.save(pasta / "icone.png")
+        base.save(pasta / "icone-512.png")
+        for t in (180, 192):
+            base.resize((t, t), Image.LANCZOS).save(pasta / f"icone-{t}.png")
+        base.save(pasta / "icone.ico", format="ICO", sizes=[(16, 16), (32, 32), (48, 48), (256, 256)])
+        return True
+    except Exception:
+        for nome in ICONES_DA_LOGO:
+            with contextlib.suppress(OSError):
+                (pasta / nome).unlink()
+        return False
 
 
 def iniciar_bandeja(srv: "Servidor", endereco: str, outros: str):

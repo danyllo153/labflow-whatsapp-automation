@@ -4301,3 +4301,62 @@ h2 {
 .cartao.grafico-g4 .legenda-g4 {
   justify-content: center;
 }
+
+/* Entrar escolhendo o nome (Lite, 26/11): um botão por pessoa, largo e fácil de tocar */
+.lista-nomes {
+  list-style: none;
+  margin: 0 0 12px;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.lista-nomes .botao {
+  width: 100%;
+  justify-content: flex-start;
+  min-height: 44px;
+}
+
+/* Quem vai no laudo (086, 27/11): uma caixa por data, com as pessoas para marcar */
+.nomes-no-laudo {
+  display: grid;
+  gap: 8px;
+  margin: 8px 0 4px;
+}
+.nomes-do-dia {
+  border: 1px solid var(--borda, #d0d5dd);
+  border-radius: 8px;
+  padding: 8px 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+}
+.nomes-do-dia legend {
+  font-weight: 600;
+  padding: 0 4px;
+}
+.nomes-do-dia .etiqueta {
+  margin-left: 6px;
+}
+
+/* Equipe do turno (27/11): colocar os colegas no turno pelo mesmo PC */
+.equipe-colocar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.equipe-colocar label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-weight: 600;
+}
+
+.equipe-tirar {
+  margin-left: 8px;
+  min-height: 30px;
+  padding: 2px 10px;
+  font-size: 0.8rem;
+}

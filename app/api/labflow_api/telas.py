@@ -7,11 +7,12 @@ Qualquer endereço de /app/ que não seja um arquivo devolve o index.html (o Rea
 A pasta vem de LABFLOW_WEB_DIR (no container: /app/web); sem ela, /app/ responde 404 com um aviso.
 """
 
+import base64
 import os
 from pathlib import Path
 
 from fastapi import APIRouter, HTTPException
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.responses import FileResponse, RedirectResponse, Response
 
 roteador = APIRouter(include_in_schema=False)
 
@@ -37,6 +38,29 @@ def _arquivo(caminho: Path, pasta: Path) -> FileResponse:
     return FileResponse(caminho, headers=cabecalhos)
 
 
+# Icones da marca: a Lite gera dados\\marca\\icone*.* da logo da instalacao (fora do Git). Existindo, valem no lugar dos neutros de public.
+ICONES_DA_MARCA = {"favicon.ico": "icone.ico", "icone-180.png": "icone-180.png", "icone-192.png": "icone-192.png", "icone-512.png": "icone-512.png"}
+
+
+def _icone_da_marca(caminho: str) -> Response | None:
+    pasta = os.environ.get("LABFLOW_MARCA_DIR", "").strip()
+    if not pasta:
+        return None
+    cabecalhos = {"Cache-Control": "no-cache", "X-Content-Type-Options": "nosniff"}
+    if caminho == "icone.svg":  # a aba prefere o SVG: com logo, ele so embrulha o PNG dela
+        png = Path(pasta) / "icone.png"
+        if not png.is_file() or png.stat().st_size > 1024 * 1024:  # acima de 1 MB: valem os icones neutros
+            return None
+        dados = base64.b64encode(png.read_bytes()).decode("ascii")
+        svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><image href="data:image/png;base64,{dados}" width="64" height="64"/></svg>'
+        return Response(svg, media_type="image/svg+xml", headers=cabecalhos)
+    nome = ICONES_DA_MARCA.get(caminho)
+    arquivo = Path(pasta) / nome if nome else None
+    if arquivo is not None and arquivo.is_file() and arquivo.stat().st_size <= 1024 * 1024:
+        return FileResponse(arquivo, headers=cabecalhos)
+    return None
+
+
 @roteador.get("/")
 def raiz() -> RedirectResponse:
     return RedirectResponse("/app/")
@@ -48,7 +72,10 @@ def app_sem_barra() -> RedirectResponse:
 
 
 @roteador.get("/app/{caminho:path}")
-def telas(caminho: str) -> FileResponse:
+def telas(caminho: str) -> Response:
+    da_marca = _icone_da_marca(caminho)
+    if da_marca is not None:
+        return da_marca
     pasta = pasta_telas()
     indice = pasta / "index.html"
     if not indice.is_file():

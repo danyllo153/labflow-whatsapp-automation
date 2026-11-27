@@ -12,11 +12,19 @@ beforeEach(() => window.localStorage.clear());
 afterEach(() => vi.unstubAllGlobals());
 
 describe("Aparência (APP-031)", () => {
-  it("sem escolha, segue o aparelho: nenhum atributo na raiz", () => {
-    preparar();
+  it("sem escolha, o padrão é o claro, mesmo com o aparelho no escuro", () => {
+    preparar(true);
     expect(lerTema()).toBe("auto");
     aplicarTema();
-    expect(document.documentElement.hasAttribute("data-tema")).toBe(false);
+    expect(document.documentElement.getAttribute("data-tema")).toBe("claro");
+    expect(document.querySelector('meta[name="theme-color"]')?.getAttribute("content")).toBe("#1C5A94");
+  });
+
+  it("escolha guardada como escuro vale ao abrir o app", () => {
+    preparar(false);
+    window.localStorage.setItem(CHAVE_TEMA, "escuro");
+    aplicarTema();
+    expect(document.documentElement.getAttribute("data-tema")).toBe("escuro");
   });
 
   it("escolher Escuro grava, põe o atributo e muda a cor da barra do celular", () => {
@@ -35,13 +43,13 @@ describe("Aparência (APP-031)", () => {
     expect(document.querySelector('meta[name="theme-color"]')?.getAttribute("content")).toBe("#1C5A94");
   });
 
-  it("Automático num aparelho escuro usa a barra escura e apaga a escolha guardada", () => {
+  it("Voltar ao padrão apaga a escolha guardada e fica claro", () => {
     preparar(true);
     guardarTema("claro");
     guardarTema("auto");
     expect(window.localStorage.getItem(CHAVE_TEMA)).toBeNull();
-    expect(document.documentElement.hasAttribute("data-tema")).toBe(false);
-    expect(document.querySelector('meta[name="theme-color"]')?.getAttribute("content")).toBe("#14283D");
+    expect(document.documentElement.getAttribute("data-tema")).toBe("claro");
+    expect(document.querySelector('meta[name="theme-color"]')?.getAttribute("content")).toBe("#1C5A94");
   });
 
   it("valor guardado estranho vira Automático", () => {

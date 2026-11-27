@@ -108,21 +108,23 @@ function Saudacao({ nome }: { nome?: string }) {
   );
 }
 
-/** Logo: o frasco num círculo marinho, com o nome ao lado; na Lite, a logo e o nome da instalação (dados\marca). */
+/** Logo: o frasco num círculo marinho, com o nome ao lado; na Lite, com logo em dados\marca, só a logo inteira (nome no alt e no title). */
 function Marca() {
   const marca = useMarca();
   return (
     <div className="marca">
       {marca.logo ? (
-        <img className="marca-logo marca-logo-imagem" src="/marca/logo.png" alt="" />
+        <img className="marca-logo marca-logo-imagem" src="/marca/logo.png" alt={marca.nome} title={marca.nome} />
       ) : (
-        <span className="marca-logo" aria-hidden="true">
+        <>
+          <span className="marca-logo" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M9 3h6M10 3v6.5L4.6 18.2A1.8 1.8 0 0 0 6.1 21h11.8a1.8 1.8 0 0 0 1.5-2.8L14 9.5V3M7.5 15h9" />
           </svg>
-        </span>
+          </span>
+          <span className="marca-nome">{marca.nome}</span>
+        </>
       )}
-      <span className="marca-nome">{marca.nome}</span>
     </div>
   );
 }

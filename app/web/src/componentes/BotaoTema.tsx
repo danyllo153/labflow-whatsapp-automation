@@ -4,12 +4,10 @@ import { guardarTema, lerTema } from "../tema";
 
 /**
  * Claro / escuro num toque, na barra do topo (pedido de 26/10). Na lua, passa para o escuro; no sol, volta ao claro.
- * A escolha fica neste aparelho, igual à de Minha conta (lá continua o "Automático").
+ * A escolha fica neste aparelho, igual à de Minha conta.
  */
 function escuroAgora(): boolean {
-  const tema = lerTema();
-  if (tema !== "auto") return tema === "escuro";
-  return typeof window.matchMedia === "function" && window.matchMedia("(prefers-color-scheme: dark)").matches;
+  return lerTema() === "escuro";
 }
 
 export default function BotaoTema() {
