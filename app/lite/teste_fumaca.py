@@ -85,7 +85,7 @@ def main() -> None:
     raiz = trabalho / "G" / "LabFlow"
     shutil.copytree(pacote, raiz)
     marca = raiz / "dados" / "marca"
-    marca.mkdir(parents=True)
+    marca.mkdir(parents=True, exist_ok=True)
     (marca / "marca.json").write_text(json.dumps({"nome": "Laboratório Exemplo", "cor_principal": "#0a7c4a"}), encoding="utf-8")
     pc_a, pc_b = trabalho / "pcA", trabalho / "pcB"
     pc_a.mkdir()

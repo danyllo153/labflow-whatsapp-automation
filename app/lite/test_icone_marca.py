@@ -54,7 +54,7 @@ def test_sem_logo_ou_com_erro_apaga_e_devolve_falso(tmp_path):
 
 
 def test_logo_enorme_cai_no_neutro(tmp_path):
-    Image.new("RGBA", (9000, 20), (255, 0, 0, 255)).save(tmp_path / "logo.png")  # acima de 8000 px de lado, mas leve
+    Image.new("RGBA", (4500, 20), (255, 0, 0, 255)).save(tmp_path / "logo.png")  # acima de 4000 px de lado, mas leve
     assert not lite.gerar_icone_da_logo(tmp_path)
     assert not (tmp_path / "icone.ico").exists()
 

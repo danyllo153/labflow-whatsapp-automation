@@ -165,6 +165,10 @@ def ips_deste_pc() -> list[str]:
 
 def porta_livre(inicio: int, todas_as_interfaces: bool) -> int:
     for porta in range(inicio, inicio + 50):
+        # no Windows o bind em 0.0.0.0 passa mesmo com outro app escutando em 127.0.0.1 na mesma porta: a conexão
+        # (e o /saude) iria para o outro. Se algo já responde em 127.0.0.1 nessa porta, pula.
+        if conecta("127.0.0.1", porta, 0.5):
+            continue
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         if not EH_WINDOWS:  # como o uvicorn faz; no Windows essa opção deixaria duas escutando na mesma porta
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -523,7 +527,7 @@ class Servidor:
         for _ in range(60):
             if self.api.poll() is not None:
                 raise RuntimeError("O app não subiu. Veja o arquivo api.log em " + str(self.local))
-            if api_viva(self.porta_api):
+            if api_viva(self.porta_api) and self.api.poll() is None:  # quem responde precisa ser o processo que esta Lite abriu
                 return
             time.sleep(1)
         raise RuntimeError("O app demorou demais para subir.")
@@ -838,7 +842,7 @@ def gerar_icone_da_logo(pasta: Path) -> bool:
             raise OSError("sem logo ou grande demais")
         Image.MAX_IMAGE_PIXELS = 40_000_000
         with Image.open(logo) as aberta:
-            if aberta.width > 8000 or aberta.height > 8000:
+            if aberta.width > 4000 or aberta.height > 4000:
                 raise OSError("logo grande demais")
             aberta.load()
             origem = aberta.convert("RGBA")

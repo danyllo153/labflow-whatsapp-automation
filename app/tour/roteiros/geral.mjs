@@ -9,7 +9,7 @@ const linha = (icone, nome, nota = "") =>
    <span style="flex:1">${nome}</span><span style="color:#7a8396;font-size:14px">${nota}</span></div>`;
 const PASTA = `<!doctype html><html><body style='${FUNDO}'>
   <div style="width:760px;background:#fff;color:#1f2433;border-radius:12px;overflow:hidden;box-shadow:0 20px 50px rgba(0,0,0,.4);font-size:17px">
-    <div style="background:#eef1f7;padding:12px 16px;font-size:15px;color:#4a5263">📁 G: › Garantia da Qualidade › Microbiologia › <b>LabFlow</b></div>
+    <div style="background:#eef1f7;padding:12px 16px;font-size:15px;color:#4a5263">📁 G: › Laboratorio › <b>LabFlow</b></div>
     ${linha("▶️", "<b>Abrir LabFlow</b>", "dois cliques")}
     ${linha("⏹️", "Fechar LabFlow")}
     ${linha("📡", "Testar rede")}

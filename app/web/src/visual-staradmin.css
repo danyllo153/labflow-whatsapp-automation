@@ -1653,7 +1653,7 @@ button.numero-app.numero-clicavel:hover {
 .marca-logo.marca-logo-imagem {
   width: auto;
   max-width: 100%;
-  height: 48px; /* a logo é grande (3124x2216): cabe na altura do topo, largura automática, sem distorcer */
+  height: 48px; /* a logo costuma ser grande: cabe na altura do topo, largura automática, sem distorcer */
   border-radius: 0;
   background: transparent;
   object-fit: contain;

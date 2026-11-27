@@ -5,7 +5,7 @@
 **O projeto atual não muda:** a Lite é o mesmo app (API, telas e migrations) empacotado para Windows.
 
 ## Decisões
-- Roda da pasta `G:\Terminal Guarujá\Garantia da Qualidade\Microbiologia\LabFlow`, sem Docker, sem admin, sem internet.
+- Roda da pasta `G:\Laboratorio\LabFlow`, sem Docker, sem admin, sem internet.
 - **Todas as funções do app** e as mesmas regras de usuário e cargo; cada pessoa com o próprio login.
 - **Sem bot, sem WhatsApp, sem celular e sem assistente** nesta etapa (ideias para depois: assistente dentro do app e acesso por Wi-Fi).
 - **Começa vazio:** só as migrations; na primeira abertura, o usuário `admin` com senha provisória (24 h) na janela.
