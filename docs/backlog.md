@@ -7,6 +7,19 @@
 > **05/11/2026:** sem teste ao vivo nem tarefa de portfólio em aberto; o Lite está com o Henry (design). Em aberto e com o Danyllo: Power BI online com gateway e domínio próprio antes do piloto do app (abaixo).
 > **Estado em 24/10/2026 (tarde):** **v1.4.0 lançada** (23/10). Bot no ar com **263 nós** (`pre79`), banco até a migration **040** do bot e a **064** do app; cargo **Analista** (antes Operador). App com os Marcos 1 a 4, o acabamento visual e os laudos de rastreio no ar. Piloto: por enquanto só o Danyllo testa; dados em dia em lote em 23/10. Detalhe e como publicar: `docs/handoff.md` seção 0 no repositório.
 
+### Lite simples (28/11)
+- [x] Onda 0: PostgreSQL 17.12 padrão e trava de versão; Lite só em 127.0.0.1 (#393)
+- [x] Onda 1: entrar por nome sem senha (só na Lite), Admin vira o nome digitado (088), equipe do turno (089), nomes no laudo (086 e 087) (#396)
+- [x] Onda 2: instalador "Abrir LabFlow.exe" de um arquivo, sem console e sem administrador (#400)
+- [x] Tanques e Drops com tabelas lado a lado (#395); Tanques só com a tabela (#399); pendências herdadas só de turno com uso (#398); tema claro mais legível (#394 e #397)
+- [ ] Atualizar o PC do laboratório com o instalador 28-11 e apagar os arquivos velhos da pasta de rede (com o dono)
+- [ ] Excel no formato novo das tabelas Tanques e Drops (precisa SQL no servidor)
+- [ ] Logo do topo do menu quase invisível no tema claro (detalhe)
+- [ ] Plano B do instalador (lançador em C# com barra de progresso), só se os ~20 s sem janela na 1ª instalação incomodarem
+- [ ] CSP da Lite: a Lite ainda não envia o cabeçalho CSP
+- [ ] Aplicar o mesmo contraste no app Documentos (perguntado, sem resposta)
+- [ ] Limpeza local (fora do Git): pastas temporárias de teste e worktrees já mescladas
+
 ### 🤖 Bot
 - [x] **PB10 (dia da incubação) no ar** (24/10, #225, migration 038 aplicada; `bi.incubacao` conferida)
 - [x] **PB8 e PB9** feitos (ver abaixo)

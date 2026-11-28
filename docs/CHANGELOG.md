@@ -13,6 +13,11 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 ## [Não lançado]
 
 ### Adicionado
+- **Instalador da Lite de um arquivo, sem console** (28/11, #400): "Abrir LabFlow.exe" extrai no PC (`%LOCALAPPDATA%\LabFlowLite`), cria o atalho com `pythonw`, atualiza trocando um arquivo e não pede administrador; cerca de 30 s para instalar, abrir e atualizar
+- **Lite: entrar por nome, sem senha** (28/11, #396, migrations 086 a 089): só no modo Lite; o Admin vira o nome digitado (088); equipe do turno com quem colocou (089); nomes no laudo (086 e 087)
+- **Lite: PostgreSQL 17.12 padrão e trava de versão** (28/11, #393); a Lite escuta só em 127.0.0.1
+- **Tanques e Drops com tabelas lado a lado** (28/11, #395): uma linha por tanque ou coleta, análises em colunas, no modelo do Recebimento NFC
+- **Tanques só com a tabela** (28/11, #399): sem gráfico de tendência e sem o cartão "Por situação"
 - **Skill `/revisar-pr`** (07/11): revisão por agentes com contexto zerado (domínio, segurança/LGPD, n8n e migrations, app back e front) antes de mesclar; só lê e relata. Modelo para outros projetos em `docs/revisao-por-agentes.md`. Ideia vinda do `google/elephant-goldfish-model`.
 - **Vídeo de portfólio de 90 s** (03/11, #379): roteiro `10-portfolio` do tour, com o dia a dia do analista (Início, Leituras, relatório do dia e gráfico de tendência do Recebimento NFC comparando CON e TMG em Fresh); os dados fictícios do gráfico vêm de `app/tour/demo-nfc.sql`, carregado só no banco de teste do workflow
 - **README refeito** (03/11, #374, #378, #380, #382): vídeo de 90 s no topo, "Em resumo", duas formas de usar (Completa e Lite), piloto, funcionalidades do app, arquitetura com API e React, números atualizados e GIF novo do bot; textos do LinkedIn e página de oferta de serviços em `docs/portfolio/`
@@ -77,6 +82,8 @@ Pra detalhes de *como* cada bug foi encontrado e resolvido, ver
 - **Ok e Não ok em ícone redondo** (25/10): nas estufas, os botões viraram o círculo verde com visto e o vermelho com X (cheio quando escolhido, contorno cinza quando não); a temperatura do Não ok fica ao lado. Nas Leituras, as marcas de lido e de fora do limite usam os mesmos ícones.
 
 ### Corrigido
+- **Pendências herdadas da Lite** (28/11, #398): só entram as de turno anterior que tenham uso
+- **Tema claro mais legível** (28/11, #394 e #397): fonte mais escura e item ativo do menu legível
 - **Laudo do embarque** (01/11): na Observação, os outros loads da linha e fase vão só separados por ";" ("Item 444; 44445 (item 344)"), sem o "também" nem a palavra "load".
 - **Encerramento dos laudos de incubação e de material asséptico** (01/11, modelos do Danyllo): no lugar de um traço só na folha, cada espaço vazio fecha sozinho. Na **incubação**, cada bloco vazio tem um traço na descrição das amostras e "-" nos lotes, na data da incubação e nas leituras. No **material asséptico**, cada dia vazio tem "-" na data, no C.T., no B.L., no nome e no visto, e um traço no ciclo de esterilização.
 - **Branco do dia automático** (01/11): as linhas paravam de entrar desde que o cartão das folhas saiu do Início (só entravam abrindo a aba Branco do dia). Agora entram ao abrir o app, o branco ou o laudo, e alcançam até 30 dias para trás (antes 7). Toda análise cria a linha (recebimento, recebimento NFC, embarque, tanques, água do processo, baias, linhas e **água de consumo mensal**, que faltava); **Wort** só com tanque (pelo dia da análise); **PCA** só com baia, linha ou água de consumo mensal (a água do processo não usa PCA).
