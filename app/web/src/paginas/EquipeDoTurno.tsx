@@ -9,7 +9,7 @@ import type { Entrada } from "./Turno";
  * Equipe do turno (APP-033): quem está no turno agora e quem já saiu, com a hora da entrada. Vários analistas dividem o
  * mesmo turno; a tela se atualiza sozinha para o celular e o computador mostrarem a mesma equipe.
  * LabFlow Lite (27/11): um PC para todos, então quem está no turno coloca os colegas nele ("Adicionar ao
- * turno") e tira quem entrou por engano.
+ * turno") e, no "Sair do turno", escolhem quem está saindo.
  */
 
 export interface Colega {
@@ -111,7 +111,7 @@ export default function EquipeDoTurno({ aviso, contarRegistros = true, entrada, 
   const [enviando, setEnviando] = useState(false);
   if (!equipe) return null;
 
-  async function mudar(caminho: string, metodo: "POST" | "DELETE", corpo?: unknown) {
+  async function mudar(caminho: string, metodo: "POST", corpo?: unknown) {
     setErro("");
     setEnviando(true);
     try {
@@ -191,17 +191,6 @@ export default function EquipeDoTurno({ aviso, contarRegistros = true, entrada, 
                   <span className="texto-secundario equipe-registros">
                     {registros[p.nome] ?? 0} registro{(registros[p.nome] ?? 0) === 1 ? "" : "s"}
                   </span>
-                )}
-                {equipe.pode_colocar && !p.sou_eu && (
-                  <button
-                    type="button"
-                    className="botao-simples equipe-tirar"
-                    disabled={enviando}
-                    aria-label={`Tirar ${p.nome} do turno`}
-                    onClick={() => void mudar(`/turno/equipe/${p.usuario_id}`, "DELETE")}
-                  >
-                    Tirar
-                  </button>
                 )}
               </li>
             ))}

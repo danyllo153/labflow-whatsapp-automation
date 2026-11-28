@@ -25,7 +25,7 @@ const COM_BRUNO = {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("Adicionar ao turno", () => {
-  it("adiciona um colega e mostra o botão para tirá-lo", async () => {
+  it("adiciona um colega", async () => {
     const pedidos: unknown[] = [];
     servidorFalso({
       "GET /turno/equipe": () => ({ status: 200, corpo: SO_EU }),
@@ -40,8 +40,7 @@ describe("Adicionar ao turno", () => {
     const equipe = screen.getByRole("region", { name: "Equipe do turno" });
     expect(await within(equipe).findByText("Bruno Lima")).toBeInTheDocument();
     expect(pedidos).toEqual([{ usuario_id: 2 }]);
-    expect(within(equipe).getByRole("button", { name: "Tirar Bruno Lima do turno" })).toBeInTheDocument();
-    expect(within(equipe).queryByRole("button", { name: /Tirar Ana/ })).not.toBeInTheDocument();
+    expect(within(equipe).queryByRole("button", { name: /^Tirar/ })).not.toBeInTheDocument(); // o Tirar por linha saiu (28/11)
   });
 
   it("fora do turno não mostra o Adicionar", async () => {
