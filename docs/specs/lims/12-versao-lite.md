@@ -30,6 +30,7 @@
 `- **Banco ao atualizar:** se a nova versão traz migrations, o `lite.py` grava antes `dadosackupntes-de-atualizar-<data>.dump` (já existia; só confirmado) e só então aplica.
 `- **Gerar:** `montar.ps1` monta a pasta `LabFlow\instalacao`; `montar-exe.ps1 -Pacote <pasta LabFlow>` (precisa do WinRAR só no PC que gera) cria `Abrir LabFlow.exe` dentro dela. O `.exe` e o ícone (gerado na montagem) não vão para o Git.
 `- **Limite conhecido:** na primeira instalação, nos segundos da extração (até ~20 s com o antivírus lendo os arquivos) não há janela; só o cursor ocupado. Melhorar isso = o lançador do plano B, com barra de progresso.
+- **Permissão da pasta de rede:** só quem administra grava em `Abrir LabFlow.exe` e na pasta do LabFlow; quem grava ali pode trocar o programa que os PCs rodam. Os usuários precisam de leitura no `.exe` e escrita só em `dados\`.
 - **Plano B** se o antivírus ou a política da empresa bloquear o `.exe` novo: lançador pequeno em C# compilado com o `csc.exe` que já vem no Windows, com o programa num `.zip` (mesmo ganho, mais código).
 `
 `### Texto de 1 página para o laboratório (vai no `LEIA-ME.txt` do pacote)

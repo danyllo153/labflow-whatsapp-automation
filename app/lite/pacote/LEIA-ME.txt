@@ -33,6 +33,10 @@ ATUALIZAR (para quem cuida do LabFlow)
   Antes de mexer no banco, a atualização guarda uma cópia em dados\backup
   (antes-de-atualizar-<data>.dump). O que não mudou não é copiado de novo.
 
+SEGURANÇA DA PASTA
+  Só quem administra deve poder gravar na pasta do LabFlow na rede: quem grava ali pode trocar o
+  programa que os PCs rodam. Os demais precisam só de leitura (e escrita em dados\).
+
 OS DADOS
   Ficam na pasta "dados". O LabFlow grava uma cópia a cada minuto (se algo mudou) e ao fechar.
   Backup de cada dia em dados\backup (últimos 30 dias).

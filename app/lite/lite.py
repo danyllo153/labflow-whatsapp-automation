@@ -998,6 +998,14 @@ def aviso_rapido(titulo: str, texto: str, segundos: int = 20) -> None:
     threading.Thread(target=mostrar, daemon=True).start()
 
 
+def argumentos_do_atalho(script: Path, raiz: Path) -> str:
+    """Argumentos do atalho. Raiz de unidade (letra, dois-pontos, barra) termina em barra, que escaparia a aspa final: ganha um ponto."""
+    pasta = str(raiz)
+    if pasta.endswith("\\"):
+        pasta += "."
+    return f'"{script}" --raiz "{pasta}" --oculto'
+
+
 def criar_atalho(programa: Path, raiz: Path) -> bool:
     """Atalho 'LabFlow' na área de trabalho do usuário (pythonw: sem janela preta). Um PowerShell escondido só para criar o .lnk;
     os valores vão por variáveis de ambiente (nada de montar comando com texto de caminho). Sem administrador."""
@@ -1012,7 +1020,7 @@ def criar_atalho(programa: Path, raiz: Path) -> bool:
         "$s.TargetPath=$env:LF_PY;$s.Arguments=$env:LF_ARGS;$s.WorkingDirectory=$env:LF_DIR;"
         "$s.IconLocation=$env:LF_ICO;$s.Description='LabFlow';$s.Save()"
     )
-    env = dict(os.environ, LF_PY=str(pythonw), LF_ARGS=f'"{script}" --raiz "{raiz}" --oculto', LF_DIR=str(programa),
+    env = dict(os.environ, LF_PY=str(pythonw), LF_ARGS=argumentos_do_atalho(script, raiz), LF_DIR=str(programa),
                LF_ICO=str(icone) if icone.exists() else str(pythonw))
     try:
         r = subprocess.run(["powershell.exe", "-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-Command", comando],

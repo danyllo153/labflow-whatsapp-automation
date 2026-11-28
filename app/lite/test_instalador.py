@@ -111,3 +111,12 @@ def test_montar_exe_nao_leva_dados_nem_pede_bypass():
     assert r'"-x*\dados"' in ps and "-sfx" in ps
     assert not (AQUI / "pacote").glob("*.bat") or not list((AQUI / "pacote").glob("*.bat"))
     assert not list((AQUI / "pacote").glob("*.vbs"))
+
+
+def test_argumentos_do_atalho_com_exe_na_raiz_da_unidade():
+    script = Path("C:/prog/lite/lite.py")
+    normal = lite.argumentos_do_atalho(script, Path("X:/LabFlow"))
+    assert normal.endswith('--oculto') and normal.count('"') == 4
+    com_barra = lite.argumentos_do_atalho(script, Path("G:" + chr(92)))
+    assert com_barra.endswith("G:" + chr(92) + '." --oculto'), com_barra  # a aspa final nao pode ser escapada pela barra
+    assert com_barra.count('"') == 4 and (chr(92) + '"') not in com_barra
