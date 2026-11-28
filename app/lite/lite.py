@@ -223,6 +223,131 @@ def checar_versao_banco(data: Path, pg_bin: Path) -> None:
         raise RuntimeError(mensagem_versao_diferente(do_banco, do_pacote))
 
 
+# ---------------------------------------------------------------- filhos morrem junto / API órfã -------------------------
+_JOB = None  # Job Object do Windows: quando o lite.py morre, o Windows mata tudo o que está nele
+
+
+def prender_ao_job(proc: subprocess.Popen) -> bool:
+    """Windows: coloca o processo num Job Object com KILL_ON_JOB_CLOSE (morre junto com o lite.py, mesmo se ele for morto à força).
+    Fora do Windows, ou se falhar, devolve False (o vigia do próprio filho cobre)."""
+    global _JOB
+    if not EH_WINDOWS:
+        return False
+    try:
+        import ctypes
+        from ctypes import wintypes
+
+        k = ctypes.WinDLL("kernel32", use_last_error=True)
+        k.CreateJobObjectW.restype = wintypes.HANDLE
+        k.OpenProcess.restype = wintypes.HANDLE
+        if _JOB is None:
+            job = k.CreateJobObjectW(None, None)
+            if not job:
+                return False
+
+            class _Basico(ctypes.Structure):
+                _fields_ = [("a", ctypes.c_int64), ("b", ctypes.c_int64), ("LimitFlags", wintypes.DWORD), ("c", ctypes.c_size_t),
+                            ("d", ctypes.c_size_t), ("e", wintypes.DWORD), ("f", ctypes.c_size_t), ("g", wintypes.DWORD),
+                            ("h", wintypes.DWORD)]
+
+            class _Io(ctypes.Structure):
+                _fields_ = [(n, ctypes.c_uint64) for n in "abcdef"]
+
+            class _Estendido(ctypes.Structure):
+                _fields_ = [("Basic", _Basico), ("Io", _Io), ("m1", ctypes.c_size_t), ("m2", ctypes.c_size_t),
+                            ("m3", ctypes.c_size_t), ("m4", ctypes.c_size_t)]
+
+            info = _Estendido()
+            info.Basic.LimitFlags = 0x2000  # JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+            if not k.SetInformationJobObject(job, 9, ctypes.byref(info), ctypes.sizeof(info)):  # 9 = ExtendedLimitInformation
+                return False
+            _JOB = job
+        h = k.OpenProcess(0x0100 | 0x0001, False, proc.pid)  # PROCESS_SET_QUOTA | PROCESS_TERMINATE
+        if not h:
+            return False
+        try:
+            return bool(k.AssignProcessToJobObject(_JOB, h))
+        finally:
+            k.CloseHandle(h)
+    except Exception:
+        return False
+
+
+# Roda no filho (a API): sai sozinho se o lite.py (pai) sumir, e então executa o uvicorn normalmente.
+VIGIA_DO_PAI = """
+import os, sys, threading, time, runpy
+pai = int(os.environ.get("LABFLOW_PAI_PID") or 0)
+def vigiar():
+    if os.name == "nt":
+        import ctypes
+        k = ctypes.WinDLL("kernel32")
+        k.OpenProcess.restype = ctypes.c_void_p
+        h = k.OpenProcess(0x100000, False, pai)  # SYNCHRONIZE
+        if not h:
+            os._exit(0)
+        k.WaitForSingleObject(ctypes.c_void_p(h), 0xFFFFFFFF)
+        os._exit(0)
+    while os.getppid() == pai:
+        time.sleep(2)
+    os._exit(0)
+if pai:
+    threading.Thread(target=vigiar, daemon=True).start()
+sys.argv = ["uvicorn"] + sys.argv[1:]
+runpy.run_module("uvicorn", run_name="__main__")
+"""
+
+
+def pid_que_escuta(porta: int) -> int | None:
+    """PID do processo que escuta em 127.0.0.1:porta (netstat), ou None."""
+    try:
+        if EH_WINDOWS:
+            saida = subprocess.run(["netstat", "-ano", "-p", "tcp"], capture_output=True, text=True, timeout=15,
+                                   stdin=subprocess.DEVNULL, creationflags=SEM_JANELA).stdout
+        else:
+            saida = subprocess.run(["ss", "-ltnp"], capture_output=True, text=True, timeout=15, stdin=subprocess.DEVNULL).stdout
+    except Exception:
+        return None
+    for linha in saida.splitlines():
+        partes = linha.split()
+        if EH_WINDOWS and len(partes) >= 5 and partes[3].upper() == "LISTENING" and partes[1].endswith(f":{porta}"):
+            with contextlib.suppress(ValueError):
+                return int(partes[4])
+        if not EH_WINDOWS and f":{porta} " in linha + " " and "pid=" in linha:
+            with contextlib.suppress(ValueError, IndexError):
+                return int(linha.split("pid=")[1].split(",")[0].rstrip(")"))
+    return None
+
+
+def matar_processo(pid: int) -> None:
+    if EH_WINDOWS:
+        subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"], capture_output=True, timeout=20, stdin=subprocess.DEVNULL,
+                       creationflags=SEM_JANELA)
+    else:
+        os.kill(pid, signal.SIGTERM)
+
+
+def encerrar_api_orfa(local: Path, inicio: int) -> list[int]:
+    """Uma API (python) DESTA instalação (.exe dentro de `local`) ficou órfã escutando perto da porta da Lite: encerra. Porta ocupada por
+    qualquer outro programa não é tocada (devolve a porta, só para avisar)."""
+    de_outros: list[int] = []
+    for porta in range(inicio, inicio + 10):
+        if not conecta("127.0.0.1", porta, 0.5):
+            continue
+        pid = pid_que_escuta(porta)
+        imagem = imagem_do_processo(pid) if pid else None
+        if imagem is not None and imagem.stem.lower().startswith("python") and _dentro(imagem, local):
+            log(f"Sobrou um app (API) de uma abertura anterior na porta {porta} (PID {pid}). Encerrando antes de abrir...")
+            with contextlib.suppress(Exception):
+                matar_processo(pid)
+            for _ in range(20):
+                if not conecta("127.0.0.1", porta, 0.3):
+                    break
+                time.sleep(0.25)
+        elif pid:
+            de_outros.append(porta)
+    return de_outros
+
+
 # ---------------------------------------------------------------- PostgreSQL esquecido de outra abertura --------------
 def imagem_do_processo(pid: int) -> Path | None:
     """Caminho do .exe do processo vivo com esse PID; None se não existe (ou não dá para ler)."""
@@ -503,6 +628,7 @@ class Servidor:
         self.token = secrets.token_hex(8)
         self.api: subprocess.Popen | None = None
         self.porta_api = 0
+        self.quedas: list[float] = []  # quando a API caiu (monotonic): limite de 3 religações em 10 minutos
         self.encerrando = threading.Lock()
         self.encerrado = False
         self.parar = threading.Event()
@@ -684,8 +810,15 @@ class Servidor:
         return destino
 
     # --- API
-    def subir_api(self) -> None:
-        self.porta_api = porta_livre(self.args.porta)
+    def subir_api(self, porta: int | None = None) -> None:
+        if porta and not conecta("127.0.0.1", porta, 0.5):
+            self.porta_api = porta  # religando: mantém o endereço que já está aberto no navegador
+        else:
+            outras = encerrar_api_orfa(self.local, self.args.porta)
+            if self.args.porta in outras:
+                log(f"A porta {self.args.porta} está ocupada por outro programa (não é do LabFlow); o LabFlow vai usar outra porta.")
+                avisar("LabFlow", f"A porta {self.args.porta} está ocupada por outro programa. O LabFlow vai usar outra porta, sem problema.")
+            self.porta_api = porta_livre(self.args.porta)
         env = dict(os.environ)
         env.update(
             LABFLOW_DB_URL=self.pg.url_web(),
@@ -699,17 +832,19 @@ class Servidor:
             PYTHONUNBUFFERED="1",
             PYTHONUTF8="1",
             TZ="America/Sao_Paulo",
+            LABFLOW_PAI_PID=str(os.getpid()),  # a API vigia o lite.py e sai junto se ele sumir
         )
         saida = open(self.local / "api.log", "a", encoding="utf-8")
         flags = 0x08000000 if EH_WINDOWS else 0  # CREATE_NO_WINDOW
         self.api = subprocess.Popen(
-            [sys.executable, "-m", "uvicorn", "labflow_api.main:app", "--host", ENDERECO_LOCAL, "--port", str(self.porta_api), "--no-proxy-headers"],
+            [sys.executable, "-c", VIGIA_DO_PAI, "labflow_api.main:app", "--host", ENDERECO_LOCAL, "--port", str(self.porta_api), "--no-proxy-headers"],
             cwd=str(INST / "app"),
             env=env,
             stdout=saida,
             stderr=subprocess.STDOUT,
             creationflags=flags,
         )
+        prender_ao_job(self.api)
         for _ in range(60):
             if self.api.poll() is not None:
                 raise RuntimeError("O app não subiu. Veja o arquivo api.log em " + str(self.local))
@@ -920,9 +1055,27 @@ class Servidor:
                 sinal.unlink(missing_ok=True)
                 break
             if self.api is not None and self.api.poll() is not None:
-                log("O app parou sozinho. Veja o api.log.")
-                break
+                if not self.religar_api():
+                    break
             time.sleep(1)
+
+    def religar_api(self) -> bool:
+        """A API caiu sozinha: religa (até 3 vezes em 10 minutos). False = desistiu (o chamador encerra tudo, gravando no G:)."""
+        log(f"O app parou sozinho (código de saída {self.api.returncode}). Veja o api.log.")
+        agora = time.monotonic()
+        self.quedas = [t for t in self.quedas if agora - t < 600]
+        if len(self.quedas) >= 3:
+            log("O app caiu 3 vezes em 10 minutos: desistindo e encerrando (os dados são gravados no G:).")
+            return False
+        self.quedas.append(agora)
+        log(f"Religando o app (tentativa {len(self.quedas)} de 3)...")
+        try:
+            self.subir_api(self.porta_api)
+            self.dados.escrever_json(self.dados.servidor, self.conteudo_servidor())
+            log(f"App religado na porta {self.porta_api}.")
+        except Exception as erro:
+            log(f"Não consegui religar o app ({erro}).")
+        return True
 
 
 # ---------------------------------------------------------------- modo cliente -------------------------------------

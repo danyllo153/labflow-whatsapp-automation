@@ -213,3 +213,98 @@ def test_postgres_duvidoso_conta_como_em_uso_e_a_pasta_antiga_fica(tmp_path, mon
     chamadas = _sem_pg_ctl(monkeypatch, {4242: tmp_path / "fora" / "postgres.exe"})
     lite.limpar_programas_antigos(local, atual)
     assert antigo.exists() and chamadas == []
+
+
+# ---------------------------------------------------------------- API filha: morre junto, órfã, religar ---------------
+import os  # noqa: E402
+import time  # noqa: E402
+
+import pytest  # noqa: E402
+
+
+def test_api_sai_sozinha_quando_o_pai_some(tmp_path):
+    """O filho roda o VIGIA_DO_PAI (com um 'uvicorn' falso que só dorme); matando o pai (criado aqui), ele precisa sair."""
+    (tmp_path / "uvicorn").mkdir()
+    (tmp_path / "uvicorn" / "__main__.py").write_text("import time\ntime.sleep(120)\n", encoding="utf-8")
+    (tmp_path / "uvicorn" / "__init__.py").write_text("", encoding="utf-8")
+    pai = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(120)"])
+    env = dict(os.environ, LABFLOW_PAI_PID=str(pai.pid), PYTHONPATH=str(tmp_path))
+    filho = subprocess.Popen([sys.executable, "-c", lite.VIGIA_DO_PAI, "x:app"], env=env)
+    try:
+        time.sleep(2)
+        assert filho.poll() is None  # com o pai vivo, segue rodando
+        pai.kill()
+        pai.wait()
+        assert filho.wait(timeout=15) == 0
+    finally:
+        for p in (pai, filho):
+            if p.poll() is None:
+                p.kill()
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Job Object é do Windows")
+def test_job_object_aceita_o_filho():
+    filho = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(30)"])
+    try:
+        assert lite.prender_ao_job(filho) is True
+    finally:
+        filho.kill()
+
+
+def test_api_orfa_da_propria_instalacao_e_encerrada_e_de_outro_dono_nao(tmp_path, monkeypatch):
+    local = tmp_path / "LabFlowLite"
+    mortos, no_ar = [], {8000: 111, 8001: 222}
+    monkeypatch.setattr(lite, "conecta", lambda h, porta, espera=3.0: porta in no_ar)
+    monkeypatch.setattr(lite, "pid_que_escuta", lambda porta: no_ar.get(porta))
+    imagens = {111: local / "p-abc1234" / "python" / "python.exe", 222: tmp_path / "Outro" / "python.exe"}
+    monkeypatch.setattr(lite, "imagem_do_processo", lambda pid: imagens.get(pid))
+
+    def matar(pid):
+        mortos.append(pid)
+        for porta, p in list(no_ar.items()):
+            if p == pid:
+                del no_ar[porta]
+
+    monkeypatch.setattr(lite, "matar_processo", matar)
+    monkeypatch.setattr(lite.time, "sleep", lambda *_: None)
+    de_outros = lite.encerrar_api_orfa(local, 8000)
+    assert mortos == [111]  # só a da própria instalação
+    assert de_outros == [8001]  # a outra não foi tocada
+
+
+def _servidor_falso(tmp_path, monkeypatch, tempo):
+    srv = lite.Servidor.__new__(lite.Servidor)
+    srv.local = tmp_path
+    srv.quedas = []
+    srv.porta_api = 8000
+    srv.api = subprocess.CompletedProcess([], 3)
+    srv.api.returncode = 3
+    subidas = []
+    srv.subir_api = lambda porta=None: subidas.append(porta)
+    srv.dados = type("D", (), {"servidor": tmp_path / "s.json", "escrever_json": lambda *a: None})()
+    srv.conteudo_servidor = lambda: {}
+    monkeypatch.setattr(lite.time, "monotonic", lambda: tempo[0])
+    monkeypatch.setattr(lite, "LOCAL", tmp_path)
+    return srv, subidas
+
+
+def test_api_que_cai_religa_ate_3_vezes_em_10_minutos_e_registra_o_codigo(tmp_path, monkeypatch):
+    tempo = [1000.0]
+    srv, subidas = _servidor_falso(tmp_path, monkeypatch, tempo)
+    assert [srv.religar_api() for _ in range(4)] == [True, True, True, False]
+    assert subidas == [8000, 8000, 8000]  # mantém a mesma porta
+    texto = (tmp_path / "lite.log").read_text(encoding="utf-8")
+    assert "código de saída 3" in texto and "tentativa 3 de 3" in texto and "desistindo" in texto
+    tempo[0] += 601  # passou a janela de 10 minutos: volta a religar
+    assert srv.religar_api() is True
+
+
+def test_falha_ao_religar_conta_como_tentativa(tmp_path, monkeypatch):
+    srv, subidas = _servidor_falso(tmp_path, monkeypatch, [5.0])
+
+    def quebra(porta=None):
+        raise RuntimeError("O app não subiu")
+
+    srv.subir_api = quebra
+    assert [srv.religar_api() for _ in range(4)] == [True, True, True, False]
+    assert "Não consegui religar o app" in (tmp_path / "lite.log").read_text(encoding="utf-8")
