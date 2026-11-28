@@ -8,15 +8,19 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import lite  # noqa: E402
 
 
+INICIO = 1_700_000_000
+
+
 def _pid_file(data: Path, pid: int, pasta: Path | None = None) -> None:
     data.mkdir(parents=True, exist_ok=True)
-    (data / "postmaster.pid").write_text(f"{pid}\n{pasta or data}\n1\n54329\n", encoding="utf-8")
+    (data / "postmaster.pid").write_text(f"{pid}\n{pasta or data}\n{INICIO}\n54329\n", encoding="utf-8")
 
 
 def _falso(monkeypatch, vivos: dict):
     """vivos: pid -> caminho do exe. Simula também o pg_ctl: chamadas registradas; 'stop' tira o pid da tabela (se `obedece`)."""
     chamadas = []
     monkeypatch.setattr(lite, "imagem_do_processo", lambda pid: vivos.get(pid))
+    monkeypatch.setattr(lite, "inicio_do_processo", lambda pid: INICIO + 2 if pid in vivos else None)
 
     def run(cmd, **kw):
         chamadas.append(cmd)
@@ -138,3 +142,61 @@ def test_parar_espera_sair_e_forca_se_preciso(tmp_path, monkeypatch):
     monkeypatch.setattr(pg, "run", lambda *a, **k: subprocess.CompletedProcess(a, 0, "", ""))  # o "fast" normal não surte efeito
     assert pg.parar() is True
     assert [c[c.index("-m") + 1] for c in chamadas][0] == "fast"
+
+
+def _sem_pg_ctl(monkeypatch, vivos):
+    chamadas, _ = _falso(monkeypatch, vivos)
+    return chamadas
+
+
+def test_sem_linha_2_desiste_e_nao_chama_pg_ctl(tmp_path, monkeypatch):
+    data = tmp_path / "data"
+    data.mkdir()
+    (data / "postmaster.pid").write_text("4242\n", encoding="utf-8")
+    chamadas = _sem_pg_ctl(monkeypatch, {4242: tmp_path / "postgres.exe"})
+    assert lite.postgres_vivo_do_data(data) is None
+    assert lite.parar_postgres_esquecido(data, "x") is True and chamadas == []
+    assert lite.postgres_vivo_duvidoso(data) is True
+
+
+def test_postgres_fora_da_pasta_da_lite_nao_e_parado(tmp_path, monkeypatch):
+    lite_dir = tmp_path / "LabFlowLite"
+    data = lite_dir / "data"
+    _pid_file(data, 4242)  # a linha 2 aponta para o data da Lite
+    fora = tmp_path / "outro-programa" / "postgres.exe"
+    chamadas = _sem_pg_ctl(monkeypatch, {4242: fora})
+    assert lite.postgres_vivo_do_data(data) is None
+    assert lite.parar_postgres_esquecido(data, "x") is True and chamadas == []
+    pg = lite.Postgres(lite_dir)
+    try:
+        pg.liberar_data()
+    except RuntimeError as erro:
+        assert "ocupado" in str(erro) and "Reinicie" in str(erro)
+    else:
+        raise AssertionError("devia recusar com mensagem clara")
+    assert chamadas == []
+
+
+def test_inicio_que_nao_bate_nao_e_parado(tmp_path, monkeypatch):
+    data = tmp_path / "data"
+    _pid_file(data, 4242)
+    chamadas = _sem_pg_ctl(monkeypatch, {4242: tmp_path / "postgres.exe"})
+    monkeypatch.setattr(lite, "inicio_do_processo", lambda pid: INICIO + 3600)  # PID reaproveitado, bem depois
+    assert lite.postgres_vivo_do_data(data) is None
+    assert lite.parar_postgres_esquecido(data, "x") is True and chamadas == []
+    monkeypatch.setattr(lite, "inicio_do_processo", lambda pid: None)
+    assert lite.postgres_vivo_do_data(data) is None
+
+
+def test_pg_ctl_so_de_dentro_da_pasta_da_lite(tmp_path, monkeypatch):
+    data = tmp_path / "data"
+    _pid_file(data, 4242)
+    chamadas = _sem_pg_ctl(monkeypatch, {4242: tmp_path / "postgres.exe"})
+    (tmp_path / ("pg_ctl" + lite.EXE)).write_text("")
+    assert lite.parar_postgres_esquecido(data, "pg_ctl-do-pacote") is True
+    assert chamadas[0][0] == str(tmp_path / ("pg_ctl" + lite.EXE))
+    (tmp_path / ("pg_ctl" + lite.EXE)).unlink()
+    _pid_file(data, 4242)
+    chamadas2 = _sem_pg_ctl(monkeypatch, {4242: tmp_path / "postgres.exe"})
+    assert lite.parar_postgres_esquecido(data, "pg_ctl-do-pacote") is True
+    assert chamadas2[0][0] == "pg_ctl-do-pacote"

@@ -250,25 +250,80 @@ def imagem_do_processo(pid: int) -> Path | None:
     return None
 
 
-def postgres_vivo_do_data(data: Path) -> tuple[int, Path] | None:
-    """(PID, caminho do postgres) se o postmaster.pid da pasta data aponta para um postgres VIVO que usa exatamente esta pasta data.
-    Confere pelo PID, pelo nome/caminho do executável e pela pasta gravada no próprio arquivo; qualquer outro processo
-    que tenha herdado o mesmo PID não conta."""
+def inicio_do_processo(pid: int) -> float | None:
+    """Hora (epoch, s) em que o processo vivo começou; None se não dá para saber."""
+    if EH_WINDOWS:
+        import ctypes
+        from ctypes import wintypes
+
+        k = ctypes.WinDLL("kernel32", use_last_error=True)
+        k.OpenProcess.restype = wintypes.HANDLE
+        h = k.OpenProcess(0x1000, False, pid)
+        if not h:
+            return None
+        try:
+            criado, saiu, nucleo, usuario = (wintypes.FILETIME() for _ in range(4))
+            if not k.GetProcessTimes(h, ctypes.byref(criado), ctypes.byref(saiu), ctypes.byref(nucleo), ctypes.byref(usuario)):
+                return None
+            cem_ns = (criado.dwHighDateTime << 32) | criado.dwLowDateTime
+            return cem_ns / 10_000_000 - 11644473600  # 1601 -> 1970
+        finally:
+            k.CloseHandle(h)
+    with contextlib.suppress(OSError, ValueError, IndexError):
+        ticks = int(Path(f"/proc/{pid}/stat").read_text().rsplit(")", 1)[1].split()[19])
+        boot = next(int(l.split()[1]) for l in Path("/proc/stat").read_text().splitlines() if l.startswith("btime"))
+        return boot + ticks / os.sysconf("SC_CLK_TCK")
+    return None
+
+
+def _dentro(filho: Path, pai: Path) -> bool:
+    try:
+        filho.resolve().relative_to(pai.resolve())
+        return True
+    except (ValueError, OSError):
+        return False
+
+
+def _pid_do_arquivo(data: Path) -> tuple[int, list[str]] | None:
     try:
         linhas = (data / "postmaster.pid").read_text(encoding="utf-8", errors="replace").splitlines()
-        pid = int(linhas[0].strip())
+        return int(linhas[0].strip()), linhas
     except (OSError, ValueError, IndexError):
         return None
-    imagem = imagem_do_processo(pid)
-    if imagem is None or imagem.stem.lower() != "postgres":
+
+
+def postgres_vivo_do_data(data: Path) -> tuple[int, Path] | None:
+    """(PID, caminho do postgres) só se TUDO bater: o postmaster.pid tem a pasta data (linha 2, igual à nossa) e a hora de início
+    (linha 3); o processo vivo com esse PID é um postgres cujo .exe está DENTRO da pasta da Lite (data.parent); e ele começou na
+    hora gravada (folga de poucos segundos). Qualquer dúvida: None, e nada é parado (o arquivo é só texto, não prova nada)."""
+    lido = _pid_do_arquivo(data)
+    if lido is None:
         return None
-    if len(linhas) > 1 and linhas[1].strip():
-        try:
-            if os.path.normcase(os.path.realpath(linhas[1].strip())) != os.path.normcase(os.path.realpath(str(data))):
-                return None
-        except OSError:
+    pid, linhas = lido
+    if len(linhas) < 3 or not linhas[1].strip():
+        return None
+    try:
+        if os.path.normcase(os.path.realpath(linhas[1].strip())) != os.path.normcase(os.path.realpath(str(data))):
             return None
+        gravado = float(linhas[2].strip())
+    except (OSError, ValueError):
+        return None
+    imagem = imagem_do_processo(pid)
+    if imagem is None or imagem.stem.lower() != "postgres" or not _dentro(imagem, data.parent):
+        return None
+    inicio = inicio_do_processo(pid)
+    if inicio is None or abs(inicio - gravado) > 5:
+        return None
     return pid, imagem
+
+
+def postgres_vivo_duvidoso(data: Path) -> bool:
+    """Há um postgres vivo no PID do postmaster.pid, mas sem prova de que é desta Lite (então não paramos)?"""
+    lido = _pid_do_arquivo(data)
+    if lido is None or postgres_vivo_do_data(data) is not None:
+        return False
+    imagem = imagem_do_processo(lido[0])
+    return imagem is not None and imagem.stem.lower() == "postgres"
 
 
 def _esperar_sair(data: Path, segundos: float) -> bool:
@@ -289,7 +344,7 @@ def parar_postgres_esquecido(data: Path, pg_ctl_padrao: str, espera: int = 20) -
         return True
     pid, imagem = vivo
     pg_ctl = imagem.with_name("pg_ctl" + EXE)
-    exe = str(pg_ctl) if pg_ctl.exists() else pg_ctl_padrao
+    exe = str(pg_ctl) if pg_ctl.is_file() and _dentro(pg_ctl, data.parent) else pg_ctl_padrao  # nunca um pg_ctl de fora da pasta da Lite
     log(f"Sobrou um PostgreSQL de uma abertura anterior (PID {pid}, {imagem.parent}). Parando antes de abrir...")
     for modo in ("fast", "immediate"):
         with contextlib.suppress(Exception):
@@ -369,6 +424,9 @@ class Postgres:
 
     def liberar_data(self) -> None:
         """Antes de ligar: um PostgreSQL esquecido de outra abertura (postmaster.pid com processo vivo) é parado de forma limpa."""
+        if postgres_vivo_duvidoso(self.data):
+            raise RuntimeError("O banco do LabFlow neste PC está ocupado por um programa que não foi possível confirmar como sendo do LabFlow, "
+                               "então ele não foi parado. Reinicie o computador e abra o LabFlow de novo. Se continuar, chame o suporte.")
         if not parar_postgres_esquecido(self.data, self.exe("pg_ctl")):
             raise RuntimeError("Sobrou um PostgreSQL de uma abertura anterior e ele não quis parar. Reinicie o computador e abra o LabFlow de novo.")
 
@@ -1153,7 +1211,7 @@ def postgres_em_uso_na_pasta(local: Path, pasta: Path) -> bool:
         vivo[1].resolve().relative_to(pasta.resolve())
     except ValueError:
         return False
-    if parar_postgres_esquecido(data, str(vivo[1].with_name("pg_ctl" + EXE))):
+    if parar_postgres_esquecido(data, str(vivo[1].with_name("pg_ctl" + EXE))):  # (já dentro da pasta da Lite, pois vivo passou na conferência)
         return False
     log(f"Não apaguei {pasta.name}: o PostgreSQL dele ainda está rodando. Fica para a próxima abertura.")
     return True
