@@ -19,6 +19,21 @@ function Checar($passo) { if ($LASTEXITCODE -ne 0) { throw "Falhou: $passo (codi
 $repo = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 $raiz = Join-Path $Saida "LabFlow"
 $inst = Join-Path $raiz "instalacao"
+
+# Versao nova a cada montagem: lite-AAAAMMDD-HHMM-<sha>, com "-sujo" se ha mudanca ainda nao commitada (o PC recopia o
+# programa quando o VERSAO.txt muda). Se for igual a do pacote anterior na pasta de saida, para ANTES de apagar qualquer coisa.
+if (-not $Versao) {
+  $sha = (git -C $repo rev-parse --short HEAD).Trim()
+  Checar "git rev-parse"
+  $mudancas = (git -C $repo status --porcelain) -join ""
+  $sujo = ""
+  if ($mudancas.Trim()) { $sujo = "-sujo" }
+  $Versao = "lite-" + (Get-Date -Format "yyyyMMdd-HHmm") + "-" + $sha + $sujo
+}
+$anterior = Join-Path $inst "VERSAO.txt"
+if ((Test-Path $anterior) -and ((Get-Content $anterior -TotalCount 1).Trim() -eq $Versao)) {
+  throw "A versao $Versao e a mesma do pacote que ja esta em $Saida. Espere 1 minuto (ou mude algo) e monte de novo, para o PC perceber a atualizacao."
+}
 if (Test-Path $Saida) { Remove-Item -Recurse -Force $Saida }
 New-Item -ItemType Directory -Force $inst | Out-Null
 $tmp = Join-Path ([IO.Path]::GetTempPath()) ("lite-" + [guid]::NewGuid().ToString("N"))
@@ -89,12 +104,8 @@ foreach ($exe in "initdb", "postgres", "pg_ctl", "psql", "pg_dump", "pg_restore"
 }
 $env:PATH = $pathOriginal
 
-# 4. Versao do pacote (o .bat recopia o programa para o PC quando ela muda)
+# 4. Versao do pacote (calculada no inicio; o .bat recopia o programa para o PC quando ela muda)
 Write-Host "4/6 Versao"
-if (-not $Versao) {
-  $sha = (git -C $repo rev-parse --short HEAD).Trim()
-  $Versao = "lite-" + (Get-Date -Format "yyyyMMdd") + "-" + $sha
-}
 Set-Content -Encoding ascii (Join-Path $inst "VERSAO.txt") $Versao
 
 # 5. Arquivos da raiz: .bat e .vbs em ASCII com CRLF; LEIA-ME em UTF-8 com BOM (Bloco de Notas)
