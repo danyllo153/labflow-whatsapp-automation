@@ -6,11 +6,30 @@
 import type { Coluna } from "./definicoes";
 
 /** O que a célula de uma análise mostra: o resultado, ou "Pendente · dd/mm" com a leitura prevista. */
+export type Estado = "para_ler" | "em_analise" | "resultado";
+export const ROTULO_DO_ESTADO: Record<Estado, string> = { para_ler: "Para ler", em_analise: "Em análise", resultado: "" };
+
+/** Uma etapa dentro da célula (Pré-leitura, Leitura final, D5...): o estado e o texto que a tela mostra. */
+export interface ParteDaCelula {
+  prefixo?: string; // "Pré" / "Final" quando a célula tem mais de uma etapa
+  texto: string;
+  estado: Estado;
+  nao_ok?: boolean;
+}
+
 export interface CelulaDeAnalise {
   texto: string;
   situacao?: string; // etiqueta (Drops: Concluído, Atrasado...)
   nao_ok?: boolean;
   pendente?: boolean;
+  estado?: Estado;
+  partes?: ParteDaCelula[];
+}
+
+/** Ainda não chegou a hora de ler = "Para ler"; já está na hora (vence hoje ou atrasada) = "Em análise". */
+export function estadoDaSituacao(situacao: unknown): Estado {
+  const s = texto(situacao);
+  return s === "Vence hoje" || s === "Atrasado" ? "em_analise" : "para_ler";
 }
 
 export type LinhaDaTabela = Record<string, unknown>;
@@ -57,7 +76,7 @@ const ANALISES_DOS_TANQUES = ["C.T", "B.L", "Psicrotróficos"];
 
 interface GrupoTanque {
   linha: LinhaDaTabela;
-  celulas: Map<string, LinhaDaTabela[]>;
+  celulas: { Normal: Map<string, LinhaDaTabela[]>; Stress: Map<string, LinhaDaTabela[]> };
 }
 
 /** A célula de uma análise: pré-leitura e leitura final juntas (sem duplicar a linha). */
@@ -65,36 +84,49 @@ export function celulaDeTanque(itens: LinhaDaTabela[]): CelulaDeAnalise {
   const lido = (l: LinhaDaTabela) => l.situacao === "Lido" || l.resultado === "Ok" || l.resultado === "Não ok";
   const etapas = [...new Set(itens.map((l) => texto(l.etapa)))];
   const ordem = (e: string) => (e === "Pré-leitura" ? 0 : 1);
-  const partes = etapas
+  const partes: ParteDaCelula[] = etapas
     .sort((a, b) => ordem(a) - ordem(b))
     .map((etapa) => {
       const dela = itens.filter((l) => texto(l.etapa) === etapa);
-      const textos = [
-        ...new Set(
-          dela.map((l) => {
-            const base = lido(l) ? texto(l.contagem) || texto(l.resultado) : `Pendente · ${diaMes(l.prevista)}`;
-            return l.repeticao ? `${base} (repetição)` : base;
-          }),
-        ),
-      ].join(" / ");
-      return etapas.length > 1 ? `${etapa === "Pré-leitura" ? "Pré" : "Final"}: ${textos}` : textos;
+      // pendente: "Para ler · dd/mm" (ainda não chegou a hora) ou "Em análise · dd/mm" (vence hoje ou atrasada)
+      const unicos = new Map<string, { texto: string; estado: Estado }>();
+      for (const l of dela) {
+        const pendente = !lido(l);
+        const estado: Estado = pendente ? estadoDaSituacao(l.situacao) : "resultado";
+        const base = pendente ? `${ROTULO_DO_ESTADO[estado]} · ${diaMes(l.prevista)}` : texto(l.contagem) || texto(l.resultado);
+        const t = l.repeticao ? `${base} (repetição)` : base;
+        unicos.set(t, { texto: t, estado });
+      }
+      const lista = [...unicos.values()];
+      const estado: Estado = lista.some((u) => u.estado === "em_analise") ? "em_analise" : lista.some((u) => u.estado === "para_ler") ? "para_ler" : "resultado";
+      return {
+        prefixo: etapas.length > 1 ? (etapa === "Pré-leitura" ? "Pré" : "Final") : undefined,
+        texto: lista.map((u) => u.texto).join(" / "),
+        estado,
+        nao_ok: dela.some((l) => l.resultado === "Não ok"),
+      };
     });
-  return { texto: partes.join(" · "), nao_ok: itens.some((l) => l.resultado === "Não ok"), pendente: itens.every((l) => !lido(l)) };
+  const t = partes.map((p) => (p.prefixo ? `${p.prefixo}: ${p.texto}` : p.texto)).join(" · ");
+  const falta = partes.filter((p) => p.estado !== "resultado");
+  const estado: Estado = falta.some((p) => p.estado === "em_analise") ? "em_analise" : falta.length ? "para_ler" : "resultado";
+  return { texto: t, partes, estado, nao_ok: itens.some((l) => l.resultado === "Não ok"), pendente: itens.every((l) => !lido(l)) };
 }
 
+/** Normal e Stress na mesma linha do tanque (como o laudo de NFC): cada metade repete as análises. */
 export function agruparTanques(linhas: LinhaDaTabela[]): Agrupada {
   const extras: string[] = [];
   const grupos = agrupar<GrupoTanque>(
     linhas,
-    (l) => [l.data_coleta, l.origem, l.navio, l.tanque, l.frasco].map(texto).join("|"),
+    (l) => [l.data_coleta, l.origem, l.navio, l.tanque].map(texto).join("|"),
     (l) => ({
-      linha: { data_coleta: l.data_coleta, tanque: l.tanque, origem: l.origem, navio: l.navio, frasco: l.frasco, lida_por: "", _situacoes: [] as string[] },
-      celulas: new Map(),
+      linha: { data_coleta: l.data_coleta, tanque: l.tanque, origem: l.origem, navio: l.navio, lida_por: "", _situacoes: [] as string[] },
+      celulas: { Normal: new Map(), Stress: new Map() },
     }),
     (g, l) => {
       const analise = texto(l.analise);
       if (analise && !ANALISES_DOS_TANQUES.includes(analise) && !extras.includes(analise)) extras.push(analise);
-      g.celulas.set(analise, [...(g.celulas.get(analise) ?? []), l]);
+      const metade = texto(l.frasco) === "Stress" ? g.celulas.Stress : g.celulas.Normal;
+      metade.set(analise, [...(metade.get(analise) ?? []), l]);
       g.linha.lida_por = juntar(g.linha.lida_por, l.lida_por);
       (g.linha._situacoes as string[]).push(l.resultado === "Não ok" ? "Não ok" : texto(l.situacao));
     },
@@ -103,19 +135,23 @@ export function agruparTanques(linhas: LinhaDaTabela[]): Agrupada {
   const resultado = grupos.map((g) => {
     const { _situacoes, ...base } = g.linha;
     const linha: LinhaDaTabela = { ...base, situacao: pior(_situacoes as string[]) ?? "Ok" };
-    for (const [i, nome] of nomes.entries()) {
-      const itens = g.celulas.get(nome);
-      if (itens) linha[`analise_${i}`] = celulaDeTanque(itens);
+    for (const [prefixo, mapa] of [["n", g.celulas.Normal], ["s", g.celulas.Stress]] as const) {
+      for (const [i, nome] of nomes.entries()) {
+        const itens = mapa.get(nome);
+        if (itens) linha[`${prefixo}_analise_${i}`] = celulaDeTanque(itens);
+      }
     }
     return linha;
   });
+  const metade = (prefixo: string, grupo: string): Coluna[] =>
+    nomes.map((nome, i): Coluna => ({ chave: `${prefixo}_analise_${i}`, rotulo: nome, formato: "analise", grupo }));
   const colunas: Coluna[] = [
     { chave: "data_coleta", rotulo: "Data da coleta", formato: "data" },
     { chave: "tanque", rotulo: "Tanque", principal: true },
     { chave: "origem", rotulo: "Origem" },
     { chave: "navio", rotulo: "Navio" },
-    { chave: "frasco", rotulo: "Frasco" },
-    ...nomes.map((nome, i): Coluna => ({ chave: `analise_${i}`, rotulo: nome, formato: "analise" })),
+    ...metade("n", "Normal"),
+    ...metade("s", "Stress"),
     { chave: "situacao", rotulo: "Situação", formato: "situacao" },
     { chave: "lida_por", rotulo: "Lido por" },
   ];
@@ -126,7 +162,9 @@ export function agruparTanques(linhas: LinhaDaTabela[]): Agrupada {
 const DROPS = ["D5", "D10", "D15"];
 
 export function celulaDeDrop(l: LinhaDaTabela): CelulaDeAnalise {
-  return { situacao: texto(l.situacao), texto: `prevista ${diaMes(l.prevista)}` };
+  const concluido = texto(l.situacao) === "Concluído";
+  const estado: Estado = concluido ? "resultado" : estadoDaSituacao(l.situacao);
+  return { situacao: texto(l.situacao), texto: `prevista ${diaMes(l.prevista)}`, estado };
 }
 
 export function agruparDrops(linhas: LinhaDaTabela[]): Agrupada {

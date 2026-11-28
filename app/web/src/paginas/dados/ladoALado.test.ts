@@ -4,38 +4,68 @@ import { agruparDrops, agruparTanques, resumoDasLinhas, type CelulaDeAnalise } f
 
 const base = { data_coleta: "2026-11-20", origem: "Terra", navio: null, tanque: "T99", frasco: "Normal", lida_por: "Ana (demo)", repeticao: false };
 
-describe("Tanques lado a lado", () => {
-  it("3 análises do mesmo tanque viram 1 linha, com as etapas dentro da célula", () => {
+describe("Tanques lado a lado (Normal | Stress)", () => {
+  const f = (frasco: string, analise: string, extra: Record<string, unknown> = {}) => ({
+    ...base, frasco, analise, etapa: "Leitura final", prevista: "2026-11-22", contagem: "12", resultado: "Ok", situacao: "Lido", ...extra,
+  });
+
+  it("Normal e Stress do mesmo tanque viram 1 linha, em duas divisões com as mesmas análises", () => {
     const { linhas, colunas } = agruparTanques([
-      { ...base, analise: "C.T", etapa: "Leitura final", prevista: "2026-11-22", contagem: "12", resultado: "Ok", situacao: "Lido" },
-      { ...base, analise: "B.L", etapa: "Pré-leitura", prevista: "2026-11-23", contagem: "<1", resultado: "Ok", situacao: "Lido" },
-      { ...base, analise: "B.L", etapa: "Leitura final", prevista: "2026-11-25", contagem: null, resultado: "Pendente", situacao: "Atrasado" },
-      { ...base, analise: "Psicrotróficos", etapa: "Pré-leitura", prevista: "2026-11-25", contagem: null, resultado: "Pendente", situacao: "No prazo" },
+      f("Normal", "C.T"),
+      f("Normal", "B.L", { etapa: "Pré-leitura", contagem: "<1" }),
+      f("Normal", "B.L", { contagem: null, resultado: "Pendente", situacao: "Atrasado", prevista: "2026-11-25" }),
+      f("Stress", "C.T", { contagem: "7" }),
+      f("Stress", "Psicrotróficos", { contagem: null, resultado: "Pendente", situacao: "No prazo", prevista: "2026-11-25" }),
     ]);
     expect(linhas).toHaveLength(1);
-    expect(colunas.map((c) => c.rotulo)).toEqual(["Data da coleta", "Tanque", "Origem", "Navio", "Frasco", "C.T", "B.L", "Psicrotróficos", "Situação", "Lido por"]);
-    const c = (n: number) => linhas[0][`analise_${n}`] as CelulaDeAnalise;
-    expect(c(0).texto).toBe("12");
-    expect(c(1).texto).toBe("Pré: <1 · Final: Pendente · 25/11");
-    expect(c(2)).toMatchObject({ texto: "Pendente · 25/11", pendente: true });
+    expect(colunas.map((c) => [c.grupo ?? "", c.rotulo])).toEqual([
+      ["", "Data da coleta"], ["", "Tanque"], ["", "Origem"], ["", "Navio"],
+      ["Normal", "C.T"], ["Normal", "B.L"], ["Normal", "Psicrotróficos"],
+      ["Stress", "C.T"], ["Stress", "B.L"], ["Stress", "Psicrotróficos"],
+      ["", "Situação"], ["", "Lido por"],
+    ]);
+    const c = (k: string) => linhas[0][k] as CelulaDeAnalise | undefined;
+    expect(c("n_analise_0")?.texto).toBe("12");
+    expect(c("n_analise_1")?.texto).toBe("Pré: <1 · Final: Em análise · 25/11");
+    expect(c("s_analise_0")?.texto).toBe("7");
+    expect(c("s_analise_2")).toMatchObject({ texto: "Para ler · 25/11", pendente: true });
+    expect(c("s_analise_1")).toBeUndefined(); // metade sem a análise: a tela mostra "—"
     expect(linhas[0].situacao).toBe("Atrasado");
   });
 
-  it("tanques e frascos diferentes ficam em linhas diferentes; Não ok vence a situação", () => {
+  it("a célula mostra os três estados: para ler, em análise e o resultado", () => {
+    const e = (analise: string, extra: Record<string, unknown>) => f("Normal", analise, { contagem: null, resultado: "Pendente", ...extra });
     const { linhas } = agruparTanques([
-      { ...base, analise: "C.T", etapa: "Leitura final", prevista: "2026-11-22", contagem: "250", resultado: "Não ok", situacao: "Lido" },
-      { ...base, frasco: "Stress", analise: "C.T", etapa: "Leitura final", prevista: "2026-11-22", contagem: "3", resultado: "Ok", situacao: "Lido" },
-      { ...base, tanque: "T100", analise: "C.T", etapa: "Leitura final", prevista: "2026-11-22", contagem: "3", resultado: "Ok", situacao: "Lido" },
+      f("Normal", "C.T"),
+      e("B.L", { situacao: "Vence hoje", prevista: "2026-11-28" }),
+      e("Psicrotróficos", { situacao: "No prazo", prevista: "2026-12-03" }),
     ]);
-    expect(linhas.map((l) => [l.tanque, l.frasco, l.situacao])).toEqual([["T99", "Normal", "Não ok"], ["T99", "Stress", "Ok"], ["T100", "Normal", "Ok"]]);
-    expect((linhas[0].analise_0 as CelulaDeAnalise).nao_ok).toBe(true);
+    const c = (n: number) => linhas[0][`n_analise_${n}`] as CelulaDeAnalise;
+    expect([c(0).estado, c(0).texto]).toEqual(["resultado", "12"]);
+    expect([c(1).estado, c(1).texto]).toEqual(["em_analise", "Em análise · 28/11"]);
+    expect([c(2).estado, c(2).texto]).toEqual(["para_ler", "Para ler · 03/12"]);
+  });
+
+  it("tanque só com Normal (ou só com Stress) deixa a outra metade vazia", () => {
+    const { linhas } = agruparTanques([f("Normal", "C.T"), f("Stress", "C.T", { tanque: "T100" })]);
+    expect(linhas).toHaveLength(2);
+    expect(linhas[0].n_analise_0).toBeDefined();
+    expect(linhas[0].s_analise_0).toBeUndefined();
+    expect(linhas[1].n_analise_0).toBeUndefined();
+    expect(linhas[1].s_analise_0).toBeDefined();
+  });
+
+  it("Não ok em qualquer metade vence a situação da linha", () => {
+    const { linhas } = agruparTanques([f("Normal", "C.T"), f("Stress", "C.T", { contagem: "250", resultado: "Não ok" })]);
+    expect(linhas[0].situacao).toBe("Não ok");
+    expect((linhas[0].s_analise_0 as CelulaDeAnalise).nao_ok).toBe(true);
   });
 
   it("as duas leituras do Wort (profundidade e superfície) ficam na mesma etapa da célula", () => {
     const wort = { ...base, analise: "Psicrotróficos", etapa: "Leitura final", prevista: "2026-11-30", resultado: "Ok", situacao: "Lido" };
     const { linhas } = agruparTanques([{ ...wort, contagem: "5" }, { ...wort, contagem: "<1" }]);
     expect(linhas).toHaveLength(1);
-    expect((linhas[0].analise_2 as CelulaDeAnalise).texto).toBe("5 / <1");
+    expect((linhas[0].n_analise_2 as CelulaDeAnalise).texto).toBe("5 / <1");
   });
 
   it("origem e navio entram na chave: o mesmo tanque de navios diferentes não se mistura", () => {
@@ -55,9 +85,9 @@ describe("Drops lado a lado", () => {
     ]);
     expect(linhas).toHaveLength(1);
     expect(colunas.map((c) => c.rotulo)).toContain("D15");
-    expect(linhas[0].drop_0).toEqual({ situacao: "Concluído", texto: "prevista 25/11" });
-    expect(linhas[0].drop_1).toEqual({ situacao: "Atrasado", texto: "prevista 30/11" });
-    expect(linhas[0].drop_2).toEqual({ situacao: "No prazo", texto: "prevista 05/12" });
+    expect(linhas[0].drop_0).toEqual({ situacao: "Concluído", texto: "prevista 25/11", estado: "resultado" });
+    expect(linhas[0].drop_1).toEqual({ situacao: "Atrasado", texto: "prevista 30/11", estado: "em_analise" });
+    expect(linhas[0].drop_2).toEqual({ situacao: "No prazo", texto: "prevista 05/12", estado: "para_ler" });
     expect(linhas[0].situacao).toBe("Atrasado");
     expect(linhas[0].concluido_por).toBe("Ana (demo)");
   });

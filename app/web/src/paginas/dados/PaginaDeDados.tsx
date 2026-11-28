@@ -8,7 +8,7 @@ import { CabecalhoDaPagina } from "../../componentes/CabecalhoDaPagina";
 import { classeDaSituacao, formatar } from "./formatos";
 import Dashboard, { type Linha } from "./Dashboard";
 import { BarrasPorSituacao, type ItemDeSituacao } from "../../componentes/Graficos";
-import { agruparLinhas, resumoDasLinhas, type Agrupada, type CelulaDeAnalise } from "./ladoALado";
+import { ROTULO_DO_ESTADO, agruparLinhas, resumoDasLinhas, type Agrupada, type CelulaDeAnalise } from "./ladoALado";
 
 /**
  * Página do laboratório em leitura (07 §5; APP-015): filtros com etiquetas removíveis, tabela (cartões no celular),
@@ -76,13 +76,32 @@ export function Celula({ coluna, linha }: { coluna: Coluna; linha: Record<string
   if (coluna.formato === "analise") {
     const c = linha[coluna.chave] as CelulaDeAnalise | undefined;
     if (!c) return <span className="texto-secundario">—</span>;
-    if (c.situacao)
+    // Drops: "Concluído" com etiqueta; senão "Para ler" / "Em análise" com a data prevista
+    if (c.situacao && c.estado === "resultado")
       return (
         <>
           <span className={classeDaSituacao(c.situacao)}>{c.situacao}</span> <span className="texto-secundario">{c.texto}</span>
         </>
       );
-    return <span className={c.nao_ok ? "contagem-nao-ok" : c.pendente ? "texto-secundario" : undefined}>{c.texto}</span>;
+    if (c.situacao && c.estado)
+      return (
+        <>
+          <span className={`estado-celula estado-${c.estado}`}>{ROTULO_DO_ESTADO[c.estado]}</span> <span className="texto-secundario">{c.texto}</span>
+        </>
+      );
+    if (c.partes)
+      return (
+        <>
+          {c.partes.map((p, i) => (
+            <span key={i} className={p.estado === "resultado" ? (p.nao_ok ? "contagem-nao-ok" : undefined) : `estado-celula estado-${p.estado}`}>
+              {i > 0 && <span className="texto-secundario"> · </span>}
+              {p.prefixo ? `${p.prefixo}: ` : ""}
+              {p.texto}
+            </span>
+          ))}
+        </>
+      );
+    return <span className={c.nao_ok ? "contagem-nao-ok" : undefined}>{c.texto}</span>;
   }
   if (coluna.formato === "amostra" && texto) return <span className={`etiqueta ${texto === "Fresh" ? "etiqueta-fresh" : "etiqueta-past"}`}>{texto}</span>;
   return <>{texto}</>;
@@ -540,9 +559,10 @@ export default function PaginaDeDados({ def, embutida = false }: { def: Definica
   );
 }
 
-function Tabela({ colunas, linhas, link }: { colunas: Coluna[]; linhas: Record<string, unknown>[]; link?: (l: Record<string, unknown>) => string }) {
-  return (
-    <table className="tabela-dados">
+/** Cabeçalho em dois níveis quando há colunas com `grupo`: o grupo (Normal, Stress) em cima, atravessando as colunas dele. */
+function CabecalhoDaTabela({ colunas }: { colunas: Coluna[] }) {
+  if (!colunas.some((c) => c.grupo)) {
+    return (
       <thead>
         <tr>
           {colunas.map((c) => (
@@ -552,11 +572,61 @@ function Tabela({ colunas, linhas, link }: { colunas: Coluna[]; linhas: Record<s
           ))}
         </tr>
       </thead>
+    );
+  }
+  const alto: { chave: string; grupo?: string; coluna?: Coluna; largura: number }[] = [];
+  for (const c of colunas) {
+    const ultimo = alto[alto.length - 1];
+    if (c.grupo && ultimo?.grupo === c.grupo) ultimo.largura += 1;
+    else alto.push({ chave: c.chave, grupo: c.grupo, coluna: c.grupo ? undefined : c, largura: 1 });
+  }
+  return (
+    <thead>
+      <tr>
+        {alto.map((g) =>
+          g.coluna ? (
+            <th key={g.chave} scope="col" rowSpan={2}>
+              {g.coluna.rotulo}
+            </th>
+          ) : (
+            <th key={g.chave} scope="colgroup" colSpan={g.largura} className="grupo-de-colunas">
+              {g.grupo}
+            </th>
+          ),
+        )}
+      </tr>
+      <tr>
+        {colunas
+          .filter((c) => c.grupo)
+          .map((c) => (
+            <th key={c.chave} scope="col" className={ehPrimeiraDoGrupo(colunas, c) ? "inicio-de-grupo" : undefined}>
+              {c.rotulo}
+            </th>
+          ))}
+      </tr>
+    </thead>
+  );
+}
+
+function ehPrimeiraDoGrupo(colunas: Coluna[], c: Coluna): boolean {
+  const i = colunas.indexOf(c);
+  return !!c.grupo && (i === 0 || colunas[i - 1].grupo !== c.grupo);
+}
+
+function Tabela({ colunas, linhas, link }: { colunas: Coluna[]; linhas: Record<string, unknown>[]; link?: (l: Record<string, unknown>) => string }) {
+  const agrupada = colunas.some((c) => c.grupo);
+  const tabela = (
+    <table className={agrupada ? "tabela-dados tabela-normal-stress" : "tabela-dados"}>
+      <CabecalhoDaTabela colunas={colunas} />
       <tbody>
         {linhas.map((linha, n) => (
           <tr key={n}>
             {colunas.map((c) => (
-              <td key={c.chave} data-rotulo={c.rotulo} className={c.principal ? "principal" : undefined}>
+              <td
+                key={c.chave}
+                data-rotulo={c.grupo ? `${c.grupo} · ${c.rotulo}` : c.rotulo}
+                className={[c.principal ? "principal" : "", ehPrimeiraDoGrupo(colunas, c) ? "inicio-de-grupo" : ""].filter(Boolean).join(" ") || undefined}
+              >
                 {c.principal && link ? (
                   <Link to={link(linha)}>
                     <Celula coluna={c} linha={linha} />
@@ -571,4 +641,5 @@ function Tabela({ colunas, linhas, link }: { colunas: Coluna[]; linhas: Record<s
       </tbody>
     </table>
   );
+  return agrupada ? <div className="tabela-rolavel">{tabela}</div> : tabela;
 }

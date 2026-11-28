@@ -225,9 +225,11 @@ describe("Tanques lado a lado (27/11)", () => {
     ];
     abrir("/paginas/tanques", { "GET /paginas/tanques": (url: string) => paginaDe(todas, url) });
     expect(await screen.findByText(/^1 registro/)).toBeInTheDocument();
-    for (const nome of ["C.T", "B.L", "Psicrotróficos"]) expect(screen.getByRole("columnheader", { name: nome })).toBeInTheDocument();
-    expect(screen.getAllByRole("row")).toHaveLength(2); // cabeçalho + 1 linha
-    expect(screen.getByText("Pendente · 25/11")).toBeInTheDocument();
-    expect(screen.getByText("Pendente · 30/11")).toBeInTheDocument();
+    for (const nome of ["C.T", "B.L", "Psicrotróficos"]) expect(screen.getAllByRole("columnheader", { name: nome })).toHaveLength(2); // Normal e Stress
+    expect(screen.getByRole("columnheader", { name: "Normal" })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "Stress" })).toBeInTheDocument();
+    expect(screen.getAllByRole("row")).toHaveLength(3); // 2 linhas de cabeçalho + 1 linha
+    expect(screen.getByText("Para ler · 25/11")).toBeInTheDocument();
+    expect(screen.getByText("Para ler · 30/11")).toBeInTheDocument();
   });
 });

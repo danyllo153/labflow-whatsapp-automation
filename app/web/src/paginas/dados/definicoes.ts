@@ -16,6 +16,7 @@ export interface Coluna {
   rotulo: string;
   formato?: Formato;
   principal?: boolean; // no celular, vira o título do cartão
+  grupo?: string; // cabeçalho em dois níveis (Normal | Stress): o grupo fica em cima, o rótulo embaixo
 }
 
 export interface Filtro {
