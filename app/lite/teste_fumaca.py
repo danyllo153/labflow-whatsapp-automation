@@ -2,7 +2,7 @@
 
 Simula o uso real numa CÓPIA do pacote (o pacote publicado continua sem dados):
 1. PC A abre pelo "Abrir LabFlow com janela.bat": banco do zero, Admin provisório, telas e login.
-2. PC B (outro LOCALAPPDATA) abre enquanto A está no ar: vira cliente e não liga outro banco.
+2. PC B (outro LOCALAPPDATA, mesmo nome de PC) abre enquanto A está no ar: só abre a janela e não liga outro banco.
 3. A fecha (parar.txt): cópia no G: e backup do dia gravados, aviso de servidor apagado.
 4. PC B abre: restaura do G: e a senha trocada em A continua valendo.
 
@@ -107,11 +107,27 @@ def main() -> None:
     assert pedir(web, base + "/trocar-senha", {"nova_senha": "SenhaDoTeste123"}) == 204, "troca de senha"
     print("1 ok: PC A abriu do zero, marca lida, login e troca de senha")
 
+    # 1b. so 127.0.0.1 (decisao de 27/11): o app e o banco nao escutam em nenhum outro endereco; Host estranho leva 400
+    porta_pg = int((pc_a / "LabFlowLite" / "data" / "postmaster.pid").read_text(encoding="utf-8").splitlines()[3])
+    escutando = subprocess.run(["netstat", "-ano", "-p", "tcp"], capture_output=True, text=True).stdout
+    for porta in (info["porta"], porta_pg):
+        enderecos = [
+            linha.split()[1] for linha in escutando.splitlines() if "LISTENING" in linha and linha.split()[1].rsplit(":", 1)[-1] == str(porta)
+        ]
+        assert enderecos and all(e.startswith("127.0.0.1:") for e in enderecos), f"porta {porta} escuta fora do 127.0.0.1: {enderecos}"
+    estranho = urllib.request.Request(base + "/saude", headers={"Host": "evil.example.com"})
+    try:
+        urllib.request.urlopen(estranho, timeout=20)
+        raise AssertionError("Host estranho devia dar 400")
+    except urllib.error.HTTPError as erro:
+        assert erro.code == 400, erro.code
+    print("1b ok: app e banco escutam so em 127.0.0.1 e Host estranho leva 400")
+
     # 2. PC B enquanto A está no ar: cliente
     saida_b = trabalho / "b.txt"
     b = abrir(raiz, pc_b, saida_b)
     b.wait(timeout=600)
-    esperar(saida_b, "já está aberto", 5)
+    esperar(saida_b, "já está aberto neste PC", 5)
     assert not (pc_b / "LabFlowLite" / "data").exists(), "o cliente não pode ligar outro banco"
     print("2 ok: PC B virou cliente")
 

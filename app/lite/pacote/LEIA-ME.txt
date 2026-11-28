@@ -8,32 +8,31 @@ PARA ABRIR
   - O LabFlow abre como um programa, em TELA CHEIA, na tela de entrar.
     F11 alterna entre tela cheia e janela; Alt+F4 fecha só a tela (o LabFlow
     continua rodando no ícone perto do relógio). Cada pessoa usa o PRÓPRIO usuário e senha.
-  - Se outro PC já estiver com o LabFlow aberto, este só abre a janela do LabFlow dele:
-    vários PCs usam juntos, cada um com o seu login.
+  - O LabFlow funciona em UM PC por vez (não aceita conexões da rede). Se ele já estiver
+    aberto em outro PC, aparece o aviso de qual PC: use "Encerrar" lá e abra aqui.
 
 A JANELA PRETA E O ÍCONE PERTO DO RELÓGIO
   Na PRIMEIRA vez em cada PC, o LabFlow abre com uma janela preta: ela mostra o
   preparo e, no banco novo, a senha do primeiro acesso (anote).
   Da segunda vez em diante, abre OCULTO: só aparece o ícone do LabFlow perto do
   relógio do Windows. Botão direito no ícone:
-    Abrir o LabFlow · Endereço para os outros PCs · Encerrar o LabFlow
+    Abrir o LabFlow · Endereço neste PC · Encerrar o LabFlow
   Avisos importantes aparecem numa janelinha. "Fechar LabFlow" também encerra.
 
-O PC SERVIDOR
-  O primeiro PC que abre é o "servidor": o LabFlow dele precisa ficar ABERTO
-  (a janela preta, na primeira vez, ou o ícone perto do relógio).
-  Use de preferência o PC que fica ligado o dia todo.
+O PC EM QUE O LABFLOW ESTÁ ABERTO
+  O LabFlow fica ABERTO no PC em que você deu os dois cliques (a janela preta, na primeira
+  vez, ou o ícone perto do relógio). Use de preferência o PC que fica ligado o dia todo.
   - Troca de turno: só "Sair" no LabFlow. NÃO saia do usuário do Windows nesse PC
     (bloquear a tela com Windows+L pode).
   - Esse PC não pode suspender/hibernar (plano de energia: nunca).
   - Para fechar: no ícone perto do relógio, "Encerrar o LabFlow" (ou ENTER e S na
-    janela preta). Os outros PCs param até alguém abrir de novo.
+    janela preta). Só depois disso outro PC consegue abrir o LabFlow.
 
 OS DADOS
   Ficam na pasta "dados". Nunca apague nem substitua essa pasta.
   - O LabFlow grava uma cópia a cada minuto (se algo mudou) e ao fechar.
   - Backup de cada dia em dados\backup (últimos 30 dias).
-  - Se o PC servidor cair, espere 1 minuto e abra em qualquer PC: ele assume com
+  - Se o PC cair, espere 1 minuto e abra em qualquer PC: ele assume com
     os dados gravados (pode faltar no máximo o último minuto).
 
 PRIMEIRO ACESSO (banco vazio)
@@ -55,9 +54,7 @@ ATUALIZAR O PROGRAMA
   Feche o LabFlow em todos os PCs e troque SÓ a pasta "instalacao" pela nova.
   Na próxima abertura ele faz um backup e atualiza o banco sozinho.
 
-REDE (vários PCs)
-  Os outros PCs entram pela porta 8000 do PC servidor. Se o "Abrir LabFlow" de
-  outro PC disser que não conseguiu falar com o servidor, a TI precisa liberar no
-  firewall do Windows do PC servidor a porta TCP 8000 de entrada, só para os PCs
-  do laboratório. Para conferir: "Testar rede" (primeiro no servidor, depois nos
-  outros). Sem essa liberação, funciona um PC por vez.
+REDE
+  O LabFlow escuta só em 127.0.0.1 (este PC): não usa a rede, não pede liberação de
+  firewall nem senha de administrador, e outro PC não consegue se conectar a ele.
+  Para usar em outro PC: "Encerrar o LabFlow" neste e abra no outro.

@@ -42,14 +42,18 @@ from labflow_api.rotas_pendencias import roteador as roteador_pendencias
 from labflow_api.rotas_relatorio_dia import roteador as roteador_relatorio_dia
 from labflow_api.rotas_relatorio_turno import roteador as roteador_relatorio_turno
 from labflow_api.rotas_turno import roteador as roteador_turno
+from labflow_api import seguranca_http
 from labflow_api.marca import roteador as roteador_marca
 from labflow_api.telas import roteador as roteador_telas
+
+seguranca_http.exigir_loopback_no_modo_lite()  # Lite: recusa subir fora do 127.0.0.1
 
 app = FastAPI(
     title="LabFlow API",
     description="API do app LabFlow (LIMS do laboratório de microbiologia).",
     version="0.1.0",
 )
+seguranca_http.ligar(app)  # Lite: Host e Origin só localhost/127.0.0.1 (Completa não muda)
 
 
 @app.get("/saude", tags=["sistema"])

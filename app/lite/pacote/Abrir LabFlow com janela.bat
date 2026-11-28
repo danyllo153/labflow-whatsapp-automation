@@ -1,6 +1,6 @@
 @echo off
-rem LabFlow Lite: abre o LabFlow a partir desta pasta (G:). Este PC vira o servidor ou, se outro PC
-rem ja estiver com o LabFlow aberto, so abre o navegador nele. Arquivo em ASCII de proposito.
+rem LabFlow Lite: abre o LabFlow a partir desta pasta (G:). Este PC abre o LabFlow ou, se outro PC
+rem ja estiver com o LabFlow aberto, mostra o aviso de qual PC (um PC por vez; nada de rede). Arquivo em ASCII de proposito.
 setlocal
 chcp 65001 >nul
 title LabFlow
