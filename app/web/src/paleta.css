@@ -174,3 +174,98 @@
     background: #fdf8ec;
   }
 }
+
+/*
+ * Leitura no PC, tema claro (monitor comum do laboratório): texto principal mais escuro, texto secundário com contraste
+ * 7:1 ou mais (AAA) no creme e no branco, peso 500 nos textos pequenos e no menu, mínimo de 14px no texto corrido e
+ * 13px nos rótulos. Só tema claro e só a partir de 900px; o escuro, o celular e as cores da marca ficam como estão.
+ */
+@media (min-width: 900px) {
+  :root[data-tema="claro"] {
+    --texto: #141d38; /* era #1e2a4a (13,3:1); agora 15,6:1 no creme */
+    --texto-titulo: #141d38;
+    --texto-secundario: #454b61; /* era #5a6178 (5,8:1 no creme); agora 8,1:1 no creme e 8,6:1 no branco */
+    --menu-texto: #141d38;
+    --menu-texto-ativo: #141d38;
+    --menu-secao-texto: #4d4630; /* era #8a7f66 (3,7:1); agora 8,9:1 */
+    --topo-texto: #141d38;
+    --topo-texto-suave: #454b61;
+  }
+
+  /* grupo aberto do menu (ex.: Registros diários): estava em branco sobre o creme e sumia */
+  :root[data-tema="claro"] .menu-grupo.com-ativo > .menu-grupo-botao {
+    color: var(--menu-texto-ativo);
+    font-weight: 700;
+  }
+
+  /* menu lateral: itens em 14px e peso 500 */
+  :root[data-tema="claro"] .menu-lateral .item-rotulo,
+  :root[data-tema="claro"] .menu-lateral .menu-filho-nome {
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  :root[data-tema="claro"] .menu-lateral .menu-secao,
+  :root[data-tema="claro"] .menu-lateral .etiqueta-breve {
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  :root[data-tema="claro"] .menu-lateral .etiqueta-breve {
+    white-space: nowrap;
+  }
+
+  :root[data-tema="claro"] .menu-lateral .menu-secao-link {
+    color: var(--texto-secundario);
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  /* texto corrido: 14px e peso 500 */
+  :root[data-tema="claro"] .texto-secundario,
+  :root[data-tema="claro"] .vazio-tabela,
+  :root[data-tema="claro"] .saudacao-topo span,
+  :root[data-tema="claro"] .aviso-turno-faixa,
+  :root[data-tema="claro"] .aviso-turno-faixa a,
+  :root[data-tema="claro"] .relogio-detalhe,
+  :root[data-tema="claro"] .voltar a,
+  :root[data-tema="claro"] .cartao:not(.cartao-azul) p,
+  :root[data-tema="claro"] .cartao:not(.cartao-azul) li {
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  /* rótulos, números pequenos e legendas: 13px e peso 500 ou mais */
+  :root[data-tema="claro"] .cartao small,
+  :root[data-tema="claro"] .atualizado,
+  :root[data-tema="claro"] .contador,
+  :root[data-tema="claro"] .abas-contador,
+  :root[data-tema="claro"] .chip-equipe,
+  :root[data-tema="claro"] .estatistica-titulo,
+  :root[data-tema="claro"] .estatistica-detalhe,
+  :root[data-tema="claro"] .etiqueta {
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  :root[data-tema="claro"] .estatistica-detalhe.tom-pendente,
+  :root[data-tema="claro"] .etiqueta-pendente {
+    color: #6b4700; /* era #b07c00 (3,5:1); agora 7,8:1 no creme e 8,3:1 no branco */
+  }
+
+  :root[data-tema="claro"] .etiqueta-no-prazo {
+    color: #0a4f73; /* era #1d8fc4 (3,6:1); agora 8,3:1 */
+  }
+
+  :root[data-tema="claro"] .estatistica-detalhe.tom-ok {
+    color: #245320; /* era #2f6a2b (6,2:1) */
+  }
+
+  /* abas, botões pequenos e o aviso do turno: peso 500 ou 600, 14px */
+  :root[data-tema="claro"] .abas-app button,
+  :root[data-tema="claro"] .botao-pequeno,
+  :root[data-tema="claro"] .botao-arquivo {
+    font-size: 14px;
+    font-weight: 600;
+  }
+}
