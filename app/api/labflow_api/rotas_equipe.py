@@ -150,10 +150,11 @@ def colocar_no_turno(
         )
     con.execute(
         """
-        INSERT INTO app.entradas_turno (usuario_id, turno_id, dia, entrada, entrada_registrada) VALUES (%s, %s, %s, %s, %s)
-        ON CONFLICT (usuario_id, turno_id, dia) DO UPDATE SET saida = NULL, saida_registrada = NULL
+        INSERT INTO app.entradas_turno (usuario_id, turno_id, dia, entrada, entrada_registrada, colocado_por)
+        VALUES (%s, %s, %s, %s, %s, %s)
+        ON CONFLICT (usuario_id, turno_id, dia) DO UPDATE SET saida = NULL, saida_registrada = NULL, colocado_por = EXCLUDED.colocado_por
         """,
-        (pedido.usuario_id, minha.turno_id, minha.dia, agora, agora),
+        (pedido.usuario_id, minha.turno_id, minha.dia, agora, agora, pessoa.usuario_id),
     )
     return _equipe(con, pessoa)
 

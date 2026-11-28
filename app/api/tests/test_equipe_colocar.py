@@ -160,3 +160,15 @@ def test_lite_colocar_colegas_e_idor(cliente_lite, conexao, registro_inicial, ag
     # Caio não está em turno: não mexe na equipe da Ana
     assert c.delete(f"/turno/equipe/{ids['Bia Lima']}").status_code == 403
     assert c.post("/turno/equipe", json={"usuario_id": ids["Ana Souza"]}).status_code == 403
+
+
+def test_colocar_grava_quem_colocou(cliente, completa, agora, conexao):
+    """Ressalva da revisao: a entrada de quem foi colocado guarda o id de quem estava logado; a propria entrada fica nula."""
+    agora(em(22, 9, 0))
+    completa.pessoa("bia.teste", turno_id=None)
+    completa.pessoa("ana.teste")
+    agora(em(22, 9, 30))
+    assert cliente.post("/turno/equipe", json={"usuario_id": completa.ids["bia.teste"]}).status_code == 200
+    por = dict(conexao.execute("SELECT usuario_id, colocado_por FROM app.entradas_turno").fetchall())
+    assert por[completa.ids["bia.teste"]] == completa.ids["ana.teste"]
+    assert por[completa.ids["ana.teste"]] is None
