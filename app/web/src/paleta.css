@@ -149,3 +149,28 @@
 :root .moldura .topo-celular .botao-tema {
   color: var(--topo-icone-tema);
 }
+
+/* cartão "Concluído na semana": o azul-marinho da paleta no lugar do azul saturado, no claro e no escuro */
+.cartao-azul,
+:root[data-tema="escuro"] .cartao-azul {
+  background: var(--acao-marinho, #24365e);
+}
+
+/* tema escuro: a logo (texto marinho) ganha uma placa creme com cantos arredondados; só no PC (menu lateral) e na entrada */
+:root[data-tema="escuro"] .marca-logo-entrar {
+  box-sizing: content-box;
+  width: auto;
+  padding: 10px 18px;
+  border-radius: 14px;
+  background: #fdf8ec;
+}
+
+@media (min-width: 900px) {
+  :root[data-tema="escuro"] .menu-lateral-topo .marca-logo.marca-logo-imagem {
+    box-sizing: content-box;
+    height: 44px;
+    padding: 6px 12px;
+    border-radius: 12px;
+    background: #fdf8ec;
+  }
+}
