@@ -223,6 +223,339 @@ def checar_versao_banco(data: Path, pg_bin: Path) -> None:
         raise RuntimeError(mensagem_versao_diferente(do_banco, do_pacote))
 
 
+# ---------------------------------------------------------------- filhos morrem junto / API órfã -------------------------
+_JOB = None  # Job Object do Windows: quando o lite.py morre, o Windows mata tudo o que está nele
+
+
+def prender_ao_job(proc: subprocess.Popen) -> bool:
+    """Windows: coloca o processo num Job Object com KILL_ON_JOB_CLOSE (morre junto com o lite.py, mesmo se ele for morto à força).
+    Fora do Windows, ou se falhar, devolve False (o vigia do próprio filho cobre)."""
+    global _JOB
+    if not EH_WINDOWS:
+        return False
+    try:
+        import ctypes
+        from ctypes import wintypes
+
+        k = ctypes.WinDLL("kernel32", use_last_error=True)
+        k.CreateJobObjectW.restype = wintypes.HANDLE
+        k.OpenProcess.restype = wintypes.HANDLE
+        if _JOB is None:
+            job = k.CreateJobObjectW(None, None)
+            if not job:
+                return False
+
+            class _Basico(ctypes.Structure):
+                _fields_ = [("a", ctypes.c_int64), ("b", ctypes.c_int64), ("LimitFlags", wintypes.DWORD), ("c", ctypes.c_size_t),
+                            ("d", ctypes.c_size_t), ("e", wintypes.DWORD), ("f", ctypes.c_size_t), ("g", wintypes.DWORD),
+                            ("h", wintypes.DWORD)]
+
+            class _Io(ctypes.Structure):
+                _fields_ = [(n, ctypes.c_uint64) for n in "abcdef"]
+
+            class _Estendido(ctypes.Structure):
+                _fields_ = [("Basic", _Basico), ("Io", _Io), ("m1", ctypes.c_size_t), ("m2", ctypes.c_size_t),
+                            ("m3", ctypes.c_size_t), ("m4", ctypes.c_size_t)]
+
+            info = _Estendido()
+            info.Basic.LimitFlags = 0x2000  # JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+            if not k.SetInformationJobObject(job, 9, ctypes.byref(info), ctypes.sizeof(info)):  # 9 = ExtendedLimitInformation
+                return False
+            _JOB = job
+        h = k.OpenProcess(0x0100 | 0x0001, False, proc.pid)  # PROCESS_SET_QUOTA | PROCESS_TERMINATE
+        if not h:
+            return False
+        try:
+            return bool(k.AssignProcessToJobObject(_JOB, h))
+        finally:
+            k.CloseHandle(h)
+    except Exception:
+        return False
+
+
+# Roda no filho (a API): sai sozinho se o lite.py (pai) sumir, e então executa o uvicorn normalmente.
+VIGIA_DO_PAI = """
+import os, sys, threading, time, runpy
+pai = int(os.environ.get("LABFLOW_PAI_PID") or 0)
+def vigiar():
+    if os.name == "nt":
+        import ctypes
+        k = ctypes.WinDLL("kernel32")
+        k.OpenProcess.restype = ctypes.c_void_p
+        h = k.OpenProcess(0x100000, False, pai)  # SYNCHRONIZE
+        if not h:
+            os._exit(0)
+        k.WaitForSingleObject(ctypes.c_void_p(h), 0xFFFFFFFF)
+        os._exit(0)
+    while os.getppid() == pai:
+        time.sleep(2)
+    os._exit(0)
+if pai:
+    threading.Thread(target=vigiar, daemon=True).start()
+sys.argv = ["uvicorn"] + sys.argv[1:]
+runpy.run_module("uvicorn", run_name="__main__")
+"""
+
+
+def _sistema32(nome: str) -> str:
+    """Programa do Windows pelo caminho completo (nunca pelo PATH)."""
+    return os.path.join(os.environ.get("SystemRoot", r"C:\Windows"), "System32", nome)
+
+
+def pid_que_escuta(porta: int) -> int | None:
+    """PID do processo que escuta EXATAMENTE em 127.0.0.1:porta (netstat/ss); escuta em todas as interfaces não conta."""
+    exato = f"127.0.0.1:{porta}"
+    try:
+        if EH_WINDOWS:
+            saida = subprocess.run([_sistema32("netstat.exe"), "-ano", "-p", "tcp"], capture_output=True, text=True, timeout=15,
+                                   stdin=subprocess.DEVNULL, creationflags=SEM_JANELA).stdout
+        else:
+            ss = next((c for c in ("/usr/bin/ss", "/bin/ss") if os.path.exists(c)), None)
+            if ss is None:
+                return None
+            saida = subprocess.run([ss, "-ltnp"], capture_output=True, text=True, timeout=15, stdin=subprocess.DEVNULL).stdout
+    except Exception:
+        return None
+    for linha in saida.splitlines():
+        partes = linha.split()
+        if EH_WINDOWS and len(partes) >= 5 and partes[3].upper() == "LISTENING" and partes[1] == exato:
+            with contextlib.suppress(ValueError):
+                return int(partes[4])
+        if not EH_WINDOWS and len(partes) >= 4 and partes[3] == exato and "pid=" in linha:
+            with contextlib.suppress(ValueError, IndexError):
+                return int(linha.split("pid=")[1].split(",")[0].rstrip(")"))
+    return None
+
+
+def info_do_processo(pid: int) -> tuple[str, int] | None:
+    """(linha de comando, PID do pai) do processo vivo; None se não der para saber."""
+    try:
+        if EH_WINDOWS:
+            ps = os.path.join(os.environ.get("SystemRoot", r"C:\Windows"), "System32", "WindowsPowerShell", "v1.0", "powershell.exe")
+            cmd = (f"$p = Get-CimInstance Win32_Process -Filter 'ProcessId={int(pid)}'; "
+                   "if ($p) { ConvertTo-Json @{c=[string]$p.CommandLine; pai=[int]$p.ParentProcessId} -Compress }")
+            saida = subprocess.run([ps, "-NoProfile", "-NonInteractive", "-Command", cmd], capture_output=True, text=True, timeout=30,
+                                   stdin=subprocess.DEVNULL, creationflags=SEM_JANELA).stdout.strip()
+            dados = json.loads(saida)
+            return str(dados["c"]), int(dados["pai"])
+        linha = Path(f"/proc/{pid}/cmdline").read_bytes().replace(b"\0", b" ").decode("utf-8", "replace")
+        pai = int(Path(f"/proc/{pid}/stat").read_text().rsplit(")", 1)[1].split()[1])
+        return linha, pai
+    except Exception:
+        return None
+
+
+def pai_morto(pai: int, inicio_do_filho: float | None) -> bool:
+    """O processo pai não existe mais (ou o PID dele foi reaproveitado por um processo mais novo que o filho)?"""
+    if imagem_do_processo(pai) is None:
+        return True
+    inicio = inicio_do_processo(pai)
+    return inicio is not None and inicio_do_filho is not None and inicio > inicio_do_filho + 1
+
+
+def terminar_processo_conferido(pid: int, local: Path, inicio_esperado: float | None) -> bool:
+    """Encerra o processo SÓ depois de conferir, no MESMO handle que vai encerrar, que ele é python de dentro de `local` e que
+    começou na hora esperada (PID reaproveitado entre o netstat e o kill não é morto). Devolve True se encerrou."""
+    if inicio_esperado is None:
+        return False
+    if not EH_WINDOWS:
+        imagem, inicio = imagem_do_processo(pid), inicio_do_processo(pid)
+        if imagem is None or inicio is None or abs(inicio - inicio_esperado) > 1 or not _dentro(imagem, local):
+            return False
+        if not imagem.stem.lower().startswith("python"):
+            return False
+        os.kill(pid, signal.SIGTERM)
+        return True
+    import ctypes
+    from ctypes import wintypes
+
+    k = ctypes.WinDLL("kernel32", use_last_error=True)
+    k.OpenProcess.restype = wintypes.HANDLE
+    h = k.OpenProcess(0x1000 | 0x0001, False, pid)  # PROCESS_QUERY_LIMITED_INFORMATION | PROCESS_TERMINATE
+    if not h:
+        return False
+    try:
+        buf = ctypes.create_unicode_buffer(1024)
+        tam = wintypes.DWORD(1024)
+        if not k.QueryFullProcessImageNameW(h, 0, buf, ctypes.byref(tam)):
+            return False
+        imagem = Path(buf.value)
+        criado, saiu, nucleo, usuario = (wintypes.FILETIME() for _ in range(4))
+        if not k.GetProcessTimes(h, ctypes.byref(criado), ctypes.byref(saiu), ctypes.byref(nucleo), ctypes.byref(usuario)):
+            return False
+        inicio = ((criado.dwHighDateTime << 32) | criado.dwLowDateTime) / 10_000_000 - 11644473600
+        if abs(inicio - inicio_esperado) > 1 or not imagem.stem.lower().startswith("python") or not _dentro(imagem, local):
+            return False
+        return bool(k.TerminateProcess(h, 1))
+    finally:
+        k.CloseHandle(h)
+
+
+def encerrar_api_orfa(local: Path, inicio: int) -> list[int]:
+    """Uma API ÓRFÃ desta instalação ficou escutando perto da porta da Lite: encerra. Só mata se TUDO bater: escuta exatamente em
+    127.0.0.1, é python de dentro de `local`, a linha de comando é da API (labflow_api.main:app) e o pai dela está morto.
+    Qualquer outra coisa (inclusive a API de uma Lite viva) não é tocada: a porta é devolvida só para avisar."""
+    de_outros: list[int] = []
+    for porta in range(inicio, inicio + 10):
+        if not conecta("127.0.0.1", porta, 0.5):
+            continue
+        pid = pid_que_escuta(porta)
+        if not pid:
+            continue
+        inicio_do_pid = inicio_do_processo(pid)
+        imagem = imagem_do_processo(pid)
+        info = info_do_processo(pid)
+        nosso = (
+            imagem is not None and imagem.stem.lower().startswith("python") and _dentro(imagem, local)
+            and info is not None and "labflow_api.main:app" in info[0] and pai_morto(info[1], inicio_do_pid)
+        )
+        if not nosso:
+            de_outros.append(porta)
+            continue
+        log(f"Sobrou um app (API) órfão de uma abertura anterior na porta {porta} (PID {pid}). Encerrando antes de abrir...")
+        with contextlib.suppress(Exception):
+            terminar_processo_conferido(pid, local, inicio_do_pid)
+        for _ in range(20):
+            if not conecta("127.0.0.1", porta, 0.3):
+                break
+            time.sleep(0.25)
+    return de_outros
+
+
+# ---------------------------------------------------------------- PostgreSQL esquecido de outra abertura --------------
+def imagem_do_processo(pid: int) -> Path | None:
+    """Caminho do .exe do processo vivo com esse PID; None se não existe (ou não dá para ler)."""
+    if pid <= 0:
+        return None
+    if EH_WINDOWS:
+        import ctypes
+        from ctypes import wintypes
+
+        k = ctypes.WinDLL("kernel32", use_last_error=True)
+        k.OpenProcess.restype = wintypes.HANDLE
+        h = k.OpenProcess(0x1000, False, pid)  # PROCESS_QUERY_LIMITED_INFORMATION
+        if not h:
+            return None
+        try:
+            buf = ctypes.create_unicode_buffer(1024)
+            tam = wintypes.DWORD(1024)
+            if not k.QueryFullProcessImageNameW(h, 0, buf, ctypes.byref(tam)):
+                return None
+            return Path(buf.value)
+        finally:
+            k.CloseHandle(h)
+    with contextlib.suppress(OSError):
+        return Path(os.readlink(f"/proc/{pid}/exe"))
+    return None
+
+
+def inicio_do_processo(pid: int) -> float | None:
+    """Hora (epoch, s) em que o processo vivo começou; None se não dá para saber."""
+    if EH_WINDOWS:
+        import ctypes
+        from ctypes import wintypes
+
+        k = ctypes.WinDLL("kernel32", use_last_error=True)
+        k.OpenProcess.restype = wintypes.HANDLE
+        h = k.OpenProcess(0x1000, False, pid)
+        if not h:
+            return None
+        try:
+            criado, saiu, nucleo, usuario = (wintypes.FILETIME() for _ in range(4))
+            if not k.GetProcessTimes(h, ctypes.byref(criado), ctypes.byref(saiu), ctypes.byref(nucleo), ctypes.byref(usuario)):
+                return None
+            cem_ns = (criado.dwHighDateTime << 32) | criado.dwLowDateTime
+            return cem_ns / 10_000_000 - 11644473600  # 1601 -> 1970
+        finally:
+            k.CloseHandle(h)
+    with contextlib.suppress(OSError, ValueError, IndexError):
+        ticks = int(Path(f"/proc/{pid}/stat").read_text().rsplit(")", 1)[1].split()[19])
+        boot = next(int(l.split()[1]) for l in Path("/proc/stat").read_text().splitlines() if l.startswith("btime"))
+        return boot + ticks / os.sysconf("SC_CLK_TCK")
+    return None
+
+
+def _dentro(filho: Path, pai: Path) -> bool:
+    try:
+        filho.resolve().relative_to(pai.resolve())
+        return True
+    except (ValueError, OSError):
+        return False
+
+
+def _pid_do_arquivo(data: Path) -> tuple[int, list[str]] | None:
+    try:
+        linhas = (data / "postmaster.pid").read_text(encoding="utf-8", errors="replace").splitlines()
+        return int(linhas[0].strip()), linhas
+    except (OSError, ValueError, IndexError):
+        return None
+
+
+def postgres_vivo_do_data(data: Path) -> tuple[int, Path] | None:
+    """(PID, caminho do postgres) só se TUDO bater: o postmaster.pid tem a pasta data (linha 2, igual à nossa) e a hora de início
+    (linha 3); o processo vivo com esse PID é um postgres cujo .exe está DENTRO da pasta da Lite (data.parent); e ele começou na
+    hora gravada (folga de poucos segundos). Qualquer dúvida: None, e nada é parado (o arquivo é só texto, não prova nada)."""
+    lido = _pid_do_arquivo(data)
+    if lido is None:
+        return None
+    pid, linhas = lido
+    if len(linhas) < 3 or not linhas[1].strip():
+        return None
+    try:
+        if os.path.normcase(os.path.realpath(linhas[1].strip())) != os.path.normcase(os.path.realpath(str(data))):
+            return None
+        gravado = float(linhas[2].strip())
+    except (OSError, ValueError):
+        return None
+    imagem = imagem_do_processo(pid)
+    if imagem is None or imagem.stem.lower() != "postgres" or not _dentro(imagem, data.parent):
+        return None
+    inicio = inicio_do_processo(pid)
+    if inicio is None or abs(inicio - gravado) > 5:
+        return None
+    return pid, imagem
+
+
+def postgres_vivo_duvidoso(data: Path) -> bool:
+    """Há um postgres vivo no PID do postmaster.pid, mas sem prova de que é desta Lite (então não paramos)?"""
+    lido = _pid_do_arquivo(data)
+    if lido is None or postgres_vivo_do_data(data) is not None:
+        return False
+    imagem = imagem_do_processo(lido[0])
+    return imagem is not None and imagem.stem.lower() == "postgres"
+
+
+def _esperar_sair(data: Path, segundos: float) -> bool:
+    fim = time.monotonic() + segundos
+    while time.monotonic() < fim:
+        if postgres_vivo_do_data(data) is None:
+            return True
+        time.sleep(0.5)
+    return postgres_vivo_do_data(data) is None
+
+
+def parar_postgres_esquecido(data: Path, pg_ctl_padrao: str, espera: int = 20) -> bool:
+    """Se sobrou um PostgreSQL vivo de uma abertura anterior usando esta pasta data, para com pg_ctl (primeiro -m fast, e -m immediate
+    só se o fast não resolver em `espera` s). Usa o pg_ctl da mesma pasta do processo que está rodando (os mesmos binários).
+    Devolve True se não resta nenhum vivo."""
+    vivo = postgres_vivo_do_data(data)
+    if vivo is None:
+        return True
+    pid, imagem = vivo
+    pg_ctl = imagem.with_name("pg_ctl" + EXE)
+    exe = str(pg_ctl) if pg_ctl.is_file() and _dentro(pg_ctl, data.parent) else pg_ctl_padrao  # nunca um pg_ctl de fora da pasta da Lite
+    log(f"Sobrou um PostgreSQL de uma abertura anterior (PID {pid}, {imagem.parent}). Parando antes de abrir...")
+    for modo in ("fast", "immediate"):
+        with contextlib.suppress(Exception):
+            subprocess.run([exe, "-D", str(data), "-m", modo, "-w", "-t", str(espera), "stop"], stdin=subprocess.DEVNULL,
+                           capture_output=True, timeout=espera + 15, creationflags=SEM_JANELA)
+        if _esperar_sair(data, 3):
+            log(f"PostgreSQL antigo parado (-m {modo}).")
+            return True
+        log(f"O PostgreSQL antigo não saiu com -m {modo}.")
+    return False
+
+
 # ---------------------------------------------------------------- PostgreSQL local -----------------------------------
 class Postgres:
     def __init__(self, local: Path) -> None:
@@ -288,9 +621,22 @@ class Postgres:
         if r.returncode != 0:
             raise RuntimeError(f"O PostgreSQL não ligou (código {r.returncode}). Veja postgres.log em {self.local}")
 
-    def parar(self) -> None:
+    def liberar_data(self) -> None:
+        """Antes de ligar: um PostgreSQL esquecido de outra abertura (postmaster.pid com processo vivo) é parado de forma limpa."""
+        if postgres_vivo_duvidoso(self.data):
+            raise RuntimeError("O banco do LabFlow neste PC está ocupado por um programa que não foi possível confirmar como sendo do LabFlow, "
+                               "então ele não foi parado. Reinicie o computador e abra o LabFlow de novo. Se continuar, chame o suporte.")
+        if not parar_postgres_esquecido(self.data, self.exe("pg_ctl")):
+            raise RuntimeError("Sobrou um PostgreSQL de uma abertura anterior e ele não quis parar. Reinicie o computador e abra o LabFlow de novo.")
+
+    def parar(self) -> bool:
+        """Para o PostgreSQL e ESPERA ele sair de verdade (fast; se não sair, immediate). True se não sobrou processo."""
         with contextlib.suppress(Exception):
             self.run("pg_ctl", "-D", str(self.data), "-m", "fast", "-w", "-t", "60", "stop", check=False)
+        if _esperar_sair(self.data, 5):
+            return True
+        log("O PostgreSQL não saiu com o encerramento normal; forçando um encerramento imediato.")
+        return parar_postgres_esquecido(self.data, self.exe("pg_ctl"), espera=20)
 
     def criar_cluster(self) -> None:
         if self.data.exists():
@@ -356,6 +702,7 @@ class Servidor:
         self.token = secrets.token_hex(8)
         self.api: subprocess.Popen | None = None
         self.porta_api = 0
+        self.quedas: list[float] = []  # quando a API caiu (monotonic): limite de 3 religações em 10 minutos
         self.encerrando = threading.Lock()
         self.encerrado = False
         self.parar = threading.Event()
@@ -422,6 +769,7 @@ class Servidor:
     def subir_banco(self) -> bool:
         """Liga o PostgreSQL local com os dados certos. Devolve True se o banco acabou de ser criado do zero."""
         pg = self.pg
+        pg.liberar_data()  # um PostgreSQL esquecido da abertura anterior (ainda vivo na mesma pasta data) sai antes de qualquer coisa
         self.tratar_versao_do_banco()  # antes de qualquer coisa: versão diferente não liga nem recria por cima
         pg.senha_super = self.estado.get("senha_super") or secrets.token_urlsafe(18)
         pg.senha_web = self.estado.get("senha_web") or secrets.token_urlsafe(18)
@@ -536,8 +884,15 @@ class Servidor:
         return destino
 
     # --- API
-    def subir_api(self) -> None:
-        self.porta_api = porta_livre(self.args.porta)
+    def subir_api(self, porta: int | None = None) -> None:
+        if porta and not conecta("127.0.0.1", porta, 0.5):
+            self.porta_api = porta  # religando: mantém o endereço que já está aberto no navegador
+        else:
+            outras = encerrar_api_orfa(self.local, self.args.porta)
+            if self.args.porta in outras:
+                log(f"A porta {self.args.porta} está ocupada por outro programa (não é do LabFlow); o LabFlow vai usar outra porta.")
+                avisar("LabFlow", f"A porta {self.args.porta} está ocupada por outro programa. O LabFlow vai usar outra porta, sem problema.")
+            self.porta_api = porta_livre(self.args.porta)
         env = dict(os.environ)
         env.update(
             LABFLOW_DB_URL=self.pg.url_web(),
@@ -551,17 +906,19 @@ class Servidor:
             PYTHONUNBUFFERED="1",
             PYTHONUTF8="1",
             TZ="America/Sao_Paulo",
+            LABFLOW_PAI_PID=str(os.getpid()),  # a API vigia o lite.py e sai junto se ele sumir
         )
         saida = open(self.local / "api.log", "a", encoding="utf-8")
         flags = 0x08000000 if EH_WINDOWS else 0  # CREATE_NO_WINDOW
         self.api = subprocess.Popen(
-            [sys.executable, "-m", "uvicorn", "labflow_api.main:app", "--host", ENDERECO_LOCAL, "--port", str(self.porta_api), "--no-proxy-headers"],
+            [sys.executable, "-c", VIGIA_DO_PAI, "labflow_api.main:app", "--host", ENDERECO_LOCAL, "--port", str(self.porta_api), "--no-proxy-headers"],
             cwd=str(INST / "app"),
             env=env,
             stdout=saida,
             stderr=subprocess.STDOUT,
             creationflags=flags,
         )
+        prender_ao_job(self.api)
         for _ in range(60):
             if self.api.poll() is not None:
                 raise RuntimeError("O app não subiu. Veja o arquivo api.log em " + str(self.local))
@@ -668,7 +1025,8 @@ class Servidor:
             if self.api and self.api.poll() is None:
                 with contextlib.suppress(Exception):
                     self.api.kill()
-            self.pg.parar()
+            if not self.pg.parar():  # só dá o encerramento por terminado com o postgres realmente fora
+                log("ATENÇÃO: o PostgreSQL não saiu ao encerrar; a próxima abertura vai pará-lo antes de ligar.")
         if salvou:
             atual = self.dados.ler_json(self.dados.servidor)
             if atual is not None and atual.get("dono") == self.token:
@@ -771,9 +1129,27 @@ class Servidor:
                 sinal.unlink(missing_ok=True)
                 break
             if self.api is not None and self.api.poll() is not None:
-                log("O app parou sozinho. Veja o api.log.")
-                break
+                if not self.religar_api():
+                    break
             time.sleep(1)
+
+    def religar_api(self) -> bool:
+        """A API caiu sozinha: religa (até 3 vezes em 10 minutos). False = desistiu (o chamador encerra tudo, gravando no G:)."""
+        log(f"O app parou sozinho (código de saída {self.api.returncode}). Veja o api.log.")
+        agora = time.monotonic()
+        self.quedas = [t for t in self.quedas if agora - t < 600]
+        if len(self.quedas) >= 3:
+            log("O app caiu 3 vezes em 10 minutos: desistindo e encerrando (os dados são gravados no G:).")
+            return False
+        self.quedas.append(agora)
+        log(f"Religando o app (tentativa {len(self.quedas)} de 3)...")
+        try:
+            self.subir_api(self.porta_api)
+            self.dados.escrever_json(self.dados.servidor, self.conteudo_servidor())
+            log(f"App religado na porta {self.porta_api}.")
+        except Exception as erro:
+            log(f"Não consegui religar o app ({erro}).")
+        return True
 
 
 # ---------------------------------------------------------------- modo cliente -------------------------------------
@@ -1052,12 +1428,33 @@ def criar_atalho(programa: Path, raiz: Path) -> bool:
         return False
 
 
+def postgres_em_uso_na_pasta(local: Path, pasta: Path) -> bool:
+    """O postgres vivo deste PC (data de `local`) roda com binários de dentro de `pasta`? Tenta parar primeiro; True só se ele continua vivo."""
+    data = local / "data"
+    vivo = postgres_vivo_do_data(data)
+    if vivo is None:
+        if postgres_vivo_duvidoso(data):  # vivo, mas sem prova de quem é: não arrisca apagar a pasta antiga
+            log(f"Não apaguei {pasta.name}: há um PostgreSQL vivo que não consegui confirmar. Fica para a próxima abertura.")
+            return True
+        return False
+    try:
+        vivo[1].resolve().relative_to(pasta.resolve())
+    except ValueError:
+        return False
+    if parar_postgres_esquecido(data, str(vivo[1].with_name("pg_ctl" + EXE))):  # (já dentro da pasta da Lite, pois vivo passou na conferência)
+        return False
+    log(f"Não apaguei {pasta.name}: o PostgreSQL dele ainda está rodando. Fica para a próxima abertura.")
+    return True
+
+
 def limpar_programas_antigos(local: Path, atual: Path) -> None:
     """Apaga os programas de versões anteriores deste PC (programa-*, e o programa\\ do jeito antigo). Só o que não está em uso:
     a pasta primeiro é RENOMEADA (o Windows recusa se algum arquivo dela estiver aberto) e então apagada. Nunca mexe em dados."""
     for pasta in [*(d for d in local.glob("p-*") if NOME_PROGRAMA.match(d.name)), *local.glob("programa-*"), local / "programa"]:
         if not pasta.is_dir() or pasta.resolve() == atual.resolve():
             continue
+        if postgres_em_uso_na_pasta(local, pasta):
+            continue  # um postgres desta pasta ainda roda (e não parou): não renomeia nem apaga agora, fica para a próxima abertura
         alvo = pasta.with_name(f"apagar-{pasta.name}-{os.getpid()}")
         try:
             os.rename(pasta, alvo)
