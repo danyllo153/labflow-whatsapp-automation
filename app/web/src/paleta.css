@@ -176,6 +176,33 @@
 }
 
 /*
+ * Tema claro, em qualquer largura (a gaveta do celular e do tablet também): o grupo do menu que contém a tela aberta
+ * (ex.: NFC) ficava com texto branco (regra do menu escuro, navegacao.css) sobre o creme e sumia. Agora usa o marinho do
+ * menu (mais de 12:1 no creme) e, nos subitens, o fundo suave do item ativo; o hover deixa de ser branco sobre creme.
+ */
+:root[data-tema="claro"] .menu-grupo.com-ativo > .menu-grupo-botao {
+  color: var(--menu-texto-ativo);
+  font-weight: 700;
+}
+
+:root[data-tema="claro"] .menu-navegacao .item-menu:hover,
+:root[data-tema="claro"] .menu-filho:hover {
+  background: var(--menu-ativo-fundo);
+  color: var(--menu-texto-ativo);
+}
+
+:root[data-tema="claro"] .menu-filho.active {
+  background: var(--menu-ativo-fundo);
+  box-shadow: inset 3px 0 0 var(--menu-marca);
+}
+
+:root[data-tema="claro"] .menu-navegacao .item-menu:focus-visible,
+:root[data-tema="claro"] .menu-filho:focus-visible {
+  outline: 2px solid var(--menu-marca);
+  outline-offset: -2px;
+}
+
+/*
  * Leitura no PC, tema claro (monitor comum do laboratório): texto principal mais escuro, texto secundário com contraste
  * 7:1 ou mais (AAA) no creme e no branco, peso 500 nos textos pequenos e no menu, mínimo de 14px no texto corrido e
  * 13px nos rótulos. Só tema claro e só a partir de 900px; o escuro, o celular e as cores da marca ficam como estão.
@@ -190,12 +217,6 @@
     --menu-secao-texto: #4d4630; /* era #8a7f66 (3,7:1); agora 8,9:1 */
     --topo-texto: #141d38;
     --topo-texto-suave: #454b61;
-  }
-
-  /* grupo aberto do menu (ex.: Registros diários): estava em branco sobre o creme e sumia */
-  :root[data-tema="claro"] .menu-grupo.com-ativo > .menu-grupo-botao {
-    color: var(--menu-texto-ativo);
-    font-weight: 700;
   }
 
   /* menu lateral: itens em 14px e peso 500 */
