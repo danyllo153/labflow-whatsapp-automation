@@ -59,3 +59,33 @@ describe("Turno na Lite e na Completa", () => {
     expect(api.vezes("GET /estufas")).toBeGreaterThan(0);
   });
 });
+
+describe("Estufas em duas colunas", () => {
+  it("lista de cima para baixo e depois a segunda coluna (1 2 3 | 4 5 6)", async () => {
+    const mais = {
+      ...ESTUFAS,
+      resumo: { total: 6, conferidas: 0, nao_ok: 0, pendentes: 6 },
+      estufas: [1, 2, 3, 4, 5, 6].map((id) => ({ ...ESTUFAS.estufas[0], id })),
+    };
+    servidorFalso({
+      "GET /ambiente": () => ({ status: 200, corpo: { demonstracao: false, lite: true } }),
+      "GET /me": () => ({ status: 200, corpo: { ...ANA, trocar_senha: false } }),
+      "GET /turno": () => ({ status: 200, corpo: { ...ESTADO_TURNO, no_turno: NA_TARDE } }),
+      "GET /estufas": () => ({ status: 200, corpo: mais }),
+    });
+    render(
+      <MemoryRouter initialEntries={["/turno"]} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+        <ProvedorDeSessao>
+          <App />
+        </ProvedorDeSessao>
+      </MemoryRouter>,
+    );
+    const cartao = await screen.findByRole("region", { name: "Estufas agora" });
+    await within(cartao).findByRole("group", { name: "Supervisório da Estufa 06" }); // a conferência lê as estufas por conta própria
+    const colunas = cartao.querySelectorAll(".coluna-estufas");
+    expect(colunas).toHaveLength(2);
+    const nomes = (c: Element) => [...c.querySelectorAll("section[aria-label]")].map((n) => n.getAttribute("aria-label"));
+    expect(nomes(colunas[0])).toEqual(["Estufa 01", "Estufa 02", "Estufa 03"]);
+    expect(nomes(colunas[1])).toEqual(["Estufa 04", "Estufa 05", "Estufa 06"]);
+  });
+});
