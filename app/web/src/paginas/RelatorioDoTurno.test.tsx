@@ -114,7 +114,7 @@ describe("Relatório do turno (APP-024)", () => {
     const form = await screen.findByRole("form", { name: "Escrito à mão" });
     expect(within(form).getByLabelText("Pendências escritas à mão")).toHaveValue("Refazer meio X");
     await userEvent.type(within(form).getByLabelText("Ocorrências do turno"), "Falta de energia às 10h");
-    await userEvent.click(within(form).getByRole("button", { name: "Gravar" }));
+    await userEvent.click(within(form).getByRole("button", { name: "Salvar" }));
     const enviado = api.chamadas.find((c) => c.rota === "PUT /turno/relatorio")?.corpo;
     expect(enviado).toMatchObject({ turno_id: 1, dia: "2026-10-22", ocorrencias: "Falta de energia às 10h", pendencias_escritas: "Refazer meio X" });
     expect(await screen.findByText("Gravado.")).toBeInTheDocument();

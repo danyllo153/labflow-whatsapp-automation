@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 
 import { lerJson } from "../api";
-import FaixaDemonstracao from "../componentes/FaixaDemonstracao";
+import { FaixaDemonstracaoSozinha as FaixaDemonstracao } from "../componentes/FaixaDemonstracao";
 import { useMarca } from "../marca";
 import { useSessao } from "../sessao";
 
@@ -80,7 +80,7 @@ function EntrarPorNome() {
         {pedindoNome ? (
           <form onSubmit={criar} noValidate aria-label="Sou novo aqui">
             <h1>{primeiraVez ? "Primeira vez aqui" : "Sou novo aqui"}</h1>
-            <p className="texto-secundario">Escreva o seu nome. Ele fica na lista e você entra tocando nele, sem senha.</p>
+            <p className="texto-secundario">Escreva o seu nome. Ele fica na lista e você entra clicando nele, sem senha.</p>
             <label className="campo">
               Seu nome
               <input name="nome" autoComplete="name" maxLength={40} value={nome} onChange={(e) => setNome(e.target.value)} required />
@@ -104,7 +104,7 @@ function EntrarPorNome() {
         ) : (
           <>
             <h1>Quem é você?</h1>
-            <p className="texto-secundario">Toque no seu nome para entrar.</p>
+            <p className="texto-secundario">Clique no seu nome para entrar.</p>
             <ul className="lista-nomes">
               {nomes.map((n) => (
                 <li key={n.usuario}>
@@ -181,7 +181,7 @@ function EntrarComSenha() {
           />
         </label>
         <label className="marcar">
-          <input type="checkbox" checked={mostrar} onChange={(e) => setMostrar(e.target.checked)} /> Mostrar a senha
+          <input type="checkbox" checked={mostrar} onChange={(e) => setMostrar(e.target.checked)} /> Exibir senha
         </label>
         {erro && (
           <p className="mensagem-erro" role="alert">

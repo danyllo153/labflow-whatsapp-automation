@@ -49,7 +49,7 @@ describe("Água de consumo (27/10)", () => {
     const form = await screen.findByRole("form", { name: "Nova coleta da água de consumo" });
     expect(within(form).getAllByRole("button", { pressed: true })).toHaveLength(8);
     await userEvent.click(within(form).getByRole("button", { name: "Ponto 8" }));
-    await userEvent.click(within(form).getByRole("button", { name: "Registrar coleta (7)" }));
+    await userEvent.click(within(form).getByRole("button", { name: "Salvar (7)" }));
     expect(await screen.findByText(/Coleta registrada: 7 pontos/)).toBeInTheDocument();
     const enviado = api.chamadas.find((c) => c.rota === "POST /aguas/consumo/coletas")?.corpo;
     expect(enviado).toMatchObject({ unidade: "TMG", tipo: "mensal", pontos: [1, 2, 3, 4, 5, 6, 7] });
@@ -105,7 +105,7 @@ describe("Água de consumo (27/10)", () => {
     expect(within(cartao).queryByRole("textbox", { name: "pH de Ponto 2" })).toBeNull();
     expect(within(cartao).getByRole("textbox", { name: "C.T 48h de Ponto 2" })).toBeInTheDocument();
     await userEvent.type(within(cartao).getByRole("textbox", { name: "pH de Ponto 1" }), "7");
-    await userEvent.click(within(cartao).getByRole("button", { name: "Ver o que vai ser gravado (1)" }));
+    await userEvent.click(within(cartao).getByRole("button", { name: "Revisar (1)" }));
     expect(api.chamadas.find((c) => c.rota === "PUT /aguas/consumo/coletas/9/resultados")?.corpo).toMatchObject({ previa: true, itens: [{ ordem: 1, ph: "7" }] });
   });
 
@@ -122,9 +122,9 @@ describe("Água de consumo (27/10)", () => {
     const coli2 = within(cartao).getByRole("textbox", { name: "Coliformes (P/A) de Ponto 2" });
     await userEvent.clear(coli2);
     await userEvent.type(coli2, "P");
-    await userEvent.click(within(cartao).getByRole("button", { name: "Ver o que vai ser gravado (2)" }));
+    await userEvent.click(within(cartao).getByRole("button", { name: "Revisar (2)" }));
     expect(await within(cartao).findByText("Ponto 2: Coliformes fora do limite")).toBeInTheDocument();
-    await userEvent.click(within(cartao).getByRole("button", { name: "Confirmar" }));
+    await userEvent.click(within(cartao).getByRole("button", { name: "Salvar" }));
     expect(await screen.findByText("Nenhuma leitura pendente.")).toBeInTheDocument();
     const enviados = api.chamadas.filter((c) => c.rota === "PUT /aguas/consumo/coletas/9/resultados").map((c) => c.corpo);
     expect(enviados[0]).toMatchObject({

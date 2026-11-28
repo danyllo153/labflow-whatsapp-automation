@@ -5,6 +5,7 @@ import { enviarJson, lerJson } from "../../api";
 import { alternarFabrica, fabricasDe } from "../dados/fabricas";
 import { useSessao } from "../../sessao";
 import IconeApp from "../../componentes/IconeApp";
+import { Trilha } from "../../componentes/CabecalhoDaPagina";
 import { dm } from "../../componentes/SeletorDeDias";
 import { FABRICAS } from "../dados/definicoes";
 import { classeDaSituacao } from "../dados/formatos";
@@ -173,15 +174,13 @@ export default function RecebimentoFcoj() {
 
   return (
     <section className="app-analise">
-      <p className="voltar">
-        <Link to="/paginas">← Análises</Link>
-      </p>
       <div className="app-analise-topo">
         <span className="app-icone app-cor-fcoj" aria-hidden="true">
           <IconeApp nome="recebimento-fcoj" />
         </span>
         <div>
-          <div className="titulo-com-sino">
+          <div className="titulo-com-sino linha-titulo">
+            <Trilha />
             <h1>Recebimento FCOJ</h1>
             {painel && painel.pulados.length > 0 && <SinoEmObservacao painel={painel} aoAtualizar={setPainel} />}
           </div>
@@ -472,9 +471,9 @@ function Registrar({ pode, aoGravar }: { pode: boolean; aoGravar: () => void }) 
         </label>
       </div>
       <div className="linha-formulario">
-        <label className="campo">
+        <label className="campo campo-largo">
           Lotes
-          <input required maxLength={200} value={campos.lotes} onChange={mudar("lotes")} placeholder="ex.: 1-14 ou 1-5, 7, 9-10" />
+          <input required maxLength={200} value={campos.lotes} onChange={mudar("lotes")} placeholder="1-14 ou 1-5, 7, 9-10" />
         </label>
         <label className="campo">
           Recebido em
@@ -485,7 +484,8 @@ function Registrar({ pode, aoGravar }: { pode: boolean; aoGravar: () => void }) 
           <input
             maxLength={300}
             value={compostas ?? compostasRecomendadas(lotesDoTexto(campos.lotes))}
-            placeholder="automático (~5 lotes por composta)"
+            placeholder="automático"
+            title="Automático: cerca de 5 lotes por composta"
             onChange={(e) => (setCompostas(e.target.value), setPrevia(null))}
           />
         </label>
@@ -503,16 +503,16 @@ function Registrar({ pode, aoGravar }: { pode: boolean; aoGravar: () => void }) 
           {previa.pulados && previa.pulados.length > 0 && <p className="aviso-pulo-texto">⚠️ {avisoDePulo(previa.pulados)}</p>}
           <div className="botoes-lado">
             <button type="button" className="botao botao-principal" disabled={enviando || previa.texto.includes("nada novo")} onClick={() => void enviar(true)}>
-              Confirmar
+              Salvar
             </button>
             <button type="button" className="botao botao-simples" onClick={() => setPrevia(null)}>
-              Voltar
+              Cancelar
             </button>
           </div>
         </div>
       ) : (
         <button type="submit" className="botao botao-principal" disabled={enviando}>
-          Ver o que vai ser criado
+          Revisar
         </button>
       )}
       {feito && (
@@ -787,7 +787,7 @@ function Resultados({
 
       {pode && preenchidos.length > 0 && !previa && (
         <button type="button" className="botao botao-principal" disabled={enviando} onClick={() => void lancar(false)}>
-          Ver o que vai ser gravado ({preenchidos.length})
+          Revisar ({preenchidos.length})
         </button>
       )}
       {previa && (
@@ -796,10 +796,10 @@ function Resultados({
           <p className="previa-texto">{previa.texto}</p>
           <div className="botoes-lado">
             <button type="button" className="botao botao-principal" disabled={enviando} onClick={() => void lancar(true)}>
-              Confirmar
+              Salvar
             </button>
             <button type="button" className="botao botao-simples" onClick={() => setPrevia(null)}>
-              Voltar
+              Cancelar
             </button>
           </div>
         </div>
@@ -950,16 +950,16 @@ function CompostasDoLoad({ load, pode, aoCriar }: { load: LoadSemComposta; pode:
               <p>{previa}</p>
               <div className="botoes-lado">
                 <button type="button" className="botao botao-principal" disabled={enviando} onClick={() => void enviar(true)}>
-                  Confirmar
+                  Salvar
                 </button>
                 <button type="button" className="botao botao-simples" onClick={() => setPrevia(null)}>
-                  Voltar
+                  Cancelar
                 </button>
               </div>
             </div>
           ) : (
             <button type="button" className="botao botao-principal" disabled={enviando || !grupos.trim()} onClick={() => void enviar(false)}>
-              Ver o que vai ser criado
+              Revisar
             </button>
           )}
         </>

@@ -44,7 +44,7 @@ describe("Turno como central (APP-033)", () => {
       "GET /turno/equipe": () => ({ status: 200, corpo: EQUIPE }),
     });
     const cartao = await screen.findByRole("region", { name: "Equipe do turno" });
-    expect(within(cartao).getByText("Bruno Lima")).toBeInTheDocument();
+    expect(await within(cartao).findByText("Bruno Lima")).toBeInTheDocument();
     expect(within(cartao).getByText("Você")).toBeInTheDocument();
     expect(within(cartao).getByText(/Já saíram: Carla Dias \(16:00–18:00\)/)).toBeInTheDocument();
     expect((await screen.findAllByRole("link", { name: "2 pessoas no turno, turno Tarde" })).length).toBeGreaterThan(0);
@@ -78,7 +78,7 @@ describe("Turno como central (APP-033)", () => {
       },
     });
     const cartao = await screen.findByRole("region", { name: "Atividades realizadas" });
-    expect(within(cartao).getByText("Bruno Lima")).toBeInTheDocument();
+    expect(await within(cartao).findByText("Bruno Lima")).toBeInTheDocument();
     expect(within(cartao).queryByRole("button", { name: /Excluir/ })).not.toBeInTheDocument();
 
     await userEvent.type(within(cartao).getByLabelText("O que foi feito"), "Limpeza da capela");

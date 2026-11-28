@@ -40,7 +40,7 @@ const LAUDO = {
 };
 
 export default function IncubacaoLeitura() {
-  const { pessoa } = useSessao();
+  const { pessoa, lite } = useSessao();
   const [hoje, setHoje] = useState<string | null>(null);
   const [dia, setDia] = useState<string | null>(null);
   const [dados, setDados] = useState<DiaDeIncubacao | null>(null);
@@ -71,7 +71,7 @@ export default function IncubacaoLeitura() {
         titulo="Incubação e leitura"
         descricao={
           <>
-            O que foi plaqueado em cada dia e quando ler. Vem do que foi registrado no bot e no app; TAB e Coliformes não entram. Os
+            O que foi plaqueado em cada dia e quando ler. Vem do que foi registrado{lite ? "" : " no bot e no app"}; TAB e Coliformes não entram. Os
             lotes dos meios saem sozinhos no laudo (o lote em uso de cada meio, em Meios e lotes).
           </>
         }

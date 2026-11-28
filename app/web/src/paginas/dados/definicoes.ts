@@ -45,7 +45,7 @@ export interface DefinicaoDePagina {
   fixos?: Record<string, string>; // filtro sempre aplicado na API (ex.: uma página por teste, 24/10)
   semResumo?: boolean; // sem o cartão "Por situação" (barras) em cima da tabela (Tanques, 28/11)
   agrupar?: "tanques" | "drops"; // lado a lado (27/11): uma linha por tanque e coleta, as análises em colunas (ladoALado.ts)
-  dashboard?: { tipo: "colunas" | "tendencia"; coluna: string; aberto?: boolean }; // gráfico que o Dashboard mostra primeiro (25/10)
+  dashboard?: { tipo: "colunas" | "tendencia"; coluna: string; aberto?: boolean; soColunas?: boolean }; // gráfico que o Dashboard mostra primeiro (25/10); soColunas: sem o modo Tendência (Coletas, 28/11)
 }
 
 /** Ícone e cor (da família) de cada página; o resto vem de definicoes.ts. */
@@ -85,7 +85,7 @@ export const PAGINAS: DefinicaoDePagina[] = [
     api: "/paginas/coletas",
     impressao: "em pé",
     linkDaLinha: (l) => `/paginas/coletas/${l.coleta_id}`,
-    dashboard: { tipo: "colunas", coluna: "coletado_por", aberto: true }, // quem coletou o quê, já aberto (25/10)
+    dashboard: { tipo: "colunas", coluna: "coletado_por", aberto: true, soColunas: true }, // quem coletou o quê, já aberto (25/10)
     colunas: [
       { chave: "data_coleta", rotulo: "Data da coleta", formato: "data" },
       { chave: "tanque", rotulo: "Tanque", principal: true },
@@ -448,7 +448,7 @@ export const PAGINAS: DefinicaoDePagina[] = [
     caminho: "tanques-terra",
     grupo: "NFC",
     titulo: "Tanques terra",
-    descricao: "Um tanque por coleta, com o que já foi lido, o que falta e o status. Toque no tanque para ver tudo dele.",
+    descricao: "Um tanque por coleta, com o que já foi lido, o que falta e o status. Clique no tanque para ver tudo dele.",
     api: "/paginas/tanques-terra",
     impressao: "deitado",
     semColetor: true,
@@ -477,7 +477,7 @@ export const PAGINAS: DefinicaoDePagina[] = [
     caminho: "navios",
     grupo: "NFC",
     titulo: "Navios",
-    descricao: "Todos os navios, de NFC e de concentrado (FCOJ), com o status. Toque no navio para ver os tanques e o concentrado dele.",
+    descricao: "Todos os navios, de NFC e de concentrado (FCOJ), com o status. Clique no navio para ver os tanques e o concentrado dele.",
     api: "/paginas/navios",
     impressao: "deitado",
     semColetor: true,

@@ -89,7 +89,7 @@ export default function BlocosDoDia() {
     <div className="blocos-do-dia">
       <Bloco
         titulo="Leituras pendentes"
-        explicacao="Placas na estufa para ler hoje (e as atrasadas). Toque no número para digitar o resultado."
+        explicacao="Placas na estufa para ler hoje (e as atrasadas). Clique no número para digitar o resultado."
         grupos={dados.leituras}
         vazio="Nenhuma leitura pendente."
       />

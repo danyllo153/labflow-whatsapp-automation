@@ -173,7 +173,7 @@ export default function GraficoLotes({
           title: (itens) => `${periodo === "semana" ? "Semana de " : ""}${rotulos[itens[0].dataIndex]}`,
           footer: (itens) => {
             const lotes = periodos.get(chaves[itens[0].dataIndex]) ?? [];
-            return `${lotes.length} lotes · ${lotes.filter((x) => x.naoOk).length} não ok · toque para ver`;
+            return `${lotes.length} lotes · ${lotes.filter((x) => x.naoOk).length} não ok · clique para ver`;
           },
         },
       },
@@ -243,7 +243,7 @@ export default function GraficoLotes({
           <h2>{vista === "lotes" ? "Lotes lidos" : "Leituras com crescimento"}</h2>
           <span className="texto-secundario">
             {vista === "lotes"
-              ? `${totalLotes} lotes com leitura · ${totalNaoOk} não ok · toque numa coluna para ver os lotes`
+              ? `${totalLotes} lotes com leitura · ${totalNaoOk} não ok · clique numa coluna para ver os lotes`
               : `${crescimento.length} leituras com número (o "<10" fica de fora)`}
           </span>
         </div>

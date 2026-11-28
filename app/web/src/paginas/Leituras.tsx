@@ -57,7 +57,7 @@ export default function Leituras() {
         cor="geral"
         voltar={false}
         titulo="Leituras"
-        descricao="O relatório do dia e a leitura de cada análise: toque na análise, digite o resultado e confira antes de gravar. O histórico fica na página de cada análise."
+        descricao="O relatório do dia e a leitura de cada análise: clique na análise, digite o resultado e confira antes de gravar. O histórico fica na página de cada análise."
         acoes={aba === "dia" ? <BotaoImprimir aoClicar={() => window.print()} /> : undefined}
       />
       <AbasDaPagina titulo="Leituras" abas={abas} aba={aba} irPara={(nova) => setParams({ aba: nova })} />

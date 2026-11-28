@@ -98,14 +98,14 @@ function Linha({ item: e, aoRecuperar }: { item: Excluida; aoRecuperar: (texto: 
           </button>
           {podeApagar && (
             <button type="button" className="botao botao-perigo" onClick={() => setAberto("apagar")}>
-              Apagar de vez
+              Excluir definitivamente
             </button>
           )}
         </div>
       ) : (
-        <form className="corrigir-horario" onSubmit={confirmar} aria-label={`${aberto === "apagar" ? "Apagar de vez" : "Recuperar"} ${titulo}`}>
+        <form className="corrigir-horario" onSubmit={confirmar} aria-label={`${aberto === "apagar" ? "Excluir definitivamente" : "Recuperar"} ${titulo}`}>
           {aberto === "apagar" && (
-            <p className="mensagem-erro">Apagar de vez não tem volta: a coleta some desta lista. Fica só o registro de quem apagou e por quê.</p>
+            <p className="mensagem-erro">Excluir definitivamente não tem volta: a coleta some desta lista. Fica só o registro de quem apagou e por quê.</p>
           )}
           <label className="campo">
             {aberto === "apagar" ? "Motivo para apagar de vez" : "Motivo da recuperação"}
@@ -118,7 +118,7 @@ function Linha({ item: e, aoRecuperar }: { item: Excluida; aoRecuperar: (texto: 
           )}
           <div className="botoes-lado">
             <button type="submit" className={aberto === "apagar" ? "botao botao-perigo" : "botao botao-principal"}>
-              {aberto === "apagar" ? "Apagar de vez" : "Confirmar a recuperação"}
+              {aberto === "apagar" ? "Excluir definitivamente" : "Confirmar a recuperação"}
             </button>
             <button type="button" className="botao botao-simples" onClick={() => setAberto(null)}>
               Cancelar

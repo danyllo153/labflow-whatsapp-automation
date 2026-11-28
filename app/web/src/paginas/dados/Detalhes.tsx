@@ -188,6 +188,7 @@ export function DetalheTanque() {
           <p className="texto-secundario">
             {deNavio ? `Navio ${String(r.navio)}` : "Terra"} · coleta de {formatar(r.data_coleta, "data")}
           </p>
+          <div className="detalhe-grade">
           <Numeros
             itens={[
               ["Leituras lidas", `${r.lidas} de ${r.leituras}`],
@@ -198,11 +199,14 @@ export function DetalheTanque() {
               ["Desvios abertos", r.desvios_abertos, true],
             ]}
           />
+          <div className="detalhe-blocos">
           <Bloco titulo="Leituras" colunas={COLS_LEITURAS} linhas={dados.leituras} vazio="Nenhuma leitura registrada." />
           <Bloco titulo="Drops" colunas={COLS_DROPS} linhas={dados.drops} vazio="Sem drops." />
           <Bloco titulo="Desvios" colunas={COLS_DESVIOS} linhas={dados.desvios} vazio="Nenhum desvio." />
           {!deNavio && <Bloco titulo="TAB" colunas={COLS_TESTES} linhas={dados.testes} vazio="Nenhum TAB registrado." />}
           {!deNavio && <BlocoArquivo linhas={dados.arquivo} />}
+          </div>
+          </div>
         </>
       )}
     </section>
@@ -270,6 +274,7 @@ export function DetalheNavio() {
           <p className="texto-secundario">
             {String(r.produto)} · de {formatar(r.primeira_data, "data")} a {formatar(r.ultima_data, "data")}
           </p>
+          <div className="detalhe-grade">
           <Numeros
             itens={[
               ["Tanques NFC", r.tanques_nfc],
@@ -280,6 +285,7 @@ export function DetalheNavio() {
               ["Desvios abertos", r.desvios_abertos, true],
             ]}
           />
+          <div className="detalhe-blocos">
           <Bloco
             titulo="Tanques NFC do navio"
             colunas={COLS_TANQUES_NAVIO}
@@ -304,6 +310,8 @@ export function DetalheNavio() {
             />
           )}
           <BlocoArquivo linhas={dados.arquivo} />
+          </div>
+          </div>
         </>
       )}
     </section>
@@ -371,6 +379,7 @@ export function DetalheLoad() {
             {r.fabricas ? `Fábrica ${String(r.fabricas)}` : "Sem fábrica"} · item {String(r.itens || "-")} · desde{" "}
             {formatar(r.primeira_data, "data")}
           </p>
+          <div className="detalhe-grade">
           <Numeros
             itens={[
               ["Lotes FCOJ", r.lotes],
@@ -381,6 +390,7 @@ export function DetalheLoad() {
               ["Caixas no arquivo", r.caixas],
             ]}
           />
+          <div className="detalhe-blocos">
           <Bloco titulo="Recebimento FCOJ: lotes" colunas={COLS_LOTES} linhas={dados.lotes} vazio="Este load não tem recebimento de FCOJ." />
           <Bloco
             titulo="Compostas: TAB, Coliformes e Howard"
@@ -393,6 +403,8 @@ export function DetalheLoad() {
             <Bloco titulo="Recebimento NFC" colunas={COLS_NFC_LOAD} linhas={dados.nfc ?? []} vazio="" link={() => "/analises/recebimento-nfc"} />
           )}
           <BlocoArquivo linhas={dados.arquivo} />
+          </div>
+          </div>
         </>
       )}
     </section>

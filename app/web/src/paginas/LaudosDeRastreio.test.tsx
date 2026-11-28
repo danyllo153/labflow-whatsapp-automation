@@ -140,7 +140,7 @@ describe("Água do processo (APP-037)", () => {
     expect(within(form).getByRole("button", { name: "Câmara 5" })).toHaveAttribute("aria-pressed", "true");
     await userEvent.click(within(form).getByRole("button", { name: "Câmara 5" })); // não coletou
     expect(within(form).getByRole("button", { name: "Câmara 5" })).toHaveAttribute("aria-pressed", "false");
-    await userEvent.click(within(form).getByRole("button", { name: "Registrar coleta" }));
+    await userEvent.click(within(form).getByRole("button", { name: "Salvar" }));
     expect(api.chamadas.find((c) => c.rota === "POST /aguas/processo")?.corpo.pontos).toEqual(["manifold", "camara4", "camara6"]);
 
     await userEvent.click(screen.getByRole("button", { name: "Editar a coleta de 22/10 09:30" }));
@@ -216,7 +216,7 @@ describe("Baias e linhas (APP-037)", () => {
     });
     const form = await screen.findByRole("form", { name: "Nova coleta de baias" });
     await userEvent.type(within(form).getByLabelText("Baias (uma ou mais)"), "08, 10");
-    await userEvent.click(within(form).getByRole("button", { name: "Registrar coleta" }));
+    await userEvent.click(within(form).getByRole("button", { name: "Salvar" }));
     expect(api.chamadas.find((c) => c.rota === "POST /aguas/superficies")?.corpo).toMatchObject({ tipo: "Baia", pontos: ["08", "10"] });
     expect(screen.queryByLabelText("C.T. 48h da Baia 08 de 22/10")).toBeNull(); // o resultado é na página Leituras
     await userEvent.click(screen.getByRole("button", { name: "Editar a coleta da Baia 08 de 22/10" }));

@@ -45,15 +45,16 @@ describe("Turno: entrar e sair (APP-022)", () => {
     });
     expect(await screen.findByRole("radio", { name: /Tarde.*sugerido pelo horário/ })).toBeChecked();
     expect(screen.queryByLabelText("Sua entrada")).not.toBeInTheDocument();
-    expect(screen.getByText(/hora do toque no botão/)).toBeInTheDocument();
+    expect(screen.getByText(/hora do clique no botão/)).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("radio", { name: /Madrugada/ }));
     await userEvent.click(screen.getByRole("radio", { name: /Tarde/ }));
     await userEvent.click(screen.getByRole("button", { name: "Entrar no turno Tarde" }));
 
     expect(api.chamadas.find((c) => c.rota === "POST /turno/entrar")?.corpo).toEqual({ turno_id: 2 });
-    expect(await screen.findByRole("heading", { name: "Você está no turno Tarde de 22/10" })).toBeInTheDocument();
-    expect(screen.getByText("16:07")).toBeInTheDocument();
+    expect(await screen.findByRole("button", { name: "Sair do turno" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: /Você está no turno/ })).not.toBeInTheDocument(); // o cartão separado sumiu
+    expect(screen.getByText(/desde 16:07/)).toBeInTheDocument();
   });
 
   it("Sair do turno pede confirmação e registra a hora do clique", async () => {
@@ -67,14 +68,37 @@ describe("Turno: entrar e sair (APP-022)", () => {
     });
     await userEvent.click(await screen.findByRole("button", { name: "Sair do turno" }));
     const confirmar = screen.getByRole("form", { name: "Confirmar a saída" });
-    expect(confirmar).toHaveTextContent(/agora, às \d\d:\d\d/);
-    expect(within(confirmar).queryByLabelText("Saída")).not.toBeInTheDocument();
+    expect(confirmar).toHaveTextContent(/às \d\d:\d\d/);
+    expect(within(confirmar).getByRole("checkbox", { name: /Você/ })).toBeChecked(); // "Você" já vem marcado
     expect(api.vezes("POST /turno/sair")).toBe(0);
-    await userEvent.click(within(confirmar).getByRole("button", { name: "Confirmar saída" }));
+    await userEvent.click(within(confirmar).getByRole("button", { name: "Sair" }));
 
     expect(api.chamadas.find((c) => c.rota === "POST /turno/sair")?.corpo).toEqual({});
     expect(await screen.findByText("Tarde de 22/10")).toBeInTheDocument();
     expect(screen.getByText(/16:00 às 23:30/)).toBeInTheDocument();
+  });
+
+  it("Sair do turno escolhendo outra pessoa da equipe (e não a si mesmo)", async () => {
+    const equipe = {
+      turno: "Tarde", dia: "2026-10-22", no_turno: 2, pode_colocar: true, disponiveis: [],
+      pessoas: [
+        { usuario_id: 1, nome: "Ana Souza", entrada: "16:00", saida: null, sou_eu: true },
+        { usuario_id: 2, nome: "Bruno Lima", entrada: "16:10", saida: null, sou_eu: false },
+      ],
+    };
+    const api = abrir("/turno", {
+      "GET /turno": () => ({ status: 200, corpo: { ...ESTADO_TURNO, no_turno: NA_TARDE } }),
+      "GET /turno/equipe": () => ({ status: 200, corpo: equipe }),
+      "DELETE /turno/equipe/2": () => ({ status: 200, corpo: { ...equipe, no_turno: 1, pessoas: [equipe.pessoas[0]] } }),
+    });
+    await userEvent.click(await screen.findByRole("button", { name: "Sair do turno" }));
+    const confirmar = screen.getByRole("form", { name: "Confirmar a saída" });
+    await userEvent.click(within(confirmar).getByRole("checkbox", { name: /Você/ })); // desmarca a própria pessoa
+    await userEvent.click(within(confirmar).getByRole("checkbox", { name: "Bruno Lima" }));
+    await userEvent.click(within(confirmar).getByRole("button", { name: "Sair" }));
+    await screen.findByRole("button", { name: "Sair do turno" });
+    expect(api.vezes("DELETE /turno/equipe/2")).toBe(1);
+    expect(api.vezes("POST /turno/sair")).toBe(0);
   });
 
   it("corrigir o horário pede motivo e mostra o que foi marcado no app", async () => {

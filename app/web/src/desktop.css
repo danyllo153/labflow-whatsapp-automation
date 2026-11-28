@@ -1,0 +1,924 @@
+/*
+ * Densidade para o computador (varredura de 28/11, auditoria-desktop). Carregado POR ÚLTIMO, depois de paleta.css:
+ * só tokens de tamanho e as poucas regras que vencem as outras folhas. Nada aqui muda logo, ícones do menu, bolinhas
+ * coloridas das análises nem as cores: só tamanho, espaço, alinhamento e densidade. Tudo dentro de min-width: 900px,
+ * então o celular continua com os botões grandes de dedo.
+ */
+:root {
+  /* escala de espaçamento (base 4) */
+  --e1: 4px;
+  --e2: 8px;
+  --e3: 12px;
+  --e4: 16px;
+  --e5: 24px;
+  --e6: 32px;
+  /* alturas */
+  --h-campo: 32px;
+  --h-botao-grande: 36px;
+  --h-botao-pequeno: 28px;
+  --h-linha-tabela: 30px;
+  --h-aba: 36px;
+  --h-menu-item: 32px;
+  /* tipografia */
+  --fs-corpo: 14px;
+  --fs-tabela: 13px;
+  --fs-rotulo: 12px;
+  --fs-titulo-pagina: 20px;
+  --fs-titulo-cartao: 15px;
+  /* larguras */
+  --form-max: 720px;
+  --form-largo: 960px;
+  --conteudo-max: 1600px;
+  --menu-largura: 220px;
+  --raio: 6px;
+  --cartao-pad: 12px 16px;
+}
+
+@media (min-width: 900px) {
+  :root {
+    --largura-menu: var(--menu-largura);
+  }
+
+  /* ---------- conteúdo: centralizado e com limite em telas largas ---------- */
+  :root .moldura .conteudo {
+    max-width: var(--conteudo-max);
+    padding: 16px 28px 32px;
+    width: 100%;
+    margin-inline: auto;
+    box-sizing: border-box;
+  }
+
+  /* ---------- botões: largura do texto, 32 px ---------- */
+  :root .conteudo .botao,
+  :root .conteudo .botoes-lado .botao,
+  :root .conteudo form > .botao {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    flex: none;
+    min-height: var(--h-campo);
+    padding: 0 14px;
+    margin-bottom: 0;
+    border-radius: var(--raio);
+    font-size: var(--fs-corpo);
+  }
+
+  :root .conteudo .botao-secundario,
+  :root .conteudo .botao-topo,
+  :root .conteudo .botao-arquivo {
+    min-height: var(--h-campo);
+    padding: 0 12px;
+    border-radius: var(--raio);
+    font-size: var(--fs-corpo);
+  }
+
+  :root .conteudo .botoes-lado,
+  :root .conteudo .acoes-formulario {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--e2);
+    margin-top: var(--e2);
+  }
+
+  /* o botão principal de uma tela pode ficar um pouco maior */
+  :root .conteudo .botao-principal {
+    min-height: var(--h-botao-grande);
+  }
+
+  /* botões de escolha (tipo, turno, material): chips baixos em vez de cartões de 56 px */
+  :root .conteudo .botao-tipo {
+    min-height: var(--h-campo);
+    font-size: var(--fs-corpo);
+  }
+
+  /* ---------- campos: 32 px, rótulo de 12 px acima ---------- */
+  :root .conteudo .campo {
+    margin-bottom: var(--e3);
+  }
+
+  :root .conteudo .campo label,
+  :root .conteudo label.campo {
+    font-size: var(--fs-rotulo);
+    font-weight: 600;
+  }
+
+  :root .conteudo .campo input,
+  :root .conteudo .campo select,
+  :root .conteudo .campo textarea {
+    min-height: var(--h-campo);
+    padding: 4px 10px;
+    margin-top: 2px;
+    border-radius: var(--raio);
+    font-size: var(--fs-corpo);
+  }
+
+  :root .conteudo .campo textarea {
+    min-height: 64px;
+  }
+
+  :root .conteudo .orientacao select {
+    min-height: var(--h-campo);
+    padding: 2px 8px;
+    border-radius: var(--raio);
+  }
+
+  /* hora e data: largura do conteúdo (antes cortava "28/11/2026") */
+  :root .conteudo .campo-hora input {
+    max-width: none;
+    min-width: 9.5em;
+  }
+
+  /* ---------- grade de 12 colunas ---------- */
+  :root .conteudo .grade-12,
+  :root .conteudo .grade-filtros {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 0 var(--e3);
+    max-width: var(--form-max);
+    align-items: end;
+  }
+
+  :root .conteudo .grade-filtros > * {
+    grid-column: span 3;
+  }
+
+  :root .conteudo .grade-12.larga {
+    max-width: var(--form-largo);
+  }
+
+  :root .conteudo .grade-12 > .col-2 { grid-column: span 2; }
+  :root .conteudo .grade-12 > .col-3 { grid-column: span 3; }
+  :root .conteudo .grade-12 > .col-4 { grid-column: span 4; }
+  :root .conteudo .grade-12 > .col-5 { grid-column: span 5; }
+  :root .conteudo .grade-12 > .col-6 { grid-column: span 6; }
+  :root .conteudo .grade-12 > .col-8 { grid-column: span 8; }
+  :root .conteudo .grade-12 > .col-12 { grid-column: 1 / -1; }
+
+  /* formulário: grade de colunas iguais (3 a 4 campos por linha), alinhada à esquerda, sem esticar pela tela toda.
+     Campo comprido (lista de tanques, de lotes): .campo-largo ocupa 2 colunas. */
+  :root .conteudo .linha-formulario {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: var(--e2) var(--e3);
+    align-items: end;
+    max-width: var(--form-max);
+    margin: var(--e2) 0;
+  }
+
+  :root .conteudo .linha-formulario > .campo {
+    margin-bottom: 0;
+    min-width: 0;
+  }
+
+  :root .conteudo .linha-formulario > .campo-largo {
+    grid-column: span 2;
+  }
+
+  :root .conteudo .linha-formulario > .botao,
+  :root .conteudo .linha-formulario > .botao-link {
+    justify-self: start;
+  }
+
+  /* ---------- cartões ---------- */
+  :root .conteudo .cartao {
+    padding: var(--cartao-pad);
+  }
+
+  :root .conteudo .cartao > h2,
+  :root .conteudo .cartao h2.titulo-cartao {
+    font-size: var(--fs-titulo-cartao);
+    margin: 0 0 var(--e2);
+  }
+
+  /* ---------- tabelas densas ---------- */
+  :root .conteudo table {
+    font-size: var(--fs-tabela);
+  }
+
+  :root .conteudo table th,
+  :root .conteudo table td {
+    padding: 4px 10px;
+    line-height: 1.25;
+  }
+
+  :root .conteudo table tbody tr {
+    height: var(--h-linha-tabela);
+  }
+
+  :root .conteudo table th {
+    font-size: var(--fs-rotulo);
+    white-space: nowrap;
+  }
+
+  /* ---------- menu lateral: itens de 32 px, sem quebrar em 3 linhas ---------- */
+  :root .menu-lateral {
+    padding: 14px 10px;
+  }
+
+  :root .menu-navegacao .item-menu {
+    min-height: var(--h-menu-item);
+    padding: 4px 10px;
+    margin-bottom: 1px;
+    font-size: var(--fs-corpo);
+  }
+
+  :root .menu-navegacao .item-rotulo {
+    min-width: 0;
+    flex: 1;
+    white-space: nowrap;
+  }
+
+  :root .menu-navegacao .menu-filho {
+    min-height: var(--h-menu-item);
+    padding: 4px 10px;
+    font-size: 13px;
+  }
+
+  :root .menu-navegacao .menu-filho-nome,
+  :root .menu-navegacao .menu-grupo-botao .item-rotulo {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  :root .menu-navegacao .menu-filho-nome {
+    flex: 1;
+  }
+
+  :root .menu-navegacao .menu-secao {
+    margin: 10px 0 4px;
+  }
+}
+
+/* ======================= Leva C: cabeçalho de página compacto ======================= */
+@media (min-width: 900px) {
+  /* a faixa de demonstração vira selo pequeno ao lado do turno (o texto completo fica no title) */
+  :root .conteudo .faixa-demonstracao {
+    display: none;
+  }
+
+  :root .topo-celular .selo-demo {
+    display: inline-flex;
+    align-items: center;
+    height: 24px;
+    padding: 0 10px;
+    margin-left: auto;
+    border: 1px solid var(--aviso-borda);
+    border-radius: 999px;
+    background: var(--aviso-fundo, #fff4d6);
+    color: var(--texto);
+    font-size: var(--fs-rotulo);
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: help;
+  }
+
+  :root .topo-celular .selo-demo + .chip-equipe {
+    margin-left: 8px;
+  }
+
+  /* título: ícone de 28 px na mesma linha, trilha antes do nome, descrição de 1 linha cinza */
+  :root .faixa-pagina,
+  :root .faixa-pagina[class*="faixa-"] {
+    margin: 0 0 var(--e2);
+    padding: 0;
+  }
+
+  :root .app-analise-topo {
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: var(--e2);
+  }
+
+  :root .app-analise-topo .app-icone {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    align-self: flex-start;
+    margin-top: 2px;
+  }
+
+  :root .app-analise-topo .app-icone svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  :root .app-analise-titulo,
+  :root .app-analise-topo > div:not(.acoes-icone) {
+    min-width: 0;
+  }
+
+  :root .app-analise-topo .linha-titulo {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+
+  :root .app-analise-topo h1 {
+    font-size: var(--fs-titulo-pagina);
+    line-height: 1.2;
+    margin: 0;
+  }
+
+  :root .app-analise-topo .trilha {
+    display: inline-flex;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--texto-secundario);
+  }
+
+  :root .app-analise-topo .trilha a {
+    color: var(--texto-secundario);
+    text-decoration: none;
+  }
+
+  :root .app-analise-topo .trilha a:hover {
+    color: var(--link);
+    text-decoration: underline;
+  }
+
+  :root .app-analise-topo p.texto-secundario {
+    font-size: 13px;
+    margin: 1px 0 0;
+    line-height: 1.3;
+  }
+
+  /* abas de 36 px, encostadas no título */
+  :root .abas-app {
+    margin-bottom: var(--e3);
+  }
+
+  :root .abas-app button,
+  :root .abas-app a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: var(--h-aba);
+    padding: 0 14px;
+    font-size: var(--fs-corpo);
+  }
+}
+
+/* ======================= Leva D: formulários e escolhas ======================= */
+@media (min-width: 900px) {
+  /* escolhas de tipo, ponto e material: chips de 32 px em linha, em vez de cartões de 56 a 70 px */
+  :root .conteudo .botoes-tipo {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--e2);
+    margin-bottom: var(--e3);
+  }
+
+  :root .conteudo .botoes-tipo .botao-tipo,
+  :root .conteudo .botoes-tipo .botao-material {
+    min-height: var(--h-campo);
+    min-width: 0;
+    padding: 0 12px;
+    width: auto;
+    flex: none;
+    font-size: var(--fs-corpo);
+  }
+
+  :root .conteudo .marca-semanal {
+    margin-left: 6px;
+    padding: 0 6px;
+    font-size: 11px;
+  }
+
+  /* Água de consumo: Santos / TMG / navio em uma linha, não três cartões */
+  :root .conteudo .cartoes-agua {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--e2);
+    margin-bottom: var(--e3);
+  }
+
+  :root .conteudo .cartoes-agua .cartao-agua {
+    display: flex;
+    align-items: center;
+    gap: var(--e2);
+    margin: 0;
+    padding: 4px 10px;
+  }
+
+  :root .conteudo .cartoes-agua .cartao-agua h2 {
+    margin: 0;
+    font-size: var(--fs-corpo);
+  }
+
+  :root .conteudo .cartoes-agua .botao {
+    min-height: var(--h-botao-pequeno);
+    padding: 0 8px;
+  }
+
+  :root .conteudo .titulo-da-escolha {
+    margin: var(--e1) 0;
+    font-size: var(--fs-titulo-cartao);
+  }
+
+  /* Meios de cultura: OSA / PDA / PCA / WORT como botões (a cor de cada nome continua) */
+  :root .conteudo .cartoes-numeros:has(.cartao-meio) {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--e2);
+    margin-bottom: var(--e3);
+  }
+
+  :root .conteudo .cartao-meio {
+    min-height: var(--h-botao-grande);
+    width: auto;
+    padding: 0 18px;
+    flex-direction: row;
+    align-items: center;
+  }
+
+  :root .conteudo .cartao-meio .nome-do-meio {
+    font-size: var(--fs-titulo-cartao);
+  }
+
+  /* campo de observação e textos livres: não esticar pela tela toda */
+  :root .conteudo form textarea,
+  :root .conteudo .linha-formulario ~ .campo,
+  :root .conteudo form > .campo {
+    max-width: var(--form-max);
+  }
+}
+
+/* ======================= Leva D: listas e tabelas densas ======================= */
+@media (min-width: 900px) {
+  /* listas marcáveis (Drops, TAB, Desvios, Tanques): uma linha de 30 px por item, em 2 colunas quando cabe */
+  :root .conteudo .lista-marcavel {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(480px, 1fr));
+    column-gap: var(--e5);
+    margin: var(--e2) 0 var(--e3);
+  }
+
+  :root .conteudo .lista-marcavel li {
+    flex-wrap: nowrap;
+    min-height: var(--h-linha-tabela);
+    padding: 2px 0;
+    gap: var(--e2);
+    font-size: var(--fs-tabela);
+  }
+
+  :root .conteudo .lista-marcavel label {
+    flex-wrap: nowrap;
+    white-space: nowrap;
+    overflow: hidden;
+    gap: 6px;
+  }
+
+  :root .conteudo .lista-marcavel label > span:first-of-type {
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  :root .conteudo .lista-marcavel label > .texto-secundario {
+    flex: 0 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  :root .conteudo .lista-marcavel input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+  }
+
+  :root .conteudo .lista-marcavel .botao-da-linha,
+  :root .conteudo .lista-marcavel .botao {
+    flex: none;
+    min-height: var(--h-botao-pequeno);
+    padding: 0 10px;
+    font-size: var(--fs-rotulo);
+  }
+
+  :root .conteudo .lista-marcavel .etiqueta {
+    flex: none;
+    padding: 0 8px;
+    font-size: 11px;
+    line-height: 18px;
+  }
+
+  /* ação pequena na linha de qualquer lista */
+  :root .conteudo .botao-da-linha {
+    min-height: var(--h-botao-pequeno);
+    padding: 0 12px;
+    font-size: var(--fs-rotulo);
+  }
+
+  /* Pessoas: uma linha por pessoa (nome, usuário e cargo, situação, Editar), 15 cabem sem rolar */
+  :root .conteudo .lista-pessoas > li.cartao {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: center;
+    column-gap: var(--e4);
+    margin-bottom: 0;
+    padding: 4px 12px;
+    min-height: 36px;
+    border-radius: 0;
+    box-shadow: none;
+    border-bottom: 1px solid var(--linha-suave);
+  }
+
+  :root .conteudo .lista-pessoas > li.cartao:first-child {
+    border-radius: var(--raio) var(--raio) 0 0;
+  }
+
+  :root .conteudo .lista-pessoas > li.cartao:last-child {
+    border-radius: 0 0 var(--raio) var(--raio);
+  }
+
+  :root .conteudo .lista-pessoas .pessoa-cabeca {
+    display: contents;
+  }
+
+  :root .conteudo .lista-pessoas .pessoa-cabeca > div {
+    display: flex;
+    align-items: baseline;
+    gap: var(--e4);
+    min-width: 0;
+  }
+
+  :root .conteudo .lista-pessoas .pessoa-cabeca > div > .texto-secundario {
+    font-size: var(--fs-tabela);
+  }
+
+  :root .conteudo .lista-pessoas > li.cartao > :nth-child(n + 3):not(.botao-da-linha) {
+    grid-column: 1 / -1;
+  }
+
+  :root .conteudo .barra-acoes {
+    margin: 0 0 var(--e2);
+  }
+}
+
+@media (min-width: 900px) {
+  /* números do topo (Atrasados, Vencem hoje...): faixa baixa, não cartões de 90 px */
+  :root .conteudo .cartoes-numeros {
+    gap: var(--e3);
+    margin-bottom: var(--e3);
+  }
+
+  :root .conteudo .cartoes-numeros .cartao-numero {
+    min-height: 56px;
+    padding: 6px 14px;
+  }
+
+  :root .conteudo .cartoes-numeros .cartao-numero .numero {
+    font-size: 1.4rem;
+    line-height: 1.1;
+  }
+}
+
+@media (min-width: 900px) {
+  /* busca das páginas: 32 px e largura de uma coluna de formulário (antes tomava a linha toda) */
+  :root .conteudo .busca-com-filtro {
+    margin-bottom: var(--e2);
+  }
+
+  :root .conteudo .busca-com-filtro .busca-redonda {
+    flex: 0 1 560px;
+  }
+
+  :root .conteudo .busca-redonda {
+    height: var(--h-campo);
+    padding: 0 10px;
+  }
+
+  :root .conteudo .botao-filtro {
+    width: var(--h-campo);
+    height: var(--h-campo);
+  }
+}
+
+/* ======================= Leva E: Resultados em 2 colunas ======================= */
+@media (min-width: 1280px) {
+  :root .conteudo .resultados-topo {
+    display: grid;
+    grid-template-columns: minmax(300px, 5fr) minmax(0, 7fr);
+    gap: var(--e3);
+    align-items: start;
+  }
+
+  :root .conteudo .resultados-topo > * {
+    min-width: 0;
+    margin-bottom: 0;
+  }
+
+  /* só um dos dois (sem dados no gráfico, ou sem situação): ocupa a linha toda */
+  :root .conteudo .resultados-topo > :only-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 900px) {
+  :root .conteudo .resultados-topo {
+    margin-bottom: var(--e3);
+  }
+
+  :root .conteudo .resultados-topo > * {
+    margin-bottom: var(--e3);
+  }
+}
+
+/* ======================= Leva E: Turnos e estufas, tabelas de resultados ======================= */
+@media (min-width: 900px) {
+  /* células de resultado (etiqueta + "prevista 02/12") numa linha só: linhas de 30 px, não de 50 */
+  :root .conteudo table.tabela-dados td {
+    white-space: nowrap;
+  }
+
+  :root .conteudo table.tabela-dados td .etiqueta,
+  :root .conteudo table.tabela-dados td .estado-celula {
+    padding: 0 8px;
+    line-height: 18px;
+  }
+
+  :root .conteudo table.tabela-dados td.principal,
+  :root .conteudo table.tabela-dados td:first-child {
+    white-space: nowrap;
+  }
+
+  /* horários: 3 linhas curtas */
+  :root .admin-turnos .linha-formulario {
+    margin: 0 0 var(--e1);
+    grid-template-columns: 110px repeat(2, 180px);
+  }
+
+  :root .admin-turnos .nome-turno {
+    align-self: center;
+    padding-top: 14px;
+  }
+
+  /* atividades fixas: linha de 32 px */
+  :root .admin-turnos .atividade,
+  :root .admin-turnos .lista-simples > li {
+    padding: 2px 0;
+    min-height: var(--h-linha-tabela);
+  }
+
+  :root .admin-turnos .acoes-linha {
+    gap: var(--e1);
+  }
+
+  :root .admin-turnos .acoes-linha .botao-icone {
+    width: var(--h-botao-pequeno);
+    height: var(--h-botao-pequeno);
+  }
+
+  /* estufas: cartões menores, 6 por linha */
+  :root .admin-turnos .estufas-admin-grade {
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: var(--e2);
+  }
+
+  :root .admin-turnos .estufas-admin-grade .estufa-admin {
+    padding: 8px 10px;
+    gap: var(--e1);
+  }
+}
+
+@media (min-width: 1100px) {
+  /* Relatório do turno: os cartões em 2 colunas (cabeçalho e botões ocupam a linha toda) */
+  :root .conteudo .relatorio-turno {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--e3);
+    align-items: start;
+  }
+
+  :root .conteudo .relatorio-turno > * {
+    margin-bottom: 0;
+  }
+
+  :root .conteudo .relatorio-turno > :not(.cartao),
+  :root .conteudo .relatorio-turno > form.cartao {
+    grid-column: 1 / -1;
+  }
+
+  :root .conteudo .relatorio-turno > form[aria-label="Escrito à mão"] textarea {
+    max-width: none;
+  }
+}
+
+/* ======================= Varredura total: Turno ======================= */
+@media (min-width: 1100px) {
+  /* Equipe e Entrar no turno lado a lado; o resto ocupa a linha toda */
+  :root .conteudo .pagina-turno {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--e3);
+    align-items: start;
+  }
+
+  :root .conteudo .pagina-turno > * {
+    grid-column: 1 / -1;
+    margin-bottom: 0;
+  }
+
+  :root .conteudo .pagina-turno > .turno-topo:has(+ form),
+  :root .conteudo .pagina-turno > form[aria-label="Entrar no turno"] {
+    grid-column: auto;
+  }
+}
+
+@media (min-width: 900px) {
+  /* "Quem fez o quê": a lista rola dentro do cartão (num turno de verdade são poucas linhas, mas nunca estica a página) */
+  :root .conteudo .registros-turno .linha-do-tempo {
+    max-height: 220px;
+    overflow-y: auto;
+  }
+
+  :root .conteudo .registros-turno .linha-do-tempo li {
+    padding-top: 2px;
+    padding-bottom: 2px;
+    min-height: var(--h-linha-tabela);
+  }
+
+  /* Estufas: "Marcar todas como OK" na mesma barra do resumo, não numa linha só dela */
+  :root .conteudo .conferencia-estufas {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--e1) var(--e3);
+  }
+
+  :root .conteudo .conferencia-estufas > * {
+    grid-column: 1 / -1;
+  }
+
+  :root .conteudo .conferencia-estufas > .texto-secundario:first-child {
+    grid-column: 1;
+    margin: 0;
+  }
+
+  :root .conteudo .conferencia-estufas > .todas-ok {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  :root .conteudo .conferencia-estufas > .todas-ok:has(.previa-estufas) {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+}
+
+/* texto só para leitor de tela (o rótulo continua no campo) */
+.so-leitor {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (min-width: 900px) {
+  /* horários dos turnos: tabela 3 x 2 (Turno, Início, Fim) */
+  :root .admin-turnos .tabela-horarios {
+    max-width: 480px;
+    margin: var(--e2) 0;
+  }
+
+  :root .admin-turnos .tabela-horarios .linha-formulario {
+    grid-template-columns: 110px 130px 130px;
+    align-items: center;
+    margin: 0 0 var(--e1);
+    max-width: none;
+  }
+
+  :root .admin-turnos .tabela-horarios .nome-turno {
+    padding-top: 0;
+  }
+
+  :root .admin-turnos .tabela-horarios .campo {
+    margin: 0;
+  }
+
+  :root .admin-turnos .tabela-horarios .cabeca-tabela {
+    font-size: var(--fs-rotulo);
+    font-weight: 600;
+    color: var(--texto-secundario);
+  }
+}
+
+@media (min-width: 900px) {
+  /* abas que não cabem quebram em duas linhas, sem rolagem lateral (Leituras) */
+  :root .abas-app {
+    flex-wrap: wrap;
+    overflow: visible;
+  }
+
+  /* Esterilização: número do ciclo, campos extras e Salvar na mesma linha */
+  :root .conteudo .linha-ciclo {
+    grid-template-columns: repeat(auto-fill, minmax(160px, auto));
+    max-width: none;
+  }
+
+  /* Pessoas: colunas fixas e cabeçalho */
+  :root .conteudo .lista-pessoas > li.cartao {
+    grid-template-columns: minmax(0, 1fr) 190px 72px;
+  }
+
+  :root .conteudo .lista-pessoas > li.cabeca-tabela {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 190px 72px;
+    column-gap: var(--e4);
+    padding: 4px 12px;
+    font-size: var(--fs-rotulo);
+    font-weight: 600;
+    color: var(--texto-secundario);
+  }
+
+  :root .conteudo .lista-pessoas > li.cartao > span.etiqueta,
+  :root .conteudo .lista-pessoas .pessoa-cabeca > span {
+    justify-self: start;
+  }
+}
+
+@media (min-width: 900px) {
+  :root .menu-navegacao .menu-secao-botao {
+    width: calc(100% - 20px);
+    border: 0;
+    background: none;
+    font-family: inherit;
+    cursor: pointer;
+    align-items: center;
+  }
+
+  :root .menu-navegacao .menu-secao-botao[aria-expanded="true"] .menu-seta {
+    transform: rotate(180deg);
+  }
+}
+
+/* ======================= Detalhes (load, navio, tanque): resumo à esquerda, tabelas à direita ======================= */
+@media (min-width: 1100px) {
+  :root .conteudo .detalhe-grade {
+    display: grid;
+    grid-template-columns: minmax(220px, 4fr) minmax(0, 8fr);
+    gap: var(--e3);
+    align-items: start;
+  }
+
+  :root .conteudo .detalhe-grade > .grade-numeros {
+    position: sticky;
+    top: var(--e3);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--e2);
+    margin: 0;
+  }
+
+  :root .conteudo .detalhe-grade .cartao-numero {
+    min-height: 56px;
+    padding: 6px 12px;
+  }
+
+  :root .conteudo .detalhe-blocos {
+    min-width: 0;
+  }
+
+  :root .conteudo .detalhe-blocos .so-tela {
+    overflow-x: auto;
+  }
+}
+
+@media (min-width: 900px) {
+  /* tabelas agrupadas (Tanques, normal e stress): colunas estreitas, texto quebra, e a coluna do tanque fica fixa se ainda sobrar rolagem lateral */
+  :root .conteudo .tabela-rolavel table.tabela-dados td,
+  :root .conteudo .tabela-rolavel table.tabela-dados th {
+    white-space: normal;
+    padding: 3px 6px;
+    font-size: 12px;
+  }
+
+  :root .conteudo .tabela-rolavel table.tabela-dados td .etiqueta,
+  :root .conteudo .tabela-rolavel table.tabela-dados td .estado-celula {
+    font-size: 11px;
+    padding: 0 6px;
+  }
+
+  :root .conteudo .tabela-rolavel table.tabela-dados td:first-child,
+  :root .conteudo .tabela-rolavel table.tabela-dados thead tr:first-child th:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: var(--cartao, #fff);
+  }
+}
+
+@media (min-width: 900px) {
+  :root .conteudo .tabela-rolavel .estado-celula,
+  :root .conteudo .tabela-rolavel table.tabela-dados td span {
+    white-space: normal;
+  }
+}

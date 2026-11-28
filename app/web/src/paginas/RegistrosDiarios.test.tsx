@@ -37,7 +37,7 @@ describe("Registros diários (APP-043)", () => {
     expect(screen.queryByRole("heading", { name: /Água do processo|Limpeza de superfícies/ })).not.toBeInTheDocument(); // ficam em Páginas
     await userEvent.click(screen.getByRole("link", { name: /Material asséptico/ }));
     expect(await screen.findByRole("heading", { level: 1, name: "Material asséptico" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "← Análises" })).toHaveAttribute("href", "/paginas"); // 26/10: os registros diários ficam em Análises
+    expect(screen.getByRole("link", { name: "Análises" })).toHaveAttribute("href", "/paginas"); // 26/10: os registros diários ficam em Análises
   });
 
   it("saiu do menu (26/10): fica só em Análises, no grupo Registros diários", async () => {

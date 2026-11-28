@@ -58,7 +58,7 @@ describe("Cartão Agora (APP-056)", () => {
       </MemoryRouter>,
     );
     await userEvent.type(screen.getByLabelText("O que você está fazendo?"), "troquei o filtro da capela");
-    await userEvent.click(screen.getByRole("button", { name: "Registrar" }));
+    await userEvent.click(screen.getByRole("button", { name: "Adicionar" }));
     expect(api.chamadas.find((c) => c.rota === "POST /turno/registros")?.corpo).toEqual({ texto: "troquei o filtro da capela" });
     expect(await screen.findByText("Registrado na linha do tempo do turno.")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Ver o 1" })).toHaveAttribute("href", "/analises/tab");

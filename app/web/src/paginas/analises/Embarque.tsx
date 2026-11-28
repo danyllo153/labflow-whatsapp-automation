@@ -246,7 +246,7 @@ function CamposDoEmbarque({
     <div className="linha-formulario">
       <label className="campo">
         Navio e viagem
-        <input required maxLength={40} value={campos.navio} placeholder="ex.: O.SKY 189" onChange={(e) => mudar({ navio: e.target.value })} />
+        <input required maxLength={40} value={campos.navio} placeholder="O.SKY 189" onChange={(e) => mudar({ navio: e.target.value })} />
       </label>
       <label className="campo campo-hora">
         Linha
@@ -278,19 +278,19 @@ function Registrar({ aoGravar }: { aoGravar: () => void }) {
       <h2>Registrar amostras do embarque</h2>
       <CamposDoEmbarque campos={campos} mudar={mudar} />
       <div className="linha-formulario">
-        <label className="campo">
+        <label className="campo campo-largo">
           Load
-          <input required maxLength={60} value={campos.load} placeholder="ex.: 43783 ou 43783, 43784" onChange={(e) => mudar({ load: e.target.value })} />
+          <input required maxLength={60} value={campos.load} placeholder="43783 ou 43783, 43784" onChange={(e) => mudar({ load: e.target.value })} />
         </label>
-        <label className="campo">
+        <label className="campo campo-largo">
           Item
-          <input required maxLength={60} value={campos.item} placeholder="um por load, ou um só para todos" onChange={(e) => mudar({ item: e.target.value })} />
+          <input required maxLength={60} value={campos.item} placeholder="um por load ou um só" onChange={(e) => mudar({ item: e.target.value })} />
         </label>
       </div>
       <div className="linha-formulario">
-        <label className="campo">
+        <label className="campo campo-largo">
           Amostras
-          <input required maxLength={200} value={campos.amostras} placeholder="ex.: 1-5 (A1 a A5)" onChange={(e) => mudar({ amostras: e.target.value })} />
+          <input required maxLength={200} value={campos.amostras} placeholder="1-5 (A1 a A5)" onChange={(e) => mudar({ amostras: e.target.value })} />
         </label>
         <label className="campo">
           Data
@@ -299,7 +299,7 @@ function Registrar({ aoGravar }: { aoGravar: () => void }) {
       </div>
       {!g.previa && (
         <button type="submit" className="botao botao-principal" disabled={g.enviando}>
-          Ver o que vai ser criado
+          Revisar
         </button>
       )}
       <PreviaDaGravacao g={g} />
@@ -435,7 +435,7 @@ function Compostas({ aoGravar }: { aoGravar: () => void }) {
         <MarcasDeTeste marcas={marcas} mudar={(m) => (setMarcas(m), g.voltar())} rotulo="Análises das compostas novas" />
         {!g.previa && (
           <button type="submit" className="botao botao-principal" disabled={g.enviando}>
-            Ver o que vai ser criado
+            Revisar
           </button>
         )}
         <PreviaDaGravacao g={g} />
@@ -564,7 +564,7 @@ function Lancar({ amostras, pode, aoGravar }: { amostras: Amostra[]; pode: boole
             void g.ver({ analise: analise.cod, itens: preenchidas.map((a) => ({ embarque_amostra_id: a.id, resultado: valores[a.id].trim() })) })
           }
         >
-          Ver o que vai ser gravado ({preenchidas.length})
+          Revisar ({preenchidas.length})
         </button>
       )}
       <PreviaDaGravacao g={g} titulo="O que vai ser gravado" />

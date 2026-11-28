@@ -59,6 +59,7 @@ describe("Admin → Pessoas (APP-016)", () => {
   it("só o Admin vê Pessoas no menu", async () => {
     abrir("/");
     const lateral = await screen.findByRole("complementary", { name: "Menu" });
+    await userEvent.click(within(lateral).getByRole("button", { name: "Administração" })); // o grupo vem recolhido (28/11)
     expect(within(lateral).getByRole("link", { name: "Pessoas" })).toHaveAttribute("href", "/admin/pessoas");
     expect(within(screen.getByRole("navigation", { name: "Menu do celular" })).queryByRole("link", { name: "Pessoas" })).toBeNull();
   });
@@ -82,7 +83,7 @@ describe("Admin → Pessoas (APP-016)", () => {
     expect(within(cartaoDe("Carla Dias")).getByText(/Sem usuário no app · Analista/)).toBeInTheDocument();
   });
 
-  it("Nova pessoa: confere, mostra o resumo, cadastra e mostra a senha provisória uma vez", async () => {
+  it("Adicionar pessoa: confere, mostra o resumo, cadastra e mostra a senha provisória uma vez", async () => {
     const api = abrir("/admin/pessoas", ADMIN, {
       "POST /admin/pessoas": (corpo) => ({
         status: 201,
@@ -90,8 +91,8 @@ describe("Admin → Pessoas (APP-016)", () => {
       }),
     });
     const u = userEvent.setup();
-    await u.click(await screen.findByRole("button", { name: "Nova pessoa" }));
-    const form = screen.getByRole("form", { name: "Nova pessoa" });
+    await u.click(await screen.findByRole("button", { name: "Adicionar pessoa" }));
+    const form = screen.getByRole("form", { name: "Adicionar pessoa" });
     await u.type(within(form).getByLabelText("Nome"), "Érica Nunes Prado");
     await u.type(within(form).getByLabelText("Telefone (WhatsApp)"), "11 98765-4321");
     await u.selectOptions(within(form).getByLabelText("Cargo"), "Consultor");
@@ -113,11 +114,11 @@ describe("Admin → Pessoas (APP-016)", () => {
     expect(screen.queryByText("K7m4-Tq2p")).not.toBeInTheDocument();
   });
 
-  it("Nova pessoa: telefone incompleto não chega a mandar", async () => {
+  it("Adicionar pessoa: telefone incompleto não chega a mandar", async () => {
     const api = abrir();
     const u = userEvent.setup();
-    await u.click(await screen.findByRole("button", { name: "Nova pessoa" }));
-    const form = screen.getByRole("form", { name: "Nova pessoa" });
+    await u.click(await screen.findByRole("button", { name: "Adicionar pessoa" }));
+    const form = screen.getByRole("form", { name: "Adicionar pessoa" });
     await u.type(within(form).getByLabelText("Nome"), "Teo");
     await u.type(within(form).getByLabelText("Telefone (WhatsApp)"), "98765");
     await u.click(within(form).getByRole("button", { name: "Continuar" }));
@@ -125,13 +126,13 @@ describe("Admin → Pessoas (APP-016)", () => {
     expect(api.vezes("POST /admin/pessoas")).toBe(0);
   });
 
-  it("Nova pessoa: a recusa do banco aparece como veio", async () => {
+  it("Adicionar pessoa: a recusa do banco aparece como veio", async () => {
     abrir("/admin/pessoas", ADMIN, {
       "POST /admin/pessoas": () => ({ status: 422, corpo: { detail: "Esse telefone já está cadastrado; para mudar o cargo use a troca de cargo." } }),
     });
     const u = userEvent.setup();
-    await u.click(await screen.findByRole("button", { name: "Nova pessoa" }));
-    const form = screen.getByRole("form", { name: "Nova pessoa" });
+    await u.click(await screen.findByRole("button", { name: "Adicionar pessoa" }));
+    const form = screen.getByRole("form", { name: "Adicionar pessoa" });
     await u.type(within(form).getByLabelText("Nome"), "Teo Silva");
     await u.type(within(form).getByLabelText("Telefone (WhatsApp)"), "11987654321");
     await u.click(within(form).getByRole("button", { name: "Continuar" }));
@@ -147,7 +148,7 @@ describe("Admin → Pessoas (APP-016)", () => {
       },
     });
     const u = userEvent.setup();
-    await u.click(await screen.findByRole("button", { name: "Gerenciar Bruno Lima" }));
+    await u.click(await screen.findByRole("button", { name: "Editar Bruno Lima" }));
     const cartao = cartaoDe("Bruno Lima");
     await u.selectOptions(within(cartao).getByLabelText("Cargo"), "Admin");
     await u.click(within(cartao).getByRole("button", { name: "Trocar cargo" }));
@@ -160,11 +161,11 @@ describe("Admin → Pessoas (APP-016)", () => {
   it("Desbloquear só aparece para quem está bloqueado por senhas erradas", async () => {
     const api = abrir("/admin/pessoas", ADMIN, { "POST /admin/pessoas/7/desbloquear": () => ({ status: 200, corpo: {} }) });
     const u = userEvent.setup();
-    await u.click(await screen.findByRole("button", { name: "Gerenciar Danyllo G." }));
+    await u.click(await screen.findByRole("button", { name: "Editar Danyllo G." }));
     expect(within(cartaoDe("Danyllo G.")).queryByRole("button", { name: "Desbloquear" })).toBeNull();
     // o Admin não se bloqueia
     expect(within(cartaoDe("Danyllo G.")).queryByRole("button", { name: "Bloquear acesso" })).toBeNull();
-    await u.click(screen.getByRole("button", { name: "Gerenciar Bruno Lima" }));
+    await u.click(screen.getByRole("button", { name: "Editar Bruno Lima" }));
     await u.click(within(cartaoDe("Bruno Lima")).getByRole("button", { name: "Desbloquear" }));
     await u.click(within(cartaoDe("Bruno Lima")).getByRole("button", { name: "Confirmar" }));
     expect(api.vezes("POST /admin/pessoas/7/desbloquear")).toBe(1);
@@ -175,7 +176,7 @@ describe("Admin → Pessoas (APP-016)", () => {
       "POST /admin/pessoas/7/senha-provisoria": () => ({ status: 200, corpo: { usuario: "bruno.lima", senha_provisoria: "Ab3d-Ef4g", valida_ate: "23/10/2026 21:00" } }),
     });
     const u = userEvent.setup();
-    await u.click(await screen.findByRole("button", { name: "Gerenciar Bruno Lima" }));
+    await u.click(await screen.findByRole("button", { name: "Editar Bruno Lima" }));
     await u.click(within(cartaoDe("Bruno Lima")).getByRole("button", { name: "Gerar senha provisória" }));
     expect(within(cartaoDe("Bruno Lima")).getByRole("dialog")).toHaveTextContent("A senha atual dela deixa de valer");
     await u.click(within(cartaoDe("Bruno Lima")).getByRole("button", { name: "Confirmar" }));
@@ -186,7 +187,7 @@ describe("Admin → Pessoas (APP-016)", () => {
   it("quem não tem usuário recebe um, sugerido pelo nome", async () => {
     const api = abrir("/admin/pessoas", ADMIN, { "PUT /admin/pessoas/9/usuario": () => ({ status: 200, corpo: {} }) });
     const u = userEvent.setup();
-    await u.click(await screen.findByRole("button", { name: "Gerenciar Carla Dias" }));
+    await u.click(await screen.findByRole("button", { name: "Editar Carla Dias" }));
     const cartao = cartaoDe("Carla Dias");
     expect(within(cartao).getByLabelText("Usuário no app")).toHaveValue("carla.dias");
     expect(within(cartao).queryByRole("button", { name: "Gerar senha provisória" })).toBeNull();
@@ -198,7 +199,7 @@ describe("Admin → Pessoas (APP-016)", () => {
   it("cancelar não grava nada", async () => {
     const api = abrir();
     const u = userEvent.setup();
-    await u.click(await screen.findByRole("button", { name: "Gerenciar Bruno Lima" }));
+    await u.click(await screen.findByRole("button", { name: "Editar Bruno Lima" }));
     await u.click(within(cartaoDe("Bruno Lima")).getByRole("button", { name: "Bloquear acesso" }));
     await u.click(within(cartaoDe("Bruno Lima")).getByRole("button", { name: "Cancelar" }));
     expect(api.chamadas.filter((c) => c.rota.startsWith("PUT") || c.rota.startsWith("POST"))).toHaveLength(0);

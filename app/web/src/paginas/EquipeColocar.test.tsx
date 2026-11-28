@@ -5,7 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { servidorFalso } from "../testes-servidor";
 import EquipeDoTurno from "./EquipeDoTurno";
 
-/** Colocar os colegas no turno pelo mesmo PC (27/11). Nomes fictícios. */
+/** Adicionar os colegas no turno pelo mesmo PC (27/11). Nomes fictícios. */
 const SO_EU = {
   turno: "Manhã",
   dia: "2026-10-22",
@@ -24,8 +24,8 @@ const COM_BRUNO = {
 
 afterEach(() => vi.unstubAllGlobals());
 
-describe("Colocar no turno", () => {
-  it("coloca um colega e mostra o botão para tirá-lo", async () => {
+describe("Adicionar ao turno", () => {
+  it("adiciona um colega", async () => {
     const pedidos: unknown[] = [];
     servidorFalso({
       "GET /turno/equipe": () => ({ status: 200, corpo: SO_EU }),
@@ -35,19 +35,18 @@ describe("Colocar no turno", () => {
       },
     });
     render(<EquipeDoTurno contarRegistros={false} />);
-    await userEvent.selectOptions(await screen.findByLabelText("Colocar no turno"), "2");
-    await userEvent.click(screen.getByRole("button", { name: "Colocar" }));
+    await userEvent.selectOptions(await screen.findByLabelText("Adicionar ao turno"), "2");
+    await userEvent.click(screen.getByRole("button", { name: "Adicionar" }));
     const equipe = screen.getByRole("region", { name: "Equipe do turno" });
     expect(await within(equipe).findByText("Bruno Lima")).toBeInTheDocument();
     expect(pedidos).toEqual([{ usuario_id: 2 }]);
-    expect(within(equipe).getByRole("button", { name: "Tirar Bruno Lima do turno" })).toBeInTheDocument();
-    expect(within(equipe).queryByRole("button", { name: /Tirar Ana/ })).not.toBeInTheDocument();
+    expect(within(equipe).queryByRole("button", { name: /^Tirar/ })).not.toBeInTheDocument(); // o Tirar por linha saiu (28/11)
   });
 
-  it("fora do turno não mostra o Colocar", async () => {
+  it("fora do turno não mostra o Adicionar", async () => {
     servidorFalso({ "GET /turno/equipe": () => ({ status: 200, corpo: { ...SO_EU, pode_colocar: false, disponiveis: [] } }) });
     render(<EquipeDoTurno contarRegistros={false} />);
     expect(await screen.findByText("Ana Souza")).toBeInTheDocument();
-    expect(screen.queryByLabelText("Colocar no turno")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Adicionar ao turno")).not.toBeInTheDocument();
   });
 });

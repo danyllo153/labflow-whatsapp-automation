@@ -1,10 +1,12 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 
 import { enviarJson, lerJson } from "../api";
+import { useSessao } from "../sessao";
 import BlocosDoDia from "../componentes/BlocosDoDia";
 import ResumoEstufas from "../componentes/ResumoEstufas";
 import AtividadesDoTurno from "./AtividadesDoTurno";
+import { Corrigido, CorrigirHorario } from "./CorrigirHorario";
 import EquipeDoTurno from "./EquipeDoTurno";
 import { AlertasEstufas, type DadosEstufas } from "./Estufas";
 import RegistrosDoTurnoCartao from "./RegistrosDoTurno";
@@ -111,20 +113,22 @@ export default function Turno() {
       {estado && (
         <>
           <div className="turno-topo">
-            <EquipeDoTurno aviso={estado.no_turno?.id ?? 0} contarRegistros={!estado.checkin_obrigatorio || !!estado.no_turno} />
-            <ResumoEstufas />
+            <EquipeDoTurno
+              aviso={estado.no_turno?.id ?? 0}
+              contarRegistros={!estado.checkin_obrigatorio || !!estado.no_turno}
+              entrada={estado.no_turno ?? undefined}
+              aoMudar={() => carregar(true)}
+            />
           </div>
           {!estado.pode_entrar ? (
             <div className="cartao">
               <p>O cargo Consultor acompanha o laboratório, mas não entra em turno.</p>
             </div>
-          ) : estado.no_turno ? (
-            <NoTurno entrada={estado.no_turno} aoMudar={() => carregar(true)} />
-          ) : (
+          ) : estado.no_turno ? null : (
             <EntrarNoTurno estado={estado} aoEntrar={() => carregar(true)} />
           )}
           <FeitoNoTurnoCartao feito={estado.feito_no_turno} />
-          {(!estado.checkin_obrigatorio || estado.no_turno) && <CentralDoTurno />}
+          {(!estado.checkin_obrigatorio || estado.no_turno) ? <CentralDoTurno estufas={<ResumoEstufas />} /> : <ResumoEstufas />}
           {estado.pode_entrar && estado.recentes.some((r) => r.saida) && (
             <div className="cartao">
               <h2>Meus últimos turnos</h2>
@@ -182,7 +186,7 @@ function EntrarNoTurno({ estado, aoEntrar }: { estado: EstadoDoTurno; aoEntrar: 
           </label>
         ))}
       </fieldset>
-      <p className="texto-secundario">A entrada fica registrada com a hora do toque no botão.</p>
+      <p className="texto-secundario">A entrada fica registrada com a hora do clique no botão.</p>
       {erro && (
         <p className="mensagem-erro" role="alert">
           {erro}
@@ -192,165 +196,6 @@ function EntrarNoTurno({ estado, aoEntrar }: { estado: EstadoDoTurno; aoEntrar: 
         {enviando ? "Entrando..." : `Entrar no turno ${escolhido.nome}`}
       </button>
     </form>
-  );
-}
-
-function agoraHHMM(): string {
-  return new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit", timeZone: "America/Sao_Paulo" });
-}
-
-/** Corrigir o próprio horário: sempre com motivo; o horário do clique continua guardado (APP-022b). */
-function CorrigirHorario(props: { entrada: Entrada; titulo: string; aoTerminar: (salvou: boolean) => void }) {
-  const { entrada } = props;
-  const [horaEntrada, setHoraEntrada] = useState(entrada.entrada);
-  const [horaSaida, setHoraSaida] = useState(entrada.saida ?? "");
-  const [motivo, setMotivo] = useState("");
-  const [enviando, setEnviando] = useState(false);
-  const [erro, setErro] = useState("");
-
-  async function salvar(evento: FormEvent) {
-    evento.preventDefault();
-    if (motivo.trim().length < 5) {
-      setErro("Escreva o motivo da correção (por exemplo: esqueci de marcar na hora).");
-      return;
-    }
-    setEnviando(true);
-    setErro("");
-    try {
-      const corpo = { entrada: horaEntrada, motivo: motivo.trim(), ...(entrada.saida ? { saida: horaSaida } : {}) };
-      await enviarJson(`/turno/entradas/${entrada.id}`, corpo, "PUT");
-      props.aoTerminar(true);
-    } catch (e) {
-      setErro(mensagem(e, "Não foi possível gravar."));
-    } finally {
-      setEnviando(false);
-    }
-  }
-
-  return (
-    <form className="corrigir-horario" onSubmit={salvar} aria-label={`Corrigir ${props.titulo}`}>
-      <div className="linha-formulario">
-        <label className="campo campo-hora">
-          Entrada
-          <input type="time" required value={horaEntrada} onChange={(e) => setHoraEntrada(e.target.value)} />
-        </label>
-        {entrada.saida && (
-          <label className="campo campo-hora">
-            Saída
-            <input type="time" required value={horaSaida} onChange={(e) => setHoraSaida(e.target.value)} />
-          </label>
-        )}
-      </div>
-      <label className="campo">
-        Motivo da correção
-        <textarea rows={2} maxLength={300} value={motivo} onChange={(e) => setMotivo(e.target.value)} />
-      </label>
-      <p className="texto-secundario">
-        O horário marcado no app ({entrada.entrada_registrada}
-        {entrada.saida_registrada && ` às ${entrada.saida_registrada}`}) continua guardado junto com a correção.
-      </p>
-      {erro && (
-        <p className="mensagem-erro" role="alert">
-          {erro}
-        </p>
-      )}
-      <div className="botoes-lado">
-        <button type="submit" className="botao botao-principal" disabled={enviando}>
-          Salvar correção
-        </button>
-        <button type="button" className="botao botao-simples" onClick={() => props.aoTerminar(false)}>
-          Cancelar
-        </button>
-      </div>
-    </form>
-  );
-}
-
-function Corrigido({ entrada }: { entrada: Entrada }) {
-  if (!entrada.motivo_correcao) return null;
-  const marcado = entrada.saida_registrada ? `${entrada.entrada_registrada} às ${entrada.saida_registrada}` : entrada.entrada_registrada;
-  return (
-    <span className="texto-secundario corrigido">
-      Corrigido (marcado no app: {marcado}). Motivo: {entrada.motivo_correcao}
-    </span>
-  );
-}
-
-function NoTurno({ entrada, aoMudar }: { entrada: Entrada; aoMudar: () => Promise<void> }) {
-  const [corrigindo, setCorrigindo] = useState(false);
-  const [saindo, setSaindo] = useState<string | null>(null); // a hora mostrada na confirmação
-  const [enviando, setEnviando] = useState(false);
-  const [erro, setErro] = useState("");
-  const titulo = `a entrada no turno ${entrada.turno}`;
-
-  async function sair(evento: FormEvent) {
-    evento.preventDefault();
-    setEnviando(true);
-    setErro("");
-    try {
-      await enviarJson("/turno/sair", {});
-      setSaindo(null);
-      await aoMudar();
-    } catch (e) {
-      setErro(mensagem(e, "Não foi possível registrar a saída."));
-    } finally {
-      setEnviando(false);
-    }
-  }
-
-  return (
-    <div className="cartao no-turno" aria-label="Seu turno">
-      <h2>
-        Você está no turno {entrada.turno} de {diaMes(entrada.dia)}
-      </h2>
-      <p>
-        Entrada às <strong>{entrada.entrada}</strong>.{" "}
-        {!corrigindo && !saindo && (
-          <button type="button" className="link-botao" onClick={() => setCorrigindo(true)}>
-            Corrigir a entrada
-          </button>
-        )}
-      </p>
-      <Corrigido entrada={entrada} />
-
-      {corrigindo && (
-        <CorrigirHorario
-          entrada={entrada}
-          titulo={titulo}
-          aoTerminar={(salvou) => {
-            setCorrigindo(false);
-            if (salvou) void aoMudar();
-          }}
-        />
-      )}
-
-      {saindo ? (
-        <form className="confirmacao" aria-label="Confirmar a saída" onSubmit={sair}>
-          <p>
-            Registrar a sua saída do turno {entrada.turno} agora, às <strong>{saindo}</strong>? A entrada foi às {entrada.entrada}.
-          </p>
-          <div className="botoes-lado">
-            <button type="submit" className="botao botao-principal" disabled={enviando}>
-              Confirmar saída
-            </button>
-            <button type="button" className="botao botao-simples" onClick={() => setSaindo(null)}>
-              Continuar no turno
-            </button>
-          </div>
-        </form>
-      ) : (
-        !corrigindo && (
-          <button type="button" className="botao botao-secundario" onClick={() => setSaindo(agoraHHMM())}>
-            Sair do turno
-          </button>
-        )
-      )}
-      {erro && (
-        <p className="mensagem-erro" role="alert">
-          {erro}
-        </p>
-      )}
-    </div>
   );
 }
 
@@ -385,6 +230,7 @@ function LinhaDoTurno({ entrada, aoMudar }: { entrada: Entrada; aoMudar: () => P
 }
 
 function FeitoNoTurnoCartao({ feito }: { feito: FeitoNoTurno }) {
+  const { lite } = useSessao(); // na Lite não há WhatsApp
   const partes: [string, number][] = [
     ["coletas", feito.coletas],
     ["leituras de NFC", feito.leituras],
@@ -403,14 +249,14 @@ function FeitoNoTurnoCartao({ feito }: { feito: FeitoNoTurno }) {
           </li>
         ))}
       </ul>
-      <p className="texto-secundario">Conta o que foi registrado no horário do turno (app ou WhatsApp).</p>
+      <p className="texto-secundario">Conta o que foi registrado no horário do turno{lite ? "" : " (app ou WhatsApp)"}.</p>
     </div>
   );
 }
 
 /** O que o turno tem para fazer e já fez: atividades, estufas, as leituras e as análises pendentes (dois blocos, 27/10) e
  * a linha do tempo (APP-033). */
-function CentralDoTurno() {
+function CentralDoTurno({ estufas: cartaoDasEstufas }: { estufas: ReactNode }) {
   const [estufas, setEstufas] = useState<DadosEstufas | null>(null);
 
   useEffect(() => {
@@ -423,6 +269,7 @@ function CentralDoTurno() {
       <BlocosDoDia />
       <AtividadesDoTurno />
       <RegistrosDoTurnoCartao />
+      {cartaoDasEstufas}
       <p className="links-do-turno">
         <Link to="/esterilizacao">Registrar esterilização</Link> · <Link to="/material-asseptico">Material asséptico do dia</Link> · <Link to="/paginas">Registros diários</Link>
       </p>

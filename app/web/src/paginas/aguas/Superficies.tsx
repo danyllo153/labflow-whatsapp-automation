@@ -263,7 +263,7 @@ function NovaColeta({ tipo, aoGravar }: { tipo: Tipo; aoGravar: (d: Superficies)
         </p>
       )}
       <button type="submit" className="botao botao-principal" disabled={enviando || !pontos.trim()}>
-        Registrar coleta
+        Salvar
       </button>
     </form>
   );

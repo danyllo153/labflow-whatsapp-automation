@@ -464,11 +464,11 @@ function BuscaDeLoad({ aoAbrir }: { aoAbrir: (tipo: Tipo, numero: number) => voi
     <form className="cartao busca-arquivo" onSubmit={buscar} role="search" aria-label="Procurar load no arquivo">
       <div className="campos-linha">
         <label className="campo">
-          Em qual caixa está o load ou o navio?
+          Localizar caixa
           <input maxLength={40} placeholder="Load ou navio (ex.: 43413 ou O.WAVE 223)" value={load} onChange={(e) => setLoad(e.target.value)} />
         </label>
         <button type="submit" className="botao botao-principal">
-          Procurar
+          Buscar
         </button>
       </div>
       {erro && <p className="mensagem-erro">{erro}</p>}
@@ -532,7 +532,7 @@ function ArquivarRecebimento({ sugerida, aoGravar }: { sugerida: number | null; 
       </div>
       {!g.previa && (
         <button type="submit" className="botao botao-principal" disabled={g.enviando}>
-          Ver o que vai ser arquivado
+          Revisar
         </button>
       )}
       <PreviaDaGravacao g={g} titulo="Arquivar" />

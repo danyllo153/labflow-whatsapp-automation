@@ -252,7 +252,7 @@ function NovaPessoaPeloNome({ aoTerminar }: { aoTerminar: () => void }) {
   return (
     <form
       className="cartao"
-      aria-label="Nova pessoa"
+      aria-label="Adicionar pessoa"
       onSubmit={(e: FormEvent) => {
         e.preventDefault();
         setErro("");
@@ -260,10 +260,10 @@ function NovaPessoaPeloNome({ aoTerminar }: { aoTerminar: () => void }) {
         setConferindo(true);
       }}
     >
-      <h2>Nova pessoa</h2>
+      <h2>Adicionar pessoa</h2>
       {conferindo ? (
         <Confirmar ocupado={ocupado} rotulo="Cadastrar" onSim={() => void cadastrar()} onNao={() => setConferindo(false)}>
-          Vai cadastrar <strong>{nome.trim()}</strong>. O nome entra na lista e a pessoa entra tocando nele, sem senha.
+          Vai cadastrar <strong>{nome.trim()}</strong>. O nome entra na lista e a pessoa entra clicando nele, sem senha.
         </Confirmar>
       ) : (
         <>
@@ -334,8 +334,8 @@ function NovaPessoa({ aoTerminar, aoProvisoria }: { aoTerminar: () => void; aoPr
   }
 
   return (
-    <form className="cartao" onSubmit={conferir} aria-label="Nova pessoa">
-      <h2>Nova pessoa</h2>
+    <form className="cartao" onSubmit={conferir} aria-label="Adicionar pessoa">
+      <h2>Adicionar pessoa</h2>
       {conferindo ? (
         <Confirmar ocupado={ocupado} rotulo="Cadastrar e gerar senha provisória" onSim={() => void cadastrar()} onNao={() => setConferindo(false)}>
           Vai cadastrar <strong>{nome.trim()}</strong> como <strong>{nomeDoCargo(cargo)}</strong>
@@ -432,7 +432,7 @@ export default function Pessoas() {
       {!cadastrando && !provisoria && (
         <div className="barra-acoes">
           <button type="button" className="botao-secundario" onClick={() => setCadastrando(true)}>
-            Nova pessoa
+            Adicionar pessoa
           </button>
         </div>
       )}
@@ -460,6 +460,13 @@ export default function Pessoas() {
       )}
       {!pessoas && !erro && <p className="carregando">Carregando...</p>}
       <ul className="lista-pessoas">
+        {!!pessoas?.length && (
+          <li className="cabeca-tabela" aria-hidden="true">
+            <span>Nome{lite ? "" : " e acesso"}</span>
+            <span>Situação</span>
+            <span />
+          </li>
+        )}
         {pessoas?.map((p) => (
           <li key={p.id} className="cartao">
             <div className="pessoa-cabeca">
@@ -477,9 +484,10 @@ export default function Pessoas() {
               type="button"
               className="botao-secundario botao-da-linha"
               aria-expanded={aberta === p.id}
+              aria-label={aberta === p.id ? "Fechar" : `Editar ${p.nome || ""}`.trim()}
               onClick={() => setAberta(aberta === p.id ? null : p.id)}
             >
-              {aberta === p.id ? "Fechar" : `Gerenciar ${p.nome || ""}`.trim()}
+              {aberta === p.id ? "Fechar" : "Editar"}
             </button>
             {aberta === p.id && (
               <Gerenciar

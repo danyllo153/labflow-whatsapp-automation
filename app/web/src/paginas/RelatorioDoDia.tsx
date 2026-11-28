@@ -91,7 +91,7 @@ const COR_DO_BLOCO: Record<string, string> = {
 const semEmoji = (t: string) => t.replace(/^(🚨|⚠️)\s*/u, "");
 
 export default function RelatorioDoDia({ embutido = false }: { embutido?: boolean }) {
-  const { pessoa } = useSessao();
+  const { pessoa, lite } = useSessao();
   const pode = !!pessoa?.pode.includes("registrar_analise");
   const [dia, setDia] = useState<string | null>(null);
   const [completo, setCompleto] = useState(false);
@@ -143,7 +143,7 @@ export default function RelatorioDoDia({ embutido = false }: { embutido?: boolea
           cor="geral"
           voltar={false}
           titulo="Leituras do dia"
-          descricao='O relatório do dia, igual ao do bot: o que sai em cada análise, com lido e fora do limite. "Só o lido" é o relatório completo, com ok e não ok.'
+          descricao={`O relatório do dia${lite ? "" : ", igual ao do bot"}: o que sai em cada análise, com lido e fora do limite. "Só o lido" é o relatório completo, com ok e não ok.`}
           acoes={<BotaoImprimir aoClicar={() => window.print()} />}
         />
       )}
@@ -179,6 +179,7 @@ export default function RelatorioDoDia({ embutido = false }: { embutido?: boolea
             <a className="botao-secundario" href={`/relatorio-do-dia/excel?dia=${rel.dia}`} download aria-label="Exportar as leituras do dia para o Excel">
               Exportar Excel
             </a>
+            {!lite && (
             <a
               className="botao-secundario"
               href={`https://wa.me/?text=${encodeURIComponent(rel.texto)}`}
@@ -188,6 +189,7 @@ export default function RelatorioDoDia({ embutido = false }: { embutido?: boolea
             >
               Enviar no WhatsApp
             </a>
+            )}
           </div>
           {rel.blocos.length === 0 && <p className="texto-secundario">Nenhuma leitura prevista em {dm(rel.dia)}.</p>}
           {rel.blocos.map((b) => (
@@ -268,7 +270,7 @@ function FinalizarODia({ finalizado, aoGravar }: { finalizado: boolean; aoGravar
       {finalizado && <p className="etiqueta etiqueta-ok">O dia de hoje já foi finalizado.</p>}
       {!g.previa && (
         <button type="button" className="botao botao-principal" disabled={g.enviando} onClick={() => void g.ver({})}>
-          Ver o que vai ser finalizado
+          Revisar
         </button>
       )}
       <PreviaDaGravacao g={g} titulo="O que vai ser finalizado" />

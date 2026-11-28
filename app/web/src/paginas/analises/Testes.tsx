@@ -368,7 +368,7 @@ function Caldo({ tipo, aoGravar }: { tipo: "TAB" | "COLIFORMES"; aoGravar: () =>
           disabled={marcadas.length === 0 || g.enviando}
           onClick={() => void g.ver({ tipo, composta_ids: marcadas.map((c) => c.composta_id), data })}
         >
-          Ver o que vai ser criado ({marcadas.length})
+          Revisar ({marcadas.length})
         </button>
       )}
       <PreviaDaGravacao g={g} />
@@ -419,7 +419,7 @@ function Howard() {
           })
         }
       >
-        Gravar o Howard
+        Salvar
       </button>
       <PerguntaDaAcao a={acao} titulo="O que vai ser gravado" />
     </div>

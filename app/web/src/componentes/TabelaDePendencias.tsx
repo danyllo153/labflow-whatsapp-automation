@@ -84,7 +84,7 @@ export default function TabelaDePendencias({
         </div>
         {verTudo && todas.length > linhas.length && (
           <button type="button" className="botao botao-simples botao-pequeno" onClick={verTudo}>
-            Ver tudo ({todas.length})
+            Ver todos ({todas.length})
           </button>
         )}
       </div>

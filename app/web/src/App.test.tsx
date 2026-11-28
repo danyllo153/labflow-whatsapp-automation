@@ -154,7 +154,7 @@ describe("entrar (APP-013)", () => {
     const u = userEvent.setup();
     const senha = await screen.findByLabelText("Senha");
     expect(senha).toHaveAttribute("type", "password");
-    await u.click(screen.getByLabelText("Mostrar a senha"));
+    await u.click(screen.getByLabelText("Exibir senha"));
     expect(senha).toHaveAttribute("type", "text");
   });
 });

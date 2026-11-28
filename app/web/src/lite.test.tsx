@@ -103,6 +103,7 @@ describe("telas dentro do app", () => {
     expect(screen.queryByRole("button", { name: "Fechar o menu" })).toBeNull();
     // as telas que eram do Admin são de todos
     const lateral = screen.getByRole("complementary", { name: "Menu" });
+    await userEvent.click(within(lateral).getByRole("button", { name: "Administração" })); // o grupo vem recolhido (28/11)
     expect(within(lateral).getByRole("link", { name: "Pessoas" })).toBeInTheDocument();
     expect(within(lateral).getByRole("link", { name: "Turnos e estufas" })).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: /Conta de/ }));
@@ -182,7 +183,7 @@ describe("Admin → Pessoas na Lite", () => {
     expect(screen.getByText("Acesso bloqueado")).toBeInTheDocument();
 
     const u = userEvent.setup();
-    await u.click(screen.getByRole("button", { name: "Gerenciar Bruno Lima" }));
+    await u.click(screen.getByRole("button", { name: "Editar Bruno Lima" }));
     expect(screen.queryByRole("button", { name: "Gerar senha provisória" })).toBeNull();
     expect(screen.queryByRole("button", { name: "Trocar cargo" })).toBeNull();
     expect(screen.queryByLabelText("Cargo")).toBeNull();
@@ -191,8 +192,8 @@ describe("Admin → Pessoas na Lite", () => {
     await u.click(screen.getByRole("button", { name: "Confirmar" }));
     expect(api.vezes("PUT /admin/pessoas/7/acesso")).toBe(1);
 
-    await u.click(screen.getByRole("button", { name: "Nova pessoa" }));
-    const form = screen.getByRole("form", { name: "Nova pessoa" });
+    await u.click(screen.getByRole("button", { name: "Adicionar pessoa" }));
+    const form = screen.getByRole("form", { name: "Adicionar pessoa" });
     expect(within(form).queryByLabelText(/Telefone/)).toBeNull();
     expect(within(form).queryByLabelText("Cargo")).toBeNull();
     await u.type(within(form).getByLabelText("Nome"), "Duda Reis");

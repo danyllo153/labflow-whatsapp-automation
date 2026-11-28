@@ -255,7 +255,7 @@ function NovaColeta({ aoGravar }: { aoGravar: (d: AguaDoProcesso) => void }) {
           <input type="time" value={hora} onChange={(e) => setHora(e.target.value)} />
         </label>
       </div>
-      <p className="texto-secundario">Pontos coletados (toque para tirar o que não foi coletado):</p>
+      <p className="texto-secundario">Pontos coletados (desmarque o que não foi coletado):</p>
       <div className="botoes-tipo" role="group" aria-label="Pontos coletados">
         {PONTOS.map((p) => (
           <button
@@ -279,7 +279,7 @@ function NovaColeta({ aoGravar }: { aoGravar: (d: AguaDoProcesso) => void }) {
         </p>
       )}
       <button type="submit" className="botao botao-principal" disabled={enviando || pontos.length === 0}>
-        Registrar coleta
+        Salvar
       </button>
     </form>
   );
@@ -457,7 +457,7 @@ function Desvios({ dados, aoMudar }: { dados: DesviosDaAgua | null; aoMudar: (d:
       <h2>
         Desvios abertos <span className="contador">{abertos.length}</span>
       </h2>
-      <p className="texto-secundario">Coleta com crescimento: C.T. ou B.L. com número (o &lt;1 não conta). Toque para ver os pontos e encerrar.</p>
+      <p className="texto-secundario">Coleta com crescimento: C.T. ou B.L. com número (o &lt;1 não conta). Clique para ver os pontos e encerrar.</p>
       {dados.desvios.length === 0 && <p className="texto-secundario">Nenhum desvio no último ano.</p>}
       {dados.desvios.map((d) => (
         <CartaoDoDesvio key={d.coleta_id} desvio={d} pode={dados.pode_encerrar} aoMudar={aoMudar} />

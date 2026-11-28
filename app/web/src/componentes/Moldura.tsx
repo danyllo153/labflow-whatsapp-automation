@@ -7,7 +7,7 @@ import { useSessao } from "../sessao";
 import BotaoTema from "./BotaoTema";
 import BuscaRapida from "./BuscaRapida";
 import ChipEquipe from "./ChipEquipe";
-import FaixaDemonstracao from "./FaixaDemonstracao";
+import FaixaDemonstracao, { SeloDemonstracao, useDemonstracao } from "./FaixaDemonstracao";
 import Icone from "./Icone";
 import MenuConta from "./MenuConta";
 import MenuNavegacao from "./MenuNavegacao";
@@ -24,6 +24,7 @@ export default function Moldura() {
   const { pessoa, lite } = useSessao();
   const { pathname } = useLocation();
   const [gaveta, setGaveta] = useState(false); // o menu no celular
+  const demonstracao = useDemonstracao();
   useEffect(() => setGaveta(false), [pathname]);
   const coletor = pessoa?.cargo === "Coletor"; // só Coletas e Turno (01/11)
   const barra = coletor
@@ -60,13 +61,14 @@ export default function Moldura() {
           <Saudacao nome={pessoa?.nome || pessoa?.usuario} />
           <span className="topo-espaco" />
           {!coletor && <BuscaRapida />}
+          <SeloDemonstracao ativo={demonstracao} />
           <ChipEquipe />
           <BotaoTema />
           <MenuConta />
         </header>
 
         <main className="conteudo">
-          <FaixaDemonstracao />
+          <FaixaDemonstracao ativo={demonstracao} />
           <Outlet />
         </main>
       </div>

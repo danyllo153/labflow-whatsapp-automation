@@ -130,7 +130,7 @@ describe("Laudo de esterilização (APP-035)", () => {
     await userEvent.type(campo, "A1092/26");
     await userEvent.tab();
     expect(await screen.findByRole("status")).toHaveTextContent("O ciclo A1092/26 já tem Meio (Ana Souza às 09:40)");
-    expect(screen.getByRole("button", { name: "Registrar" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Salvar" })).toBeEnabled();
   });
 
   it("Não eficiente pede motivo e Voltar para Sim não pede", async () => {
@@ -176,7 +176,7 @@ describe("Laudo de esterilização (APP-035)", () => {
     await userEvent.click(within(form).getByRole("button", { name: "Ponteira" }));
     await userEvent.click(within(form).getByRole("button", { name: "Meio" }));
     await userEvent.type(within(form).getByLabelText("Número do ciclo"), "A1000");
-    await userEvent.click(within(form).getByRole("button", { name: "Registrar 2 no mesmo ciclo" }));
+    await userEvent.click(within(form).getByRole("button", { name: "Salvar 2 no mesmo ciclo" }));
     const enviados = api.chamadas.filter((c) => c.rota === "POST /esterilizacao").map((c) => [c.corpo.tipo, c.corpo.ciclo]);
     expect(enviados).toEqual([
       ["Ponteira", "A1000"],
