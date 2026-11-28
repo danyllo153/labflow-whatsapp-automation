@@ -23,6 +23,8 @@ const ICONE_DO_GRUPO: Record<Grupo, string> = {
   Aguas: "agua",
   Rotina: "esterilizacao",
 };
+// Nomes curtos só no menu (cabem em uma linha nos 220 px); o nome inteiro aparece ao passar o mouse e nas outras telas.
+const NOME_NO_MENU: Partial<Record<Grupo, string>> = { FCOJ: "FCOJ", Testes: "TAB · Coliformes · Howard" };
 const CHAVE = "labflow.menu.grupos";
 
 function lerAbertos(): Grupo[] {
@@ -104,11 +106,11 @@ export default function MenuNavegacao() {
         return (
           <div key={g.grupo} className={`menu-grupo${g.grupo === grupoDaTela ? " com-ativo" : ""}`}>
             <button type="button" className="item-menu menu-grupo-botao" aria-expanded={aberto} aria-controls={id} onClick={() => alternar(g.grupo)}>
-              <span className="item-rotulo">
+              <span className="item-rotulo" title={g.titulo}>
                 <span className="icone" aria-hidden="true">
                   <IconeApp nome={ICONE_DO_GRUPO[g.grupo]} />
                 </span>
-                {g.titulo}
+                {NOME_NO_MENU[g.grupo] ?? g.titulo}
               </span>
               {!aberto && atrasadosDo(g.apps) > 0 && <span className="menu-contador" title="Atrasados">{atrasadosDo(g.apps)}</span>}
               <svg className="menu-seta" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">

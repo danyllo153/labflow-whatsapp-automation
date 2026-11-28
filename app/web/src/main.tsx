@@ -16,6 +16,7 @@ import "./navegacao.css";
 import "./visual-kaiadmin.css";
 import "./visual-staradmin.css";
 import "./paleta.css"; // creme, azul-marinho e laranja (27/11): por último
+import "./desktop.css"; // densidade para o computador (28/11): por último, vence as outras folhas
 import { carregarMarca } from "./marca";
 import { aplicarTema } from "./tema";
 

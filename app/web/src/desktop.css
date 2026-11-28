@@ -1,0 +1,236 @@
+/*
+ * Densidade para o computador (varredura de 28/11, auditoria-desktop). Carregado POR ÚLTIMO, depois de paleta.css:
+ * só tokens de tamanho e as poucas regras que vencem as outras folhas. Nada aqui muda logo, ícones do menu, bolinhas
+ * coloridas das análises nem as cores: só tamanho, espaço, alinhamento e densidade. Tudo dentro de min-width: 900px,
+ * então o celular continua com os botões grandes de dedo.
+ */
+:root {
+  /* escala de espaçamento (base 4) */
+  --e1: 4px;
+  --e2: 8px;
+  --e3: 12px;
+  --e4: 16px;
+  --e5: 24px;
+  --e6: 32px;
+  /* alturas */
+  --h-campo: 32px;
+  --h-botao-grande: 36px;
+  --h-botao-pequeno: 28px;
+  --h-linha-tabela: 30px;
+  --h-aba: 36px;
+  --h-menu-item: 32px;
+  /* tipografia */
+  --fs-corpo: 14px;
+  --fs-tabela: 13px;
+  --fs-rotulo: 12px;
+  --fs-titulo-pagina: 20px;
+  --fs-titulo-cartao: 15px;
+  /* larguras */
+  --form-max: 720px;
+  --form-largo: 960px;
+  --conteudo-max: 1600px;
+  --menu-largura: 220px;
+  --raio: 6px;
+  --cartao-pad: 12px 16px;
+}
+
+@media (min-width: 900px) {
+  :root {
+    --largura-menu: var(--menu-largura);
+  }
+
+  /* ---------- conteúdo: centralizado e com limite em telas largas ---------- */
+  :root .moldura .conteudo {
+    max-width: var(--conteudo-max);
+    padding: 16px 28px 32px;
+    width: 100%;
+    margin-inline: auto;
+    box-sizing: border-box;
+  }
+
+  /* ---------- botões: largura do texto, 32 px ---------- */
+  :root .conteudo .botao,
+  :root .conteudo .botoes-lado .botao,
+  :root .conteudo form > .botao {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: auto;
+    flex: none;
+    min-height: var(--h-campo);
+    padding: 0 14px;
+    margin-bottom: 0;
+    border-radius: var(--raio);
+    font-size: var(--fs-corpo);
+  }
+
+  :root .conteudo .botao-secundario,
+  :root .conteudo .botao-topo,
+  :root .conteudo .botao-arquivo {
+    min-height: var(--h-campo);
+    padding: 0 12px;
+    border-radius: var(--raio);
+    font-size: var(--fs-corpo);
+  }
+
+  :root .conteudo .botoes-lado,
+  :root .conteudo .acoes-formulario {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: center;
+    gap: var(--e2);
+    margin-top: var(--e2);
+  }
+
+  /* o botão principal de uma tela pode ficar um pouco maior */
+  :root .conteudo .botao-principal {
+    min-height: var(--h-botao-grande);
+  }
+
+  /* botões de escolha (tipo, turno, material): chips baixos em vez de cartões de 56 px */
+  :root .conteudo .botao-tipo {
+    min-height: var(--h-campo);
+    font-size: var(--fs-corpo);
+  }
+
+  /* ---------- campos: 32 px, rótulo de 12 px acima ---------- */
+  :root .conteudo .campo {
+    margin-bottom: var(--e3);
+  }
+
+  :root .conteudo .campo label,
+  :root .conteudo label.campo {
+    font-size: var(--fs-rotulo);
+    font-weight: 600;
+  }
+
+  :root .conteudo .campo input,
+  :root .conteudo .campo select,
+  :root .conteudo .campo textarea {
+    min-height: var(--h-campo);
+    padding: 4px 10px;
+    margin-top: 2px;
+    border-radius: var(--raio);
+    font-size: var(--fs-corpo);
+  }
+
+  :root .conteudo .campo textarea {
+    min-height: 64px;
+  }
+
+  :root .conteudo .orientacao select {
+    min-height: var(--h-campo);
+    padding: 2px 8px;
+    border-radius: var(--raio);
+  }
+
+  /* hora e data: largura do conteúdo (antes cortava "28/11/2026") */
+  :root .conteudo .campo-hora input {
+    max-width: none;
+    min-width: 9.5em;
+  }
+
+  /* ---------- grade de 12 colunas ---------- */
+  :root .conteudo .grade-12,
+  :root .conteudo .grade-filtros {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    gap: 0 var(--e3);
+    max-width: var(--form-max);
+    align-items: end;
+  }
+
+  :root .conteudo .grade-filtros > * {
+    grid-column: span 3;
+  }
+
+  :root .conteudo .grade-12.larga {
+    max-width: var(--form-largo);
+  }
+
+  :root .conteudo .grade-12 > .col-2 { grid-column: span 2; }
+  :root .conteudo .grade-12 > .col-3 { grid-column: span 3; }
+  :root .conteudo .grade-12 > .col-4 { grid-column: span 4; }
+  :root .conteudo .grade-12 > .col-5 { grid-column: span 5; }
+  :root .conteudo .grade-12 > .col-6 { grid-column: span 6; }
+  :root .conteudo .grade-12 > .col-8 { grid-column: span 8; }
+  :root .conteudo .grade-12 > .col-12 { grid-column: 1 / -1; }
+
+  /* formulário simples: não esticar pela tela toda */
+  :root .conteudo .linha-formulario {
+    max-width: var(--form-max);
+    gap: 0 var(--e3);
+  }
+
+  /* ---------- cartões ---------- */
+  :root .conteudo .cartao {
+    padding: var(--cartao-pad);
+  }
+
+  :root .conteudo .cartao > h2,
+  :root .conteudo .cartao h2.titulo-cartao {
+    font-size: var(--fs-titulo-cartao);
+    margin: 0 0 var(--e2);
+  }
+
+  /* ---------- tabelas densas ---------- */
+  :root .conteudo table {
+    font-size: var(--fs-tabela);
+  }
+
+  :root .conteudo table th,
+  :root .conteudo table td {
+    padding: 4px 10px;
+    line-height: 1.25;
+  }
+
+  :root .conteudo table tbody tr {
+    height: var(--h-linha-tabela);
+  }
+
+  :root .conteudo table th {
+    font-size: var(--fs-rotulo);
+    white-space: nowrap;
+  }
+
+  /* ---------- menu lateral: itens de 32 px, sem quebrar em 3 linhas ---------- */
+  :root .menu-lateral {
+    padding: 14px 10px;
+  }
+
+  :root .menu-navegacao .item-menu {
+    min-height: var(--h-menu-item);
+    padding: 4px 10px;
+    margin-bottom: 1px;
+    font-size: var(--fs-corpo);
+  }
+
+  :root .menu-navegacao .item-rotulo {
+    min-width: 0;
+    flex: 1;
+    white-space: nowrap;
+  }
+
+  :root .menu-navegacao .menu-filho {
+    min-height: var(--h-menu-item);
+    padding: 4px 10px;
+    font-size: 13px;
+  }
+
+  :root .menu-navegacao .menu-filho-nome,
+  :root .menu-navegacao .menu-grupo-botao .item-rotulo {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  :root .menu-navegacao .menu-filho-nome {
+    flex: 1;
+  }
+
+  :root .menu-navegacao .menu-secao {
+    margin: 10px 0 4px;
+  }
+}
