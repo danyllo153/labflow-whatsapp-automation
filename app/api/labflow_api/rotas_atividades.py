@@ -9,6 +9,7 @@ Regras:
 - "Feito" e "Não feito" gravam quem e quando; tocar de novo no mesmo botão desmarca;
 - "Não feito" vira pendência do turno seguinte: aparece em "Pendências herdadas" (com a caixa de Feito) até alguém
   marcar a atividade como feita ou passarem 3 dias;
+- (28/11) o que ninguém marcou só herda se o turno anterior teve uso (entrada de alguém, marcação ou relatório);
 - (25/10, APP-065) a tela tem só a caixa de Feito: a atividade que ninguém marcou até o fim do turno também passa como
   não feita para o turno seguinte (só para o turno logo depois), até alguém marcá-la;
 - (27/10, 081) a atividade opcional aparece em qualquer dia (a pessoa escolhe quando faz) e nunca passa para o turno seguinte.
@@ -141,6 +142,14 @@ ORDER BY a.ordem
 """
 
 
+# O turno teve uso se alguém entrou nele, se algo foi marcado nele ou se escreveram o relatório dele.
+TURNO_TEVE_USO_SQL = """
+SELECT EXISTS (SELECT 1 FROM app.entradas_turno WHERE turno_id = %(t)s AND dia = %(d)s)
+    OR EXISTS (SELECT 1 FROM app.atividades_feitas WHERE turno_id = %(t)s AND dia = %(d)s)
+    OR EXISTS (SELECT 1 FROM app.relatorios_turno WHERE turno_id = %(t)s AND dia = %(d)s)
+"""
+
+
 def _herdadas(con: psycopg.Connection, turno: Turno, dia: date) -> list[Herdada]:
     herdadas = [
         Herdada(atividade_id=i, texto=t, turno=n, dia=d, quem=q)
@@ -149,6 +158,9 @@ def _herdadas(con: psycopg.Connection, turno: Turno, dia: date) -> list[Herdada]
     turnos = rotas_turno._turnos(con)
     ant, dia_ant = rotas_turno.turno_agora(turnos, rotas_turno.janela(turno, dia)[0] - timedelta(minutes=1))
     if ant.id == turno.id:
+        return herdadas
+    # (28/11) turno anterior que ninguém usou não gera herança: só o turno logo antes, e só se foi trabalhado
+    if not con.execute(TURNO_TEVE_USO_SQL, {"t": ant.id, "d": dia_ant}).fetchone()[0]:
         return herdadas
     ja = {h.atividade_id for h in herdadas}
     for i, t in con.execute(
