@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -35,7 +35,6 @@ describe("Instrução e Vídeo dos apps (E9)", () => {
     ["/analises/howard", "testes"],
     ["/analises/embarque-fcoj", "embarque-fcoj"],
     ["/analises/recebimento-nfc", "recebimento-nfc"],
-    ["/analises/desvios", "desvios"],
     ["/analises/recebimento-fcoj", "recebimento-fcoj"],
   ])("%s mostra a instrução escrita pelo Admin", async (caminho, app) => {
     abrir(`${caminho}?aba=instrucao`, {
@@ -47,6 +46,24 @@ describe("Instrução e Vídeo dos apps (E9)", () => {
     expect(await screen.findByText(/1\. Separe as placas\./)).toBeInTheDocument();
     expect(screen.getByText("Versão 2 · Ana Souza em 24/10/2026 10:00")).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /Editar a IT/ })).not.toBeInTheDocument();
+  });
+
+  // 28/11: Desvios ficou sem IT e Vídeo; as outras análises seguem com as duas abas
+  it("Desvios não mostra as abas IT e Vídeo, e Drops continua mostrando", async () => {
+    abrir("/analises/desvios", { "GET /analises/desvios": () => ({ status: 200, corpo: { para_abrir: [], abertos: [], dia_finalizado: false } }) });
+    const abas = await screen.findByRole("navigation", { name: "Partes de Desvios" });
+    expect(within(abas).getByRole("button", { name: "Não ok" })).toBeInTheDocument();
+    expect(within(abas).getByRole("button", { name: /Em repetição/ })).toBeInTheDocument();
+    expect(within(abas).getByRole("button", { name: "Resultados" })).toBeInTheDocument();
+    expect(within(abas).queryByRole("button", { name: "IT" })).not.toBeInTheDocument();
+    expect(within(abas).queryByRole("button", { name: "Vídeo" })).not.toBeInTheDocument();
+  });
+
+  it("outra análise (Drops) continua com IT e Vídeo", async () => {
+    abrir("/analises/drops", { "GET /analises/drops/pendentes": () => ({ status: 200, corpo: [] }) });
+    const abas = await screen.findByRole("navigation", { name: "Partes de Drops" });
+    expect(within(abas).getByRole("button", { name: "IT" })).toBeInTheDocument();
+    expect(within(abas).getByRole("button", { name: "Vídeo" })).toBeInTheDocument();
   });
 
   it("o Admin escreve a instrução e grava", async () => {

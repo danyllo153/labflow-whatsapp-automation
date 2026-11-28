@@ -148,14 +148,21 @@ export function ConferenciaEstufas({
           {!dados.pode_registrar && <p className="texto-secundario">O seu cargo vê as estufas, mas não confere.</p>}
           {dados.pode_registrar && <TodasOk dados={dados} aoMudar={mudar} />}
           <div className="lista-estufas">
-            <div className="estufa-linha estufa-cabecalho" aria-hidden="true">
-              <span className="estufa-nome">Estufa</span>
-              <span>Supervisório</span>
-              <span>Field chart</span>
-            </div>
-            {dados.estufas.map((e) => (
-              <LinhaDaEstufa key={e.id} estufa={e} pode={dados.pode_registrar} aoMudar={mudar} />
-            ))}
+            {/* duas colunas, de cima para baixo (1 2 3 | 4 5 6): a ordem de leitura e do teclado segue a da tela */}
+            {[dados.estufas.slice(0, Math.ceil(dados.estufas.length / 2)), dados.estufas.slice(Math.ceil(dados.estufas.length / 2))]
+              .filter((coluna) => coluna.length > 0)
+              .map((coluna) => (
+                <div className="coluna-estufas" key={coluna[0].id}>
+                  <div className="estufa-linha estufa-cabecalho" aria-hidden="true">
+                    <span className="estufa-nome">Estufa</span>
+                    <span>Sup.</span>
+                    <span>Field</span>
+                  </div>
+                  {coluna.map((e) => (
+                    <LinhaDaEstufa key={e.id} estufa={e} pode={dados.pode_registrar} aoMudar={mudar} />
+                  ))}
+                </div>
+              ))}
           </div>
         </div>
       )}
@@ -287,7 +294,7 @@ function Leitura(props: {
 
   return (
     <div className="leitura-estufa" role="group" aria-label={`${nome} da ${nomeDaEstufa(estufa.id)}`} title={quem || undefined}>
-      <span className="leitura-nome">{nome}</span>
+      <span className="leitura-nome" aria-hidden="true">{nome === "Supervisório" ? "Sup." : "Field"}</span>
       {props.pode ? (
         <span className="botoes-estufa">
           <button type="button" className="botao-icone-ok" aria-label="Ok" title="Ok" aria-pressed={leitura?.ok === true} disabled={enviando} onClick={() => void gravar({ ok: true })}>

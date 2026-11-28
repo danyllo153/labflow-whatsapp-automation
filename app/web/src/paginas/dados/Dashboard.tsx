@@ -58,12 +58,13 @@ export default function Dashboard({
   def: DefinicaoDePagina;
   linhas: Linha[];
   total: number;
-  inicial?: { tipo: Tipo; coluna: string };
+  inicial?: { tipo: Tipo; coluna: string; soColunas?: boolean };
   aoFechar: () => void;
 }) {
   const textos = def.colunas.filter((c) => !c.formato || c.formato === "texto" || c.formato === "situacao");
   const datas = def.colunas.filter((c) => c.formato === "data" || c.formato === "dataHora");
-  const [tipo, setTipo] = useState<Tipo>(inicial?.tipo ?? (textos.length ? "colunas" : "tendencia"));
+  const soColunas = !!inicial?.soColunas; // Coletas (28/11): tendência não faz sentido, só "Colunas"
+  const [tipo, setTipo] = useState<Tipo>(soColunas ? "colunas" : inicial?.tipo ?? (textos.length ? "colunas" : "tendencia"));
   const [porTexto, setPorTexto] = useState(inicial?.tipo === "colunas" ? inicial.coluna : textos[0]?.chave ?? "");
   const [porData, setPorData] = useState(inicial?.tipo === "tendencia" ? inicial.coluna : datas[0]?.chave ?? "");
   const [forma, setForma] = useState<"linha" | "colunas">("linha");
@@ -88,14 +89,16 @@ export default function Dashboard({
         </button>
       </div>
       <div className="dashboard-escolhas">
-        <div role="group" aria-label="Tipo de gráfico" className="seletor-segmentado">
-          <button type="button" aria-pressed={tipo === "colunas"} disabled={textos.length === 0} onClick={() => setTipo("colunas")}>
-            Colunas
-          </button>
-          <button type="button" aria-pressed={tipo === "tendencia"} disabled={datas.length === 0} onClick={() => setTipo("tendencia")}>
-            Tendência
-          </button>
-        </div>
+        {!soColunas && (
+          <div role="group" aria-label="Tipo de gráfico" className="seletor-segmentado">
+            <button type="button" aria-pressed={tipo === "colunas"} disabled={textos.length === 0} onClick={() => setTipo("colunas")}>
+              Colunas
+            </button>
+            <button type="button" aria-pressed={tipo === "tendencia"} disabled={datas.length === 0} onClick={() => setTipo("tendencia")}>
+              Tendência
+            </button>
+          </div>
+        )}
         {tipo === "colunas" ? (
           <label className="campo campo-inline">
             Contar por

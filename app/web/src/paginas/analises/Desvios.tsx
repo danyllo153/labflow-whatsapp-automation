@@ -12,7 +12,6 @@ import {
   useAcao,
   useLista,
 } from "./comum";
-import { ABAS_FINAIS } from "./Instrucao";
 
 /**
  * Desvios de tanque (Fase E, E8; funções da 047): só o que fugiu do padrão. O app nunca abre desvio sozinho: lista as
@@ -54,8 +53,7 @@ interface Dados {
 export const ABAS_DESVIOS = [
   { aba: "abrir", rotulo: "Não ok" },
   { aba: "abertos", rotulo: "Em repetição" },
-  { aba: "resultados", rotulo: "Resultados" },
-  ...ABAS_FINAIS,
+  { aba: "resultados", rotulo: "Resultados" }, // sem IT e Vídeo (28/11): só nesta página
 ];
 
 const nome = (d: { navio: string | null; tanque: string; frasco: string | null; analise: string | null }) =>
