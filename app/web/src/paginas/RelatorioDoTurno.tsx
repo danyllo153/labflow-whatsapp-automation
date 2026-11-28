@@ -80,6 +80,7 @@ const CAMPOS = [
 ] as const;
 
 export default function RelatorioDoTurno() {
+  const { lite } = useSessao();
   const [busca] = useSearchParams();
   const turnoId = busca.get("turno");
   const dia = busca.get("dia");
@@ -149,7 +150,7 @@ export default function RelatorioDoTurno() {
       <div className="cartao">
         <h2>Analistas do turno</h2>
         {r.analistas.length === 0 ? (
-          <p className="texto-secundario">Ninguém marcou entrada pelo app neste turno.</p>
+          <p className="texto-secundario">Ninguém marcou entrada neste turno.</p>
         ) : (
           <ul className="lista-simples">
             {r.analistas.map((a, n) => (
@@ -268,7 +269,7 @@ export default function RelatorioDoTurno() {
         </div>
       )}
 
-      <Escritos relatorio={r} aoGravar={setDados} />
+      <Escritos relatorio={r} aoGravar={setDados} lite={lite} />
       {r.reaberto && <p className="texto-secundario">{r.reaberto}</p>}
       {r.pode_encerrar && <EncerrarTurno relatorio={r} aoMudar={setDados} />}
       {r.pode_reabrir && <ReabrirTurno relatorio={r} aoMudar={setDados} />}
@@ -276,7 +277,7 @@ export default function RelatorioDoTurno() {
   );
 }
 
-function Escritos({ relatorio: r, aoGravar }: { relatorio: Relatorio; aoGravar: (r: Relatorio) => void }) {
+function Escritos({ relatorio: r, aoGravar, lite }: { relatorio: Relatorio; aoGravar: (r: Relatorio) => void; lite: boolean }) {
   const inicial = (c: (typeof CAMPOS)[number]["chave"]) => (c === "analistas_extras" ? r.analistas_extras : r.escritos[c]) ?? "";
   const [valores, setValores] = useState<Record<string, string>>(() => Object.fromEntries(CAMPOS.map((c) => [c.chave, inicial(c.chave)])));
   const [gravando, setGravando] = useState(false);
@@ -316,7 +317,7 @@ function Escritos({ relatorio: r, aoGravar }: { relatorio: Relatorio; aoGravar: 
       <h2>Escrito à mão</h2>
       {CAMPOS.map((c) => (
         <label className="campo" key={c.chave}>
-          {c.rotulo}
+          {lite ? c.rotulo.replace(" (que não entraram pelo app)", " (que não marcaram entrada)") : c.rotulo}
           <textarea
             rows={c.chave === "analistas_extras" ? 1 : 3}
             placeholder={c.dica}

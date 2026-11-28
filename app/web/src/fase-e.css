@@ -836,3 +836,19 @@ button.numero-app {
   padding: 4px 12px;
   font-size: 0.9rem;
 }
+
+/* Estufas em lista, partida em duas colunas lado a lado (28/11): 1 2 3 | 4 5 6 */
+.lista-estufas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; border: 0; border-radius: 0; overflow: visible; align-items: start; }
+.coluna-estufas { display: flex; flex-direction: column; border: 1px solid var(--borda); border-radius: 8px; overflow: hidden; }
+.coluna-estufas .estufa-linha { grid-template-columns: minmax(0, 1fr) 112px 112px; gap: 4px 6px; padding: 4px 8px; }
+.coluna-estufas .estufa-cabecalho { display: grid; padding-top: 4px; padding-bottom: 4px; }
+.coluna-estufas .estufa-linha .leitura-nome { display: none; }
+.coluna-estufas .estufa-linha .leitura-estufa { flex-wrap: nowrap; }
+.coluna-estufas .estufa-diferenca { grid-column: 1 / -1; }
+@media (max-width: 900px) {
+  .lista-estufas { grid-template-columns: 1fr; }
+}
+@media (max-width: 600px) {
+  .coluna-estufas .estufa-linha { grid-template-columns: minmax(0, 1fr) 84px 84px; padding: 4px 6px; }
+  .coluna-estufas .estufa-nome .texto-secundario { display: none; }
+}
