@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState, type ChangeEvent } from "react";
 
 import { enviarArquivo, enviarJson, lerJson } from "../api";
+import NomesNoLaudo from "../componentes/NomesNoLaudo";
 import { useSessao } from "../sessao";
 
 /**
@@ -45,6 +46,7 @@ interface ConfigDoLaudo {
   rotulo: string; // nome da região (leitor de tela) e do campo do modelo
   explicacao: string;
   unidade: string; // "linhas" ou "dias"
+  nomes?: string; // laudo com o NOME escolhido por folha ou data (086): o nome em /laudos-nomes
 }
 
 export const LAUDO_ESTERILIZACAO: ConfigDoLaudo = {
@@ -54,11 +56,13 @@ export const LAUDO_ESTERILIZACAO: ConfigDoLaudo = {
   explicacao:
     "As linhas se preenchem sozinhas com o que foi registrado (data, material, ciclo, eficiente e o nome de quem marcou). A assinatura (Visto) é à mão, na folha impressa.",
   unidade: "linhas",
+  nomes: "esterilizacao",
 };
 
 export default function LaudoEsterilizacao({ versao, config = LAUDO_ESTERILIZACAO }: { versao: number; config?: ConfigDoLaudo }) {
   const [dados, setDados] = useState<DadosLaudos | null>(null);
   const [erro, setErro] = useState("");
+  const [nomesAbertos, setNomesAbertos] = useState<number | null>(null); // a folha com "Quem vai no laudo" aberto
   const { pessoa } = useSessao();
   const podeApagar = !!pessoa?.pode.includes("gerenciar_pessoas"); // 01/11: só o Admin apaga a folha de vez
 
@@ -159,9 +163,21 @@ export default function LaudoEsterilizacao({ versao, config = LAUDO_ESTERILIZACA
                     <IconeAcao nome="refazer" />
                     Refazer folha
                   </button>
+                  {config.nomes && (
+                    <button
+                      type="button"
+                      className="acao-laudo"
+                      aria-expanded={nomesAbertos === p.id}
+                      aria-label={`Quem vai no laudo da página ${p.numero}`}
+                      onClick={() => setNomesAbertos(nomesAbertos === p.id ? null : p.id)}
+                    >
+                      Quem vai no laudo
+                    </button>
+                  )}
                   {podeApagar && <BotaoApagar pagina={p} aoClicar={() => setConfirmar({ acao: "apagar", pagina: p })} />}
                 </span>
               </div>
+              {config.nomes && nomesAbertos === p.id && <NomesNoLaudo laudo={config.nomes} paginaId={p.id} />}
               {confirmar?.pagina.id === p.id && <Confirmar pedido={confirmar} aoConfirmar={() => void acao(p.id, confirmar.acao)} aoVoltar={() => setConfirmar(null)} />}
             </li>
           ))}

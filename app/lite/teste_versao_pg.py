@@ -41,7 +41,7 @@ def novo_servidor(nome: str, banco: int, pacote: int):
     (raiz / "pacote" / "bin").mkdir(parents=True)
     (raiz / "pacote" / "VERSAO.txt").write_text(f"postgres (PostgreSQL) {pacote}.1\n")
     lite.LOCAL = raiz / "local"
-    srv = lite.Servidor(argparse.Namespace(porta=8000, redefinir_admin=False), lite.Dados(raiz / "rede"), raiz / "local")
+    srv = lite.Servidor(argparse.Namespace(porta=8000), lite.Dados(raiz / "rede"), raiz / "local")
     srv.pg.bin = raiz / "pacote" / "bin"
     if banco:
         (srv.pg.data).mkdir()

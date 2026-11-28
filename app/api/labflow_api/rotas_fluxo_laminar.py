@@ -19,7 +19,7 @@ import psycopg
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 
-from labflow_api import laudo_asseptico, laudo_esterilizacao, laudos, rotas_turno
+from labflow_api import laudo_asseptico, laudo_esterilizacao, laudos, nomes_laudo, rotas_turno
 from labflow_api.dependencias import PessoaLogada, obter_conexao
 from labflow_api.permissoes import exigir, pode
 from labflow_api.rotas_turno import FUSO
@@ -235,7 +235,7 @@ def _gerar(con: psycopg.Connection, pagina_id: int, modelo: bytes | None) -> byt
     ).fetchall()
     for n, (dia, *valores, quem) in enumerate(linhas):
         textos = [dia.strftime("%d.%m.%Y"), *(_no_laudo(c, v, dia, hoje) for c, v in zip(CAMPOS, valores)),
-                  laudo_esterilizacao.primeiro_nome(quem)]
+                  nomes_laudo.no_pdf(con, "fluxo-laminar", pagina_id, dia, laudo_esterilizacao.primeiro_nome(quem))]
         for i, texto in enumerate(textos):
             celulas.append(TABELA.celula(texto, n, i, tamanho=11))
     return laudos.preencher(modelo, DEMONSTRACAO, celulas)  # o traço da folha impressa é do motor (laudos.baixar_pdf)

@@ -23,7 +23,8 @@ Regras (PB10 e o padrão de escrita do Danyllo, 24/10):
 - leituras: OSA/PCA 48 h (+2 dias), PDA 72 h (+3) e 120 h (+5), Wort 240 h (+10); o lote é o que estava em uso NAQUELE dia;
 - o dia entra na folha quando fecha (no dia seguinte), na ordem; o conteúdo é lido na hora de gerar o PDF. Texto que não
   cabe nas 4 linhas continua no bloco de baixo, com a mesma data, os mesmos lotes e as mesmas leituras (o bloco nunca
-  ganha linha a mais). Nome e Visto do responsável ficam em branco (à mão).
+  ganha linha a mais). O Nome do responsável é quem foi escolhido para a folha ("Quem vai no laudo", 086); sem
+  escolha, em branco. O Visto é à mão.
 """
 
 import dataclasses
@@ -36,7 +37,7 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 from reportlab.pdfbase.pdfmetrics import stringWidth
 
-from labflow_api import laudos, rotas_turno
+from labflow_api import laudos, nomes_laudo, rotas_turno
 from labflow_api.dependencias import PessoaLogada, obter_conexao
 from labflow_api.permissoes import exigir
 from labflow_api.rotas_meios import lote_em_uso
@@ -294,6 +295,7 @@ def ver_dia(
 # colunas: descrição | OSA | PDA | PCA | Wort | data da incubação | 48h | 72h | 120h | 240h
 COLUNAS = (33.8, 210.4, 245.8, 281.3, 316.8, 352.0, 408.9, 458.6, 494.0, 530.4, 564.8)
 TABELA = laudos.Tabela(colunas=COLUNAS, topo=163.4, base=645.0, linhas=BLOCOS_POR_FOLHA * LINHAS_POR_BLOCO)
+LINHA_DO_NOME = (33.8, 352.0, 655.0, 670.0)  # sem modelo (ou sem o rótulo nele): logo abaixo da tabela
 DEMONSTRACAO = laudos.demonstracao(
     "Controle de Incubação e Leitura", TABELA,
     ("Descrição das amostras", "OSA", "PDA", "PCA", "Wort", "Incubação", "48h", "72h", "120h", "240h"),
@@ -348,6 +350,12 @@ def _gerar(con: psycopg.Connection, pagina_id: int, modelo: bytes | None) -> byt
     if laudos.finalizada(con, pagina_id):
         fechar, riscos = encerramento(usados)
         celulas += fechar
+    # o Nome do rodapé: quem foi escolhido para a folha (086); sem escolha, em branco como sempre foi
+    nome = laudos.depois_do_rotulo(
+        modelo, ("Nome",), nomes_laudo.no_pdf(con, NOME, pagina_id, None, ""), LINHA_DO_NOME, abaixo_de=TABELA.base
+    )
+    if nome:
+        celulas.append(nome)
     return laudos.preencher(modelo, DEMONSTRACAO, celulas, riscos=riscos)
 
 

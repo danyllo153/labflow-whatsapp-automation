@@ -43,6 +43,7 @@ const CAMPOS: { chave: keyof Uso; rotulo: string; dica: string }[] = [
 
 const LAUDO = {
   base: "/material-asseptico/laudos",
+  nomes: "material-asseptico",
   titulo: "Laudo de material asséptico",
   rotulo: "Laudo de material asséptico",
   explicacao: "Nove dias por página, com o que foi usado em cada um e o nome de quem preencheu. O Visto é à mão, na folha impressa.",

@@ -66,12 +66,12 @@ function usePrecisaDeCheckin(ativo: boolean): boolean | null {
 }
 
 export default function App() {
-  const { pessoa, carregando } = useSessao();
-  const precisaDeCheckin = usePrecisaDeCheckin(Boolean(pessoa && !pessoa.trocar_senha));
+  const { pessoa, carregando, lite } = useSessao();
+  const precisaDeCheckin = usePrecisaDeCheckin(Boolean(pessoa && (lite || !pessoa.trocar_senha)));
 
   if (carregando) return <p className="carregando">Carregando...</p>;
   if (!pessoa) return <Entrar />;
-  if (pessoa.trocar_senha) return <TrocarSenha obrigatoria />;
+  if (pessoa.trocar_senha && !lite) return <TrocarSenha obrigatoria />; // na Lite não há senha
   if (precisaDeCheckin === null) return <p className="carregando">Carregando...</p>;
 
   if (precisaDeCheckin) {
@@ -146,7 +146,7 @@ export default function App() {
           <Route key={item.caminho} path={item.caminho} element={<EmBreve item={item} />} />
         ))}
         <Route path="/conta" element={<Conta />} />
-        <Route path="/conta/senha" element={<TrocarSenha />} />
+        <Route path="/conta/senha" element={lite ? <Navigate to="/conta" replace /> : <TrocarSenha />} />
         <Route path="/admin/pessoas" element={<Pessoas />} />
         <Route path="/admin/turnos" element={<TurnosEstufas />} />
         <Route path="/admin/coletas-excluidas" element={<ColetasExcluidas />} />

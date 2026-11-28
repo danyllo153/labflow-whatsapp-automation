@@ -34,8 +34,9 @@ const LAUDO = {
   titulo: "Laudo de incubação e leitura",
   rotulo: "Laudo de incubação e leitura",
   explicacao:
-    "Um dia de incubação por bloco, 7 por folha. O dia entra na folha no dia seguinte, quando fecha. Nome e Visto do responsável são à mão.",
+    "Um dia de incubação por bloco, 7 por folha. O dia entra na folha no dia seguinte, quando fecha. Em \"Quem vai no laudo\" você escolhe o Nome do responsável; o Visto é à mão.",
   unidade: "dias",
+  nomes: "incubacao",
 };
 
 export default function IncubacaoLeitura() {

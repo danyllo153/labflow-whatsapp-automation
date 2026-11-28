@@ -41,6 +41,7 @@ const CAMPOS: { chave: keyof Valores; rotulo: string; grupo: string }[] = [
 
 const LAUDO = {
   base: "/laudos/fluxo-laminar",
+  nomes: "fluxo-laminar",
   titulo: "Laudo de meio de cultura e fluxo laminar",
   rotulo: "Laudo de meio de cultura e fluxo laminar",
   explicacao: "Um dia por linha, 39 por página, com o nome de quem preencheu. O Visto é à mão, na folha impressa.",

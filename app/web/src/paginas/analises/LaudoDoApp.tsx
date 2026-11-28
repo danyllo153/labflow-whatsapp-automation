@@ -9,7 +9,7 @@ import { SoQuemGrava } from "./comum";
 
 type Laudo = "tab" | "coliformes" | "howard" | "nfc-tanques" | "embarque-fcoj";
 
-const CONFIGS: Record<Laudo, { titulo: string; explicacao: string; unidade: string }> = {
+const CONFIGS: Record<Laudo, { titulo: string; explicacao: string; unidade: string; nomes?: string }> = {
   tab: {
     titulo: "Laudo do TAB – Método II (IFU 2019)",
     explicacao:
@@ -34,8 +34,10 @@ const CONFIGS: Record<Laudo, { titulo: string; explicacao: string; unidade: stri
   },
   "embarque-fcoj": {
     titulo: "Laudo de análises do embarque",
-    explicacao: "Uma folha por navio (Embarque = a viagem), uma amostra por linha, 13 por folha: linha/fase, load, amostra, C.T. e B.L.",
+    explicacao:
+      "Uma folha por navio (Embarque = a viagem), uma amostra por linha, 13 por folha: linha/fase, load, amostra, C.T. e B.L. Em “Quem vai no laudo” você escolhe o Analista Responsável.",
     unidade: "amostras",
+    nomes: "embarque-fcoj", // o nome escolhido por folha (086)
   },
 };
 
@@ -44,7 +46,7 @@ export function AbaLaudo({ laudo }: { laudo: Laudo }) {
   const c = CONFIGS[laudo];
   return (
     <SoQuemGrava pode={!!pessoa?.pode.includes("registrar_analise")}>
-      <LaudoEsterilizacao versao={0} config={{ base: `/laudos/${laudo}`, titulo: c.titulo, rotulo: c.titulo, explicacao: c.explicacao, unidade: c.unidade }} />
+      <LaudoEsterilizacao versao={0} config={{ base: `/laudos/${laudo}`, titulo: c.titulo, rotulo: c.titulo, explicacao: c.explicacao, unidade: c.unidade, nomes: c.nomes }} />
     </SoQuemGrava>
   );
 }
