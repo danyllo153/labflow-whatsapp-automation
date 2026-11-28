@@ -7,7 +7,7 @@
 ## Decisões
 - Roda da pasta `X:\LabFlow`, sem Docker, sem admin, sem internet.
 - **Todas as funções do app**; sem senha nem cargos (todas as pessoas têm as mesmas funções).
-- **Sem bot, sem WhatsApp, sem celular e sem assistente** nesta etapa (ideias para depois: assistente dentro do app e acesso por Wi-Fi).
+- **Sem bot, sem WhatsApp, sem celular e sem assistente** nesta etapa (ideia para depois: assistente dentro do app; acesso por rede só com senha de novo).
 - **Começa vazio:** só as migrations; na primeira abertura a pessoa digita o nome (sem senha; ver "Sem senha" abaixo).
 - **Um PC por vez, só em 127.0.0.1:** o PC que abre primeiro liga o PostgreSQL e o app nele mesmo e grava o aviso de servidor; outro PC que tente abrir recebe o aviso de qual PC está com o LabFlow aberto ("use Encerrar lá") e não se conecta. Nada escuta na rede (sem porta 8000 aberta para outros PCs, sem regra de firewall).
 
@@ -23,9 +23,9 @@
 ## Pastas
 ```
 LabFlow\                      (X:)
-  Abrir LabFlow.vbs (sem janela)  Abrir LabFlow com janela.bat  Fechar LabFlow.bat  Testar rede.bat  Redefinir senha do Admin.bat  LEIA-ME.txt
+  Abrir LabFlow.vbs (sem janela)  Abrir LabFlow com janela.bat  Fechar LabFlow.bat  LEIA-ME.txt  COMECE AQUI.html
   instalacao\                 trocada inteira a cada versão
-    python\ (embutido + dependências)  app\labflow_api\  web\  migrations\  postgres\ (15+)  lite\lite.py  VERSAO.txt
+    python\ (embutido + dependências)  app\labflow_api\  web\  migrations\  postgres\ (17.12)  lite\lite.py  VERSAO.txt
   dados\                      nunca apagar nem substituir
     labflow.dump  labflow.anterior.dump  labflow.info.json  servidor.json  backup\  recuperacao\
 %LOCALAPPDATA%\LabFlowLite\   em cada PC
@@ -38,14 +38,14 @@ LabFlow\                      (X:)
 3. Banco: se o `data\` local está em dia com o X: (mesmo `gravado_em`), religa (recupera uma queda sem perder nada); senão restaura o `labflow.dump`. Banco local que ficou para trás depois de uma queda vai para `dados\recuperacao`.
 4. Migrations: aplica as que faltam (tabela `public.lite_migracoes`), com backup antes quando não é o banco novo.
 5. Cópia no X: a cada 60 s se houve escrita (e a cada 10 min mesmo sem), e ao fechar; `labflow.anterior.dump` e backup do dia (30 dias).
-6. Papéis como no servidor (`labflow_app`, `labflow_leitura`, `labflow_app_web`); o app entra como `labflow_app_web`; PostgreSQL só em 127.0.0.1 com senha.
+6. Papéis como no servidor (`labflow_app`, `labflow_leitura`, `labflow_app_web`); o app entra como `labflow_app_web`; PostgreSQL só em 127.0.0.1 (o app entra com a senha do papel, guardada só no PC).
 7. Fechar: ENTER + S na janela, `Fechar LabFlow.bat`, ou o X da janela (o Windows dá poucos segundos; o que não couber fica no banco local e volta na próxima abertura no mesmo PC).
 
 ## Janela e ícone (01/11)
 - O LabFlow abre como programa: modo aplicativo do Edge (`--app --start-fullscreen`: tela cheia como o F11, sem barra de endereço; o F11 volta para janela), senão o do Chrome, senão o navegador padrão.
-- Primeira vez em cada PC: a janela preta (preparo, senha do primeiro acesso). Depois (marcador `%LOCALAPPDATA%\LabFlowLite\ja-abriu.txt`, sem opções extras no .bat): `pythonw --oculto`, sem janela.
-- Oculto: ícone perto do relógio (pystray) com Abrir o LabFlow, Endereço para os outros PCs e Encerrar (com confirmação); avisos (não abriu, não conectou, outro PC assumiu, falha ao gravar no X:, senha) em janelinha do Windows. Sem o ícone (sessão sem área de trabalho), segue funcionando e fecha pelo `Fechar LabFlow.bat`.
-- A senha provisória só aparece na tela/janelinha; o `lite.log` registra só que ela foi mostrada.
+- Primeira vez em cada PC: a janela preta (preparo). Depois (marcador `%LOCALAPPDATA%\LabFlowLite\ja-abriu.txt`, sem opções extras no .bat): `pythonw --oculto`, sem janela.
+- Oculto: ícone perto do relógio (pystray) com Abrir o LabFlow, Endereço neste PC e Encerrar (com confirmação); avisos (não abriu, outro PC assumiu, falha ao gravar no X:, cópia não conferida) em janelinha do Windows. Sem o ícone (sessão sem área de trabalho), segue funcionando e fecha pelo `Fechar LabFlow.bat`.
+- Não há senha para mostrar nem anotar: o `lite.log` não guarda nenhum segredo.
 
 ## Marca da instalação
 - Pasta `dados\marca` no X: (criada na primeira abertura, com um LEIA-ME): `marca.json` (`nome`, `cor_principal`, `cor_secundaria`, em `#rrggbb`), `logo.png` (até 2 MB) e `estilo.css` (até 200 KB, por último). Tudo opcional; arquivo com erro é ignorado sozinho.
@@ -55,14 +55,14 @@ LabFlow\                      (X:)
 - Fica em `dados`, então a troca da `instalacao` não mexe nela. **Nada da marca vai para o repositório** (só valores fictícios nos testes; `.gitignore` barra `dados/` e `marca/`). Sem a variável (servidor de demonstração), fica o LabFlow.
 
 ## O que derruba o servidor (vai no LEIA-ME)
-Sair do usuário do Windows, suspender/hibernar, reinício do Windows Update. Troca de turno é só "Sair" no LabFlow.
+Sair do usuário do Windows, suspender/hibernar, reinício do Windows Update. Troca de turno é só "Trocar de pessoa" no LabFlow.
 
 ## Para a TI
-Liberar a porta TCP 8000 de entrada no firewall do PC servidor, só para os PCs do laboratório. Conferir com `Testar rede.bat`. A rede interna usa HTTP (sem criptografia); o Henry está ciente.
+Nenhuma liberação de porta ou firewall: o LabFlow escuta só em `127.0.0.1` (neste PC) e roda sem administrador. Um PC por vez; a pasta de rede guarda só os dados.
 
 ## Como gerar o pacote
-GitHub Actions → "LabFlow Lite (pacote Windows)" (roda em PR de `app/lite/**`, em push na `main` e manual) → baixar `LabFlow-Lite` em Artifacts → descompactar no X:. O mesmo job testa no Windows: abrir do zero, segundo PC como cliente, fechar e restaurar em outro PC.
+GitHub Actions → "LabFlow Lite (pacote Windows)" (roda em PR de `app/lite/**`, em push na `main` e manual) → baixar `LabFlow-Lite` em Artifacts → descompactar no X:. O mesmo job testa no Windows: abrir do zero sem senha, o outro PC ver o aviso de que já está aberto (sem conectar), encerrar com a cópia conferida e restaurar em outro PC.
 
 ## Pendências
-- Testar nos PCs do laboratório (Windows 10, rede da empresa) e a liberação da porta.
+- Testar nos PCs do laboratório (Windows 10, rede da empresa), sem precisar liberar porta.
 - Limites reais (`limites_nfc`, Howard): carregar pelo app ou por arquivo fora do Git depois do primeiro acesso.
