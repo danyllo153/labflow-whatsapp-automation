@@ -89,10 +89,9 @@ def lite(monkeypatch):
 @pytest.fixture
 def cliente_lite(conexao, lite):
     """Cliente da Lite: Host e IP de quem chama em loopback (o middleware do modo Lite confere), mesma transação do teste."""
-    from fastapi.testclient import TestClient
-
     from labflow_api.dependencias import obter_conexao
     from labflow_api.main import app
+    from tests.clientes import cliente_http
 
     def conexao_do_teste():
         conexao.execute("SET ROLE labflow_app_web")
@@ -103,12 +102,7 @@ def cliente_lite(conexao, lite):
 
     app.dependency_overrides[obter_conexao] = conexao_do_teste
     try:
-        try:
-            c = TestClient(app, base_url="http://127.0.0.1:8000", client=("127.0.0.1", 50000))
-        except TypeError:  # starlette antigo, sem o argumento client=
-            c = TestClient(app, base_url="http://127.0.0.1:8000")
-            c._transport.client = ("127.0.0.1", 50000)
-        yield c
+        yield cliente_http("http://127.0.0.1:8000")
     finally:
         app.dependency_overrides.clear()
 

@@ -4,6 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from labflow_api.main import app
+from tests.clientes import cliente_http
 
 
 @pytest.fixture
@@ -114,7 +115,7 @@ def test_completa_continua_instalavel(telas, tmp_path):
 def test_lite_nao_e_instalavel_como_app(telas, tmp_path, monkeypatch):
     monkeypatch.setenv("LABFLOW_LITE", "1")
     (tmp_path / "index.html").write_text(INDICE_COM_APP, encoding="utf-8")
-    c = TestClient(app, base_url="http://127.0.0.1:8000", client=("127.0.0.1", 50000))
+    c = cliente_http("http://127.0.0.1:8000")
     for caminho in ("/app/", "/app/index.html", "/app/turno"):
         r = c.get(caminho)
         assert r.status_code == 200 and "LabFlow" in r.text, caminho

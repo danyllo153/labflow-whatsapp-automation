@@ -10,6 +10,7 @@ from fastapi.testclient import TestClient
 
 from labflow_api import seguranca_http
 from labflow_api.main import app
+from tests.clientes import cliente_http
 
 PASTA_API = Path(__file__).resolve().parents[1]
 
@@ -20,7 +21,7 @@ def lite(monkeypatch):
 
 
 def cliente(host: str) -> TestClient:
-    return TestClient(app, base_url=f"http://{host}", client=("127.0.0.1", 50000))
+    return cliente_http(f"http://{host}")
 
 
 @pytest.mark.parametrize("host", ["localhost", "localhost:8000", "127.0.0.1", "127.0.0.1:8765", "LOCALHOST:8000"])
@@ -108,19 +109,19 @@ def test_lite_ip_do_testclient_padrao_nao_vale_mais(lite):
 
 @pytest.mark.parametrize("ip", ["192.168.0.5", "10.0.0.7", "8.8.8.8"])
 def test_lite_ip_de_fora_leva_403_mesmo_com_host_certo(lite, ip):
-    c = TestClient(app, base_url="http://127.0.0.1:8000", client=(ip, 50000))
+    c = cliente_http("http://127.0.0.1:8000", ip)
     assert c.get("/saude").status_code == 403
     assert c.post("/saude").status_code == 403
 
 
 @pytest.mark.parametrize("ip", ["127.0.0.1", "::1"])
 def test_lite_ip_loopback_passa(lite, ip):
-    assert TestClient(app, base_url="http://127.0.0.1:8000", client=(ip, 50000)).get("/saude").status_code == 200
+    assert cliente_http("http://127.0.0.1:8000", ip).get("/saude").status_code == 200
 
 
 def test_completa_nao_confere_o_ip(monkeypatch):
     monkeypatch.delenv("LABFLOW_LITE", raising=False)
-    assert TestClient(app, base_url="http://127.0.0.1:8000", client=("192.168.0.5", 50000)).get("/saude").status_code == 200
+    assert cliente_http("http://127.0.0.1:8000", "192.168.0.5").get("/saude").status_code == 200
 
 
 def test_variavel_de_hosts_extra_nao_vale_mais(lite, monkeypatch):
