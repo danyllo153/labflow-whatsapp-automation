@@ -1206,6 +1206,9 @@ def postgres_em_uso_na_pasta(local: Path, pasta: Path) -> bool:
     data = local / "data"
     vivo = postgres_vivo_do_data(data)
     if vivo is None:
+        if postgres_vivo_duvidoso(data):  # vivo, mas sem prova de quem é: não arrisca apagar a pasta antiga
+            log(f"Não apaguei {pasta.name}: há um PostgreSQL vivo que não consegui confirmar. Fica para a próxima abertura.")
+            return True
         return False
     try:
         vivo[1].resolve().relative_to(pasta.resolve())

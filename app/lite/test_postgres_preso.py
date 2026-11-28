@@ -200,3 +200,16 @@ def test_pg_ctl_so_de_dentro_da_pasta_da_lite(tmp_path, monkeypatch):
     chamadas2 = _sem_pg_ctl(monkeypatch, {4242: tmp_path / "postgres.exe"})
     assert lite.parar_postgres_esquecido(data, "pg_ctl-do-pacote") is True
     assert chamadas2[0][0] == "pg_ctl-do-pacote"
+
+
+def test_postgres_duvidoso_conta_como_em_uso_e_a_pasta_antiga_fica(tmp_path, monkeypatch):
+    local = tmp_path / "LabFlowLite"
+    antigo = local / "programa"
+    atual = local / "p-novo1"
+    for p in (antigo, atual):
+        p.mkdir(parents=True)
+    (local / "data").mkdir()
+    (local / "data" / "postmaster.pid").write_text("4242\n", encoding="utf-8")  # sem linha 2: não dá para provar
+    chamadas = _sem_pg_ctl(monkeypatch, {4242: tmp_path / "fora" / "postgres.exe"})
+    lite.limpar_programas_antigos(local, atual)
+    assert antigo.exists() and chamadas == []
