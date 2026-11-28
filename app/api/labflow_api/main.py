@@ -22,6 +22,7 @@ from labflow_api.rotas_equipe import roteador as roteador_equipe
 from labflow_api.rotas_esterilizacao import roteador as roteador_esterilizacao
 from labflow_api.rotas_laudo import roteador as roteador_laudo
 from labflow_api.rotas_login import roteador as roteador_login
+from labflow_api.rotas_entrar_por_nome import roteador as roteador_entrar_por_nome
 from labflow_api.rotas_paginas import roteador as roteador_paginas
 from labflow_api import laudos_analises  # noqa: F401 (registra os laudos de TAB, Coliformes, Howard, NFC, Embarque e contra-amostra)
 from labflow_api.laudos import roteador as roteador_laudos
@@ -74,6 +75,7 @@ def ambiente() -> dict[str, bool]:
 
 app.include_router(roteador_marca)  # nome, logo e cores da instalação (Lite); sem login
 app.include_router(roteador_login)
+app.include_router(roteador_entrar_por_nome)  # Lite: entrar pelo nome, sem senha (404 fora da Lite)
 app.include_router(roteador_admin)
 app.include_router(roteador_admin_turnos)
 app.include_router(roteador_coletas)

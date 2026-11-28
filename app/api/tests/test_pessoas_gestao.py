@@ -166,18 +166,12 @@ def test_operador_e_aceito_como_nome_antigo_e_gravado_como_analista(admin, criar
     assert conexao.execute("SELECT cargo FROM usuarios WHERE id = %s", (outro,)).fetchone()[0] == "Analista"
 
 
-# ---------------------------------------------------------------- Lite sem telefone (01/11)
+# ---------------------------------------------------------------- Lite sem telefone (01/11) e sem senha (27/11)
 def test_sem_telefone_so_na_lite(admin, conexao, monkeypatch):
     sem = {**NOVA, "telefone": ""}
     r = admin.post("/admin/pessoas", json=sem)
     assert r.status_code == 422 and "telefone" in r.json()["detail"]  # servidor com bot: o telefone é obrigatório
     monkeypatch.setenv("LABFLOW_LITE", "1")
     admin.headers["Host"] = "127.0.0.1"  # no modo Lite a API só aceita localhost/127.0.0.1
-    assert admin.get("/ambiente").json()["lite"] is True
-    r = admin.post("/admin/pessoas", json=sem)
-    assert r.status_code == 201, r.text
-    r2 = admin.post("/admin/pessoas", json={**sem, "nome": "Caio Teste", "usuario": "caio.teste"})
-    assert r2.status_code == 201, r2.text
-    telefones = [t for (t,) in conexao.execute("SELECT telefone FROM usuarios WHERE nome IN ('Bia Teste', 'Caio Teste') ORDER BY id")]
-    assert len(telefones) == 2 and len(set(telefones)) == 2  # cada um com o seu marcador, sem repetir
-    assert all(t.startswith("55000000") and len(t) == 13 for t in telefones)
+    # na Lite a cadastro com senha provisória não existe: a pessoa entra pelo nome (tests/test_entrar_por_nome.py)
+    assert admin.post("/admin/pessoas", json=sem).status_code in (403, 404)

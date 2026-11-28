@@ -6,7 +6,6 @@ desbloquear, bloquear acesso). Cadastrar e trocar cargo usam as funções do bot
 a regra mora num lugar só e quem o app cadastra já é reconhecido no WhatsApp.
 """
 
-import os
 import secrets
 
 import psycopg
@@ -15,11 +14,24 @@ from typing import Literal
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
-from labflow_api.dependencias import PessoaLogada, obter_conexao
+from labflow_api.dependencias import PessoaLogada, e_lite, obter_conexao
 from labflow_api.permissoes import exigir
 from labflow_api.seguranca import gerar_hash_senha
 
 roteador = APIRouter(prefix="/admin", tags=["admin"])
+
+
+def so_completa() -> None:
+    """Senha provisória, usuário curto e cargo só existem na versão Completa. Na Lite (sem senha, todos iguais) a rota não existe."""
+    if e_lite():
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Not Found")
+
+
+# O registro que era o Admin da Lite (telefone marcador e nome iniciais): enquanto o nome for "Administrador", ninguém o assumiu
+# e ele não aparece na lista nem em Pessoas (db/migrations/088).
+TELEFONE_REGISTRO_INICIAL = "5500000000001"
+NOME_REGISTRO_INICIAL = "Administrador"
+SQL_NAO_E_REGISTRO_INICIAL = f"NOT (u.telefone = '{TELEFONE_REGISTRO_INICIAL}' AND u.nome = '{NOME_REGISTRO_INICIAL}')"
 
 # Sem letras e números que se confundem (0/O, 1/l/I), para ler em voz alta ou copiar do papel.
 _ALFABETO = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789"
@@ -63,7 +75,7 @@ def _nova_provisoria(con: psycopg.Connection, usuario_id: int, admin_id: int) ->
     return senha, valida_ate
 
 
-@roteador.post("/pessoas/{usuario_id}/senha-provisoria", response_model=SenhaProvisoria)
+@roteador.post("/pessoas/{usuario_id}/senha-provisoria", response_model=SenhaProvisoria, dependencies=[Depends(so_completa)])
 def gerar_provisoria(
     usuario_id: int,
     admin: PessoaLogada = Depends(exigir("gerenciar_pessoas")),
@@ -99,11 +111,18 @@ SQL_PESSOAS = """
 
 
 def _pessoas(con: psycopg.Connection, usuario_id: int | None = None) -> list[Pessoa]:
-    sql, valores = SQL_PESSOAS, []
+    sql, valores, filtros = SQL_PESSOAS, [], []
     if usuario_id is not None:
-        sql += " WHERE u.id = %s"
+        filtros.append("u.id = %s")
         valores.append(usuario_id)
+    if e_lite():
+        filtros.append(SQL_NAO_E_REGISTRO_INICIAL)  # o "Admin" não aparece: o primeiro nome digitado assume esse registro (088)
+    if filtros:
+        sql += " WHERE " + " AND ".join(filtros)
     linhas = con.execute(sql + " ORDER BY lower(coalesce(u.nome, '')), u.id", valores).fetchall()
+    if e_lite():  # sem senha: só há "Ativo" ou "Acesso bloqueado"
+        em_lite = {"Bloqueado pelo Admin": "Acesso bloqueado", "Sem usuário no app": "Sem usuário no app"}
+        linhas = [(i, n, cg, us, em_lite.get(st, "Ativo")) for i, n, cg, us, st in linhas]
     return [Pessoa(id=i, nome=n, cargo=cg, usuario=us, situacao=st) for i, n, cg, us, st in linhas]
 
 
@@ -133,7 +152,7 @@ class PedidoUsuario(BaseModel):
     usuario: str
 
 
-@roteador.put("/pessoas/{usuario_id}/usuario", response_model=Pessoa)
+@roteador.put("/pessoas/{usuario_id}/usuario", response_model=Pessoa, dependencies=[Depends(so_completa)])
 def definir_usuario(
     usuario_id: int,
     pedido: PedidoUsuario,
@@ -180,11 +199,7 @@ def _recusa_do_banco(erro: psycopg.errors.RaiseException) -> HTTPException:
     return HTTPException(codigo, mensagem)
 
 
-def e_lite() -> bool:
-    """A LabFlow Lite (spec 12): sem bot, então o telefone da pessoa é opcional (01/11)."""
-    return os.environ.get("LABFLOW_LITE", "0") == "1"
-
-
+# (e_lite vem de dependencias: na Lite não há bot, então o telefone é opcional (01/11), e não há senha nem cargos.)
 # Na Lite, a pessoa sem telefone ganha um marcador (como o Admin da Lite, 5500000000001): o banco exige um telefone
 # único (001, função do bot 031), e o bot não existe lá. O Admin troca depois, se quiser.
 MARCADOR_LITE = "55000000"
@@ -208,7 +223,7 @@ class NovaPessoa(BaseModel):
     valida_ate: str
 
 
-@roteador.post("/pessoas", response_model=NovaPessoa, status_code=status.HTTP_201_CREATED)
+@roteador.post("/pessoas", response_model=NovaPessoa, status_code=status.HTTP_201_CREATED, dependencies=[Depends(so_completa)])
 def nova_pessoa(
     pedido: PedidoNovaPessoa,
     admin: PessoaLogada = Depends(exigir("gerenciar_pessoas")),
@@ -244,7 +259,7 @@ class PedidoCargo(BaseModel):
     cargo: Cargo
 
 
-@roteador.put("/pessoas/{usuario_id}/cargo", response_model=Pessoa)
+@roteador.put("/pessoas/{usuario_id}/cargo", response_model=Pessoa, dependencies=[Depends(so_completa)])
 def trocar_cargo(
     usuario_id: int,
     pedido: PedidoCargo,
@@ -260,7 +275,7 @@ def trocar_cargo(
     return _uma_pessoa(con, usuario_id)
 
 
-@roteador.post("/pessoas/{usuario_id}/desbloquear", response_model=Pessoa)
+@roteador.post("/pessoas/{usuario_id}/desbloquear", response_model=Pessoa, dependencies=[Depends(so_completa)])
 def desbloquear(
     usuario_id: int,
     admin: PessoaLogada = Depends(exigir("gerenciar_pessoas")),

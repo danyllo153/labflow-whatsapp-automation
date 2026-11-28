@@ -14,6 +14,7 @@ from labflow_api.dependencias import (
     NOME_COOKIE,
     PessoaLogada,
     cookie_seguro,
+    e_lite,
     obter_conexao,
     pessoa_logada,
 )
@@ -40,13 +41,19 @@ class QuemSou(BaseModel):
     pode: list[str]  # ações que o cargo permite (o app usa para mostrar ou esconder botões)
 
 
+def _sem_senha_na_lite() -> None:
+    """Na Lite não há senha: quem abre escolhe o nome (rotas_entrar_por_nome). Estas rotas só existem na Completa."""
+    if e_lite():
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Not Found")
+
+
 def _quem_sou(p: PessoaLogada) -> QuemSou:
     return QuemSou(
         usuario=p.usuario, nome=p.nome, cargo=p.cargo, trocar_senha=p.trocar_senha, pode=acoes_do_cargo(p.cargo)
     )
 
 
-@roteador.post("/login", response_model=QuemSou)
+@roteador.post("/login", response_model=QuemSou, dependencies=[Depends(_sem_senha_na_lite)])
 def entrar(
     pedido: PedidoLogin,
     request: Request,
@@ -145,7 +152,7 @@ class PedidoTrocaSenha(BaseModel):
     senha_atual: str | None = None  # obrigatória só na troca voluntária (sem senha provisória pendente)
 
 
-@roteador.post("/trocar-senha", status_code=status.HTTP_204_NO_CONTENT)
+@roteador.post("/trocar-senha", status_code=status.HTTP_204_NO_CONTENT, dependencies=[Depends(_sem_senha_na_lite)])
 def trocar_senha(
     pedido: PedidoTrocaSenha,
     pessoa: PessoaLogada = Depends(pessoa_logada),
