@@ -31,6 +31,11 @@ BEGIN
      WHERE telefone = '5500000000001' AND cargo = 'Admin' AND nome = 'Administrador'
      FOR UPDATE;
     IF NOT FOUND THEN
+        -- idempotente: se o registro inicial ja foi assumido com este mesmo nome, devolve ele sem mudar nada
+        SELECT * INTO v FROM usuarios WHERE telefone = '5500000000001' AND cargo = 'Admin' AND nome = v_nome;
+        IF FOUND THEN
+            RETURN v;
+        END IF;
         RAISE EXCEPTION 'Não há registro inicial para assumir.';
     END IF;
     UPDATE usuarios SET nome = v_nome WHERE id = v.id RETURNING * INTO v;

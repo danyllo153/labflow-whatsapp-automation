@@ -1,4 +1,4 @@
--- 086 — app: quem vai no laudo, escolhido por folha e por data (Microbiologia Documentos, pedido do Danyllo de 27/11)
+-- 086 — app: quem vai no laudo, escolhido por folha e por data (pedido de 27/11)
 --
 -- Faixa do app (050–099). Desfazer: 086_app_nomes_no_laudo_desfazer.sql. Aplicar com o administrador do banco
 -- (psql -U evolution), depois de um backup.
