@@ -17,7 +17,7 @@ from labflow_api.rotas_admin import e_lite
 
 HOSTS_PERMITIDOS = frozenset({"localhost", "127.0.0.1"})
 ENDERECOS_LOOPBACK = frozenset({"127.0.0.1", "localhost", "::1"})
-CLIENTES_LOOPBACK = frozenset({"127.0.0.1", "::1", "testclient"})  # IP de quem se conecta; "testclient" é o do TestClient do Starlette
+CLIENTES_LOOPBACK = frozenset({"127.0.0.1", "::1"})  # IP de quem se conecta (request.client.host)
 METODOS_QUE_ALTERAM = frozenset({"POST", "PUT", "PATCH", "DELETE"})
 
 

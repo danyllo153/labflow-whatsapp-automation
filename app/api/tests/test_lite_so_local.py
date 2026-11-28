@@ -20,7 +20,7 @@ def lite(monkeypatch):
 
 
 def cliente(host: str) -> TestClient:
-    return TestClient(app, base_url=f"http://{host}")
+    return TestClient(app, base_url=f"http://{host}", client=("127.0.0.1", 50000))
 
 
 @pytest.mark.parametrize("host", ["localhost", "localhost:8000", "127.0.0.1", "127.0.0.1:8765", "LOCALHOST:8000"])
@@ -102,6 +102,10 @@ def test_main_sobe_no_modo_lite_em_127():
     assert r.returncode == 0, r.stderr
 
 
+def test_lite_ip_do_testclient_padrao_nao_vale_mais(lite):
+    assert TestClient(app, base_url="http://127.0.0.1:8000").get("/saude").status_code == 403
+
+
 @pytest.mark.parametrize("ip", ["192.168.0.5", "10.0.0.7", "8.8.8.8"])
 def test_lite_ip_de_fora_leva_403_mesmo_com_host_certo(lite, ip):
     c = TestClient(app, base_url="http://127.0.0.1:8000", client=(ip, 50000))
@@ -109,7 +113,7 @@ def test_lite_ip_de_fora_leva_403_mesmo_com_host_certo(lite, ip):
     assert c.post("/saude").status_code == 403
 
 
-@pytest.mark.parametrize("ip", ["127.0.0.1", "::1", "testclient"])
+@pytest.mark.parametrize("ip", ["127.0.0.1", "::1"])
 def test_lite_ip_loopback_passa(lite, ip):
     assert TestClient(app, base_url="http://127.0.0.1:8000", client=(ip, 50000)).get("/saude").status_code == 200
 

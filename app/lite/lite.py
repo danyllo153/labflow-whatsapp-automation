@@ -578,7 +578,7 @@ class Servidor:
         saida = open(self.local / "api.log", "a", encoding="utf-8")
         flags = 0x08000000 if EH_WINDOWS else 0  # CREATE_NO_WINDOW
         self.api = subprocess.Popen(
-            [sys.executable, "-m", "uvicorn", "labflow_api.main:app", "--host", ENDERECO_LOCAL, "--port", str(self.porta_api)],
+            [sys.executable, "-m", "uvicorn", "labflow_api.main:app", "--host", ENDERECO_LOCAL, "--port", str(self.porta_api), "--no-proxy-headers"],
             cwd=str(INST / "app"),
             env=env,
             stdout=saida,
