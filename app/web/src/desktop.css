@@ -859,3 +859,66 @@
     transform: rotate(180deg);
   }
 }
+
+/* ======================= Detalhes (load, navio, tanque): resumo à esquerda, tabelas à direita ======================= */
+@media (min-width: 1100px) {
+  :root .conteudo .detalhe-grade {
+    display: grid;
+    grid-template-columns: minmax(220px, 4fr) minmax(0, 8fr);
+    gap: var(--e3);
+    align-items: start;
+  }
+
+  :root .conteudo .detalhe-grade > .grade-numeros {
+    position: sticky;
+    top: var(--e3);
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--e2);
+    margin: 0;
+  }
+
+  :root .conteudo .detalhe-grade .cartao-numero {
+    min-height: 56px;
+    padding: 6px 12px;
+  }
+
+  :root .conteudo .detalhe-blocos {
+    min-width: 0;
+  }
+
+  :root .conteudo .detalhe-blocos .so-tela {
+    overflow-x: auto;
+  }
+}
+
+@media (min-width: 900px) {
+  /* tabelas agrupadas (Tanques, normal e stress): colunas estreitas, texto quebra, e a coluna do tanque fica fixa se ainda sobrar rolagem lateral */
+  :root .conteudo .tabela-rolavel table.tabela-dados td,
+  :root .conteudo .tabela-rolavel table.tabela-dados th {
+    white-space: normal;
+    padding: 3px 6px;
+    font-size: 12px;
+  }
+
+  :root .conteudo .tabela-rolavel table.tabela-dados td .etiqueta,
+  :root .conteudo .tabela-rolavel table.tabela-dados td .estado-celula {
+    font-size: 11px;
+    padding: 0 6px;
+  }
+
+  :root .conteudo .tabela-rolavel table.tabela-dados td:first-child,
+  :root .conteudo .tabela-rolavel table.tabela-dados thead tr:first-child th:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: var(--cartao, #fff);
+  }
+}
+
+@media (min-width: 900px) {
+  :root .conteudo .tabela-rolavel .estado-celula,
+  :root .conteudo .tabela-rolavel table.tabela-dados td span {
+    white-space: normal;
+  }
+}
