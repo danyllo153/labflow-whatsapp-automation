@@ -297,54 +297,128 @@ runpy.run_module("uvicorn", run_name="__main__")
 """
 
 
+def _sistema32(nome: str) -> str:
+    """Programa do Windows pelo caminho completo (nunca pelo PATH)."""
+    return os.path.join(os.environ.get("SystemRoot", r"C:\Windows"), "System32", nome)
+
+
 def pid_que_escuta(porta: int) -> int | None:
-    """PID do processo que escuta em 127.0.0.1:porta (netstat), ou None."""
+    """PID do processo que escuta EXATAMENTE em 127.0.0.1:porta (netstat/ss); escuta em todas as interfaces não conta."""
+    exato = f"127.0.0.1:{porta}"
     try:
         if EH_WINDOWS:
-            saida = subprocess.run(["netstat", "-ano", "-p", "tcp"], capture_output=True, text=True, timeout=15,
+            saida = subprocess.run([_sistema32("netstat.exe"), "-ano", "-p", "tcp"], capture_output=True, text=True, timeout=15,
                                    stdin=subprocess.DEVNULL, creationflags=SEM_JANELA).stdout
         else:
-            saida = subprocess.run(["ss", "-ltnp"], capture_output=True, text=True, timeout=15, stdin=subprocess.DEVNULL).stdout
+            ss = next((c for c in ("/usr/bin/ss", "/bin/ss") if os.path.exists(c)), None)
+            if ss is None:
+                return None
+            saida = subprocess.run([ss, "-ltnp"], capture_output=True, text=True, timeout=15, stdin=subprocess.DEVNULL).stdout
     except Exception:
         return None
     for linha in saida.splitlines():
         partes = linha.split()
-        if EH_WINDOWS and len(partes) >= 5 and partes[3].upper() == "LISTENING" and partes[1].endswith(f":{porta}"):
+        if EH_WINDOWS and len(partes) >= 5 and partes[3].upper() == "LISTENING" and partes[1] == exato:
             with contextlib.suppress(ValueError):
                 return int(partes[4])
-        if not EH_WINDOWS and f":{porta} " in linha + " " and "pid=" in linha:
+        if not EH_WINDOWS and len(partes) >= 4 and partes[3] == exato and "pid=" in linha:
             with contextlib.suppress(ValueError, IndexError):
                 return int(linha.split("pid=")[1].split(",")[0].rstrip(")"))
     return None
 
 
-def matar_processo(pid: int) -> None:
-    if EH_WINDOWS:
-        subprocess.run(["taskkill", "/PID", str(pid), "/T", "/F"], capture_output=True, timeout=20, stdin=subprocess.DEVNULL,
-                       creationflags=SEM_JANELA)
-    else:
+def info_do_processo(pid: int) -> tuple[str, int] | None:
+    """(linha de comando, PID do pai) do processo vivo; None se não der para saber."""
+    try:
+        if EH_WINDOWS:
+            ps = os.path.join(os.environ.get("SystemRoot", r"C:\Windows"), "System32", "WindowsPowerShell", "v1.0", "powershell.exe")
+            cmd = (f"$p = Get-CimInstance Win32_Process -Filter 'ProcessId={int(pid)}'; "
+                   "if ($p) { ConvertTo-Json @{c=[string]$p.CommandLine; pai=[int]$p.ParentProcessId} -Compress }")
+            saida = subprocess.run([ps, "-NoProfile", "-NonInteractive", "-Command", cmd], capture_output=True, text=True, timeout=30,
+                                   stdin=subprocess.DEVNULL, creationflags=SEM_JANELA).stdout.strip()
+            dados = json.loads(saida)
+            return str(dados["c"]), int(dados["pai"])
+        linha = Path(f"/proc/{pid}/cmdline").read_bytes().replace(b"\0", b" ").decode("utf-8", "replace")
+        pai = int(Path(f"/proc/{pid}/stat").read_text().rsplit(")", 1)[1].split()[1])
+        return linha, pai
+    except Exception:
+        return None
+
+
+def pai_morto(pai: int, inicio_do_filho: float | None) -> bool:
+    """O processo pai não existe mais (ou o PID dele foi reaproveitado por um processo mais novo que o filho)?"""
+    if imagem_do_processo(pai) is None:
+        return True
+    inicio = inicio_do_processo(pai)
+    return inicio is not None and inicio_do_filho is not None and inicio > inicio_do_filho + 1
+
+
+def terminar_processo_conferido(pid: int, local: Path, inicio_esperado: float | None) -> bool:
+    """Encerra o processo SÓ depois de conferir, no MESMO handle que vai encerrar, que ele é python de dentro de `local` e que
+    começou na hora esperada (PID reaproveitado entre o netstat e o kill não é morto). Devolve True se encerrou."""
+    if inicio_esperado is None:
+        return False
+    if not EH_WINDOWS:
+        imagem, inicio = imagem_do_processo(pid), inicio_do_processo(pid)
+        if imagem is None or inicio is None or abs(inicio - inicio_esperado) > 1 or not _dentro(imagem, local):
+            return False
+        if not imagem.stem.lower().startswith("python"):
+            return False
         os.kill(pid, signal.SIGTERM)
+        return True
+    import ctypes
+    from ctypes import wintypes
+
+    k = ctypes.WinDLL("kernel32", use_last_error=True)
+    k.OpenProcess.restype = wintypes.HANDLE
+    h = k.OpenProcess(0x1000 | 0x0001, False, pid)  # PROCESS_QUERY_LIMITED_INFORMATION | PROCESS_TERMINATE
+    if not h:
+        return False
+    try:
+        buf = ctypes.create_unicode_buffer(1024)
+        tam = wintypes.DWORD(1024)
+        if not k.QueryFullProcessImageNameW(h, 0, buf, ctypes.byref(tam)):
+            return False
+        imagem = Path(buf.value)
+        criado, saiu, nucleo, usuario = (wintypes.FILETIME() for _ in range(4))
+        if not k.GetProcessTimes(h, ctypes.byref(criado), ctypes.byref(saiu), ctypes.byref(nucleo), ctypes.byref(usuario)):
+            return False
+        inicio = ((criado.dwHighDateTime << 32) | criado.dwLowDateTime) / 10_000_000 - 11644473600
+        if abs(inicio - inicio_esperado) > 1 or not imagem.stem.lower().startswith("python") or not _dentro(imagem, local):
+            return False
+        return bool(k.TerminateProcess(h, 1))
+    finally:
+        k.CloseHandle(h)
 
 
 def encerrar_api_orfa(local: Path, inicio: int) -> list[int]:
-    """Uma API (python) DESTA instalação (.exe dentro de `local`) ficou órfã escutando perto da porta da Lite: encerra. Porta ocupada por
-    qualquer outro programa não é tocada (devolve a porta, só para avisar)."""
+    """Uma API ÓRFÃ desta instalação ficou escutando perto da porta da Lite: encerra. Só mata se TUDO bater: escuta exatamente em
+    127.0.0.1, é python de dentro de `local`, a linha de comando é da API (labflow_api.main:app) e o pai dela está morto.
+    Qualquer outra coisa (inclusive a API de uma Lite viva) não é tocada: a porta é devolvida só para avisar."""
     de_outros: list[int] = []
     for porta in range(inicio, inicio + 10):
         if not conecta("127.0.0.1", porta, 0.5):
             continue
         pid = pid_que_escuta(porta)
-        imagem = imagem_do_processo(pid) if pid else None
-        if imagem is not None and imagem.stem.lower().startswith("python") and _dentro(imagem, local):
-            log(f"Sobrou um app (API) de uma abertura anterior na porta {porta} (PID {pid}). Encerrando antes de abrir...")
-            with contextlib.suppress(Exception):
-                matar_processo(pid)
-            for _ in range(20):
-                if not conecta("127.0.0.1", porta, 0.3):
-                    break
-                time.sleep(0.25)
-        elif pid:
+        if not pid:
+            continue
+        inicio_do_pid = inicio_do_processo(pid)
+        imagem = imagem_do_processo(pid)
+        info = info_do_processo(pid)
+        nosso = (
+            imagem is not None and imagem.stem.lower().startswith("python") and _dentro(imagem, local)
+            and info is not None and "labflow_api.main:app" in info[0] and pai_morto(info[1], inicio_do_pid)
+        )
+        if not nosso:
             de_outros.append(porta)
+            continue
+        log(f"Sobrou um app (API) órfão de uma abertura anterior na porta {porta} (PID {pid}). Encerrando antes de abrir...")
+        with contextlib.suppress(Exception):
+            terminar_processo_conferido(pid, local, inicio_do_pid)
+        for _ in range(20):
+            if not conecta("127.0.0.1", porta, 0.3):
+                break
+            time.sleep(0.25)
     return de_outros
 
 

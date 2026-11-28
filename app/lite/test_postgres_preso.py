@@ -251,25 +251,84 @@ def test_job_object_aceita_o_filho():
         filho.kill()
 
 
-def test_api_orfa_da_propria_instalacao_e_encerrada_e_de_outro_dono_nao(tmp_path, monkeypatch):
+def _cenario_orfa(tmp_path, monkeypatch, *, imagem, cmd, pai_vivo, pid_na_porta=111):
     local = tmp_path / "LabFlowLite"
-    mortos, no_ar = [], {8000: 111, 8001: 222}
+    no_ar = {8000: pid_na_porta}
+    mortos = []
     monkeypatch.setattr(lite, "conecta", lambda h, porta, espera=3.0: porta in no_ar)
     monkeypatch.setattr(lite, "pid_que_escuta", lambda porta: no_ar.get(porta))
-    imagens = {111: local / "p-abc1234" / "python" / "python.exe", 222: tmp_path / "Outro" / "python.exe"}
-    monkeypatch.setattr(lite, "imagem_do_processo", lambda pid: imagens.get(pid))
+    monkeypatch.setattr(lite, "imagem_do_processo", lambda pid: {pid_na_porta: imagem(local), 7: local / "python.exe" if pai_vivo else None}.get(pid))
+    monkeypatch.setattr(lite, "inicio_do_processo", lambda pid: {pid_na_porta: 1000.0, 7: 500.0}.get(pid))
+    monkeypatch.setattr(lite, "info_do_processo", lambda pid: (cmd, 7))
 
-    def matar(pid):
-        mortos.append(pid)
-        for porta, p in list(no_ar.items()):
-            if p == pid:
-                del no_ar[porta]
+    def terminar(pid, loc, inicio):
+        mortos.append((pid, inicio))
+        no_ar.clear()
+        return True
 
-    monkeypatch.setattr(lite, "matar_processo", matar)
+    monkeypatch.setattr(lite, "terminar_processo_conferido", terminar)
     monkeypatch.setattr(lite.time, "sleep", lambda *_: None)
-    de_outros = lite.encerrar_api_orfa(local, 8000)
-    assert mortos == [111]  # só a da própria instalação
-    assert de_outros == [8001]  # a outra não foi tocada
+    return local, mortos
+
+
+API = "python -c <vigia> labflow_api.main:app --host 127.0.0.1 --port 8000"
+
+
+def test_api_orfa_nossa_com_pai_morto_e_encerrada(tmp_path, monkeypatch):
+    local, mortos = _cenario_orfa(tmp_path, monkeypatch, imagem=lambda l: l / "p-abc1234" / "python.exe", cmd=API, pai_vivo=False)
+    assert lite.encerrar_api_orfa(local, 8000) == [] and mortos == [(111, 1000.0)]
+
+
+def test_api_de_lite_viva_pai_vivo_nao_e_tocada(tmp_path, monkeypatch):
+    local, mortos = _cenario_orfa(tmp_path, monkeypatch, imagem=lambda l: l / "p-abc1234" / "python.exe", cmd=API, pai_vivo=True)
+    assert lite.encerrar_api_orfa(local, 8000) == [8000] and mortos == []
+
+
+def test_python_nosso_sem_ser_a_api_ou_de_fora_da_pasta_nao_e_tocado(tmp_path, monkeypatch):
+    local, mortos = _cenario_orfa(tmp_path, monkeypatch, imagem=lambda l: l / "python.exe", cmd="python meu_script.py", pai_vivo=False)
+    assert lite.encerrar_api_orfa(local, 8000) == [8000] and mortos == []
+    local, mortos = _cenario_orfa(tmp_path, monkeypatch, imagem=lambda l: tmp_path / "Outro" / "python.exe", cmd=API, pai_vivo=False)
+    assert lite.encerrar_api_orfa(local, 8000) == [8000] and mortos == []
+
+
+def test_pai_com_pid_reaproveitado_conta_como_morto(monkeypatch):
+    monkeypatch.setattr(lite, "imagem_do_processo", lambda pid: Path("x.exe"))
+    monkeypatch.setattr(lite, "inicio_do_processo", lambda pid: 2000.0)  # o "pai" começou depois do filho
+    assert lite.pai_morto(7, 1000.0) is True
+    monkeypatch.setattr(lite, "inicio_do_processo", lambda pid: 500.0)
+    assert lite.pai_morto(7, 1000.0) is False
+
+
+def test_netstat_so_aceita_127_0_0_1_exato(monkeypatch):
+    saida = ("  TCP    0.0.0.0:8000           0.0.0.0:0              LISTENING       11\n"
+             "  TCP    [::]:8000              [::]:0                 LISTENING       12\n"
+             "  TCP    127.0.0.1:18000        0.0.0.0:0              LISTENING       13\n"
+             "  TCP    127.0.0.1:8000         0.0.0.0:0              LISTENING       14\n")
+    monkeypatch.setattr(lite, "EH_WINDOWS", True)
+    monkeypatch.setattr(lite.subprocess, "run", lambda cmd, **kw: subprocess.CompletedProcess(cmd, 0, saida, ""))
+    assert lite.pid_que_escuta(8000) == 14
+    monkeypatch.setattr(lite.subprocess, "run", lambda cmd, **kw: subprocess.CompletedProcess(cmd, 0, saida.replace("127.0.0.1:8000", "0.0.0.0:9999"), ""))
+    assert lite.pid_que_escuta(8000) is None  # 0.0.0.0:8000 e [::]:8000 não valem
+    chamado = []
+    monkeypatch.setattr(lite.subprocess, "run", lambda cmd, **kw: chamado.append(cmd) or subprocess.CompletedProcess(cmd, 0, "", ""))
+    lite.pid_que_escuta(8000)
+    assert chamado[0][0].lower().endswith("system32\\netstat.exe") or chamado[0][0].lower().endswith("system32/netstat.exe")
+
+
+def test_terminar_processo_confere_imagem_e_inicio_no_mesmo_handle(tmp_path):
+    filho = subprocess.Popen([sys.executable, "-c", "import time; time.sleep(60)"])  # PID criado aqui
+    try:
+        time.sleep(1)
+        inicio = lite.inicio_do_processo(filho.pid)
+        local = Path(sys.executable).resolve().parent
+        assert lite.terminar_processo_conferido(filho.pid, local, inicio + 100) is False  # início não bate (PID reaproveitado)
+        assert lite.terminar_processo_conferido(filho.pid, tmp_path, inicio) is False  # fora da pasta da Lite
+        assert filho.poll() is None
+        assert lite.terminar_processo_conferido(filho.pid, local, inicio) is True
+        filho.wait(timeout=10)
+    finally:
+        if filho.poll() is None:
+            filho.kill()
 
 
 def _servidor_falso(tmp_path, monkeypatch, tempo):
