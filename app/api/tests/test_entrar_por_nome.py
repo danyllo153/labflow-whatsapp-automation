@@ -1,46 +1,8 @@
 """Lite sem senha (27/11): entrar pelo nome, o Admin que some, todos iguais; a Completa continua com senha."""
 
 import pytest
-from fastapi.testclient import TestClient
 
 SENHA = "Senha-de-teste-1"
-
-
-@pytest.fixture
-def lite(monkeypatch):
-    monkeypatch.setenv("LABFLOW_LITE", "1")
-    monkeypatch.setenv("LABFLOW_COOKIE_SEGURO", "0")  # a Lite fala HTTP em 127.0.0.1
-    monkeypatch.setenv("LABFLOW_BIND_HOST", "127.0.0.1")  # o app só sobe no modo Lite se escutar em loopback
-
-
-@pytest.fixture
-def cliente_lite(conexao, lite):
-    """Cliente da Lite: Host e IP de quem chama em loopback (o middleware do modo Lite confere), mesma transação do teste."""
-    from labflow_api.dependencias import obter_conexao
-    from labflow_api.main import app
-
-    def conexao_do_teste():
-        conexao.execute("SET ROLE labflow_app_web")
-        try:
-            yield conexao
-        finally:
-            conexao.execute("RESET ROLE")
-
-    app.dependency_overrides[obter_conexao] = conexao_do_teste
-    try:
-        yield TestClient(app, base_url="http://127.0.0.1:8000", client=("127.0.0.1", 50000))
-    finally:
-        app.dependency_overrides.clear()
-
-
-@pytest.fixture
-def registro_inicial(conexao):
-    """O que a Lite deixa pronto: o registro que era o Admin (nome "Administrador"), sem ninguém tê-lo assumido."""
-    uid = conexao.execute(
-        "INSERT INTO usuarios (telefone, nome, cargo) VALUES ('5500000000001', 'Administrador', 'Admin') RETURNING id"
-    ).fetchone()[0]
-    conexao.execute("INSERT INTO app.credenciais (usuario_id, usuario, trocar_senha) VALUES (%s, 'admin', false)", (uid,))
-    return uid
 
 
 def nomes(c):
