@@ -1,5 +1,5 @@
 # Gera o "Abrir LabFlow.exe": autoextraivel (SFX) do WinRAR com o programa do LabFlow Lite (a pasta instalacao\ do pacote).
-# Dois cliques no .exe, na pasta de rede: extrai NO PC (%LOCALAPPDATA%\LabFlowLite\programa-<versao>), cria o atalho "LabFlow" na area de
+# Dois cliques no .exe, na pasta de rede: extrai NO PC (%LOCALAPPDATA%\LabFlowLite\p-<hash da versao>), cria o atalho "LabFlow" na area de
 # trabalho e abre o LabFlow. Nas proximas vezes o atalho abre direto; se o .exe da rede mudar, o atalho roda o .exe novo e atualiza sozinho.
 # NAO pede administrador (o modulo Default.SFX do WinRAR roda como o usuario: manifesto asInvoker). A pasta dados\ nunca entra no .exe.
 # Precisa do WinRAR instalado SO no PC que gera o .exe; quem abre o .exe nao precisa de nada.
@@ -33,6 +33,7 @@ if (Test-Path -LiteralPath $Saida) { Remove-Item -LiteralPath $Saida -Force }
 
 $versao = (Get-Content -LiteralPath (Join-Path $inst "VERSAO.txt") -TotalCount 1).Trim()
 if ($versao -notmatch '^[A-Za-z0-9._-]+$') { throw "Versao com caracteres invalidos: $versao" }
+$hash = ([BitConverter]::ToString([Security.Cryptography.SHA256]::Create().ComputeHash([Text.Encoding]::ASCII.GetBytes($versao))) -replace '-', '').Substring(0, 7).ToLower()
 $tmp = Join-Path ([IO.Path]::GetTempPath()) ("lite-exe-" + [guid]::NewGuid().ToString("N"))
 New-Item -ItemType Directory -Force $tmp | Out-Null
 
@@ -61,13 +62,13 @@ $bw.Write($png)
 $bw.Close()
 Copy-Item $ico (Join-Path $inst "lite\labflow.ico") -Force  # o atalho usa este icone (fica dentro do programa extraido)
 
-# Comandos do SFX: sfx.txt com a versao no lugar de {{VERSAO}} (o caminho de extracao e fixo na montagem, nada vem do usuario)
+# Comandos do SFX: sfx.txt com o hash curto da versao (7 caracteres) no lugar de {{HASH}}: caminho curto, o Windows limita ~260 (o caminho de extracao e fixo na montagem, nada vem do usuario)
 $sfx = Join-Path $tmp "sfx.txt"
-$texto = (Get-Content -Raw (Join-Path $PSScriptRoot "sfx.txt")) -replace '\{\{VERSAO\}\}', $versao
+$texto = (Get-Content -Raw (Join-Path $PSScriptRoot "sfx.txt")) -replace '\{\{HASH\}\}', $hash
 if ($Silencioso) { $texto = $texto -replace '(?m)^Silent=1', 'Silent=2' }
 [IO.File]::WriteAllText($sfx, $texto, [Text.Encoding]::ASCII)
 
-Write-Host "Gerando $Saida (versao $versao)..."
+Write-Host "Gerando $Saida (versao $versao, pasta p-$hash)..."
 # -sfx: modulo padrao (janela de progresso, 64 bits, sem administrador); -ep1: guarda a partir de instalacao\; nunca leva dados\, logs, pgdata, dumps nem .env
 Push-Location $inst
 try {

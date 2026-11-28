@@ -44,7 +44,7 @@ def test_registro_de_outra_pasta_de_rede_e_ignorado(tmp_path):
 
 def test_limpeza_apaga_so_programas_velhos_e_nunca_dados(tmp_path):
     local = tmp_path / "LabFlowLite"
-    atual, velho, antigo = local / "programa-novo", local / "programa-velho", local / "programa"
+    atual, velho, antigo = local / "p-abc1234", local / "programa-velho", local / "programa"
     for p in (atual, velho, antigo, local / "data", local / "marca"):
         p.mkdir(parents=True)
         (p / "arq.txt").write_text("x")
@@ -60,7 +60,7 @@ def test_limpeza_apaga_so_programas_velhos_e_nunca_dados(tmp_path):
 
 def test_limpeza_deixa_pasta_em_uso(tmp_path, monkeypatch):
     local = tmp_path / "LabFlowLite"
-    atual, velho = local / "programa-novo", local / "programa-velho"
+    atual, velho = local / "p-abc1234", local / "programa-velho"
     for p in (atual, velho):
         p.mkdir(parents=True)
     real = os.rename
@@ -80,7 +80,7 @@ def test_instalacao_grava_registro_e_marca_de_pronto(tmp_path, monkeypatch):
     local.mkdir(), raiz.mkdir()
     exe = raiz / lite.EXE_REDE
     exe.write_bytes(b"exe")
-    programa = tmp_path / "local" / "programa-t"
+    programa = tmp_path / "local" / "p-abc1234"
     programa.mkdir()
     chamadas = []
     monkeypatch.setattr(lite, "INST", programa)
@@ -97,13 +97,13 @@ def test_instalacao_grava_registro_e_marca_de_pronto(tmp_path, monkeypatch):
 def test_sfx_sem_administrador_e_so_na_pasta_do_usuario():
     sfx = (AQUI / "sfx.txt").read_text(encoding="ascii")
     comandos = "\n".join(l for l in sfx.splitlines() if not l.startswith(";"))
-    assert r"Path=%LOCALAPPDATA%\LabFlowLite\programa-{{VERSAO}}" in comandos.splitlines()
+    assert r"Path=%LOCALAPPDATA%\LabFlowLite\p-{{HASH}}" in comandos.splitlines()
     for proibido in ("RequireAdmin", "ProgramFiles", "HKLM", "reg add", "sc create", "netsh", "-ExecutionPolicy", "Bypass", ".vbs", "dados"):
         assert proibido.lower() not in comandos.lower().replace("pronto.txt", ""), proibido
     assert "pythonw.exe" in comandos and "--instalado-por" in comandos  # sem janela preta
     # o Presetup só mexe na pasta DESTA versão (nenhuma variável vinda do usuário além do %LOCALAPPDATA% do Windows)
     presetup = next(l for l in comandos.splitlines() if l.startswith("Presetup="))
-    assert presetup.count("programa-{{VERSAO}}") == 3 and "pronto.txt" in presetup and "labflow" not in presetup.replace("LabFlowLite", "").lower()
+    assert presetup.count("p-{{HASH}}") == 3 and "pronto.txt" in presetup and "labflow" not in presetup.replace("LabFlowLite", "").lower()
 
 
 def test_montar_exe_nao_leva_dados_nem_pede_bypass():
@@ -120,3 +120,36 @@ def test_argumentos_do_atalho_com_exe_na_raiz_da_unidade():
     com_barra = lite.argumentos_do_atalho(script, Path("G:" + chr(92)))
     assert com_barra.endswith("G:" + chr(92) + '." --oculto'), com_barra  # a aspa final nao pode ser escapada pela barra
     assert com_barra.count('"') == 4 and (chr(92) + '"') not in com_barra
+
+
+def test_caminho_mais_longo_e_limite(tmp_path):
+    programa = tmp_path / "p-abc1234"
+    fundo = programa / "postgres" / "bin"
+    fundo.mkdir(parents=True)
+    (fundo / "libpq.dll").write_text("x")
+    (programa / "a.txt").write_text("x")
+    tamanho, quem = lite.caminho_mais_longo(programa)
+    assert quem == fundo / "libpq.dll" and tamanho == len(str(fundo / "libpq.dll"))
+    assert lite.checar_caminho(programa) is None  # curto: segue
+
+
+def test_caminho_longo_gera_mensagem_clara(tmp_path, monkeypatch):
+    programa = tmp_path / "p-abc1234"
+    (programa / "bin").mkdir(parents=True)
+    (programa / "bin" / "libpq.dll").write_text("x")
+    monkeypatch.setattr(lite, "LIMITE_CAMINHO", 10)
+    msg = lite.checar_caminho(programa)
+    assert msg and "longo demais" in msg and "TI" in msg and str(programa) in msg and "260" in msg
+
+
+def test_nome_da_pasta_do_programa_so_aceita_hash_curto():
+    assert lite.NOME_PROGRAMA.match("p-0a1b2c3") and not lite.NOME_PROGRAMA.match("p-../x") and not lite.NOME_PROGRAMA.match("p-0a1b2c3d")
+
+
+def test_limpeza_nao_toca_pasta_fora_do_padrao(tmp_path):
+    local = tmp_path / "LabFlowLite"
+    atual, estranha = local / "p-abc1234", local / "p-dados"
+    for p in (atual, estranha):
+        p.mkdir(parents=True)
+    lite.limpar_programas_antigos(local, atual)
+    assert estranha.exists()

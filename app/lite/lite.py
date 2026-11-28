@@ -10,7 +10,7 @@ Como funciona (spec: docs/specs/lims/12-versao-lite.md):
 
 Uso (o atalho "LabFlow" da área de trabalho chama, com pythonw):
   pythonw lite.py --raiz <pasta de rede> --oculto [--sem-navegador] [--porta 8000] [--local <pasta>]
-O "Abrir LabFlow.exe" (autoextraível, spec 12) extrai o programa em %LOCALAPPDATA%\\LabFlowLite\\programa-<versão> e chama
+O "Abrir LabFlow.exe" (autoextraível, spec 12) extrai o programa em %LOCALAPPDATA%\\LabFlowLite\\p-<hash curto da versão> e chama
   pythonw lite.py --instalado-por <caminho do .exe>   (a pasta de rede é a pasta do .exe)
 Isso grava instalado.json, cria o atalho e apaga programas antigos; depois abre o LabFlow. Ao abrir pelo atalho, se o .exe da
 rede mudou (outro tamanho ou data), o atalho roda o .exe novo, que atualiza sozinho.
@@ -968,6 +968,27 @@ EXE_REDE = "Abrir LabFlow.exe"  # fica na pasta de rede, ao lado de "dados"
 REGISTRO = "instalado.json"  # no LOCAL: qual programa está instalado e como era o .exe da rede quando instalou
 
 
+NOME_PROGRAMA = re.compile(r"^p-[0-9a-f]{7}$")  # pasta do programa extraído pelo .exe (hash curto da versão)
+LIMITE_CAMINHO = 240  # o Windows limita ~260 caracteres por caminho (DLL do libpq falhou com 250)
+
+
+def caminho_mais_longo(programa: Path) -> tuple[int, Path | None]:
+    """(tamanho, arquivo) do caminho mais comprido dentro do programa extraído."""
+    maior, quem = 0, None
+    for pasta, _dirs, arquivos in os.walk(programa):
+        for nome in arquivos:
+            tamanho = len(pasta) + 1 + len(nome)
+            if tamanho > maior:
+                maior, quem = tamanho, Path(pasta) / nome
+    return maior, quem
+
+
+def mensagem_caminho_longo(tamanho: int, programa: Path) -> str:
+    return (f"O LabFlow não pode abrir neste usuário do Windows: o caminho da pasta onde ele é instalado é longo demais "
+            f"({tamanho} caracteres; o Windows aceita até cerca de 260).\n\nPasta: {programa}\n\n"
+            "Peça à TI para encurtar o perfil do usuário ou liberar caminhos longos. Nada foi alterado na pasta de rede.")
+
+
 def assinatura_do_exe(exe: Path) -> str | None:
     """Tamanho e data do .exe da rede: se mudou, há versão nova (ou voltou uma antiga). Uma única leitura de metadados."""
     try:
@@ -1034,7 +1055,7 @@ def criar_atalho(programa: Path, raiz: Path) -> bool:
 def limpar_programas_antigos(local: Path, atual: Path) -> None:
     """Apaga os programas de versões anteriores deste PC (programa-*, e o programa\\ do jeito antigo). Só o que não está em uso:
     a pasta primeiro é RENOMEADA (o Windows recusa se algum arquivo dela estiver aberto) e então apagada. Nunca mexe em dados."""
-    for pasta in [*local.glob("programa-*"), local / "programa"]:
+    for pasta in [*(d for d in local.glob("p-*") if NOME_PROGRAMA.match(d.name)), *local.glob("programa-*"), local / "programa"]:
         if not pasta.is_dir() or pasta.resolve() == atual.resolve():
             continue
         alvo = pasta.with_name(f"apagar-{pasta.name}-{os.getpid()}")
@@ -1043,6 +1064,12 @@ def limpar_programas_antigos(local: Path, atual: Path) -> None:
         except OSError:
             continue  # em uso (LabFlow antigo ainda aberto): fica para a próxima vez
         shutil.rmtree(alvo, ignore_errors=True)
+
+
+def checar_caminho(programa: Path) -> str | None:
+    """Mensagem em português se algum arquivo do programa passa do limite de caminho; senão None."""
+    tamanho, _quem = caminho_mais_longo(programa)
+    return mensagem_caminho_longo(tamanho, programa) if tamanho > LIMITE_CAMINHO else None
 
 
 def registrar_instalacao(exe: Path, local: Path) -> None:
@@ -1112,6 +1139,11 @@ def main() -> int:
 
     print(f"LabFlow Lite {PROGRAMA_VERSAO}")
     if exe_instalador is not None:
+        problema = checar_caminho(INST)
+        if problema:
+            log(problema)
+            avisar("LabFlow: não foi possível abrir", problema, erro=True, esperar=True)
+            return 1
         registrar_instalacao(exe_instalador, LOCAL)
     else:
         novo_exe = exe_da_rede_mais_novo(LOCAL, Path(args.raiz))

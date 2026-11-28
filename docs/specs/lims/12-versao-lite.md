@@ -23,7 +23,7 @@
 `## Instalar e atualizar com um arquivo (28/11)
 `Pedido: "clicar só em Abrir LabFlow e já abrir, como um programa instalado, sem tela preta e sem burocracia".
 `- **Na pasta de rede ficam só `Abrir LabFlow.exe` e `dados\`.** O `.exe` é um autoextraível (SFX) do WinRAR com o programa inteiro (~1 arquivo, lido em sequência; o PostgreSQL não roda de pasta de rede, então o programa é extraído no PC).
-`- **Primeira vez em um PC (dois cliques no `.exe`):** extrai (alguns segundos, sem janela: o SFX roda com `Silent=1`, que no teste não mostrou progresso; o aviso "Preparando o LabFlow..." aparece ao terminar) em `%LOCALAPPDATA%\LabFlowLite\programa-<versão>`; o `lite.py` (rodado com `pythonw`, sem console) grava `instalado.json`, cria o atalho **LabFlow** na área de trabalho do usuário (com o ícone) e abre o LabFlow.
+`- **Primeira vez em um PC (dois cliques no `.exe`):** extrai (alguns segundos, sem janela: o SFX roda com `Silent=1`, que no teste não mostrou progresso; o aviso "Preparando o LabFlow..." aparece ao terminar) em `%LOCALAPPDATA%\LabFlowLite\p-<hash>`; o `lite.py` (rodado com `pythonw`, sem console) grava `instalado.json`, cria o atalho **LabFlow** na área de trabalho do usuário (com o ícone) e abre o LabFlow.
 `- **Depois:** abre-se pelo atalho (`pythonw lite.py --raiz <pasta de rede> --oculto`), sem copiar nada. Ao abrir, o `lite.py` compara tamanho e data do `.exe` da rede com os guardados em `instalado.json`; se mudaram (e o LabFlow não está aberto neste PC), roda o `.exe` novo, que mostra o aviso "Atualizando LabFlow...", instala em `programa-<versão nova>`, recria o atalho, apaga as pastas de programa velhas (só as que não estão em uso: a pasta é renomeada antes, e o Windows recusa se houver arquivo aberto) e abre. Rede fora do ar: abre o que já está instalado.
 `- **Atualizar = trocar UM arquivo** (o `.exe` novo por cima do antigo na pasta de rede), com o LabFlow encerrado em todos os PCs.
 `- **Sem administrador (decisão de 27/11):** o `.exe` roda como o usuário (módulo `Default.SFX`, manifesto `asInvoker`); só escreve em `%LOCALAPPDATA%` e na área de trabalho do usuário; nada de Program Files, registro, serviço ou firewall; sem `.bat`, `.vbs` nem `-ExecutionPolicy Bypass` no que o laboratório clica (o `PowerShell` escondido que cria o `.lnk` roda um comando, não um script). `dados\` nunca entra no `.exe` nem é tocada: o `Presetup` só apaga a pasta **desta versão** quando a extração anterior ficou pela metade (sem `pronto.txt`).
@@ -31,6 +31,7 @@
 `- **Gerar:** `montar.ps1` monta a pasta `LabFlow\instalacao`; `montar-exe.ps1 -Pacote <pasta LabFlow>` (precisa do WinRAR só no PC que gera) cria `Abrir LabFlow.exe` dentro dela. O `.exe` e o ícone (gerado na montagem) não vão para o Git.
 `- **Limite conhecido:** na primeira instalação, nos segundos da extração (até ~20 s com o antivírus lendo os arquivos) não há janela; só o cursor ocupado. Melhorar isso = o lançador do plano B, com barra de progresso.
 - **Permissão da pasta de rede:** só quem administra grava em `Abrir LabFlow.exe` e na pasta do LabFlow; quem grava ali pode trocar o programa que os PCs rodam. Os usuários precisam de leitura no `.exe` e escrita só em `dados\`.
+- **Caminho curto:** a pasta é `p-<7 caracteres do SHA-256 da versão>` porque o Windows limita ~260 caracteres por caminho (com um `%LOCALAPPDATA%` de 108 caracteres a DLL do libpq passava de 250 e não abria). Ao instalar, o `lite.py` mede o arquivo mais comprido; se passar de 240, mostra uma janela em português pedindo à TI para encurtar o perfil, em vez de falhar calado.
 - **Plano B** se o antivírus ou a política da empresa bloquear o `.exe` novo: lançador pequeno em C# compilado com o `csc.exe` que já vem no Windows, com o programa num `.zip` (mesmo ganho, mais código).
 `
 `### Texto de 1 página para o laboratório (vai no `LEIA-ME.txt` do pacote)
@@ -45,7 +46,7 @@
 `  LEIA-ME.txt
 `  dados\                      nunca apagar nem substituir
 `    labflow.dump  labflow.anterior.dump  labflow.info.json  servidor.json  backup\  recuperacao\  marca%LOCALAPPDATA%\LabFlowLite\   em cada PC
-`  programa-<versão>\ (python\ embutido + dependências, app\labflow_api\, web\, migrations\, postgres\ 17.12, lite\lite.py, VERSAO.txt)
+`  p-<hash>\ (python\ embutido + dependências, app\labflow_api\, web\, migrations\, postgres\ 17.12, lite\lite.py, VERSAO.txt)
 `  data\ (PostgreSQL do servidor)  instalado.json  estado.json  lite.log  api.log
 `área de trabalho do usuário: atalho "LabFlow"
 ````
