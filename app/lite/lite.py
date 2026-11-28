@@ -702,6 +702,7 @@ class Servidor:
         if atual is None or atual.get("dono") != self.token:
             return -1
         try:
+            (self.local / "parar.txt").unlink(missing_ok=True)  # pedido de Encerrar velho, de antes desta abertura
             do_zero = self.subir_banco()
             self.aplicar_migracoes(do_zero)
             self.pg.preparar_papeis()
@@ -762,7 +763,7 @@ class Servidor:
         if sys.stdin is not None and sys.stdin.isatty():
             threading.Thread(target=ler_enter, daemon=True).start()
         sinal = self.local / "parar.txt"
-        sinal.unlink(missing_ok=True)
+        # (nao apagar o parar.txt aqui: um pedido de Encerrar feito enquanto o app ainda terminava de abrir se perderia)
         while not self.parar.is_set():
             if sinal.exists():
                 sinal.unlink(missing_ok=True)
