@@ -34,6 +34,9 @@ $anterior = Join-Path $inst "VERSAO.txt"
 if ((Test-Path $anterior) -and ((Get-Content $anterior -TotalCount 1).Trim() -eq $Versao)) {
   throw "A versao $Versao e a mesma do pacote que ja esta em $Saida. Espere 1 minuto (ou mude algo) e monte de novo, para o PC perceber a atualizacao."
 }
+foreach ($pastaDados in (Join-Path $raiz "dados"), (Join-Path $Saida "dados")) {
+  if (Test-Path $pastaDados) { throw "Existe uma pasta de dados em ${pastaDados}: ela nunca e apagada. Use outra pasta de saida (vazia) ou mova a pasta dados antes." }
+}
 if (Test-Path $Saida) { Remove-Item -Recurse -Force $Saida }
 New-Item -ItemType Directory -Force $inst | Out-Null
 $tmp = Join-Path ([IO.Path]::GetTempPath()) ("lite-" + [guid]::NewGuid().ToString("N"))

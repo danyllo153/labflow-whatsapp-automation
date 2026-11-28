@@ -120,10 +120,10 @@
   <p class="suave">Precisa de: Windows 10 ou mais novo (64 bits), acesso de escrita na pasta do G:. <b>Não precisa</b> de administrador, de instalar programa, de Docker nem de internet.</p>
   <ol class="passos">
     <li><strong>Descompacte o zip no G:</strong>
-      Extraia em <span class="caminho">G:\Laboratorio\</span>. O zip já traz a pasta <code>LabFlow</code>; o resultado final é
-      <span class="caminho">G:\Laboratorio\LabFlow</span>.</li>
+      Extraia em <span class="caminho">X:\LabFlow\</span>. O zip já traz a pasta <code>LabFlow</code>; o resultado final é
+      <span class="caminho">X:\LabFlow</span>.</li>
     <li><strong>Escolha o PC de uso</strong>
-      O PC onde o LabFlow vai ficar aberto no dia a dia (Windows 10 ou 11). É nele que você abre o LabFlow primeiro.
+      O PC onde o LabFlow vai ficar aberto no dia a dia (Windows 10 ou 11). É nele que você abre o LabFlow primeiro.</li>
     <li><strong>Dê dois cliques em <code>Abrir LabFlow</code></strong>
       Na primeira vez ele se prepara (1 a 3 minutos). Se a TI bloquear o arquivo <code>.vbs</code>, use <code>Abrir LabFlow com janela</code> (o <code>.bat</code>), que faz o mesmo.</li>
     <li><strong>Anote a senha provisória</strong>
@@ -231,7 +231,7 @@
 O QUE É
 O mesmo app completo (API, telas e banco PostgreSQL) empacotado para Windows. Tem todas as funções do app, com usuários e cargos; cada pessoa tem o próprio login. NÃO tem bot de WhatsApp, celular nem assistente de IA nesta etapa.
 
-PASTA (G:\Laboratorio\LabFlow)
+PASTA (X:\LabFlow)
 - Abrir LabFlow.vbs / Abrir LabFlow com janela.bat: abrem o sistema (o .bat serve se o .vbs for bloqueado).
 - Fechar LabFlow.bat: grava tudo no G: e fecha o LabFlow deste PC.
 - Redefinir senha do Admin.bat: gera uma nova senha provisória (24 h) para o admin; só funciona com o LabFlow fechado em todos os PCs.
@@ -242,7 +242,7 @@ COMO FUNCIONA
 - O LabFlow abre num PC por vez: PostgreSQL e app rodam nesse PC, só em 127.0.0.1 (nunca na rede), com senha. Outro PC que tente abrir recebe o aviso de qual PC está com ele aberto e não se conecta. Um banco só, sem conflito.
 - Neste PC o LabFlow não pode suspender/hibernar, nem sair do usuário do Windows; troca de turno é só "Sair" no LabFlow.
 - O LabFlow grava uma cópia no G: a cada 60 s (se houve escrita), a cada 10 min mesmo sem escrita, e ao fechar. Se o PC cair, depois de ~1 minuto qualquer PC que abrir assume com os dados gravados (pode faltar no máximo o último minuto).
-- Primeira abertura em cada PC: janela preta (preparo de 1 a 3 min; no banco novo mostra o usuário "admin" e uma senha provisória de 24 h, que deve ser anotada). Depois abre oculto, com um ícone perto do relógio: Abrir o LabFlow, Endereço para os outros PCs, Encerrar o LabFlow (leva 10 a 30 s para gravar). A tela abre em tela cheia (F11 alterna; Alt+F4 fecha só a tela).
+- Primeira abertura em cada PC: janela preta (preparo de 1 a 3 min; no banco novo mostra o usuário "admin" e uma senha provisória de 24 h, que deve ser anotada). Depois abre oculto, com um ícone perto do relógio: Abrir o LabFlow, Endereço neste PC, Encerrar o LabFlow (leva 10 a 30 s para gravar). A tela abre em tela cheia (F11 alterna; Alt+F4 fecha só a tela).
 - Primeiro acesso: entrar como admin, trocar a senha e cadastrar as pessoas em Admin > Pessoas (telefone opcional). O navegador não deve salvar a senha (PC compartilhado).
 - Para a TI: nenhuma liberação de porta ou firewall (o LabFlow escuta só em 127.0.0.1, neste PC). Funciona um PC por vez.
 

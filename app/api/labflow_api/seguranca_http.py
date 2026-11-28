@@ -17,13 +17,13 @@ from labflow_api.rotas_admin import e_lite
 
 HOSTS_PERMITIDOS = frozenset({"localhost", "127.0.0.1"})
 ENDERECOS_LOOPBACK = frozenset({"127.0.0.1", "localhost", "::1"})
+CLIENTES_LOOPBACK = frozenset({"127.0.0.1", "::1", "testclient"})  # IP de quem se conecta; "testclient" é o do TestClient do Starlette
 METODOS_QUE_ALTERAM = frozenset({"POST", "PUT", "PATCH", "DELETE"})
 
 
 def hosts_permitidos() -> frozenset[str]:
-    """localhost e 127.0.0.1; LABFLOW_HOSTS_EXTRA (separados por vírgula) existe só para os testes."""
-    extra = {h.strip().lower() for h in os.environ.get("LABFLOW_HOSTS_EXTRA", "").split(",") if h.strip()}
-    return HOSTS_PERMITIDOS | extra
+    """Só localhost e 127.0.0.1. Nenhuma variável de ambiente alarga a lista (os testes ajustam HOSTS_PERMITIDOS com monkeypatch)."""
+    return HOSTS_PERMITIDOS
 
 
 def exigir_loopback_no_modo_lite(ambiente: dict | None = None) -> None:
@@ -75,6 +75,9 @@ def ligar(app: FastAPI) -> None:
             host = _nome_do_host(request.headers.get("host", ""))
         except ValueError:
             host = ""
+        cliente = request.client.host if request.client else ""
+        if cliente not in CLIENTES_LOOPBACK:  # defesa em profundidade: mesmo se algo escutar fora do loopback
+            return _recusa(403, "Acesso só neste PC.")
         if host not in hosts_permitidos():
             return _recusa(400, "Endereço não permitido.")
         if request.method in METODOS_QUE_ALTERAM:
