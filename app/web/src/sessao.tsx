@@ -14,7 +14,11 @@ export interface Pessoa {
 interface Sessao {
   pessoa: Pessoa | null;
   carregando: boolean;
+  /** LabFlow Lite (um PC só, sem senha, sem celular): GET /ambiente. Na Completa é false. */
+  lite: boolean;
   entrar: (usuario: string, senha: string) => Promise<void>;
+  entrarPorNome: (usuario: string) => Promise<void>; // Lite: quem abre toca no próprio nome
+  entrarComoNovo: (nome: string) => Promise<void>; // Lite: "Sou novo aqui" (na 1ª abertura assume o registro do Admin)
   sair: () => Promise<void>;
   trocarSenha: (novaSenha: string, senhaAtual?: string) => Promise<void>;
 }
@@ -24,8 +28,14 @@ const Contexto = createContext<Sessao | null>(null);
 export function ProvedorDeSessao({ children }: { children: ReactNode }) {
   const [pessoa, setPessoa] = useState<Pessoa | null>(null);
   const [carregando, setCarregando] = useState(true);
+  const [lite, setLite] = useState(false);
+  const [ambientePronto, setAmbientePronto] = useState(false);
 
   useEffect(() => {
+    lerJson<{ lite?: boolean }>("/ambiente")
+      .then((a) => setLite(!!a.lite))
+      .catch(() => setLite(false))
+      .finally(() => setAmbientePronto(true));
     lerJson<Pessoa>("/me")
       .then(setPessoa)
       .catch(() => setPessoa(null))
@@ -37,6 +47,14 @@ export function ProvedorDeSessao({ children }: { children: ReactNode }) {
 
   const entrar = useCallback(async (usuario: string, senha: string) => {
     setPessoa(await enviarJson<Pessoa>("/login", { usuario, senha }));
+  }, []);
+
+  const entrarPorNome = useCallback(async (usuario: string) => {
+    setPessoa(await enviarJson<Pessoa>("/entrar/por-nome", { usuario }));
+  }, []);
+
+  const entrarComoNovo = useCallback(async (nome: string) => {
+    setPessoa(await enviarJson<Pessoa>("/entrar/novo", { nome }));
   }, []);
 
   const sair = useCallback(async () => {
@@ -53,7 +71,11 @@ export function ProvedorDeSessao({ children }: { children: ReactNode }) {
     setPessoa(await lerJson<Pessoa>("/me"));
   }, []);
 
-  return <Contexto.Provider value={{ pessoa, carregando, entrar, sair, trocarSenha }}>{children}</Contexto.Provider>;
+  return (
+    <Contexto.Provider value={{ pessoa, carregando: carregando || !ambientePronto, lite, entrar, entrarPorNome, entrarComoNovo, sair, trocarSenha }}>
+      {children}
+    </Contexto.Provider>
+  );
 }
 
 export function useSessao(): Sessao {

@@ -14,6 +14,8 @@ from pathlib import Path
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse, RedirectResponse, Response
 
+from labflow_api.dependencias import e_lite
+
 roteador = APIRouter(include_in_schema=False)
 
 PASTA_PADRAO = Path(__file__).resolve().parent.parent / "web"
@@ -71,8 +73,21 @@ def app_sem_barra() -> RedirectResponse:
     return RedirectResponse("/app/")
 
 
+# Lite (27/11): atende só o próprio PC, então não há "instalar como app" nem service worker (celular não acessa).
+SO_NA_COMPLETA = {"manifest.webmanifest", "sw.js"}
+LINHAS_DE_APP_INSTALAVEL = ('rel="manifest"', 'rel="apple-touch-icon"')
+
+
+def _indice_da_lite(indice: Path) -> Response:
+    linhas = indice.read_text(encoding="utf-8").splitlines()
+    html = "\n".join(l for l in linhas if not any(marca in l for marca in LINHAS_DE_APP_INSTALAVEL))
+    return Response(html, media_type="text/html; charset=utf-8", headers={"Cache-Control": "no-cache", "X-Content-Type-Options": "nosniff"})
+
+
 @roteador.get("/app/{caminho:path}")
 def telas(caminho: str) -> Response:
+    if e_lite() and caminho in SO_NA_COMPLETA:
+        raise HTTPException(404, "Arquivo não encontrado.")
     da_marca = _icone_da_marca(caminho)
     if da_marca is not None:
         return da_marca
@@ -82,7 +97,7 @@ def telas(caminho: str) -> Response:
         raise HTTPException(404, "As telas do app não estão nesta instalação (pasta app/web/dist).")
     pedido = (pasta / caminho).resolve()
     if caminho and pedido.is_relative_to(pasta) and pedido.is_file():
-        return _arquivo(pedido, pasta)
+        return _indice_da_lite(pedido) if e_lite() and pedido == indice else _arquivo(pedido, pasta)
     if caminho.startswith("assets/"):
         raise HTTPException(404, "Arquivo não encontrado.")
-    return _arquivo(indice, pasta)
+    return _indice_da_lite(indice) if e_lite() else _arquivo(indice, pasta)

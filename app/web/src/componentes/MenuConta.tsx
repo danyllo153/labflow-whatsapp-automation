@@ -11,13 +11,13 @@ import Icone from "./Icone";
  * (aparência e senha, em Minha conta); o avatar com as iniciais (24/10) abre um menu com quem está logada, o cargo, trocar senha e sair.
  */
 export default function MenuConta() {
-  const { pessoa, sair } = useSessao();
+  const { pessoa, sair, lite } = useSessao();
   const [aberto, setAberto] = useState(false);
   const raiz = useRef<HTMLDivElement>(null);
   const local = useLocation();
   const nome = pessoa?.nome || pessoa?.usuario;
   // no celular a barra de baixo tem só os 5 fixos: as outras telas ficam aqui (no computador estão no menu lateral)
-  const outras = MENU.filter(
+  const outras = lite ? [] : MENU.filter( // na Lite não há celular: nada de itens "só no celular"
     (item) =>
       item.soNoMenuLateral &&
       (!item.pode || pessoa?.pode.includes(item.pode)) &&
@@ -61,22 +61,26 @@ export default function MenuConta() {
       {aberto && (
         <div className="menu-conta" role="menu" aria-label="Conta">
           <div className="menu-conta-nome">{nome}</div>
-          <div className="texto-secundario">
-            {pessoa?.usuario} · {nomeDoCargo(pessoa?.cargo)}
-          </div>
+          {!lite && (
+            <div className="texto-secundario">
+              {pessoa?.usuario} · {nomeDoCargo(pessoa?.cargo)}
+            </div>
+          )}
           <Link to="/conta" role="menuitem">
             Minha conta
           </Link>
-          <Link to="/conta/senha" role="menuitem">
-            Trocar senha
-          </Link>
+          {!lite && (
+            <Link to="/conta/senha" role="menuitem">
+              Trocar senha
+            </Link>
+          )}
           {outras.map((item) => (
             <Link key={item.caminho} to={item.caminho} role="menuitem" className="so-celular">
               {item.rotulo}
             </Link>
           ))}
           <button type="button" role="menuitem" onClick={() => void sair()}>
-            Sair
+            {lite ? "Trocar de pessoa" : "Sair"}
           </button>
         </div>
       )}
