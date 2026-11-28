@@ -6,8 +6,8 @@
 import type { Coluna } from "./definicoes";
 
 /** O que a célula de uma análise mostra: o resultado, ou "Pendente · dd/mm" com a leitura prevista. */
-export type Estado = "para_ler" | "em_analise" | "resultado";
-export const ROTULO_DO_ESTADO: Record<Estado, string> = { para_ler: "Para ler", em_analise: "Em análise", resultado: "" };
+export type Estado = "para_ler" | "em_analise" | "atrasado" | "resultado";
+export const ROTULO_DO_ESTADO: Record<Estado, string> = { para_ler: "Para ler", em_analise: "Em análise", atrasado: "Atrasado", resultado: "" };
 
 /** Uma etapa dentro da célula (Pré-leitura, Leitura final, D5...): o estado e o texto que a tela mostra. */
 export interface ParteDaCelula {
@@ -26,10 +26,10 @@ export interface CelulaDeAnalise {
   partes?: ParteDaCelula[];
 }
 
-/** Ainda não chegou a hora de ler = "Para ler"; já está na hora (vence hoje ou atrasada) = "Em análise". */
+/** Ainda não chegou a hora de ler = "Para ler"; vence hoje = "Em análise"; passou do prazo = "Atrasado". */
 export function estadoDaSituacao(situacao: unknown): Estado {
   const s = texto(situacao);
-  return s === "Vence hoje" || s === "Atrasado" ? "em_analise" : "para_ler";
+  return s === "Atrasado" ? "atrasado" : s === "Vence hoje" ? "em_analise" : "para_ler";
 }
 
 export type LinhaDaTabela = Record<string, unknown>;
@@ -80,6 +80,11 @@ interface GrupoTanque {
 }
 
 /** A célula de uma análise: pré-leitura e leitura final juntas (sem duplicar a linha). */
+function pior_estado(estados: Estado[]): Estado {
+  for (const e of ["atrasado", "em_analise", "para_ler"] as const) if (estados.includes(e)) return e;
+  return "resultado";
+}
+
 export function celulaDeTanque(itens: LinhaDaTabela[]): CelulaDeAnalise {
   const lido = (l: LinhaDaTabela) => l.situacao === "Lido" || l.resultado === "Ok" || l.resultado === "Não ok";
   const etapas = [...new Set(itens.map((l) => texto(l.etapa)))];
@@ -88,7 +93,7 @@ export function celulaDeTanque(itens: LinhaDaTabela[]): CelulaDeAnalise {
     .sort((a, b) => ordem(a) - ordem(b))
     .map((etapa) => {
       const dela = itens.filter((l) => texto(l.etapa) === etapa);
-      // pendente: "Para ler · dd/mm" (ainda não chegou a hora) ou "Em análise · dd/mm" (vence hoje ou atrasada)
+      // pendente: "Para ler · dd/mm", "Em análise · dd/mm" (vence hoje) ou "Atrasado · dd/mm"
       const unicos = new Map<string, { texto: string; estado: Estado }>();
       for (const l of dela) {
         const pendente = !lido(l);
@@ -98,7 +103,7 @@ export function celulaDeTanque(itens: LinhaDaTabela[]): CelulaDeAnalise {
         unicos.set(t, { texto: t, estado });
       }
       const lista = [...unicos.values()];
-      const estado: Estado = lista.some((u) => u.estado === "em_analise") ? "em_analise" : lista.some((u) => u.estado === "para_ler") ? "para_ler" : "resultado";
+      const estado = pior_estado(lista.map((u) => u.estado));
       return {
         prefixo: etapas.length > 1 ? (etapa === "Pré-leitura" ? "Pré" : "Final") : undefined,
         texto: lista.map((u) => u.texto).join(" / "),
@@ -107,8 +112,7 @@ export function celulaDeTanque(itens: LinhaDaTabela[]): CelulaDeAnalise {
       };
     });
   const t = partes.map((p) => (p.prefixo ? `${p.prefixo}: ${p.texto}` : p.texto)).join(" · ");
-  const falta = partes.filter((p) => p.estado !== "resultado");
-  const estado: Estado = falta.some((p) => p.estado === "em_analise") ? "em_analise" : falta.length ? "para_ler" : "resultado";
+  const estado = pior_estado(partes.map((p) => p.estado));
   return { texto: t, partes, estado, nao_ok: itens.some((l) => l.resultado === "Não ok"), pendente: itens.every((l) => !lido(l)) };
 }
 

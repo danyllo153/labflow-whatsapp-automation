@@ -26,24 +26,26 @@ describe("Tanques lado a lado (Normal | Stress)", () => {
     ]);
     const c = (k: string) => linhas[0][k] as CelulaDeAnalise | undefined;
     expect(c("n_analise_0")?.texto).toBe("12");
-    expect(c("n_analise_1")?.texto).toBe("Pré: <1 · Final: Em análise · 25/11");
+    expect(c("n_analise_1")?.texto).toBe("Pré: <1 · Final: Atrasado · 25/11");
     expect(c("s_analise_0")?.texto).toBe("7");
     expect(c("s_analise_2")).toMatchObject({ texto: "Para ler · 25/11", pendente: true });
     expect(c("s_analise_1")).toBeUndefined(); // metade sem a análise: a tela mostra "—"
     expect(linhas[0].situacao).toBe("Atrasado");
   });
 
-  it("a célula mostra os três estados: para ler, em análise e o resultado", () => {
+  it("a célula mostra os quatro estados: para ler, em análise, atrasado e o resultado", () => {
     const e = (analise: string, extra: Record<string, unknown>) => f("Normal", analise, { contagem: null, resultado: "Pendente", ...extra });
     const { linhas } = agruparTanques([
       f("Normal", "C.T"),
       e("B.L", { situacao: "Vence hoje", prevista: "2026-11-28" }),
       e("Psicrotróficos", { situacao: "No prazo", prevista: "2026-12-03" }),
+      e("Wort", { situacao: "Atrasado", prevista: "2026-11-26" }),
     ]);
     const c = (n: number) => linhas[0][`n_analise_${n}`] as CelulaDeAnalise;
     expect([c(0).estado, c(0).texto]).toEqual(["resultado", "12"]);
     expect([c(1).estado, c(1).texto]).toEqual(["em_analise", "Em análise · 28/11"]);
     expect([c(2).estado, c(2).texto]).toEqual(["para_ler", "Para ler · 03/12"]);
+    expect([c(3).estado, c(3).texto]).toEqual(["atrasado", "Atrasado · 26/11"]);
   });
 
   it("tanque só com Normal (ou só com Stress) deixa a outra metade vazia", () => {
@@ -86,7 +88,7 @@ describe("Drops lado a lado", () => {
     expect(linhas).toHaveLength(1);
     expect(colunas.map((c) => c.rotulo)).toContain("D15");
     expect(linhas[0].drop_0).toEqual({ situacao: "Concluído", texto: "prevista 25/11", estado: "resultado" });
-    expect(linhas[0].drop_1).toEqual({ situacao: "Atrasado", texto: "prevista 30/11", estado: "em_analise" });
+    expect(linhas[0].drop_1).toEqual({ situacao: "Atrasado", texto: "prevista 30/11", estado: "atrasado" });
     expect(linhas[0].drop_2).toEqual({ situacao: "No prazo", texto: "prevista 05/12", estado: "para_ler" });
     expect(linhas[0].situacao).toBe("Atrasado");
     expect(linhas[0].concluido_por).toBe("Ana (demo)");

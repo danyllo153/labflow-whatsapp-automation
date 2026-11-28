@@ -4397,3 +4397,9 @@ h2 {
   background: var(--laranja-suave);
   color: var(--texto, inherit);
 }
+
+.estado-atrasado {
+  background: transparent;
+  color: var(--nao-ok);
+  border: 1px solid currentColor;
+}
