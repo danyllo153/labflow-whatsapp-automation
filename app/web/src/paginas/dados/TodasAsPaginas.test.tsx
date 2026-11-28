@@ -83,7 +83,9 @@ describe("todas as páginas do Power BI no app (APP-019)", () => {
     expect(await screen.findByRole("heading", { level: 1, name: def.titulo })).toBeInTheDocument();
     expect(await screen.findByText(/^1 registro/)).toBeInTheDocument();
     expect(urls.some((u) => u.startsWith(`${def.api}?`))).toBe(true);
-    for (const c of def.colunas) expect(screen.getByRole("columnheader", { name: c.rotulo })).toBeInTheDocument();
+    // Tanques e Drops (27/11): as colunas vêm do agrupamento lado a lado (ladoALado.test.ts confere cada uma)
+    const colunas = def.agrupar ? ["Tanque", "Situação"] : def.colunas.map((c) => c.rotulo);
+    for (const rotulo of colunas) expect(screen.getByRole("columnheader", { name: rotulo })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Exportar Excel" })).toHaveAttribute("href", `${def.api}/excel?${new URLSearchParams(def.fixos ?? {}).toString()}`);
   });
 

@@ -1,7 +1,8 @@
 /** Páginas do laboratório (07 §5): o que cada uma mostra e filtra. A API já filtra pelas views do Power BI. */
 
+// "analise": célula das tabelas lado a lado (ladoALado.ts: Tanques e Drops, 27/11)
 // "contagem": o resultado de uma análise na linha do lote (27/10), em vermelho quando a situação dela é Não ok
-export type Formato = "texto" | "data" | "dataHora" | "situacao" | "fabrica" | "amostra" | "contagem";
+export type Formato = "texto" | "data" | "dataHora" | "situacao" | "fabrica" | "amostra" | "contagem" | "analise";
 
 /** O C.T 48h, o B.L 72h e o B.L 120h na mesma linha do lote (Recebimento FCOJ e Embarque, 27/10). */
 const COLUNAS_DAS_CONTAGENS: Coluna[] = [
@@ -41,6 +42,7 @@ export interface DefinicaoDePagina {
   oculta?: boolean; // não aparece na lista, mas o endereço continua abrindo (links antigos)
   linkDaLinha?: (linha: Record<string, unknown>) => string; // tocar na linha abre a página do item
   fixos?: Record<string, string>; // filtro sempre aplicado na API (ex.: uma página por teste, 24/10)
+  agrupar?: "tanques" | "drops"; // lado a lado (27/11): uma linha por tanque e coleta, as análises em colunas (ladoALado.ts)
   dashboard?: { tipo: "colunas" | "tendencia"; coluna: string; aberto?: boolean }; // gráfico que o Dashboard mostra primeiro (25/10)
 }
 
@@ -142,6 +144,7 @@ export const PAGINAS: DefinicaoDePagina[] = [
     descricao: "Leituras de C.T, B.L e Psicrotróficos por tanque (normal e stress), com o resultado Ok / Não ok.",
     api: "/paginas/tanques",
     resultado: { tipo: "tendencia", data: "coleta" },
+    agrupar: "tanques",
     impressao: "deitado",
     semColetor: true,
     colunas: [
@@ -178,7 +181,8 @@ export const PAGINAS: DefinicaoDePagina[] = [
     titulo: "Drops",
     descricao: "D5, D10 e D15 previstos e concluídos, com quem concluiu e o desvio, se houve.",
     api: "/paginas/drops",
-    impressao: "em pé",
+    agrupar: "drops",
+    impressao: "deitado",
     semColetor: true,
     colunas: [
       { chave: "prevista", rotulo: "Prevista", formato: "data" },
