@@ -3,11 +3,11 @@
 # Spec: docs/specs/lims/12-versao-lite.md. Arquivo em ASCII de proposito (Windows PowerShell 5.1).
 #
 # Uso: powershell -ExecutionPolicy Bypass -File app\lite\montar.ps1 -Saida C:\temp\lite
-#   -PostgresDir  pasta de um PostgreSQL 15+ ja instalado (bin, lib, share); sem ela usa PGROOT ou baixa da EDB
+#   -PostgresDir  pasta de um PostgreSQL 17 ja instalado (bin, lib, share); sem ela usa PGROOT ou baixa da EDB (17.12)
 param(
   [string]$Saida = "lite-pacote",
   [string]$PostgresDir = "",
-  [string]$PostgresZipVersao = "16.6-1",
+  [string]$PostgresZipVersao = "17.12-1",  # a MESMA versao principal do CI (o runner do GitHub tem a 17); o banco dos PCs e do 17
   [string]$PythonVersao = "3.12.8",
   [string]$Versao = ""
 )
@@ -19,6 +19,24 @@ function Checar($passo) { if ($LASTEXITCODE -ne 0) { throw "Falhou: $passo (codi
 $repo = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 $raiz = Join-Path $Saida "LabFlow"
 $inst = Join-Path $raiz "instalacao"
+
+# Versao nova a cada montagem: lite-AAAAMMDD-HHMM-<sha>, com "-sujo" se ha mudanca ainda nao commitada (o PC recopia o
+# programa quando o VERSAO.txt muda). Se for igual a do pacote anterior na pasta de saida, para ANTES de apagar qualquer coisa.
+if (-not $Versao) {
+  $sha = (git -C $repo rev-parse --short HEAD).Trim()
+  Checar "git rev-parse"
+  $mudancas = (git -C $repo status --porcelain) -join ""
+  $sujo = ""
+  if ($mudancas.Trim()) { $sujo = "-sujo" }
+  $Versao = "lite-" + (Get-Date -Format "yyyyMMdd-HHmm") + "-" + $sha + $sujo
+}
+$anterior = Join-Path $inst "VERSAO.txt"
+if ((Test-Path $anterior) -and ((Get-Content $anterior -TotalCount 1).Trim() -eq $Versao)) {
+  throw "A versao $Versao e a mesma do pacote que ja esta em $Saida. Espere 1 minuto (ou mude algo) e monte de novo, para o PC perceber a atualizacao."
+}
+foreach ($pastaDados in (Join-Path $raiz "dados"), (Join-Path $Saida "dados")) {
+  if (Test-Path $pastaDados) { throw "Existe uma pasta de dados em ${pastaDados}: ela nunca e apagada. Use outra pasta de saida (vazia) ou mova a pasta dados antes." }
+}
 if (Test-Path $Saida) { Remove-Item -Recurse -Force $Saida }
 New-Item -ItemType Directory -Force $inst | Out-Null
 $tmp = Join-Path ([IO.Path]::GetTempPath()) ("lite-" + [guid]::NewGuid().ToString("N"))
@@ -50,12 +68,12 @@ Get-ChildItem (Join-Path $repo "db\migrations") -Filter "*.sql" | Where-Object {
   Copy-Item -Destination (Join-Path $inst "migrations")
 Copy-Item (Join-Path $repo "app\lite\lite.py") (Join-Path $inst "lite\lite.py")
 
-# 3. PostgreSQL portatil (15 ou mais novo: as migrations usam NULLS NOT DISTINCT)
+# 3. PostgreSQL portatil (sempre a versao 17: a trava do lite.py recusa banco de outra versao principal)
 Write-Host "3/6 PostgreSQL"
 if (-not $PostgresDir -and $env:PGROOT) { $PostgresDir = $env:PGROOT }
 if ($PostgresDir) {
   $major = [int](((& (Join-Path $PostgresDir "bin\pg_config.exe") --version) -replace "[^0-9.]", "").Split(".")[0])
-  if ($major -lt 15) { Write-Host "PostgreSQL $major em $PostgresDir e antigo; baixando o $PostgresZipVersao"; $PostgresDir = "" }
+  if ($major -ne 17) { Write-Host "PostgreSQL $major em $PostgresDir; o pacote usa a versao 17; baixando o $PostgresZipVersao"; $PostgresDir = "" }
 }
 if (-not $PostgresDir) {
   $pz = Join-Path $tmp "pg.zip"
@@ -89,12 +107,8 @@ foreach ($exe in "initdb", "postgres", "pg_ctl", "psql", "pg_dump", "pg_restore"
 }
 $env:PATH = $pathOriginal
 
-# 4. Versao do pacote (o .bat recopia o programa para o PC quando ela muda)
+# 4. Versao do pacote (calculada no inicio; o .bat recopia o programa para o PC quando ela muda)
 Write-Host "4/6 Versao"
-if (-not $Versao) {
-  $sha = (git -C $repo rev-parse --short HEAD).Trim()
-  $Versao = "lite-" + (Get-Date -Format "yyyyMMdd") + "-" + $sha
-}
 Set-Content -Encoding ascii (Join-Path $inst "VERSAO.txt") $Versao
 
 # 5. Arquivos da raiz: .bat e .vbs em ASCII com CRLF; LEIA-ME em UTF-8 com BOM (Bloco de Notas)
