@@ -222,3 +222,26 @@ def test_admin_marca_a_atividade_como_opcional(cliente, logado):
     assert r.status_code == 200
     mudada = next(x for x in r.json()["atividades"] if x["id"] == a["id"])
     assert mudada["opcional"] and mudada["dias_semana"] is None  # na opcional, os dias da semana não valem
+
+
+def test_turno_anterior_sem_uso_nenhum_nao_gera_herdadas(cliente, logado, agora, conexao):
+    """28/11: ninguém entrou nem marcou nada no turno anterior; abrir o app no seguinte não traz herdadas."""
+    logado()
+    conexao.execute("DELETE FROM app.atividades_feitas")
+    conexao.execute("DELETE FROM app.entradas_turno")
+    agora(em(22, 17))  # Tarde, e a Manhã ficou sem uso
+    assert cliente.get("/turno/atividades").json()["herdadas"] == []
+
+
+def test_turno_anterior_com_entrada_de_alguem_gera_herdadas_das_nao_marcadas(cliente, logado, agora, conexao):
+    uid = logado()
+    conexao.execute("DELETE FROM app.atividades_feitas")
+    conexao.execute("DELETE FROM app.entradas_turno")
+    agora(em(22, 17))
+    assert cliente.get("/turno/atividades").json()["herdadas"] == []
+    conexao.execute(
+        "INSERT INTO app.entradas_turno (usuario_id, turno_id, dia, entrada) VALUES (%s, 1, %s, %s)",
+        (uid, date(2026, 10, 22), em(22, 9)),
+    )
+    herdadas = cliente.get("/turno/atividades").json()["herdadas"]
+    assert herdadas and {h["turno"] for h in herdadas} == {"Manhã"} and all(h["quem"] is None for h in herdadas)
