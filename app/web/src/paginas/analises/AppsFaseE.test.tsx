@@ -216,10 +216,10 @@ describe("apps de análise da Fase E (E3 a E8)", () => {
     abrir("/analises/drops?aba=resultados", {
       "GET /analises/drops/abertos": () => ({ status: 200, corpo: [] }),
       "GET /analises/drops/desvios": () => ({ status: 200, corpo: [] }),
-      "GET /paginas/drops?pagina=1&por_pagina=50": pagina([{ tanque: "T85", drop: "D5", situacao: "Concluído" }]),
+      "GET /paginas/drops?pagina=1&por_pagina=200": pagina([{ tanque: "T85", data_coleta: "2026-10-20", drop: "D5", prevista: "2026-10-25", situacao: "Concluído" }]),
       "GET /paginas/desvios?pagina=1&por_pagina=50": pagina([]),
     });
-    expect(await screen.findByRole("columnheader", { name: "Drop" })).toBeInTheDocument();
+    expect(await screen.findByRole("columnheader", { name: "D15" })).toBeInTheDocument();
     expect(screen.getByText("T85")).toBeInTheDocument();
     expect(within(screen.getByRole("main")).queryByRole("link", { name: "Drops" })).toBeNull(); // não é mais um link para outra página
     await userEvent.click(screen.getByRole("button", { name: "Desvios" }));

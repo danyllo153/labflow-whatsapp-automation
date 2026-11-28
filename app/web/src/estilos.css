@@ -4360,3 +4360,46 @@ h2 {
   padding: 2px 10px;
   font-size: 0.8rem;
 }
+
+/* Tanques: Normal | Stress na mesma linha, como o laudo de NFC (28/11): grade e separador entre as duas metades */
+.tabela-rolavel {
+  overflow-x: auto;
+}
+
+.tabela-normal-stress th,
+.tabela-normal-stress td {
+  border: 1px solid var(--linha-suave);
+}
+
+.tabela-normal-stress th.grupo-de-colunas {
+  text-align: center;
+}
+
+.tabela-normal-stress th.inicio-de-grupo,
+.tabela-normal-stress td.inicio-de-grupo {
+  border-left: 3px solid var(--laranja, currentColor);
+}
+
+/* estado de cada etapa nas tabelas lado a lado (28/11): sempre com o texto, a cor só reforça */
+.estado-celula {
+  border-radius: 6px;
+  padding: 1px 6px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.estado-para_ler {
+  background: var(--linha-suave);
+  color: var(--texto-secundario, inherit);
+}
+
+.estado-em_analise {
+  background: var(--laranja-suave);
+  color: var(--texto, inherit);
+}
+
+.estado-atrasado {
+  background: transparent;
+  color: var(--nao-ok);
+  border: 1px solid currentColor;
+}
