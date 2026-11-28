@@ -9,6 +9,16 @@ import IconeApp from "./IconeApp";
  * depois (abas, números, primeiro cartão) sobe um pouco sobre a faixa. É o mesmo dos apps de análise, agora também nos Registros diários, na
  * Esterilização, nas Leituras, no Arquivo e nas páginas de dados.
  */
+/** "Análises ›" antes do título (varredura desktop, 28/11): no lugar do "← Análises" que ocupava uma linha inteira. */
+export function Trilha() {
+  return (
+    <nav className="trilha" aria-label="Você está em">
+      <Link to="/paginas">Análises</Link>
+      <span aria-hidden="true">›</span>
+    </nav>
+  );
+}
+
 export function CabecalhoDaPagina({
   icone,
   cor,
@@ -22,23 +32,21 @@ export function CabecalhoDaPagina({
   cor: string;
   titulo: ReactNode;
   descricao?: ReactNode;
-  voltar?: boolean; // tela do menu lateral (Leituras): sem o "← Análises"
+  voltar?: boolean; // tela do menu lateral (Leituras): sem a trilha "Análises ›"
   acoes?: ReactNode;
   conteudoDoIcone?: ReactNode; // a sigla, quando o app ainda não tem desenho
 }) {
   return (
     <div className={`faixa-pagina faixa-${cor}`}>
-      {voltar && (
-        <p className="voltar">
-          <Link to="/paginas">← Análises</Link>
-        </p>
-      )}
       <div className="app-analise-topo">
         <span className={`app-icone app-cor-${cor}`} aria-hidden="true">
           {conteudoDoIcone ?? <IconeApp nome={icone} />}
         </span>
         <div className="app-analise-titulo">
-          <h1>{titulo}</h1>
+          <div className="linha-titulo">
+            {voltar && <Trilha />}
+            <h1>{titulo}</h1>
+          </div>
           {descricao && <p className="texto-secundario">{descricao}</p>}
         </div>
         {acoes && <div className="acoes-icone">{acoes}</div>}

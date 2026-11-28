@@ -234,3 +234,113 @@
     margin: 10px 0 4px;
   }
 }
+
+/* ======================= Leva C: cabeçalho de página compacto ======================= */
+@media (min-width: 900px) {
+  /* a faixa de demonstração vira selo pequeno ao lado do turno (o texto completo fica no title) */
+  :root .conteudo .faixa-demonstracao {
+    display: none;
+  }
+
+  :root .topo-celular .selo-demo {
+    display: inline-flex;
+    align-items: center;
+    height: 24px;
+    padding: 0 10px;
+    margin-left: auto;
+    border: 1px solid var(--aviso-borda);
+    border-radius: 999px;
+    background: var(--aviso-fundo, #fff4d6);
+    color: var(--texto);
+    font-size: var(--fs-rotulo);
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: help;
+  }
+
+  :root .topo-celular .selo-demo + .chip-equipe {
+    margin-left: 8px;
+  }
+
+  /* título: ícone de 28 px na mesma linha, trilha antes do nome, descrição de 1 linha cinza */
+  :root .faixa-pagina,
+  :root .faixa-pagina[class*="faixa-"] {
+    margin: 0 0 var(--e2);
+    padding: 0;
+  }
+
+  :root .app-analise-topo {
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: var(--e2);
+  }
+
+  :root .app-analise-topo .app-icone {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    align-self: flex-start;
+    margin-top: 2px;
+  }
+
+  :root .app-analise-topo .app-icone svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  :root .app-analise-titulo,
+  :root .app-analise-topo > div:not(.acoes-icone) {
+    min-width: 0;
+  }
+
+  :root .app-analise-topo .linha-titulo {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+
+  :root .app-analise-topo h1 {
+    font-size: var(--fs-titulo-pagina);
+    line-height: 1.2;
+    margin: 0;
+  }
+
+  :root .app-analise-topo .trilha {
+    display: inline-flex;
+    gap: 6px;
+    font-size: 13px;
+    color: var(--texto-secundario);
+  }
+
+  :root .app-analise-topo .trilha a {
+    color: var(--texto-secundario);
+    text-decoration: none;
+  }
+
+  :root .app-analise-topo .trilha a:hover {
+    color: var(--link);
+    text-decoration: underline;
+  }
+
+  :root .app-analise-topo p.texto-secundario {
+    font-size: 13px;
+    margin: 1px 0 0;
+    line-height: 1.3;
+  }
+
+  /* abas de 36 px, encostadas no título */
+  :root .abas-app {
+    margin-bottom: var(--e3);
+  }
+
+  :root .abas-app button,
+  :root .abas-app a {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: var(--h-aba);
+    padding: 0 14px;
+    font-size: var(--fs-corpo);
+  }
+}

@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 
 import { lerJson } from "../api";
-import FaixaDemonstracao from "../componentes/FaixaDemonstracao";
+import { FaixaDemonstracaoSozinha as FaixaDemonstracao } from "../componentes/FaixaDemonstracao";
 import { useMarca } from "../marca";
 import { useSessao } from "../sessao";
 

@@ -5,6 +5,7 @@ import { enviarJson, lerJson } from "../../api";
 import { alternarFabrica, fabricasDe } from "../dados/fabricas";
 import { useSessao } from "../../sessao";
 import IconeApp from "../../componentes/IconeApp";
+import { Trilha } from "../../componentes/CabecalhoDaPagina";
 import { dm } from "../../componentes/SeletorDeDias";
 import { FABRICAS } from "../dados/definicoes";
 import { classeDaSituacao } from "../dados/formatos";
@@ -173,15 +174,13 @@ export default function RecebimentoFcoj() {
 
   return (
     <section className="app-analise">
-      <p className="voltar">
-        <Link to="/paginas">← Análises</Link>
-      </p>
       <div className="app-analise-topo">
         <span className="app-icone app-cor-fcoj" aria-hidden="true">
           <IconeApp nome="recebimento-fcoj" />
         </span>
         <div>
-          <div className="titulo-com-sino">
+          <div className="titulo-com-sino linha-titulo">
+            <Trilha />
             <h1>Recebimento FCOJ</h1>
             {painel && painel.pulados.length > 0 && <SinoEmObservacao painel={painel} aoAtualizar={setPainel} />}
           </div>
