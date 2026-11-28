@@ -8,7 +8,12 @@ Como funciona (spec: docs/specs/lims/12-versao-lite.md):
 - A cada minuto (se algo mudou) e ao fechar, o servidor grava uma cópia do banco no G:. Backup diário, 30 dias.
 - Só biblioteca padrão do Python (as dependências do app ficam no pacote).
 
-Uso (o .bat chama): python lite.py --raiz <pasta do G:> [--sem-navegador] [--porta 8000] [--local <pasta>]
+Uso (o atalho "LabFlow" da área de trabalho chama, com pythonw):
+  pythonw lite.py --raiz <pasta de rede> --oculto [--sem-navegador] [--porta 8000] [--local <pasta>]
+O "Abrir LabFlow.exe" (autoextraível, spec 12) extrai o programa em %LOCALAPPDATA%\\LabFlowLite\\programa-<versão> e chama
+  pythonw lite.py --instalado-por <caminho do .exe>   (a pasta de rede é a pasta do .exe)
+Isso grava instalado.json, cria o atalho e apaga programas antigos; depois abre o LabFlow. Ao abrir pelo atalho, se o .exe da
+rede mudou (outro tamanho ou data), o atalho roda o .exe novo, que atualiza sozinho.
 """
 
 from __future__ import annotations
@@ -958,18 +963,135 @@ def iniciar_bandeja(srv: "Servidor", endereco: str):
         return None
 
 
+# ---------------------------------------------------------------- instalação pelo .exe (spec 12) ----------------------
+EXE_REDE = "Abrir LabFlow.exe"  # fica na pasta de rede, ao lado de "dados"
+REGISTRO = "instalado.json"  # no LOCAL: qual programa está instalado e como era o .exe da rede quando instalou
+
+
+def assinatura_do_exe(exe: Path) -> str | None:
+    """Tamanho e data do .exe da rede: se mudou, há versão nova (ou voltou uma antiga). Uma única leitura de metadados."""
+    try:
+        st = exe.stat()
+    except OSError:
+        return None
+    return f"{st.st_size}-{int(st.st_mtime)}"
+
+
+def ler_registro(local: Path) -> dict:
+    try:
+        return json.loads((local / REGISTRO).read_text(encoding="utf-8"))
+    except Exception:
+        return {}
+
+
+def aviso_rapido(titulo: str, texto: str, segundos: int = 20) -> None:
+    """Janelinha que fecha sozinha (MessageBoxTimeout do Windows) e não segura o programa: 'Atualizando LabFlow...'."""
+    if not (OCULTO and EH_WINDOWS):
+        return
+
+    def mostrar() -> None:
+        import ctypes
+
+        with contextlib.suppress(Exception):
+            ctypes.windll.user32.MessageBoxTimeoutW(0, texto, titulo, 0x40 | 0x40000, 0, segundos * 1000)
+
+    threading.Thread(target=mostrar, daemon=True).start()
+
+
+def criar_atalho(programa: Path, raiz: Path) -> bool:
+    """Atalho 'LabFlow' na área de trabalho do usuário (pythonw: sem janela preta). Um PowerShell escondido só para criar o .lnk;
+    os valores vão por variáveis de ambiente (nada de montar comando com texto de caminho). Sem administrador."""
+    if not EH_WINDOWS:
+        return False
+    pythonw = programa / "python" / "pythonw.exe"
+    script = programa / "lite" / "lite.py"
+    icone = programa / "lite" / "labflow.ico"
+    comando = (
+        "$d=$env:LABFLOW_DESKTOP; if(-not $d){$d=[Environment]::GetFolderPath('Desktop')};"
+        "$s=(New-Object -ComObject WScript.Shell).CreateShortcut((Join-Path $d 'LabFlow.lnk'));"
+        "$s.TargetPath=$env:LF_PY;$s.Arguments=$env:LF_ARGS;$s.WorkingDirectory=$env:LF_DIR;"
+        "$s.IconLocation=$env:LF_ICO;$s.Description='LabFlow';$s.Save()"
+    )
+    env = dict(os.environ, LF_PY=str(pythonw), LF_ARGS=f'"{script}" --raiz "{raiz}" --oculto', LF_DIR=str(programa),
+               LF_ICO=str(icone) if icone.exists() else str(pythonw))
+    try:
+        r = subprocess.run(["powershell.exe", "-NoProfile", "-NonInteractive", "-WindowStyle", "Hidden", "-Command", comando],
+                           env=env, capture_output=True, text=True, timeout=60, creationflags=SEM_JANELA, stdin=subprocess.DEVNULL)
+        return r.returncode == 0
+    except Exception as erro:
+        log(f"(não consegui criar o atalho na área de trabalho: {erro})")
+        return False
+
+
+def limpar_programas_antigos(local: Path, atual: Path) -> None:
+    """Apaga os programas de versões anteriores deste PC (programa-*, e o programa\\ do jeito antigo). Só o que não está em uso:
+    a pasta primeiro é RENOMEADA (o Windows recusa se algum arquivo dela estiver aberto) e então apagada. Nunca mexe em dados."""
+    for pasta in [*local.glob("programa-*"), local / "programa"]:
+        if not pasta.is_dir() or pasta.resolve() == atual.resolve():
+            continue
+        alvo = pasta.with_name(f"apagar-{pasta.name}-{os.getpid()}")
+        try:
+            os.rename(pasta, alvo)
+        except OSError:
+            continue  # em uso (LabFlow antigo ainda aberto): fica para a próxima vez
+        shutil.rmtree(alvo, ignore_errors=True)
+
+
+def registrar_instalacao(exe: Path, local: Path) -> None:
+    """Chamado pelo .exe logo depois de extrair: guarda a assinatura do .exe, cria o atalho e limpa o que ficou velho."""
+    antes = ler_registro(local)
+    programa = INST
+    aviso_rapido("LabFlow", "Atualizando LabFlow..." if antes else "Preparando o LabFlow neste computador...\nEle abre sozinho em instantes.")
+    criar_atalho(programa, exe.parent)
+    limpar_programas_antigos(local, programa)
+    registro = {"programa": str(programa), "versao": PROGRAMA_VERSAO, "exe": str(exe), "assinatura": assinatura_do_exe(exe)}
+    (local / REGISTRO).write_text(json.dumps(registro, indent=1), encoding="utf-8")
+    (programa / "pronto.txt").write_text(PROGRAMA_VERSAO, encoding="utf-8")  # extração completa (o .exe confere antes de reaproveitar)
+    log(f"Instalado em {programa} (versão {PROGRAMA_VERSAO}).")
+
+
+def instancia_local_viva(dados: Dados) -> bool:
+    """Este PC já está com o LabFlow aberto (servidor.json é daqui e a porta responde)? Então não atualiza por cima."""
+    info = dados.ler_json(dados.servidor) or {}
+    return info.get("pc") == socket.gethostname() and bool(info.get("porta")) and conecta("127.0.0.1", int(info["porta"]), 1)
+
+
+def exe_da_rede_mais_novo(local: Path, raiz: Path) -> Path | None:
+    """O .exe da pasta de rede mudou desde a instalação deste PC? Devolve o caminho dele; senão None (inclui rede fora do ar)."""
+    registro = ler_registro(local)
+    exe = raiz / EXE_REDE
+    if not registro.get("assinatura") or Path(registro.get("exe", "")).resolve() != exe.resolve():
+        return None
+    atual = assinatura_do_exe(exe)
+    return exe if atual and atual != registro["assinatura"] else None
+
+
+def atualizar_pelo_exe(exe: Path) -> None:
+    """Roda o .exe novo (ele mostra o progresso, extrai, abre o LabFlow novo) e devolve o controle."""
+    flags = (0x00000008 | 0x00000200) if EH_WINDOWS else 0  # DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP
+    subprocess.Popen([str(exe)], cwd=str(exe.parent), stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                     creationflags=flags)
+
+
 # ---------------------------------------------------------------- principal ----------------------------------------
 def main() -> int:
     global LOCAL, OCULTO
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     ap = argparse.ArgumentParser()
-    ap.add_argument("--raiz", required=True, help="pasta do LabFlow no G: (a que tem a pasta dados)")
+    ap.add_argument("--raiz", help="pasta de rede do LabFlow (a que tem a pasta dados)")
+    ap.add_argument("--instalado-por", help="o 'Abrir LabFlow.exe' que acabou de extrair este programa (a pasta dele é a raiz)")
     ap.add_argument("--local", help="pasta de trabalho deste PC")
-    ap.add_argument("--porta", type=int, default=PORTA_PADRAO)
-    ap.add_argument("--sem-navegador", action="store_true")
+    ap.add_argument("--porta", type=int, default=int(os.environ.get("LABFLOW_PORTA") or PORTA_PADRAO))  # LABFLOW_PORTA: só para testes
+    ap.add_argument("--sem-navegador", action="store_true", default=bool(os.environ.get("LABFLOW_SEM_NAVEGADOR")))  # a variável: só para testes
     ap.add_argument("--oculto", action="store_true", help="sem a janela preta: ícone perto do relógio e avisos em janelinha")
     args = ap.parse_args()
+    exe_instalador = Path(args.instalado_por) if args.instalado_por else None
+    if exe_instalador is not None:
+        args.raiz = str(exe_instalador.parent)
+        args.oculto = True
+    if not args.raiz:
+        ap.error("falta --raiz (ou --instalado-por)")
     OCULTO = args.oculto
 
     if EH_WINDOWS:
@@ -981,6 +1103,16 @@ def main() -> int:
     dados = Dados(Path(args.raiz).resolve())
 
     print(f"LabFlow Lite {PROGRAMA_VERSAO}")
+    if exe_instalador is not None:
+        registrar_instalacao(exe_instalador, LOCAL)
+    else:
+        novo_exe = exe_da_rede_mais_novo(LOCAL, Path(args.raiz))
+        if novo_exe is not None and not instancia_local_viva(dados):
+            log(f"Há uma versão nova do LabFlow na pasta de rede ({novo_exe.name}): atualizando.")
+            aviso_rapido("LabFlow", "Atualizando LabFlow...")
+            atualizar_pelo_exe(novo_exe)
+            time.sleep(1)
+            return 0
     srv = Servidor(args, dados, LOCAL)
     if EH_WINDOWS:
         import ctypes

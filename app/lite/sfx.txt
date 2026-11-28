@@ -1,0 +1,12 @@
+;Comandos do autoextraivel (SFX) do WinRAR do LabFlow. Usado por app/lite/montar-exe.ps1 (troca {{VERSAO}} pela versao do pacote). ASCII.
+;Roda como o usuario (modulo Default.SFX: manifesto asInvoker): nada de administrador, Program Files, registro, servico ou firewall.
+;Extrai no PC (nunca na pasta de rede) em uma pasta por versao; a pasta dados da rede nunca e tocada.
+;Presetup so mexe na pasta DESTA versao, e so se a extracao anterior ficou pela metade (sem pronto.txt).
+;Setup chama o pythonw (Python sem janela preta): grava a instalacao, cria o atalho LabFlow e abre o LabFlow.
+Title=LabFlow
+Path=%LOCALAPPDATA%\LabFlowLite\programa-{{VERSAO}}
+Silent=1
+;(Silent=1 esconde o dialogo inicial; no teste tambem nao mostrou progresso. Sem Silent o usuario teria de clicar em Instalar.)
+Overwrite=2
+Presetup=cmd.exe /c if not exist "%LOCALAPPDATA%\LabFlowLite\programa-{{VERSAO}}\pronto.txt" if exist "%LOCALAPPDATA%\LabFlowLite\programa-{{VERSAO}}" rmdir /s /q "%LOCALAPPDATA%\LabFlowLite\programa-{{VERSAO}}"
+Setup=python\pythonw.exe lite\lite.py --instalado-por "%sfxname%"

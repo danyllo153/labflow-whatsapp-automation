@@ -1,4 +1,5 @@
-# Monta o pacote do LabFlow Lite para Windows (pasta LabFlow com instalacao\ e os .bat).
+# Monta o pacote do LabFlow Lite para Windows (pasta LabFlow com instalacao\ e o LEIA-ME). Depois, montar-exe.ps1 gera o
+# "Abrir LabFlow.exe" (o unico arquivo que o laboratorio copia para a pasta de rede).
 # Roda no GitHub Actions (windows-latest) ou num PC Windows com internet, Python 3.12 e o build das telas pronto.
 # Spec: docs/specs/lims/12-versao-lite.md. Arquivo em ASCII de proposito (Windows PowerShell 5.1).
 #
@@ -20,8 +21,8 @@ $repo = (Resolve-Path (Join-Path $PSScriptRoot "..\..")).Path
 $raiz = Join-Path $Saida "LabFlow"
 $inst = Join-Path $raiz "instalacao"
 
-# Versao nova a cada montagem: lite-AAAAMMDD-HHMM-<sha>, com "-sujo" se ha mudanca ainda nao commitada (o PC recopia o
-# programa quando o VERSAO.txt muda). Se for igual a do pacote anterior na pasta de saida, para ANTES de apagar qualquer coisa.
+# Versao nova a cada montagem: lite-AAAAMMDD-HHMM-<sha>, com "-sujo" se ha mudanca ainda nao commitada (o .exe e o PC usam o
+# VERSAO.txt para saber que ha programa novo). Se for igual a do pacote anterior na pasta de saida, para ANTES de apagar qualquer coisa.
 if (-not $Versao) {
   $sha = (git -C $repo rev-parse --short HEAD).Trim()
   Checar "git rev-parse"
@@ -107,20 +108,19 @@ foreach ($exe in "initdb", "postgres", "pg_ctl", "psql", "pg_dump", "pg_restore"
 }
 $env:PATH = $pathOriginal
 
-# 4. Versao do pacote (calculada no inicio; o .bat recopia o programa para o PC quando ela muda)
+# 4. Versao do pacote (calculada no inicio; da nome a pasta programa-<versao> que o .exe extrai no PC)
 Write-Host "4/6 Versao"
 Set-Content -Encoding ascii (Join-Path $inst "VERSAO.txt") $Versao
 
-# 5. Arquivos da raiz: .bat e .vbs em ASCII com CRLF; LEIA-ME em UTF-8 com BOM (Bloco de Notas)
-Write-Host "5/6 Atalhos e LEIA-ME"
+# 5. Arquivos da raiz: so o LEIA-ME, em UTF-8 com BOM (Bloco de Notas). Nada de .bat nem .vbs: o laboratorio abre pelo .exe/atalho.
+Write-Host "5/6 LEIA-ME"
 Get-ChildItem (Join-Path $repo "app\lite\pacote") | ForEach-Object {
   $texto = ([IO.File]::ReadAllText($_.FullName) -replace "`r`n", "`n") -replace "`n", "`r`n"
   $destino = Join-Path $raiz $_.Name
-  if ($_.Extension -eq ".bat" -or $_.Extension -eq ".vbs") { [IO.File]::WriteAllText($destino, $texto, [Text.Encoding]::ASCII) }
-  else { [IO.File]::WriteAllText($destino, $texto, (New-Object Text.UTF8Encoding($true))) }
+  [IO.File]::WriteAllText($destino, $texto, (New-Object Text.UTF8Encoding($true)))
 }
 
 # 6. Resumo
 $mb = [math]::Round(((Get-ChildItem -Recurse $raiz | Measure-Object Length -Sum).Sum / 1MB), 0)
-Write-Host "6/6 Pronto: $raiz ($mb MB), versao $Versao"
+Write-Host "6/6 Pronto: $raiz ($mb MB), versao $Versao. Proximo passo: app\lite\montar-exe.ps1 -Pacote `"$raiz`""
 Remove-Item -Recurse -Force $tmp

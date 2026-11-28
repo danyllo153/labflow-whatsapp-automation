@@ -1,7 +1,7 @@
 """Teste de fumaça do pacote do LabFlow Lite no Windows (roda no GitHub Actions depois do montar.ps1).
 
 Simula o uso real numa CÓPIA do pacote (o pacote publicado continua sem dados):
-1. PC A abre pelo "Abrir LabFlow com janela.bat": banco do zero, sem senha e sem Admin. A pessoa digita o nome ("Sou novo
+1. PC A abre (o programa é copiado para o "PC", como o .exe faz ao extrair; o .exe em si precisa do WinRAR e é testado à mão): banco do zero, sem senha e sem Admin. A pessoa digita o nome ("Sou novo
    aqui"), cadastra outra, lança (entra no turno) e a sessão guarda de qual PC veio.
 2. PC B (outro LOCALAPPDATA, mesmo nome de PC) abre enquanto A está no ar: só abre a janela e não liga outro banco.
 3. A "Encerrar" (parar.txt): cópia no G: gravada e conferida, backup do dia gravado, aviso de servidor apagado.
@@ -24,18 +24,15 @@ from pathlib import Path
 
 
 def abrir(raiz: Path, local_app: Path, saida: Path, oculto: bool = False) -> subprocess.Popen:
+    """Simula o .exe: copia a instalacao para o 'PC' (uma vez) e roda o lite.py de la, como o atalho faz (pythonw no oculto)."""
     env = dict(os.environ, LOCALAPPDATA=str(local_app))
-    if not oculto:
-        env["LABFLOW_LITE_TESTE"] = "1"
-    else:
-        env.pop("LABFLOW_LITE_TESTE", None)
-    return subprocess.Popen(
-        ["wscript", str(raiz / "Abrir LabFlow.vbs")] if oculto else ["cmd", "/c", str(raiz / "Abrir LabFlow com janela.bat"), "--sem-navegador"],
-        env=env,
-        stdin=subprocess.DEVNULL,
-        stdout=open(saida, "w", encoding="utf-8"),
-        stderr=subprocess.STDOUT,
-    )
+    programa = local_app / "LabFlowLite" / "programa-teste"
+    if not programa.exists():
+        shutil.copytree(raiz / "instalacao", programa)
+    py = programa / "python" / ("pythonw.exe" if oculto else "python.exe")
+    comando = [str(py), str(programa / "lite" / "lite.py"), "--raiz", str(raiz)]
+    comando += ["--oculto"] if oculto else ["--sem-navegador"]
+    return subprocess.Popen(comando, env=env, stdin=subprocess.DEVNULL, stdout=open(saida, "w", encoding="utf-8"), stderr=subprocess.STDOUT)
 
 
 def esperar(saida: Path, texto: str, segundos: int, proc: subprocess.Popen | None = None) -> str:
@@ -48,7 +45,7 @@ def esperar(saida: Path, texto: str, segundos: int, proc: subprocess.Popen | Non
             break
         time.sleep(2)
     print(saida.read_text(encoding="utf-8", errors="replace") if saida.exists() else "(sem saída)")
-    for prog in sorted(saida.parent.glob("pc*/LabFlowLite/programa")):
+    for prog in sorted(saida.parent.glob("pc*/LabFlowLite/programa-teste")):
         local_bin = prog / "postgres" / "bin"
         pacote_bin = saida.parent / "G" / "LabFlow" / "instalacao" / "postgres" / "bin"
         faltam = sorted({p.name for p in pacote_bin.iterdir()} - {p.name for p in local_bin.iterdir()})
@@ -174,10 +171,9 @@ def main() -> None:
     fechar(raiz, pc_b, b2, saida_b2)
     print("4 ok: outro PC restaurou do G:, as duas pessoas entram só tocando no nome e o lançamento está lá")
 
-    # 5. B de novo pelo atalho Abrir LabFlow.vbs: já abriu uma vez, então abre OCULTO (sem janela nenhuma)
+    # 5. B de novo pelo atalho (pythonw): já abriu uma vez, então abre OCULTO (sem janela nenhuma)
     assert (pc_b / "LabFlowLite" / "ja-abriu.txt").exists(), "o marcador de 'já abriu' não foi gravado"
     oculto = abrir(raiz, pc_b, trabalho / "b3.txt", oculto=True)
-    oculto.wait(timeout=60)  # o wscript devolve o controle logo
     fim = time.time() + 300
     while time.time() < fim:
         info = json.loads((raiz / "dados" / "servidor.json").read_text(encoding="utf-8")) if (raiz / "dados" / "servidor.json").exists() else {}
@@ -191,13 +187,14 @@ def main() -> None:
     fim = time.time() + 180
     while (raiz / "dados" / "servidor.json").exists() and time.time() < fim:
         time.sleep(2)
-    assert not (raiz / "dados" / "servidor.json").exists(), "o modo oculto não fechou pelo Fechar LabFlow"
+    assert not (raiz / "dados" / "servidor.json").exists(), "o modo oculto não fechou pelo parar.txt"
     log_b = (pc_b / "LabFlowLite" / "lite.log").read_text(encoding="utf-8", errors="replace")
     assert "Rodando oculto" in log_b and "Tudo gravado" in log_b.split("Rodando oculto")[-1]
-    print("5 ok: pelo atalho .vbs, da segunda vez abriu oculto e fechou pelo Fechar LabFlow")
+    print("5 ok: pelo pythonw, da segunda vez abriu oculto e fechou pelo Fechar LabFlow")
 
     # 6. o pacote não traz mais nada de senha de Admin
     assert not list(raiz.glob("Redef*")), "sobrou o .bat de refazer a senha do Admin"
+    assert not list(raiz.glob("*.bat")) and not list(raiz.glob("*.vbs")), "o pacote não leva .bat nem .vbs (abre pelo .exe/atalho)"
     texto_leia = (raiz / "LEIA-ME.txt").read_text(encoding="utf-8-sig")
     assert not re.search(r"provis[óo]ria|redefin", texto_leia, re.I)
     print("6 ok: o pacote não tem mais senha de Admin para anotar ou refazer")

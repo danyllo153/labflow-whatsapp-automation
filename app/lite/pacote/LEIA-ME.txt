@@ -1,60 +1,47 @@
 LABFLOW (versão para a pasta de rede)
 =====================================
 
-PARA ABRIR
-  Dois cliques em "Abrir LabFlow" (o atalho .vbs: abre sem janela do cmd).
-  Se a TI bloquear o .vbs, use "Abrir LabFlow com janela" (o .bat): funciona igual.
-  - Na primeira vez em cada PC ele se prepara (1 a 3 minutos).
-  - O LabFlow abre como um programa, em TELA CHEIA, na tela de entrar.
-    F11 alterna entre tela cheia e janela; Alt+F4 fecha só a tela (o LabFlow
-    continua rodando no ícone perto do relógio). Ninguém digita senha: cada pessoa toca no
-    próprio nome na tela de entrar (ou escreve o nome em "Sou novo aqui").
-  - O LabFlow funciona em UM PC por vez (não aceita conexões da rede). Se ele já estiver
-    aberto em outro PC, aparece o aviso de qual PC: use "Encerrar" lá e abra aqui.
+NA PASTA DE REDE (exemplo: X:\LabFlow) FICAM SÓ DUAS COISAS
+  Abrir LabFlow.exe   o programa inteiro, num arquivo só
+  dados\              o banco e os backups. NUNCA apague nem substitua esta pasta.
 
-A JANELA PRETA E O ÍCONE PERTO DO RELÓGIO
-  Na PRIMEIRA vez em cada PC, o LabFlow abre com uma janela preta: ela mostra o
-  preparo (1 a 3 minutos).
-  Da segunda vez em diante, abre OCULTO: só aparece o ícone do LabFlow perto do
-  relógio do Windows. Botão direito no ícone:
-    Abrir o LabFlow · Endereço neste PC · Encerrar o LabFlow
-  Avisos importantes aparecem numa janelinha. "Fechar LabFlow" também encerra.
+INSTALAR (uma vez em cada PC)
+  1. Dê dois cliques em "Abrir LabFlow.exe".
+  2. Espere alguns segundos (até meio minuto na primeira vez): aparece "Preparando o LabFlow..."
+     e ele abre sozinho. Não pede senha de administrador.
+  3. O atalho "LabFlow" aparece na área de trabalho.
+  Pronto. Daí em diante, abra pelo atalho "LabFlow" da área de trabalho.
+  Nas próximas vezes não copia nada: abre direto.
 
-O PC EM QUE O LABFLOW ESTÁ ABERTO
-  O LabFlow fica ABERTO no PC em que você deu os dois cliques (a janela preta, na primeira
-  vez, ou o ícone perto do relógio). Use de preferência o PC que fica ligado o dia todo.
-  - Troca de turno: "Trocar de pessoa" no LabFlow. NÃO saia do usuário do Windows nesse PC
-    (bloquear a tela com Windows+L pode).
-  - Esse PC não pode suspender/hibernar (plano de energia: nunca).
-  - Para fechar: no ícone perto do relógio, "Encerrar o LabFlow" (ou ENTER e S na
-    janela preta). Só depois disso outro PC consegue abrir o LabFlow.
+ENTRAR
+  Não existe senha. Na primeira abertura o LabFlow pede o seu nome: escreva e pronto. Depois,
+  cada pessoa toca no próprio nome na lista (ou escreve um nome novo em "Sou novo aqui").
+  O LabFlow abre como um programa, em janela própria. O ícone do LabFlow fica perto do
+  relógio: botão direito para "Abrir o LabFlow", "Endereço neste PC" ou "Encerrar o LabFlow".
+
+UM PC POR VEZ
+  O LabFlow funciona em UM PC por vez (não usa a rede, só o próprio PC). Para trocar de PC:
+  no ícone perto do relógio, "Encerrar o LabFlow"; só depois abra no outro PC. Se o PC caiu,
+  espere 1 minuto e abra em qualquer PC: ele assume com os dados gravados (pode faltar no
+  máximo o último minuto). O PC onde ele está aberto não pode suspender nem hibernar.
+
+ATUALIZAR (para quem cuida do LabFlow)
+  1. "Encerrar o LabFlow" em todos os PCs.
+  2. Troque UM arquivo: copie o "Abrir LabFlow.exe" novo por cima do antigo na pasta de rede.
+  3. Em cada PC, abra o atalho "LabFlow" como sempre: ele percebe o arquivo novo, mostra
+     "Atualizando LabFlow..." e abre já na versão nova (alguns segundos).
+  Antes de mexer no banco, a atualização guarda uma cópia em dados\backup
+  (antes-de-atualizar-<data>.dump). O que não mudou não é copiado de novo.
 
 OS DADOS
-  Ficam na pasta "dados". Nunca apague nem substitua essa pasta.
-  - O LabFlow grava uma cópia a cada minuto (se algo mudou) e ao fechar.
-  - Backup de cada dia em dados\backup (últimos 30 dias).
-  - Se o PC cair, espere 1 minuto e abra em qualquer PC: ele assume com
-    os dados gravados (pode faltar no máximo o último minuto).
-
-PRIMEIRO ACESSO
-  Não existe senha nem "Admin". Na primeira abertura o LabFlow pede o seu nome: escreva e
-  pronto, você já entra. Daí em diante, quem abre escolhe o nome na lista ou escreve um nome
-  novo ("Sou novo aqui"). Todas as pessoas podem tudo; em Pessoas dá para cadastrar um
-  nome e bloquear quem não usa mais. Quem senta no PC escolhe qualquer nome: por isso o
-  LabFlow só funciona neste PC (127.0.0.1) e guarda o nome escolhido e o PC de cada entrada.
-  Instalação antiga: o nome que for digitado primeiro assume o lugar do antigo "Admin"
-  (os lançamentos dele continuam no seu nome); as outras pessoas já aparecem na lista.
+  Ficam na pasta "dados". O LabFlow grava uma cópia a cada minuto (se algo mudou) e ao fechar.
+  Backup de cada dia em dados\backup (últimos 30 dias).
 
 MARCA (opcional)
   Nome, logo e cores do laboratório: pasta dados\marca (instruções no LEIA-ME de lá).
-  marca.json (nome, cor principal e secundária), logo.png e estilo.css. Vale ao
-  reabrir o LabFlow e continua depois das atualizações (fica em "dados").
+  Vale ao reabrir o LabFlow e continua depois das atualizações.
 
-ATUALIZAR O PROGRAMA
-  Feche o LabFlow em todos os PCs e troque SÓ a pasta "instalacao" pela nova.
-  Na próxima abertura ele faz um backup e atualiza o banco sozinho.
-
-REDE
-  O LabFlow escuta só em 127.0.0.1 (este PC): não usa a rede, não pede liberação de
-  firewall nem senha de administrador, e outro PC não consegue se conectar a ele.
-  Para usar em outro PC: "Encerrar o LabFlow" neste e abra no outro.
+SE ALGO NÃO ABRIR
+  O LabFlow avisa numa janelinha. Os detalhes ficam em
+  %LOCALAPPDATA%\LabFlowLite\lite.log (cole esse endereço na barra do Explorador).
+  Antivírus que bloqueia o .exe: peça à TI para liberar "Abrir LabFlow.exe".
