@@ -1,9 +1,10 @@
 """LabFlow Lite: roda o app inteiro (API, telas e PostgreSQL) a partir de uma pasta de rede, sem Docker nem servidor.
 
 Como funciona (spec: docs/specs/lims/12-versao-lite.md):
-- A pasta de rede (G:) guarda só os DADOS: labflow.dump (cópia do banco), backups, o aviso de quem é o servidor.
-- O PC que abre primeiro vira o SERVIDOR: liga um PostgreSQL local (pasta do próprio PC), restaura o banco do G:, liga o app
-  e grava o endereço em dados/servidor.json. Os outros PCs só abrem o navegador nesse endereço (modo CLIENTE).
+- A pasta de rede (G:) guarda só os DADOS: labflow.dump (cópia do banco), backups, o aviso de qual PC está com o LabFlow aberto.
+- UM PC POR VEZ (decisão de 27/11): o PC que abre primeiro liga um PostgreSQL local (pasta do próprio PC), restaura o banco do G:,
+  liga o app SÓ em 127.0.0.1 e grava o aviso em dados/servidor.json. O LabFlow nunca escuta na rede: outro PC que tente abrir
+  enquanto ele está aberto recebe o aviso "está aberto no PC X: use Encerrar lá" e não se conecta a nada.
 - A cada minuto (se algo mudou) e ao fechar, o servidor grava uma cópia do banco no G:. Backup diário, 30 dias.
 - Só biblioteca padrão do Python (as dependências do app ficam no pacote).
 
@@ -18,6 +19,7 @@ import datetime as dt
 import getpass
 import json
 import os
+import re
 import secrets
 import shutil
 import signal
@@ -41,6 +43,7 @@ PORTA_PADRAO = 8000
 MANTER_BACKUPS = 30
 SUPER = "lfadmin"
 BANCO = "labflow"
+ENDERECO_LOCAL = "127.0.0.1"  # a Lite só escuta neste endereço (app e banco): nunca na rede
 ADMIN_TELEFONE = "5500000000001"  # marcador: o Admin troca depois em Admin > Pessoas
 
 
@@ -146,34 +149,18 @@ class Dados:
 
 
 # ---------------------------------------------------------------- rede ----------------------------------------------
-def ips_deste_pc() -> list[str]:
-    achados: list[str] = []
-    with contextlib.suppress(Exception):
-        for item in socket.getaddrinfo(socket.gethostname(), None, socket.AF_INET):
-            ip = item[4][0]
-            if not ip.startswith("127.") and ip not in achados:
-                achados.append(ip)
-    with contextlib.suppress(Exception):
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.connect(("10.255.255.255", 1))
-        ip = s.getsockname()[0]
-        s.close()
-        if not ip.startswith("127.") and ip not in achados:
-            achados.insert(0, ip)
-    return achados
-
-
-def porta_livre(inicio: int, todas_as_interfaces: bool) -> int:
+def porta_livre(inicio: int) -> int:
+    """Primeira porta livre a partir de `inicio`, SEMPRE em 127.0.0.1 (a Lite não escuta na rede)."""
     for porta in range(inicio, inicio + 50):
-        # no Windows o bind em 0.0.0.0 passa mesmo com outro app escutando em 127.0.0.1 na mesma porta: a conexão
-        # (e o /saude) iria para o outro. Se algo já responde em 127.0.0.1 nessa porta, pula.
+        # no Windows o bind em 127.0.0.1 passa mesmo com outro programa escutando em todas as interfaces na mesma porta (ex.: outro app
+        # aberto no PC): a conexão iria para o outro. Se algo já responde nessa porta, pula.
         if conecta("127.0.0.1", porta, 0.5):
             continue
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         if not EH_WINDOWS:  # como o uvicorn faz; no Windows essa opção deixaria duas escutando na mesma porta
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
-            s.bind(("0.0.0.0" if todas_as_interfaces else "127.0.0.1", porta))
+            s.bind(("127.0.0.1", porta))
             return porta
         except OSError:
             continue
@@ -195,6 +182,40 @@ def api_viva(porta: int) -> bool:
         return urllib.request.urlopen(f"http://127.0.0.1:{porta}/saude", timeout=3).status == 200
     except Exception:
         return False
+
+
+def major_do_banco(data: Path) -> int | None:
+    """Versão principal do PostgreSQL que criou a pasta de dados (arquivo PG_VERSION, ex.: 17). None se não existe/ilegível."""
+    try:
+        return int((data / "PG_VERSION").read_text(encoding="utf-8").strip().split(".")[0])
+    except (OSError, ValueError):
+        return None
+
+
+def major_do_pacote(pg_bin: Path) -> int | None:
+    """Versão principal do postgres.exe do pacote (VERSAO.txt ao lado, gravado na montagem; senão `postgres --version`)."""
+    texto = ""
+    with contextlib.suppress(OSError):
+        texto = (pg_bin.parent / "VERSAO.txt").read_text(encoding="utf-8", errors="replace")
+    if not texto:
+        with contextlib.suppress(Exception):
+            texto = subprocess.run([str(pg_bin / ("postgres" + EXE)), "--version"], capture_output=True, text=True,
+                                   stdin=subprocess.DEVNULL, creationflags=SEM_JANELA).stdout
+    achou = re.search(r"(\d+)(?:\.\d+)?", texto.split(")")[-1] if ")" in texto else texto)
+    return int(achou.group(1)) if achou else None
+
+
+def mensagem_versao_diferente(do_banco: int, do_pacote: int) -> str:
+    return (f"Este pacote traz o PostgreSQL {do_pacote}, mas o banco deste PC é do PostgreSQL {do_banco}: use o pacote certo "
+            f"(o da mesma versão do PostgreSQL). Nada foi alterado nem apagado.")
+
+
+def checar_versao_banco(data: Path, pg_bin: Path) -> None:
+    """Trava (27/11): banco criado por outra versão principal do PostgreSQL não abre, e o programa NÃO pode recriar a pasta
+    de dados por cima (apagaria o banco). Levanta RuntimeError com a mensagem clara antes de ligar qualquer coisa."""
+    do_banco, do_pacote = major_do_banco(data), major_do_pacote(pg_bin)
+    if do_banco is not None and do_pacote is not None and do_banco != do_pacote:
+        raise RuntimeError(mensagem_versao_diferente(do_banco, do_pacote))
 
 
 # ---------------------------------------------------------------- PostgreSQL local -----------------------------------
@@ -359,12 +380,47 @@ class Servidor:
                 return c
         return None
 
+    def dump_ilegivel(self) -> str | None:
+        """Há cópia na pasta de rede, mas o pg_restore deste pacote não consegue ler (gravada por um PostgreSQL mais novo, ou
+        danificada). Devolve a mensagem em português, ou None se não há esse problema."""
+        achou = [c for c in (self.dados.dump, self.dados.novo, self.dados.anterior) if c.exists() and c.stat().st_size > 0]
+        if not achou or self.dump_do_g() is not None:
+            return None
+        return (f"A cópia do banco na pasta de rede ({achou[0].name}) não pôde ser lida por este pacote (PostgreSQL "
+                f"{major_do_pacote(self.pg.bin) or '?'}). Ela provavelmente foi gravada por um PostgreSQL mais novo: use o pacote "
+                f"mais recente do LabFlow. Nada foi alterado nem apagado; se o problema continuar, procure em dados\\backup e chame o suporte.")
+
+    def perguntar_restaurar(self, do_banco: int, do_pacote: int) -> bool:
+        return confirmar(
+            "LabFlow: banco de outra versão",
+            f"O banco guardado neste PC é do PostgreSQL {do_banco}, e este pacote traz o PostgreSQL {do_pacote}.\n\n"
+            "Posso restaurar a última cópia gravada na pasta de rede (nenhum dado é apagado: o banco antigo deste PC fica guardado "
+            "em uma pasta ao lado).\n\nRestaurar a cópia da pasta de rede agora?",
+        )
+
+    def tratar_versao_do_banco(self) -> None:
+        """Banco local de outra versão principal do PostgreSQL: nunca liga nem recria por cima. Se o pacote é mais NOVO e há cópia
+        legível na pasta de rede, oferece restaurar dela; o banco antigo é só RENOMEADO (data-pgNN-...), nunca apagado."""
+        pg = self.pg
+        do_banco, do_pacote = major_do_banco(pg.data), major_do_pacote(pg.bin)
+        if do_banco is None or do_pacote is None or do_banco == do_pacote:
+            return
+        if do_pacote < do_banco or self.dump_do_g() is None:
+            raise RuntimeError(mensagem_versao_diferente(do_banco, do_pacote))
+        if not self.perguntar_restaurar(do_banco, do_pacote):
+            raise RuntimeError(mensagem_versao_diferente(do_banco, do_pacote))
+        guardado = self.local / f"data-pg{do_banco}-{dt.datetime.now():%Y%m%d-%H%M%S}"
+        os.replace(pg.data, guardado)
+        log(f"Banco antigo deste PC (PostgreSQL {do_banco}) guardado em {guardado.name}. Restaurando a cópia da pasta de rede...")
+        self._gravar_estado(ultimo_gravado_em=None, origem="g")
+
     def subir_banco(self) -> bool:
         """Liga o PostgreSQL local com os dados certos. Devolve True se o banco acabou de ser criado do zero."""
         pg = self.pg
+        self.tratar_versao_do_banco()  # antes de qualquer coisa: versão diferente não liga nem recria por cima
         pg.senha_super = self.estado.get("senha_super") or secrets.token_urlsafe(18)
         pg.senha_web = self.estado.get("senha_web") or secrets.token_urlsafe(18)
-        pg.porta = porta_livre(54329, False)
+        pg.porta = porta_livre(54329)
         info = self.dados.ler_json(self.dados.info)
         tem_local = (pg.data / "PG_VERSION").exists()
         grav = self.estado.get("ultimo_gravado_em")
@@ -372,6 +428,10 @@ class Servidor:
         reaproveitar = tem_local and (
             (info is not None and grav == info.get("gravado_em")) or (info is None and self.estado.get("origem") == "zero")
         )
+        if not reaproveitar:  # vai recriar o banco local: antes, confere que a cópia da pasta pode ser lida (senão, nada é mexido)
+            problema = self.dump_ilegivel()
+            if problema:
+                raise RuntimeError(problema)
         self._gravar_estado(senha_super=pg.senha_super, senha_web=pg.senha_web, limpo=False)
         if reaproveitar:
             log("Banco deste PC está em dia com o G:. Ligando o PostgreSQL...")
@@ -400,7 +460,7 @@ class Servidor:
     def _guardar_local_antigo(self) -> None:
         """Outra sessão gravou no G: depois deste PC cair: guarda o que sobrou aqui, só por segurança."""
         try:
-            self.pg.porta = porta_livre(54329, False)
+            self.pg.porta = porta_livre(54329)
             self.pg.iniciar()
             self.dados.recuperacao.mkdir(parents=True, exist_ok=True)
             destino = self.dados.recuperacao / f"local-{socket.gethostname()}-{dt.datetime.now():%Y%m%d-%H%M%S}.dump"
@@ -500,7 +560,7 @@ class Servidor:
 
     # --- API
     def subir_api(self) -> None:
-        self.porta_api = porta_livre(self.args.porta, True)
+        self.porta_api = porta_livre(self.args.porta)
         env = dict(os.environ)
         env.update(
             LABFLOW_DB_URL=self.pg.url_web(),
@@ -509,6 +569,7 @@ class Servidor:
             LABFLOW_COOKIE_SEGURO="0",  # a rede interna é HTTP (decisão da Lite)
             LABFLOW_DEMONSTRACAO="0",
             LABFLOW_LITE="1",  # sem bot: o telefone em Nova pessoa é opcional (01/11)
+            LABFLOW_BIND_HOST=ENDERECO_LOCAL,  # a API recusa subir no modo Lite se não for loopback; confere Host e Origin
             PYTHONPATH=str(INST / "app"),
             PYTHONUNBUFFERED="1",
             PYTHONUTF8="1",
@@ -517,7 +578,7 @@ class Servidor:
         saida = open(self.local / "api.log", "a", encoding="utf-8")
         flags = 0x08000000 if EH_WINDOWS else 0  # CREATE_NO_WINDOW
         self.api = subprocess.Popen(
-            [sys.executable, "-m", "uvicorn", "labflow_api.main:app", "--host", "0.0.0.0", "--port", str(self.porta_api)],
+            [sys.executable, "-m", "uvicorn", "labflow_api.main:app", "--host", ENDERECO_LOCAL, "--port", str(self.porta_api), "--no-proxy-headers"],
             cwd=str(INST / "app"),
             env=env,
             stdout=saida,
@@ -537,7 +598,6 @@ class Servidor:
         return {
             "dono": self.token,
             "pc": socket.gethostname(),
-            "ips": ips_deste_pc(),
             "porta": self.porta_api,
             "usuario_windows": getpass.getuser(),
             "inicio": dt.datetime.now().isoformat(timespec="seconds"),
@@ -642,6 +702,7 @@ class Servidor:
         if atual is None or atual.get("dono") != self.token:
             return -1
         try:
+            (self.local / "parar.txt").unlink(missing_ok=True)  # pedido de Encerrar velho, de antes desta abertura
             do_zero = self.subir_banco()
             self.aplicar_migracoes(do_zero)
             self.pg.preparar_papeis()
@@ -662,12 +723,11 @@ class Servidor:
         threading.Thread(target=self.batimento, daemon=True).start()
         threading.Thread(target=self.laco_de_salvar, daemon=True).start()
         endereco = f"http://127.0.0.1:{self.porta_api}/app/"
-        outros = ", ".join(f"http://{ip}:{self.porta_api}/app/" for ip in ips_deste_pc()[:2])
         log("")
         log("=" * 60)
         log("LabFlow no ar neste PC (SERVIDOR).")
         log(f"  Aqui:  {endereco}")
-        log(f"  Outros PCs do laboratório: abram o 'Abrir LabFlow' (ou {outros})")
+        log("  Só este PC usa o LabFlow agora (ele não aceita conexões da rede). Para usar em outro PC, encerre aqui antes.")
         if OCULTO:
             log("  Rodando oculto: o ícone do LabFlow fica perto do relógio (Abrir, Endereço, Encerrar).")
         else:
@@ -676,7 +736,7 @@ class Servidor:
         log("=" * 60)
         marcar_que_abriu()
         if OCULTO:
-            self.icone = iniciar_bandeja(self, endereco, outros)
+            self.icone = iniciar_bandeja(self, endereco)
         if not self.args.sem_navegador:
             abrir_janela(endereco)
         self._esperar_fim()
@@ -693,7 +753,7 @@ class Servidor:
                     linha = sys.stdin.readline()
                     if linha == "":
                         return
-                    log("Encerrar o LabFlow? Os outros PCs vão parar de funcionar. Digite S e Enter para confirmar.")
+                    log("Encerrar o LabFlow? Tudo será gravado no G:. Digite S e Enter para confirmar.")
                     if sys.stdin.readline().strip().lower() in ("s", "sim", "y"):
                         self.parar.set()
                         return
@@ -703,7 +763,7 @@ class Servidor:
         if sys.stdin is not None and sys.stdin.isatty():
             threading.Thread(target=ler_enter, daemon=True).start()
         sinal = self.local / "parar.txt"
-        sinal.unlink(missing_ok=True)
+        # (nao apagar o parar.txt aqui: um pedido de Encerrar feito enquanto o app ainda terminava de abrir se perderia)
         while not self.parar.is_set():
             if sinal.exists():
                 sinal.unlink(missing_ok=True)
@@ -716,8 +776,10 @@ class Servidor:
 
 # ---------------------------------------------------------------- modo cliente -------------------------------------
 def modo_cliente(dados: Dados, args: argparse.Namespace) -> int:
+    """O aviso em dados/servidor.json diz que o LabFlow já está aberto em algum PC. Um PC por vez: o LabFlow só escuta em 127.0.0.1,
+    então este PC nunca tenta conectar em outro (e a API recusaria um Host que não fosse localhost/127.0.0.1)."""
     info = dados.ler_json(dados.servidor) or {}
-    for _ in range(60):  # o servidor ainda está ligando (alguém abriu segundos antes): espera até 2 minutos
+    for _ in range(60):  # o PC que abriu ainda está ligando (alguém abriu segundos antes): espera até 2 minutos
         if not info.get("iniciando"):
             break
         if _ == 0:
@@ -725,24 +787,21 @@ def modo_cliente(dados: Dados, args: argparse.Namespace) -> int:
         time.sleep(2)
         info = dados.ler_json(dados.servidor) or {}
     porta = int(info.get("porta") or PORTA_PADRAO)
-    candidatos = [socket.gethostname() if info.get("pc") == socket.gethostname() else info.get("pc"), *info.get("ips", [])]
-    for host in [h for h in candidatos if h]:
-        if conecta(host, porta):
-            endereco = f"http://{host}:{porta}/app/"
-            log(f"O LabFlow já está aberto no PC {info.get('pc')}. Abrindo {endereco}")
-            marcar_que_abriu()
-            if not args.sem_navegador:
-                abrir_janela(endereco)
-            return 0
+    if info.get("pc") == socket.gethostname() and conecta("127.0.0.1", porta, 1):  # já aberto NESTE PC: só traz a janela
+        endereco = f"http://127.0.0.1:{porta}/app/"
+        log(f"O LabFlow já está aberto neste PC. Abrindo {endereco}")
+        marcar_que_abriu()
+        if not args.sem_navegador:
+            abrir_janela(endereco)
+        return 0
+    pc = info.get("pc") or "outro PC"
     log("")
-    log(f"O LabFlow está aberto no PC {info.get('pc')} (desde {info.get('inicio')}), mas este PC não conseguiu falar com ele.")
-    log(f"Provável causa: o firewall/rede bloqueia a porta {porta}. Peça à TI para liberar a porta TCP {porta} de entrada")
-    log("no PC servidor, para os PCs do laboratório. Enquanto isso, só um PC usa o LabFlow por vez:")
-    log("peça para fechar lá (tecla ENTER na janela do LabFlow) e abra aqui.")
-    log("Se o PC servidor caiu ou foi desligado, espere 1 minuto e abra de novo: este PC assume, com os dados gravados.")
-    avisar("LabFlow: não conectou", f"O LabFlow está aberto no PC {info.get('pc')}, mas este PC não conseguiu falar com ele "
-           f"(porta {porta}).\n\nSe o PC servidor caiu ou foi desligado, espere 1 minuto e abra de novo: este PC assume.\n"
-           f"Se acontecer sempre, peça à TI para liberar a porta TCP {porta} no PC servidor.", erro=True, esperar=True)
+    log(f"O LabFlow está aberto no PC {pc} (desde {info.get('inicio')}): use Encerrar lá (ícone perto do relógio > Encerrar, ou ENTER na")
+    log("janela dele) e abra aqui. O LabFlow funciona em um PC por vez e não aceita conexões da rede.")
+    log("Se aquele PC caiu ou foi desligado, espere 1 minuto e abra de novo: este PC assume, com os dados gravados.")
+    avisar("LabFlow: está aberto em outro PC", f"O LabFlow está aberto no PC {pc}.\n\nUse Encerrar lá (ícone do LabFlow perto do relógio) "
+           "e abra aqui. Ele funciona em um PC por vez.\n\nSe aquele PC caiu ou foi desligado, espere 1 minuto e abra de novo: "
+           "este PC assume, com os dados gravados.", erro=True, esperar=True)
     return 2
 
 
@@ -865,7 +924,7 @@ def gerar_icone_da_logo(pasta: Path) -> bool:
         return False
 
 
-def iniciar_bandeja(srv: "Servidor", endereco: str, outros: str):
+def iniciar_bandeja(srv: "Servidor", endereco: str):
     """O ícone do LabFlow perto do relógio (modo oculto). Sem ele (biblioteca ausente, sessão sem área de trabalho), o
     LabFlow segue funcionando e fecha pelo 'Fechar LabFlow'."""
     try:
@@ -878,52 +937,23 @@ def iniciar_bandeja(srv: "Servidor", endereco: str, outros: str):
         desenho.polygon([(26, 13), (38, 13), (38, 28), (50, 50), (14, 50), (26, 28)], fill=(255, 255, 255))
 
         def encerrar(icone, _item) -> None:
-            if confirmar("Encerrar o LabFlow?", "Tudo será gravado no G: e os outros PCs param de usar o LabFlow até alguém "
-                                               "abrir de novo.\n\nEncerrar agora?"):
+            if confirmar("Encerrar o LabFlow?", "Tudo será gravado no G: e o LabFlow fecha neste PC. Outro PC só poderá "
+                                               "abrir depois disso.\n\nEncerrar agora?"):
                 srv.parar.set()
 
         menu = pystray.Menu(
             pystray.MenuItem("Abrir o LabFlow", lambda _i, _it: abrir_janela(endereco), default=True),
-            pystray.MenuItem("Endereço para os outros PCs", lambda _i, _it: avisar(
-                "LabFlow: endereço", f"Neste PC: {endereco}\nOutros PCs: {outros}\n\nOu, nos outros PCs, os dois cliques em Abrir LabFlow.")),
+            pystray.MenuItem("Endereço neste PC", lambda _i, _it: avisar(
+                "LabFlow: endereço", f"Neste PC: {endereco}\n\nO LabFlow só abre neste PC (não aceita conexões da rede).")),
             pystray.Menu.SEPARATOR,
             pystray.MenuItem("Encerrar o LabFlow", encerrar),
         )
-        icone = pystray.Icon("LabFlow", imagem, "LabFlow (servidor deste laboratório)", menu)
+        icone = pystray.Icon("LabFlow", imagem, "LabFlow (aberto neste PC)", menu)
         threading.Thread(target=icone.run, daemon=True).start()
         return icone
     except Exception as erro:
         log(f"(sem o ícone perto do relógio: {erro}; para encerrar, use o Fechar LabFlow)")
         return None
-
-
-# ---------------------------------------------------------------- teste de rede ------------------------------------
-def testar_rede(dados: Dados, args: argparse.Namespace) -> int:
-    arq = dados.dir / "teste-rede.json"
-    ativo = dados.ler_json(arq)
-    idade = None
-    with contextlib.suppress(OSError):
-        idade = dados.relogio() - arq.stat().st_mtime
-    if ativo and idade is not None and idade < 600 and ativo.get("pc") != socket.gethostname():
-        print(f"Testando a conexão com o PC {ativo['pc']} na porta {ativo['porta']}...")
-        for host in [ativo["pc"], *ativo.get("ips", [])]:
-            print(f"  {host}: {'OK' if conecta(host, ativo['porta']) else 'FALHOU'}")
-        print("Se algum deu OK, este PC consegue usar o LabFlow aberto no outro.")
-        return 0
-    porta = porta_livre(args.porta, True)
-    manipulador = __import__("http.server").server
-    servidor = manipulador.ThreadingHTTPServer(("0.0.0.0", porta), manipulador.SimpleHTTPRequestHandler)
-    dados.escrever_json(arq, {"pc": socket.gethostname(), "ips": ips_deste_pc(), "porta": porta})
-    print(f"Este PC ({socket.gethostname()}) está ESCUTANDO na porta {porta} por 10 minutos.")
-    print("Agora rode 'Testar rede' nos outros PCs do laboratório. Tecle Ctrl+C aqui para parar.")
-    threading.Thread(target=servidor.serve_forever, daemon=True).start()
-    try:
-        time.sleep(600)
-    except KeyboardInterrupt:
-        pass
-    servidor.shutdown()
-    arq.unlink(missing_ok=True)
-    return 0
 
 
 # ---------------------------------------------------------------- principal ----------------------------------------
@@ -937,7 +967,6 @@ def main() -> int:
     ap.add_argument("--porta", type=int, default=PORTA_PADRAO)
     ap.add_argument("--sem-navegador", action="store_true")
     ap.add_argument("--redefinir-admin", action="store_true", help="gera nova senha provisória para o primeiro Admin")
-    ap.add_argument("--testar-rede", action="store_true")
     ap.add_argument("--oculto", action="store_true", help="sem a janela preta: ícone perto do relógio e avisos em janelinha")
     args = ap.parse_args()
     OCULTO = args.oculto
@@ -949,9 +978,6 @@ def main() -> int:
     LOCAL = Path(args.local) if args.local else base
     LOCAL.mkdir(parents=True, exist_ok=True)
     dados = Dados(Path(args.raiz).resolve())
-
-    if args.testar_rede:
-        return testar_rede(dados, args)
 
     print(f"LabFlow Lite {PROGRAMA_VERSAO}")
     srv = Servidor(args, dados, LOCAL)

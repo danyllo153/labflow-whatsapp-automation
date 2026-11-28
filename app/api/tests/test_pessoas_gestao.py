@@ -172,6 +172,7 @@ def test_sem_telefone_so_na_lite(admin, conexao, monkeypatch):
     r = admin.post("/admin/pessoas", json=sem)
     assert r.status_code == 422 and "telefone" in r.json()["detail"]  # servidor com bot: o telefone é obrigatório
     monkeypatch.setenv("LABFLOW_LITE", "1")
+    admin.headers["Host"] = "127.0.0.1"  # no modo Lite a API só aceita localhost/127.0.0.1
     assert admin.get("/ambiente").json()["lite"] is True
     r = admin.post("/admin/pessoas", json=sem)
     assert r.status_code == 201, r.text
