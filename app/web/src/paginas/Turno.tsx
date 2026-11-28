@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 
 import { enviarJson, lerJson } from "../api";
+import { useSessao } from "../sessao";
 import BlocosDoDia from "../componentes/BlocosDoDia";
 import ResumoEstufas from "../componentes/ResumoEstufas";
 import AtividadesDoTurno from "./AtividadesDoTurno";
@@ -112,7 +113,6 @@ export default function Turno() {
         <>
           <div className="turno-topo">
             <EquipeDoTurno aviso={estado.no_turno?.id ?? 0} contarRegistros={!estado.checkin_obrigatorio || !!estado.no_turno} />
-            <ResumoEstufas />
           </div>
           {!estado.pode_entrar ? (
             <div className="cartao">
@@ -124,7 +124,7 @@ export default function Turno() {
             <EntrarNoTurno estado={estado} aoEntrar={() => carregar(true)} />
           )}
           <FeitoNoTurnoCartao feito={estado.feito_no_turno} />
-          {(!estado.checkin_obrigatorio || estado.no_turno) && <CentralDoTurno />}
+          {(!estado.checkin_obrigatorio || estado.no_turno) ? <CentralDoTurno estufas={<ResumoEstufas />} /> : <ResumoEstufas />}
           {estado.pode_entrar && estado.recentes.some((r) => r.saida) && (
             <div className="cartao">
               <h2>Meus últimos turnos</h2>
@@ -385,6 +385,7 @@ function LinhaDoTurno({ entrada, aoMudar }: { entrada: Entrada; aoMudar: () => P
 }
 
 function FeitoNoTurnoCartao({ feito }: { feito: FeitoNoTurno }) {
+  const { lite } = useSessao(); // na Lite não há WhatsApp
   const partes: [string, number][] = [
     ["coletas", feito.coletas],
     ["leituras de NFC", feito.leituras],
@@ -403,14 +404,14 @@ function FeitoNoTurnoCartao({ feito }: { feito: FeitoNoTurno }) {
           </li>
         ))}
       </ul>
-      <p className="texto-secundario">Conta o que foi registrado no horário do turno (app ou WhatsApp).</p>
+      <p className="texto-secundario">Conta o que foi registrado no horário do turno{lite ? "" : " (app ou WhatsApp)"}.</p>
     </div>
   );
 }
 
 /** O que o turno tem para fazer e já fez: atividades, estufas, as leituras e as análises pendentes (dois blocos, 27/10) e
  * a linha do tempo (APP-033). */
-function CentralDoTurno() {
+function CentralDoTurno({ estufas: cartaoDasEstufas }: { estufas: ReactNode }) {
   const [estufas, setEstufas] = useState<DadosEstufas | null>(null);
 
   useEffect(() => {
@@ -421,8 +422,9 @@ function CentralDoTurno() {
     <>
       <AlertasEstufas alertas={estufas?.alertas} />
       <BlocosDoDia />
-      <AtividadesDoTurno />
       <RegistrosDoTurnoCartao />
+      <AtividadesDoTurno />
+      {cartaoDasEstufas}
       <p className="links-do-turno">
         <Link to="/esterilizacao">Registrar esterilização</Link> · <Link to="/material-asseptico">Material asséptico do dia</Link> · <Link to="/paginas">Registros diários</Link>
       </p>

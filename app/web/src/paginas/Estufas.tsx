@@ -287,7 +287,7 @@ function Leitura(props: {
 
   return (
     <div className="leitura-estufa" role="group" aria-label={`${nome} da ${nomeDaEstufa(estufa.id)}`} title={quem || undefined}>
-      <span className="leitura-nome">{nome}</span>
+      <span className="leitura-nome" aria-hidden="true">{nome === "Supervisório" ? "Sup." : "Field"}</span>
       {props.pode ? (
         <span className="botoes-estufa">
           <button type="button" className="botao-icone-ok" aria-label="Ok" title="Ok" aria-pressed={leitura?.ok === true} disabled={enviando} onClick={() => void gravar({ ok: true })}>
