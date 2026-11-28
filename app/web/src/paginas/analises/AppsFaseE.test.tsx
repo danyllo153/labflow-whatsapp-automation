@@ -38,7 +38,7 @@ describe("apps de análise da Fase E (E3 a E8)", () => {
     await userEvent.type(await screen.findByRole("textbox", { name: "Placas de 44 Normal C.T 48h" }), "<1, <1, 2");
     await userEvent.click(screen.getByRole("button", { name: "Ler as placas (1)" }));
     expect(await screen.findByRole("status", { name: "O que vai ser gravado" })).toHaveTextContent("tanque 44 normal CT = <1,<1,2");
-    await userEvent.click(screen.getByRole("button", { name: "Confirmar" }));
+    await userEvent.click(screen.getByRole("button", { name: "Salvar" }));
     expect(posts("POST /analises/tanques/placas")).toEqual([
       { itens: [{ analise_id: 7, etapa: "final", placas: "<1, <1, 2" }], previa: true },
       { itens: [{ analise_id: 7, etapa: "final", placas: "<1, <1, 2" }], previa: false },
@@ -56,7 +56,7 @@ describe("apps de análise da Fase E (E3 a E8)", () => {
     expect(screen.queryByRole("button", { name: /Feitas sem placas/ })).not.toBeInTheDocument(); // saiu (25/10)
     await userEvent.click(screen.getByRole("button", { name: "<1 em todas as leituras (1)" }));
     expect(screen.getByRole("textbox", { name: "Placas de 41 Normal Wort 240h" })).toHaveValue("<1, <1, <1");
-    await userEvent.click(await screen.findByRole("button", { name: "Confirmar" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Salvar" }));
     const itens = [
       { analise_id: 7, etapa: "final", placas: "<1, <1, <1" },
       { analise_id: 8, etapa: "final", placas: "<1, <1, <1" },
@@ -74,9 +74,9 @@ describe("apps de análise da Fase E (E3 a E8)", () => {
     const form = await screen.findByRole("form", { name: "Registrar coleta" });
     await userEvent.type(within(form).getByLabelText("Navio e viagem"), "O.SKY 189");
     await userEvent.type(within(form).getByLabelText("Tanques"), "1C, 2P");
-    await userEvent.click(within(form).getByRole("button", { name: "Ver o que vai ser criado" }));
+    await userEvent.click(within(form).getByRole("button", { name: "Revisar" }));
     expect(await within(form).findByText(/6 drops/)).toBeInTheDocument();
-    await userEvent.click(within(form).getByRole("button", { name: "Confirmar" }));
+    await userEvent.click(within(form).getByRole("button", { name: "Salvar" }));
     expect(posts("POST /analises/tanques/coleta").map((c) => [c.origem, c.navio, c.tanques, c.previa])).toEqual([
       ["navio", "O.SKY 189", "1C, 2P", true],
       ["navio", "O.SKY 189", "1C, 2P", false],
@@ -124,7 +124,7 @@ describe("apps de análise da Fase E (E3 a E8)", () => {
     const grupo = await screen.findByRole("region", { name: "TAB para espalhar" });
     await userEvent.click(within(grupo).getByRole("button", { name: "Espalhei (2)" }));
     expect(within(grupo).getByRole("status", { name: "Confirma?" })).toHaveTextContent("Load 43669 · #88 (6-10)");
-    await userEvent.click(within(grupo).getByRole("button", { name: "Confirmar" }));
+    await userEvent.click(within(grupo).getByRole("button", { name: "Salvar" }));
     expect(posts("POST /analises/testes/acao")).toEqual([{ acao: "espalhar", tipo: "TAB", ids: [1, 2], resultado: null }]);
     expect(await screen.findByText(/2 testes atualizados/)).toBeInTheDocument();
   });
@@ -174,7 +174,7 @@ describe("apps de análise da Fase E (E3 a E8)", () => {
     });
     expect(await screen.findByRole("checkbox", { name: /tanque 44 · D10/ })).toBeChecked(); // a lista vem toda marcada
     await userEvent.click(screen.getByRole("button", { name: "Concluir (1)" }));
-    await userEvent.click(await screen.findByRole("button", { name: "Confirmar" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Salvar" }));
     expect(posts("POST /analises/drops/concluir")).toEqual([{ ids: [5], previa: true }, { ids: [5], previa: false }]);
   });
 
@@ -188,7 +188,7 @@ describe("apps de análise da Fase E (E3 a E8)", () => {
     });
     await userEvent.click(await screen.findByRole("button", { name: "Abrir desvio" }));
     expect(posts("POST /analises/desvios/abrir")).toEqual([]);
-    await userEvent.click(screen.getByRole("button", { name: "Confirmar" }));
+    await userEvent.click(screen.getByRole("button", { name: "Salvar" }));
     expect(posts("POST /analises/desvios/abrir")).toEqual([{ analise_id: 7, etapa: "final" }]);
   });
 
@@ -199,9 +199,9 @@ describe("apps de análise da Fase E (E3 a E8)", () => {
       "POST /analises/recebimento-nfc/lancar": (c) => gravacao("load 43777 lote 123 fresh · C.T 48h: lido 12 → 120 (10^1)", c.previa),
     });
     await userEvent.type(await screen.findByRole("textbox", { name: "C.T 48h do load 43777 lote 123 fresh" }), "12");
-    await userEvent.click(screen.getByRole("button", { name: "Ver o que vai ser gravado (1)" }));
+    await userEvent.click(screen.getByRole("button", { name: "Revisar (1)" }));
     expect(await screen.findByText(/lido 12 → 120/)).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "Confirmar" }));
+    await userEvent.click(screen.getByRole("button", { name: "Salvar" }));
     expect(posts("POST /analises/recebimento-nfc/lancar").map((c) => c.previa)).toEqual([true, false]);
   });
 

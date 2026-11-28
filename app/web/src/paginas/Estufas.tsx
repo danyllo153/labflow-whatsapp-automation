@@ -207,7 +207,7 @@ function TodasOk({ dados, aoMudar }: { dados: DadosEstufas; aoMudar: (d: DadosEs
     <div className="todas-ok">
       {!vendo ? (
         <button type="button" className="botao botao-principal" onClick={() => setVendo(true)}>
-          Todas as pendentes Ok ({lista.length})
+          Marcar todas como OK ({lista.length})
         </button>
       ) : (
         <div className="previa-estufas" role="group" aria-label="Confirmar todas Ok">
@@ -217,7 +217,7 @@ function TodasOk({ dados, aoMudar }: { dados: DadosEstufas; aoMudar: (d: DadosEs
           </p>
           <div className="botoes-lado">
             <button type="button" className="botao botao-principal" disabled={enviando} onClick={() => void confirmar()}>
-              Confirmar
+              Salvar
             </button>
             <button type="button" className="botao botao-simples" onClick={() => setVendo(false)}>
               Cancelar
@@ -326,7 +326,7 @@ function Leitura(props: {
           </label>
           <div className="botoes-lado">
             <button type="submit" className="botao botao-principal" disabled={enviando}>
-              Gravar Não ok
+              Salvar
             </button>
             <button type="button" className="botao botao-simples" onClick={() => setNaoOk(false)}>
               Cancelar

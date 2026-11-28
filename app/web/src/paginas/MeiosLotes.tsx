@@ -137,7 +137,7 @@ export default function MeiosLotes() {
                     {dados.pode_registrar && <CorrigirDesde key={`${atual.meio}-${atual.em_uso.desde}`} meio={atual.meio} aoMudar={mudou} />}
                   </>
                 ) : (
-                  <p>Nenhum lote marcado em uso. Toque em "Usar este" num lote abaixo.</p>
+                  <p>Nenhum lote marcado em uso. Clique em "Usar este" num lote abaixo.</p>
                 )}
               </section>
               {dados.pode_registrar && <NovoLote meio={atual.meio} aoGravar={mudou} />}

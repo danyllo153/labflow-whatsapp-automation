@@ -73,7 +73,7 @@ export default function TrocarSenha({ obrigatoria = false }: { obrigatoria?: boo
         <input type={tipo} autoComplete="new-password" value={repetida} onChange={(e) => setRepetida(e.target.value)} />
       </label>
       <label className="marcar">
-        <input type="checkbox" checked={mostrar} onChange={(e) => setMostrar(e.target.checked)} /> Mostrar as senhas
+        <input type="checkbox" checked={mostrar} onChange={(e) => setMostrar(e.target.checked)} /> Exibir senhas
       </label>
       {erro && (
         <p className="mensagem-erro" role="alert">

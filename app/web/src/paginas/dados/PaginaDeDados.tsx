@@ -443,7 +443,7 @@ export default function PaginaDeDados({ def, embutida = false }: { def: Definica
             {etiquetas.map((f) => (
               <li key={f.chave}>
                 {f.rotulo}: <strong>{valorDoFiltro(f, aplicados[f.chave])}</strong>
-                <button type="button" aria-label={`Tirar o filtro ${f.rotulo}`} onClick={() => tirar(f.chave)}>
+                <button type="button" aria-label={`Limpar filtro ${f.rotulo}`} onClick={() => tirar(f.chave)}>
                   x
                 </button>
               </li>

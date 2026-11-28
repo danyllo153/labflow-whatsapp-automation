@@ -329,7 +329,7 @@ function Escritos({ relatorio: r, aoGravar, lite }: { relatorio: Relatorio; aoGr
       ))}
       <div className="botoes-lado nao-imprime">
         <button type="submit" className="botao botao-principal" disabled={gravando}>
-          Gravar
+          Salvar
         </button>
       </div>
       {aviso && (

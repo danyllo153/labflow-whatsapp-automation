@@ -254,7 +254,7 @@ function NovaColeta({ dados, escolha, tipo, aoGravar }: { dados: AguaDeConsumo; 
           <input maxLength={60} placeholder="opcional" value={coletadoPor} onChange={(e) => setColetadoPor(e.target.value)} />
         </label>
       </div>
-      <p className="texto-secundario">Pontos coletados (toque para tirar o que não foi coletado):</p>
+      <p className="texto-secundario">Pontos coletados (desmarque o que não foi coletado):</p>
       <div className="botoes-tipo" role="group" aria-label="Pontos coletados">
         {opcoes.map((p) => (
           <button
@@ -299,7 +299,7 @@ function NovaColeta({ dados, escolha, tipo, aoGravar }: { dados: AguaDeConsumo; 
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M20 6 9 17l-5-5" />
           </svg>
-          Registrar coleta ({marcados.length})
+          Salvar ({marcados.length})
         </button>
       </div>
     </form>
@@ -806,7 +806,7 @@ function LeituraDaColeta({
           </div>
           {!previa && (
             <button type="button" className="botao botao-principal" disabled={enviando || itens().length === 0} onClick={() => void enviar(false)}>
-              Ver o que vai ser gravado ({itens().length})
+              Revisar ({itens().length})
             </button>
           )}
           {previa && (
@@ -821,10 +821,10 @@ function LeituraDaColeta({
               )}
               <div className="botoes-lado">
                 <button type="button" className="botao botao-principal" disabled={enviando} onClick={() => void enviar(true)}>
-                  Confirmar
+                  Salvar
                 </button>
                 <button type="button" className="botao botao-simples" onClick={() => setPrevia(null)}>
-                  Voltar
+                  Cancelar
                 </button>
               </div>
             </div>

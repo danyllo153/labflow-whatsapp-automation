@@ -93,7 +93,7 @@ export default function Inicio() {
             <IconeAcao nome="imprimir" /> Imprimir
           </button>
           <Link className="botao botao-principal botao-pequeno" to="/turno">
-            + Registrar
+            Adicionar
           </Link>
         </div>
       </div>

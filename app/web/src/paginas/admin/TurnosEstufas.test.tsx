@@ -58,7 +58,7 @@ describe("Admin → Turnos e estufas (APP-028)", () => {
     const inicio = within(form).getByLabelText("Início de Manhã");
     await userEvent.clear(inicio);
     await userEvent.type(inicio, "07:00");
-    await userEvent.click(within(form).getByRole("button", { name: "Gravar horários" }));
+    await userEvent.click(within(form).getByRole("button", { name: "Salvar" }));
     expect(api.chamadas.find((c) => c.rota === "PUT /admin/turnos/horarios")?.corpo).toEqual({
       turnos: [
         { id: 1, inicio: "07:00", fim: "16:00" },
@@ -72,7 +72,7 @@ describe("Admin → Turnos e estufas (APP-028)", () => {
   it("mostra o erro da API quando os horários não fecham as 24 horas", async () => {
     abrir({ "PUT /admin/turnos/horarios": () => ({ status: 422, corpo: { detail: "Os três turnos precisam cobrir as 24 horas: cada um começa na hora em que o anterior termina." } }) });
     const form = await screen.findByRole("form", { name: "Horários dos turnos" });
-    await userEvent.click(within(form).getByRole("button", { name: "Gravar horários" }));
+    await userEvent.click(within(form).getByRole("button", { name: "Salvar" }));
     expect(await within(form).findByRole("alert")).toHaveTextContent("cobrir as 24 horas");
   });
 
@@ -81,7 +81,7 @@ describe("Admin → Turnos e estufas (APP-028)", () => {
     const grupo = await screen.findByRole("group", { name: "Atividades fixas" });
     expect(within(grupo).getByText("Leitura de placa")).toBeInTheDocument();
     expect(within(grupo).queryByText("Planilhas")).not.toBeInTheDocument();
-    await userEvent.click(within(grupo).getByRole("checkbox", { name: "Mostrar as desativadas" }));
+    await userEvent.click(within(grupo).getByRole("checkbox", { name: "Exibir desativadas" }));
     expect(within(grupo).getByText("Planilhas")).toBeInTheDocument();
     await userEvent.click(within(grupo).getByRole("button", { name: "Madrugada" }));
     expect(within(grupo).getByText(/Coliformes demais fábricas/)).toHaveTextContent("sex");
@@ -142,7 +142,7 @@ describe("Admin → Turnos e estufas (APP-028)", () => {
     await userEvent.clear(within(form).getByLabelText("Máximo (°C)"));
     await userEvent.type(within(form).getByLabelText("Máximo (°C)"), "36,5");
     await userEvent.type(within(form).getByLabelText("Vale desde (vazio = hoje)"), "2026-10-23");
-    await userEvent.click(within(form).getByRole("button", { name: "Gravar faixa" }));
+    await userEvent.click(within(form).getByRole("button", { name: "Salvar" }));
     expect(api.chamadas.find((c) => c.rota === "PUT /admin/turnos/estufas/3/faixa")?.corpo).toEqual({ minimo: 34.5, maximo: 36.5, desde: "2026-10-23" });
     await userEvent.click(within(e3).getByRole("button", { name: "Desativar a Estufa 03" }));
     expect(api.chamadas.find((c) => c.rota === "PUT /admin/turnos/estufas/3")?.corpo).toEqual({ ativa: false });

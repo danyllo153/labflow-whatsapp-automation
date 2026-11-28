@@ -45,7 +45,7 @@ describe("Turno: entrar e sair (APP-022)", () => {
     });
     expect(await screen.findByRole("radio", { name: /Tarde.*sugerido pelo horário/ })).toBeChecked();
     expect(screen.queryByLabelText("Sua entrada")).not.toBeInTheDocument();
-    expect(screen.getByText(/hora do toque no botão/)).toBeInTheDocument();
+    expect(screen.getByText(/hora do clique no botão/)).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("radio", { name: /Madrugada/ }));
     await userEvent.click(screen.getByRole("radio", { name: /Tarde/ }));

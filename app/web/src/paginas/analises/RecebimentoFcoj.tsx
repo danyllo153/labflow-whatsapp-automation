@@ -503,16 +503,16 @@ function Registrar({ pode, aoGravar }: { pode: boolean; aoGravar: () => void }) 
           {previa.pulados && previa.pulados.length > 0 && <p className="aviso-pulo-texto">⚠️ {avisoDePulo(previa.pulados)}</p>}
           <div className="botoes-lado">
             <button type="button" className="botao botao-principal" disabled={enviando || previa.texto.includes("nada novo")} onClick={() => void enviar(true)}>
-              Confirmar
+              Salvar
             </button>
             <button type="button" className="botao botao-simples" onClick={() => setPrevia(null)}>
-              Voltar
+              Cancelar
             </button>
           </div>
         </div>
       ) : (
         <button type="submit" className="botao botao-principal" disabled={enviando}>
-          Ver o que vai ser criado
+          Revisar
         </button>
       )}
       {feito && (
@@ -787,7 +787,7 @@ function Resultados({
 
       {pode && preenchidos.length > 0 && !previa && (
         <button type="button" className="botao botao-principal" disabled={enviando} onClick={() => void lancar(false)}>
-          Ver o que vai ser gravado ({preenchidos.length})
+          Revisar ({preenchidos.length})
         </button>
       )}
       {previa && (
@@ -796,10 +796,10 @@ function Resultados({
           <p className="previa-texto">{previa.texto}</p>
           <div className="botoes-lado">
             <button type="button" className="botao botao-principal" disabled={enviando} onClick={() => void lancar(true)}>
-              Confirmar
+              Salvar
             </button>
             <button type="button" className="botao botao-simples" onClick={() => setPrevia(null)}>
-              Voltar
+              Cancelar
             </button>
           </div>
         </div>
@@ -950,16 +950,16 @@ function CompostasDoLoad({ load, pode, aoCriar }: { load: LoadSemComposta; pode:
               <p>{previa}</p>
               <div className="botoes-lado">
                 <button type="button" className="botao botao-principal" disabled={enviando} onClick={() => void enviar(true)}>
-                  Confirmar
+                  Salvar
                 </button>
                 <button type="button" className="botao botao-simples" onClick={() => setPrevia(null)}>
-                  Voltar
+                  Cancelar
                 </button>
               </div>
             </div>
           ) : (
             <button type="button" className="botao botao-principal" disabled={enviando || !grupos.trim()} onClick={() => void enviar(false)}>
-              Ver o que vai ser criado
+              Revisar
             </button>
           )}
         </>

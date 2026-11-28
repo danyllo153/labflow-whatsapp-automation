@@ -68,7 +68,7 @@ describe("Esterilização (APP-026)", () => {
     expect(within(form).queryByLabelText(/Nome do meio/)).not.toBeInTheDocument();
     await userEvent.click(within(form).getByRole("button", { name: "Ponteira" }));
     await userEvent.type(within(form).getByLabelText("Número do ciclo"), "102");
-    await userEvent.click(within(form).getByRole("button", { name: "Registrar" }));
+    await userEvent.click(within(form).getByRole("button", { name: "Salvar" }));
     expect(api.chamadas.find((c) => c.rota === "POST /esterilizacao")?.corpo).toEqual({ tipo: "Ponteira", ciclo: "102", meio: "", descricao: "" });
     expect(await screen.findByText("Ponteira · ciclo 102")).toBeInTheDocument();
   });
@@ -76,7 +76,7 @@ describe("Esterilização (APP-026)", () => {
   it("sem escolher o tipo, avisa e não envia", async () => {
     const api = abrir();
     const form = await screen.findByRole("form", { name: "Registrar esterilização" });
-    await userEvent.click(within(form).getByRole("button", { name: "Registrar" }));
+    await userEvent.click(within(form).getByRole("button", { name: "Salvar" }));
     expect(within(form).getByRole("alert")).toHaveTextContent("Escolha o que foi esterilizado");
     expect(api.vezes("POST /esterilizacao")).toBe(0);
   });
@@ -86,7 +86,7 @@ describe("Esterilização (APP-026)", () => {
     const form = await screen.findByRole("form", { name: "Registrar esterilização" });
     await userEvent.click(within(form).getByRole("button", { name: "Outro" }));
     await userEvent.type(within(form).getByLabelText("Número do ciclo"), "5");
-    await userEvent.click(within(form).getByRole("button", { name: "Registrar" }));
+    await userEvent.click(within(form).getByRole("button", { name: "Salvar" }));
     expect(await within(form).findByRole("alert")).toHaveTextContent("Descreva o que foi esterilizado");
   });
 

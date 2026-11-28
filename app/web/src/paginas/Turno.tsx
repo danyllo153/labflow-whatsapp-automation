@@ -186,7 +186,7 @@ function EntrarNoTurno({ estado, aoEntrar }: { estado: EstadoDoTurno; aoEntrar: 
           </label>
         ))}
       </fieldset>
-      <p className="texto-secundario">A entrada fica registrada com a hora do toque no botão.</p>
+      <p className="texto-secundario">A entrada fica registrada com a hora do clique no botão.</p>
       {erro && (
         <p className="mensagem-erro" role="alert">
           {erro}

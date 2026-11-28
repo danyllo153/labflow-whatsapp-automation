@@ -34,7 +34,7 @@ export default function Coletas() {
         icone="coletas"
         cor="geral"
         titulo="Coletas"
-        descricao={coletor ? "Registre a coleta e veja as suas: toque numa para corrigir o tanque e a data ou excluir." : DEF.descricao}
+        descricao={coletor ? "Registre a coleta e veja as suas: clique numa para corrigir o tanque e a data ou excluir." : DEF.descricao}
         voltar={!coletor}
       />
       <AbasDaPagina titulo="Coletas" abas={abas} aba={aba} irPara={irPara} />

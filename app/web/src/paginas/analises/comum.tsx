@@ -217,10 +217,10 @@ export function CaixaDeConfirmar({
       {aviso && <p className="aviso-pulo-texto">⚠️ {aviso}</p>}
       <div className="botoes-lado">
         <button type="button" className="botao botao-principal" disabled={enviando} onClick={aoConfirmar}>
-          Confirmar
+          Salvar
         </button>
         <button type="button" className="botao botao-simples" onClick={aoVoltar}>
-          Voltar
+          Cancelar
         </button>
       </div>
     </div>

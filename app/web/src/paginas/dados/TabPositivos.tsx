@@ -119,7 +119,7 @@ export default function TabPositivos({
         <div>
           <h2>{teste} positivos no ano</h2>
           <span className="texto-secundario">
-            {positivos ? `${positivos.length} ${positivos.length === 1 ? "positivo" : "positivos"} em ${ano}` : "..."} · toque numa coluna
+            {positivos ? `${positivos.length} ${positivos.length === 1 ? "positivo" : "positivos"} em ${ano}` : "..."} · clique numa coluna
           </span>
         </div>
       </div>

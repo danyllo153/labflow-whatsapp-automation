@@ -167,7 +167,7 @@ function Horarios({ turnos, aoMudar }: { turnos: Horario[]; aoMudar: Muda }) {
       )}
       {aviso && <p className="texto-secundario" role="status">{aviso}</p>}
       <button type="submit" className="botao botao-principal">
-        Gravar horários
+        Salvar
       </button>
     </form>
   );
@@ -200,7 +200,7 @@ function AtividadesFixas({ config, aoMudar }: { config: Configuracao; aoMudar: M
       </div>
       <label className="marcar-feito">
         <input type="checkbox" checked={mostrarInativas} onChange={(e) => setMostrarInativas(e.target.checked)} />
-        <span>Mostrar as desativadas</span>
+        <span>Exibir desativadas</span>
       </label>
       {erro && (
         <p className="mensagem-erro" role="alert">
@@ -472,7 +472,7 @@ function LinhaEstufa({ estufa: e, aoMudar }: { estufa: EstufaAdmin; aoMudar: Mud
             </p>
           )}
           <button type="submit" className="botao botao-principal">
-            Gravar faixa
+            Salvar
           </button>
         </form>
       )}

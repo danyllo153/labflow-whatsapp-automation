@@ -180,18 +180,18 @@ function Registrar({ aoGravar }: { aoGravar: () => void }) {
           </label>
           {linhas.length > 1 && (
             <button type="button" className="botao-link" onClick={() => (setLinhas(linhas.filter((_, j) => j !== i)), g.voltar())}>
-              Tirar
+              Remover
             </button>
           )}
         </div>
       ))}
       <div className="botoes-lado">
         <button type="button" className="botao botao-simples" onClick={() => setLinhas([...linhas, { ...linhas[linhas.length - 1], lote: "" }])}>
-          + Lote
+          Adicionar lote
         </button>
         {!g.previa && (
           <button type="submit" className="botao botao-principal" disabled={g.enviando || validas.length === 0}>
-            Ver o que vai ser criado ({validas.length})
+            Revisar ({validas.length})
           </button>
         )}
       </div>
@@ -270,7 +270,7 @@ function Lancar({ pendentes, pode, aoGravar }: { pendentes: Pendente[]; pode: bo
           disabled={g.enviando}
           onClick={() => void g.ver({ itens: preenchidos.map((p) => ({ id: p.id, analise: p.analise, resultado: valores[chave(p)].trim() })) })}
         >
-          Ver o que vai ser gravado ({preenchidos.length})
+          Revisar ({preenchidos.length})
         </button>
       )}
       <PreviaDaGravacao g={g} titulo="O que vai ser gravado" />

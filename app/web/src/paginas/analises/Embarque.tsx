@@ -299,7 +299,7 @@ function Registrar({ aoGravar }: { aoGravar: () => void }) {
       </div>
       {!g.previa && (
         <button type="submit" className="botao botao-principal" disabled={g.enviando}>
-          Ver o que vai ser criado
+          Revisar
         </button>
       )}
       <PreviaDaGravacao g={g} />
@@ -435,7 +435,7 @@ function Compostas({ aoGravar }: { aoGravar: () => void }) {
         <MarcasDeTeste marcas={marcas} mudar={(m) => (setMarcas(m), g.voltar())} rotulo="Análises das compostas novas" />
         {!g.previa && (
           <button type="submit" className="botao botao-principal" disabled={g.enviando}>
-            Ver o que vai ser criado
+            Revisar
           </button>
         )}
         <PreviaDaGravacao g={g} />
@@ -564,7 +564,7 @@ function Lancar({ amostras, pode, aoGravar }: { amostras: Amostra[]; pode: boole
             void g.ver({ analise: analise.cod, itens: preenchidas.map((a) => ({ embarque_amostra_id: a.id, resultado: valores[a.id].trim() })) })
           }
         >
-          Ver o que vai ser gravado ({preenchidas.length})
+          Revisar ({preenchidas.length})
         </button>
       )}
       <PreviaDaGravacao g={g} titulo="O que vai ser gravado" />

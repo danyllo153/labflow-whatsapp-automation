@@ -83,12 +83,12 @@ describe("Estufas (APP-027; no Turno desde 26/10)", () => {
     const grupo = await screen.findByRole("group", { name: "Field chart da Estufa 04" });
     await userEvent.click(within(grupo).getByRole("button", { name: "Não ok" }));
     const form = screen.getByRole("form", { name: "Não ok: Field chart da Estufa 04" });
-    await userEvent.click(within(form).getByRole("button", { name: "Gravar Não ok" }));
+    await userEvent.click(within(form).getByRole("button", { name: "Salvar" }));
     expect(within(grupo).getByRole("alert")).toHaveTextContent("Digite a temperatura");
     expect(api.vezes("PUT /estufas/4")).toBe(0);
     await userEvent.type(within(form).getByLabelText("Temperatura (°C)"), "43,8");
     await userEvent.type(within(form).getByLabelText("Observação (opcional)"), "porta aberta");
-    await userEvent.click(within(form).getByRole("button", { name: "Gravar Não ok" }));
+    await userEvent.click(within(form).getByRole("button", { name: "Salvar" }));
     expect(api.chamadas.find((c) => c.rota === "PUT /estufas/4")?.corpo).toEqual({
       leitura: "Field chart",
       ok: false,
@@ -127,10 +127,10 @@ describe("Estufas (APP-027; no Turno desde 26/10)", () => {
       "PUT /estufas/4": () => ({ status: 200, corpo: BASE }),
       "PUT /estufas/6": () => ({ status: 200, corpo: BASE }),
     });
-    await userEvent.click(await screen.findByRole("button", { name: "Todas as pendentes Ok (4)" }));
+    await userEvent.click(await screen.findByRole("button", { name: "Marcar todas como OK (4)" }));
     expect(screen.getByRole("group", { name: "Confirmar todas Ok" })).toHaveTextContent("Grava Ok em 4 leituras: Estufa 04, Estufa 06.");
     expect(api.vezes("PUT /estufas/4")).toBe(0);
-    await userEvent.click(screen.getByRole("button", { name: "Confirmar" }));
+    await userEvent.click(screen.getByRole("button", { name: "Salvar" }));
     expect(api.vezes("PUT /estufas/4")).toBe(2);
     expect(api.vezes("PUT /estufas/6")).toBe(2);
     expect(api.chamadas.find((c) => c.rota === "PUT /estufas/6")?.corpo).toEqual({ leitura: "Supervisório", ok: true });

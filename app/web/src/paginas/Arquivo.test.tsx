@@ -74,16 +74,16 @@ describe("Arquivo de contra-amostras (PB21)", () => {
   it("a busca mostra em qual caixa está o load", async () => {
     abrir();
     const busca = await screen.findByRole("search", { name: "Procurar load no arquivo" });
-    await userEvent.type(within(busca).getByLabelText("Em qual caixa está o load ou o navio?"), "98801");
-    await userEvent.click(within(busca).getByRole("button", { name: "Procurar" }));
+    await userEvent.type(within(busca).getByLabelText("Localizar caixa"), "98801");
+    await userEvent.click(within(busca).getByRole("button", { name: "Buscar" }));
     expect(await within(busca).findByRole("list", { name: "Caixas do load" })).toHaveTextContent("Caixa 121 (Recebimento) · load 98801 · lotes 1-3");
   });
 
   it("procurar um navio acha a caixa dele, abre a caixa e o Laudo leva à folha do laudo (01/11)", async () => {
     abrir();
     const busca = await screen.findByRole("search", { name: "Procurar load no arquivo" });
-    await userEvent.type(within(busca).getByLabelText("Em qual caixa está o load ou o navio?"), "O.BETA 205");
-    await userEvent.click(within(busca).getByRole("button", { name: "Procurar" }));
+    await userEvent.type(within(busca).getByLabelText("Localizar caixa"), "O.BETA 205");
+    await userEvent.click(within(busca).getByRole("button", { name: "Buscar" }));
     expect(await within(busca).findByRole("list", { name: "Caixas do load" })).toHaveTextContent("Caixa 27 (Navio) · O.BETA 205");
     await userEvent.click(within(busca).getByRole("button", { name: "Abrir a caixa 27" }));
     const conteudo = await screen.findByRole("article", { name: /Caixa 27 · Navio/ });
@@ -94,8 +94,8 @@ describe("Arquivo de contra-amostras (PB21)", () => {
   it("a caixa de navio mostra a data inicial e deixa escolher outra, com a prévia do descarte (PB24, 01/11)", async () => {
     const api = abrir();
     const busca = await screen.findByRole("search", { name: "Procurar load no arquivo" });
-    await userEvent.type(within(busca).getByLabelText("Em qual caixa está o load ou o navio?"), "O.BETA 205");
-    await userEvent.click(within(busca).getByRole("button", { name: "Procurar" }));
+    await userEvent.type(within(busca).getByLabelText("Localizar caixa"), "O.BETA 205");
+    await userEvent.click(within(busca).getByRole("button", { name: "Buscar" }));
     await userEvent.click(await within(busca).findByRole("button", { name: "Abrir a caixa 27" }));
     const conteudo = await screen.findByRole("article", { name: /Caixa 27 · Navio/ });
     expect(conteudo).toHaveTextContent("Data inicial: 25/10/2026 (última amostra em 20/10/2026 + 5 dias)");
@@ -112,8 +112,8 @@ describe("Arquivo de contra-amostras (PB21)", () => {
   it("a caixa da planilha abre o PDF do laudo pelo botão Laudo e deixa trocar o PDF (01/11)", async () => {
     const api = abrir();
     const busca = await screen.findByRole("search", { name: "Procurar load no arquivo" });
-    await userEvent.type(within(busca).getByLabelText("Em qual caixa está o load ou o navio?"), "O.GAMA 10");
-    await userEvent.click(within(busca).getByRole("button", { name: "Procurar" }));
+    await userEvent.type(within(busca).getByLabelText("Localizar caixa"), "O.GAMA 10");
+    await userEvent.click(within(busca).getByRole("button", { name: "Buscar" }));
     await userEvent.click(await within(busca).findByRole("button", { name: "Abrir a caixa 28" }));
     const conteudo = await screen.findByRole("article", { name: /Caixa 28 · Navio/ });
     expect(within(conteudo).getByRole("link", { name: /Laudo/ })).toHaveAttribute("href", "/arquivo/navio/28/laudo-pdf");
@@ -131,7 +131,7 @@ describe("Arquivo de contra-amostras (PB21)", () => {
     expect(within(form).queryByLabelText(/Item/)).toBeNull();
     await userEvent.type(within(form).getByLabelText("Load"), "98802");
     await userEvent.type(within(form).getByLabelText("Lotes"), "1-5");
-    await userEvent.click(within(form).getByRole("button", { name: "Ver o que vai ser arquivado" }));
+    await userEvent.click(within(form).getByRole("button", { name: "Revisar" }));
     expect(api.chamadas.find((c) => c.rota === "POST /arquivo/arquivar")?.corpo).toMatchObject({ load: "98802", lotes: "1-5", caixa: 122, previa: true });
   });
 });

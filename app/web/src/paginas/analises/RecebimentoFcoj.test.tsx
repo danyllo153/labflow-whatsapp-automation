@@ -109,7 +109,7 @@ describe("Recebimento FCOJ como app (Fase E, E2)", () => {
     await userEvent.type(within(form).getByLabelText("Item"), "99902");
     await userEvent.selectOptions(within(form).getByLabelText("Fábrica"), "AQA");
     await userEvent.type(within(form).getByLabelText("Lotes"), "1-3");
-    await userEvent.click(within(form).getByRole("button", { name: "Ver o que vai ser criado" }));
+    await userEvent.click(within(form).getByRole("button", { name: "Revisar" }));
     expect(await within(form).findByText(/Load 98701 novo/)).toBeInTheDocument();
     expect(within(form).getByText(/O lote 4 ainda não chegou e já vieram lotes depois/)).toBeInTheDocument();
     expect(api.chamadas.filter((c) => c.rota.startsWith("POST")).map((c) => c.corpo.previa)).toEqual([true]);
@@ -117,7 +117,7 @@ describe("Recebimento FCOJ como app (Fase E, E2)", () => {
     expect(within(form).getByLabelText("Compostas")).toHaveValue("(1-3)");
     expect(within(form).getByText("1 composta no load 98701: lotes 1-3.")).toBeInTheDocument();
 
-    await userEvent.click(within(form).getByRole("button", { name: "Confirmar" }));
+    await userEvent.click(within(form).getByRole("button", { name: "Salvar" }));
     expect(await within(form).findByText(/^Registrado\./)).toBeInTheDocument();
     const enviado = api.chamadas.filter((c) => c.rota.startsWith("POST")).slice(-1)[0]?.corpo;
     expect(enviado).toMatchObject({ load: "98701", item: "99902", fabrica: "AQA", lotes: "1-3", compostas: "(1-3)", previa: false });
@@ -135,9 +135,9 @@ describe("Recebimento FCOJ como app (Fase E, E2)", () => {
     const lote2 = screen.getByRole("textbox", { name: "C.T 48h do load 98704 lote 2" });
     await userEvent.clear(lote2);
     await userEvent.type(lote2, "210");
-    await userEvent.click(screen.getByRole("button", { name: "Ver o que vai ser gravado (2)" }));
+    await userEvent.click(screen.getByRole("button", { name: "Revisar (2)" }));
     expect(await screen.findByText(/Acima do limite/)).toBeInTheDocument();
-    await userEvent.click(screen.getByRole("button", { name: "Confirmar" }));
+    await userEvent.click(screen.getByRole("button", { name: "Salvar" }));
     expect(await screen.findByText("2 resultados de C.T 48h gravados.")).toBeInTheDocument();
     const lancados = api.chamadas.filter((c) => c.rota === "POST /analises/recebimento-fcoj/lancar").map((c) => c.corpo);
     expect(lancados).toEqual([
@@ -180,9 +180,9 @@ describe("Recebimento FCOJ como app (Fase E, E2)", () => {
     expect(within(load).getByText("1-20")).toBeInTheDocument();
     await userEvent.click(within(load).getByRole("button", { name: "Usar o recomendado (1-5)(6-10)(11-15)(16-20)" }));
     expect(within(load).getByLabelText("Compostas")).toHaveValue("(1-5)(6-10)(11-15)(16-20)");
-    await userEvent.click(within(load).getByRole("button", { name: "Ver o que vai ser criado" }));
+    await userEvent.click(within(load).getByRole("button", { name: "Revisar" }));
     expect(await within(load).findByText(/4 compostas no load 98706: lotes 1-5/)).toBeInTheDocument();
-    await userEvent.click(within(load).getByRole("button", { name: "Confirmar" }));
+    await userEvent.click(within(load).getByRole("button", { name: "Salvar" }));
     expect(await screen.findByText(/^Criado\. 4 compostas no load 98706: #90/)).toBeInTheDocument();
     expect(await screen.findByText(/já criadas: #90 \(1-5\)/)).toBeInTheDocument();
     expect(screen.getByText(/^Criado\. 4 compostas no load 98706: #90/)).toBeInTheDocument(); // a mensagem fica depois de recarregar

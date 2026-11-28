@@ -66,19 +66,19 @@ describe("Admin → Coletas excluídas (APP-029)", () => {
         </ProvedorDeSessao>
       </MemoryRouter>,
     );
-    await userEvent.click(await screen.findByRole("button", { name: "Apagar de vez" }));
-    const form = screen.getByRole("form", { name: /^Apagar de vez Tanque T91/ });
+    await userEvent.click(await screen.findByRole("button", { name: "Excluir definitivamente" }));
+    const form = screen.getByRole("form", { name: /^Excluir definitivamente Tanque T91/ });
     expect(form).toHaveTextContent("não tem volta");
     await userEvent.type(within(form).getByLabelText("Motivo para apagar de vez"), "Teste antigo");
-    await userEvent.click(within(form).getByRole("button", { name: "Apagar de vez" }));
+    await userEvent.click(within(form).getByRole("button", { name: "Excluir definitivamente" }));
     expect(api.chamadas.find((c) => c.rota === "POST /coletas/excluidas/5/apagar")?.corpo).toEqual({ motivo: "Teste antigo" });
     expect(await screen.findByText(/apagada de vez/)).toBeInTheDocument();
   });
 
-  it("sem gerenciar pessoas (não é Admin), não aparece o Apagar de vez", async () => {
+  it("sem gerenciar pessoas (não é Admin), não aparece o Excluir definitivamente", async () => {
     abrir();
     expect(await screen.findByRole("button", { name: "Recuperar" })).toBeInTheDocument();
-    expect(screen.queryByRole("button", { name: "Apagar de vez" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Excluir definitivamente" })).toBeNull();
   });
 
   it("sem nenhuma excluída, avisa", async () => {

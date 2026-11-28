@@ -78,7 +78,7 @@ const TEXTOS: Record<Origem, { titulo: string; sigla: string; descricao: string 
 const RESULTADOS: Record<Origem, Parameters<typeof Resultados>[0]["paginas"]> = {
   terra: [
     { caminho: "/paginas/tanques", titulo: "Resultados", descricao: "C.T, B.L e Wort de cada tanque, Normal e Stress lado a lado", fixos: { origem: "Terra" } },
-    { caminho: "/paginas/tanques-terra", titulo: "Um tanque por coleta", descricao: "o status de cada tanque; toque para ver tudo dele" },
+    { caminho: "/paginas/tanques-terra", titulo: "Um tanque por coleta", descricao: "o status de cada tanque; clique para ver tudo dele" },
   ],
   navio: [
     { caminho: "/paginas/tanques", titulo: "Resultados", descricao: "C.T, B.L e Wort de cada tanque, Normal e Stress lado a lado", fixos: { origem: "Navio" } },
@@ -190,7 +190,7 @@ function Leituras({ leituras, erro, pode, aoGravar }: { leituras: Leitura[] | nu
     <div className="cartao">
       <h2>Leituras para fazer</h2>
       <p className="texto-secundario">
-        Marque as leituras e use <strong>&lt;1 em todas</strong>, ou digite as 3 placas (ex.: <code>&lt;1, &lt;1, 2</code>) e toque em{" "}
+        Marque as leituras e use <strong>&lt;1 em todas</strong>, ou digite as 3 placas (ex.: <code>&lt;1, &lt;1, 2</code>) e clique em{" "}
         <strong>Ler as placas</strong>. Nada é gravado antes do Confirmar.
       </p>
       {grupos.map(([grupo, itens]) => (
@@ -318,7 +318,7 @@ export function ColetaDeTanque({ origem, aoGravar, coletor }: { origem: Origem; 
       )}
       {!g.previa && (
         <button type="submit" className="botao botao-principal" disabled={g.enviando}>
-          Ver o que vai ser criado
+          Revisar
         </button>
       )}
       <PreviaDaGravacao g={g} />
@@ -358,7 +358,7 @@ function Analise({ origem, aoGravar }: { origem: Origem; aoGravar: () => void })
       />
       {!g.previa && (
         <button type="submit" className="botao botao-principal" disabled={g.enviando}>
-          Ver o que vai ser criado
+          Revisar
         </button>
       )}
       <PreviaDaGravacao g={g} />

@@ -91,7 +91,7 @@ export default function Instrucao({ app, parte }: { app: AppComInstrucao; parte:
           )}
           <div className="botoes-lado">
             <button type="button" className="botao botao-principal" disabled={salvando} onClick={() => void salvar()}>
-              Gravar
+              Salvar
             </button>
             <button type="button" className="botao botao-simples" disabled={salvando} onClick={() => setEditando(false)}>
               Cancelar
@@ -105,7 +105,7 @@ export default function Instrucao({ app, parte }: { app: AppComInstrucao; parte:
               <div className="instrucao-texto">{dados.texto}</div>
             ) : (
               <p className="texto-secundario">
-                {dados.pode_editar ? "Ainda não há IT desta análise. Toque em Adicionar IT." : "O Admin ainda não adicionou a IT desta análise."}
+                {dados.pode_editar ? "Ainda não há IT desta análise. Clique em Adicionar IT." : "O Admin ainda não adicionou a IT desta análise."}
               </p>
             ))}
           {parte === "video" &&

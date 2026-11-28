@@ -80,7 +80,7 @@ describe("Instrução e Vídeo dos apps (E9)", () => {
     );
     await userEvent.click(await screen.findByRole("button", { name: "Adicionar IT" }));
     await userEvent.type(screen.getByLabelText(/Instrução de trabalho/), "Conclua os drops do dia.");
-    await userEvent.click(screen.getByRole("button", { name: "Gravar" }));
+    await userEvent.click(screen.getByRole("button", { name: "Salvar" }));
     expect(await screen.findByText("Conclua os drops do dia.")).toBeInTheDocument();
     expect(api.chamadas.find((c) => c.rota === "PUT /analises/instrucoes/drops")?.corpo).toEqual({ texto: "Conclua os drops do dia.", video_url: null });
   });

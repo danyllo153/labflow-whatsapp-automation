@@ -190,8 +190,8 @@ function Registrar({ tipos, aoRegistrar }: { tipos: string[]; aoRegistrar: (d: D
 
   return (
     <form className="cartao" onSubmit={registrar} aria-label="Registrar esterilização">
-      <h2>O que foi esterilizado?</h2>
-      <p className="texto-secundario">Toque em tudo o que foi junto no mesmo ciclo.</p>
+      <h2>Itens do ciclo</h2>
+      <p className="texto-secundario">Marque tudo o que foi junto no mesmo ciclo.</p>
       <div className="botoes-tipo" role="group" aria-label="Tipo">
         {tipos.map((t) => (
           <button
@@ -224,7 +224,7 @@ function Registrar({ tipos, aoRegistrar }: { tipos: string[]; aoRegistrar: (d: D
       )}
       {escolhidos.includes("Outro") && (
         <label className="campo">
-          O que foi esterilizado
+          Qual é o item
           <input maxLength={120} value={descricao} onChange={(e) => setDescricao(e.target.value)} />
         </label>
       )}
@@ -234,7 +234,7 @@ function Registrar({ tipos, aoRegistrar }: { tipos: string[]; aoRegistrar: (d: D
         </p>
       )}
       <button type="submit" className="botao botao-principal" disabled={enviando}>
-        {escolhidos.length > 1 ? `Registrar ${escolhidos.length} no mesmo ciclo` : "Registrar"}
+        {escolhidos.length > 1 ? `Salvar ${escolhidos.length} no mesmo ciclo` : "Salvar"}
       </button>
     </form>
   );

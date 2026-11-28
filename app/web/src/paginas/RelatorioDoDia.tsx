@@ -270,7 +270,7 @@ function FinalizarODia({ finalizado, aoGravar }: { finalizado: boolean; aoGravar
       {finalizado && <p className="etiqueta etiqueta-ok">O dia de hoje já foi finalizado.</p>}
       {!g.previa && (
         <button type="button" className="botao botao-principal" disabled={g.enviando} onClick={() => void g.ver({})}>
-          Ver o que vai ser finalizado
+          Revisar
         </button>
       )}
       <PreviaDaGravacao g={g} titulo="O que vai ser finalizado" />
