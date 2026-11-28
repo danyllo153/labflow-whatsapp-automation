@@ -153,8 +153,9 @@ export default function MeiosLotes() {
                     base: `/laudos/meios-${atual.meio}`,
                     titulo: `Laudo de meios de cultura · ${atual.meio}`,
                     rotulo: `Laudo de meios de cultura ${atual.meio}`,
-                    explicacao: "Uma folha por meio, 33 lotes por folha. O bloco Analista / Responsável é assinado à mão.",
+                    explicacao: "Uma folha por meio, 33 lotes por folha. Em \"Quem vai no laudo\" você escolhe o Analista / Responsável; a assinatura é à mão.",
                     unidade: "lotes",
+                    nomes: `meios-${atual.meio}`,
                   }}
                 />
               )}

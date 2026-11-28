@@ -15,6 +15,7 @@ from pypdf import PdfReader, PdfWriter
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 
+from labflow_api import nomes_laudo
 from labflow_api.rotas_turno import FUSO
 
 CAPACIDADE = 35  # linhas por página do laudo
@@ -59,7 +60,8 @@ def linhas_da_pagina(con: psycopg.Connection, laudo_id: int) -> list[dict]:
         linhas.append(
             {
                 "data": primeira.astimezone(FUSO).date(), "dia": dia, "ciclo": ciclo, "material": " / ".join(materiais),
-                "eficiente": eficiente, "analista": " / ".join(pessoas),
+                # o analista: quem foi escolhido para o dia (086); sem escolha, quem registrou (ou em branco, 26/11)
+                "eficiente": eficiente, "analista": nomes_laudo.no_pdf(con, "esterilizacao", laudo_id, dia, " / ".join(pessoas)),
             }
         )
     return linhas

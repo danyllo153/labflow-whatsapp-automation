@@ -17,7 +17,7 @@ from pydantic import BaseModel, Field
 from pypdf import PdfReader
 from reportlab.pdfgen import canvas
 
-from labflow_api import laudo_esterilizacao, laudos, rotas_turno
+from labflow_api import laudo_esterilizacao, laudos, nomes_laudo, rotas_turno
 from labflow_api.dependencias import PessoaLogada, obter_conexao
 from labflow_api.permissoes import exigir
 from labflow_api.rotas_admin import _recusa_do_banco
@@ -638,9 +638,10 @@ def _gerar_laudo(con: psycopg.Connection, pagina_id: int, modelo: bytes | None) 
         nome = laudo_esterilizacao.primeiro_nome(quem) if quem else ""
         if nome and nome not in analistas:
             analistas.append(nome)
-    if analistas:
+    # "Analista Responsável": quem foi escolhido para a folha (086); sem escolha, quem registrou (na Lite, em branco)
+    if texto := nomes_laudo.no_pdf(con, NOME_DO_LAUDO, pagina_id, None, ", ".join(analistas), juntar=", "):
         x0, x1, topo, base = LINHA_DO_ANALISTA
-        celulas.append(laudos.Celula(", ".join(analistas), x0, x1, topo, base, centro=False, tamanho=10))
+        celulas.append(laudos.Celula(texto, x0, x1, topo, base, centro=False, tamanho=10))
     return laudos.preencher(modelo, _demonstracao, celulas)
 
 
@@ -719,9 +720,9 @@ def _gerar_laudo_nfc(con: psycopg.Connection, pagina_id: int, modelo: bytes | No
         nome = laudo_esterilizacao.primeiro_nome(quem) if quem else ""
         if nome and nome not in analistas:
             analistas.append(nome)
-    if analistas:
+    if texto := nomes_laudo.no_pdf(con, NOME_DO_LAUDO_NFC, pagina_id, None, ", ".join(analistas), juntar=", "):
         x0, x1, topo, base = LINHA_DO_ANALISTA
-        celulas.append(laudos.Celula(", ".join(analistas), x0, x1, topo, base, centro=False, tamanho=10))
+        celulas.append(laudos.Celula(texto, x0, x1, topo, base, centro=False, tamanho=10))
     return laudos.preencher(modelo, _demonstracao, celulas)
 
 

@@ -11,7 +11,7 @@ from datetime import date
 
 import psycopg
 
-from labflow_api import laudo_esterilizacao, laudos
+from labflow_api import laudo_esterilizacao, laudos, nomes_laudo
 from labflow_api.rotas_analise_recebimento import modelo_deitado_valido
 
 DESDE = date(2026, 10, 20)  # o que entra nas folhas na primeira vez (o que veio antes já está no papel)
@@ -361,8 +361,9 @@ def _gerar_embarque(con: psycopg.Connection, pagina_id: int, modelo: bytes | Non
         nome = laudo_esterilizacao.primeiro_nome(d[9]) if d[9] else ""
         if nome and nome not in analistas:
             analistas.append(nome)
-    if analistas:  # "Analista Responsável": quem registrou as amostras da folha
-        celulas.append(laudos.Celula(", ".join(analistas), 140.0, 560.0, 436.0, 452.0, centro=False))
+    # "Analista Responsável": quem foi escolhido para a folha (086); sem escolha, quem registrou as amostras (na Lite, em branco)
+    if texto := nomes_laudo.no_pdf(con, "embarque-fcoj", pagina_id, None, ", ".join(analistas), juntar=", "):
+        celulas.append(laudos.Celula(texto, 140.0, 560.0, 436.0, 452.0, centro=False))
     return laudos.preencher(modelo, DEMO_EMB, celulas)
 
 

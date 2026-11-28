@@ -52,6 +52,7 @@ export const ABAS_NFC = [
 // O mesmo papel e o mesmo modelo do laudo do Recebimento FCOJ (decidido em 25/10), em folhas próprias do item 129.
 const LAUDO = {
   base: "/laudos/recebimento-nfc",
+  nomes: "recebimento-nfc",
   titulo: "Laudo do recebimento de NFC",
   rotulo: "Laudo do recebimento de NFC",
   explicacao:

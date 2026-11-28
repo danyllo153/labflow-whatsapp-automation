@@ -364,6 +364,38 @@ def achar(linha: list[Letra], frase: str, depois: float = -1.0) -> tuple[Letra, 
     return (letras[i], letras[i + len(alvo) - 1]) if i >= 0 else None
 
 
+def depois_do_rotulo(
+    modelo: bytes | None, rotulos: tuple[str, ...], texto: str, padrao: tuple[float, float, float, float],
+    abaixo_de: float = 0.0, tamanho: float = 10.0,
+) -> Celula | None:
+    """Célula logo depois de um rótulo do modelo enviado (o "Nome" do rodapé da incubação, o "Analista / Responsável" dos
+    meios; 086, 27/11): a primeira linha abaixo de `abaixo_de` com um dos rótulos; o texto vai até o próximo rótulo da
+    linha (ex.: "Visto"). Sem modelo, ou sem o rótulo nele, vai em `padrao` (x0, x1, topo, base)."""
+    if not texto:
+        return None
+    linhas: list[list[Letra]] = []
+    if modelo:
+        try:
+            linhas = letras_do_modelo(modelo)
+        except Exception:
+            linhas = []
+    for linha in linhas:
+        if not linha or linha[0].y < abaixo_de:
+            continue
+        for rotulo in rotulos:
+            achado = achar(linha, rotulo)
+            if achado is None:
+                continue
+            ultima = achado[1]
+            depois = [le for le in linha if le.x0 > ultima.x1 + 6 and not le.letra.isspace() and le.letra not in ":_./"]
+            x0 = ultima.x1 + 2
+            x1 = max(depois[0].x0 - 4 if depois else 565.0, x0 + 60)
+            meio = ultima.y - tamanho / 3  # o _desenhar põe a linha de base em meio + tamanho/3: a mesma do rótulo
+            return Celula(texto, x0, x1, meio - 6, meio + 6, centro=False, tamanho=tamanho, fixo=True)
+    x0, x1, topo, base = padrao
+    return Celula(texto, x0, x1, topo, base, centro=False, tamanho=tamanho, fixo=True)
+
+
 def TABELA_CELULA(tabela: Tabela, texto: str, linha: int, coluna: int, centro: bool = True) -> Celula:  # noqa: N802
     """A célula de uma tabela, com o texto à esquerda quando não é centralizado (Times 11, o papel)."""
     return tabela.celula(texto, linha, coluna, centro=centro)

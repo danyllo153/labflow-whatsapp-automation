@@ -12,6 +12,15 @@
 - **Vários PCs ao mesmo tempo:** o primeiro que abre é o **servidor** (PostgreSQL e app no próprio PC); os outros só abrem o navegador nele (porta 8000). Um PostgreSQL só: sem conflito. Servidor habitual: o PC da micro que fica ligado 24 h (Windows 10).
 - **Plano B:** sem a porta liberada pela TI, um PC por vez (o aviso diz quem está com ele aberto).
 
+## Sem senha, sem Admin e sem celular (27/11)
+- **Entrar:** a tela mostra a lista de nomes e "Sou novo aqui". Não há senha, senha provisória, "Redefinir senha do Admin" nem cargos: todas as pessoas têm as mesmas funções (a API trata o cargo do banco como Admin só no modo Lite, `LABFLOW_LITE=1`). Em Pessoas dá para cadastrar um nome e bloquear/liberar o acesso; quem é bloqueado perde a sessão na hora.
+- **O "Admin" some:** na primeira abertura quem digita o nome assume o registro que era o Admin (mesmo id; migration 088). Em instalação antiga, as pessoas que já existiam aparecem na lista. Nome com mais de 40 letras gravado antes da 087 continua na lista, para editar.
+- **Rastro:** cada lançamento grava quem fez; a sessão guarda o nome do PC (`app.sessoes.aparelho`).
+- **Limite aceito:** sem senha, quem senta no PC escolhe qualquer nome; o rastro é o nome escolhido e o PC. Só é aceitável porque a Lite escuta **só em 127.0.0.1** (um PC por vez). **Voltar a atender outros PCs = veto da segurança até haver senha de novo.**
+- **Sem celular:** sem manifest nem service worker (o que uma versão antiga deixou no navegador é desligado), sem barra de baixo nem gaveta; a tela é para PC (a partir de ~1280 px). A Completa continua com o celular.
+- **Quem vai no laudo:** em cada folha em preenchimento, "Quem vai no laudo" escolhe os nomes (086); sem ninguém marcado o campo sai em branco (a assinatura é à mão). **Equipe do turno:** quem está no turno coloca os colegas nele e tira quem entrou por engano.
+- **Encerrar:** grava a cópia no G:, **confere que ela vale** e só então libera o outro PC; se não conferiu, o aviso de servidor fica e o PC avisa.
+
 ## Pastas
 ```
 LabFlow\                      (G:)

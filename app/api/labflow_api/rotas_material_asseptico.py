@@ -19,7 +19,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response,
 from pydantic import BaseModel, Field
 
 from labflow_api import laudo_asseptico as laudo
-from labflow_api import laudo_esterilizacao, laudos, rotas_turno
+from labflow_api import laudo_esterilizacao, laudos, nomes_laudo, rotas_turno
 from labflow_api.dependencias import PessoaLogada, obter_conexao
 from labflow_api.permissoes import exigir, pode
 from labflow_api.rotas_turno import FUSO
@@ -330,7 +330,7 @@ def baixar_pdf(
     _da_pagina(con, pagina_id)
     dias = [
         {"dia": d, "ponteiras": p, "agua_diluicao": a, "placas": pl, "meios": m, "ct": ct or "", "bl": bl or "",
-         "analista": laudo_esterilizacao.primeiro_nome(quem)}
+         "analista": nomes_laudo.no_pdf(con, laudo.NOME_DO_MODELO, pagina_id, d, laudo_esterilizacao.primeiro_nome(quem))}
         for d, p, a, pl, m, ct, bl, quem in con.execute(
             """
             SELECT m.dia, m.ponteiras, m.agua_diluicao, m.placas, m.meios, m.ct, m.bl, coalesce(u.nome, c.usuario)
