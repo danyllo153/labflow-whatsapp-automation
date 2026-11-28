@@ -43,6 +43,7 @@ export interface DefinicaoDePagina {
   oculta?: boolean; // não aparece na lista, mas o endereço continua abrindo (links antigos)
   linkDaLinha?: (linha: Record<string, unknown>) => string; // tocar na linha abre a página do item
   fixos?: Record<string, string>; // filtro sempre aplicado na API (ex.: uma página por teste, 24/10)
+  semResumo?: boolean; // sem o cartão "Por situação" (barras) em cima da tabela (Tanques, 28/11)
   agrupar?: "tanques" | "drops"; // lado a lado (27/11): uma linha por tanque e coleta, as análises em colunas (ladoALado.ts)
   dashboard?: { tipo: "colunas" | "tendencia"; coluna: string; aberto?: boolean }; // gráfico que o Dashboard mostra primeiro (25/10)
 }
@@ -144,8 +145,8 @@ export const PAGINAS: DefinicaoDePagina[] = [
     titulo: "Tanques",
     descricao: "Leituras de C.T, B.L e Psicrotróficos por tanque (normal e stress), com o resultado Ok / Não ok.",
     api: "/paginas/tanques",
-    resultado: { tipo: "tendencia", data: "coleta" },
-    agrupar: "tanques",
+    agrupar: "tanques", // sem gráfico nem cartão "Por situação" (28/11): a tabela Normal | Stress ocupa o espaço
+    semResumo: true,
     impressao: "deitado",
     semColetor: true,
     colunas: [

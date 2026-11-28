@@ -461,7 +461,7 @@ export default function PaginaDeDados({ def, embutida = false }: { def: Definica
         )}
         {!dados && !erro && <p className="carregando">Carregando...</p>}
 
-        {dados && !erro && dados.resumo && dados.resumo.length > 0 && dados.total > 0 && (
+        {dados && !erro && !def.semResumo && dados.resumo && dados.resumo.length > 0 && dados.total > 0 && (
           <section className="cartao" aria-label="Por situação">
             <h2>
               {dados.resumo_coluna === "status" ? "Por status" : "Por situação"} <span className="contador">{dados.total}</span>

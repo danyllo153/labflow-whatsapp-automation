@@ -77,11 +77,11 @@ const TEXTOS: Record<Origem, { titulo: string; sigla: string; descricao: string 
 /** Só a leitura final, com o gráfico de C.T, B.L e Wort e o limite (27/10); o filtro de origem fica fixo no app. */
 const RESULTADOS: Record<Origem, Parameters<typeof Resultados>[0]["paginas"]> = {
   terra: [
-    { caminho: "/paginas/tanques", titulo: "Resultados", descricao: "C.T, B.L e Wort de cada tanque, com o gráfico", fixos: { origem: "Terra" } },
+    { caminho: "/paginas/tanques", titulo: "Resultados", descricao: "C.T, B.L e Wort de cada tanque, Normal e Stress lado a lado", fixos: { origem: "Terra" } },
     { caminho: "/paginas/tanques-terra", titulo: "Um tanque por coleta", descricao: "o status de cada tanque; toque para ver tudo dele" },
   ],
   navio: [
-    { caminho: "/paginas/tanques", titulo: "Resultados", descricao: "C.T, B.L e Wort de cada tanque, com o gráfico", fixos: { origem: "Navio" } },
+    { caminho: "/paginas/tanques", titulo: "Resultados", descricao: "C.T, B.L e Wort de cada tanque, Normal e Stress lado a lado", fixos: { origem: "Navio" } },
     { caminho: "/paginas/navios", titulo: "Navios", descricao: "cada navio com os tanques e o FCOJ", fixos: { produto: "NFC" } },
   ],
 };
