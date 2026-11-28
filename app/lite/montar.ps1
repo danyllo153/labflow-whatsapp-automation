@@ -3,11 +3,11 @@
 # Spec: docs/specs/lims/12-versao-lite.md. Arquivo em ASCII de proposito (Windows PowerShell 5.1).
 #
 # Uso: powershell -ExecutionPolicy Bypass -File app\lite\montar.ps1 -Saida C:\temp\lite
-#   -PostgresDir  pasta de um PostgreSQL 15+ ja instalado (bin, lib, share); sem ela usa PGROOT ou baixa da EDB
+#   -PostgresDir  pasta de um PostgreSQL 17 ja instalado (bin, lib, share); sem ela usa PGROOT ou baixa da EDB (17.12)
 param(
   [string]$Saida = "lite-pacote",
   [string]$PostgresDir = "",
-  [string]$PostgresZipVersao = "16.6-1",
+  [string]$PostgresZipVersao = "17.12-1",  # a MESMA versao principal do CI (o runner do GitHub tem a 17); o banco dos PCs e do 17
   [string]$PythonVersao = "3.12.8",
   [string]$Versao = ""
 )
@@ -50,12 +50,12 @@ Get-ChildItem (Join-Path $repo "db\migrations") -Filter "*.sql" | Where-Object {
   Copy-Item -Destination (Join-Path $inst "migrations")
 Copy-Item (Join-Path $repo "app\lite\lite.py") (Join-Path $inst "lite\lite.py")
 
-# 3. PostgreSQL portatil (15 ou mais novo: as migrations usam NULLS NOT DISTINCT)
+# 3. PostgreSQL portatil (sempre a versao 17: a trava do lite.py recusa banco de outra versao principal)
 Write-Host "3/6 PostgreSQL"
 if (-not $PostgresDir -and $env:PGROOT) { $PostgresDir = $env:PGROOT }
 if ($PostgresDir) {
   $major = [int](((& (Join-Path $PostgresDir "bin\pg_config.exe") --version) -replace "[^0-9.]", "").Split(".")[0])
-  if ($major -lt 15) { Write-Host "PostgreSQL $major em $PostgresDir e antigo; baixando o $PostgresZipVersao"; $PostgresDir = "" }
+  if ($major -ne 17) { Write-Host "PostgreSQL $major em $PostgresDir; o pacote usa a versao 17; baixando o $PostgresZipVersao"; $PostgresDir = "" }
 }
 if (-not $PostgresDir) {
   $pz = Join-Path $tmp "pg.zip"

@@ -18,6 +18,7 @@ import datetime as dt
 import getpass
 import json
 import os
+import re
 import secrets
 import shutil
 import signal
@@ -197,6 +198,40 @@ def api_viva(porta: int) -> bool:
         return False
 
 
+def major_do_banco(data: Path) -> int | None:
+    """Versão principal do PostgreSQL que criou a pasta de dados (arquivo PG_VERSION, ex.: 17). None se não existe/ilegível."""
+    try:
+        return int((data / "PG_VERSION").read_text(encoding="utf-8").strip().split(".")[0])
+    except (OSError, ValueError):
+        return None
+
+
+def major_do_pacote(pg_bin: Path) -> int | None:
+    """Versão principal do postgres.exe do pacote (VERSAO.txt ao lado, gravado na montagem; senão `postgres --version`)."""
+    texto = ""
+    with contextlib.suppress(OSError):
+        texto = (pg_bin.parent / "VERSAO.txt").read_text(encoding="utf-8", errors="replace")
+    if not texto:
+        with contextlib.suppress(Exception):
+            texto = subprocess.run([str(pg_bin / ("postgres" + EXE)), "--version"], capture_output=True, text=True,
+                                   stdin=subprocess.DEVNULL, creationflags=SEM_JANELA).stdout
+    achou = re.search(r"(\d+)(?:\.\d+)?", texto.split(")")[-1] if ")" in texto else texto)
+    return int(achou.group(1)) if achou else None
+
+
+def mensagem_versao_diferente(do_banco: int, do_pacote: int) -> str:
+    return (f"Este pacote traz o PostgreSQL {do_pacote}, mas o banco deste PC é do PostgreSQL {do_banco}: use o pacote certo "
+            f"(o da mesma versão do PostgreSQL). Nada foi alterado nem apagado.")
+
+
+def checar_versao_banco(data: Path, pg_bin: Path) -> None:
+    """Trava (27/11): banco criado por outra versão principal do PostgreSQL não abre, e o programa NÃO pode recriar a pasta
+    de dados por cima (apagaria o banco). Levanta RuntimeError com a mensagem clara antes de ligar qualquer coisa."""
+    do_banco, do_pacote = major_do_banco(data), major_do_pacote(pg_bin)
+    if do_banco is not None and do_pacote is not None and do_banco != do_pacote:
+        raise RuntimeError(mensagem_versao_diferente(do_banco, do_pacote))
+
+
 # ---------------------------------------------------------------- PostgreSQL local -----------------------------------
 class Postgres:
     def __init__(self, local: Path) -> None:
@@ -359,9 +394,44 @@ class Servidor:
                 return c
         return None
 
+    def dump_ilegivel(self) -> str | None:
+        """Há cópia na pasta de rede, mas o pg_restore deste pacote não consegue ler (gravada por um PostgreSQL mais novo, ou
+        danificada). Devolve a mensagem em português, ou None se não há esse problema."""
+        achou = [c for c in (self.dados.dump, self.dados.novo, self.dados.anterior) if c.exists() and c.stat().st_size > 0]
+        if not achou or self.dump_do_g() is not None:
+            return None
+        return (f"A cópia do banco na pasta de rede ({achou[0].name}) não pôde ser lida por este pacote (PostgreSQL "
+                f"{major_do_pacote(self.pg.bin) or '?'}). Ela provavelmente foi gravada por um PostgreSQL mais novo: use o pacote "
+                f"mais recente do LabFlow. Nada foi alterado nem apagado; se o problema continuar, procure em dados\\backup e chame o suporte.")
+
+    def perguntar_restaurar(self, do_banco: int, do_pacote: int) -> bool:
+        return confirmar(
+            "LabFlow: banco de outra versão",
+            f"O banco guardado neste PC é do PostgreSQL {do_banco}, e este pacote traz o PostgreSQL {do_pacote}.\n\n"
+            "Posso restaurar a última cópia gravada na pasta de rede (nenhum dado é apagado: o banco antigo deste PC fica guardado "
+            "em uma pasta ao lado).\n\nRestaurar a cópia da pasta de rede agora?",
+        )
+
+    def tratar_versao_do_banco(self) -> None:
+        """Banco local de outra versão principal do PostgreSQL: nunca liga nem recria por cima. Se o pacote é mais NOVO e há cópia
+        legível na pasta de rede, oferece restaurar dela; o banco antigo é só RENOMEADO (data-pgNN-...), nunca apagado."""
+        pg = self.pg
+        do_banco, do_pacote = major_do_banco(pg.data), major_do_pacote(pg.bin)
+        if do_banco is None or do_pacote is None or do_banco == do_pacote:
+            return
+        if do_pacote < do_banco or self.dump_do_g() is None:
+            raise RuntimeError(mensagem_versao_diferente(do_banco, do_pacote))
+        if not self.perguntar_restaurar(do_banco, do_pacote):
+            raise RuntimeError(mensagem_versao_diferente(do_banco, do_pacote))
+        guardado = self.local / f"data-pg{do_banco}-{dt.datetime.now():%Y%m%d-%H%M%S}"
+        os.replace(pg.data, guardado)
+        log(f"Banco antigo deste PC (PostgreSQL {do_banco}) guardado em {guardado.name}. Restaurando a cópia da pasta de rede...")
+        self._gravar_estado(ultimo_gravado_em=None, origem="g")
+
     def subir_banco(self) -> bool:
         """Liga o PostgreSQL local com os dados certos. Devolve True se o banco acabou de ser criado do zero."""
         pg = self.pg
+        self.tratar_versao_do_banco()  # antes de qualquer coisa: versão diferente não liga nem recria por cima
         pg.senha_super = self.estado.get("senha_super") or secrets.token_urlsafe(18)
         pg.senha_web = self.estado.get("senha_web") or secrets.token_urlsafe(18)
         pg.porta = porta_livre(54329, False)
@@ -372,6 +442,10 @@ class Servidor:
         reaproveitar = tem_local and (
             (info is not None and grav == info.get("gravado_em")) or (info is None and self.estado.get("origem") == "zero")
         )
+        if not reaproveitar:  # vai recriar o banco local: antes, confere que a cópia da pasta pode ser lida (senão, nada é mexido)
+            problema = self.dump_ilegivel()
+            if problema:
+                raise RuntimeError(problema)
         self._gravar_estado(senha_super=pg.senha_super, senha_web=pg.senha_web, limpo=False)
         if reaproveitar:
             log("Banco deste PC está em dia com o G:. Ligando o PostgreSQL...")
