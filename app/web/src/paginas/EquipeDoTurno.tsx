@@ -6,7 +6,7 @@ import { iniciais } from "../componentes/MenuConta";
 /**
  * Equipe do turno (APP-033): quem está no turno agora e quem já saiu, com a hora da entrada. Vários analistas dividem o
  * mesmo turno; a tela se atualiza sozinha para o celular e o computador mostrarem a mesma equipe.
- * LabFlow Lite (27/11): um PC para todos, então quem está no turno coloca os colegas nele ("Colocar no
+ * LabFlow Lite (27/11): um PC para todos, então quem está no turno coloca os colegas nele ("Adicionar ao
  * turno") e tira quem entrou por engano.
  */
 
@@ -142,7 +142,7 @@ export default function EquipeDoTurno({ aviso, contarRegistros = true }: { aviso
           }}
         >
           <label>
-            Colocar no turno
+            Adicionar ao turno
             <select value={escolhida} onChange={(e) => setEscolhida(e.target.value)} disabled={enviando}>
               <option value="">Escolha quem está com você</option>
               {equipe.disponiveis.map((d) => (
@@ -153,7 +153,7 @@ export default function EquipeDoTurno({ aviso, contarRegistros = true }: { aviso
             </select>
           </label>
           <button type="submit" className="botao botao-principal" disabled={!escolhida || enviando}>
-            Colocar
+            Adicionar
           </button>
         </form>
       )}
