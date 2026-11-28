@@ -4427,3 +4427,33 @@ h2 {
   background: var(--laranja-suave);
   z-index: 2;
 }
+
+/* Equipe do turno: Adicionar e Sair do turno lado a lado; quem está saindo em lista (28/11) */
+.equipe-acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.equipe-acoes .equipe-colocar {
+  margin-top: 0;
+}
+
+.equipe-sair {
+  margin-top: 12px;
+}
+
+.equipe-sair fieldset {
+  border: 0;
+  margin: 0 0 8px;
+  padding: 0;
+}
+
+.equipe-sair-pessoa {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 40px;
+}
