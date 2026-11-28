@@ -45,7 +45,7 @@ export interface DefinicaoDePagina {
   fixos?: Record<string, string>; // filtro sempre aplicado na API (ex.: uma página por teste, 24/10)
   semResumo?: boolean; // sem o cartão "Por situação" (barras) em cima da tabela (Tanques, 28/11)
   agrupar?: "tanques" | "drops"; // lado a lado (27/11): uma linha por tanque e coleta, as análises em colunas (ladoALado.ts)
-  dashboard?: { tipo: "colunas" | "tendencia"; coluna: string; aberto?: boolean }; // gráfico que o Dashboard mostra primeiro (25/10)
+  dashboard?: { tipo: "colunas" | "tendencia"; coluna: string; aberto?: boolean; soColunas?: boolean }; // gráfico que o Dashboard mostra primeiro (25/10); soColunas: sem o modo Tendência (Coletas, 28/11)
 }
 
 /** Ícone e cor (da família) de cada página; o resto vem de definicoes.ts. */
@@ -85,7 +85,7 @@ export const PAGINAS: DefinicaoDePagina[] = [
     api: "/paginas/coletas",
     impressao: "em pé",
     linkDaLinha: (l) => `/paginas/coletas/${l.coleta_id}`,
-    dashboard: { tipo: "colunas", coluna: "coletado_por", aberto: true }, // quem coletou o quê, já aberto (25/10)
+    dashboard: { tipo: "colunas", coluna: "coletado_por", aberto: true, soColunas: true }, // quem coletou o quê, já aberto (25/10)
     colunas: [
       { chave: "data_coleta", rotulo: "Data da coleta", formato: "data" },
       { chave: "tanque", rotulo: "Tanque", principal: true },
