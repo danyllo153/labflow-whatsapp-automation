@@ -4403,3 +4403,27 @@ h2 {
   color: var(--nao-ok);
   border: 1px solid currentColor;
 }
+
+/* Normal | Stress mais compacto e com o tanque fixo na rolagem horizontal (28/11) */
+.tabela-normal-stress {
+  font-size: 0.85rem;
+}
+
+.tabela-normal-stress th,
+.tabela-normal-stress td {
+  padding: 6px;
+}
+
+.tabela-normal-stress th:first-child,
+.tabela-normal-stress td:first-child {
+  position: sticky;
+  left: 0;
+  z-index: 1;
+  background: var(--cartao);
+  box-shadow: 1px 0 0 var(--borda);
+}
+
+.tabela-normal-stress thead th:first-child {
+  background: var(--laranja-suave);
+  z-index: 2;
+}

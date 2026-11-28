@@ -150,8 +150,8 @@ export function agruparTanques(linhas: LinhaDaTabela[]): Agrupada {
   const metade = (prefixo: string, grupo: string): Coluna[] =>
     nomes.map((nome, i): Coluna => ({ chave: `${prefixo}_analise_${i}`, rotulo: nome, formato: "analise", grupo }));
   const colunas: Coluna[] = [
+    { chave: "tanque", rotulo: "Tanque", principal: true }, // primeira e fixa na rolagem horizontal
     { chave: "data_coleta", rotulo: "Data da coleta", formato: "data" },
-    { chave: "tanque", rotulo: "Tanque", principal: true },
     { chave: "origem", rotulo: "Origem" },
     { chave: "navio", rotulo: "Navio" },
     ...metade("n", "Normal"),

@@ -144,8 +144,7 @@ export const PAGINAS: DefinicaoDePagina[] = [
     titulo: "Tanques",
     descricao: "Leituras de C.T, B.L e Psicrotróficos por tanque (normal e stress), com o resultado Ok / Não ok.",
     api: "/paginas/tanques",
-    resultado: { tipo: "tendencia", data: "coleta" },
-    agrupar: "tanques",
+    agrupar: "tanques", // sem gráfico (28/11): a tabela Normal | Stress ocupa o espaço
     impressao: "deitado",
     semColetor: true,
     colunas: [

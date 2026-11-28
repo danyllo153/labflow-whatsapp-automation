@@ -19,7 +19,7 @@ describe("Tanques lado a lado (Normal | Stress)", () => {
     ]);
     expect(linhas).toHaveLength(1);
     expect(colunas.map((c) => [c.grupo ?? "", c.rotulo])).toEqual([
-      ["", "Data da coleta"], ["", "Tanque"], ["", "Origem"], ["", "Navio"],
+      ["", "Tanque"], ["", "Data da coleta"], ["", "Origem"], ["", "Navio"],
       ["Normal", "C.T"], ["Normal", "B.L"], ["Normal", "Psicrotróficos"],
       ["Stress", "C.T"], ["Stress", "B.L"], ["Stress", "Psicrotróficos"],
       ["", "Situação"], ["", "Lido por"],

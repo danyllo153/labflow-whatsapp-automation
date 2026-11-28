@@ -231,5 +231,8 @@ describe("Tanques lado a lado (27/11)", () => {
     expect(screen.getAllByRole("row")).toHaveLength(3); // 2 linhas de cabeçalho + 1 linha
     expect(screen.getByText("Para ler · 25/11")).toBeInTheDocument();
     expect(screen.getByText("Para ler · 30/11")).toBeInTheDocument();
+    // sem gráfico (28/11): nem o botão nem a tendência do resultado
+    expect(screen.queryByRole("button", { name: /Gráfico/ })).not.toBeInTheDocument();
+    expect(screen.queryByText("Tendência do resultado")).not.toBeInTheDocument();
   });
 });
