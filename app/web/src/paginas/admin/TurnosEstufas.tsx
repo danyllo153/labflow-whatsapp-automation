@@ -144,22 +144,29 @@ function Horarios({ turnos, aoMudar }: { turnos: Horario[]; aoMudar: Muda }) {
     <form className="cartao" onSubmit={salvar} aria-label="Horários dos turnos">
       <h2>Horários padrão dos turnos</h2>
       <p className="texto-secundario">Os três turnos precisam cobrir as 24 horas: cada um começa quando o anterior termina.</p>
+      <div className="tabela-horarios">
+      <div className="linha-formulario cabeca-tabela" aria-hidden="true">
+        <span>Turno</span>
+        <span>Início</span>
+        <span>Fim</span>
+      </div>
       {turnos.map((t) => {
         const v = valores.find((x) => x.id === t.id)!;
         return (
           <div className="linha-formulario" key={t.id}>
             <strong className="nome-turno">{t.nome}</strong>
             <label className="campo campo-hora">
-              Início de {t.nome}
+              <span className="so-leitor">Início de {t.nome}</span>
               <input type="time" required value={v.inicio} onChange={(e) => mudar(t.id, "inicio", e.target.value)} />
             </label>
             <label className="campo campo-hora">
-              Fim de {t.nome}
+              <span className="so-leitor">Fim de {t.nome}</span>
               <input type="time" required value={v.fim} onChange={(e) => mudar(t.id, "fim", e.target.value)} />
             </label>
           </div>
         );
       })}
+      </div>
       {erro && (
         <p className="mensagem-erro" role="alert">
           {erro}

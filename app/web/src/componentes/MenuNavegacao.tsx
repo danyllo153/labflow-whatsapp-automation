@@ -26,6 +26,7 @@ const ICONE_DO_GRUPO: Record<Grupo, string> = {
 // Nomes curtos só no menu (cabem em uma linha nos 220 px); o nome inteiro aparece ao passar o mouse e nas outras telas.
 const NOME_NO_MENU: Partial<Record<Grupo, string>> = { FCOJ: "FCOJ", Testes: "TAB · Coliformes · Howard" };
 const CHAVE = "labflow.menu.grupos";
+const CHAVE_ADMIN = "labflow.menu.admin";
 
 function lerAbertos(): Grupo[] {
   try {
@@ -70,6 +71,26 @@ export default function MenuNavegacao() {
     if (grupoDaTela && !abertos.includes(grupoDaTela)) setAbertos((a) => [...a, grupoDaTela]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [grupoDaTela]);
+
+  // Administração recolhível (varredura de 28/11): fechada por padrão, para o menu caber em 768 px; abre sozinha dentro dela
+  const [adminAberto, setAdminAberto] = useState<boolean>(() => {
+    try {
+      return localStorage.getItem(CHAVE_ADMIN) === "1";
+    } catch {
+      return false;
+    }
+  });
+  const noAdmin = pathname.startsWith("/admin");
+  const mostrarAdmin = adminAberto || noAdmin;
+  function alternarAdmin() {
+    const novo = !mostrarAdmin;
+    setAdminAberto(novo);
+    try {
+      localStorage.setItem(CHAVE_ADMIN, novo ? "1" : "0");
+    } catch {
+      // sem armazenamento: só não lembra
+    }
+  }
 
   function atrasadosDo(lista: typeof apps): number {
     return lista.reduce((n, a) => n + (contagens?.[a.chave ?? a.caminho]?.atrasados ?? 0), 0);
@@ -138,7 +159,15 @@ export default function MenuNavegacao() {
         );
       })}
 
-      {admin.length > 0 && <p className="menu-secao">Administração</p>}
+      {admin.length > 0 && (
+        <button type="button" className="menu-secao menu-secao-botao" aria-expanded={mostrarAdmin} aria-controls="menu-admin" onClick={alternarAdmin}>
+          Administração
+          <svg className="menu-seta" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
+            <path d="m6 9 6 6 6-6" />
+          </svg>
+        </button>
+      )}
+      <div id="menu-admin" hidden={!mostrarAdmin}>
       {admin.map((item) => (
         <NavLink key={item.caminho} to={item.caminho} className="item-menu">
           <span className="item-rotulo">
@@ -156,6 +185,7 @@ export default function MenuNavegacao() {
           <span className="etiqueta-breve">Em breve</span>
         </NavLink>
       ))}
+      </div>
     </nav>
   );
 }

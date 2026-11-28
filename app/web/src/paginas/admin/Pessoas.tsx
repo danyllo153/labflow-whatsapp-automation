@@ -460,6 +460,13 @@ export default function Pessoas() {
       )}
       {!pessoas && !erro && <p className="carregando">Carregando...</p>}
       <ul className="lista-pessoas">
+        {!!pessoas?.length && (
+          <li className="cabeca-tabela" aria-hidden="true">
+            <span>Nome{lite ? "" : " e acesso"}</span>
+            <span>Situação</span>
+            <span />
+          </li>
+        )}
         {pessoas?.map((p) => (
           <li key={p.id} className="cartao">
             <div className="pessoa-cabeca">

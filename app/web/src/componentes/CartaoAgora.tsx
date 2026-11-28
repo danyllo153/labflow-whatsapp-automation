@@ -170,7 +170,7 @@ export default function CartaoAgora(props: { turno: EstadoDoTurno | null; estufa
             onChange={(e) => setTexto(e.target.value)}
           />
           <button type="submit" className="botao botao-principal" disabled={!texto.trim()}>
-            Registrar
+            Adicionar
           </button>
         </form>
         {(aviso || erro) && (

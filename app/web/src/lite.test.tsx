@@ -103,6 +103,7 @@ describe("telas dentro do app", () => {
     expect(screen.queryByRole("button", { name: "Fechar o menu" })).toBeNull();
     // as telas que eram do Admin são de todos
     const lateral = screen.getByRole("complementary", { name: "Menu" });
+    await userEvent.click(within(lateral).getByRole("button", { name: "Administração" })); // o grupo vem recolhido (28/11)
     expect(within(lateral).getByRole("link", { name: "Pessoas" })).toBeInTheDocument();
     expect(within(lateral).getByRole("link", { name: "Turnos e estufas" })).toBeInTheDocument();
     await userEvent.click(screen.getByRole("button", { name: /Conta de/ }));

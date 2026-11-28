@@ -59,6 +59,7 @@ describe("Admin → Pessoas (APP-016)", () => {
   it("só o Admin vê Pessoas no menu", async () => {
     abrir("/");
     const lateral = await screen.findByRole("complementary", { name: "Menu" });
+    await userEvent.click(within(lateral).getByRole("button", { name: "Administração" })); // o grupo vem recolhido (28/11)
     expect(within(lateral).getByRole("link", { name: "Pessoas" })).toHaveAttribute("href", "/admin/pessoas");
     expect(within(screen.getByRole("navigation", { name: "Menu do celular" })).queryByRole("link", { name: "Pessoas" })).toBeNull();
   });

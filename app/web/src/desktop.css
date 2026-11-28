@@ -709,3 +709,153 @@
     max-width: none;
   }
 }
+
+/* ======================= Varredura total: Turno ======================= */
+@media (min-width: 1100px) {
+  /* Equipe e Entrar no turno lado a lado; o resto ocupa a linha toda */
+  :root .conteudo .pagina-turno {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--e3);
+    align-items: start;
+  }
+
+  :root .conteudo .pagina-turno > * {
+    grid-column: 1 / -1;
+    margin-bottom: 0;
+  }
+
+  :root .conteudo .pagina-turno > .turno-topo:has(+ form),
+  :root .conteudo .pagina-turno > form[aria-label="Entrar no turno"] {
+    grid-column: auto;
+  }
+}
+
+@media (min-width: 900px) {
+  /* "Quem fez o quê": a lista rola dentro do cartão (num turno de verdade são poucas linhas, mas nunca estica a página) */
+  :root .conteudo .registros-turno .linha-do-tempo {
+    max-height: 220px;
+    overflow-y: auto;
+  }
+
+  :root .conteudo .registros-turno .linha-do-tempo li {
+    padding-top: 2px;
+    padding-bottom: 2px;
+    min-height: var(--h-linha-tabela);
+  }
+
+  /* Estufas: "Marcar todas como OK" na mesma barra do resumo, não numa linha só dela */
+  :root .conteudo .conferencia-estufas {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--e1) var(--e3);
+  }
+
+  :root .conteudo .conferencia-estufas > * {
+    grid-column: 1 / -1;
+  }
+
+  :root .conteudo .conferencia-estufas > .texto-secundario:first-child {
+    grid-column: 1;
+    margin: 0;
+  }
+
+  :root .conteudo .conferencia-estufas > .todas-ok {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  :root .conteudo .conferencia-estufas > .todas-ok:has(.previa-estufas) {
+    grid-column: 1 / -1;
+    grid-row: auto;
+  }
+}
+
+/* texto só para leitor de tela (o rótulo continua no campo) */
+.so-leitor {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (min-width: 900px) {
+  /* horários dos turnos: tabela 3 x 2 (Turno, Início, Fim) */
+  :root .admin-turnos .tabela-horarios {
+    max-width: 480px;
+    margin: var(--e2) 0;
+  }
+
+  :root .admin-turnos .tabela-horarios .linha-formulario {
+    grid-template-columns: 110px 130px 130px;
+    align-items: center;
+    margin: 0 0 var(--e1);
+    max-width: none;
+  }
+
+  :root .admin-turnos .tabela-horarios .nome-turno {
+    padding-top: 0;
+  }
+
+  :root .admin-turnos .tabela-horarios .campo {
+    margin: 0;
+  }
+
+  :root .admin-turnos .tabela-horarios .cabeca-tabela {
+    font-size: var(--fs-rotulo);
+    font-weight: 600;
+    color: var(--texto-secundario);
+  }
+}
+
+@media (min-width: 900px) {
+  /* abas que não cabem quebram em duas linhas, sem rolagem lateral (Leituras) */
+  :root .abas-app {
+    flex-wrap: wrap;
+    overflow: visible;
+  }
+
+  /* Esterilização: número do ciclo, campos extras e Salvar na mesma linha */
+  :root .conteudo .linha-ciclo {
+    grid-template-columns: repeat(auto-fill, minmax(160px, auto));
+    max-width: none;
+  }
+
+  /* Pessoas: colunas fixas e cabeçalho */
+  :root .conteudo .lista-pessoas > li.cartao {
+    grid-template-columns: minmax(0, 1fr) 190px 72px;
+  }
+
+  :root .conteudo .lista-pessoas > li.cabeca-tabela {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 190px 72px;
+    column-gap: var(--e4);
+    padding: 4px 12px;
+    font-size: var(--fs-rotulo);
+    font-weight: 600;
+    color: var(--texto-secundario);
+  }
+
+  :root .conteudo .lista-pessoas > li.cartao > span.etiqueta,
+  :root .conteudo .lista-pessoas .pessoa-cabeca > span {
+    justify-self: start;
+  }
+}
+
+@media (min-width: 900px) {
+  :root .menu-navegacao .menu-secao-botao {
+    width: calc(100% - 20px);
+    border: 0;
+    background: none;
+    font-family: inherit;
+    cursor: pointer;
+    align-items: center;
+  }
+
+  :root .menu-navegacao .menu-secao-botao[aria-expanded="true"] .menu-seta {
+    transform: rotate(180deg);
+  }
+}
