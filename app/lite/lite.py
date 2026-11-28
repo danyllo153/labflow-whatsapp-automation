@@ -223,6 +223,85 @@ def checar_versao_banco(data: Path, pg_bin: Path) -> None:
         raise RuntimeError(mensagem_versao_diferente(do_banco, do_pacote))
 
 
+# ---------------------------------------------------------------- PostgreSQL esquecido de outra abertura --------------
+def imagem_do_processo(pid: int) -> Path | None:
+    """Caminho do .exe do processo vivo com esse PID; None se não existe (ou não dá para ler)."""
+    if pid <= 0:
+        return None
+    if EH_WINDOWS:
+        import ctypes
+        from ctypes import wintypes
+
+        k = ctypes.WinDLL("kernel32", use_last_error=True)
+        k.OpenProcess.restype = wintypes.HANDLE
+        h = k.OpenProcess(0x1000, False, pid)  # PROCESS_QUERY_LIMITED_INFORMATION
+        if not h:
+            return None
+        try:
+            buf = ctypes.create_unicode_buffer(1024)
+            tam = wintypes.DWORD(1024)
+            if not k.QueryFullProcessImageNameW(h, 0, buf, ctypes.byref(tam)):
+                return None
+            return Path(buf.value)
+        finally:
+            k.CloseHandle(h)
+    with contextlib.suppress(OSError):
+        return Path(os.readlink(f"/proc/{pid}/exe"))
+    return None
+
+
+def postgres_vivo_do_data(data: Path) -> tuple[int, Path] | None:
+    """(PID, caminho do postgres) se o postmaster.pid da pasta data aponta para um postgres VIVO que usa exatamente esta pasta data.
+    Confere pelo PID, pelo nome/caminho do executável e pela pasta gravada no próprio arquivo; qualquer outro processo
+    que tenha herdado o mesmo PID não conta."""
+    try:
+        linhas = (data / "postmaster.pid").read_text(encoding="utf-8", errors="replace").splitlines()
+        pid = int(linhas[0].strip())
+    except (OSError, ValueError, IndexError):
+        return None
+    imagem = imagem_do_processo(pid)
+    if imagem is None or imagem.stem.lower() != "postgres":
+        return None
+    if len(linhas) > 1 and linhas[1].strip():
+        try:
+            if os.path.normcase(os.path.realpath(linhas[1].strip())) != os.path.normcase(os.path.realpath(str(data))):
+                return None
+        except OSError:
+            return None
+    return pid, imagem
+
+
+def _esperar_sair(data: Path, segundos: float) -> bool:
+    fim = time.monotonic() + segundos
+    while time.monotonic() < fim:
+        if postgres_vivo_do_data(data) is None:
+            return True
+        time.sleep(0.5)
+    return postgres_vivo_do_data(data) is None
+
+
+def parar_postgres_esquecido(data: Path, pg_ctl_padrao: str, espera: int = 20) -> bool:
+    """Se sobrou um PostgreSQL vivo de uma abertura anterior usando esta pasta data, para com pg_ctl (primeiro -m fast, e -m immediate
+    só se o fast não resolver em `espera` s). Usa o pg_ctl da mesma pasta do processo que está rodando (os mesmos binários).
+    Devolve True se não resta nenhum vivo."""
+    vivo = postgres_vivo_do_data(data)
+    if vivo is None:
+        return True
+    pid, imagem = vivo
+    pg_ctl = imagem.with_name("pg_ctl" + EXE)
+    exe = str(pg_ctl) if pg_ctl.exists() else pg_ctl_padrao
+    log(f"Sobrou um PostgreSQL de uma abertura anterior (PID {pid}, {imagem.parent}). Parando antes de abrir...")
+    for modo in ("fast", "immediate"):
+        with contextlib.suppress(Exception):
+            subprocess.run([exe, "-D", str(data), "-m", modo, "-w", "-t", str(espera), "stop"], stdin=subprocess.DEVNULL,
+                           capture_output=True, timeout=espera + 15, creationflags=SEM_JANELA)
+        if _esperar_sair(data, 3):
+            log(f"PostgreSQL antigo parado (-m {modo}).")
+            return True
+        log(f"O PostgreSQL antigo não saiu com -m {modo}.")
+    return False
+
+
 # ---------------------------------------------------------------- PostgreSQL local -----------------------------------
 class Postgres:
     def __init__(self, local: Path) -> None:
@@ -288,9 +367,19 @@ class Postgres:
         if r.returncode != 0:
             raise RuntimeError(f"O PostgreSQL não ligou (código {r.returncode}). Veja postgres.log em {self.local}")
 
-    def parar(self) -> None:
+    def liberar_data(self) -> None:
+        """Antes de ligar: um PostgreSQL esquecido de outra abertura (postmaster.pid com processo vivo) é parado de forma limpa."""
+        if not parar_postgres_esquecido(self.data, self.exe("pg_ctl")):
+            raise RuntimeError("Sobrou um PostgreSQL de uma abertura anterior e ele não quis parar. Reinicie o computador e abra o LabFlow de novo.")
+
+    def parar(self) -> bool:
+        """Para o PostgreSQL e ESPERA ele sair de verdade (fast; se não sair, immediate). True se não sobrou processo."""
         with contextlib.suppress(Exception):
             self.run("pg_ctl", "-D", str(self.data), "-m", "fast", "-w", "-t", "60", "stop", check=False)
+        if _esperar_sair(self.data, 5):
+            return True
+        log("O PostgreSQL não saiu com o encerramento normal; forçando um encerramento imediato.")
+        return parar_postgres_esquecido(self.data, self.exe("pg_ctl"), espera=20)
 
     def criar_cluster(self) -> None:
         if self.data.exists():
@@ -422,6 +511,7 @@ class Servidor:
     def subir_banco(self) -> bool:
         """Liga o PostgreSQL local com os dados certos. Devolve True se o banco acabou de ser criado do zero."""
         pg = self.pg
+        pg.liberar_data()  # um PostgreSQL esquecido da abertura anterior (ainda vivo na mesma pasta data) sai antes de qualquer coisa
         self.tratar_versao_do_banco()  # antes de qualquer coisa: versão diferente não liga nem recria por cima
         pg.senha_super = self.estado.get("senha_super") or secrets.token_urlsafe(18)
         pg.senha_web = self.estado.get("senha_web") or secrets.token_urlsafe(18)
@@ -668,7 +758,8 @@ class Servidor:
             if self.api and self.api.poll() is None:
                 with contextlib.suppress(Exception):
                     self.api.kill()
-            self.pg.parar()
+            if not self.pg.parar():  # só dá o encerramento por terminado com o postgres realmente fora
+                log("ATENÇÃO: o PostgreSQL não saiu ao encerrar; a próxima abertura vai pará-lo antes de ligar.")
         if salvou:
             atual = self.dados.ler_json(self.dados.servidor)
             if atual is not None and atual.get("dono") == self.token:
@@ -1052,12 +1143,30 @@ def criar_atalho(programa: Path, raiz: Path) -> bool:
         return False
 
 
+def postgres_em_uso_na_pasta(local: Path, pasta: Path) -> bool:
+    """O postgres vivo deste PC (data de `local`) roda com binários de dentro de `pasta`? Tenta parar primeiro; True só se ele continua vivo."""
+    data = local / "data"
+    vivo = postgres_vivo_do_data(data)
+    if vivo is None:
+        return False
+    try:
+        vivo[1].resolve().relative_to(pasta.resolve())
+    except ValueError:
+        return False
+    if parar_postgres_esquecido(data, str(vivo[1].with_name("pg_ctl" + EXE))):
+        return False
+    log(f"Não apaguei {pasta.name}: o PostgreSQL dele ainda está rodando. Fica para a próxima abertura.")
+    return True
+
+
 def limpar_programas_antigos(local: Path, atual: Path) -> None:
     """Apaga os programas de versões anteriores deste PC (programa-*, e o programa\\ do jeito antigo). Só o que não está em uso:
     a pasta primeiro é RENOMEADA (o Windows recusa se algum arquivo dela estiver aberto) e então apagada. Nunca mexe em dados."""
     for pasta in [*(d for d in local.glob("p-*") if NOME_PROGRAMA.match(d.name)), *local.glob("programa-*"), local / "programa"]:
         if not pasta.is_dir() or pasta.resolve() == atual.resolve():
             continue
+        if postgres_em_uso_na_pasta(local, pasta):
+            continue  # um postgres desta pasta ainda roda (e não parou): não renomeia nem apaga agora, fica para a próxima abertura
         alvo = pasta.with_name(f"apagar-{pasta.name}-{os.getpid()}")
         try:
             os.rename(pasta, alvo)
