@@ -214,3 +214,22 @@ describe("Páginas: Coletas e Recebimento (APP-015)", () => {
     expect(await screen.findByText("Nenhum registro com esses filtros.")).toBeInTheDocument();
   });
 });
+
+describe("Tanques lado a lado (27/11)", () => {
+  it("3 análises do mesmo tanque aparecem numa linha só, com a leitura prevista nas pendentes", async () => {
+    const t = { data_coleta: "2026-11-20", origem: "Terra", navio: null, tanque: "T99", frasco: "Normal", lida_por: null, repeticao: false, etapa: "Leitura final" };
+    const todas = [
+      { ...t, analise: "C.T", prevista: "2026-11-22", contagem: "12", resultado: "Ok", situacao: "Lido" },
+      { ...t, analise: "B.L", prevista: "2026-11-25", contagem: null, resultado: "Pendente", situacao: "No prazo" },
+      { ...t, analise: "Psicrotróficos", prevista: "2026-11-30", contagem: null, resultado: "Pendente", situacao: "No prazo" },
+    ];
+    abrir("/paginas/tanques", { "GET /paginas/tanques": (url: string) => paginaDe(todas, url) });
+    expect(await screen.findByText(/^1 registro/)).toBeInTheDocument();
+    for (const nome of ["C.T", "B.L", "Psicrotróficos"]) expect(screen.getAllByRole("columnheader", { name: nome })).toHaveLength(2); // Normal e Stress
+    expect(screen.getByRole("columnheader", { name: "Normal" })).toBeInTheDocument();
+    expect(screen.getByRole("columnheader", { name: "Stress" })).toBeInTheDocument();
+    expect(screen.getAllByRole("row")).toHaveLength(3); // 2 linhas de cabeçalho + 1 linha
+    expect(screen.getByText("Para ler · 25/11")).toBeInTheDocument();
+    expect(screen.getByText("Para ler · 30/11")).toBeInTheDocument();
+  });
+});

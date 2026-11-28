@@ -8,6 +8,7 @@ import { CabecalhoDaPagina } from "../../componentes/CabecalhoDaPagina";
 import { classeDaSituacao, formatar } from "./formatos";
 import Dashboard, { type Linha } from "./Dashboard";
 import { BarrasPorSituacao, type ItemDeSituacao } from "../../componentes/Graficos";
+import { ROTULO_DO_ESTADO, agruparLinhas, resumoDasLinhas, type Agrupada, type CelulaDeAnalise } from "./ladoALado";
 
 /**
  * Página do laboratório em leitura (07 §5; APP-015): filtros com etiquetas removíveis, tabela (cartões no celular),
@@ -71,6 +72,37 @@ export function Celula({ coluna, linha }: { coluna: Coluna; linha: Record<string
     if (!texto) return <span className="texto-secundario" title={situacao || undefined}>…</span>;
     return <span className={situacao === "Não ok" ? "contagem-nao-ok" : undefined}>{texto}</span>;
   }
+  // tabelas lado a lado (Tanques e Drops, 27/11): o resultado da análise, ou "Pendente · dd/mm"; etiqueta quando há situação
+  if (coluna.formato === "analise") {
+    const c = linha[coluna.chave] as CelulaDeAnalise | undefined;
+    if (!c) return <span className="texto-secundario">—</span>;
+    // Drops: "Concluído" com etiqueta; senão "Para ler" / "Em análise" com a data prevista
+    if (c.situacao && c.estado === "resultado")
+      return (
+        <>
+          <span className={classeDaSituacao(c.situacao)}>{c.situacao}</span> <span className="texto-secundario">{c.texto}</span>
+        </>
+      );
+    if (c.situacao && c.estado)
+      return (
+        <>
+          <span className={`estado-celula estado-${c.estado}`}>{ROTULO_DO_ESTADO[c.estado]}</span> <span className="texto-secundario">{c.texto}</span>
+        </>
+      );
+    if (c.partes)
+      return (
+        <>
+          {c.partes.map((p, i) => (
+            <span key={i} className={p.estado === "resultado" ? (p.nao_ok ? "contagem-nao-ok" : undefined) : `estado-celula estado-${p.estado}`}>
+              {i > 0 && <span className="texto-secundario"> · </span>}
+              {p.prefixo ? `${p.prefixo}: ` : ""}
+              {p.texto}
+            </span>
+          ))}
+        </>
+      );
+    return <span className={c.nao_ok ? "contagem-nao-ok" : undefined}>{c.texto}</span>;
+  }
   if (coluna.formato === "amostra" && texto) return <span className={`etiqueta ${texto === "Fresh" ? "etiqueta-fresh" : "etiqueta-past"}`}>{texto}</span>;
   return <>{texto}</>;
 }
@@ -87,7 +119,9 @@ export default function PaginaDeDados({ def, embutida = false }: { def: Definica
 
   const [rascunho, setRascunho] = useState<Record<string, string>>(aplicados);
   const [filtrosAbertos, setFiltrosAbertos] = useState(false);
-  const [dados, setDados] = useState<Pagina | null>(null);
+  const [dadosDoServidor, setDados] = useState<Pagina | null>(null);
+  // lado a lado (27/11): todas as linhas do filtro, agrupadas aqui; a paginação é feita sobre as linhas já agrupadas
+  const [agrupado, setAgrupado] = useState<(Agrupada & { cortado: boolean }) | null>(null);
   const [erro, setErro] = useState("");
   const [orientacao, setOrientacao] = useState(def.impressao);
   const [paraImprimir, setParaImprimir] = useState<Record<string, unknown>[] | null>(null);
@@ -109,14 +143,36 @@ export default function PaginaDeDados({ def, embutida = false }: { def: Definica
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [texto]);
 
+  /** Todas as linhas do filtro (até o limite), página por página: para imprimir e para o Dashboard. */
+  const lerTodas = useCallback(async (limite = Infinity) => {
+    const todas: Record<string, unknown>[] = [];
+    let total = 0;
+    for (let p = 1; ; p++) {
+      const parte = await lerJson<Pagina>(`${def.api}?${consulta({ ...comBusca, ...def.fixos }, { pagina: p, por_pagina: POR_PAGINA_IMPRESSAO })}`);
+      total = parte.total;
+      todas.push(...parte.linhas);
+      if (todas.length >= parte.total || parte.linhas.length === 0 || todas.length >= limite) break;
+    }
+    return { linhas: todas, total };
+  }, [def.api, def.fixos, comBusca]);
+
+  const buscarTodas = lerTodas;
+
+  const paginaDoServidor = def.agrupar ? 1 : pagina; // agrupado: a página é fatiada aqui, sem buscar de novo
   const carregar = useCallback(async () => {
     try {
-      setDados(await lerJson<Pagina>(`${def.api}?${consulta({ ...comBusca, ...def.fixos }, { pagina, por_pagina: POR_PAGINA })}`));
+      if (def.agrupar) {
+        const { linhas, total } = await lerTodas(LIMITE_IMPRESSAO);
+        setAgrupado({ ...agruparLinhas(def.agrupar, linhas), cortado: total > linhas.length });
+        setErro("");
+        return;
+      }
+      setDados(await lerJson<Pagina>(`${def.api}?${consulta({ ...comBusca, ...def.fixos }, { pagina: paginaDoServidor, por_pagina: POR_PAGINA })}`));
       setErro("");
     } catch (e) {
       setErro(e instanceof Error ? e.message : "Não foi possível carregar a página.");
     }
-  }, [def.api, def.fixos, comBusca, pagina]);
+  }, [def.api, def.agrupar, def.fixos, comBusca, paginaDoServidor, lerTodas]);
 
   useEffect(() => {
     void carregar();
@@ -142,18 +198,6 @@ export default function PaginaDeDados({ def, embutida = false }: { def: Definica
     irPara(resto);
   }
 
-  /** Todas as linhas do filtro (até o limite), página por página: para imprimir e para o Dashboard. */
-  const buscarTodas = useCallback(async (limite = Infinity) => {
-    const todas: Record<string, unknown>[] = [];
-    let total = 0;
-    for (let p = 1; ; p++) {
-      const parte = await lerJson<Pagina>(`${def.api}?${consulta({ ...comBusca, ...def.fixos }, { pagina: p, por_pagina: POR_PAGINA_IMPRESSAO })}`);
-      total = parte.total;
-      todas.push(...parte.linhas);
-      if (todas.length >= parte.total || parte.linhas.length === 0 || todas.length >= limite) break;
-    }
-    return { linhas: todas, total };
-  }, [def.api, def.fixos, comBusca]);
 
   // o Dashboard acompanha o filtro da tela (pedido de 25/10)
   useEffect(() => {
@@ -176,7 +220,8 @@ export default function PaginaDeDados({ def, embutida = false }: { def: Definica
     }
     setPreparando(true);
     try {
-      const { linhas: todas } = await buscarTodas();
+      const { linhas: bruto } = await buscarTodas();
+      const todas = def.agrupar ? agruparLinhas(def.agrupar, bruto).linhas : bruto;
       let imagem: string | null = null;
       try {
         imagem = dashboardAberto && canvasDoGrafico.current ? canvasDoGrafico.current.toDataURL("image/png") : null;
@@ -201,6 +246,21 @@ export default function PaginaDeDados({ def, embutida = false }: { def: Definica
     return () => window.removeEventListener("afterprint", fim);
   }, [paraImprimir]);
 
+  // com o agrupamento, a página mostrada é uma fatia das linhas agrupadas e o resumo é contado nelas
+  const dados = useMemo<Pagina | null>(() => {
+    if (!def.agrupar) return dadosDoServidor;
+    if (!agrupado) return null;
+    const resumo = resumoDasLinhas(agrupado.linhas);
+    return {
+      total: agrupado.linhas.length,
+      pagina,
+      por_pagina: POR_PAGINA,
+      linhas: agrupado.linhas.slice((pagina - 1) * POR_PAGINA, pagina * POR_PAGINA),
+      resumo,
+      resumo_coluna: "situacao",
+    };
+  }, [def.agrupar, dadosDoServidor, agrupado, pagina]);
+  const colunas = def.agrupar && agrupado ? agrupado.colunas : def.colunas;
   const totalPaginas = dados ? Math.max(1, Math.ceil(dados.total / POR_PAGINA)) : 1;
   const etiquetas = def.filtros.filter((f) => aplicados[f.chave]);
   // a fábrica à vista, em pílulas (26/10): o filtro mais usado no recebimento e no embarque, sem abrir o funil
@@ -410,7 +470,7 @@ export default function PaginaDeDados({ def, embutida = false }: { def: Definica
               itens={dados.resumo}
               escolhido={dados.resumo_coluna ? aplicados[dados.resumo_coluna] : undefined}
               aoEscolher={
-                dados.resumo_coluna && def.filtros.some((f) => f.chave === dados.resumo_coluna)
+                !def.agrupar && dados.resumo_coluna && def.filtros.some((f) => f.chave === dados.resumo_coluna)
                   ? (rotulo) => {
                       const chave = dados.resumo_coluna as string;
                       irPara(aplicados[chave] === rotulo ? Object.fromEntries(Object.entries(aplicados).filter(([k]) => k !== chave)) : { ...aplicados, [chave]: rotulo });
@@ -451,12 +511,17 @@ export default function PaginaDeDados({ def, embutida = false }: { def: Definica
               {dados.total === 1 ? "1 registro" : `${dados.total} registros`}
               {dados.total > 0 && ` · página ${pagina} de ${totalPaginas}`}
             </p>
+            {agrupado?.cortado && def.agrupar && (
+              <p className="texto-secundario" role="status">
+                Mostrando os {LIMITE_IMPRESSAO} registros mais recentes do filtro: filtre por período para ver o resto.
+              </p>
+            )}
             {dados.linhas.length === 0 ? (
               <div className="cartao">
                 <p>Nenhum registro com esses filtros.</p>
               </div>
             ) : (
-              <Tabela colunas={def.colunas} linhas={dados.linhas} link={def.linkDaLinha} />
+              <Tabela colunas={colunas} linhas={dados.linhas} link={def.linkDaLinha} />
             )}
             {totalPaginas > 1 && (
               <nav className="paginacao" aria-label="Páginas da lista">
@@ -487,16 +552,17 @@ export default function PaginaDeDados({ def, embutida = false }: { def: Definica
             {formatar(new Date().toISOString(), "dataHora")}
           </p>
           {imagemDoGrafico && <img className="grafico-impressao" src={imagemDoGrafico} alt="Gráfico do resultado com o filtro da tela" />}
-          <Tabela colunas={def.colunas} linhas={paraImprimir} />
+          <Tabela colunas={colunas} linhas={paraImprimir} />
         </div>
       )}
     </section>
   );
 }
 
-function Tabela({ colunas, linhas, link }: { colunas: Coluna[]; linhas: Record<string, unknown>[]; link?: (l: Record<string, unknown>) => string }) {
-  return (
-    <table className="tabela-dados">
+/** Cabeçalho em dois níveis quando há colunas com `grupo`: o grupo (Normal, Stress) em cima, atravessando as colunas dele. */
+function CabecalhoDaTabela({ colunas }: { colunas: Coluna[] }) {
+  if (!colunas.some((c) => c.grupo)) {
+    return (
       <thead>
         <tr>
           {colunas.map((c) => (
@@ -506,11 +572,61 @@ function Tabela({ colunas, linhas, link }: { colunas: Coluna[]; linhas: Record<s
           ))}
         </tr>
       </thead>
+    );
+  }
+  const alto: { chave: string; grupo?: string; coluna?: Coluna; largura: number }[] = [];
+  for (const c of colunas) {
+    const ultimo = alto[alto.length - 1];
+    if (c.grupo && ultimo?.grupo === c.grupo) ultimo.largura += 1;
+    else alto.push({ chave: c.chave, grupo: c.grupo, coluna: c.grupo ? undefined : c, largura: 1 });
+  }
+  return (
+    <thead>
+      <tr>
+        {alto.map((g) =>
+          g.coluna ? (
+            <th key={g.chave} scope="col" rowSpan={2}>
+              {g.coluna.rotulo}
+            </th>
+          ) : (
+            <th key={g.chave} scope="colgroup" colSpan={g.largura} className="grupo-de-colunas">
+              {g.grupo}
+            </th>
+          ),
+        )}
+      </tr>
+      <tr>
+        {colunas
+          .filter((c) => c.grupo)
+          .map((c) => (
+            <th key={c.chave} scope="col" className={ehPrimeiraDoGrupo(colunas, c) ? "inicio-de-grupo" : undefined}>
+              {c.rotulo}
+            </th>
+          ))}
+      </tr>
+    </thead>
+  );
+}
+
+function ehPrimeiraDoGrupo(colunas: Coluna[], c: Coluna): boolean {
+  const i = colunas.indexOf(c);
+  return !!c.grupo && (i === 0 || colunas[i - 1].grupo !== c.grupo);
+}
+
+function Tabela({ colunas, linhas, link }: { colunas: Coluna[]; linhas: Record<string, unknown>[]; link?: (l: Record<string, unknown>) => string }) {
+  const agrupada = colunas.some((c) => c.grupo);
+  const tabela = (
+    <table className={agrupada ? "tabela-dados tabela-normal-stress" : "tabela-dados"}>
+      <CabecalhoDaTabela colunas={colunas} />
       <tbody>
         {linhas.map((linha, n) => (
           <tr key={n}>
             {colunas.map((c) => (
-              <td key={c.chave} data-rotulo={c.rotulo} className={c.principal ? "principal" : undefined}>
+              <td
+                key={c.chave}
+                data-rotulo={c.grupo ? `${c.grupo} · ${c.rotulo}` : c.rotulo}
+                className={[c.principal ? "principal" : "", ehPrimeiraDoGrupo(colunas, c) ? "inicio-de-grupo" : ""].filter(Boolean).join(" ") || undefined}
+              >
                 {c.principal && link ? (
                   <Link to={link(linha)}>
                     <Celula coluna={c} linha={linha} />
@@ -525,4 +641,5 @@ function Tabela({ colunas, linhas, link }: { colunas: Coluna[]; linhas: Record<s
       </tbody>
     </table>
   );
+  return agrupada ? <div className="tabela-rolavel">{tabela}</div> : tabela;
 }
