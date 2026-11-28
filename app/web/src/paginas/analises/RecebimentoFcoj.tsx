@@ -471,9 +471,9 @@ function Registrar({ pode, aoGravar }: { pode: boolean; aoGravar: () => void }) 
         </label>
       </div>
       <div className="linha-formulario">
-        <label className="campo">
+        <label className="campo campo-largo">
           Lotes
-          <input required maxLength={200} value={campos.lotes} onChange={mudar("lotes")} placeholder="ex.: 1-14 ou 1-5, 7, 9-10" />
+          <input required maxLength={200} value={campos.lotes} onChange={mudar("lotes")} placeholder="1-14 ou 1-5, 7, 9-10" />
         </label>
         <label className="campo">
           Recebido em
@@ -484,7 +484,8 @@ function Registrar({ pode, aoGravar }: { pode: boolean; aoGravar: () => void }) 
           <input
             maxLength={300}
             value={compostas ?? compostasRecomendadas(lotesDoTexto(campos.lotes))}
-            placeholder="automático (~5 lotes por composta)"
+            placeholder="automático"
+            title="Automático: cerca de 5 lotes por composta"
             onChange={(e) => (setCompostas(e.target.value), setPrevia(null))}
           />
         </label>

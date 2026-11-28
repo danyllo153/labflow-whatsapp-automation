@@ -274,13 +274,13 @@ function CamposDeTanque({
         {extra}
       </div>
       <div className="linha-formulario">
-        <label className="campo">
+        <label className="campo campo-largo">
           Tanques
           <input
             required
             maxLength={200}
             value={campos.tanques}
-            placeholder={campos.origem === "navio" ? "ex.: 1C, 2P, 2S (até 16)" : "ex.: 44, 45 (até 8)"}
+            placeholder={campos.origem === "navio" ? "1C, 2P, 2S (até 16)" : "44, 45 (até 8)"}
             onChange={(e) => mudar({ tanques: e.target.value })}
           />
         </label>
