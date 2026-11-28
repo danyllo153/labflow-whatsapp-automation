@@ -6,8 +6,8 @@ Regras (decididas com o Danyllo em 23 e 24/10):
 - cada meio (OSA, PDA, PCA, Wort) tem UM lote em uso, escolhido com um toque; trocar fecha o período do anterior;
 - o lote em uso não é sempre o mais novo, e um lote antigo pode voltar a ser usado (escolher do histórico);
 - o laudo de incubação usa o lote que estava em uso NAQUELE dia (`lote_em_uso`), então trocar hoje não muda o passado;
-- o laudo "Controle de Qualidade e Aceitação de Meios de Cultura" tem uma folha por meio, 33 linhas; o bloco
-  Analista / Responsável fica em branco (assinatura à mão);
+- o laudo "Controle de Qualidade e Aceitação de Meios de Cultura" tem uma folha por meio, 33 linhas; no bloco
+  Analista / Responsável vai quem foi escolhido para a folha ("Quem vai no laudo", 086, 27/11); sem escolha, em branco;
 - o histórico em papel entra uma vez por um CSV que o Admin envia (os números reais nunca vão para o Git).
 """
 
@@ -20,7 +20,7 @@ import psycopg
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, Field
 
-from labflow_api import laudos, rotas_turno
+from labflow_api import laudos, nomes_laudo, rotas_turno
 from labflow_api.dependencias import PessoaLogada, obter_conexao
 from labflow_api.permissoes import exigir, pode
 from labflow_api.rotas_turno import FUSO
@@ -32,6 +32,7 @@ Meio = Literal["OSA", "PDA", "PCA", "Wort"]
 MODELO = "meios-cultura"
 LINHAS_POR_FOLHA = 33
 TABELA = laudos.Tabela(colunas=(41.1, 119.1, 197.1, 289.2, 381.3, 445.1, 572.7), topo=192.55, base=650.2, linhas=LINHAS_POR_FOLHA)
+LINHA_DO_ANALISTA = (41.1, 381.3, 660.0, 675.0)  # sem modelo (ou sem o rótulo nele): logo abaixo da tabela
 
 
 class Periodo(BaseModel):
@@ -348,6 +349,12 @@ def _gerar(meio: str):
         ):
             for coluna, texto in enumerate((recebido.strftime("%d.%m.%Y"), meio.upper() if meio == "Wort" else meio, lote, conservacao, ph, obs or "-")):
                 celulas.append(TABELA.celula(texto, n, coluna, tamanho=9))
+        analista = laudos.depois_do_rotulo(
+            modelo, ("Responsável", "Analista"), nomes_laudo.no_pdf(con, f"meios-{meio}", pagina_id, None, ""),
+            LINHA_DO_ANALISTA, abaixo_de=TABELA.base,
+        )
+        if analista:
+            celulas.append(analista)
         return laudos.preencher(modelo, DEMONSTRACAO, celulas)
 
     return gerar

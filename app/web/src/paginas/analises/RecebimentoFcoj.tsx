@@ -31,6 +31,7 @@ export const ATALHOS_DO_APP = [
 
 const LAUDO = {
   base: "/laudos/recebimento-fcoj",
+  nomes: "recebimento-fcoj",
   titulo: "Laudo do recebimento de FCOJ",
   rotulo: "Laudo do recebimento de FCOJ",
   explicacao:

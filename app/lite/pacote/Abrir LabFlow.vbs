@@ -1,5 +1,5 @@
 ' LabFlow Lite: abre sem nenhuma janela do cmd. Na primeira vez neste PC (ou depois de uma atualizacao), abre com a
-' janela, para mostrar o preparo e a senha do primeiro acesso. Arquivo em ASCII de proposito (o Windows le .vbs assim).
+' janela, para mostrar o preparo. Arquivo em ASCII de proposito (o Windows le .vbs assim).
 Option Explicit
 Dim sh, fs, raiz, pasta, ver, pronto, bat
 Set sh = CreateObject("WScript.Shell")

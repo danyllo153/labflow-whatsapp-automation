@@ -5,6 +5,8 @@ Os números são conferidos contra as próprias views do Power BI no banco de te
 
 from io import BytesIO
 
+from datetime import timedelta
+
 import pytest
 from openpyxl import load_workbook
 
@@ -207,10 +209,13 @@ def test_excel_tem_as_mesmas_linhas_da_pagina(cliente, logado, recebimento_nfc, 
 def test_visao_geral_traz_um_ponto_por_dia_e_bate_com_as_views(cliente, conexao, criar_pessoa):
     criar_pessoa(usuario="ana.teste", cargo="Operador")
     cliente.post("/login", json={"usuario": "ana.teste", "senha": "Senha-de-teste-1"})
-    corpo = cliente.get("/paginas/visao-geral", params={"data_de": "2026-10-10", "data_ate": "2026-10-19"}).json()
+    # janela de 10 dias que termina hoje: o demo.sql grava os dados em relação a CURRENT_DATE, então não há data fixa
+    ate = _conta(conexao, "SELECT CURRENT_DATE")
+    de = ate - timedelta(days=9)
+    corpo = cliente.get("/paginas/visao-geral", params={"data_de": de.isoformat(), "data_ate": ate.isoformat()}).json()
     serie = corpo["serie"]
-    assert [p["dia"] for p in serie] == [f"2026-10-{d}" for d in range(10, 20)]
-    dia = "2026-10-17"
+    assert [p["dia"] for p in serie] == [(de + timedelta(days=i)).isoformat() for i in range(10)]
+    dia = max(serie, key=lambda p: p["registradas"])["dia"]  # o dia com mais registros da janela
     esperado_nao_ok = (
         conexao.execute("SELECT count(*) FROM bi.contagens WHERE lido AND alarme AND data_leitura = %s", (dia,)).fetchone()[0]
         + conexao.execute("SELECT count(*) FROM bi.testes WHERE positivo AND data_resultado = %s", (dia,)).fetchone()[0]
@@ -230,7 +235,7 @@ def test_visao_geral_traz_um_ponto_por_dia_e_bate_com_as_views(cliente, conexao,
     ponto = next(p for p in serie if p["dia"] == dia)
     assert (ponto["registradas"], ponto["nao_ok"]) == (esperado_registradas, esperado_nao_ok)
     assert sum(p["registradas"] for p in serie) > 0
-    assert cliente.get("/paginas/visao-geral", params={"data_de": "2025-01-01", "data_ate": "2026-10-19"}).status_code == 422
+    assert cliente.get("/paginas/visao-geral", params={"data_de": (ate - timedelta(days=400)).isoformat(), "data_ate": ate.isoformat()}).status_code == 422
 
 
 def test_paginas_trazem_o_resumo_por_situacao_do_que_esta_filtrado(cliente, conexao, criar_pessoa):

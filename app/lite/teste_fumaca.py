@@ -1,10 +1,11 @@
 """Teste de fumaça do pacote do LabFlow Lite no Windows (roda no GitHub Actions depois do montar.ps1).
 
 Simula o uso real numa CÓPIA do pacote (o pacote publicado continua sem dados):
-1. PC A abre pelo "Abrir LabFlow com janela.bat": banco do zero, Admin provisório, telas e login.
+1. PC A abre pelo "Abrir LabFlow com janela.bat": banco do zero, sem senha e sem Admin. A pessoa digita o nome ("Sou novo
+   aqui"), cadastra outra, lança (entra no turno) e a sessão guarda de qual PC veio.
 2. PC B (outro LOCALAPPDATA, mesmo nome de PC) abre enquanto A está no ar: só abre a janela e não liga outro banco.
-3. A fecha (parar.txt): cópia no G: e backup do dia gravados, aviso de servidor apagado.
-4. PC B abre: restaura do G: e a senha trocada em A continua valendo.
+3. A "Encerrar" (parar.txt): cópia no G: gravada e conferida, backup do dia gravado, aviso de servidor apagado.
+4. PC B abre: restaura do G: as duas pessoas continuam na lista, entram só tocando no nome e o lançamento de A está lá.
 
 Uso: python teste_fumaca.py <pasta LabFlow do pacote>
 """
@@ -12,6 +13,7 @@ Uso: python teste_fumaca.py <pasta LabFlow do pacote>
 import http.cookiejar
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -95,17 +97,31 @@ def main() -> None:
     saida_a = trabalho / "a.txt"
     a = abrir(raiz, pc_a, saida_a)
     texto = esperar(saida_a, "LabFlow no ar", 600, a)
-    usuario, senha = next(l for l in texto.splitlines() if l.startswith("LITE_ADMIN=")).split("=", 1)[1].split(":", 1)
+    assert "LITE_ADMIN" not in texto and not re.search(r"provis[óo]ria", texto, re.I), "a Lite não gera mais senha de Admin"
     info = json.loads((raiz / "dados" / "servidor.json").read_text(encoding="utf-8"))
     base = f"http://127.0.0.1:{info['porta']}"
     web = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
     assert pedir(web, base + "/saude") == 200
     assert pedir(web, base + "/app/") == 200, "telas não abriram"
+    assert pedir(web, base + "/app/manifest.webmanifest") == 404 and pedir(web, base + "/app/sw.js") == 404, "a Lite não é instalável como app"
     marca_lida = json.loads(urllib.request.urlopen(base + "/marca", timeout=20).read())
     assert marca_lida["nome"] == "Laboratório Exemplo" and marca_lida["cor_principal"] == "#0a7c4a", marca_lida
-    assert pedir(web, base + "/login", {"usuario": usuario, "senha": senha}) == 200, "login com a senha provisória"
-    assert pedir(web, base + "/trocar-senha", {"nova_senha": "SenhaDoTeste123"}) == 204, "troca de senha"
-    print("1 ok: PC A abriu do zero, marca lida, login e troca de senha")
+    # sem senha e sem Admin: primeira abertura, ninguém na lista; /login não existe
+    assert json.loads(urllib.request.urlopen(base + "/entrar/primeira-vez", timeout=20).read()) == {"primeira_vez": True}
+    assert json.loads(urllib.request.urlopen(base + "/entrar/nomes", timeout=20).read()) == []
+    assert pedir(web, base + "/login", {"usuario": "admin", "senha": "x"}) == 404, "na Lite não há login com senha"
+    assert pedir(web, base + "/me") == 401
+    assert pedir(web, base + "/entrar/novo", {"nome": "<script>x</script>"}) == 422
+    assert pedir(web, base + "/entrar/novo", {"nome": "Ana Teste"}) == 201, "primeira pessoa (assume o registro do Admin)"
+    assert pedir(web, base + "/me") == 200
+    assert pedir(web, base + "/admin/pessoas/por-nome", {"nome": "Bia Teste"}) == 201, "cadastrar outra pessoa pelo nome"
+    nomes = json.loads(urllib.request.urlopen(base + "/entrar/nomes", timeout=20).read())
+    assert [n["nome"] for n in nomes] == ["Ana Teste", "Bia Teste"], nomes  # nenhum "Admin" na lista
+    # lança: Ana entra no turno (grava quem e quando)
+    turno = json.loads(web.open(base + "/turno", timeout=20).read())
+    assert turno["sugestao"], turno
+    assert pedir(web, base + "/turno/entrar", {"turno_id": turno["sugestao"]["turno_id"]}) == 200, "lançamento (entrar no turno)"
+    print("1 ok: PC A abriu do zero, sem senha e sem Admin; pessoa nova entrou, cadastrou outra e lançou")
 
     # 1b. so 127.0.0.1 (decisao de 27/11): o app e o banco nao escutam em nenhum outro endereco; Host estranho leva 400
     porta_pg = int((pc_a / "LabFlowLite" / "data" / "postmaster.pid").read_text(encoding="utf-8").splitlines()[3])
@@ -136,18 +152,27 @@ def main() -> None:
     dados = raiz / "dados"
     assert (dados / "labflow.dump").stat().st_size > 0
     assert list((dados / "backup").glob("labflow-*.dump")), "sem backup do dia"
-    print("3 ok: A fechou e gravou no G:")
+    log_a_antes = (pc_a / "LabFlowLite" / "lite.log").read_text(encoding="utf-8", errors="replace")
+    assert "Tudo gravado e conferido" in log_a_antes, "o Encerrar precisa conferir a cópia antes de liberar o outro PC"
+    print("3 ok: A encerrou, gravou no G: e conferiu a cópia")
 
-    # 4. B vira servidor com os dados do G:
+    # 4. "outro PC" (B) vira servidor com os dados do G:: as pessoas estão lá e entram só tocando no nome
     saida_b2 = trabalho / "b2.txt"
     b2 = abrir(raiz, pc_b, saida_b2)
     texto = esperar(saida_b2, "LabFlow no ar", 600, b2)
     assert "Restaurando os dados do G:" in texto
     info = json.loads((raiz / "dados" / "servidor.json").read_text(encoding="utf-8"))
+    base_b = f"http://127.0.0.1:{info['porta']}"
     web = urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
-    assert pedir(web, f"http://127.0.0.1:{info['porta']}/login", {"usuario": usuario, "senha": "SenhaDoTeste123"}) == 200
+    assert json.loads(urllib.request.urlopen(base_b + "/entrar/primeira-vez", timeout=20).read()) == {"primeira_vez": False}
+    nomes = json.loads(urllib.request.urlopen(base_b + "/entrar/nomes", timeout=20).read())
+    assert [n["nome"] for n in nomes] == ["Ana Teste", "Bia Teste"], nomes
+    assert pedir(web, base_b + "/entrar/por-nome", {"usuario": next(n["usuario"] for n in nomes if n["nome"] == "Ana Teste")}) == 200
+    assert json.loads(web.open(base_b + "/me", timeout=20).read())["nome"] == "Ana Teste"
+    turno_b = json.loads(web.open(base_b + "/turno", timeout=20).read())
+    assert turno_b["no_turno"], "o lançamento feito no PC A (entrar no turno) tem de estar aqui"
     fechar(raiz, pc_b, b2, saida_b2)
-    print("4 ok: B restaurou do G: e a senha nova vale")
+    print("4 ok: outro PC restaurou do G:, as duas pessoas entram só tocando no nome e o lançamento está lá")
 
     # 5. B de novo pelo atalho Abrir LabFlow.vbs: já abriu uma vez, então abre OCULTO (sem janela nenhuma)
     assert (pc_b / "LabFlowLite" / "ja-abriu.txt").exists(), "o marcador de 'já abriu' não foi gravado"
@@ -171,10 +196,11 @@ def main() -> None:
     assert "Rodando oculto" in log_b and "Tudo gravado" in log_b.split("Rodando oculto")[-1]
     print("5 ok: pelo atalho .vbs, da segunda vez abriu oculto e fechou pelo Fechar LabFlow")
 
-    # 6. a senha provisória não fica gravada no lite.log
-    log_a = (pc_a / "LabFlowLite" / "lite.log").read_text(encoding="utf-8", errors="replace")
-    assert senha not in log_a and "senha provisória mostrada só na tela" in log_a
-    print("6 ok: a senha provisória não está no log")
+    # 6. o pacote não traz mais nada de senha de Admin
+    assert not list(raiz.glob("Redef*")), "sobrou o .bat de refazer a senha do Admin"
+    texto_leia = (raiz / "LEIA-ME.txt").read_text(encoding="utf-8-sig")
+    assert not re.search(r"provis[óo]ria|redefin", texto_leia, re.I)
+    print("6 ok: o pacote não tem mais senha de Admin para anotar ou refazer")
     print("TESTE DE FUMAÇA OK")
 
 

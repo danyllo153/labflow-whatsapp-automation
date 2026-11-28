@@ -32,9 +32,20 @@ createRoot(document.getElementById("raiz")!).render(
   </StrictMode>,
 );
 
-// App instalável: o service worker guarda só os arquivos das telas, nunca os dados (ver public/sw.js).
-if ("serviceWorker" in navigator && import.meta.env.PROD) {
-  navigator.serviceWorker.register("/app/sw.js", { scope: "/app/" }).catch(() => {
-    // sem service worker o app funciona igual, só não fica instalável
+// App instalável (só na Completa): o service worker guarda só os arquivos das telas, nunca os dados (ver public/sw.js).
+// A Lite atende só o próprio PC (sem celular, 27/11): sem "instalar como app" e sem service worker; se uma versão antiga
+// deixou um registrado neste navegador, ele é desligado e o que guardou é apagado.
+fetch("/ambiente", { credentials: "same-origin" })
+  .then((r) => (r.ok ? r.json() : {}))
+  .catch(() => ({}))
+  .then((ambiente: { lite?: boolean }) => {
+    if (!("serviceWorker" in navigator)) return;
+    if (ambiente.lite) {
+      void navigator.serviceWorker.getRegistrations().then((registros) => registros.forEach((r) => void r.unregister()));
+      void caches?.keys().then((nomes) => nomes.filter((n) => n.startsWith("labflow-")).forEach((n) => void caches.delete(n)));
+    } else if (import.meta.env.PROD) {
+      navigator.serviceWorker.register("/app/sw.js", { scope: "/app/" }).catch(() => {
+        // sem service worker o app funciona igual, só não fica instalável
+      });
+    }
   });
-}

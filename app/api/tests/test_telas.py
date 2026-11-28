@@ -4,6 +4,7 @@ import pytest
 from fastapi.testclient import TestClient
 
 from labflow_api.main import app
+from tests.clientes import cliente_http
 
 
 @pytest.fixture
@@ -95,3 +96,31 @@ def test_icone_da_marca_acima_de_1_mb_cai_no_neutro(telas, tmp_path, monkeypatch
     (marca / "icone.png").write_bytes(b"0" * (1024 * 1024 + 1))
     monkeypatch.setenv("LABFLOW_MARCA_DIR", str(marca))
     assert telas.get("/app/icone.svg").text == "<svg>neutro</svg>"
+
+
+# ---------------------------------------------------------------- Lite: sem versão de celular (27/11)
+INDICE_COM_APP = (
+    '<!doctype html><title>LabFlow</title>\n<link rel="manifest" href="/app/manifest.webmanifest" />\n'
+    '<link rel="icon" href="/app/icone.svg" />\n<link rel="apple-touch-icon" href="/app/icone-192.png" />\n'
+)
+
+
+def test_completa_continua_instalavel(telas, tmp_path):
+    (tmp_path / "index.html").write_text(INDICE_COM_APP, encoding="utf-8")
+    assert 'rel="manifest"' in telas.get("/app/").text and 'rel="apple-touch-icon"' in telas.get("/app/turno").text
+    assert telas.get("/app/manifest.webmanifest").status_code == 200
+    assert telas.get("/app/sw.js").status_code == 200
+
+
+def test_lite_nao_e_instalavel_como_app(telas, tmp_path, monkeypatch):
+    monkeypatch.setenv("LABFLOW_LITE", "1")
+    (tmp_path / "index.html").write_text(INDICE_COM_APP, encoding="utf-8")
+    c = cliente_http("http://127.0.0.1:8000")
+    for caminho in ("/app/", "/app/index.html", "/app/turno"):
+        r = c.get(caminho)
+        assert r.status_code == 200 and "LabFlow" in r.text, caminho
+        assert 'rel="manifest"' not in r.text and 'rel="apple-touch-icon"' not in r.text, caminho
+        assert 'rel="icon"' in r.text  # o ícone da aba fica
+    assert c.get("/app/manifest.webmanifest").status_code == 404
+    assert c.get("/app/sw.js").status_code == 404
+    assert c.get("/app/assets/index-abc123.js").status_code == 200  # o resto das telas segue igual

@@ -7,13 +7,14 @@ PARA ABRIR
   - Na primeira vez em cada PC ele se prepara (1 a 3 minutos).
   - O LabFlow abre como um programa, em TELA CHEIA, na tela de entrar.
     F11 alterna entre tela cheia e janela; Alt+F4 fecha só a tela (o LabFlow
-    continua rodando no ícone perto do relógio). Cada pessoa usa o PRÓPRIO usuário e senha.
+    continua rodando no ícone perto do relógio). Ninguém digita senha: cada pessoa toca no
+    próprio nome na tela de entrar (ou escreve o nome em "Sou novo aqui").
   - O LabFlow funciona em UM PC por vez (não aceita conexões da rede). Se ele já estiver
     aberto em outro PC, aparece o aviso de qual PC: use "Encerrar" lá e abra aqui.
 
 A JANELA PRETA E O ÍCONE PERTO DO RELÓGIO
   Na PRIMEIRA vez em cada PC, o LabFlow abre com uma janela preta: ela mostra o
-  preparo e, no banco novo, a senha do primeiro acesso (anote).
+  preparo (1 a 3 minutos).
   Da segunda vez em diante, abre OCULTO: só aparece o ícone do LabFlow perto do
   relógio do Windows. Botão direito no ícone:
     Abrir o LabFlow · Endereço neste PC · Encerrar o LabFlow
@@ -22,7 +23,7 @@ A JANELA PRETA E O ÍCONE PERTO DO RELÓGIO
 O PC EM QUE O LABFLOW ESTÁ ABERTO
   O LabFlow fica ABERTO no PC em que você deu os dois cliques (a janela preta, na primeira
   vez, ou o ícone perto do relógio). Use de preferência o PC que fica ligado o dia todo.
-  - Troca de turno: só "Sair" no LabFlow. NÃO saia do usuário do Windows nesse PC
+  - Troca de turno: "Trocar de pessoa" no LabFlow. NÃO saia do usuário do Windows nesse PC
     (bloquear a tela com Windows+L pode).
   - Esse PC não pode suspender/hibernar (plano de energia: nunca).
   - Para fechar: no ícone perto do relógio, "Encerrar o LabFlow" (ou ENTER e S na
@@ -35,15 +36,14 @@ OS DADOS
   - Se o PC cair, espere 1 minuto e abra em qualquer PC: ele assume com
     os dados gravados (pode faltar no máximo o último minuto).
 
-PRIMEIRO ACESSO (banco vazio)
-  Na primeira abertura a janela preta mostra o usuário "admin" e uma senha
-  provisória (vale 24 horas). Entre, troque a senha e cadastre as pessoas em
-  Admin > Pessoas (o telefone é opcional: a Lite não tem o bot do WhatsApp).
-  ANOTE a senha antes de fechar a janela preta. Se o navegador perguntar se quer
-  salvar a senha, clique em "Nunca" (o PC e compartilhado).
-  Perdeu a senha do admin? Feche o LabFlow em TODOS os PCs e dê dois cliques em
-  "Redefinir senha do Admin" (gera uma nova senha provisória de 24 h na janela preta).
-  Com o LabFlow aberto em algum PC, ele avisa e não redefine.
+PRIMEIRO ACESSO
+  Não existe senha nem "Admin". Na primeira abertura o LabFlow pede o seu nome: escreva e
+  pronto, você já entra. Daí em diante, quem abre escolhe o nome na lista ou escreve um nome
+  novo ("Sou novo aqui"). Todas as pessoas podem tudo; em Pessoas dá para cadastrar um
+  nome e bloquear quem não usa mais. Quem senta no PC escolhe qualquer nome: por isso o
+  LabFlow só funciona neste PC (127.0.0.1) e guarda o nome escolhido e o PC de cada entrada.
+  Instalação antiga: o nome que for digitado primeiro assume o lugar do antigo "Admin"
+  (os lançamentos dele continuam no seu nome); as outras pessoas já aparecem na lista.
 
 MARCA (opcional)
   Nome, logo e cores do laboratório: pasta dados\marca (instruções no LEIA-ME de lá).

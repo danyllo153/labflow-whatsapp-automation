@@ -44,7 +44,7 @@ MANTER_BACKUPS = 30
 SUPER = "lfadmin"
 BANCO = "labflow"
 ENDERECO_LOCAL = "127.0.0.1"  # a Lite só escuta neste endereço (app e banco): nunca na rede
-ADMIN_TELEFONE = "5500000000001"  # marcador: o Admin troca depois em Admin > Pessoas
+REGISTRO_INICIAL_TELEFONE = "5500000000001"  # registro inicial ("Administrador"): o primeiro nome digitado assume ele (migration 088)
 
 
 ICONES_DA_LOGO = ("icone.ico", "icone.png", "icone-180.png", "icone-192.png", "icone-512.png")
@@ -64,11 +64,11 @@ Esta pasta fica em "dados": a troca da pasta "instalacao" numa atualização nã
 """
 
 
-def log(msg: str, segredo: bool = False) -> None:
-    """Na janela (quando há) e no lite.log. `segredo` (a senha provisória) só vai para a tela, nunca para o arquivo."""
+def log(msg: str) -> None:
+    """Na janela (quando há) e no lite.log."""
     print(msg, flush=True)
     with contextlib.suppress(Exception):
-        if LOCAL is not None and not segredo:
+        if LOCAL is not None:
             with open(LOCAL / "lite.log", "a", encoding="utf-8") as f:
                 f.write(f"{dt.datetime.now().isoformat(timespec='seconds')} {msg}\n")
 
@@ -490,52 +490,24 @@ class Servidor:
             pg.sql(f"INSERT INTO public.lite_migracoes (arquivo) VALUES ('{f.name}')")
         log(f"Banco atualizado ({len(pendentes)} migration(s)).")
 
-    # --- primeiro Admin
-    def primeiro_acesso(self, redefinir: bool) -> None:
+    # --- registro inicial (sem senha, sem Admin)
+    def garantir_registro_inicial(self) -> None:
+        """Banco novo: deixa pronto o registro que a primeira pessoa vai assumir ao digitar o nome (a API troca o nome dele, mesmo
+        id). Banco que já tem esse registro (instalação antiga, com o Admin e as pessoas) não muda nada. Não há senha."""
         if str(INST / "app") not in sys.path:
             sys.path.insert(0, str(INST / "app"))
         import psycopg
 
-        from labflow_api.primeiro_admin import preparar_admin
-
         with psycopg.connect(self.pg.url_super()) as con:
-            tem = con.execute("SELECT count(*) FROM app.credenciais").fetchone()[0]
-            if tem and not redefinir:
+            if con.execute("SELECT 1 FROM usuarios WHERE cargo = 'Admin' LIMIT 1").fetchone():
                 return
-            if tem:
-                linha = con.execute(
-                    "SELECT u.id, c.usuario FROM app.credenciais c JOIN usuarios u ON u.id = c.usuario_id "
-                    "WHERE u.cargo = 'Admin' ORDER BY u.id LIMIT 1"
-                ).fetchone()
-                if linha is None:
-                    log("Não achei nenhum Admin para redefinir.")
-                    return
-                uid, usuario = linha
-            else:
-                uid = con.execute(
-                    "INSERT INTO usuarios (telefone, nome, cargo) VALUES (%s, 'Administrador', 'Admin') RETURNING id",
-                    (ADMIN_TELEFONE,),
-                ).fetchone()[0]
-                usuario = "admin"
-            senha = preparar_admin(con, uid, usuario)
+            uid = con.execute(
+                "INSERT INTO usuarios (telefone, nome, cargo) VALUES (%s, 'Administrador', 'Admin') RETURNING id",
+                (REGISTRO_INICIAL_TELEFONE,),
+            ).fetchone()[0]
+            con.execute("INSERT INTO app.credenciais (usuario_id, usuario, trocar_senha) VALUES (%s, 'admin', false)", (uid,))
             con.commit()
-        log("")
-        log("=" * 60)
-        log("PRIMEIRO ACESSO" if not tem else "SENHA REDEFINIDA")
-        log(f"  Usuário: {usuario}")
-        log(f"  Senha provisória (vale 24 horas): {senha}", segredo=True)
-        with contextlib.suppress(Exception):
-            with open(self.local / "lite.log", "a", encoding="utf-8") as f:
-                f.write(f"{dt.datetime.now().isoformat(timespec='seconds')}   (senha provisória mostrada só na tela)\n")
-        log("  No primeiro login o LabFlow pede uma senha nova.")
-        log("  Anote agora: esta senha não aparece de novo.")
-        log("=" * 60)
-        log("")
-        avisar("LabFlow: primeiro acesso" if not tem else "LabFlow: senha redefinida",
-               f"Usuário: {usuario}\nSenha provisória (vale 24 horas): {senha}\n\n"
-               "No primeiro login o LabFlow pede uma senha nova. Anote agora: esta senha não aparece de novo.")
-        if os.environ.get("LABFLOW_LITE_TESTE"):
-            print(f"LITE_ADMIN={usuario}:{senha}", flush=True)
+        log("Banco novo: na primeira abertura, quem digitar o nome vira a primeira pessoa do LabFlow.")
 
     # --- marca da instalação (dados\marca: nome, logo e cores; fica no G:, então passa intacta pelas atualizações)
     def preparar_marca(self) -> Path:
@@ -662,25 +634,50 @@ class Servidor:
             self.salvar()
 
     # --- encerrar
+    def copia_conferida(self) -> bool:
+        """A cópia que acabou de ir para a pasta de rede existe, o pg_restore consegue lê-la e o registro dela é o desta saída."""
+        info = self.dados.ler_json(self.dados.info) or {}
+        gravado = self.estado.get("ultimo_gravado_em")
+        return bool(gravado) and info.get("gravado_em") == gravado and self.pg.dump_valido(self.dados.dump)
+
     def encerrar(self) -> None:
+        """Grava a cópia do banco na pasta de rede, CONFERE que ela vale e só então libera o outro PC (apaga o aviso de servidor).
+        Se a cópia não foi conferida, o aviso fica: ninguém abre em outro PC e perde o trabalho deste (ver o aviso na tela)."""
         with self.encerrando:
             if self.encerrado:
                 return
             self.encerrado = True
         self.parar.set()
         log("Encerrando: gravando tudo no G:...")
-        if self.api and self.api.poll() is None:
-            with contextlib.suppress(Exception):
-                self.api.terminate()
-                self.api.wait(timeout=15)
-        salvou = self.salvar(forcar=True) if self.pg.iniciado() else False
-        self.pg.parar()
-        atual = self.dados.ler_json(self.dados.servidor)
-        if atual is not None and atual.get("dono") == self.token:
-            with contextlib.suppress(OSError):
-                self.dados.servidor.unlink()
+        salvou = False
+        try:
+            if self.api and self.api.poll() is None:
+                with contextlib.suppress(Exception):
+                    self.api.terminate()
+                    self.api.wait(timeout=15)
+            salvou = self.salvar(forcar=True) if self.pg.iniciado() else False
+            salvou = salvou and self.copia_conferida()
+        except Exception as erro:  # o que falhar aqui não pode deixar o app e o banco vivos
+            log(f"ATENÇÃO: erro ao gravar na saída ({erro}).")
+        finally:
+            if self.api and self.api.poll() is None:
+                with contextlib.suppress(Exception):
+                    self.api.kill()
+            self.pg.parar()
+        if salvou:
+            atual = self.dados.ler_json(self.dados.servidor)
+            if atual is not None and atual.get("dono") == self.token:
+                with contextlib.suppress(OSError):
+                    self.dados.servidor.unlink()
         self._gravar_estado(limpo=bool(salvou))
-        log("Tudo gravado. Pode fechar." if salvou else "ATENÇÃO: o último salvamento no G: falhou; o banco deste PC foi mantido.")
+        if salvou:
+            log("Tudo gravado e conferido. Pode fechar; outro PC já pode abrir.")
+        else:
+            log("ATENÇÃO: a cópia na pasta de rede não foi conferida; o banco deste PC foi mantido e o LabFlow continua marcado "
+                "como aberto aqui. Não abra em outro PC: confira o acesso à pasta de rede e abra o LabFlow neste PC de novo.")
+            avisar("LabFlow: a cópia não foi conferida",
+                   "Os dados deste PC NÃO foram copiados com segurança para a pasta de rede. Não abra o LabFlow em outro PC. "
+                   "Confira o acesso à pasta de rede e abra o LabFlow neste PC de novo.", erro=True)
 
     # --- ciclo completo
     def rodar(self) -> int:
@@ -707,7 +704,7 @@ class Servidor:
             self.aplicar_migracoes(do_zero)
             self.pg.preparar_papeis()
             self.pg.fechar_acessos()
-            self.primeiro_acesso(self.args.redefinir_admin)
+            self.garantir_registro_inicial()
             self.subir_api()
         except Exception as erro:
             log(f"NÃO FOI POSSÍVEL ABRIR: {erro}")
@@ -937,9 +934,14 @@ def iniciar_bandeja(srv: "Servidor", endereco: str):
         desenho.polygon([(26, 13), (38, 13), (38, 28), (50, 50), (14, 50), (26, 28)], fill=(255, 255, 255))
 
         def encerrar(icone, _item) -> None:
-            if confirmar("Encerrar o LabFlow?", "Tudo será gravado no G: e o LabFlow fecha neste PC. Outro PC só poderá "
-                                               "abrir depois disso.\n\nEncerrar agora?"):
-                srv.parar.set()
+            # a pergunta roda em outra thread: dentro do menu do ícone a janelinha podia não responder ao "Sim" (27/11)
+            def perguntar() -> None:
+                if confirmar("Encerrar o LabFlow?", "Tudo será gravado no G: e o LabFlow fecha neste PC. Outro PC só poderá "
+                                                   "abrir depois disso.\n\nEncerrar agora?"):
+                    log("Encerrar pedido pelo ícone perto do relógio.")
+                    srv.parar.set()
+
+            threading.Thread(target=perguntar, daemon=True).start()
 
         menu = pystray.Menu(
             pystray.MenuItem("Abrir o LabFlow", lambda _i, _it: abrir_janela(endereco), default=True),
@@ -966,7 +968,6 @@ def main() -> int:
     ap.add_argument("--local", help="pasta de trabalho deste PC")
     ap.add_argument("--porta", type=int, default=PORTA_PADRAO)
     ap.add_argument("--sem-navegador", action="store_true")
-    ap.add_argument("--redefinir-admin", action="store_true", help="gera nova senha provisória para o primeiro Admin")
     ap.add_argument("--oculto", action="store_true", help="sem a janela preta: ícone perto do relógio e avisos em janelinha")
     args = ap.parse_args()
     OCULTO = args.oculto
@@ -1000,17 +1001,6 @@ def main() -> int:
         signal.signal(signal.SIGINT, lambda *_: srv.parar.set())
 
     codigo = srv.rodar()
-    if codigo == -1 and args.redefinir_admin:
-        # 01/11: com o LabFlow aberto em algum PC, a senha não pode ser redefinida (o banco está com o servidor)
-        log("O LabFlow está aberto: feche em todos os PCs e rode o --redefinir-admin de novo.")
-        avisar(
-            "LabFlow: feche antes de redefinir",
-            "O LabFlow está aberto em algum PC do laboratório. Para redefinir a senha do Admin, feche o LabFlow em todos "
-            "os PCs (ícone perto do relógio > Encerrar) e rode de novo com --redefinir-admin.",
-            erro=True,
-            esperar=True,
-        )
-        return 1
     if codigo == -1:
         return modo_cliente(dados, args)
     return codigo

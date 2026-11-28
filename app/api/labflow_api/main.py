@@ -22,6 +22,8 @@ from labflow_api.rotas_equipe import roteador as roteador_equipe
 from labflow_api.rotas_esterilizacao import roteador as roteador_esterilizacao
 from labflow_api.rotas_laudo import roteador as roteador_laudo
 from labflow_api.rotas_login import roteador as roteador_login
+from labflow_api.rotas_entrar_por_nome import roteador as roteador_entrar_por_nome
+from labflow_api.nomes_laudo import roteador as roteador_nomes_laudo
 from labflow_api.rotas_paginas import roteador as roteador_paginas
 from labflow_api import laudos_analises  # noqa: F401 (registra os laudos de TAB, Coliformes, Howard, NFC, Embarque e contra-amostra)
 from labflow_api.laudos import roteador as roteador_laudos
@@ -50,7 +52,7 @@ seguranca_http.exigir_loopback_no_modo_lite()  # Lite: recusa subir fora do 127.
 
 app = FastAPI(
     title="LabFlow API",
-    description="API do app LabFlow (LIMS do laboratório de microbiologia).",
+    description="API do app LabFlow (LIMS do laboratório).",
     version="0.1.0",
 )
 seguranca_http.ligar(app)  # Lite: Host e Origin só localhost/127.0.0.1 (Completa não muda)
@@ -74,6 +76,7 @@ def ambiente() -> dict[str, bool]:
 
 app.include_router(roteador_marca)  # nome, logo e cores da instalação (Lite); sem login
 app.include_router(roteador_login)
+app.include_router(roteador_entrar_por_nome)  # Lite: entrar pelo nome, sem senha (404 fora da Lite)
 app.include_router(roteador_admin)
 app.include_router(roteador_admin_turnos)
 app.include_router(roteador_coletas)
@@ -88,6 +91,7 @@ app.include_router(roteador_arquivo)
 app.include_router(roteador_relatorio_dia)
 app.include_router(roteador_estufas)
 app.include_router(roteador_laudos)
+app.include_router(roteador_nomes_laudo)  # quem vai em cada laudo e data (086)
 app.include_router(roteador_meios)
 app.include_router(roteador_agua_consumo)  # antes de /aguas
 app.include_router(roteador_aguas)

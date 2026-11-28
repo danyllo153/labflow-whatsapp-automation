@@ -44,9 +44,14 @@ export function telefoneComDdi(telefone: string): string {
   return digitos.length === 10 || digitos.length === 11 ? `55${digitos}` : digitos;
 }
 
+/** Acesso bloqueado pelo Admin (Completa) ou "Acesso bloqueado" (Lite, sem Admin). */
+function estaBloqueado(situacao: string): boolean {
+  return situacao === "Bloqueado pelo Admin" || situacao === "Acesso bloqueado";
+}
+
 function classeDaSituacao(situacao: string): string {
   if (situacao === "Ativo") return "etiqueta etiqueta-ok";
-  if (situacao.startsWith("Bloqueado")) return "etiqueta etiqueta-nao-ok";
+  if (situacao.startsWith("Bloqueado") || situacao === "Acesso bloqueado") return "etiqueta etiqueta-nao-ok";
   if (situacao === "Senha provisória pendente") return "etiqueta etiqueta-pendente";
   return "etiqueta etiqueta-neutra";
 }
@@ -103,7 +108,7 @@ type Acao =
   | { tipo: "acesso"; ativo: boolean }
   | { tipo: "usuario"; usuario: string };
 
-function Gerenciar({ p, souEu, aoMudar, aoProvisoria }: { p: Pessoa; souEu: boolean; aoMudar: () => void; aoProvisoria: (d: Provisoria) => void }) {
+function Gerenciar({ p, souEu, lite, aoMudar, aoProvisoria }: { p: Pessoa; souEu: boolean; lite: boolean; aoMudar: () => void; aoProvisoria: (d: Provisoria) => void }) {
   const [cargo, setCargo] = useState(p.cargo);
   const [usuario, setUsuario] = useState(p.usuario ?? sugerirUsuario(p.nome ?? ""));
   const [pedindo, setPedindo] = useState<Acao | null>(null);
@@ -133,7 +138,11 @@ function Gerenciar({ p, souEu, aoMudar, aoProvisoria }: { p: Pessoa; souEu: bool
     provisoria: `Gerar uma senha provisória para ${nome}? A senha atual dela deixa de valer e ela sai do app nos aparelhos onde estiver.`,
     cargo: `Trocar o cargo de ${nome} de ${nomeDoCargo(p.cargo)} para ${nomeDoCargo(cargo)}? Vale também no WhatsApp.`,
     desbloquear: `Desbloquear ${nome}? A senha continua a mesma; só zera as senhas erradas.`,
-    acesso: p.situacao === "Bloqueado pelo Admin" ? `Liberar o acesso de ${nome} ao app?` : `Bloquear o acesso de ${nome} ao app? Ela sai do app na hora. O WhatsApp não muda.`,
+    acesso: estaBloqueado(p.situacao)
+      ? `Liberar o acesso de ${nome} ao app?`
+      : lite
+        ? `Bloquear o acesso de ${nome}? O nome sai da lista e, se estiver com o app aberto, sai na hora. Os lançamentos ficam.`
+        : `Bloquear o acesso de ${nome} ao app? Ela sai do app na hora. O WhatsApp não muda.`,
     usuario: `Dar o usuário "${usuario.trim().toLowerCase()}" para ${nome}?`,
   };
 
@@ -145,6 +154,7 @@ function Gerenciar({ p, souEu, aoMudar, aoProvisoria }: { p: Pessoa; souEu: bool
         </Confirmar>
       ) : (
         <>
+          {!lite && (
           <form
             className="linha-acao"
             onSubmit={(e: FormEvent) => {
@@ -160,7 +170,9 @@ function Gerenciar({ p, souEu, aoMudar, aoProvisoria }: { p: Pessoa; souEu: bool
               Salvar usuário
             </button>
           </form>
+          )}
 
+          {!lite && (
           <form
             className="linha-acao"
             onSubmit={(e: FormEvent) => {
@@ -182,14 +194,15 @@ function Gerenciar({ p, souEu, aoMudar, aoProvisoria }: { p: Pessoa; souEu: bool
               Trocar cargo
             </button>
           </form>
+          )}
 
           <div className="botoes-acao">
-            {p.usuario && (
+            {p.usuario && !lite && (
               <button type="button" className="botao-secundario" onClick={() => setPedindo({ tipo: "provisoria" })}>
                 Gerar senha provisória
               </button>
             )}
-            {p.situacao === "Bloqueado por senhas erradas" && (
+            {p.situacao === "Bloqueado por senhas erradas" && !lite && (
               <button type="button" className="botao-secundario" onClick={() => setPedindo({ tipo: "desbloquear" })}>
                 Desbloquear
               </button>
@@ -198,9 +211,9 @@ function Gerenciar({ p, souEu, aoMudar, aoProvisoria }: { p: Pessoa; souEu: bool
               <button
                 type="button"
                 className="botao-secundario"
-                onClick={() => setPedindo({ tipo: "acesso", ativo: p.situacao === "Bloqueado pelo Admin" })}
+                onClick={() => setPedindo({ tipo: "acesso", ativo: estaBloqueado(p.situacao) })}
               >
-                {p.situacao === "Bloqueado pelo Admin" ? "Liberar acesso" : "Bloquear acesso"}
+                {estaBloqueado(p.situacao) ? "Liberar acesso" : "Bloquear acesso"}
               </button>
             )}
           </div>
@@ -215,6 +228,68 @@ function Gerenciar({ p, souEu, aoMudar, aoProvisoria }: { p: Pessoa; souEu: bool
   );
 }
 
+/** Lite (sem senha, sem cargo, sem telefone): só o nome. A pessoa entra tocando no próprio nome na tela de entrar. */
+function NovaPessoaPeloNome({ aoTerminar }: { aoTerminar: () => void }) {
+  const [nome, setNome] = useState("");
+  const [conferindo, setConferindo] = useState(false);
+  const [ocupado, setOcupado] = useState(false);
+  const [erro, setErro] = useState("");
+
+  async function cadastrar() {
+    setOcupado(true);
+    setErro("");
+    try {
+      await enviarJson<Pessoa>("/admin/pessoas/por-nome", { nome: nome.trim() });
+      aoTerminar();
+    } catch (e) {
+      setErro(e instanceof Error ? e.message : "Não foi possível cadastrar.");
+      setConferindo(false);
+    } finally {
+      setOcupado(false);
+    }
+  }
+
+  return (
+    <form
+      className="cartao"
+      aria-label="Nova pessoa"
+      onSubmit={(e: FormEvent) => {
+        e.preventDefault();
+        setErro("");
+        if (!nome.trim()) return setErro("Escreva o nome.");
+        setConferindo(true);
+      }}
+    >
+      <h2>Nova pessoa</h2>
+      {conferindo ? (
+        <Confirmar ocupado={ocupado} rotulo="Cadastrar" onSim={() => void cadastrar()} onNao={() => setConferindo(false)}>
+          Vai cadastrar <strong>{nome.trim()}</strong>. O nome entra na lista e a pessoa entra tocando nele, sem senha.
+        </Confirmar>
+      ) : (
+        <>
+          <label className="campo">
+            Nome
+            <input value={nome} maxLength={40} onChange={(e) => setNome(e.target.value)} />
+          </label>
+          <div className="botoes-lado">
+            <button type="submit" className="botao botao-principal">
+              Continuar
+            </button>
+            <button type="button" className="botao botao-simples" onClick={aoTerminar}>
+              Cancelar
+            </button>
+          </div>
+        </>
+      )}
+      {erro && (
+        <p className="mensagem-erro" role="alert">
+          {erro}
+        </p>
+      )}
+    </form>
+  );
+}
+
 function NovaPessoa({ aoTerminar, aoProvisoria }: { aoTerminar: () => void; aoProvisoria: (d: Provisoria) => void }) {
   const [nome, setNome] = useState("");
   const [telefone, setTelefone] = useState("");
@@ -226,21 +301,14 @@ function NovaPessoa({ aoTerminar, aoProvisoria }: { aoTerminar: () => void; aoPr
   const [erro, setErro] = useState("");
 
   const tel = telefoneComDdi(telefone);
-  // na Lite não há bot: o telefone é opcional (01/11)
-  const [lite, setLite] = useState(false);
-  useEffect(() => {
-    lerJson<{ lite?: boolean }>("/ambiente")
-      .then((a) => setLite(!!a.lite))
-      .catch(() => setLite(false));
-  }, []);
-  const semTelefone = lite && !tel;
+  // (na Lite não há telefone nem senha: ela usa NovaPessoaPeloNome)
   const usuarioFinal = (usuarioMexido ? usuario : sugerirUsuario(nome)).trim().toLowerCase();
 
   function conferir(e: FormEvent) {
     e.preventDefault();
     setErro("");
     if (!nome.trim()) return setErro("Escreva o nome.");
-    if (!semTelefone && !/^[0-9]{12,13}$/.test(tel)) return setErro("Telefone com DDD e número (ex.: 11 98765-4321).");
+    if (!/^[0-9]{12,13}$/.test(tel)) return setErro("Telefone com DDD e número (ex.: 11 98765-4321).");
     if (!usuarioFinal) return setErro("Escreva o usuário no app (ex.: ana.souza).");
     setConferindo(true);
   }
@@ -271,8 +339,8 @@ function NovaPessoa({ aoTerminar, aoProvisoria }: { aoTerminar: () => void; aoPr
       {conferindo ? (
         <Confirmar ocupado={ocupado} rotulo="Cadastrar e gerar senha provisória" onSim={() => void cadastrar()} onNao={() => setConferindo(false)}>
           Vai cadastrar <strong>{nome.trim()}</strong> como <strong>{nomeDoCargo(cargo)}</strong>
-          {semTelefone ? ", sem telefone" : <>, telefone <strong>{tel}</strong></>}, usuário no app <strong>{usuarioFinal}</strong>, e gerar
-          uma senha provisória de 24 horas.{!lite && " A pessoa também passa a ser reconhecida no WhatsApp."}
+          , telefone <strong>{tel}</strong>, usuário no app <strong>{usuarioFinal}</strong>, e gerar
+          uma senha provisória de 24 horas. A pessoa também passa a ser reconhecida no WhatsApp.
         </Confirmar>
       ) : (
         <>
@@ -281,7 +349,7 @@ function NovaPessoa({ aoTerminar, aoProvisoria }: { aoTerminar: () => void; aoPr
             <input value={nome} onChange={(e) => setNome(e.target.value)} />
           </label>
           <label className="campo">
-            {lite ? "Telefone (opcional)" : "Telefone (WhatsApp)"}
+            Telefone (WhatsApp)
             <input type="tel" inputMode="tel" placeholder="11 98765-4321" value={telefone} onChange={(e) => setTelefone(e.target.value)} />
           </label>
           <label className="campo">
@@ -326,7 +394,7 @@ function NovaPessoa({ aoTerminar, aoProvisoria }: { aoTerminar: () => void; aoPr
 }
 
 export default function Pessoas() {
-  const { pessoa: eu } = useSessao();
+  const { pessoa: eu, lite } = useSessao();
   const [pessoas, setPessoas] = useState<Pessoa[] | null>(null);
   const [erro, setErro] = useState("");
   const [aberta, setAberta] = useState<number | null>(null);
@@ -360,7 +428,7 @@ export default function Pessoas() {
   return (
     <section>
       <h1>Pessoas</h1>
-      {provisoria && <SenhaParaEntregar dados={provisoria} onPronto={() => setProvisoria(null)} />}
+      {provisoria && !lite && <SenhaParaEntregar dados={provisoria} onPronto={() => setProvisoria(null)} />}
       {!cadastrando && !provisoria && (
         <div className="barra-acoes">
           <button type="button" className="botao-secundario" onClick={() => setCadastrando(true)}>
@@ -368,7 +436,15 @@ export default function Pessoas() {
           </button>
         </div>
       )}
-      {cadastrando && (
+      {cadastrando && lite && (
+        <NovaPessoaPeloNome
+          aoTerminar={() => {
+            setCadastrando(false);
+            void carregar();
+          }}
+        />
+      )}
+      {cadastrando && !lite && (
         <NovaPessoa
           aoProvisoria={setProvisoria}
           aoTerminar={() => {
@@ -389,9 +465,11 @@ export default function Pessoas() {
             <div className="pessoa-cabeca">
               <div>
                 <strong>{p.nome || "(sem nome)"}</strong>
-                <div className="texto-secundario">
-                  {p.usuario ? `Usuário ${p.usuario}` : "Sem usuário no app"} · {nomeDoCargo(p.cargo)}
-                </div>
+                {!lite && (
+                  <div className="texto-secundario">
+                    {p.usuario ? `Usuário ${p.usuario}` : "Sem usuário no app"} · {nomeDoCargo(p.cargo)}
+                  </div>
+                )}
               </div>
               <span className={classeDaSituacao(p.situacao)}>{p.situacao}</span>
             </div>
@@ -407,6 +485,7 @@ export default function Pessoas() {
               <Gerenciar
                 key={`${p.id}-${p.cargo}-${p.usuario}-${p.situacao}`}
                 p={p}
+                lite={lite}
                 souEu={p.usuario === eu.usuario}
                 aoMudar={() => void carregar()}
                 aoProvisoria={setProvisoria}

@@ -21,7 +21,7 @@ import MenuNavegacao from "./MenuNavegacao";
 
 const BARRA_DO_CELULAR = ["/", "/turno", "/leituras", "/esterilizacao"];
 export default function Moldura() {
-  const { pessoa } = useSessao();
+  const { pessoa, lite } = useSessao();
   const { pathname } = useLocation();
   const [gaveta, setGaveta] = useState(false); // o menu no celular
   useEffect(() => setGaveta(false), [pathname]);
@@ -35,23 +35,27 @@ export default function Moldura() {
       <aside id="menu-lateral" className={`menu-lateral${gaveta ? " aberta" : ""}`} aria-label="Menu">
         <div className="menu-lateral-topo">
           <Marca />
-          <button type="button" className="botao-icone fechar-gaveta" aria-label="Fechar o menu" onClick={() => setGaveta(false)}>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-              <path d="M6 6l12 12M18 6 6 18" />
-            </svg>
-          </button>
+          {!lite && (
+            <button type="button" className="botao-icone fechar-gaveta" aria-label="Fechar o menu" onClick={() => setGaveta(false)}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                <path d="M6 6l12 12M18 6 6 18" />
+              </svg>
+            </button>
+          )}
         </div>
         <MenuNavegacao />
       </aside>
-      {gaveta && <div className="gaveta-fundo" aria-hidden="true" onClick={() => setGaveta(false)} />}
+      {gaveta && !lite && <div className="gaveta-fundo" aria-hidden="true" onClick={() => setGaveta(false)} />}
 
       <div className="coluna">
         <header className="topo-celular">
-          <button type="button" className="botao-icone" aria-label="Abrir o menu" aria-expanded={gaveta} aria-controls="menu-lateral" onClick={() => setGaveta(true)}>
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
-              <path d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
+          {!lite && (
+            <button type="button" className="botao-icone" aria-label="Abrir o menu" aria-expanded={gaveta} aria-controls="menu-lateral" onClick={() => setGaveta(true)}>
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+                <path d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+          )}
           <Marca />
           <Saudacao nome={pessoa?.nome || pessoa?.usuario} />
           <span className="topo-espaco" />
@@ -67,6 +71,7 @@ export default function Moldura() {
         </main>
       </div>
 
+      {!lite && (
       <nav className="barra-baixo" aria-label="Menu do celular">
         {barra.map((item) => (
           <NavLink key={item.caminho} to={item.caminho} end={item.caminho === "/"} className="item-barra">
@@ -83,6 +88,7 @@ export default function Moldura() {
           </button>
         )}
       </nav>
+      )}
     </div>
   );
 }
