@@ -19,7 +19,7 @@ function Cabecalho() {
   return (
     <div className="marca marca-entrar">
       {marca.logo ? <img className="marca-logo-entrar" src="/marca/logo.png" alt={marca.nome} title={marca.nome} /> : marca.nome}
-      <span className="marca-subtitulo">Laboratório de microbiologia</span>
+      <span className="marca-subtitulo">Sistema do laboratório</span>
     </div>
   );
 }

@@ -89,7 +89,7 @@
 
 <header class="topo">
   <h1>LabFlow Lite</h1>
-  <p>Sistema do laboratório de Microbiologia que roda direto da pasta de rede (G:), sem servidor, sem instalação e sem internet.</p>
+  <p>Sistema do laboratório (LabFlow) que roda direto da pasta de rede (X:), sem servidor, sem instalação e sem internet.</p>
 </header>
 
 <nav class="indice">
@@ -108,7 +108,7 @@
   <div class="grade">
     <div class="cartao"><h4>1. Um PC por vez</h4><p>O LabFlow abre e guarda o banco de dados no PC em que você der os dois cliques. Ele só funciona nesse PC: não aceita conexões da rede.</p></div>
     <div class="cartao"><h4>2. Outro PC? Encerre aqui antes</h4><p>Se alguém tentar abrir em outro PC com o LabFlow aberto neste, aparece o aviso dizendo em qual PC ele está. Encerre lá e abra no outro.</p></div>
-    <div class="cartao"><h4>3. Tudo é gravado no G:</h4><p>A cada minuto (se algo mudou) e ao fechar, o LabFlow guarda uma cópia na pasta <code>dados</code>, com backup de cada dia.</p></div>
+    <div class="cartao"><h4>3. Tudo é gravado no X:</h4><p>A cada minuto (se algo mudou) e ao fechar, o LabFlow guarda uma cópia na pasta <code>dados</code>, com backup de cada dia.</p></div>
     <div class="cartao"><h4>4. Se o PC cair</h4><p>Espere 1 minuto e abra o LabFlow em qualquer PC: ele assume com os dados gravados. Pode faltar no máximo o último minuto.</p></div>
   </div>
   <div class="ok"><b>O que tem</b> Todas as funções do app (amostras, resultados, laudos, painéis, cadastros), com usuários e cargos. <b style="margin-top:6px">O que não tem (nesta etapa)</b> Bot de WhatsApp, celular e assistente de IA.</div>
@@ -116,9 +116,9 @@
 
 <section id="instalar">
   <h2>Instalar <span class="tag">uma vez só</span></h2>
-  <p class="suave">Precisa de: Windows 10 ou mais novo (64 bits), acesso de escrita na pasta do G:. <b>Não precisa</b> de administrador, de instalar programa, de Docker nem de internet.</p>
+  <p class="suave">Precisa de: Windows 10 ou mais novo (64 bits), acesso de escrita na pasta do X:. <b>Não precisa</b> de administrador, de instalar programa, de Docker nem de internet.</p>
   <ol class="passos">
-    <li><strong>Descompacte o zip no G:</strong>
+    <li><strong>Descompacte o zip no X:</strong>
       Extraia em <span class="caminho">X:\LabFlow\</span>. O zip já traz a pasta <code>LabFlow</code>; o resultado final é
       <span class="caminho">X:\LabFlow</span>.</li>
     <li><strong>Escolha o PC de uso</strong>
@@ -139,7 +139,7 @@
     <tr><td>Abrir o LabFlow</td><td>Dois cliques em <code>Abrir LabFlow</code>. Se ele já está aberto em outro PC, aparece o aviso de qual PC: use Encerrar lá primeiro.</td></tr>
     <tr><td>Trocar de turno</td><td>Só clicar em <b>Trocar de pessoa</b> dentro do LabFlow (no avatar, no canto de cima).</td></tr>
     <tr><td>Fechar a tela</td><td><b>Alt+F4</b> fecha só a tela; o LabFlow continua rodando no ícone perto do relógio. <b>F11</b> alterna entre tela cheia e janela.</td></tr>
-    <tr><td>Encerrar de vez (antes de usar em outro PC)</td><td>Ícone perto do relógio → botão direito → <b>Encerrar o LabFlow</b> → Sim. Espere de 10 a 30 segundos: ele grava tudo no G:. Alternativa: dois cliques em <code>Fechar LabFlow</code>.</td></tr>
+    <tr><td>Encerrar de vez (antes de usar em outro PC)</td><td>Ícone perto do relógio → botão direito → <b>Encerrar o LabFlow</b> → Sim. Espere de 10 a 30 segundos: ele grava tudo no X:. Alternativa: dois cliques em <code>Fechar LabFlow</code>.</td></tr>
   </table>
   <div class="perigo"><b>O que derruba o LabFlow</b>
     Sair do usuário do Windows (bloquear a tela com Windows+L pode), suspender ou hibernar o PC, e reinício do Windows Update.
@@ -168,7 +168,7 @@
   </table>
   <p>Exemplo de <code>marca.json</code>:</p>
 <pre>{
-  "nome": "Laboratório de Microbiologia",
+  "nome": "Meu Laboratório",
   "cor_principal": "#1f3bb3",
   "cor_secundaria": "#1e283d"
 }</pre>
@@ -181,7 +181,7 @@
     <tr><th>Item</th><th>Detalhe</th></tr>
     <tr><td><b>Firewall</b></td><td>Nenhuma regra nova. O LabFlow escuta só em <code>127.0.0.1</code> (este PC), então o Windows não pede liberação de porta nem de administrador.</td></tr>
     <tr><td><b>Instalação</b></td><td>Nenhuma. Roda sem administrador, sem Docker e sem internet. Python e PostgreSQL vão embutidos na pasta.</td></tr>
-    <tr><td><b>Onde grava</b></td><td>Dados no G: (<code>LabFlow\dados</code>). Cópia de trabalho em <code>%LOCALAPPDATA%\LabFlowLite</code> de cada PC (o PostgreSQL não roda bem direto de pasta de rede).</td></tr>
+    <tr><td><b>Onde grava</b></td><td>Dados no X: (<code>LabFlow\dados</code>). Cópia de trabalho em <code>%LOCALAPPDATA%\LabFlowLite</code> de cada PC (o PostgreSQL não roda bem direto de pasta de rede).</td></tr>
     <tr><td><b>Segurança</b></td><td>O PostgreSQL e o sistema escutam só em 127.0.0.1 (este PC), nunca na rede; o sistema recusa pedidos com outro endereço. Não há senha: quem senta no PC escolhe o próprio nome, e por isso o sistema só abre neste PC; cada entrada guarda o nome escolhido e o nome do PC.</td></tr>
     <tr><td><b>Arquivos</b></td><td>Se a política bloquear <code>.vbs</code>, usar o <code>Abrir LabFlow com janela.bat</code> (equivalente). Antivírus: liberar a pasta <code>LabFlow</code> e <code>%LOCALAPPDATA%\LabFlowLite</code> se necessário.</td></tr>
     <tr><td><b>Energia</b></td><td>O PC onde o LabFlow está aberto não pode suspender nem hibernar, nem reiniciar sozinho com o LabFlow aberto.</td></tr>
@@ -191,7 +191,7 @@
 
 <section id="pasta">
   <h2>O que tem na pasta</h2>
-<pre class="arvore"><span class="d">LabFlow\</span>                          <span class="c">(no G:)</span>
+<pre class="arvore"><span class="d">LabFlow\</span>                          <span class="c">(no X:)</span>
   Abrir LabFlow.vbs                 <span class="n">abre o sistema (sem janela do cmd)</span>
   Abrir LabFlow com janela.bat      <span class="n">o mesmo, caso o .vbs seja bloqueado</span>
   Fechar LabFlow.bat                <span class="n">grava tudo e fecha o LabFlow deste PC</span>
@@ -213,21 +213,21 @@
   <h2>Perguntar ao Claude <span class="tag">opcional</span></h2>
   <p>Se você usa o Claude, cole o texto abaixo numa conversa nova. Ele passa a conhecer a pasta e o funcionamento, e pode tirar dúvidas e orientar a TI. Mande a pasta <code>LabFlow</code> ou o <code>LEIA-ME.txt</code> junto, se quiser.</p>
   <button class="copiar" id="btn" type="button">Copiar texto</button>
-<pre class="quebra" id="prompt">Você vai me ajudar a usar o "LabFlow Lite", um sistema de laboratório de microbiologia que roda de uma pasta de rede no Windows (G:), sem servidor, sem Docker, sem administrador e sem internet. Responda sempre em português, com passos curtos, um de cada vez. Use só o que está descrito aqui; se algo não estiver, diga que não sei e peça para olhar o LEIA-ME.txt ou falar com o Danyllo.
+<pre class="quebra" id="prompt">Você vai me ajudar a usar o "LabFlow Lite", um sistema de laboratório que roda de uma pasta de rede no Windows (X:), sem servidor, sem Docker, sem administrador e sem internet. Responda sempre em português, com passos curtos, um de cada vez. Use só o que está descrito aqui; se algo não estiver, diga que não sei e peça para olhar o LEIA-ME.txt ou falar com o Danyllo.
 
 O QUE É
 O mesmo app completo (API, telas e banco PostgreSQL) empacotado para Windows. Tem todas as funções do app; não há senha nem cargos: cada pessoa toca no próprio nome e todas podem tudo. NÃO tem bot de WhatsApp, celular nem assistente de IA nesta etapa.
 
 PASTA (X:\LabFlow)
 - Abrir LabFlow.vbs / Abrir LabFlow com janela.bat: abrem o sistema (o .bat serve se o .vbs for bloqueado).
-- Fechar LabFlow.bat: grava tudo no G: e fecha o LabFlow deste PC.
+- Fechar LabFlow.bat: grava tudo no X: e fecha o LabFlow deste PC.
 - instalacao\: o programa (Python, app, telas, migrations, PostgreSQL). É trocada inteira a cada versão.
 - dados\: banco (labflow.dump, labflow.anterior.dump), backup\ (um por dia, 30 dias), recuperacao\, marca\ e servidor.json. NUNCA apagar nem substituir.
 
 COMO FUNCIONA
 - O LabFlow abre num PC por vez: PostgreSQL e app rodam nesse PC, só em 127.0.0.1 (nunca na rede), sem senha. Outro PC que tente abrir recebe o aviso de qual PC está com ele aberto e não se conecta. Um banco só, sem conflito.
 - Neste PC o LabFlow não pode suspender/hibernar, nem sair do usuário do Windows; troca de turno é só "Trocar de pessoa" no LabFlow.
-- O LabFlow grava uma cópia no G: a cada 60 s (se houve escrita), a cada 10 min mesmo sem escrita, e ao fechar. Se o PC cair, depois de ~1 minuto qualquer PC que abrir assume com os dados gravados (pode faltar no máximo o último minuto).
+- O LabFlow grava uma cópia no X: a cada 60 s (se houve escrita), a cada 10 min mesmo sem escrita, e ao fechar. Se o PC cair, depois de ~1 minuto qualquer PC que abrir assume com os dados gravados (pode faltar no máximo o último minuto).
 - Primeira abertura em cada PC: janela preta (preparo de 1 a 3 min). Depois abre oculto, com um ícone perto do relógio: Abrir o LabFlow, Endereço neste PC, Encerrar o LabFlow (leva 10 a 30 s para gravar). A tela abre em tela cheia (F11 alterna; Alt+F4 fecha só a tela).
 - Primeiro acesso: o LabFlow pede o nome e a pessoa entra; as outras escolhem o nome na lista ou escrevem um nome novo ("Sou novo aqui"). Não há senha, cargo nem "Admin".
 - Para a TI: nenhuma liberação de porta ou firewall (o LabFlow escuta só em 127.0.0.1, neste PC). Funciona um PC por vez.
