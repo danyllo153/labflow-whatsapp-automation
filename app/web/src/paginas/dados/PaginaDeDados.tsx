@@ -461,6 +461,8 @@ export default function PaginaDeDados({ def, embutida = false }: { def: Definica
         )}
         {!dados && !erro && <p className="carregando">Carregando...</p>}
 
+        {/* "Por situação" e o gráfico lado a lado no computador (varredura de 28/11); no resto, um embaixo do outro */}
+        <div className="resultados-topo">
         {dados && !erro && !def.semResumo && dados.resumo && dados.resumo.length > 0 && dados.total > 0 && (
           <section className="cartao" aria-label="Por situação">
             <h2>
@@ -504,6 +506,7 @@ export default function PaginaDeDados({ def, embutida = false }: { def: Definica
           ) : (
             <p className="carregando">Montando o dashboard...</p>
           ))}
+        </div>
 
         {dados && !erro && (
           <>
