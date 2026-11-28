@@ -234,5 +234,6 @@ describe("Tanques lado a lado (27/11)", () => {
     // sem gráfico (28/11): nem o botão nem a tendência do resultado
     expect(screen.queryByRole("button", { name: /Gráfico/ })).not.toBeInTheDocument();
     expect(screen.queryByText("Tendência do resultado")).not.toBeInTheDocument();
+    expect(screen.queryByRole("region", { name: "Por situação" })).not.toBeInTheDocument(); // nem o cartão de barras
   });
 });
